@@ -1,3 +1,6 @@
+import { CH1_COLOR, CH2_COLOR, SCOPE_THEME, SCOPE_SECTIONS, SCOPE_LABELS, SCOPE_KEYS } from '../data/instrumentVisuals'
+export { CH1_COLOR, CH2_COLOR } from '../data/instrumentVisuals'
+
 // One drawing recipe drives the live CanvasTextures and the exported PNG decals.
 // These two traces are illustrative; no sampling rate, bandwidth or acquisition
 // status is inferred from the reference picture or from the visual instrument.
@@ -7,7 +10,7 @@ export type ArtworkCommand =
   | { kind: 'polygon'; points: [number, number][]; color: string }
   | { kind: 'text'; text: string; x: number; y: number; size: number; color: string; align?: 'left' | 'center' | 'right' }
 export interface ScopeArtwork { width: number; height: number; commands: ArtworkCommand[] }
-export const CH1_COLOR = '#ffe04a', CH2_COLOR = '#20d4ee'
+
 
 // World-space front layout shared by geometry, CanvasTexture legends and the
 // exported palette preview. Keep control centers here so labels cannot drift.
@@ -29,14 +32,14 @@ export const SCOPE_LAYOUT = {
     { name: 'ch2_position', x: 2.46, y: 0.815, r: 0.105, accent: CH2_COLOR },
   ],
   buttons: [
-    { name: 'auto_set_button', label: 'Auto Set', x: 2.61, y: 3.29, w: 0.46, h: 0.17, color: CH2_COLOR },
-    { name: 'run_stop_button', label: 'Run/Stop', x: 2.61, y: 3.08, w: 0.46, h: 0.17, color: '#36d790' },
-    { name: 'single_button', label: 'Single', x: 2.61, y: 2.87, w: 0.46, h: 0.17, color: '#35434e' },
-    { name: 'default_button', label: 'Default', x: 2.61, y: 2.66, w: 0.46, h: 0.17, color: '#35434e' },
-    { name: 'trigger_mode_button', label: 'Mode', x: 2.16, y: 2.31, w: 0.40, h: 0.17, color: '#35434e' },
-    { name: 'trigger_source_button', label: 'Source', x: 2.65, y: 2.31, w: 0.40, h: 0.17, color: '#35434e' },
-    { name: 'trigger_slope_button', label: 'Slope', x: 2.16, y: 2.08, w: 0.40, h: 0.17, color: '#35434e' },
-    { name: 'trigger_menu_button', label: 'Menu', x: 2.65, y: 2.08, w: 0.40, h: 0.17, color: '#35434e' },
+    { name: 'auto_set_button', ...SCOPE_KEYS.auto_set_button, x: 2.61, y: 3.29, w: 0.46, h: 0.17 },
+    { name: 'run_stop_button', ...SCOPE_KEYS.run_stop_button, x: 2.61, y: 3.08, w: 0.46, h: 0.17 },
+    { name: 'single_button', ...SCOPE_KEYS.single_button, x: 2.61, y: 2.87, w: 0.46, h: 0.17 },
+    { name: 'default_button', ...SCOPE_KEYS.default_button, x: 2.61, y: 2.66, w: 0.46, h: 0.17 },
+    { name: 'trigger_mode_button', ...SCOPE_KEYS.trigger_mode_button, x: 2.16, y: 2.31, w: 0.40, h: 0.17 },
+    { name: 'trigger_source_button', ...SCOPE_KEYS.trigger_source_button, x: 2.65, y: 2.31, w: 0.40, h: 0.17 },
+    { name: 'trigger_slope_button', ...SCOPE_KEYS.trigger_slope_button, x: 2.16, y: 2.08, w: 0.40, h: 0.17 },
+    { name: 'trigger_menu_button', ...SCOPE_KEYS.trigger_menu_button, x: 2.65, y: 2.08, w: 0.40, h: 0.17 },
     { name: 'power_button', label: '', x: -2.47, y: 0.62, w: 0.32, h: 0.30, color: '#272e33' },
   ],
   bncs: [
@@ -49,7 +52,7 @@ export const SCOPE_LAYOUT = {
 } as const
 
 export function scopeScreenArtwork(): ScopeArtwork {
-  const commands: ArtworkCommand[] = [{ kind: 'rect', x: 0, y: 0, w: 1024, h: 704, color: '#050b10' }]
+  const commands: ArtworkCommand[] = [{ kind: 'rect', x: 0, y: 0, w: 1024, h: 704, color: SCOPE_THEME.screen }]
   const line = (points: [number, number][], color: string, width = 1, dash?: number[]) => commands.push({ kind: 'path', points, color, width, dash })
   const text = (text: string, x: number, y: number, color: string, size = 22) => commands.push({ kind: 'text', text, x, y, color, size })
   // Ten horizontal divisions, eight vertical divisions. Restrained minor ticks
@@ -97,13 +100,13 @@ export function scopeLegendsArtwork(): ScopeArtwork {
   line([0.02, 3.49], [0.02, 3.71], '#869aa4')
   text('DIGITAL OSCILLOSCOPE', 0.16, 3.65, 16, '#c6d2d9', 'left')
   text('2 Channel  100MHz  1GSa/s', 0.16, 3.53, 14, '#9fb0ba', 'left')
-  for (const [i, title] of ['Horizontal', 'Trigger', 'Vertical'].entries()) {
+  for (const [i, title] of SCOPE_SECTIONS.entries()) {
     const panel = SCOPE_LAYOUT.panels[i]
     text(title, panel.x - panel.w / 2 + 0.08, panel.y + panel.h / 2 - (title === 'Vertical' ? 0.06 : 0.10), 27, '#e2e9ed', 'left')
   }
   const control = (name: string) => SCOPE_LAYOUT.knobs.find((knob) => knob.name === name)!
   const time = control('time_div_knob'), position = control('horizontal_position'), level = control('trigger_level')
-  text('Time / Div', time.x, time.y - 0.35, 22); text('Position', position.x, position.y - 0.26, 21)
+  text(SCOPE_LABELS.timeDiv, time.x, time.y - 0.35, 22); text(SCOPE_LABELS.position, position.x, position.y - 0.26, 21)
   text('s', time.x - 0.14, time.y + 0.33, 17, CH2_COLOR); text('ms', time.x + 0.21, time.y + 0.33, 17)
   text('µs', time.x + 0.32, time.y + 0.17, 16); text('ns', time.x + 0.35, time.y + 0.01, 16)
   // Professional solid filled left / right chevron triangles above Horizontal Position knob
@@ -112,15 +115,15 @@ export function scopeLegendsArtwork(): ScopeArtwork {
     { kind: 'polygon', points: [[px(position.x + 0.13), py(position.y + 0.25)], [px(position.x + 0.05), py(position.y + 0.295)], [px(position.x + 0.05), py(position.y + 0.205)]], color: '#e1e8ec' }
   )
   for (const button of SCOPE_LAYOUT.buttons) if (button.label) text(button.label, button.x, button.y, 18, ['auto_set_button', 'run_stop_button'].includes(button.name) ? '#07181e' : '#e1e8ec')
-  text('Level', level.x, level.y - 0.26, 21)
+  text(SCOPE_LABELS.level, level.x, level.y - 0.26, 21)
   line([level.x - 0.48, level.y - 0.02], [level.x - 0.44, level.y - 0.02]); line([level.x - 0.44, level.y - 0.02], [level.x - 0.40, level.y + 0.04]); line([level.x - 0.40, level.y + 0.04], [level.x - 0.36, level.y + 0.04])
   text('Trig', level.x - 0.43, level.y - 0.23, 16, '#b8c7ce')
   for (const [channel, color] of [[1, CH1_COLOR], [2, CH2_COLOR]] as const) {
     const volts = control(`ch${channel}_volts_div`), pos = control(`ch${channel}_position`)
     // Rounded rectangular badge for CH1 and CH2 headers
     commands.push({ kind: 'rect', x: px(volts.x - 0.335), y: py(volts.y + 0.44), w: 0.67 * 256, h: 0.105 / 3.8 * 960, color, r: 8 })
-    text(`CH${channel}`, volts.x, volts.y + 0.387, 22, '#07181e'); text('Volts / Div', volts.x, volts.y + 0.285, 19)
-    text('Position', pos.x, pos.y + 0.20, 19)
+    text(`CH${channel}`, volts.x, volts.y + 0.387, 22, '#07181e'); text(SCOPE_LABELS.voltsDiv, volts.x, volts.y + 0.285, 19)
+    text(SCOPE_LABELS.position, pos.x, pos.y + 0.20, 19)
     // Professional solid filled up / down chevron triangles for Vertical Position knob
     commands.push(
       { kind: 'polygon', points: [[px(pos.x - 0.22), py(pos.y + 0.08)], [px(pos.x - 0.17), py(pos.y + 0.02)], [px(pos.x - 0.27), py(pos.y + 0.02)]], color: '#e1e8ec' },

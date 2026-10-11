@@ -4,6 +4,13 @@ All notable project changes will be documented in this file. The project follows
 
 ## [Unreleased]
 
+### Changed — 2026-10-12 Instrument GUI
+
+- Redesign Oscilloscope with a large empty display, seven dials, Horizontal/Trigger/Vertical groups and front-panel keys; share unchanged CH1 yellow/CH2 cyan colors and control labels with the 3D model.
+- Redesign Signal Monitor with channel list, division grid/time markers, capture/trigger status, control bar and unknown measurements. Controls remain disabled and no acquired waveforms or samples are invented.
+- Increase default Scope/Monitor sizes to760×530/720×500; use scoped responsive styles within the existing floating-window manager. Other window logic and graph/instrument stores remain unchanged.
+- Actual-SFC/store regressions and browser checks pass. Frontend185/185, Python97/97 and production build pass; evidence: `verification/2026-10-12-instrument-gui.md`.
+
 ### Changed — 2026-10-11 Fixed drawer dimensions
 
 - Remove manual Components/Tools resizing, separator handles, pointer/keyboard handlers, resize state/actions/limits, helper and obsolete tests/CSS. Keep Components at96 px and Tools at66 px (54 px at workbench width560 px or less).

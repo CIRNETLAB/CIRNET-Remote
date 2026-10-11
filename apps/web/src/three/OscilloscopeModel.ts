@@ -4,6 +4,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { CH1_COLOR, CH2_COLOR, SCOPE_LAYOUT, drawScopeArtwork, scopeLegendsArtwork, scopeScreenArtwork, type ScopeArtwork } from './OscilloscopeArtwork'
 import { createInstrumentChassis, mountInstrumentChassis } from './InstrumentChassis'
 import { loadInstrumentLogo } from './InstrumentArtwork'
+import { SCOPE_THEME } from '../data/instrumentVisuals'
 
 export const OSCILLOSCOPE_SIZE = [6, 3.8, 2.8] as const
 export const OSCILLOSCOPE_KNOBS = ['time_div_knob', 'horizontal_position', 'trigger_level', 'ch1_volts_div', 'ch1_position', 'ch2_volts_div', 'ch2_position'] as const
@@ -29,8 +30,8 @@ export function addOscilloscopeModel(group: Group) {
     const material = new MeshStandardMaterial({ color, metalness, roughness }); material.name = name; return material
   }
   const shell = standard('scope_silver_powdercoat', '#a1aab4', 0.32, 0.54)
-  const bezel = standard('scope_bezel', '#30383e', 0.18, 0.52)
-  const panel = standard('scope_control_panels', '#272e33', 0.12, 0.57)
+  const bezel = standard('scope_bezel', SCOPE_THEME.bezel, 0.18, 0.52)
+  const panel = standard('scope_control_panels', SCOPE_THEME.panel, 0.12, 0.57)
   const rubber = standard('scope_rubber', '#080f16', 0, 0.7)
   const grip = standard('scope_knob_grip', '#35434e', 0.18, 0.4)
   const silver = standard('scope_bnc_metal', '#b7c4cf', 0.78, 0.26)
@@ -68,7 +69,7 @@ export function addOscilloscopeModel(group: Group) {
   // Replace screen.material.map with a CanvasTexture to draw live samples later.
   // Reuse/update that texture rather than allocating one on every acquisition.
   const screenTexture = canvasTexture(scopeScreenArtwork())
-  const screenMaterial = new MeshBasicMaterial({ map: screenTexture, color: screenTexture ? '#ffffff' : '#050b10', toneMapped: false }); screenMaterial.name = 'scope_screen'
+  const screenMaterial = new MeshBasicMaterial({ map: screenTexture, color: screenTexture ? '#ffffff' : SCOPE_THEME.screen, toneMapped: false }); screenMaterial.name = 'scope_screen'
   const screen = add('screen', new PlaneGeometry(layout.screen.w, layout.screen.h), screenMaterial, layout.screen.x, layout.screen.y, 1.122)
   screen.userData = { role: 'waveform-screen', channels: 2, waveform: 'illustrative-preview', textureSize: [1024, 704] }
   const legendsMaterial = new MeshBasicMaterial({ map: canvasTexture(scopeLegendsArtwork()), transparent: true, depthWrite: false, toneMapped: false }); legendsMaterial.name = 'scope_legends'
@@ -103,7 +104,7 @@ export function addOscilloscopeModel(group: Group) {
     const mesh = rounded(name, [width, height, 0.056], [x, y, 1.137], 0.016, material, false, 2)
     mesh.userData = { interaction: 'button', pressAxis: 'Z' }
   }
-  const green = standard('scope_run_green', '#36d790', 0.1, 0.4)
+  const green = standard('scope_run_green', SCOPE_THEME.run, 0.1, 0.4)
   for (const control of layout.buttons) button(control.name, control.x, control.y, control.w, control.h, control.color === CH2_COLOR ? cyan : control.name === 'run_stop_button' ? green : control.name === 'power_button' ? panel : grip)
   const ledMaterial = standard('scope_power_indicator', '#31e96d', 0.05, 0.4)
   const led = rounded('power_led', [0.047, 0.047, 0.015], [layout.led.x, layout.led.y, 1.12], 0.008, ledMaterial)

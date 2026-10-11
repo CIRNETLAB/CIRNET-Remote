@@ -1,8 +1,8 @@
 ---
 project: net-Circuit-Remote
-current_phase: interactive-workspace-fixed-drawers
-status: fixed-drawers-verified
-last_updated: 2026-10-11
+current_phase: interactive-workspace-instrument-gui
+status: instrument-gui-verified
+last_updated: 2026-10-12
 next_task: phase-3-simulator-event-clock-model-integration
 blocking_issue: none
 hardware_mode: simulation
@@ -14,6 +14,14 @@ fpga_development_started: false
 ## Current Goal
 
 Phase 2 **Interactive Circuit Workspace** is implemented, preserving Phase 1 shell and transport boundaries. Next: Phase 3 simulator/event/clock/model adapters and real output/capture data.
+
+## Instrument GUI redesign — 2026-10-12
+
+Read OscilloscopeWindow, SignalMonitorWindow, FloatingWindow/manager, window definitions, instrument/UI stores, scope model/artwork and CSS before editing. Scope now uses a large empty display and Horizontal/Trigger/Vertical faceplate with seven static disabled dials and the eight existing front-panel keys. Signal Monitor uses configured channel names, a division-based empty timeline, capture/trigger header, disabled controls and unknown measurements. Default sizes are760×530 and720×500, respectively; scoped container queries adapt within existing floating-window bounds/scrolling. No capture source, samples, graph ports or execution state are fabricated.
+
+Shared presentation-only instrumentVisuals supplies unchanged scope colors/control labels to GUI and model/artwork. Acquisition and all six stores, FloatingWindow/manager, Circuit Graph and other window logic remain unchanged. No dependency, animation loop or additional canvas/WebGL is added. Removed only obsolete scope/monitor global selectors.
+
+Four actual-SFC SSR regressions failed before implementation and pass after it; they cover controls, unavailable capture, escaped real channel labels, shared visual metadata, unchanged instrument/graph state and responsive window bounds/default restoration. Full frontend185/185, Python97/97 and production build142 modules pass. Native browser verifies both full default layouts, small-window wrapping/scrolling, eight configured channel rows matching36 px grid guides, and existing Function Generator, Inspector, Component Info and Hex Editor (including Apply). Runtime warning/error logs are empty; read-only review found no critical/important issue. Existing Vite bundle advisory and three Python deprecations remain. Details/file list/screenshots: `verification/2026-10-12-instrument-gui.md`. Phase3 capture/simulator integration remains next.
 
 ## Fixed drawer dimensions — 2026-10-11
 
@@ -262,7 +270,7 @@ Device-library coverage is small. gRPC generated bindings/handlers, exact SDRAM/
 
 ### What changed
 
-Latest task removes manual drawer sizing while retaining mounted overlay transforms and the fixed WebGL viewport. Components is96 px; Tools66/54 px at the560 px workbench breakpoint. Handles, resize helper/state/actions/limits/tests/CSS and the motion resizing branch are removed; safe areas and gizmo corridors use fixed dimensions. Frontend181/181, Python97/97 and production build pass. See the fixed-drawer entry, SOURCE_ANALYSIS_COLLAPSIBLE_TOOLBARS and verification/2026-10-11-fixed-drawers. Preserve graph/history/geometry and hardware boundaries.
+Latest task redesigns Scope and Signal Monitor as lightweight responsive instrument GUIs with shared scope presentation colors/labels. Disabled controls and explicit unavailable capture/empty trace/unknown measurement states remain; no acquisition, graph or manager architecture changes. Scope760×530 and Monitor720×500 fit default desktop bodies. Frontend185/185, Python97/97 and production build pass; evidence/files: verification/2026-10-12-instrument-gui. Existing fixed overlay drawers and safe areas remain intact. Preserve graph/history/geometry and hardware boundaries.
 
 Phase 2 canonical catalog, separate memory contract, graph command/history layer, scene/models/picking/wires/camera controls, pointer/drag/keyboard interactions, selected Inspector/Hex Editor, lifecycle fixes, tests and Markdown. Preserve historical specs/verification and supplied artwork/axis gizmo.
 

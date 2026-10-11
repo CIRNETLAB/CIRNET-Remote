@@ -40,6 +40,7 @@ UI migration completed on 2026-10-09; evidence in `DEV_LOG.md`:
 - [x] Add bottom simulation status bar with honest unavailable execution controls.
 - [x] Add shared floating-window manager: drag/focus/keyboard/clamp.
 - [x] Add initial instrument window shells: Oscilloscope, Function Generator, Signal Monitor.
+- [x] Refine Scope into a responsive 2D front-panel GUI and Signal Monitor into a channel/timeline Logic Analyzer layout, sharing scope presentation metadata with the 3D model. Capture controls/data/measurements remain unavailable pending Phase3 contracts. Evidence: `verification/2026-10-12-instrument-gui.md`.
 - [x] Add Component Info, Inspector and Memory Hex Editor window shells.
 - [x] Retire legacy routed page components after references/tests are migrated.
 - [x] Keep API/WebSocket/hardware boundary tests green; verify build and desktop browser layout.
