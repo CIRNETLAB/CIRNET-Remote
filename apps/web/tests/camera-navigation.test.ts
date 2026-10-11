@@ -86,7 +86,7 @@ test('drawing buffer allocation and its redraw happen in the same frame, includi
   } finally { manager.dispose() }
 })
 
-test('panel-driven viewport resizing preserves camera pose, magnification, models and connections', () => {
+test('actual viewport resizing preserves camera pose, magnification, models and connections', () => {
   const { manager } = setup()
   try {
     const graph = { schema_version: '1.0' as const, circuit_id: 'panels', modules: [{ id: 'A', type: 'CLOCK', position: { x: 0, y: 0, z: 0 } }, { id: 'B', type: 'LED', position: { x: 4, y: 0, z: 2 } }], connections: [{ source: 'A.OUT', destination: 'B.IN' }] }

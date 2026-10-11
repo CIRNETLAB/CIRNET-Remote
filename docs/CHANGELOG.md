@@ -4,7 +4,13 @@ All notable project changes will be documented in this file. The project follows
 
 ## [Unreleased]
 
-### Changed — 2026-10-11 Smooth overlay drawers
+### Changed — 2026-10-11 Fixed drawer dimensions
+
+- Remove manual Components/Tools resizing, separator handles, pointer/keyboard handlers, resize state/actions/limits, helper and obsolete tests/CSS. Keep Components at96 px and Tools at66 px (54 px at workbench width560 px or less).
+- Preserve mounted overlay transforms, edge toggles, safe areas, floating windows and viewport/camera/graph behavior. Simplify motion occupancy to collapse/reduced-motion handling; use fixed ribbon height for gizmo toggle clearance.
+- Add responsive/safe-area and reduced-motion regressions. Frontend181/181, production build and Python97/97 pass. Current evidence: `verification/2026-10-11-fixed-drawers.md`.
+
+### Changed — 2026-10-11 Smooth overlay drawers (historical resizing behavior)
 
 - Replace flex panel dimension switches with mounted absolute overlay drawers using200 ms translate3d transitions. Menu motion retains full canvas/buffer dimensions and camera projection, with no canvas observer/resize pipeline activity.
 - Preserve icon styling, edge toggles, resize handles/preferences and tool/graph state. Add derived safe insets for floating/contextual UI, retained drawer obstacles and stable toggle corridors for gizmo clearance.

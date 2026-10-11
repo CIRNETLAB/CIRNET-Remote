@@ -14,15 +14,12 @@ test('drawer safe areas follow panel targets without changing the Three.js viewp
   const ui = useUiStore(), viewport = ui.viewport
   const insets = () => ui.drawerInsets
   assert.deepEqual(insets(), { left: 66, top: 96 })
-  ui.setComponentToolbarHeight(180); ui.setToolsSidebarWidth(150)
-  assert.deepEqual(insets(), { left: 150, top: 180 })
-  ui.toggleComponentToolbar(); assert.deepEqual(insets(), { left: 150, top: 0 })
+  ui.toggleComponentToolbar(); assert.deepEqual(insets(), { left: 66, top: 0 })
   ui.toggleToolsSidebar(); assert.deepEqual(insets(), { left: 0, top: 0 })
   ui.setWorkbenchSize(320, 300)
   ui.toggleComponentToolbar(); ui.toggleToolsSidebar()
-  assert.deepEqual(insets(), { left: 120, top: 120 })
+  assert.deepEqual(insets(), { left: 54, top: 96 })
   assert.equal(ui.viewport, viewport, 'drawer layout is independent of the canvas viewport')
-  assert.equal(ui.componentToolbarHeight, 180); assert.equal(ui.toolsSidebarWidth, 150)
 })
 
 test('floating windows stay out of open drawers and keep their position when drawers close', () => {
@@ -36,9 +33,22 @@ test('floating windows stay out of open drawers and keep their position when dra
   ui.moveWindow('oscilloscope', 0, 0)
   ui.toggleComponentToolbar(); ui.toggleToolsSidebar()
   assert.ok(window.x >= 66 && window.y >= 96)
-  ui.setComponentToolbarHeight(260); ui.setToolsSidebarWidth(180)
-  assert.ok(window.x >= 180 && window.y >= 260)
   assert.ok(window.x + window.width <= 1200 && window.y + window.height <= 700)
+  assert.equal(ui.viewport, viewport)
+})
+
+test('reopening responsive drawers bounds windows without changing the canvas viewport', () => {
+  const ui = useUiStore(), viewport = ui.viewport
+  ui.toggleComponentToolbar(); ui.toggleToolsSidebar()
+  ui.setWorkbenchSize(560, 300); ui.openWindow('oscilloscope')
+  ui.moveWindow('oscilloscope', 0, 0)
+  ui.toggleToolsSidebar(); ui.toggleComponentToolbar()
+  assert.equal(ui.windows[0].x, 54); assert.equal(ui.windows[0].y, 96)
+  ui.setWorkbenchSize(561, 300)
+  assert.equal(ui.windows[0].x, 66); assert.equal(ui.windows[0].y, 96)
+  const position = [ui.windows[0].x, ui.windows[0].y]
+  for (let i = 0; i < 20; i++) { ui.toggleToolsSidebar(); ui.toggleComponentToolbar() }
+  assert.deepEqual([ui.windows[0].x, ui.windows[0].y], position)
   assert.equal(ui.viewport, viewport)
 })
 
@@ -128,42 +138,18 @@ test('collapsing either toolbar preserves circuit history, selection and the edi
   assert.equal(JSON.stringify(circuit.$state), graph)
 })
 
-test('panels remember expanded sizes independently through collapse and responsive clamping', () => {
+test('drawer sizes are fixed across collapse and follow only the tools responsive breakpoint', () => {
   const ui = useUiStore()
-  assert.equal(ui.componentToolbarHeight, null)
-  assert.equal(ui.toolsSidebarWidth, null)
-  ui.setWorkbenchSize(1200, 700)
-  ui.setComponentToolbarHeight(180)
-  ui.setToolsSidebarWidth(150)
-  ui.toggleComponentToolbar(); ui.toggleToolsSidebar()
-  assert.equal(ui.componentToolbarHeight, 180)
-  assert.equal(ui.toolsSidebarWidth, 150)
-  ui.setWorkbenchSize(320, 300)
-  assert.equal(ui.componentToolbarMaxHeight, 120)
-  assert.equal(ui.toolsSidebarMaxWidth, 120)
-  assert.equal(ui.componentToolbarHeight, 180, 'responsive limits must not erase the preference')
-  assert.equal(ui.toolsSidebarWidth, 150)
-  ui.toggleComponentToolbar(); ui.toggleToolsSidebar()
-  ui.setWorkbenchSize(1200, 700)
-  assert.equal(ui.componentToolbarHeight, 180)
-  assert.equal(ui.toolsSidebarWidth, 150)
-})
-
-test('panel sizes reject invalid input and have finite minimum/maximum dimensions', () => {
-  const ui = useUiStore()
-  ui.setComponentToolbarHeight(-500); ui.setToolsSidebarWidth(-500)
-  assert.equal(ui.componentToolbarHeight, 96)
-  assert.equal(ui.toolsSidebarWidth, 54)
-  ui.setComponentToolbarHeight(9999); ui.setToolsSidebarWidth(9999)
-  assert.equal(ui.componentToolbarHeight, 260)
-  assert.equal(ui.toolsSidebarWidth, 180)
-  for (const invalid of [NaN, Infinity, -Infinity]) {
-    ui.setComponentToolbarHeight(invalid); ui.setToolsSidebarWidth(invalid)
-    ui.setWorkbenchSize(invalid, invalid)
-    assert.equal(ui.componentToolbarHeight, 260)
-    assert.equal(ui.toolsSidebarWidth, 180)
-    assert.ok(Number.isFinite(ui.componentToolbarMaxHeight))
-    assert.ok(Number.isFinite(ui.toolsSidebarMaxWidth))
+  for (const [width, expected] of [[1200, 66], [561, 66], [560, 54], [320, 54], [1200, 66]]) {
+    ui.setWorkbenchSize(width, 300)
+    assert.equal(ui.toolsOverlayWidth, expected)
+    assert.equal(ui.componentOverlayHeight, 96)
+    ui.toggleComponentToolbar(); ui.toggleToolsSidebar()
+    assert.deepEqual(ui.drawerInsets, { left: 0, top: 0 })
+    assert.equal(ui.toolsOverlayWidth, expected, 'the mounted drawer retains its fixed size while hidden')
+    assert.equal(ui.componentOverlayHeight, 96)
+    ui.toggleComponentToolbar(); ui.toggleToolsSidebar()
+    assert.deepEqual(ui.drawerInsets, { left: expected, top: 96 })
   }
 })
 

@@ -5,7 +5,6 @@ import { useUiStore } from '../../stores/ui'
 import { useWorkspaceStore } from '../../stores/workspace'
 import WorkbenchIcon from './WorkbenchIcon.vue'
 import { getDefinition } from '../../data/editorCatalog'
-import { usePanelResize } from '../../composables/usePanelResize'
 import { useDrawerMotion } from '../../composables/useDrawerMotion'
 import { createFrameTask } from '../../composables/frameTasks'
 const ui = useUiStore()
@@ -15,8 +14,7 @@ const drawer = ref<HTMLElement>()
 const collapseToggle = ref<HTMLButtonElement>()
 const collapseLabel = computed(() => ui.componentToolbarCollapsed ? 'Expand Components' : 'Collapse Components')
 const expandedHeight = computed(() => ui.componentOverlayHeight)
-const resize = usePanelResize({ axis: 'y', enabled: () => !ui.componentToolbarCollapsed, size: () => expandedHeight.value, limits: () => ({ min: 96, max: ui.componentToolbarMaxHeight }), setSize: ui.setComponentToolbarHeight })
-const motion = useDrawerMotion({ collapsed: () => ui.componentToolbarCollapsed, resizing: () => resize.dragging.value, drawer: () => drawer.value })
+const motion = useDrawerMotion({ collapsed: () => ui.componentToolbarCollapsed, drawer: () => drawer.value })
 const active = computed(() => !ui.componentToolbarCollapsed ? ribbonGroups.find((group) => group.id === ui.activeRibbonGroup) : undefined)
 const paletteStyle = ref({ left: '10px', width: '250px' })
 let resizeObserver: ResizeObserver | undefined
@@ -61,7 +59,7 @@ onMounted(() => {
 onUnmounted(() => { document.removeEventListener('pointerdown', outside); document.removeEventListener('keydown', escape); resizeObserver?.disconnect(); paletteTask.cancel() })
 </script>
 <template>
-  <div ref="root" class="component-panel has-size" :class="{ 'is-collapsed': ui.componentToolbarCollapsed, 'is-resizing': resize.dragging.value, 'is-reduced-motion': motion.reducedMotion.value }" :data-drawer-occupied="motion.occupied.value" :style="{ height: expandedHeight + 'px', '--ribbon-toggle-offset': ui.componentToolbarCollapsed ? '0px' : ui.workbenchSize.width / 2 - 22 + 'px' }">
+  <div ref="root" class="component-panel" :class="{ 'is-collapsed': ui.componentToolbarCollapsed, 'is-reduced-motion': motion.reducedMotion.value }" :data-drawer-occupied="motion.occupied.value" :style="{ height: expandedHeight + 'px', '--ribbon-toggle-offset': ui.componentToolbarCollapsed ? '0px' : ui.workbenchSize.width / 2 - 22 + 'px' }">
     <div ref="drawer" class="component-drawer" :inert="ui.componentToolbarCollapsed" :aria-hidden="ui.componentToolbarCollapsed" @transitionend="motion.transitionEnd">
     <section id="component-toolbar" class="component-ribbon" aria-label="Component library">
     <div id="component-families" class="ribbon-scroll" role="toolbar" aria-label="Component families" @scroll="paletteTask.schedule">
@@ -71,7 +69,6 @@ onUnmounted(() => { document.removeEventListener('pointerdown', outside); docume
       </button>
     </div>
     </section>
-    <div class="panel-resize-handle ribbon-resize-handle" role="separator" aria-orientation="horizontal" aria-label="Resize Components" title="Resize Components" tabindex="0" aria-controls="component-toolbar" :aria-valuemin="96" :aria-valuemax="ui.componentToolbarMaxHeight" :aria-valuenow="expandedHeight" @pointerdown="resize.pointerDown" @pointermove="resize.pointerMove" @pointerup="resize.pointerUp" @pointercancel="resize.cancel" @lostpointercapture="resize.lostPointerCapture" @keydown="resize.keydown" />
   <div v-if="active" id="ribbon-palette" class="ribbon-palette" :style="paletteStyle" :aria-label="active.label + ' components'">
    <div class="palette-heading"><strong>{{ active.label }}</strong></div>
    <div class="palette-items"><button v-for="item in active.items" :key="item.type" :draggable="!!getDefinition(item.type)" @dragstart="drag($event, item)" @click="choose(item)"><span class="palette-art"><img v-if="item.icon" :src="iconUrl(item.icon)" alt="" width="58" height="58" /><WorkbenchIcon v-else :name="item.glyph || 'chip'" /></span><strong>{{ item.name }}</strong><small>{{ item.window ? 'Open window' : getDefinition(item.type) ? 'Place component' : item.type === 'JUMPER' ? 'Connect ports' : 'Model unavailable' }}</small></button></div>

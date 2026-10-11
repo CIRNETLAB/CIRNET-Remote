@@ -11,12 +11,10 @@ function bound(window: WorkspaceWindow, width: number, height: number, insets: {
 }
 
 export const useUiStore = defineStore('ui', {
-  state: () => ({ activeRibbonGroup: null as string | null, componentToolbarCollapsed: false, toolsSidebarCollapsed: false, componentToolbarHeight: null as number | null, toolsSidebarWidth: null as number | null, workbenchSize: { width: 900, height: 600 }, windows: [] as WorkspaceWindow[], viewport: { width: 900, height: 500 }, connectionState: 'idle' as ConnectionState }),
+  state: () => ({ activeRibbonGroup: null as string | null, componentToolbarCollapsed: false, toolsSidebarCollapsed: false, workbenchSize: { width: 900, height: 600 }, windows: [] as WorkspaceWindow[], viewport: { width: 900, height: 500 }, connectionState: 'idle' as ConnectionState }),
   getters: {
-    componentToolbarMaxHeight: (state) => Math.max(96, Math.min(260, state.workbenchSize.height - 180)),
-    toolsSidebarMaxWidth: (state) => Math.max(54, Math.min(180, state.workbenchSize.width - 200)),
-    componentOverlayHeight(): number { return Math.min(this.componentToolbarHeight ?? 96, this.componentToolbarMaxHeight) },
-    toolsOverlayWidth(): number { return Math.min(this.toolsSidebarWidth ?? (this.workbenchSize.width <= 560 ? 54 : 66), this.toolsSidebarMaxWidth) },
+    componentOverlayHeight: () => 96,
+    toolsOverlayWidth: (state) => state.workbenchSize.width <= 560 ? 54 : 66,
     drawerInsets(): { left: number; top: number } {
       return { left: this.toolsSidebarCollapsed ? 0 : this.toolsOverlayWidth, top: this.componentToolbarCollapsed ? 0 : this.componentOverlayHeight }
     },
@@ -29,20 +27,6 @@ export const useUiStore = defineStore('ui', {
       if (!this.componentToolbarCollapsed) this.boundWindows()
     },
     toggleToolsSidebar() { this.toolsSidebarCollapsed = !this.toolsSidebarCollapsed; if (!this.toolsSidebarCollapsed) this.boundWindows() },
-    setComponentToolbarHeight(height: number) {
-      if (!Number.isFinite(height)) return
-      height = Math.max(96, Math.min(260, height))
-      if (this.componentToolbarHeight === height) return
-      this.componentToolbarHeight = height
-      if (!this.componentToolbarCollapsed) this.boundWindows()
-    },
-    setToolsSidebarWidth(width: number) {
-      if (!Number.isFinite(width)) return
-      width = Math.max(54, Math.min(180, width))
-      if (this.toolsSidebarWidth === width) return
-      this.toolsSidebarWidth = width
-      if (!this.toolsSidebarCollapsed) this.boundWindows()
-    },
     boundWindows() { for (const window of this.windows) bound(window, this.viewport.width, this.viewport.height, this.drawerInsets) },
     setWorkbenchSize(width: number, height: number) {
       if (!Number.isFinite(width) || !Number.isFinite(height)) return

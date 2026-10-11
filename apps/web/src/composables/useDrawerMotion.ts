@@ -4,7 +4,6 @@ import { onScopeDispose, ref, watch, watchEffect } from 'vue'
 // its CSS transition finishes; it never drives layout, timers or render frames.
 export function useDrawerMotion(options: {
   collapsed: () => boolean
-  resizing: () => boolean
   drawer: () => HTMLElement | undefined
   media?: MediaQueryList
 }) {
@@ -14,9 +13,8 @@ export function useDrawerMotion(options: {
   const settle = () => { occupied.value = !options.collapsed() }
   watch(options.collapsed, (collapsed) => {
     if (!collapsed) occupied.value = true
-    else if (reducedMotion.value || options.resizing()) settle()
+    else if (reducedMotion.value) settle()
   }, { flush: 'sync' })
-  watch(options.resizing, (resizing) => { if (resizing) settle() }, { flush: 'sync' })
   watchEffect(() => {
     if (!options.collapsed() || !occupied.value) return
     const drawer = options.drawer()

@@ -38,7 +38,7 @@ function updateGizmoObstacles() {
     // Edge buttons also move while their own drawer is closed. Reserve their
     // complete corridors so cached rectangles cannot lag behind a transition.
     obstacles.push({ left: 0, top: 0, right: ui.viewport.width, bottom: 36 })
-    obstacles.push({ left: 4, top: ui.viewport.height / 2 - 14, right: 32, bottom: ui.viewport.height / 2 + ui.componentToolbarMaxHeight / 2 + 14 })
+    obstacles.push({ left: 4, top: ui.viewport.height / 2 - 14, right: 32, bottom: ui.viewport.height / 2 + ui.componentOverlayHeight / 2 + 14 })
     manager.setGizmoObstacles(obstacles)
   }
 }

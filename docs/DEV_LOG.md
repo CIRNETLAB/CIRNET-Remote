@@ -1,7 +1,7 @@
 ---
 project: net-Circuit-Remote
-current_phase: interactive-workspace-overlay-drawers
-status: overlay-drawers-verified
+current_phase: interactive-workspace-fixed-drawers
+status: fixed-drawers-verified
 last_updated: 2026-10-11
 next_task: phase-3-simulator-event-clock-model-integration
 blocking_issue: none
@@ -15,7 +15,15 @@ fpga_development_started: false
 
 Phase 2 **Interactive Circuit Workspace** is implemented, preserving Phase 1 shell and transport boundaries. Next: Phase 3 simulator/event/clock/model adapters and real output/capture data.
 
-## Smooth overlay drawers — 2026-10-11
+## Fixed drawer dimensions — 2026-10-11
+
+Read the drawer components, motion/resize composables, UI store, shell/obstacles, CSS and related tests/docs before removing manual sizing. Components remains96 px; Tools66 px or54 px at workbench width560 px or less. Removed separators, pointer/keyboard sizing, helper and its five tests, dimension preferences/max getters/setters, resizing motion branch and CSS handles/is-resizing/always-on has-size. The family-button computed height remains auto; gizmo toggle clearance uses the fixed ribbon height. Existing overlay transform200 ms, palette/icons, inert/focus behavior, floating-window safe areas and actual viewport/Three.js resize pipeline remain intact.
+
+Updated obsolete size tests; added responsive boundary/window safe-area and initial reduced-motion repeated-toggle coverage. The simplified motion API test first failed TypeScript because the old implementation required a resizing callback, then passed after removal. Final frontend181/181, production build135 modules and full Python97/97 pass; existing bundle advisory and three Python deprecations remain. Read-only independent review against262ba84 finds no actionable source/test issue.
+
+Native browser probe with3 models/1 wire sampled80 frames during9 reversals: one1280×629 CSS size and1600×786 buffer, zero aspect mismatches/canvas RO/buffer allocations/viewport or editor-cancel calls, unchanged view/projection matrices and graph. Same-frame reversal settles hidden obstacles; reduced-motion has only endpoint transforms and retains the same canvas/camera/graph. Scope retains66/96 position when drawers close; responsive checks560/561/320 px produce54/66/54 px Tools,96 px Ribbon, bounded window headers and no horizontal overflow. Drawer separators are absent; runtime warn/error logs empty. Current analysis and changed-file/evidence record: `SOURCE_ANALYSIS_COLLAPSIBLE_TOOLBARS.md`, `verification/2026-10-11-fixed-drawers.md`. Prior resize reports below are historical; Phase3 remains next.
+
+## Smooth overlay drawers — 2026-10-11 (historical manual sizing)
 
 Read the seven requested files, related shell/editor/windows/resize code and approved architecture/spec. Inspected the19.87-second supplied recording at two-second intervals; reproduced the remaining flex/CSS-buffer mismatch in a native-browser frame probe: closing Ribbon caused one canvas observer/cancel/viewport/buffer update and three mismatched-aspect frames. The prior optimization removed resize storms but still changed the canvas box before its buffer caught up.
 
@@ -254,7 +262,7 @@ Device-library coverage is small. gRPC generated bindings/handlers, exact SDRAM/
 
 ### What changed
 
-Latest task optimizes the fully collapsible/resizable panels: commit layout once, RAF/deduplicated observers, cached pre-render obstacles and buffer allocation with redraw in one frame. Frontend178/178, Python97/97 and production build pass. See the panel performance entry, SOURCE_ANALYSIS_COLLAPSIBLE_TOOLBARS and verification/2026-10-11-panel-resize-performance. Preserve graph/history/geometry and hardware boundaries.
+Latest task removes manual drawer sizing while retaining mounted overlay transforms and the fixed WebGL viewport. Components is96 px; Tools66/54 px at the560 px workbench breakpoint. Handles, resize helper/state/actions/limits/tests/CSS and the motion resizing branch are removed; safe areas and gizmo corridors use fixed dimensions. Frontend181/181, Python97/97 and production build pass. See the fixed-drawer entry, SOURCE_ANALYSIS_COLLAPSIBLE_TOOLBARS and verification/2026-10-11-fixed-drawers. Preserve graph/history/geometry and hardware boundaries.
 
 Phase 2 canonical catalog, separate memory contract, graph command/history layer, scene/models/picking/wires/camera controls, pointer/drag/keyboard interactions, selected Inspector/Hex Editor, lifecycle fixes, tests and Markdown. Preserve historical specs/verification and supplied artwork/axis gizmo.
 
