@@ -37,7 +37,7 @@ onBeforeUnmount(() => {
   end()
   if (root.value?.contains(document.activeElement) && opener?.isConnected) {
     // A toolbar can be collapsed while its instrument window is still open.
-    const target = opener.getClientRects().length ? opener : opener.closest('.component-panel, .tools-panel')?.querySelector<HTMLButtonElement>('.toolbar-collapse-toggle')
+    const target = !opener.closest('[inert]') && opener.getClientRects().length ? opener : opener.closest('.component-panel, .tools-panel')?.querySelector<HTMLButtonElement>('.toolbar-collapse-toggle')
     target?.focus()
   }
 })

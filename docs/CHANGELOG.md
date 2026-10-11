@@ -4,7 +4,13 @@ All notable project changes will be documented in this file. The project follows
 
 ## [Unreleased]
 
-### Changed — 2026-10-11 Panel resize performance
+### Changed — 2026-10-11 Smooth overlay drawers
+
+- Replace flex panel dimension switches with mounted absolute overlay drawers using200 ms translate3d transitions. Menu motion retains full canvas/buffer dimensions and camera projection, with no canvas observer/resize pipeline activity.
+- Preserve icon styling, edge toggles, resize handles/preferences and tool/graph state. Add derived safe insets for floating/contextual UI, retained drawer obstacles and stable toggle corridors for gizmo clearance.
+- Handle rapid/same-frame reversals, reduced motion, manual resizing and hidden inert opener focus. Seven regressions added; final frontend185/185, production build and full Python97/97 pass. Evidence: `verification/2026-10-11-overlay-drawers.md`.
+
+### Changed — 2026-10-11 Panel resize performance (historical)
 
 - Replace ribbon/sidebar width/height animations with one layout update and opacity-only content reveal; preserve expanded sizes, complete collapse, edge toggles and resizing.
 - Coalesce and deduplicate observer sizes, UI viewport/window updates and palette anchoring. Skip unchanged camera projections and WebGL buffer allocations; allocate changed buffers immediately before their redraw to avoid an intermediate empty frame.

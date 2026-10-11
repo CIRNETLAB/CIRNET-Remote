@@ -17,6 +17,7 @@ const graphicsError = ref('')
 const axes = ref<OrientationAxis[]>([])
 let manager: ReturnType<typeof createSceneManager> | undefined
 let observer: ReturnType<typeof observeElementSize> | undefined
+let drawerObserver: MutationObserver | undefined
 let contextLost = false
 let obstaclesDirty = true
 const editor = useCircuitEditor(canvas, () => manager)
@@ -24,10 +25,24 @@ function visibility() { if (contextLost || document.hidden) editor.cancel(); man
 function updateGizmoObstacles() {
   if (!obstaclesDirty) return
   const origin = host.value?.getBoundingClientRect(), stage = host.value?.parentElement
-  if (manager && origin && stage) { obstaclesDirty = false; manager.setGizmoObstacles([...(stage.closest('.workbench-layout') ?? stage).querySelectorAll('.component-information, .floating-window, .workspace-navigator, .toolbar-collapse-toggle')].map((element) => {
+  if (manager && origin && stage) {
+    obstaclesDirty = false
+    const layout = stage.closest('.workbench-layout') ?? stage
+    const obstacles = [...layout.querySelectorAll('.component-information, .floating-window, .workspace-navigator')].map((element) => {
       const r = element.getBoundingClientRect(); return { left: r.left - origin.left, top: r.top - origin.top, right: r.right - origin.left, bottom: r.bottom - origin.top }
-  })) }
+    })
+    // Reserve the entire swept area, using known sizes rather than measuring
+    // a transformed drawer on every animation frame.
+    if (layout.querySelector('.component-panel[data-drawer-occupied=true]')) obstacles.push({ left: 0, top: 0, right: ui.viewport.width, bottom: ui.componentOverlayHeight })
+    if (layout.querySelector('.tools-panel[data-drawer-occupied=true]')) obstacles.push({ left: 0, top: 0, right: ui.toolsOverlayWidth + 36, bottom: ui.viewport.height })
+    // Edge buttons also move while their own drawer is closed. Reserve their
+    // complete corridors so cached rectangles cannot lag behind a transition.
+    obstacles.push({ left: 0, top: 0, right: ui.viewport.width, bottom: 36 })
+    obstacles.push({ left: 4, top: ui.viewport.height / 2 - 14, right: 32, bottom: ui.viewport.height / 2 + ui.componentToolbarMaxHeight / 2 + 14 })
+    manager.setGizmoObstacles(obstacles)
+  }
 }
+function invalidateObstacles() { obstaclesDirty = true; manager?.requestRender() }
 function rendered() {
   editor.updatePorts()
   if (manager) {
@@ -48,6 +63,8 @@ onMounted(() => {
     editor.sync(); visibility()
   } catch { if (manager) manager.dispose(); else renderer?.dispose(); manager = undefined; graphicsError.value = '3D graphics unavailable. Edit graph coordinates and ports using Inspector.' }
   if (host.value) observer = observeElementSize(host.value, size)
+  drawerObserver = new MutationObserver(invalidateObstacles)
+  host.value?.closest('.workbench-layout')?.querySelectorAll('.component-panel, .tools-panel').forEach((panel) => drawerObserver?.observe(panel, { attributes: true, attributeFilter: ['data-drawer-occupied'] }))
   canvas.value?.addEventListener('webglcontextlost', lost)
   canvas.value?.addEventListener('webglcontextrestored', restored)
   document.addEventListener('visibilitychange', visibility)
@@ -55,8 +72,9 @@ onMounted(() => {
 watch(() => workspace.zoom, (zoom) => { if (manager && Math.abs(manager.zoomPercent() - zoom) > 0.02) { editor.cancel(); manager.setZoom(zoom) } })
 watch(() => workspace.fitRequest, () => { editor.cancel(); manager?.fitCircuit() })
 // Component Info can change height on selection without changing window state.
-watch([() => ui.windows, () => circuit.graph?.modules.find((module) => module.id === workspace.selectedModuleId)?.type], () => { obstaclesDirty = true; manager?.requestRender() }, { deep: true, flush: 'post' })
-onUnmounted(() => { observer?.disconnect(); manager?.dispose(); canvas.value?.removeEventListener('webglcontextlost', lost); canvas.value?.removeEventListener('webglcontextrestored', restored); document.removeEventListener('visibilitychange', visibility) })
+watch([() => ui.windows, () => circuit.graph?.modules.find((module) => module.id === workspace.selectedModuleId)?.type], invalidateObstacles, { deep: true, flush: 'post' })
+watch([() => ui.drawerInsets.left, () => ui.drawerInsets.top, () => ui.componentOverlayHeight, () => ui.toolsOverlayWidth], invalidateObstacles, { flush: 'post' })
+onUnmounted(() => { observer?.disconnect(); drawerObserver?.disconnect(); manager?.dispose(); canvas.value?.removeEventListener('webglcontextlost', lost); canvas.value?.removeEventListener('webglcontextrestored', restored); document.removeEventListener('visibilitychange', visibility) })
 </script>
 <template>
   <div ref="host" :class="['circuit-workspace', { 'is-dragging': editor.dragging.value, 'is-zoom-area': workspace.zoomAreaActive, 'can-grab': editor.hoveredHandle.value || editor.hoveredControl.value || (workspace.tool === 'move' && !workspace.placementType) }]" @dragover.prevent @drop="editor.drop">

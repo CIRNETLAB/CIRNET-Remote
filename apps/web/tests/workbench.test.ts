@@ -10,6 +10,38 @@ import { parseCircuitFile } from '../src/services/files/circuitFile'
 
 beforeEach(() => setActivePinia(createPinia()))
 
+test('drawer safe areas follow panel targets without changing the Three.js viewport', () => {
+  const ui = useUiStore(), viewport = ui.viewport
+  const insets = () => ui.drawerInsets
+  assert.deepEqual(insets(), { left: 66, top: 96 })
+  ui.setComponentToolbarHeight(180); ui.setToolsSidebarWidth(150)
+  assert.deepEqual(insets(), { left: 150, top: 180 })
+  ui.toggleComponentToolbar(); assert.deepEqual(insets(), { left: 150, top: 0 })
+  ui.toggleToolsSidebar(); assert.deepEqual(insets(), { left: 0, top: 0 })
+  ui.setWorkbenchSize(320, 300)
+  ui.toggleComponentToolbar(); ui.toggleToolsSidebar()
+  assert.deepEqual(insets(), { left: 120, top: 120 })
+  assert.equal(ui.viewport, viewport, 'drawer layout is independent of the canvas viewport')
+  assert.equal(ui.componentToolbarHeight, 180); assert.equal(ui.toolsSidebarWidth, 150)
+})
+
+test('floating windows stay out of open drawers and keep their position when drawers close', () => {
+  const ui = useUiStore()
+  ui.setViewport(1200, 700); ui.setWorkbenchSize(1200, 700); ui.openWindow('oscilloscope')
+  const window = ui.windows[0], viewport = ui.viewport
+  assert.ok(window.x >= 66 && window.y >= 96, 'open drawers must not obscure the instrument header')
+  const position = [window.x, window.y]
+  ui.toggleComponentToolbar(); ui.toggleToolsSidebar()
+  assert.deepEqual([window.x, window.y], position, 'closing an overlay does not move the instrument')
+  ui.moveWindow('oscilloscope', 0, 0)
+  ui.toggleComponentToolbar(); ui.toggleToolsSidebar()
+  assert.ok(window.x >= 66 && window.y >= 96)
+  ui.setComponentToolbarHeight(260); ui.setToolsSidebarWidth(180)
+  assert.ok(window.x >= 180 && window.y >= 260)
+  assert.ok(window.x + window.width <= 1200 && window.y + window.height <= 700)
+  assert.equal(ui.viewport, viewport)
+})
+
 test('duplicate layout notifications retain viewport identities and floating-window bounds', () => {
   const ui = useUiStore()
   ui.setViewport(900.5, 500.25); ui.setWorkbenchSize(1000.5, 700.25); ui.openWindow('oscilloscope')
@@ -156,7 +188,7 @@ test('drag and viewport shrink keep every window and its controls inside the wor
   ui.openWindow('oscilloscope')
   ui.moveWindow('oscilloscope', 9999, -500)
   const window = ui.windows[0]
-  assert.equal(window.y, 0)
+  assert.equal(window.y, ui.drawerInsets.top)
   assert.ok(window.x + window.width <= 1200)
   ui.setViewport(320, 220)
   assert.ok(window.x >= 0 && window.y >= 0)

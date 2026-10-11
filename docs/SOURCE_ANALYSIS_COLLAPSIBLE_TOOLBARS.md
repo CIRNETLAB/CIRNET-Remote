@@ -1,6 +1,32 @@
 # Phân tích source và thuật toán panel — 2026-10-11
 
-Phiên bản hiện hành: thu gọn hoàn toàn, thay đổi kích thước và tối ưu luồng resize/render. Báo cáo `verification/2026-10-11-collapsible-toolbars-browser.md` là bằng chứng lịch sử của phiên bản còn strip 36 px/rail 38 px. Bằng chứng chức năng: `verification/2026-10-11-resizable-panels-browser.md`; số đo và kiểm chứng bản tối ưu: `verification/2026-10-11-panel-resize-performance.md`.
+Phiên bản hiện hành: drawer overlay trượt bằng transform trên viewport cố định. Bằng chứng hiện hành: `verification/2026-10-11-overlay-drawers.md`. Các bản flex collapse/opacity-only bên dưới là lịch sử, đã được thay thế ở luồng đóng/mở; thuật toán graph, captured resize và resize viewport thực vẫn giữ nguyên.
+
+## Drawer hiện hành: nguyên nhân và thuật toán
+
+Đọc kỹ ToolRail, ComponentRibbon, CircuitWorkspace3D, frameTasks, SceneManager, ui và CSS cùng shell/editor/windows. Video19,87 giây được xem qua các mốc cách2 giây; model đổi kích thước khi Ribbon xuất hiện/biến mất. Frame probe tái hiện: flex đổi canvas box ngay, RO→RAF→scene mới cập nhật buffer sau; dù setSize và draw đã cùng frame, CSS vẫn stretch buffer cũ trước frame đó. Một lần đóng Ribbon có3 frame lệch tỷ lệ.
+
+Shell giữ vùng giữa title/status; workbench-body và workspace-stage phủ tuyệt đối inset0. Hai root panel cũng absolute, không phân bổ diện tích flex. Root giữ kích thước đã clamp để nội dung vẫn mounted và transform phần trăm có cơ sở ổn định. Chỉ inner drawer và nút cạnh trượt bằng translate3d,200 ms cubic-bezier(.22,1,.36,1); không animate width/height. Tools theo vị trí dưới Ribbon bằng translateY và cập nhật chiều cao nội dung một lần, không tác động stage/canvas. Không tái tạo renderer/scene/model/wire.
+
+`ui` giữ một nguồn target: cờ đóng/mở và preference. `componentOverlayHeight`/`toolsOverlayWidth` tính từ preference (mặc định96,66/54) và responsiveMax; không đo DOM để khởi tạo. `drawerInsets` trả top/left panel mở, độc lập viewport WebGL. Window clamp lấy inset làm min x/y và phần khả dụng làm max kích thước; mở panel hoặc đổi size chỉ bound một lần, đóng không kéo cửa sổ về gốc. Các setter bỏ qua input không hữu hạn/kích thước trùng. Component Info/inventory dùng CSS safe area.
+
+`useDrawerMotion` chỉ sở hữu lifecycle occupancy, không sao chép target hay chạy timer/RAF animation. Đóng: inert/aria-hidden ngay, giữ visibility/obstacle đến hết transform. Mở: occupancy true ngay. CSS tự đảo chiều từ transform đang nội suy. End event chỉ nhận transform của chính drawer, bỏ completion cũ khi animation thay thế còn chạy. Post-flush getAnimations kiểm tra một lần sau commit để xử lý expand→collapse cùng frame: DOM không đổi nên không có end event. Reduced-motion đổi giữa chừng và resize captured tắt transition/settle; listener media được giải phóng khi dispose. Nội dung đã đóng vẫn mounted nhưng visibility-hidden, không nhận focus/pointer; toggle nằm ngoài vùng inert.
+
+Gizmo chỉ đo Component Info, windows và navigator khi cache dirty. Panel occupied dùng hình chữ nhật quét đầy đủ theo kích thước đã biết, không đo vị trí drawer mỗi frame. Nút Components có corridor top36; nút Tools đóng có corridor x4–32 quanh giữa workspace đến giữa workspace+maxRibbonHeight/2. Nhờ vậy cache không lệch khi nút còn trượt dù panel của nó đóng. Một MutationObserver cục bộ theo đúng hai occupancy attribute invalidates cache lúc drawer đóng xong; watchers target/size/windows/content cùng gộp request vào render hiện hành.
+
+```text
+menu toggle → target/inset + CSS transform → compositor slide → settle occupancy
+             (canvas, buffer, camera và viewport không đổi)
+
+viewport thật đổi → RO contentRect → RAF deduplicate → cancel gesture/resize
+                → projection + ui viewport/window bounds → setSize + draw cùng frame
+```
+
+frameTasks và SceneManager được phân tích nhưng không cần sửa: deduplicate viewport/buffer, coalesce RAF và buffer/draw ordering đã đúng. Drawer bỏ nguyên nhân gọi chúng khi menu trượt. Scope Escape kiểm tra opener inert, trả focus về toggle ngoài drawer. Palette vẫn neo theo family/scroll/resize, đóng khi Ribbon đóng.
+
+Kiểm chứng: hai store test FAIL trước sửa; test async cùng-frame FAIL trước sửa review. Final185/185 frontend, build và97/97 Python PASS. Frame sampling khi đảo hai drawer9 lần giữ1280×629 CSS,1600×786 buffer, không gọi canvas RO/setSize/viewport/cancel và không thay view/projection matrices hoặc graph. Kéo thật150/180, keyboard, responsive và Scope focus đã kiểm tra. Review lại không còn finding; chi tiết và giới hạn trong báo cáo hiện hành.
+
+## Phân tích các bản trước (lịch sử)
 
 ## Kiến trúc liên quan trong toàn project
 

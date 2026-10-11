@@ -1,7 +1,7 @@
 ---
 project: net-Circuit-Remote
-current_phase: interactive-workspace-panel-resize-performance
-status: panel-resize-performance-verified
+current_phase: interactive-workspace-overlay-drawers
+status: overlay-drawers-verified
 last_updated: 2026-10-11
 next_task: phase-3-simulator-event-clock-model-integration
 blocking_issue: none
@@ -15,7 +15,17 @@ fpga_development_started: false
 
 Phase 2 **Interactive Circuit Workspace** is implemented, preserving Phase 1 shell and transport boundaries. Next: Phase 3 simulator/event/clock/model adapters and real output/capture data.
 
-## Panel resize performance — 2026-10-11
+## Smooth overlay drawers — 2026-10-11
+
+Read the seven requested files, related shell/editor/windows/resize code and approved architecture/spec. Inspected the19.87-second supplied recording at two-second intervals; reproduced the remaining flex/CSS-buffer mismatch in a native-browser frame probe: closing Ribbon caused one canvas observer/cancel/viewport/buffer update and three mismatched-aspect frames. The prior optimization removed resize storms but still changed the canvas box before its buffer caught up.
+
+The stage now fills one fixed workbench region behind absolute mounted drawer overlays. Drawer/toggle transforms animate200 ms with soft easing; widths/heights do not animate. Inner panels become inert/aria-hidden on close and visibility-hidden only after motion; buttons stay outside. `ui` derives default/responsive overlay sizes and safe insets, retaining preferences and avoiding viewport mutation. Window bounds change once when expansion/size makes it necessary; collapse retains positions. Component Info/inventory use safe-area CSS. Gizmo cache reserves swept panel/toggle regions, with one owned attribute observer for completed close. Existing frameTasks/SceneManager resize/draw architecture is unchanged.
+
+Seven new tests cover safe-area/viewport identity, window position, motion retention/reversal, reduced motion, resize/disposal and same-frame/no-event settlement. Initial two store regressions failed before implementation. Independent review reproduced a phantom obstacle after same-frame reversal and stale moving-toggle rectangles; the async regression failed before correction. Post-commit getAnimations settlement and stable toggle corridors fixed both; re-review finds no further actionable issue. No per-frame product timer/listener/DOM measurement was added.
+
+Final frontend185/185 and production build pass (136 modules, existing large-bundle advisory); full Python97/97 passes with three existing deprecations. Native UI checks cover all states, rapid reversals, real drags150/180 px, keyboard sizing,320×480/390×480/1920×1080 and preference restoration, Scope Escape focus with an inert opener, and clean Open/import. Clean console warnings/errors empty; screenshots show identical model/wire positions and size in expanded/collapsed views. Detailed frame metrics and changed-file list: `verification/2026-10-11-overlay-drawers.md`. Browser instrumentation remains in ignored test-build fixtures; no dependency/graph/schema/icon/simulation-control change or commit/push/deployment. After handoff docs, Python97/97 rerun, context-check and git diff --check pass. Viewport override reset, functional test tabs closed and this session's Vite server stopped.
+
+## Panel resize performance — 2026-10-11 (historical)
 
 Read the shell, ribbon, rail, workspace observer, UI store, SceneManager, editor cancellation/window lifecycle and CSS before editing. A temporary native-browser probe with44 components/20 wires and Scope reproduced11–15 canvas observer callbacks, buffer allocations, cancellations and viewport/window updates per toggle. Root cause:160 ms width/height transitions plus unconditional resize and per-render DOM scanning; obstacle updates after rendering could request another draw.
 

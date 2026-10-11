@@ -34,7 +34,7 @@ UI migration completed on 2026-10-09; evidence in `DEV_LOG.md`:
 - [x] Add application/file-action bar: New / Open / Save / Undo / Redo (local JSON/project history).
 - [x] Add top component ribbon with twelve groups and supplied SVG artwork thumbnails; choice-only palettes anchored to their family and single-line labels.
 - [x] Add left interaction tool rail with seven shared modes.
-- [x] Fully collapse component ribbon/tools sidebar to zero height/width with floating edge toggles; captured drag/keyboard resizing, responsive limits and remembered expanded dimensions. RAF/deduplicated resize with one geometry commit and buffer allocation/redraw in the same frame removes animation resize storms. Evidence: `verification/2026-10-11-resizable-panels-browser.md` and `verification/2026-10-11-panel-resize-performance.md` (supersedes the initial partial-collapse layout).
+- [x] Fully collapse component ribbon/tools sidebar with floating edge toggles; captured drag/keyboard resizing, responsive limits and remembered expanded dimensions. Current mounted overlay drawers slide via200 ms transforms over a fixed Three.js viewport, with inert hidden content, reversal/reduced-motion handling and safe areas. RAF/deduplicated WebGL resizing is reserved for actual viewport changes. Current evidence: `verification/2026-10-11-overlay-drawers.md`; earlier flex-collapse/performance evidence remains historical.
 - [x] Add central workspace shell occupying most of the viewport.
 - [x] Add status-bar-right Zoom In/Out/Fit Entire Circuit and Workspace Object Snap with definitions (supersedes Perspective overlay/reset).
 - [x] Add bottom simulation status bar with honest unavailable execution controls.

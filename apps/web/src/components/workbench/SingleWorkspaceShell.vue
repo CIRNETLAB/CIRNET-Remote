@@ -22,4 +22,4 @@ if (!circuit.current && !circuit.drafts.length) { circuit.createDraft('Untitled 
 watch(() => circuit.activeId, () => workspace.clearSelection())
 useLabConnection()
 </script>
-<template><div class="single-workspace-shell"><a class="skip-link" href="#workspace">Skip to workspace</a><AppTitleBar /><div ref="layout" class="workbench-layout"><ComponentRibbon /><div class="workbench-body"><ToolRail /><main id="workspace" class="workspace-stage" tabindex="-1" aria-label="Circuit workbench"><CircuitWorkspace3D /><FloatingWindowManager /></main></div></div><SimulationStatusBar /></div></template>
+<template><div class="single-workspace-shell"><a class="skip-link" href="#workspace">Skip to workspace</a><AppTitleBar /><div ref="layout" class="workbench-layout" :style="{ '--drawer-top': ui.drawerInsets.top + 'px', '--drawer-left': ui.drawerInsets.left + 'px' }"><ComponentRibbon /><div class="workbench-body"><ToolRail /><main id="workspace" class="workspace-stage" tabindex="-1" aria-label="Circuit workbench"><CircuitWorkspace3D /><FloatingWindowManager /></main></div></div><SimulationStatusBar /></div></template>
