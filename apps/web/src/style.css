@@ -33,8 +33,8 @@ code { font-family: Consolas, monospace; }
 .file-error { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #f1b1af; background: #412b31; padding: 6px 14px; }
 .file-error button { display: flex; padding: 2px; background: transparent; }
 .workbench-layout { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; }
-.component-panel { position: relative; z-index: 20; flex-shrink: 0; min-height: 0; transition: height 160ms ease; }
-.component-ribbon { display: flex; height: 100%; min-width: 0; overflow: hidden; background: #202d3c; border-bottom: 1px solid #415167; }
+.component-panel { position: relative; z-index: 20; flex-shrink: 0; min-height: 0; }
+.component-ribbon { display: flex; height: 100%; min-width: 0; overflow: hidden; background: #202d3c; border-bottom: 1px solid #415167; animation: panel-reveal 160ms ease; }
 .ribbon-scroll { display: flex; flex: 1; min-width: 0; margin-right: 36px; overflow-x: auto; scrollbar-width: thin; scrollbar-color: #526477 transparent; padding: 4px 10px 5px; }
 .toolbar-collapse-toggle { position: absolute; z-index: 2; display: grid; place-items: center; width: 28px; height: 28px; padding: 4px; background: #1c2836; color: #9db3c5; box-shadow: 0 2px 5px #0004; }
 .ribbon-collapse-toggle { top: 4px; right: 8px; }
@@ -46,7 +46,7 @@ code { font-family: Consolas, monospace; }
 .panel-resize-handle:hover, .panel-resize-handle:focus-visible { background: #5ccbb855; }
 .ribbon-resize-handle { left: 0; right: 0; bottom: 0; height: 5px; cursor: ns-resize; }
 .rail-resize-handle { top: 0; bottom: 0; right: 0; width: 5px; cursor: ew-resize; }
-.component-panel.is-resizing, .tools-panel.is-resizing { transition: none; }
+.component-panel.is-resizing .component-ribbon, .tools-panel.is-resizing .tool-rail { animation: none; }
 .ribbon-scroll > button:last-child { border-right-color: transparent; }
 .ribbon-scroll > button.active { background: #304655; border-color: #4b8e88; }
 .ribbon-art { width: 56px; height: 42px; display: grid; place-items: center; }
@@ -108,8 +108,8 @@ code { font-family: Consolas, monospace; }
 .hex-row { display: grid; grid-template-columns: 55px minmax(0, 1fr) 70px; gap: 7px; font-size: 11px; padding: 4px 0; }
 .hex-input { margin-top: 12px; }
 .workbench-body { display: flex; flex: 1; min-height: 0; }
-.tools-panel { position: relative; z-index: 10; width: 66px; min-width: 0; flex-shrink: 0; transition: width 160ms ease; }
-.tool-rail { width: 100%; height: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; overflow: hidden; background: #1c2836; border-right: 1px solid #35465a; padding: 12px 6px 10px; }
+.tools-panel { position: relative; z-index: 10; width: 66px; min-width: 0; flex-shrink: 0; }
+.tool-rail { width: 100%; height: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; overflow: hidden; background: #1c2836; border-right: 1px solid #35465a; padding: 12px 6px 10px; animation: panel-reveal 160ms ease; }
 .rail-label { font-size: 8px; letter-spacing: 1px; color: #7f95a9; margin-bottom: 13px; }
 .tool-rail [role=toolbar] { display: flex; flex-direction: column; gap: 6px; width: 100%; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #526477 transparent; }
 .tool-rail button { display: flex; flex-shrink: 0; flex-direction: column; align-items: center; justify-content: center; gap: 4px; height: 49px; border-color: transparent; background: transparent; width: 100%; color: #a4b5c6; }
@@ -198,5 +198,6 @@ code { font-family: Consolas, monospace; }
 @media (max-width: 1200px) { .app-titlebar { gap: 12px; }.simulation-statusbar { gap: 10px; }.simulation-state small { display: none; }.connection-status { gap: 8px; }.project-title small { display: none; } }
 @media (max-width: 900px) { .brand strong { display: none; }.app-titlebar { gap: 9px; padding: 0 10px; }.file-actions button { padding: 5px 6px; font-size: 11px; }.inspector-toggle span { display: none; }.simulation-statusbar { flex-wrap: wrap; row-gap: 3px; column-gap: 10px; }.connection-status { margin-left: 0; } }
 @media (max-width: 560px) { .project-title { display: none; }.file-actions { gap: 1px; }.file-actions .workbench-icon { display: none; }.toolbar-divider { margin: 0 2px; }.file-actions button { font-size: 10px; padding: 5px; }.inspector-toggle { margin-left: auto; padding: 3px; }.tools-panel { width: 54px; }.tool-rail { padding-inline: 4px; }.tool-rail button { height: 47px; }.workspace-empty p { font-size: 15px; }.workspace-empty > span:last-of-type { font-size: 10px; }.workspace-quick { flex-wrap: wrap; gap: 4px; }.workspace-quick button { font-size: 9px; padding: 4px 6px; }.placement-notice { left: 6px; bottom: 10px; }.workspace-navigator { right: 8px; bottom: 8px; gap: 3px; }.axis-gizmo { width: 84px; height: 84px; }.placement-notice { max-width: calc(100% - 200px); }.palette-heading { flex-wrap: wrap; gap: 5px; }.floating-body { padding: 10px; }.generator-controls { gap: 8px; }.instrument-controls { grid-template-columns: repeat(2, 1fr); }.simulation-statusbar { padding-inline: 7px; font-size: 9px; }.simulation-statusbar > span:nth-of-type(2), .simulation-statusbar > span:nth-of-type(3) { display: none; } }
-@media (prefers-reduced-motion: reduce) { .component-panel, .tools-panel { transition: none; } }
+@keyframes panel-reveal { from { opacity: .65; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .component-ribbon, .tool-rail { animation: none; } }
 @media (max-height: 700px) { .tool-rail { padding-top: 8px; }.rail-label { margin-bottom: 6px; }.tool-rail [role=toolbar] { gap: 3px; }.tool-rail button { height: 42px; }.workspace-empty { top: 47%; }.workspace-empty p { margin-top: 10px; }.workspace-quick { margin-top: 12px; } }

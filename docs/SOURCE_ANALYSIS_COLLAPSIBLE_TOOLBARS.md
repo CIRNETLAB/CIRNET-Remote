@@ -1,6 +1,6 @@
 # Phân tích source và thuật toán panel — 2026-10-11
 
-Phiên bản hiện hành: thu gọn hoàn toàn và thay đổi kích thước. Báo cáo `verification/2026-10-11-collapsible-toolbars-browser.md` là bằng chứng lịch sử của phiên bản còn strip 36 px/rail 38 px. Bằng chứng hiện hành: `verification/2026-10-11-resizable-panels-browser.md`.
+Phiên bản hiện hành: thu gọn hoàn toàn, thay đổi kích thước và tối ưu luồng resize/render. Báo cáo `verification/2026-10-11-collapsible-toolbars-browser.md` là bằng chứng lịch sử của phiên bản còn strip 36 px/rail 38 px. Bằng chứng chức năng: `verification/2026-10-11-resizable-panels-browser.md`; số đo và kiểm chứng bản tối ưu: `verification/2026-10-11-panel-resize-performance.md`.
 
 ## Kiến trúc liên quan trong toàn project
 
@@ -30,7 +30,7 @@ Nút mũi tên nằm ngoài toàn bộ section/aside bị ẩn. Components đón
 
 `v-show` ẩn toàn bộ section/aside bằng `display: none`: header, nền, border, nhãn và icon biến mất khỏi layout/focus/accessibility, nhưng vẫn giữ DOM/scroll/opener. Palette dùng `v-if` vì đã đóng. Không tạo lại scene, renderer, canvas hay model.
 
-Wrapper Components đóng có height0; wrapper Tools đóng có width0/min-width0/flex-shrink0. Wrapper không có padding/border/background. Stage có flex1/min-height0, tự nhận toàn bộ diện tích giải phóng. Shell bỏ min-height560; media query giữ width mặc định66/54 ở wrapper, không áp width cạnh tranh lên aside. Ribbon giữ icon và dành margin phải36 px cho toggle. Context Components20 nằm trên Tools10 để popup Structure không bị sidebar rộng che. Animation height/width160 ms tắt khi kéo hoặc reduced motion.
+Wrapper Components đóng có height0; wrapper Tools đóng có width0/min-width0/flex-shrink0. Wrapper không có padding/border/background. Stage có flex1/min-height0, tự nhận toàn bộ diện tích giải phóng. Shell bỏ min-height560; media query giữ width mặc định66/54 ở wrapper, không áp width cạnh tranh lên aside. Ribbon giữ icon và dành margin phải36 px cho toggle. Context Components20 nằm trên Tools10 để popup Structure không bị sidebar rộng che. Width/height đổi một lần; chỉ nội dung có hiệu ứng opacity160 ms, tắt khi kéo hoặc reduced motion. Không animate hình học workspace.
 
 Rail giữ min-height0/overflow-y:auto cho danh sách và flex-shrink0 cho button: tool list cuộn trong phần còn lại trên màn hình thấp. Toggle nằm ngoài nội dung/scroller.
 
@@ -53,13 +53,14 @@ Escape, pointercancel đúng ID, capture mất, move không còn button, collaps
 ## Resize và thuật toán camera/cửa sổ
 
 ```text
-toggle → Vue cập nhật display/width → flex tính lại stage
-       → ResizeObserver của CircuitWorkspace3D
-       → editor.cancel() → manager.resize(width,height)
-       → ui.setViewport(width,height) → clamp các cửa sổ
+toggle → Vue cập nhật display/width/height một lần → flex tính stage
+       → ResizeObserver contentRect → giữ kích thước cuối, bỏ kích thước trùng
+       → RAF: editor.cancel() → manager.resize(width,height) → aspect/projection
+            → ui.setViewport(width,height) → clamp cửa sổ nếu viewport đổi
+       → RAF render: đo obstacles nếu dirty → setSize nếu buffer đổi → draw
 ```
 
-Camera giữ position/quaternion/FOV và magnification; chỉ set renderer size, cập nhật aspect/projection và yêu cầu redraw. Không fit/reset camera khi resize. Model matrix/graph pose/endpoint không đổi. Gizmo obstacle scan thêm các floating toggle ở workbench cha. Cửa sổ giữ bounds hiện có: kích thước ưu tiên từ `windowDefinitions`, tọa độ clamp vào `[0, viewportSize - windowSize]`.
+Camera giữ position/quaternion/FOV và magnification; cập nhật aspect/projection chỉ khi viewport thực sự đổi. Renderer giữ buffer đã vẽ khi kích thước không đổi; buffer mới cấp phát ngay trước draw trong cùng frame, tránh một frame buffer bị xóa. Không fit/reset camera khi resize. Model matrix/graph pose/endpoint không đổi. Gizmo obstacle scan gồm các floating toggle ở workbench cha và chạy trước render khi dirty. Cửa sổ giữ bounds hiện có: kích thước ưu tiên từ `windowDefinitions`, tọa độ clamp vào `[0, viewportSize - windowSize]`.
 
 Resize hủy preview/capture và Zoom To Area đang bật, vì gốc/tỷ lệ tọa độ vùng đã thay đổi. Chế độ editing, model selection, loại linh kiện chuẩn bị đặt và pending logical port vẫn tồn tại; hủy gesture không commit thêm Undo. Hai action thu gọn chỉ sửa UI; không import circuit/workspace hay gọi API.
 
@@ -75,4 +76,23 @@ Palette vẫn neo lại khi resize/scroll và vẫn đóng qua outside/Escape nh
 
 Giữ hai test collapse bằng store thật; thêm hai sizing test, năm composable pointer/keyboard test và một SceneManager camera/model/connection resize test. Sizing FAIL trước API; foreign-pointer cancel FAIL trước ownership guard. Final frontend171/171 và production build PASS (134 modules, advisory bundle lớn hiện có). Native browser kiểm chứng zero height/width, kéo min/max, nhớ kích thước, Enter/Space, focus Scope, responsive320×480 đến1920×1080, popup trên rail và mạch2 component/1 wire/110% zoom giữ nguyên.
 
-Kết quả thực sự chạy, ảnh, danh sách file và giới hạn kiểm chứng nằm trong `verification/2026-10-11-resizable-panels-browser.md` và DEV_LOG. Không thay API/schema/metadata/artwork hoặc thêm dependency. Full backend/hardware suites không chạy lại cho feature UI này; không claim execution/capture chưa triển khai và không commit/push/deploy.
+Kết quả171/171 và việc không chạy lại backend ở trên thuộc lượt triển khai tính năng trước. Lượt tối ưu hiện tại chạy frontend178/178, toàn bộ Python97/97 và production build PASS. Ảnh, số đo, danh sách file và giới hạn kiểm chứng: `verification/2026-10-11-panel-resize-performance.md` và DEV_LOG. Không thay API/schema/metadata/artwork hoặc thêm dependency; không claim execution/capture chưa triển khai và không commit/push/deploy.
+
+## Phân tích nguyên nhân giật và thuật toán tối ưu
+
+Đọc sâu cả bảy file được yêu cầu, cùng useCircuitEditor, usePanelResize và cửa sổ. Bản trước animate height/width160 ms, tạo11–15 kích thước canvas trung gian mỗi lần toggle. Mỗi callback đọc lại DOM rồi cancel editor, setSize, cập nhật projection và ghi viewport/clamp cửa sổ. Sau draw, callback còn đo obstacle; obstacle đổi lại schedule frame tiếp. Palette đã đóng vẫn đo wrapper. Vì vậy debounce riêng WebGL sẽ không loại bỏ chi phí layout/store/DOM còn lại.
+
+| File | Xử lý và tính bất biến |
+| --- | --- |
+| ToolRail.vue | Đã phân tích nhưng không cần sửa: wrapper/session state, toggle, captured resize và focus đã đúng. CSS chung áp dụng tối ưu cho rail. |
+| style.css | Bỏ transition width/height ở hai wrapper; giữ toàn bộ layout, border, màu, icon và kích thước cuối. Reveal chỉ opacity nội dung. |
+| ComponentRibbon.vue | Palette đóng bỏ qua DOM; watch post-flush, observer/scroll cùng schedule một task; left/width trùng không ghi reactive state. |
+| SingleWorkspaceShell.vue | Observer lấy contentRect, coalesce/deduplicate trước setWorkbenchSize; không đo DOM lần nữa. |
+| frameTasks.ts | Factory không giữ state bố cục Pinia: pending là size cuối, applied là size đã xử lý. Burst trong frame chạy một callback; nếu trở lại applied trước frame thì hủy. Non-finite/target khác bị bỏ qua; disconnect hủy RAF và chặn callback muộn. |
+| CircuitWorkspace3D.vue | Chỉ cancel/resize/update viewport một lần cho size mới. Obstacle dirty do resize, windows hoặc selected type; đo trước render. Axes giữ ref nếu tọa độ không đổi. Context restore chỉ sync/request draw, không resize lại bằng DOM measurement. |
+| ui.ts | Guard non-finite và equal dimensions trước thay object/clamp windows. Không thêm state/store. |
+| SceneManager.ts | Viewport mới cập nhật aspect; last drawn buffer là cache renderer, không phải state graph/layout trùng. Size trùng no-op; zero/suspend không allocate; resume vẽ size mới nhất. onBeforeRender giữ frame đang pending để cập nhật obstacles được gộp vào cùng draw. |
+
+Cache obstacle còn phải biết nội dung Component Info: đổi Clock sang Breadboard khi cửa sổ đã mở/topmost không làm ui.windows thay đổi, nhưng chiều cao DOM tăng311.4→346.6 px. Multi-source watcher post-flush theo windows và selected type xử lý trường hợp này sau Vue cập nhật DOM; không thêm listener/observer toàn cục. Camera-only orbit không còn đo obstacle trên mỗi draw.
+
+RO và palette tasks đều được hủy khi unmount; SceneManager cancel frame/dispose như trước. Actual pointer dragging vẫn resize theo các frame có kích thước mới để giữ phản hồi trực tiếp, tối đa một lần/frame. Không debounce đến cuối gesture, không sửa Circuit Graph hoặc phát lệnh simulation.

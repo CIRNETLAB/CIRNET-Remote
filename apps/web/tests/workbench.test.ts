@@ -9,6 +9,21 @@ import { useUiStore } from '../src/stores/ui'
 import { parseCircuitFile } from '../src/services/files/circuitFile'
 
 beforeEach(() => setActivePinia(createPinia()))
+
+test('duplicate layout notifications retain viewport identities and floating-window bounds', () => {
+  const ui = useUiStore()
+  ui.setViewport(900.5, 500.25); ui.setWorkbenchSize(1000.5, 700.25); ui.openWindow('oscilloscope')
+  const viewport = ui.viewport, layout = ui.workbenchSize, window = ui.windows[0], bounds = { ...window }
+  for (let i = 0; i < 20; i++) { ui.setViewport(900.5, 500.25); ui.setWorkbenchSize(1000.5, 700.25) }
+  assert.equal(ui.viewport, viewport, 'duplicate viewport callbacks must not invalidate Pinia consumers')
+  assert.equal(ui.workbenchSize, layout)
+  assert.deepEqual({ ...window }, bounds)
+  ui.setViewport(NaN, 500); ui.setViewport(900, Infinity)
+  assert.equal(ui.viewport, viewport, 'invalid dimensions must leave the current layout usable')
+  ui.setViewport(320, 200)
+  assert.notEqual(ui.viewport, viewport)
+  assert.ok(window.x + window.width <= 320 && window.y + window.height <= 200)
+})
 const valid = () => ({ schema_version: '1.0', circuit_id: 'example', modules: [{ id: 'U1', type: '74HC08' }], connections: [], metadata: { name: 'AND lab' } })
 
 test('root, legacy and unknown URLs all enter the same workspace', async () => {

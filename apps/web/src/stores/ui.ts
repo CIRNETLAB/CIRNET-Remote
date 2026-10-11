@@ -25,10 +25,15 @@ export const useUiStore = defineStore('ui', {
     setComponentToolbarHeight(height: number) { if (Number.isFinite(height)) this.componentToolbarHeight = Math.max(96, Math.min(260, height)) },
     setToolsSidebarWidth(width: number) { if (Number.isFinite(width)) this.toolsSidebarWidth = Math.max(54, Math.min(180, width)) },
     setWorkbenchSize(width: number, height: number) {
-      if (Number.isFinite(width) && Number.isFinite(height)) this.workbenchSize = { width: Math.max(0, width), height: Math.max(0, height) }
+      if (!Number.isFinite(width) || !Number.isFinite(height)) return
+      width = Math.max(0, width); height = Math.max(0, height)
+      if (this.workbenchSize.width !== width || this.workbenchSize.height !== height) this.workbenchSize = { width, height }
     },
     setViewport(width: number, height: number) {
-      this.viewport = { width: Math.max(0, width), height: Math.max(0, height) }
+      if (!Number.isFinite(width) || !Number.isFinite(height)) return
+      width = Math.max(0, width); height = Math.max(0, height)
+      if (this.viewport.width === width && this.viewport.height === height) return
+      this.viewport = { width, height }
       for (const window of this.windows) bound(window, this.viewport.width, this.viewport.height)
     },
     openWindow(kind: WindowKind, options: { activate?: boolean } = {}) {

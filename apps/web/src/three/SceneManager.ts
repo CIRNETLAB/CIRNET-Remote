@@ -11,12 +11,12 @@ import { applyPowerSupplyControls, type SupplyControl } from './PowerSupplyModel
 import { createWireLayer } from './WireLayer'
 
 export interface SceneRenderer { setSize(width: number, height: number, updateStyle?: boolean): void; render(scene: Scene, camera: PerspectiveCamera): void; dispose(): void }
-interface SceneOptions { renderer: SceneRenderer; canvas?: HTMLCanvasElement; onRender?: () => void; onZoomChange?: (percent: number) => void; requestFrame?: (callback: FrameRequestCallback) => number; cancelFrame?: (id: number) => void }
+interface SceneOptions { renderer: SceneRenderer; canvas?: HTMLCanvasElement; onBeforeRender?: () => void; onRender?: () => void; onZoomChange?: (percent: number) => void; requestFrame?: (callback: FrameRequestCallback) => number; cancelFrame?: (id: number) => void }
 export type PickResult = ({ kind: 'module'; id: string } | { kind: 'control'; id: string; control: SupplyControl } | { kind: 'port'; id: string; endpoint: string } | { kind: 'wire'; source: string; destination: string }) & { point: Vector3 }
 export interface OrientationAxis { label: 'X' | 'Y' | 'Z'; x: number; y: number; depth: number; color: string }
 
 // Geometry is a projection of graph IDs and named logical ports, never a source of nets.
-export function createSceneManager({ renderer, canvas, onRender, onZoomChange, requestFrame = requestAnimationFrame, cancelFrame = cancelAnimationFrame }: SceneOptions) {
+export function createSceneManager({ renderer, canvas, onBeforeRender, onRender, onZoomChange, requestFrame = requestAnimationFrame, cancelFrame = cancelAnimationFrame }: SceneOptions) {
   const scene = new Scene(); scene.background = new Color('#101925')
   const camera = new PerspectiveCamera(42, 1, 0.1, 150); camera.position.set(0, 11, 10); camera.lookAt(0, 0, 0); camera.updateMatrixWorld()
   const grid = createTechnicalGrid()
@@ -36,13 +36,18 @@ export function createSceneManager({ renderer, canvas, onRender, onZoomChange, r
   let gizmoObstacles: GizmoObstacle[] = []
   const updateGizmo = () => gizmo.update(highlightedId ? models.get(highlightedId) : undefined, models.values(), camera, width, height, gizmoObstacles)
   const raycaster = new Raycaster(), plane = new Plane(new Vector3(0, 1, 0), 0)
-  let width = 1, height = 1, frame: number | null = null, disposed = false, visible = false, suspended = false, pointerLocked = false
+  let width = 1, height = 1, sized = false, frame: number | null = null, disposed = false, visible = false, suspended = false, pointerLocked = false
+  let bufferWidth = 0, bufferHeight = 0
   let ghost: Group | null = null
   const schedule = () => {
     if (disposed || !visible || suspended || frame !== null) return
     frame = requestFrame(() => {
+      // Layout obstacles join this draw, rather than scheduling a second draw after it.
+      if (!disposed && visible && !suspended) onBeforeRender?.()
       frame = null
       if (!disposed && visible && !suspended) {
+        // setSize clears the drawing buffer. Refill it in this same frame.
+        if (bufferWidth !== width || bufferHeight !== height) { renderer.setSize(width, height, false); bufferWidth = width; bufferHeight = height }
         const target = controls?.target ?? viewTarget
         const focus = highlightedId ? models.get(highlightedId)?.position ?? target : target
         updateTechnicalGrid(grid, camera, target, focus, height)
@@ -102,6 +107,7 @@ export function createSceneManager({ renderer, canvas, onRender, onZoomChange, r
   }
   return {
     scene, camera, grid, models, wires,
+    requestRender: schedule,
     endpointPosition,
     setGizmoObstacles(areas: GizmoObstacle[]) { if (!disposed && JSON.stringify(areas) !== JSON.stringify(gizmoObstacles)) { gizmoObstacles = areas.map((area) => ({ ...area })); schedule() } },
     gizmoHandlePosition(handle: TransformHandle) { if (disposed) return null; updateGizmo(); return gizmo.position(handle) },
@@ -193,9 +199,12 @@ export function createSceneManager({ renderer, canvas, onRender, onZoomChange, r
     project(point: Vector3) { camera.updateMatrixWorld(); const p = point.clone().project(camera); return { x: (p.x + 1) * width / 2, y: (1 - p.y) * height / 2, visible: p.z >= -1 && p.z <= 1 && Math.abs(p.x) < 1 && Math.abs(p.y) < 1 } },
     resize(w: number, h: number) {
       if (disposed || !Number.isFinite(w) || !Number.isFinite(h)) return
-      visible = w > 0 && h > 0; updateControlsEnabled()
+      const wasVisible = visible
+      visible = w > 0 && h > 0
+      if (visible !== wasVisible) updateControlsEnabled()
       if (!visible) { if (frame !== null) cancelFrame(frame); frame = null; return }
-      width = w; height = h; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); schedule()
+      if (sized && width === w && height === h) { if (!wasVisible) schedule(); return }
+      width = w; height = h; sized = true; camera.aspect = w / h; camera.updateProjectionMatrix(); schedule()
     },
     zoomPercent,
     setZoom(percent: number) {

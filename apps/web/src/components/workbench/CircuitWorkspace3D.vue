@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { WebGLRenderer } from 'three'
 import { createSceneManager, type OrientationAxis } from '../../three/SceneManager'
 import { useWorkspaceStore } from '../../stores/workspace'
@@ -7,6 +7,7 @@ import { useCircuitStore } from '../../stores/circuit'
 import { useUiStore } from '../../stores/ui'
 import WorkspaceNavigator from './WorkspaceNavigator.vue'
 import { useCircuitEditor } from '../../composables/useCircuitEditor'
+import { observeElementSize } from '../../composables/frameTasks'
 const workspace = useWorkspaceStore()
 const circuit = useCircuitStore()
 const ui = useUiStore()
@@ -15,39 +16,46 @@ const canvas = ref<HTMLCanvasElement>()
 const graphicsError = ref('')
 const axes = ref<OrientationAxis[]>([])
 let manager: ReturnType<typeof createSceneManager> | undefined
-let observer: ResizeObserver | undefined
+let observer: ReturnType<typeof observeElementSize> | undefined
 let contextLost = false
+let obstaclesDirty = true
 const editor = useCircuitEditor(canvas, () => manager)
 function visibility() { if (contextLost || document.hidden) editor.cancel(); manager?.suspend(contextLost || document.hidden) }
 function updateGizmoObstacles() {
+  if (!obstaclesDirty) return
   const origin = host.value?.getBoundingClientRect(), stage = host.value?.parentElement
-  if (manager && origin && stage) manager.setGizmoObstacles([...(stage.closest('.workbench-layout') ?? stage).querySelectorAll('.component-information, .floating-window, .workspace-navigator, .toolbar-collapse-toggle')].map((element) => {
+  if (manager && origin && stage) { obstaclesDirty = false; manager.setGizmoObstacles([...(stage.closest('.workbench-layout') ?? stage).querySelectorAll('.component-information, .floating-window, .workspace-navigator, .toolbar-collapse-toggle')].map((element) => {
       const r = element.getBoundingClientRect(); return { left: r.left - origin.left, top: r.top - origin.top, right: r.right - origin.left, bottom: r.bottom - origin.top }
-  }))
+  })) }
 }
-function rendered() { editor.updatePorts(); if (manager) axes.value = manager.orientationAxes(); updateGizmoObstacles() }
-function size() { if (host.value) { const { width, height } = host.value.getBoundingClientRect(); editor.cancel(); manager?.resize(width, height); ui.setViewport(width, height) } }
-function lost(event: Event) { event.preventDefault(); contextLost = true; editor.cancel(); visibility(); graphicsError.value = 'Graphics context interrupted. Waiting for recovery…' }
-function restored() { contextLost = false; graphicsError.value = ''; visibility(); editor.sync(); size() }
+function rendered() {
+  editor.updatePorts()
+  if (manager) {
+    const next = manager.orientationAxes()
+    if (next.some((axis, index) => axis.label !== axes.value[index]?.label || axis.x !== axes.value[index]?.x || axis.y !== axes.value[index]?.y || axis.depth !== axes.value[index]?.depth)) axes.value = next
+  }
+}
+function size(width: number, height: number) { obstaclesDirty = true; editor.cancel(); manager?.resize(width, height); ui.setViewport(width, height) }
+function lost(event: Event) { event.preventDefault(); contextLost = true; visibility(); graphicsError.value = 'Graphics context interrupted. Waiting for recovery…' }
+function restored() { contextLost = false; graphicsError.value = ''; visibility(); editor.sync(); obstaclesDirty = true; manager?.requestRender() }
 onMounted(() => {
   let renderer: WebGLRenderer | undefined
   try {
     renderer = new WebGLRenderer({ canvas: canvas.value, antialias: true, alpha: false })
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    manager = createSceneManager({ renderer, canvas: canvas.value, onRender: rendered, onZoomChange: (percent) => workspace.setZoom(percent) })
+    manager = createSceneManager({ renderer, canvas: canvas.value, onBeforeRender: updateGizmoObstacles, onRender: rendered, onZoomChange: (percent) => workspace.setZoom(percent) })
     manager.setZoom(workspace.zoom)
     editor.sync(); visibility()
   } catch { if (manager) manager.dispose(); else renderer?.dispose(); manager = undefined; graphicsError.value = '3D graphics unavailable. Edit graph coordinates and ports using Inspector.' }
-  observer = new ResizeObserver(size)
-  if (host.value) observer.observe(host.value)
+  if (host.value) observer = observeElementSize(host.value, size)
   canvas.value?.addEventListener('webglcontextlost', lost)
   canvas.value?.addEventListener('webglcontextrestored', restored)
   document.addEventListener('visibilitychange', visibility)
-  size()
 })
 watch(() => workspace.zoom, (zoom) => { if (manager && Math.abs(manager.zoomPercent() - zoom) > 0.02) { editor.cancel(); manager.setZoom(zoom) } })
 watch(() => workspace.fitRequest, () => { editor.cancel(); manager?.fitCircuit() })
-watch(() => ui.windows, () => { void nextTick(updateGizmoObstacles) }, { deep: true })
+// Component Info can change height on selection without changing window state.
+watch([() => ui.windows, () => circuit.graph?.modules.find((module) => module.id === workspace.selectedModuleId)?.type], () => { obstaclesDirty = true; manager?.requestRender() }, { deep: true, flush: 'post' })
 onUnmounted(() => { observer?.disconnect(); manager?.dispose(); canvas.value?.removeEventListener('webglcontextlost', lost); canvas.value?.removeEventListener('webglcontextrestored', restored); document.removeEventListener('visibilitychange', visibility) })
 </script>
 <template>

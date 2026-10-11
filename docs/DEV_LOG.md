@@ -1,7 +1,7 @@
 ---
 project: net-Circuit-Remote
-current_phase: interactive-workspace-resizable-panels
-status: fully-collapsible-resizable-panels-verified
+current_phase: interactive-workspace-panel-resize-performance
+status: panel-resize-performance-verified
 last_updated: 2026-10-11
 next_task: phase-3-simulator-event-clock-model-integration
 blocking_issue: none
@@ -14,6 +14,22 @@ fpga_development_started: false
 ## Current Goal
 
 Phase 2 **Interactive Circuit Workspace** is implemented, preserving Phase 1 shell and transport boundaries. Next: Phase 3 simulator/event/clock/model adapters and real output/capture data.
+
+## Panel resize performance — 2026-10-11
+
+Read the shell, ribbon, rail, workspace observer, UI store, SceneManager, editor cancellation/window lifecycle and CSS before editing. A temporary native-browser probe with44 components/20 wires and Scope reproduced11–15 canvas observer callbacks, buffer allocations, cancellations and viewport/window updates per toggle. Root cause:160 ms width/height transitions plus unconditional resize and per-render DOM scanning; obstacle updates after rendering could request another draw.
+
+Panel geometry now commits once; only inner content opacity animates. Shared frameTasks consumes ResizeObserver contentRect, keeps the latest dimensions per RAF, deduplicates applied dimensions and releases queued frames on disconnect. Shell size and canvas size remain separate. Inactive palettes skip DOM reads; active palette anchoring coalesces and only changes styles when necessary. UI actions reject invalid/repeated dimensions before reactive writes/window clamping. SceneManager skips unchanged projections/buffers and allocates a changed drawing buffer immediately before its redraw in the same frame, avoiding an intermediate cleared frame. Zero/hidden/suspended scenes retain the last drawn buffer; resume draws the latest size.
+
+Gizmo obstacles are measured only after layout/window/selected-component-type changes, before the existing render. Orientation axes skip unchanged reactive assignments. Review found Component Info can change height when selection changes without any window-state mutation; the single post-flush watcher now covers that content source as well. Native Clock→Breadboard selection confirms height311.4→346.6 px and one fresh obstacle scan/draw without a viewport allocation. Independent final review reports no remaining actionable finding.
+
+Three new SceneManager tests, three frame-task/observer tests and one store test cover duplicate sizes, burst coalescing, zero/restore, disconnect, buffer/draw ordering, suspension, window identity and pre-render obstacle updates. Duplicate buffer/store tests and the cleared-frame ordering test were observed FAIL before their fixes. Final **frontend178/178 PASS**, including test/production TypeScript; **production build PASS**,135 modules. Full repository **Python97/97 PASS**, three existing deprecation warnings. Npm/Python use approved external execution because the Windows sandbox blocks runtime/loopback access; the sandbox Python launch was terminated after hanging on path resolution.
+
+Final native-browser measurements: all four individual collapse/expand actions have **one** canvas observer callback, cancellation, viewport update, buffer allocation and draw. Twenty rapid toggles have20 actual viewport/buffer updates; pointer hover/leave causes5 additional legitimate draws, which reuse cached obstacles. Five orbit actions have5 draws and zero buffer/viewport/obstacle DOM work. Clean app UI Open loads the same44/20 fixture; 110% zoom, axes, graph counts, simulation/Undo-Redo status and Scope's local32/36 position stay unchanged through collapse/reopen. Canvas1214×533 becomes1280×629 and restores exactly. Native drag remembers180/150 px; responsive checks390×480,320×480 and1920×1080 have no document overflow and restore preferences.
+
+No graph/contract/model/icon/simulation-control changes, dependency additions, commit/push/deployment or physical execution claims. Existing large-bundle advisory remains. Analysis and exact file list/evidence: `SOURCE_ANALYSIS_COLLAPSIBLE_TOOLBARS.md`, `verification/2026-10-11-panel-resize-performance.md`. Phase3 remains the existing next task.
+
+Final clean app QA also checks Scope keyboard movement and Escape focus return with hidden opener, Input palette anchoring and Clock placement/Escape cancellation. Runtime warning/error logs and graphics/editor/file notices empty. Browser tabs closed and viewport override reset. Full Python97/97 rerun after docs updates passes context integrity; `git diff --check` PASS.
 
 ## Fully collapsible and resizable panels — 2026-10-11
 
@@ -228,7 +244,7 @@ Device-library coverage is small. gRPC generated bindings/handlers, exact SDRAM/
 
 ### What changed
 
-Latest task adds temporary Zoom To Area rectangle framing and concise zoom titles; see the 2026-10-11 entry and SOURCE_ANALYSIS_ZOOM_TO_AREA. Source/build/frontend/Python verification passed. Preserve the previous graph/history/geometry and hardware boundaries.
+Latest task optimizes the fully collapsible/resizable panels: commit layout once, RAF/deduplicated observers, cached pre-render obstacles and buffer allocation with redraw in one frame. Frontend178/178, Python97/97 and production build pass. See the panel performance entry, SOURCE_ANALYSIS_COLLAPSIBLE_TOOLBARS and verification/2026-10-11-panel-resize-performance. Preserve graph/history/geometry and hardware boundaries.
 
 Phase 2 canonical catalog, separate memory contract, graph command/history layer, scene/models/picking/wires/camera controls, pointer/drag/keyboard interactions, selected Inspector/Hex Editor, lifecycle fixes, tests and Markdown. Preserve historical specs/verification and supplied artwork/axis gizmo.
 

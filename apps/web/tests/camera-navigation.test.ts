@@ -16,6 +16,76 @@ function setup(onZoomChange?: (percent: number) => void) {
   return { manager, wheel, canvas }
 }
 
+test('unchanged viewport sizes do not reset the drawing buffer or camera projection', () => {
+  let sizes = 0, projections = 0, renders = 0, id = 0
+  const frames = new Map<number, FrameRequestCallback>()
+  const manager = createSceneManager({ renderer: { setSize() { sizes++ }, render() { renders++ }, dispose() {} }, requestFrame(callback) { frames.set(++id, callback); return id }, cancelFrame(frame) { frames.delete(frame) } })
+  const original = manager.camera.updateProjectionMatrix.bind(manager.camera)
+  manager.camera.updateProjectionMatrix = () => { projections++; original() }
+  const flush = () => { const pending = [...frames.values()]; frames.clear(); pending.forEach(callback => callback(0)) }
+  try {
+    manager.resize(900.5, 500.25); flush()
+    for (let i = 0; i < 20; i++) manager.resize(900.5, 500.25)
+    flush()
+    assert.equal(sizes, 1, 'duplicate notifications must not reset WebGL drawing buffers')
+    assert.equal(projections, 1); assert.equal(renders, 1)
+    manager.resize(0, 0); manager.resize(0, 0); flush()
+    assert.equal(sizes, 1, 'hidden canvases do not allocate a zero drawing buffer')
+    manager.resize(900.5, 500.25); flush()
+    assert.equal(sizes, 1, 'restoring the previous buffer size only requests a redraw')
+    assert.equal(projections, 1); assert.equal(renders, 2)
+    manager.resize(901.5, 500.25); flush()
+    assert.equal(sizes, 2); assert.equal(projections, 2); assert.equal(renders, 3)
+  } finally { manager.dispose() }
+})
+
+test('gizmo obstacles prepared before rendering do not schedule a redundant second frame', () => {
+  let id = 0, renders = 0, prepared = 0
+  const frames = new Map<number, FrameRequestCallback>()
+  const manager = createSceneManager({
+    renderer: { setSize() {}, render() { renders++ }, dispose() {} },
+    requestFrame(callback) { frames.set(++id, callback); return id }, cancelFrame(id) { frames.delete(id) },
+    onBeforeRender() { prepared++; manager.setGizmoObstacles([{ left: prepared, top: 20, right: 150, bottom: 180 }]) },
+  })
+  try {
+    manager.resize(1000, 700)
+    const first = [...frames.values()]; frames.clear(); first.forEach(callback => callback(0))
+    assert.equal(prepared, 1); assert.equal(renders, 1); assert.equal(frames.size, 0)
+    for (let i = 0; i < 20; i++) manager.requestRender()
+    assert.equal(frames.size, 1)
+    const next = [...frames.values()]; frames.clear(); next.forEach(callback => callback(0))
+    assert.equal(prepared, 2); assert.equal(renders, 2); assert.equal(frames.size, 0)
+    manager.requestRender(); manager.dispose(); assert.equal(frames.size, 0)
+  } finally { manager.dispose() }
+})
+
+test('drawing buffer allocation and its redraw happen in the same frame, including resume', () => {
+  let id = 0
+  const calls: string[] = [], frames = new Map<number, FrameRequestCallback>()
+  const manager = createSceneManager({
+    renderer: { setSize(w, h) { calls.push(`size ${w} ${h}`) }, render() { calls.push('draw') }, dispose() {} },
+    requestFrame(callback) { frames.set(++id, callback); return id }, cancelFrame(frame) { frames.delete(frame) },
+  })
+  const flush = () => { const pending = [...frames.values()]; frames.clear(); pending.forEach(callback => callback(0)) }
+  try {
+    manager.resize(900, 500)
+    assert.deepEqual(calls, [], 'do not clear the visible drawing buffer before its redraw frame')
+    flush(); assert.deepEqual(calls, ['size 900 500', 'draw'])
+    calls.length = 0
+    manager.resize(700, 400); manager.resize(900, 500)
+    flush(); assert.deepEqual(calls, ['draw'], 'returning to the drawn size needs no buffer allocation')
+    calls.length = 0
+    manager.resize(950, 550); manager.suspend(true); flush()
+    assert.deepEqual(calls, [], 'a suspended scene keeps its last drawn buffer')
+    manager.suspend(false); assert.deepEqual(calls, [])
+    flush(); assert.deepEqual(calls, ['size 950 550', 'draw'])
+    calls.length = 0
+    manager.resize(1000, 600); manager.resize(0, 0); flush()
+    assert.deepEqual(calls, [])
+    manager.resize(1000, 600); flush(); assert.deepEqual(calls, ['size 1000 600', 'draw'])
+  } finally { manager.dispose() }
+})
+
 test('panel-driven viewport resizing preserves camera pose, magnification, models and connections', () => {
   const { manager } = setup()
   try {

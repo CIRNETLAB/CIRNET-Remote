@@ -6,6 +6,7 @@ import { useWorkspaceStore } from '../../stores/workspace'
 import WorkbenchIcon from './WorkbenchIcon.vue'
 import { getDefinition } from '../../data/editorCatalog'
 import { usePanelResize } from '../../composables/usePanelResize'
+import { createFrameTask } from '../../composables/frameTasks'
 const ui = useUiStore()
 const workspace = useWorkspaceStore()
 const root = ref<HTMLElement>()
@@ -17,14 +18,17 @@ const active = computed(() => !ui.componentToolbarCollapsed ? ribbonGroups.find(
 const paletteStyle = ref({ left: '10px', width: '250px' })
 let resizeObserver: ResizeObserver | undefined
 function anchorPalette() {
+  if (!active.value) return
   const bounds = root.value?.getBoundingClientRect()
   const trigger = root.value?.querySelector<HTMLButtonElement>(`[data-group="${ui.activeRibbonGroup}"]`)?.getBoundingClientRect()
   if (!bounds || !trigger || !active.value) return
   const width = Math.max(0, Math.min(26 + active.value.items.length * 120 + (active.value.items.length - 1) * 8, bounds.width - 20))
   const left = Math.max(10, Math.min(trigger.left - bounds.left, bounds.width - width - 10))
-  paletteStyle.value = { left: `${left}px`, width: `${width}px` }
+  const next = { left: `${left}px`, width: `${width}px` }
+  if (next.left !== paletteStyle.value.left || next.width !== paletteStyle.value.width) paletteStyle.value = next
 }
-watch(active, async () => { await nextTick(); anchorPalette() })
+const paletteTask = createFrameTask(anchorPalette)
+watch(active, () => { if (active.value) paletteTask.schedule(); else paletteTask.cancel() }, { flush: 'post' })
 watch(() => ui.componentToolbarCollapsed, (collapsed) => {
   if (collapsed && root.value?.contains(document.activeElement) && document.activeElement !== collapseToggle.value) {
     void nextTick(() => collapseToggle.value?.focus())
@@ -50,14 +54,14 @@ function escape(event: KeyboardEvent) { if (event.key === 'Escape' && ui.activeR
 onMounted(() => {
   if (ui.componentToolbarHeight === null && root.value) ui.setComponentToolbarHeight(root.value.getBoundingClientRect().height)
   document.addEventListener('pointerdown', outside); document.addEventListener('keydown', escape)
-  resizeObserver = new ResizeObserver(anchorPalette); if (root.value) resizeObserver.observe(root.value)
+  resizeObserver = new ResizeObserver(() => { if (active.value) paletteTask.schedule() }); if (root.value) resizeObserver.observe(root.value)
 })
-onUnmounted(() => { document.removeEventListener('pointerdown', outside); document.removeEventListener('keydown', escape); resizeObserver?.disconnect() })
+onUnmounted(() => { document.removeEventListener('pointerdown', outside); document.removeEventListener('keydown', escape); resizeObserver?.disconnect(); paletteTask.cancel() })
 </script>
 <template>
   <div ref="root" class="component-panel" :class="{ 'is-collapsed': ui.componentToolbarCollapsed, 'is-resizing': resize.dragging.value, 'has-size': expandedHeight !== undefined }" :style="{ height: ui.componentToolbarCollapsed ? '0px' : expandedHeight === undefined ? undefined : expandedHeight + 'px' }">
     <section v-show="!ui.componentToolbarCollapsed" id="component-toolbar" class="component-ribbon" aria-label="Component library">
-    <div id="component-families" class="ribbon-scroll" role="toolbar" aria-label="Component families" @scroll="anchorPalette">
+    <div id="component-families" class="ribbon-scroll" role="toolbar" aria-label="Component families" @scroll="paletteTask.schedule">
       <button v-for="group in ribbonGroups" :key="group.id" :data-group="group.id" :aria-expanded="ui.activeRibbonGroup === group.id" aria-controls="ribbon-palette" :class="{ active: ui.activeRibbonGroup === group.id }" @click="ui.toggleRibbon(group.id)">
         <span class="ribbon-art"><img v-if="group.icon" :src="iconUrl(group.icon)" alt="" width="44" height="44" /><WorkbenchIcon v-else :name="group.glyph || 'chip'" /></span>
         <span class="ribbon-label">{{ group.label }}</span><WorkbenchIcon class="ribbon-chevron" name="chevron" />

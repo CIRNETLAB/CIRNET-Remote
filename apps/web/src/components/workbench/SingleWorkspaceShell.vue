@@ -4,6 +4,7 @@ import { useLabConnection } from '../../composables/useLabConnection'
 import { useCircuitStore } from '../../stores/circuit'
 import { useWorkspaceStore } from '../../stores/workspace'
 import { useUiStore } from '../../stores/ui'
+import { observeElementSize } from '../../composables/frameTasks'
 import AppTitleBar from './AppTitleBar.vue'
 import ComponentRibbon from './ComponentRibbon.vue'
 import ToolRail from './ToolRail.vue'
@@ -12,12 +13,9 @@ import SimulationStatusBar from './SimulationStatusBar.vue'
 import FloatingWindowManager from '../windows/FloatingWindowManager.vue'
 const circuit = useCircuitStore(), workspace = useWorkspaceStore()
 const ui = useUiStore(), layout = ref<HTMLElement>()
-let layoutObserver: ResizeObserver | undefined
+let layoutObserver: ReturnType<typeof observeElementSize> | undefined
 onMounted(() => {
-  layoutObserver = new ResizeObserver(() => {
-    if (layout.value) { const { width, height } = layout.value.getBoundingClientRect(); ui.setWorkbenchSize(width, height) }
-  })
-  if (layout.value) layoutObserver.observe(layout.value)
+  if (layout.value) layoutObserver = observeElementSize(layout.value, ui.setWorkbenchSize)
 })
 onUnmounted(() => layoutObserver?.disconnect())
 if (!circuit.current && !circuit.drafts.length) { circuit.createDraft('Untitled circuit'); circuit.past = [] }

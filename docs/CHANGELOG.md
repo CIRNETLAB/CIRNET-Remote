@@ -4,6 +4,13 @@ All notable project changes will be documented in this file. The project follows
 
 ## [Unreleased]
 
+### Changed — 2026-10-11 Panel resize performance
+
+- Replace ribbon/sidebar width/height animations with one layout update and opacity-only content reveal; preserve expanded sizes, complete collapse, edge toggles and resizing.
+- Coalesce and deduplicate observer sizes, UI viewport/window updates and palette anchoring. Skip unchanged camera projections and WebGL buffer allocations; allocate changed buffers immediately before their redraw to avoid an intermediate empty frame.
+- Cache gizmo obstacle measurements until layout/window/selected-component content changes, prepare them before rendering and skip unchanged orientation-axis updates. Graph, camera pose/zoom, icons, models, wires and simulation controls retain their existing contracts.
+- Verified frontend178/178, full Python97/97 and production build; native44-component/20-wire fixture reduces individual toggle allocations from11–15 to1. Evidence: `verification/2026-10-11-panel-resize-performance.md`.
+
 ### Added / Changed — 2026-10-11 Collapsible and resizable panels
 
 - Component ribbon and tools sidebar fully collapse to zero height/width with floating top/left edge buttons; their headers, backgrounds, borders and content leave no layout strip.
