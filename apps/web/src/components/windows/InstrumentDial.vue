@@ -1,10 +1,10 @@
 <script setup lang="ts">
-defineProps<{ label: string; caption: string; value: string; compact?: boolean }>()
+withDefaults(defineProps<{ label: string; caption: string; value: string; compact?: boolean; unavailableReason?: string }>(), { unavailableReason: 'Control unavailable · acquisition is not connected' })
 </script>
 <template>
   <div class="instrument-dial" :class="{ compact }">
     <span class="dial-caption">{{ caption }}</span>
-    <button type="button" disabled class="dial-knob" :aria-label="label" title="Control unavailable · acquisition is not connected"><span aria-hidden="true" /></button>
+    <button type="button" disabled class="dial-knob" :aria-label="label" :title="unavailableReason"><span aria-hidden="true" /></button>
     <span class="dial-value">{{ value }}</span>
   </div>
 </template>

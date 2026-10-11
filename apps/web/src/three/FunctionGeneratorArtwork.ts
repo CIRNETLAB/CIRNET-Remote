@@ -2,6 +2,8 @@ import { type ArtworkCommand, type InstrumentArtwork } from './InstrumentArtwork
 export { drawInstrumentArtwork, instrumentArtworkSvg } from './InstrumentArtwork'
 
 export const GENERATOR_CH1 = '#ffe04a', GENERATOR_CH2 = '#20d4ee', GENERATOR_SYNC = '#35dd73'
+export const GENERATOR_THEME = { screen: '#030b0f', bezel: '#30383e', panel: '#272e33' } as const
+export const GENERATOR_PARAMETER_LABELS = ['Frequency', 'Amplitude', 'Offset', 'Duty', 'Phase'] as const
 // Shared world-space centers keep the live mesh, decals and palette SVG aligned.
 export const GENERATOR_LAYOUT = {
   screen: { x: -1.54, y: 2.10, w: 2.34, h: 1.80 },
@@ -33,19 +35,19 @@ export const GENERATOR_LAYOUT = {
 // These values and traces are display artwork, not a synthesized signal or a
 // physical device rating. A later DDS integration can update the separate screen.
 export function generatorScreenArtwork(): InstrumentArtwork {
-  const commands: ArtworkCommand[] = [{ kind: 'rect', x: 0, y: 0, w: 1024, h: 768, color: '#030b0f' }]
+  const commands: ArtworkCommand[] = [{ kind: 'rect', x: 0, y: 0, w: 1024, h: 768, color: GENERATOR_THEME.screen }]
   const text = (text: string, x: number, y: number, color: string, size = 29) => commands.push({ kind: 'text', text, x, y, color, size })
   const path = (points: [number, number][], color: string, width = 2, dash?: number[]) => commands.push({ kind: 'path', points, color, width, dash })
   for (const [i, color] of [GENERATOR_CH1, GENERATOR_CH2].entries()) {
     const top = 18 + i * 368
-    commands.push({ kind: 'rect', x: 16, y: top, w: 992, h: 350, color, r: 12 }, { kind: 'rect', x: 20, y: top + 4, w: 984, h: 342, color: '#030b0f', r: 9 })
+    commands.push({ kind: 'rect', x: 16, y: top, w: 992, h: 350, color, r: 12 }, { kind: 'rect', x: 20, y: top + 4, w: 984, h: 342, color: GENERATOR_THEME.screen, r: 9 })
     commands.push({ kind: 'polygon', points: [[20, top + 4], [174, top + 4], [202, top + 36], [174, top + 68], [20, top + 68]], color })
     text(`CH${i + 1}`, 40, top + 36, '#06141a', 42)
     text(i === 0 ? 'Sine' : 'Square', 238, top + 37, color, 31)
     commands.push({ kind: 'rect', x: 912, y: top + 12, w: 76, h: 46, color, r: 8 })
     text('ON', 925, top + 35, '#06141a', 30)
     path([[205, top + 68], [989, top + 68]], color, 1.5)
-    const labels = ['Frequency', 'Amplitude', 'Offset', 'Duty', 'Phase']
+    const labels = GENERATOR_PARAMETER_LABELS
     const values = i === 0 ? ['1.000 000 kHz', '5.000 Vpp', '0.000 V', '50.0 %', '0.0 °'] : ['10.000 000 kHz', '3.000 Vpp', '0.000 V', '50.0 %', '90.0 °']
     labels.forEach((label, j) => { text(label, 38, top + 108 + j * 48, '#dfe8ec', 28); text(':', 223, top + 108 + j * 48, '#dfe8ec', 28); text(values[j], 250, top + 108 + j * 48, j === 0 ? color : '#e4edf0', 28) })
     const plot = { x: 616, y: top + 88, w: 368, h: 242 }

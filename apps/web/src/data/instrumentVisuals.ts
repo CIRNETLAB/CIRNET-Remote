@@ -1,6 +1,7 @@
 // Presentation metadata only. No capture capability, device rating or sample
 // data is implied by these colors and front-panel labels.
 export const CH1_COLOR = '#ffe04a', CH2_COLOR = '#20d4ee'
+export const SUPPLY_THEME = { voltage: '#ff493c', current: '#30b4ff', bezel: '#30383e', panel: '#272e33' } as const
 export const SCOPE_THEME = { ch1: CH1_COLOR, ch2: CH2_COLOR, run: '#36d790', bezel: '#30383e', panel: '#272e33', screen: '#050b10' } as const
 export const SCOPE_SECTIONS = ['Horizontal', 'Trigger', 'Vertical'] as const
 export const SCOPE_LABELS = { timeDiv: 'Time / Div', position: 'Position', level: 'Level', voltsDiv: 'Volts / Div' } as const

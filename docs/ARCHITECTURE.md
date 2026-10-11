@@ -81,15 +81,19 @@ Select
 Wire
 Move
 Rotate
-Delete
-Probe
 Scope
+Probe
+Power Supply (window launcher)
+Function Generator (window launcher)
 ```
+
+Delete remains a canvas keyboard/gizmo/selection action and retained editor logic, with no sidebar button. The two new launchers call the existing UI window manager directly and do not select an editing mode.
 
 Tools requiring a larger control surface open as floating windows over the workspace rather than routing to another page:
 
 ```text
 Oscilloscope
+Power Supply
 Function Generator
 Logic Analyzer / Signal Monitor
 Component / IC Information
@@ -282,3 +286,7 @@ The workbench region remains sized by the title/status shell. Its stage fills th
 OscilloscopeWindow and SignalMonitorWindow own scoped responsive CSS and lightweight empty SVG grids. InstrumentDial is a static disabled visual control, without acquisition handlers, timers or render loops. `data/instrumentVisuals.ts` contains presentation-only scope colors/sections/control labels; OscilloscopeArtwork/Model consume the same values without geometry or behavior changes. Existing instrument state supplies configuration labels and configured channel names only. Both channels still read the existing shared scale; separate acquisition/channel contracts have not been invented. Unavailable positions/levels/source and all measurements are unknown.
 
 Window definitions provide760×530 Scope and720×500 Monitor defaults. Existing FloatingWindow/manager and UI store continue owning clamp/drag/focus/scroll and drawer safe areas; no new manager or duplicated window state is introduced. SVG grid height follows channel rows, aligning36 px rows with guides without generating digital trace values. Time markers indicate configured divisions, not measured timestamps. Browser/SSR verification and changed files: `verification/2026-10-12-instrument-gui.md`.
+
+PowerSupplyWindow600×510 derives selection and all setpoints directly from CircuitStore/workspace selection. Native change events call the existing validated property/history command; no instrument supply state or async adapter exists. Shared supply getters/limits keep GUI and model consistent. Display V/A are local setpoints, W is unknown; OFF retains configuration and an absent/non-supply selection disables controls. Visual Vcc/Gnd remain non-electrical.
+
+Generator760×530 consumes GENERATOR_LAYOUT/colors/theme/parameter labels from FunctionGeneratorArtwork; model geometry and generated assets remain unchanged. Existing flat instrument.generator fields remain CH1 configuration; nested channel2 is independent local configuration, preserving legacy readers. Window-local channel focus creates no output/editor state. Static normalized SVG shapes are explicitly schematic previews, never samples; all function/encoder/output/power controls remain disabled. Current tests/browser/files: `verification/2026-10-12-supply-generator-launchers.md`.

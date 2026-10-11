@@ -1,7 +1,7 @@
 import { BoxGeometry, CanvasTexture, CylinderGeometry, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, SphereGeometry, SRGBColorSpace, TorusGeometry, type BufferGeometry, type Material, type Object3D } from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
-import { GENERATOR_CH1, GENERATOR_CH2, GENERATOR_SYNC, GENERATOR_LAYOUT, drawInstrumentArtwork, generatorLegendsArtwork, generatorScreenArtwork } from './FunctionGeneratorArtwork'
+import { GENERATOR_CH1, GENERATOR_CH2, GENERATOR_SYNC, GENERATOR_LAYOUT, GENERATOR_THEME, drawInstrumentArtwork, generatorLegendsArtwork, generatorScreenArtwork } from './FunctionGeneratorArtwork'
 import { loadInstrumentLogo, type InstrumentArtwork } from './InstrumentArtwork'
 import { createInstrumentChassis, mountInstrumentChassis } from './InstrumentChassis'
 
@@ -26,8 +26,8 @@ export function addFunctionGeneratorModel(group: Group) {
   }
   const light = (name: string, color: string) => { const material = new MeshBasicMaterial({ color, toneMapped: false }); material.name = name; return material }
   const shell = standard('generator_silver_powdercoat', '#a1aab4', 0.32, 0.54)
-  const bezel = standard('generator_bezel', '#30383e', 0.18, 0.52)
-  const panel = standard('generator_panels', '#272e33', 0.12, 0.57)
+  const bezel = standard('generator_bezel', GENERATOR_THEME.bezel, 0.18, 0.52)
+  const panel = standard('generator_panels', GENERATOR_THEME.panel, 0.12, 0.57)
   const rubber = standard('generator_rubber', '#080f16', 0, 0.7)
   const grip = standard('generator_knob_grip', '#35434e', 0.18, 0.4)
   const silver = standard('generator_bnc_metal', '#b7c4cf', 0.78, 0.26)
@@ -66,7 +66,7 @@ export function addFunctionGeneratorModel(group: Group) {
   merged('case_fasteners', [-2.70, 2.70].flatMap(x => [-0.75, 0.75].map(z => new CylinderGeometry(0.036, 0.036, 0.005, 12).translate(x, 3.491, z))), silver)
 
   const screenTexture = canvasTexture(generatorScreenArtwork())
-  const screenMaterial = new MeshBasicMaterial({ map: screenTexture, color: screenTexture ? '#ffffff' : '#030b0f', toneMapped: false }); screenMaterial.name = 'generator_screen'
+  const screenMaterial = new MeshBasicMaterial({ map: screenTexture, color: screenTexture ? '#ffffff' : GENERATOR_THEME.screen, toneMapped: false }); screenMaterial.name = 'generator_screen'
   const screen = add('screen', new PlaneGeometry(layout.screen.w, layout.screen.h), screenMaterial, layout.screen.x, layout.screen.y, 1.122)
   screen.userData = { role: 'waveform-screen', channels: 2, waveform: 'illustrative-preview', textureSize: [1024, 768] }
   const legendsMaterial = new MeshBasicMaterial({ map: canvasTexture(generatorLegendsArtwork()), transparent: true, depthWrite: false, toneMapped: false }); legendsMaterial.name = 'generator_legends'

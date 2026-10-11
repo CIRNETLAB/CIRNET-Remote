@@ -13,6 +13,8 @@ const paths: Record<string, string> = {
   delete: 'M3 6h18 M9 6V3h6v3 M5 6l1 15h12l1-15 M10 10v7 M14 10v7',
   scope: 'M3 4h18v14H3z M7 21h10 M12 18v3 M5 11h3l2-4 4 8 2-4h3',
   probe: 'M4 21 18 7 M14 3l7 7 M12 8l4 4 M3 22l3-1-2-2z',
+  'power-supply': 'M3 3h18v18H3z M6 6h8v6H6z M17 6h.01 M17 11h.01 M6 17h4 M8 15v4 M15 17h4',
+  generator: 'M2 4h20v16H2z M5 12c2-8 4 8 6 0s4 8 6 0 M19 7h.01 M19 16h.01 M7 23v-3 M17 23v-3',
   inspector: 'M4 4h16v16H4z M9 4v16 M12 8h5 M12 12h5 M12 16h3',
   close: 'M6 6l12 12 M18 6 6 18',
   plus: 'M12 5v14 M5 12h14', minus: 'M5 12h14',

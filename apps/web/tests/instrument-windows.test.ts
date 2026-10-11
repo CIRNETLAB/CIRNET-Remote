@@ -75,7 +75,7 @@ test('configured monitor names remain escaped labels without fabricating digital
   assert.doesNotMatch(html, /<polyline|<canvas/)
 })
 
-test('larger scope/monitor windows remain bounded and restore defaults without changing other window sizes', () => {
+test('instrument windows remain bounded and restore defaults while Inspector and Hex retain their sizes', () => {
   const scope = windowDefinitions.oscilloscope
   assert.ok(scope.width >= 720 && scope.width <= 780)
   assert.ok(scope.height >= 480 && scope.height <= 540)
@@ -89,7 +89,7 @@ test('larger scope/monitor windows remain bounded and restore defaults without c
   }
   ui.setWorkbenchSize(1200, 800); ui.setViewport(1200, 800)
   assert.equal(ui.windows[0].width, scope.width); assert.equal(ui.windows[0].height, scope.height)
-  assert.deepEqual(windowDefinitions.generator, { title: 'Function Generator', width: 420, height: 400 })
+  assert.deepEqual(windowDefinitions.generator, { title: 'Function Generator', width: 760, height: 530 })
   assert.deepEqual(windowDefinitions.inspector, { title: 'Inspector', width: 400, height: 470 })
   assert.deepEqual(windowDefinitions['hex-editor'], { title: 'Hex Editor', width: 470, height: 330 })
 })

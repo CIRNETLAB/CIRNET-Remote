@@ -1,7 +1,7 @@
 ---
 project: net-Circuit-Remote
-current_phase: interactive-workspace-instrument-gui
-status: instrument-gui-verified
+current_phase: interactive-workspace-supply-generator-launchers
+status: supply-generator-launchers-verified
 last_updated: 2026-10-12
 next_task: phase-3-simulator-event-clock-model-integration
 blocking_issue: none
@@ -14,6 +14,16 @@ fpga_development_started: false
 ## Current Goal
 
 Phase 2 **Interactive Circuit Workspace** is implemented, preserving Phase 1 shell and transport boundaries. Next: Phase 3 simulator/event/clock/model adapters and real output/capture data.
+
+## Supply and Generator launchers / GUI — 2026-10-12
+
+Read requested rail/workspace/window/instrument/icon/model/artwork/GUI/CSS files and existing editor/property/history/interaction tests before changes. Removed only the Delete button from ToolRail. Delete/Backspace, gizmo/Component Info deletion and legacy delete logic remain. New Power Supply and Function Generator buttons have distinct compact icons and call only ui.openWindow; they do not change tool, selection, pending port, placement or area mode. Existing mounted overlay drawers and scrolling stay intact.
+
+PowerSupplyWindow600×510 binds only the selected POWER_SUPPLY. Voltage/current knobs with native range/number controls and POWER switch update voltage_v/current_limit_a/power_on through CircuitStore validation/history; one change per completed slider drag, no shadow setpoint state. It follows selection/deletion/Undo/Redo. V/A show local settings only when powered on; W remains unknown; no selection is explicit and controls disabled. Supply colors are shared with the unchanged 3D model.
+
+Generator760×530 uses two configuration panels, static schematic SVG previews, shared Artwork colors/labels/key/output metadata, function keypad, disabled encoder/soft keys/output/power and local CH1/CH2 focus selection. Existing flat generator fields remain CH1; nested channel2 contains independent local defaults. Phase stays unknown. No DDS/output API, additional canvas, acquisition/render loop, hardware contract or graph change is introduced. Removed obsolete Generator global CSS; Scope/Monitor source and window/viewport architecture remain intact.
+
+Five feature regressions failed correctly before implementation; six new tests include actual compiled SFC events, state/selection/validation/history/no-telemetry/defaults/shared icons/disabled output plus Delete/Backspace. Final frontend191/191, Python97/97 and production build147 modules pass; existing bundle advisory and three Python deprecations remain. Browser verifies Move retained by launchers, canonical5 V/1.2 A and unknown W, native keyboard edits/Undo/Redo, deletion clearing binding, both complete default layouts, responsive320 px without horizontal overflow and unchanged Scope/Monitor. Narrow keypad label overflow was corrected to two columns; final buttons fit. Read-only review finds no critical/important issue; runtime warn/error logs empty. Evidence and exact file list: `verification/2026-10-12-supply-generator-launchers.md`. Phase3 integration remains next.
 
 ## Instrument GUI redesign — 2026-10-12
 
@@ -270,7 +280,7 @@ Device-library coverage is small. gRPC generated bindings/handlers, exact SDRAM/
 
 ### What changed
 
-Latest task redesigns Scope and Signal Monitor as lightweight responsive instrument GUIs with shared scope presentation colors/labels. Disabled controls and explicit unavailable capture/empty trace/unknown measurement states remain; no acquisition, graph or manager architecture changes. Scope760×530 and Monitor720×500 fit default desktop bodies. Frontend185/185, Python97/97 and production build pass; evidence/files: verification/2026-10-12-instrument-gui. Existing fixed overlay drawers and safe areas remain intact. Preserve graph/history/geometry and hardware boundaries.
+Latest task removes only sidebar Delete and adds Power Supply/Generator launchers preserving editing state. Supply GUI binds selected canonical graph properties/history, never telemetry; Generator has two local previews with legacy CH1 fields retained and independent nested channel2. Output controls remain disabled. Shared artwork/themes preserve 3D colors/geometry; existing window manager, drawers, Scope/Monitor and graph contracts remain. Frontend191/191, Python97/97 and production build pass; evidence/files: verification/2026-10-12-supply-generator-launchers. Phase3 capture/DDS/simulator integration remains next.
 
 Phase 2 canonical catalog, separate memory contract, graph command/history layer, scene/models/picking/wires/camera controls, pointer/drag/keyboard interactions, selected Inspector/Hex Editor, lifecycle fixes, tests and Markdown. Preserve historical specs/verification and supplied artwork/axis gizmo.
 

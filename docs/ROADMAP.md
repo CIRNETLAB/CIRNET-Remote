@@ -33,7 +33,7 @@ UI migration completed on 2026-10-09; evidence in `DEV_LOG.md`:
 - [x] Remove visible main-page navigation.
 - [x] Add application/file-action bar: New / Open / Save / Undo / Redo (local JSON/project history).
 - [x] Add top component ribbon with twelve groups and supplied SVG artwork thumbnails; choice-only palettes anchored to their family and single-line labels.
-- [x] Add left interaction tool rail with seven shared modes.
+- [x] Add left interaction rail; current GUI has Select/Wire/Move/Rotate/Scope/Probe and independent Supply/Generator launchers. Delete is retained as keyboard/gizmo/editor logic, without its sidebar button.
 - [x] Fully collapse component ribbon/tools sidebar with floating edge toggles. Current mounted overlay drawers use fixed96 px Components and66/54 px Tools, sliding via200 ms transforms over a fixed Three.js viewport, with inert hidden content, reversal/reduced-motion handling and safe areas. Manual drawer resizing is removed; RAF/deduplicated WebGL resizing remains reserved for actual viewport changes. Current evidence: `verification/2026-10-11-fixed-drawers.md`; earlier flex-collapse/performance/overlay-resize evidence remains historical.
 - [x] Add central workspace shell occupying most of the viewport.
 - [x] Add status-bar-right Zoom In/Out/Fit Entire Circuit and Workspace Object Snap with definitions (supersedes Perspective overlay/reset).
@@ -41,6 +41,7 @@ UI migration completed on 2026-10-09; evidence in `DEV_LOG.md`:
 - [x] Add shared floating-window manager: drag/focus/keyboard/clamp.
 - [x] Add initial instrument window shells: Oscilloscope, Function Generator, Signal Monitor.
 - [x] Refine Scope into a responsive 2D front-panel GUI and Signal Monitor into a channel/timeline Logic Analyzer layout, sharing scope presentation metadata with the 3D model. Capture controls/data/measurements remain unavailable pending Phase3 contracts. Evidence: `verification/2026-10-12-instrument-gui.md`.
+- [x] Add selected canonical-setpoint Power Supply GUI and two-channel Generator configuration preview GUI with shared model/artwork spec. Launchers preserve editing state; physical output/telemetry/DDS integration remain unavailable. Evidence: `verification/2026-10-12-supply-generator-launchers.md`.
 - [x] Add Component Info, Inspector and Memory Hex Editor window shells.
 - [x] Retire legacy routed page components after references/tests are migrated.
 - [x] Keep API/WebSocket/hardware boundary tests green; verify build and desktop browser layout.

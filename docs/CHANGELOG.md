@@ -4,6 +4,13 @@ All notable project changes will be documented in this file. The project follows
 
 ## [Unreleased]
 
+### Changed — 2026-10-12 Supply / Generator launchers
+
+- Remove only the sidebar Delete button; retain Delete/Backspace, gizmo and selection deletion. Add distinct Power Supply/Function Generator icons and launchers that preserve editing state.
+- Add600×510 Supply GUI bound to selected canonical graph properties with existing validation/history. Display local V/A settings, unknown W and explicit NO SUPPLY SELECTED; no telemetry or parallel setpoint state.
+- Redesign760×530 Generator with two local configuration previews, shared artwork controls/colors, encoder/output visuals and channel focus. Retain legacy CH1 fields and add independent channel2 configuration. Hardware/DDS controls stay disabled.
+- Frontend191/191, Python97/97 and production build pass; browser evidence/files: `verification/2026-10-12-supply-generator-launchers.md`.
+
 ### Changed — 2026-10-12 Instrument GUI
 
 - Redesign Oscilloscope with a large empty display, seven dials, Horizontal/Trigger/Vertical groups and front-panel keys; share unchanged CH1 yellow/CH2 cyan colors and control labels with the 3D model.

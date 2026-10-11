@@ -49,6 +49,20 @@ function supplyFront(h: ReturnType<typeof setup>, x: number, y: number, z = 1.85
   return h.manager.project(new Vector3(x, y, z))
 }
 
+test('Delete and Backspace remove selections with Undo/Redo independent of the sidebar button', async () => {
+  for (const key of ['Delete', 'Backspace']) {
+    const h = setup()
+    try {
+      const id = h.circuit.placeModule('LED', { x: 0, y: 0, z: 0 })
+      h.workspace.selectModule(id); await nextTick()
+      h.editor.keydown({ key, preventDefault() {} } as KeyboardEvent)
+      assert.equal(h.circuit.graph!.modules.length, 0)
+      h.circuit.undo(); assert.equal(h.circuit.graph!.modules[0].id, id)
+      h.circuit.redo(); assert.equal(h.circuit.graph!.modules.length, 0)
+    } finally { h.dispose() }
+  }
+})
+
 test('area selection takes priority over model editing and commits only a new camera frame', async () => {
   for (const tool of ['move', 'rotate', 'delete', 'wire'] as const) {
     const h = setup(tool)

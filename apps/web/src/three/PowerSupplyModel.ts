@@ -1,6 +1,7 @@
 import { BoxGeometry, CanvasTexture, CylinderGeometry, DoubleSide, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, SRGBColorSpace, TorusGeometry } from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { loadInstrumentLogo } from './InstrumentArtwork'
+import { SUPPLY_THEME } from '../data/instrumentVisuals'
 
 export type SupplyControl = 'voltage_v' | 'current_limit_a' | 'power_on'
 export const supplyControlMaximum = (control: SupplyControl) => control === 'voltage_v' ? 15 : 5
@@ -49,7 +50,7 @@ function drawDisplay(ctx: CanvasRenderingContext2D, on: boolean, voltage: number
     a: [14, -78, 77, -78], b: [86, -66, 86, -12], c: [86, 12, 86, 66],
     d: [14, 78, 77, 78], e: [6, 12, 6, 66], f: [6, -66, 6, -12], g: [14, 0, 77, 0],
   }
-  for (const [row, unit, color, value] of [[0, 'V', '#ff493c', voltage], [1, 'A', '#30b4ff', current], [2, 'W', '#ff493c', null]] as const) {
+  for (const [row, unit, color, value] of [[0, 'V', SUPPLY_THEME.voltage, voltage], [1, 'A', SUPPLY_THEME.current, current], [2, 'W', SUPPLY_THEME.voltage, null]] as const) {
     const y = 200 + row * 280
     ctx.fillStyle = color; ctx.strokeStyle = color; ctx.lineWidth = 14; ctx.lineCap = 'butt'
     const text = value === null ? '----' : value.toFixed(2).padStart(5, '0').replace('.', '')
@@ -119,8 +120,8 @@ export function addPowerSupplyModel(group: Group, [w, h, d]: readonly number[]) 
   }
   const front = d / 2, panelY = (h + 0.14) / 2
   add('supply-enclosure', new Mesh(new RoundedBoxGeometry(w, h - 0.14, d - 0.16, 4, 0.065), mat('#a1aab4', 0.48, 0.38)), 0, panelY, -0.08, true)
-  add('supply-bezel', new Mesh(new RoundedBoxGeometry(w - 0.035, h - 0.17, 0.16, 4, 0.045), mat('#30383e', 0.32, 0.4)), 0, panelY, front - 0.08, true)
-  add('supply-front', new Mesh(new RoundedBoxGeometry(w - 0.16, h - 0.26, 0.025, 3, 0.025), mat('#272e33', 0.24, 0.52)), 0, panelY, front + 0.003)
+  add('supply-bezel', new Mesh(new RoundedBoxGeometry(w - 0.035, h - 0.17, 0.16, 4, 0.045), mat(SUPPLY_THEME.bezel, 0.32, 0.4)), 0, panelY, front - 0.08, true)
+  add('supply-front', new Mesh(new RoundedBoxGeometry(w - 0.16, h - 0.26, 0.025, 3, 0.025), mat(SUPPLY_THEME.panel, 0.24, 0.52)), 0, panelY, front + 0.003)
   add('control-strip', new Mesh(new RoundedBoxGeometry(w * 0.265, h * 0.66, 0.025, 3, 0.027), mat('#343c42', 0.2, 0.48)), w * 0.335, h * 0.585, front + 0.025)
   // Keep the upper glass edge below the case header and the lower edge above
   // the output labels. Printed branding occupies the right-hand header space.
