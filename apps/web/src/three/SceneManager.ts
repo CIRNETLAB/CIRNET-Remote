@@ -34,7 +34,8 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
   scene.add(grid, ambient, light, fillLight, content, wires)
   const gizmo = createComponentTransformGizmo(); scene.add(gizmo.root)
   let gizmoObstacles: GizmoObstacle[] = []
-  const updateGizmo = () => gizmo.update(highlightedId ? models.get(highlightedId) : undefined, models.values(), camera, width, height, gizmoObstacles)
+  const gizmoModel = () => ghost ?? (highlightedId ? models.get(highlightedId) : undefined)
+  const updateGizmo = () => gizmo.update(gizmoModel(), models.values(), camera, width, height, gizmoObstacles)
   const raycaster = new Raycaster(), plane = new Plane(new Vector3(0, 1, 0), 0)
   let width = 1, height = 1, sized = false, frame: number | null = null, disposed = false, visible = false, suspended = false, pointerLocked = false
   let bufferWidth = 0, bufferHeight = 0
@@ -115,7 +116,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     pickGizmo(x: number, y: number) { if (!validPointer(x, y)) return null; updateGizmo(); ray(x, y); return gizmo.pick(raycaster) },
     hoverGizmo(x: number, y: number) { if (!validPointer(x, y)) return null; updateGizmo(); ray(x, y); const handle = gizmo.pick(raycaster)?.handle ?? null; gizmo.hover(handle); schedule(); return handle },
     clearGizmoHover() { if (disposed) return; gizmo.hover(null); schedule() },
-    activateGizmo(handle: TransformHandle | null) { if (disposed) return; updateGizmo(); gizmo.activate(handle, highlightedId ? models.get(highlightedId) : undefined); schedule() },
+    activateGizmo(handle: TransformHandle | null) { if (disposed) return; updateGizmo(); gizmo.activate(handle, gizmoModel()); schedule() },
     syncGraph(next: CircuitGraph | null) {
       if (disposed) return
       modules.clear(); for (const module of next?.modules ?? []) modules.set(module.id, module)
@@ -143,12 +144,13 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
         applyPowerSupplyControls(model, { ...module.properties, [control]: value }); model.updateMatrixWorld(true); schedule()
       }
     },
-    setGhost(type: string | null, position?: Vector3) {
-      if (disposed || (position && !position.toArray().every(Number.isFinite))) return
-      if (ghost && type && position && ghost.userData.type === type) { ghost.position.copy(position); ghost.updateMatrixWorld(true); schedule(); return }
+    setGhost(type: string | null, position?: Required<NonNullable<CircuitModule['position']>>, rotation = 0) {
+      if (disposed || !Number.isFinite(rotation) || (position && ![position.x, position.y, position.z].every(Number.isFinite))) return
+      if (ghost && type && position && ghost.userData.type === type) { applyPose(ghost, { id: 'PLACE', type, position, rotation }); schedule(); return }
       if (ghost) { disposeObject(ghost); scene.remove(ghost); ghost = null }
       if (type && position && getDefinition(type)) {
-        ghost = buildComponent({ id: 'PLACE', type, position }); ghost.userData.type = type
+        // PLACE is a render-only pick target, absent from models, ports and Circuit Graph.
+        ghost = buildComponent({ id: 'PLACE', type, position, rotation }); ghost.userData.kind = 'placement'
         ghost.traverse((object) => {
           if (object instanceof Mesh) {
             const mats = Array.isArray(object.material) ? object.material : [object.material]

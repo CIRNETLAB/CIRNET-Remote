@@ -7,6 +7,19 @@ import { componentCatalog, getDefinition } from '../src/data/editorCatalog'
 import { createMemoryImage, parseMemoryImage } from '../src/services/files/memoryImage'
 
 beforeEach(() => { setActivePinia(createPinia()); useCircuitStore().createDraft(); useCircuitStore().past = [] })
+test('placement accepts a finite initial rotation in one command and rejects invalid rotation before history', () => {
+  const store = useCircuitStore(), position = { x: 2, y: 0, z: 3 }
+  const place = store.placeModule
+  const snapshot = store.snapshot()
+  for (const rotation of [NaN, Infinity, -Infinity]) {
+    assert.throws(() => place('BREADBOARD', position, rotation), /Rotation must be finite/)
+    assert.equal(store.snapshot(), snapshot); assert.equal(store.past.length, 0)
+  }
+  const id = place('BREADBOARD', position, -270)
+  assert.equal(store.graph!.modules[0].rotation, 90); assert.equal(store.past.length, 1)
+  store.undo(); assert.equal(store.graph!.modules.length, 0)
+  store.redo(); assert.equal(store.graph!.modules[0].id, id); assert.equal(store.graph!.modules[0].rotation, 90)
+})
 test('visual supply controls are bounded, isolated and survive file round-trip without electrical ports', () => {
   const store = useCircuitStore(), position = { x: 0, y: 0, z: 0 }
   store.placeModule('POWER_SUPPLY', position); store.placeModule('POWER_SUPPLY', position)

@@ -32,18 +32,19 @@ export const useCircuitStore = defineStore('circuit', {
       if (!this.current || JSON.stringify(graph) === JSON.stringify(this.graph)) return
       this.recordChange(); this.current.graph = graph; this.clearValidation()
     },
-    placeModule(type: string, position: Required<NonNullable<CircuitModule['position']>>): string {
+    placeModule(type: string, position: Required<NonNullable<CircuitModule['position']>>, rotation = 0): string {
       if (!this.graph) throw new Error('Create a circuit first.')
       const definition = getDefinition(type)
       if (!definition) throw new Error('Placement metadata is unavailable for this type.')
       if (!Object.values(position).every(Number.isFinite)) throw new Error('Position must be finite.')
+      if (!Number.isFinite(rotation)) throw new Error('Rotation must be finite.')
       const ids = new Set(this.graph.modules.map((module) => module.id))
       let serial = 1
       while (ids.has(`${type}_${serial}`)) serial++
       const id = `${type}_${serial}`
       const properties = structuredClone(definition.defaults)
       if (definition.memoryContract) properties.memory = createMemoryImage()
-      this.commitGraph({ ...this.graph, modules: [...this.graph.modules, { id, type, position: { ...position }, rotation: 0, properties }] })
+      this.commitGraph({ ...this.graph, modules: [...this.graph.modules, { id, type, position: { ...position }, rotation: ((rotation % 360) + 360) % 360, properties }] })
       return id
     },
     moveModule(id: string, position: Required<NonNullable<CircuitModule['position']>>) {

@@ -138,7 +138,7 @@ code { font-family: Consolas, monospace; }
 .workspace-empty > span:last-of-type { font-size: 12px; line-height: 1.8; color: #839bae; }
 .workspace-quick { display: flex; justify-content: center; gap: 7px; margin-top: 21px; pointer-events: auto; }
 .workspace-quick button { font-size: 10px; background: #1e3040; border-color: #3d5766; padding: 6px 10px; color: #a2c4ca; }
-.placement-notice { position: absolute; bottom: 20px; left: 22px; max-width: calc(100% - 250px); font-size: 10px; color: #8ca4b7; background: #101925b3; padding: 5px 7px; pointer-events: none; }
+.placement-notice { position: absolute; bottom: 20px; left: 22px; margin-left: var(--drawer-left); max-width: calc(100% - 250px); font-size: 10px; color: #8ca4b7; background: #101925b3; padding: 5px 7px; pointer-events: none; }
 .workspace-navigator { position: absolute; right: 16px; bottom: 14px; display: flex; align-items: center; gap: 8px; user-select: none; pointer-events: none; }
 .axis-gizmo { width: 104px; height: 104px; pointer-events: none; filter: drop-shadow(0 1px 2px #0009); }
 .axis-gizmo text { font: 700 12px Consolas, monospace; }

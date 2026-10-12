@@ -64,6 +64,7 @@ UI migration completed on 2026-10-09; evidence in `DEV_LOG.md`:
 - [x] Adjacent Component Transform Gizmo: X/Z/free movement, Y rotation, hover/live wires, stable active pixel scale, obstacle avoidance, one Undo/cancel; Move-only body dragging retained. Original bench Power Supply model and no tool-title overlay. Evidence: `verification/2026-10-09-component-transform-gizmo-browser.md`; final bundling still limited by sandbox.
 - [x] Ribbon/gizmo/supply refinement: anchored choice-only palettes, one-line Embedded/Controller, clear handles with live rotating Y grip, tall-model/small-canvas clearance, upright metal two-knob/two-post supply without USB. Evidence: `verification/2026-10-09-ribbon-gizmo-supply-browser.md`; unknown/OFF visual-only source boundary retained.
 - [x] Undo/redo graph commands; one committed step per drag; canceled preview changes no graph.
+- [x] Placement ghost uses the same X/Z/XZ/Y/Delete gizmo with an anchored local draft, rotation-aware axis-safe Breadboard snapping, owned pointer cancellation and atomic pose placement/Undo/Redo. Evidence: `verification/2026-10-12-placement-ghost-gizmo.md`.
 - [x] Circuit Graph updates independent of geometry; cascade deletion and JSON round trip.
 - [x] Local JSON save/open project UX in the Single Workspace (server persistence remains Phase 4).
 - [x] Selected-module Inspector and local Memory Hex Editor contract.

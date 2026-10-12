@@ -1,7 +1,7 @@
 ---
 project: net-Circuit-Remote
-current_phase: interactive-workspace-supply-generator-launchers
-status: supply-generator-launchers-verified
+current_phase: interactive-workspace-placement-ghost-gizmo
+status: placement-ghost-gizmo-verified
 last_updated: 2026-10-12
 next_task: phase-3-simulator-event-clock-model-integration
 blocking_issue: none
@@ -14,6 +14,14 @@ fpga_development_started: false
 ## Current Goal
 
 Phase 2 **Interactive Circuit Workspace** is implemented, preserving Phase 1 shell and transport boundaries. Next: Phase 3 simulator/event/clock/model adapters and real output/capture data.
+
+## Placement ghost Gizmo — 2026-10-12
+
+Read requested editor/scene/gizmo/workspace/circuit/model and interaction/history tests before editing. Existing pointerDown committed placement before gizmo picking; gizmo targeted only selected graph models. Editor now owns a local type/position/rotation draft. First valid preview anchors its pose so pointer approach cannot chase the adjacent handles. One existing scene gizmo targets ghost or selected model, with unchanged scale/obstacle/render logic. X/Z/XZ/Y use shared captured gesture math; preview/release never creates graph identity, ports, Info or history. Ghost Delete/right click/Escape discard placement; model deletion remains intact. Own capture interruption discards draft; foreign pointer move/up/cancel/capture loss cannot affect the active gesture. Tool/type/graph changes clear stale drafts.
+
+Placement accepts finite initial rotation and commits the entire pose once. Draft snapping uses explicit yaw and constrained-axis docking/anti-overlap; rotation re-snaps from gesture origin to avoid accumulated pushes when reversing. Ghost remains stable through ordinary moves/leave, camera navigation and drawer motion. PointerDown picks gizmo before ground projection/commit; anchored hover avoids extra ground projection, and pointerUp avoids duplicate ghost pose application. Selection after commit resumes existing model gizmo behavior. Only placement help uses existing drawer-left inset; no graph/schema/gizmo geometry/dependency/window/instrument/simulation change.
+
+Nine new regressions include actual production raycasting/capture/math/history. Initial six fail before implementation; rotation-drift test reproduces z6 instead of2.66 before correction. Read-only review finds two further cases: constrained draft axis overlap and foreign pointercancel. Both are reproduced by failing tests and fixed; full frontend200/200, Python97/97 and production147-module build pass. Browser confirms ghost X/Y manipulation with Components0/Undo disabled, stable pose away from handles, no Info before placement, atomic one-click Undo/Redo and unchanged canvas1280×629 / buffer1600×786. Full evidence and changed files: `verification/2026-10-12-placement-ghost-gizmo.md`. Phase3 integration remains next.
 
 ## Supply and Generator launchers / GUI — 2026-10-12
 

@@ -4,6 +4,13 @@ All notable project changes will be documented in this file. The project follows
 
 ## [Unreleased]
 
+### Changed — 2026-10-12 Placement ghost Gizmo
+
+- Reuse the single Component Transform Gizmo for ghost X/Z/XZ/Y transforms before placement. Anchored drafts stay outside graph/history; handle clicks cannot accidentally place a model or open Component Info.
+- Ghost Delete/right click/Escape cancel; pointer capture guards include foreign pointercancel. Commit the entire position/rotation through one placement command and Undo/Redo step.
+- Draft Breadboard snap/docking/anti-overlap uses its rotation, respects constrained X/Z and resolves rotation from the original gesture pose. Existing graph schema, model gestures, camera, drawers and instruments remain.
+- Frontend200/200, Python97/97 and production build pass; details and browser evidence: `verification/2026-10-12-placement-ghost-gizmo.md`.
+
 ### Changed — 2026-10-12 Supply / Generator launchers
 
 - Remove only the sidebar Delete button; retain Delete/Backspace, gizmo and selection deletion. Add distinct Power Supply/Function Generator icons and launchers that preserve editing state.
