@@ -1,0 +1,1098 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+  "title": "Lab-First domain contracts 1.0",
+  "$defs": {
+    "LabEndpoint": {
+      "type": "object",
+      "properties": {
+        "endpoint_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "role": {
+          "enum": [
+            "INPUT_SOURCE",
+            "OUTPUT_SENSE",
+            "CLOCK",
+            "VCC",
+            "GND",
+            "GENERATOR",
+            "SCOPE",
+            "LOGIC_ANALYZER"
+          ]
+        },
+        "node_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "channel": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "required": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "endpoint_id",
+        "role"
+      ],
+      "additionalProperties": false
+    },
+    "AssignmentDefinition": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "assignment_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reference_design_graph": {
+          "type": "object"
+        },
+        "reference_topology_graph": {
+          "$ref": "#/$defs/DetectedTopologyGraph"
+        },
+        "expected_component_set": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "instructor_pin_profiles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "profile_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+              },
+              "component_type": {
+                "type": "string",
+                "minLength": 1
+              },
+              "pins": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "pin_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+                    },
+                    "role": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "pin_id",
+                    "role"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "profile_id",
+              "component_type",
+              "pins"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "lab_endpoints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LabEndpoint"
+          }
+        },
+        "expected_behavior": {
+          "type": "object",
+          "properties": {
+            "truth_table": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "inputs": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "enum": [
+                        0,
+                        1
+                      ]
+                    }
+                  },
+                  "outputs": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "enum": [
+                        0,
+                        1
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "inputs",
+                  "outputs"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "expected_signals": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "signal": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+                  },
+                  "time_ns": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "value": {
+                    "enum": [
+                      0,
+                      1
+                    ]
+                  }
+                },
+                "required": [
+                  "signal",
+                  "time_ns",
+                  "value"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "assessment_policy": {
+          "enum": [
+            "STRICT_TOPOLOGY",
+            "FUNCTIONAL_ONLY",
+            "TOPOLOGY_AND_FUNCTION"
+          ]
+        },
+        "component_resolution_mode": {
+          "enum": [
+            "AUTO_DISCOVERY",
+            "INSTRUCTOR_PROFILE",
+            "HYBRID"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "assignment_id",
+        "title",
+        "lab_endpoints",
+        "assessment_policy"
+      ],
+      "additionalProperties": false
+    },
+    "DetectedNode": {
+      "type": "object",
+      "properties": {
+        "node_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "node_id"
+      ],
+      "additionalProperties": false
+    },
+    "DetectedConnection": {
+      "type": "object",
+      "properties": {
+        "node_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+          },
+          "minItems": 2
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "node_ids"
+      ],
+      "additionalProperties": false
+    },
+    "ObservedPhysicalComponent": {
+      "type": "object",
+      "properties": {
+        "component_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "kind": {
+          "enum": [
+            "OBSERVED_PHYSICAL_COMPONENT",
+            "OPAQUE_PHYSICAL_COMPONENT"
+          ]
+        },
+        "node_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+          }
+        },
+        "identity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "package": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "component_id",
+        "kind",
+        "node_ids",
+        "identity"
+      ],
+      "additionalProperties": false
+    },
+    "OpaquePhysicalComponent": {
+      "type": "object",
+      "properties": {
+        "component_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "kind": {
+          "const": "OPAQUE_PHYSICAL_COMPONENT"
+        },
+        "node_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+          }
+        },
+        "identity": {
+          "const": "UNKNOWN"
+        },
+        "package": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "component_id",
+        "kind",
+        "node_ids",
+        "identity"
+      ],
+      "additionalProperties": false
+    },
+    "DetectedTopologyGraph": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "scan_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DetectedNode"
+          }
+        },
+        "connections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DetectedConnection"
+          }
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ObservedPhysicalComponent"
+          }
+        },
+        "ambiguities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "scan_id",
+        "nodes",
+        "connections",
+        "components",
+        "ambiguities"
+      ],
+      "additionalProperties": false
+    },
+    "ExecutionDecision": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "decision": {
+          "enum": [
+            "BLOCK_SAFETY",
+            "BLOCK_UNEXECUTABLE",
+            "RUN_NORMAL",
+            "RUN_GUARDED"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "decision",
+        "reasons"
+      ],
+      "additionalProperties": false
+    },
+    "StationCapabilities": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "station_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "mode": {
+          "enum": [
+            "simulation",
+            "hardware"
+          ]
+        },
+        "available": {
+          "type": "boolean"
+        },
+        "virtual_digital": {
+          "type": "boolean"
+        },
+        "virtual_analog": {
+          "type": "boolean"
+        },
+        "physical_digital": {
+          "type": "boolean"
+        },
+        "physical_analog_routing": {
+          "type": "boolean"
+        },
+        "physical_execution_slots": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "topology_scan_supported": {
+          "type": "boolean"
+        },
+        "safety_gate_supported": {
+          "type": "boolean"
+        },
+        "guarded_run_supported": {
+          "type": "boolean"
+        },
+        "component_resolution_modes": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "AUTO_DISCOVERY",
+              "INSTRUCTOR_PROFILE",
+              "HYBRID"
+            ]
+          }
+        },
+        "logic_analyzer_channels": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "oscilloscope_channels": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "generator_channels": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "routing_resources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "resource_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+              },
+              "roles": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "INPUT_SOURCE",
+                    "OUTPUT_SENSE",
+                    "CLOCK",
+                    "VCC",
+                    "GND",
+                    "GENERATOR",
+                    "SCOPE",
+                    "LOGIC_ANALYZER"
+                  ]
+                }
+              },
+              "node_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+                }
+              }
+            },
+            "required": [
+              "resource_id",
+              "roles",
+              "node_ids"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "breadboards": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+              },
+              "model": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "id",
+              "model"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "instruments": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "available": {
+                "type": "boolean"
+              },
+              "channels": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "status": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "available"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "hardware_rpc_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fpga_protocol_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "firmware_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hardware_profile_version": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "schema_version",
+        "station_id",
+        "mode",
+        "available",
+        "virtual_digital",
+        "virtual_analog",
+        "physical_digital",
+        "physical_analog_routing",
+        "physical_execution_slots",
+        "topology_scan_supported",
+        "safety_gate_supported",
+        "guarded_run_supported",
+        "component_resolution_modes",
+        "logic_analyzer_channels",
+        "oscilloscope_channels",
+        "generator_channels",
+        "routing_resources",
+        "hardware_rpc_version",
+        "fpga_protocol_version",
+        "firmware_version",
+        "hardware_profile_version"
+      ],
+      "additionalProperties": false
+    },
+    "ClockConfiguration": {
+      "type": "object",
+      "properties": {
+        "signal": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "period_ns": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "cycles": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        }
+      },
+      "required": [
+        "signal",
+        "period_ns",
+        "cycles"
+      ],
+      "additionalProperties": false
+    },
+    "GeneratorConfiguration": {
+      "type": "object",
+      "properties": {
+        "channel": {
+          "enum": [
+            1,
+            2
+          ]
+        },
+        "waveform": {
+          "enum": [
+            "SINE",
+            "SQUARE",
+            "TRIANGLE",
+            "RAMP",
+            "PULSE",
+            "ARBITRARY"
+          ]
+        },
+        "frequency_hz": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "amplitude_vpp": {
+          "type": "number",
+          "minimum": 0
+        },
+        "offset_v": {
+          "type": "number"
+        },
+        "phase_degrees": {
+          "type": "number"
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "channel",
+        "waveform",
+        "frequency_hz",
+        "amplitude_vpp",
+        "offset_v",
+        "enabled"
+      ],
+      "additionalProperties": false
+    },
+    "CaptureConfiguration": {
+      "type": "object",
+      "properties": {
+        "signals": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+          }
+        },
+        "duration_ns": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000000
+        },
+        "max_events": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "trigger": {
+          "type": "object",
+          "properties": {
+            "signal": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+            },
+            "edge": {
+              "enum": [
+                "RISING",
+                "FALLING",
+                "ANY"
+              ]
+            }
+          },
+          "required": [
+            "signal",
+            "edge"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "signals",
+        "duration_ns"
+      ],
+      "additionalProperties": false
+    },
+    "InstrumentationExecutionPlan": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "station_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "experiment_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "power_policy": {
+          "type": "object",
+          "properties": {
+            "profile_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+            },
+            "guarded": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "profile_id",
+            "guarded"
+          ],
+          "additionalProperties": false
+        },
+        "endpoint_bindings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "endpoint_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+              },
+              "node_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+              },
+              "role": {
+                "enum": [
+                  "INPUT_SOURCE",
+                  "OUTPUT_SENSE",
+                  "CLOCK",
+                  "VCC",
+                  "GND",
+                  "GENERATOR",
+                  "SCOPE",
+                  "LOGIC_ANALYZER"
+                ]
+              }
+            },
+            "required": [
+              "endpoint_id",
+              "node_id",
+              "role"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "routing_allocations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "endpoint_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+              },
+              "resource_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+              }
+            },
+            "required": [
+              "endpoint_id",
+              "resource_id"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "instrument_allocations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "endpoint_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+              },
+              "instrument": {
+                "enum": [
+                  "SCOPE",
+                  "GENERATOR",
+                  "LOGIC_ANALYZER"
+                ]
+              },
+              "channel": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "endpoint_id",
+              "instrument",
+              "channel"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "clock_config": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {},
+              "required": [],
+              "additionalProperties": false
+            },
+            {
+              "$ref": "#/$defs/ClockConfiguration"
+            }
+          ]
+        },
+        "generator_config": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GeneratorConfiguration"
+          }
+        },
+        "capture_config": {
+          "$ref": "#/$defs/CaptureConfiguration"
+        },
+        "test_vectors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "time_ns": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "inputs": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+                },
+                "additionalProperties": {
+                  "enum": [
+                    0,
+                    1
+                  ]
+                }
+              }
+            },
+            "required": [
+              "time_ns",
+              "inputs"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "runtime_safety_policy": {
+          "type": "object",
+          "properties": {
+            "profile_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+            },
+            "watchdog_required": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "profile_id",
+            "watchdog_required"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schema_version",
+        "station_id",
+        "experiment_id",
+        "power_policy",
+        "endpoint_bindings",
+        "routing_allocations",
+        "instrument_allocations",
+        "clock_config",
+        "generator_config",
+        "capture_config",
+        "test_vectors",
+        "runtime_safety_policy"
+      ],
+      "additionalProperties": false
+    },
+    "SafetyVerificationResult": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "status": {
+          "enum": [
+            "SAFE",
+            "UNSAFE",
+            "INDETERMINATE"
+          ]
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "observed_signals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "signal": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+              },
+              "time_ns": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "value": {
+                "enum": [
+                  0,
+                  1
+                ]
+              }
+            },
+            "required": [
+              "signal",
+              "time_ns",
+              "value"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "status",
+        "issues"
+      ],
+      "additionalProperties": false
+    },
+    "TopologyVerificationResult": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "status": {
+          "enum": [
+            "MATCH",
+            "MISMATCH",
+            "UNKNOWN",
+            "AMBIGUOUS"
+          ]
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "observed_signals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "signal": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+              },
+              "time_ns": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "value": {
+                "enum": [
+                  0,
+                  1
+                ]
+              }
+            },
+            "required": [
+              "signal",
+              "time_ns",
+              "value"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "status",
+        "issues"
+      ],
+      "additionalProperties": false
+    },
+    "FunctionalVerificationResult": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "status": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "PARTIAL",
+            "NO_RESPONSE",
+            "NOT_EVALUATED"
+          ]
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "observed_signals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "signal": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+              },
+              "time_ns": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "value": {
+                "enum": [
+                  0,
+                  1
+                ]
+              }
+            },
+            "required": [
+              "signal",
+              "time_ns",
+              "value"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "status",
+        "issues"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

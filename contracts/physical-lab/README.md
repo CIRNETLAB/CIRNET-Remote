@@ -1,0 +1,5 @@
+# Physical Lab contracts 1.0
+
+JSON Schema 2020-12 definitions in lab.schema.json. DetectedTopologyGraph preserves student mistakes and opaque/ambiguous observations; CircuitGraph remains 1.0. Independent Safety/Topology/Functional results and ExecutionDecision. InstrumentationExecutionPlan routes lab endpoints only, never internal student wiring. Closed field shapes exclude raw transport controls. Semantic endpoint uniqueness/binding validation is in contracts.validation.
+
+examples/v1-target-capabilities.json is a DESIGN TARGET, available=false, not runtime hardware evidence. Runtime channel/support/slot counts come from actual drivers/profiles. No electrical values are invented.

@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "station_id": "v1-design-target",
+  "mode": "hardware",
+  "available": false,
+  "virtual_digital": false,
+  "virtual_analog": false,
+  "physical_digital": false,
+  "physical_analog_routing": false,
+  "physical_execution_slots": 1,
+  "topology_scan_supported": false,
+  "safety_gate_supported": false,
+  "guarded_run_supported": false,
+  "component_resolution_modes": [
+    "AUTO_DISCOVERY",
+    "INSTRUCTOR_PROFILE",
+    "HYBRID"
+  ],
+  "logic_analyzer_channels": 0,
+  "oscilloscope_channels": 2,
+  "generator_channels": 2,
+  "routing_resources": [],
+  "hardware_rpc_version": "2.0",
+  "fpga_protocol_version": "2.0-scaffold",
+  "firmware_version": "UNAVAILABLE",
+  "hardware_profile_version": "TBD_BY_HARDWARE_DESIGN"
+}
