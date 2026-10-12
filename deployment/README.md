@@ -1,10 +1,5 @@
-# Deployment Templates
+# Mini PC deployment templates
 
-This directory contains **starter templates**, not a production-hardening claim.
+Canonical Lab-First authority: ../docs/ARCHITECTURE.md. Linux Mini PC Intel Xeon W-1370 / 16 GB RAM / 256 GB SSD; Nginx, systemd, FastAPI, isolated Hardware Service, PostgreSQL production.
 
-- `nginx/netcircuit.conf`: serves the built Vue SPA and proxies `/api/` and `/ws/` to FastAPI.
-- `systemd/netcircuit-api.service`: runs FastAPI on localhost port 8000.
-- `systemd/netcircuit-hardware.service`: runs the Hardware Service on localhost port 50051.
-- `raspberry-pi/README.md`: deployment checklist for Raspberry Pi OS 64-bit.
-
-The Hardware Service must not be exposed directly to the public network. Browser traffic goes through the Application Backend.
+nginx/netcircuit.conf serves Vue/proxies API and WebSocket. systemd units bind API 127.0.0.1:8000 and Hardware Service 127.0.0.1:50051. See mini-pc/README.md. RPC stays local-only behind FastAPI. Templates have not been validated on target hardware.

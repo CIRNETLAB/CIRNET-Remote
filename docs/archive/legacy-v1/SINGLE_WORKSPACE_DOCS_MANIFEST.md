@@ -1,3 +1,7 @@
+SUPERSEDED
+Do not use as current implementation authority.
+Current authority: docs/ARCHITECTURE.md
+
 # Single Workspace Documentation and Implementation Manifest
 
 The initial package approved the Single Workspace direction through Markdown changes. The 2026-10-09 implementation now migrates the source, tests and icon pipeline as well. Original specification/history is retained; current implementation evidence lives in DEV_LOG.

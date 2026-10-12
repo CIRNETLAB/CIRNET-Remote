@@ -1,6 +1,6 @@
 # Application Backend
 
-FastAPI shell for net*CIRCUIT Remote.
+FastAPI modular-monolith boundary for the Lab-First laboratory on a Linux Mini PC. Current authority: ../../docs/ARCHITECTURE.md. PostgreSQL is the production target; SQLite is optional for tests/development. R4 adds assignment/experiment/station/verification/persistence and FIFO/lease lifecycle; endpoints below describe the pre-R4 implementation.
 
 ## Local run
 

@@ -5,7 +5,7 @@ DOCS = ROOT / "docs"
 
 REQUIRED_DOCS = [
     "ARCHITECTURE.md", "CIRCUIT_SPEC.md", "ROADMAP.md", "CHANGELOG.md",
-    "CONTEXT.md", "DEV_LOG.md",
+    "CONTEXT.md", "DEV_LOG.md", "MIGRATION_LAB_FIRST.md", "PHYSICAL_LAB_SAFETY.md",
 ]
 
 
@@ -19,7 +19,9 @@ def test_context_locks_core_architecture():
     required = [
         "EP4CE6E22C8N",
         "EP4CE10E22C8N",
-        "64 MB",
+        "Mini PC", "Lab-First", "Safety-gated", "PostgreSQL",
+        "AssignmentDefinition", "LabEndpoint", "ExecutionDecision",
+        "SafetyVerificationResult", "TopologyVerificationResult", "FunctionalVerificationResult",
         "Web-first",
         "Frontend must never",
         "raw FPGA",

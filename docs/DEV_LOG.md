@@ -1,9 +1,9 @@
 ---
 project: net-Circuit-Remote
-current_phase: interactive-workspace-placement-sticky-gizmo
-status: placement-sticky-gizmo-verified
-last_updated: 2026-10-12
-next_task: phase-3-simulator-event-clock-model-integration
+current_phase: lab-first-r0-r7-migration
+status: r0-gates-passed
+last_updated: 2026-10-13
+next_task: r1-domain-contracts
 blocking_issue: none
 hardware_mode: simulation
 fpga_development_started: false
@@ -13,7 +13,7 @@ fpga_development_started: false
 
 ## Current Goal
 
-Phase 2 **Interactive Circuit Workspace** is implemented, preserving Phase 1 shell and transport boundaries. Next: Phase 3 simulator/event/clock/model adapters and real output/capture data.
+Execute the approved Lab-First R0–R7 migration on branch refactor. Current authority is ARCHITECTURE.md; status/evidence/rulings are in MIGRATION_LAB_FIRST.md. The entries and older handoff below are historical evidence and never override canonical v3.1.
 
 ## Unified placement pose and sticky Gizmo — 2026-10-12
 
@@ -284,7 +284,7 @@ One read-only reviewer found two material issues: ribbon opener focus loss/resel
 
 Scope retained: editing/execution/capture are explicit Phase 2+ features; the router's no-op record serves address compatibility only; permissive module properties follow the canonical schema. Costs of these choices are later editor/model/API work, a small temporary compatibility dependency, and leaving logical/electrical validation to the backend. No contract changes or physical driver work occurred.
 
-## Architectural decisions still locked
+## Historical architecture decisions (SUPERSEDED by Lab-First v3.1)
 
 - Raspberry Pi 5 is the V1 main controller; Web-first / simulation-first.
 - Single Workspace is the frontend UX architecture.

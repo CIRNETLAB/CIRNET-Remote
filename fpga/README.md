@@ -1,12 +1,7 @@
-# FPGA Workspace
+# Lab-First FPGA workspace
 
-This directory holds the future RTL and Quartus project sources for net*CIRCUIT Remote.
+Canonical authority: ../docs/ARCHITECTURE.md. Mini PC host boundary is FpgaTransport (serial/USB-SPI, future USB3/Ethernet), with transport-independent protocol.
 
-## Targets
+EP4CE6E22C8N prototype has no external SDRAM. R7 aligns compile-safe reset/safe-state, protocol/control, topology scan, protected drive, routing, experiment clock and fault interlock.
 
-- **Prototype:** EP4CE6E22C8N, no external SDRAM, Experiment Controller only.
-- **V1 final:** EP4CE10E22C8N + 64 MB 16-bit SDR SDRAM.
-
-The RTL should be modular and portable between the prototype and final target where practical. Target-specific pin assignments and timing constraints must remain separate from reusable RTL.
-
-No file in this scaffold claims that routing, Logic Analyzer, SDRAM, Generator, or Oscilloscope functionality is already implemented.
+Future EP4CE10E22C8N + external SDRAM supports Logic Analyzer, Scope 2CH + ADC/AFE and Generator 2CH + DAC/output stage with shared SDRAM arbiter, trigger/timestamps/CDC. These are target interfaces only; no working acquisition/timing/routing/protection claim. Part/pin/timing/electrical inputs: TBD_BY_HARDWARE_DESIGN.

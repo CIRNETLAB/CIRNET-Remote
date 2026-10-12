@@ -1,3 +1,7 @@
+SUPERSEDED
+Do not use as current implementation authority.
+Current authority: docs/ARCHITECTURE.md
+
 # SUPERSEDED — Historical Web Foundation UI Design
 
 > **Status:** SUPERSEDED on 2026-10-09 for user-facing UI architecture.  

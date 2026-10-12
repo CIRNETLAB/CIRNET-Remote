@@ -1,294 +1,86 @@
-# net*CIRCUIT Remote Architecture
-
-## 1. System goal
-
-net*CIRCUIT Remote is a remote laboratory for digital electronics. Users construct experiments in a Web workspace, validate them in software, run them through a Virtual Hardware Station during early development, and later execute the same model on real logic ICs routed and measured by FPGA hardware.
-
-## 2. Top-level architecture
-
-```text
-User Browser
-    |
-    | HTTPS / REST / WebSocket
-    v
-Nginx on Raspberry Pi 5
-    |----------------------> Vue static frontend
-    |
-    `--> FastAPI Application Server
-              |
-              | gRPC / local contract
-              v
-        Hardware Service
-              |
-        HardwareStation API
-          /                    v             v
-VirtualStation   PhysicalStation
-(simulator)      (FPGA later)
-                      |
-                      v
-           EP4CE6 prototype / EP4CE10 V1
-                      |
-                 Routing Fabric
-                      |
-              Real logic IC hardware
-```
+# net*CIRCUIT Remote — Lab-First v3.1
 
-## 3. Responsibility boundaries
+This is the single canonical architecture authority. The original v3 proposal/audit are provenance; archived specs/prompts, source analyses and verification reports are history. This document governs conflicts.
 
-### Frontend
+**Safety-gated, Lab-First, Contract-Driven Virtual-to-Physical Laboratory Architecture.**
 
-Owns the **Single Workspace** UI state, workspace interaction, Circuit Graph editing, component/tool selection, floating instrument windows, status presentation and waveform rendering. It **must not** know FPGA registers, chip-select details, raw MUX addresses, Linux device paths or physical switching sequences.
+Computer checks SAFETY → safe circuit runs → real physics produces behavior → software observes, compares and teaches.
 
-The user-facing application is not a dashboard-style multi-page site. `/` opens the workbench directly. The former Dashboard / Circuits / Stations / Experiments / Settings page model is superseded and must not be extended.
+SAFETY != CORRECTNESS. UNKNOWN != UNSAFE. TOPOLOGY MISMATCH != RUN BLOCK.
 
+## System boundary
 
-### Application Backend
+Browser Vue 3 / TypeScript / Pinia / Three.js → REST/WebSocket → Nginx → FastAPI modular monolith → local-only gRPC Hardware Service → HardwareStation. Application depends on the abstraction: VirtualHardwareStation (simulator) or PhysicalHardwareStation (driver/protected lab infrastructure). Hardware Service is isolated in its own process and owns FPGA transport/control.
 
-Owns authentication/session boundaries, Circuit Graph validation, experiment lifecycle, resource locking, storage, WebSocket coordination and high-level policy.
+Production host: Linux Mini PC Intel Xeon W-1370, 16 GB RAM, 256 GB SSD, Nginx, systemd, FastAPI, Hardware Service, PostgreSQL. SQLite is optional for development/tests. Store capture metadata in the database and large payloads in capture storage.
 
-### Hardware Service
+Configured capabilities reflect implemented support. Analog virtual execution requires a real SPICE-compatible adapter; otherwise virtual_analog=false. Physical digital requires validated driver/profile/protection; physical analog routing is outside V1.
 
-Owns Hardware Station discovery, capability reporting, translation from validated logical requests to hardware operations, hardware safety transitions, transport drivers and physical/virtual adapter selection.
+## Design and physical truth
 
-### FPGA
+CircuitGraph schema 1.0 is the logical DesignGraph source of truth; Three.js Scene is its projection. Coordinates never imply electrical nets. Preserve commands/history, explicit connections, placement ghost/gizmo, camera and resource ownership. Ghosts enter the graph only at commit.
 
-Owns deterministic and timing-critical behavior: routing apply sequences, experiment clock, trigger, capture, GPIO timing, Logic Analyzer, SDRAM access and later instrument datapaths.
+Duplicate-edge/direction/width/extra-driver restrictions are editor authoring rules. DetectedTopologyGraph is separate and preserves wrong/missing/unexpected connections, wrong/opaque components and ambiguity. Never sanitize observations into the expected answer.
 
-## 3A. Single Workspace UI architecture
+In manual breadboard V1, **student wiring is physical truth**: real ICs and jumpers form the internal circuit. Instructor placement is not a grading reference.
 
-The approved frontend shell is a desktop-style virtual electronics workbench inspired by the supplied reference images and CRUMB-like workflows, while keeping original code/assets/visual identity.
+AssignmentDefinition contains optional reference design/topology, expected components, instructor pin profiles, expected behavior, assessment policy and LabEndpoint bindings. Roles: INPUT_SOURCE, OUTPUT_SENSE, CLOCK, VCC, GND, GENERATOR, SCOPE, LOGIC_ANALYZER. Resolution modes: AUTO_DISCOVERY, INSTRUCTOR_PROFILE, HYBRID (recommended V1). OPAQUE_PHYSICAL_COMPONENT means unknown observed identity, not unsafe.
 
-```text
-┌─────────────────────────────────────────────────────────────────────┐
-│ App bar: brand | New | Open | Save | Undo | Redo                   │
-├─────────────────────────────────────────────────────────────────────┤
-│ Component ribbon: Structure / Passive / Active / Output / Input /  │
-│ Logic ICs / Arithmetic ICs / Memory / Display / Instruments / ...  │
-├────────┬───────────────────────────────────────────────────┬────────┤
-│        │                                                   │        │
-│ Tool   │               Circuit Workspace                   │ Info   │
-│ Rail   │       Three.js board / breadboard scene           │ window │
-│        │                                                   │        │
-├────────┴───────────────────────────────────────────────────┴────────┤
-│ Execution / counts / status | right: Zoom In/Out/Fit/Object Snap     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+## Physical Run
 
-Primary tool rail:
+Physical Run → scheduler/lease → SAFE_STATE → Topology Scan.
 
-```text
-Select
-Wire
-Move
-Rotate
-Scope
-Probe
-Power Supply (window launcher)
-Function Generator (window launcher)
-```
+Scan produces independent Safety Verify and Topology Verify (diagnostic only). ExecutionDecision consumes safety and executability; topology supports feedback.
 
-Delete remains a canvas keyboard/gizmo/selection action and retained editor logic, with no sidebar button. The two new launchers call the existing UI window manager directly and do not select an editing mode.
+BLOCK ends the request. RUN/GUARDED → Lab Execution Compiler → Infrastructure Routing → Guarded Power-Up → Real Student Circuit → Observed Signals → Functional Verification.
 
-Tools requiring a larger control surface open as floating windows over the workspace rather than routing to another page:
+SafetyVerificationResult: SAFE / UNSAFE / INDETERMINATE. Unsafe and indeterminate block by default. Faults include power shorts, hazardous contention, polarity/voltage/current risks and protection failure.
 
-```text
-Oscilloscope
-Power Supply
-Function Generator
-Logic Analyzer / Signal Monitor
-Component / IC Information
-Properties / Inspector
-Memory Hex Editor
-Validation / execution status
-```
+TopologyVerificationResult: MATCH / MISMATCH / UNKNOWN / AMBIGUOUS. Diagnostics/grading/feedback only; cannot authorize or veto Run.
 
-The central workspace is the dominant visual area. Large permanent sidebars are avoided; information appears contextually through ribbon menus, overlays and floating windows.
+FunctionalVerificationResult: PASS / FAIL / PARTIAL / NO_RESPONSE / NOT_EVALUATED. Evaluates observed behavior after execution.
 
-### Frontend rendering layers
+| Evidence | ExecutionDecision |
+|---|---|
+| Unsafe/indeterminate safety | BLOCK_SAFETY |
+| Required endpoint/resource/capability unavailable | BLOCK_UNEXECUTABLE |
+| Safe wrong IC/wiring or topology mismatch | RUN_NORMAL / RUN_GUARDED |
+| Safe unknown identity with executable endpoints/protection | RUN_GUARDED |
 
-```text
-HTML/CSS application chrome
-        +
-Three.js 3D circuit scene
-        +
-Canvas/SVG instrument plots
-        +
-optional scene labels
-```
+Software verification never substitutes for electrical protection. See PHYSICAL_LAB_SAFETY.md.
 
-Electrical identity is never inferred from visual coordinates.
+## Compiler and routing
 
-### Legacy UI migration
+Lab Execution Compiler emits InstrumentationExecutionPlan for infrastructure only: VCC/GND and safe power policy, input sources, clock, generator, output sense, Scope/Logic Analyzer allocation, trigger/capture, test vectors and runtime protection. The infrastructure routing solver resolves endpoints against actual available resources. It never reconstructs internal logical nets to repair student wiring. Domain plans contain no raw FPGA registers, MUX addresses or Linux transport identifiers.
 
-Phase 1 migration is implemented on 2026-10-09. `App.vue` renders only `SingleWorkspaceShell`; Vue Router only normalizes legacy/unknown addresses to `/`. All seven old page files and the five Library/Workspace/Inspector/Dock/LogicAnalyzer components were removed. Typed API clients, WebSocket and six stores remain reusable.
+## Lifecycle and concurrency
 
-Current composition: `components/workbench/{AppTitleBar,ComponentRibbon,ToolRail,CircuitWorkspace3D,SimulationStatusBar}` and `components/windows/FloatingWindowManager`. Shared `FloatingWindow` owns drag, keyboard movement/Escape, activation/focus restoration and bounded workspace-relative placement for instruments, Inspector and Hex Editor. `ComponentInfoWindow` is the single anchored introduction panel at the upper right; it still uses the shared `ui.windows` open/z/activation state. Automatic selection opens it passively, preserving canvas focus and pointer capture; explicit ribbon Info activation focuses its header. `ui` owns ribbon/window state, `workspace` owns one active tool, and `circuit` owns local files, bounded project history and stale-validation guards. Validation and station selection live inside Inspector.
+HardwareStation operations: get_capabilities, enter_safe_state, scan_topology, read_runtime_safety, prepare_execution, apply_routing, guarded_power_up, configure_clock/generator/trigger, arm_capture, start_execution, stop_execution, read_capture, reset. Physical start requires fresh scan/safety decision, matching executable station/experiment plan, applied routing, guarded power-up and capture readiness. Direct run cannot bypass the lifecycle.
 
-Phase 2: `three/SceneManager.ts` owns scene/camera/lights/grid/renderer, metadata-backed models, named port anchors, wire projections, ray picking and OrbitControls. `ComponentModel` owns procedural geometry/label textures and GPU disposal including instance buffers. Vue owns ResizeObserver, visibility/context/mount bridges; `useCircuitEditor` coordinates pointer capture, preview/cancel and command commit. Renders coalesce on demand; zero/hidden/lost-context scenes suspend; unmount releases frame/listener/control/GPU resources.
+Hardware states: OFFLINE, IDLE, RESERVED, SAFE_STATE, TOPOLOGY_SCAN, SAFETY_CHECK, ROUTE_PREPARE, GUARDED_POWER_UP, READY, ARMED, RUNNING, CAPTURING, VERIFYING, STOPPING, RELEASE, FAULT. Virtual transitions may omit electrical scan, without pretending it happened.
 
-Placement refinement: `useCircuitEditor` owns one temporary `{ type, position, rotation }` draft outside Pinia graph/history. Normal pointer movement snaps its XZ position using its existing yaw, then updates the render-only ghost without holding a mouse button. `SceneManager` directs its single `ComponentTransformGizmo` to the ghost while present, otherwise to the selected graph model. Preview exposes X/Z/XZ/rotate-y; only Delete is hidden and excluded from picking. Gizmo picking and spatial capture precede follow/commit. Capture uses26/42 CSS px entry/exit hysteresis around the real handles and a narrow directed approach corridor so a slowly approached handle remains reachable. Leaving capture resumes follow; captured transforms affect only draft/geometry, with unchanged pointer ownership guards. Ghost and gizmo pose update synchronously through setGhost and the existing coalesced RAF. Placement caches a relative offset, directions, local visual corners and conservative free cells; ordinary moves validate constant-size data without traversing models/obstacles or solving candidates. Camera/projection, viewport, yaw, obstacle identity and graph revision invalidate layout. The current valid candidate survives score differences below1500; an invalid candidate yields to a clear alternative. Capture resets at transform start/release, layout dependency changes, pointer leave, replacement/removal and disposal. The old placement anchor/idle timer is removed. No placement-body raycast/drag or hoveredPlacement state remains. PLACE is excluded from models/port lookup and never selects or opens Info. Right click/Escape discard the draft. `placeModule(type, position, rotation = 0)` validates and commits the full pose once; selection and the original full gizmo then bind to the real model. Draft snapping takes explicit yaw and optional axis constraint; rotation resolves from gesture origin without cumulative docking drift. Schema, electrical identities and placed-model snapping/history remain unchanged.
+Application lifecycle: QUEUED → RESERVED → SAFE_STATE → TOPOLOGY_SCAN → SAFETY_CHECK → EXECUTION_DECISION → ROUTE_PREPARE → GUARDED_POWER_UP → RUNNING → CAPTURING → FUNCTIONAL_VERIFY → COMPLETE → SAFE_STATE → RELEASE. Error/disconnect/lease expiry/max run time triggers stop, safe cleanup and release or quarantine. FIFO and per-user admission limits serialize shared hardware without a broker.
 
-Current technical refinement: `BreadboardHousing` perforates deck/decal using shared `BreadboardSockets` coordinates; one InstancedMesh contains beveled socket entrances, walls and floors. Common keys have clearance and bevels remain inside nominal docking dimensions. `SelectionOutline` renders camera-dependent housing contours with LineSegments2/LineMaterial at 2 CSS pixels, Medium Gold #d4af37. Outlines follow model pose, ignore picking, retain body colors and dispose before replacement/removal. `TechnicalGrid` renders a derivative-filtered XZ plane with minor/major hierarchy, distance/focus fade and projected-pixel minor suppression in the existing RAF. Info only renders for a selected graph model; clearing/deleting selection closes it. Add + arms placement and the ordinary command commits graph/history. See `SOURCE_ANALYSIS_TECHNICAL_WORKBENCH.md`.
+30–50 connected users does not imply 30–50 physical executions. V1 target: one slot per shared fabric; actual capacity comes from driver/profile. Virtual sessions are independent and bounded by workers. CPU-bound simulation leaves FastAPI's event loop.
 
-Navigation UX correction: only Move permits direct model dragging; Select selects without creating a move gesture or pointer capture. Empty-surface left-drag pans the XZ plane. Model motion uses a horizontal plane through the actual ray hit, retains elevation and commits once. Empty-surface pan translates camera and target by the world grab-anchor delta without editing graph/history. Right-button OrbitControls rotation updates `WorkspaceNavigator` through the same render callback: inverse camera quaternion projects the fixed world XYZ basis into SVG screen directions. Six adjacent accessible orbit/pan buttons replace the separate View controls box; button panning follows the camera's XZ heading. Passive gizmo regions pass pointer events to the canvas. See `SOURCE_ANALYSIS_WORKSPACE_NAVIGATION.md`.
+## Simulator, UI and results
 
-`circuit` owns typed graph commands/history and rejects invalid changes before recording. Move previews geometry and commits once on release; delete cascades wires. `workspace` owns transient placement/selection/pending-port/snap state. Named IDs/functional ports define connectivity; no visual coordinate/hole/overlap does. Canonical functional catalog is `device-library/editor/components.json`, consumed through a verified generated snapshot. 74HC08 logical gates, generic arithmetic abstractions and memory do not imply confirmed package/electrical hardware mappings. The optional rotation field remains graph schema 1.0 compatible. Local memory images have a separate versioned byte contract; Hex Editor updates graph through history. Simulator execution/acquisition remain Phase 3+.
+CircuitGraph → structural/logical validation → VirtualExecutionPlan → Python discrete-event engine with deterministic event ordering, net dependencies and propagation delays. Initial models: 74HC08/AND, NOT, OR/XOR, switch/input, LED/probe, clock. AnalogSimulationEngine / SPICEAdapter / MixedSignalCoordinator are unavailable boundaries until implemented.
 
-The supplied `assets/icon .svg` set currently has 20 files with large embedded PNG artwork. A reproducible script produces small SVG/WebP thumbnails with a provenance manifest and canonical starter metadata snapshots. Frontend imports remain inside `apps/web/src`; originals stay untouched. A separate standard-Python script synchronizes the functional editor catalog. Tests verify both pipelines.
+Unified results contain execution state/decision, independent safety/topology/function, digital samples, captures/timestamps, warnings/errors and raw observations. UI preserves the workbench and displays SAFETY, TOPOLOGY, FUNCTION separately. No fake waveform/acquisition. Large captures use versioned binary frames plus capture ID, instrument/channel, sample rate/count, timestamp and encoding; bounded diagnostic data may use JSON.
 
-The active Single Workspace UI specification is:
+## Capabilities and FPGA
 
-`docs/superpowers/specs/2026-10-09-single-workspace-ui-design.md`
+StationCapabilities: virtual_digital, virtual_analog, physical_digital, physical_analog_routing, physical_execution_slots, topology_scan_supported, safety_gate_supported, guarded_run_supported, component_resolution_modes, logic_analyzer_channels, oscilloscope_channels, generator_channels, routing/resources and independent hardware_rpc_version, fpga_protocol_version, firmware_version, hardware_profile_version.
 
+Scope 2CH / Generator 2CH are target capacities; unavailable ADC/DAC support stays false. Breadboard count is profile-derived.
 
-## 4. Hardware Station abstraction
+EP4CE6E22C8N prototype has no SDRAM. Compile-safe boundaries: reset/safe-state, protocol/control, topology scan, protected drive, routing, experiment clock, fault interlock. Mini PC uses FpgaTransport: serial/USB-SPI and future USB3/Ethernet; protocol is transport-independent.
 
-```text
-HardwareStation
-├── Experiment Controller
-├── Instrument Controller
-├── Routing Fabric
-├── Breadboard[]
-├── Logic IC Resources
-└── Measurement Resources
-```
+Future EP4CE10E22C8N + external SDRAM: Logic Analyzer, Scope 2CH + ADC/AFE, Generator 2CH + DAC/output stage, shared SDRAM arbiter, trigger, timestamps and explicit CDC. Pinout, switching/protection schematic, part selections, timing and electrical values: TBD_BY_HARDWARE_DESIGN. Never fabricate hardware success or measurements.
 
-Software must not assume that one Hardware Station always contains exactly one FPGA. V1 uses one FPGA architecture, but future Instrument logic may migrate to a second FPGA without changing the Browser-facing model.
+## Execution discipline
 
-## 5. Virtual vs physical execution
+R0–R7 run sequentially, TDD and acceptance gates, one main commit per phase. MIGRATION_LAB_FIRST.md records evidence/rulings/blockers. Preserve frontend/history; no unrelated rewrites, broker/cloud dependencies or bundle optimization. Unsupported features report UNAVAILABLE / NOT_IMPLEMENTED / capability=false.
 
-Both execution modes follow the same conceptual API: `get_capabilities`, `validate_configuration`, `apply_circuit`, `set_input`, `configure_clock`, `configure_generator`, `configure_trigger`, `arm_capture`, `run`, `stop`, `read_capture`, `safe_state`, and `reset`.
-
-Virtual Hardware is the default development target before FPGA integration. Physical Hardware must never silently fall back to a simulated success state when FPGA hardware is unavailable.
-
-## 6. Circuit Graph flow
-
-```text
-Browser Circuit Graph
-    -> Backend parse
-    -> logical validation
-    -> electrical/resource validation
-    -> acquire station lock
-    -> generate routing plan
-    -> Hardware Service
-    -> safe state
-    -> apply route
-    -> configure input/clock/instrument
-    -> arm
-    -> run/capture
-    -> stop
-    -> read results
-    -> release station
-    -> Browser
-```
-
-## 7. Control plane and data plane
-
-### Control plane
-
-```text
-Browser -> REST/WebSocket command -> FastAPI -> Hardware Service
-        -> FPGA control registers -> routing / clock / trigger
-```
-
-### Data plane
-
-```text
-Real IC / ADC -> FPGA capture -> FIFO / SDRAM -> Hardware Service
-              -> Application Backend -> WebSocket binary -> Browser
-```
-
-Bulk sample data should use binary transport when appropriate rather than JSON sample-by-sample.
-
-## 8. FPGA development path
-
-### Prototype
-
-`EP4CE6E22C8N`, no external SDRAM. Scope is Experiment Controller bring-up only: clock/reset, device/version registers, communication interface, GPIO, safe-state FSM, basic routing control and basic experiment clock.
-
-### Final V1
-
-`EP4CE10E22C8N` + **64 MB SDR SDRAM, 16-bit**. V1 remains a single-FPGA architecture, with RTL separated into Experiment Control and Instrument domains.
-
-```text
-EP4CE10
-├── Experiment Control Domain
-│   ├── Routing Manager
-│   ├── MUX/Crosspoint Control
-│   ├── GPIO
-│   ├── Experiment Clock
-│   └── Safety FSM
-└── Instrument Domain
-    ├── Trigger
-    ├── Logic Analyzer
-    ├── Generator
-    ├── Acquisition
-    ├── Capture Buffer
-    └── SDRAM Controller
-```
-
-An analog oscilloscope requires an external analog front-end and ADC. An analog/arbitrary waveform generator may require DAC and output analog circuitry.
-
-## 9. Breadboard model
-
-A physical contact is not automatically an independent routing channel.
-
-```text
-Physical Contact -> Electrical Node -> Routing Resource
-                 -> MUX/Crosspoint -> FPGA-controlled Source/Destination
-```
-
-The initial target is at least two physical breadboards. Exact independent routing capacity remains subject to routing IC choice, FPGA I/O, topology, signal integrity and electrical constraints.
-
-## 10. Fault behavior
-
-```text
-FAULT -> stop clock -> disable generator -> safe routing -> stop capture
-      -> set error -> log -> release or quarantine station
-```
-
-Fault sources include timeout, invalid route, resource conflict, disconnect, protocol mismatch, capture overflow, SDRAM error or instrument failure.
-
-## 11. Multi-user model
-
-Concurrent Web users do not equal concurrent independent physical experiments. The application server manages sessions, queueing, reservations and ownership; concurrency of physical experiments is bounded by actual Hardware Stations/resources.
-
-## 12. Web-first integration gate
-
-FPGA integration begins only after milestone **W1 — Web Platform Ready for FPGA Integration**, defined in `ROADMAP.md`.
-
-## Component transform and view ownership — 2026-10-09
-
-`ComponentTransformGizmo` is scene-owned and never serialized. Raycast its explicit X/Z/free/Y handles before graph geometry; Move-only direct body dragging remains. The editor previews pose/endpoints/wires, unwraps Y angles, then commits one circuit command or restores graph geometry on cancel. Screen scale is refreshed during active movement; candidate positions avoid reusable neighbor snapshots and DOM window/navigation bounds. Arbitrary-angle breadboard snap uses conservative AABB extents. `PowerSupplyModel` owns the original visual case/panel/knobs/vents/terminals; no electrical ports or live measurements are invented.
-
-View controls belong at Status Bar right: Zoom In/Out, fit entire model/wire bounds with viewing direction retained, and Workspace Object Snap (0.5 movement, 15-degree gizmo rotation). No Perspective or generic tool-title overlay. Scene resources stay outside Pinia and dispose with SceneManager. See `SOURCE_ANALYSIS_COMPONENT_TRANSFORM_GIZMO.md` for algorithms and verification limits.
-
-Latest refinement: the ribbon palette owns DOM anchoring to its clicked family, with ResizeObserver/scroll recalculation and no per-entry Info rows. Labels remain single-line. Gizmo X/Z constraints stay world-aligned; a Y-only subgroup follows preview/committed model yaw, and its pick marker comes from the visible grip. Cached local visual bounds are projected through current pose/camera to avoid selected model controls without inflating arbitrary-yaw bounds; viewport margins keep handles usable. `PowerSupplyModel` now owns an upright two-knob/two-post metal visual with portrait V/A/W unknown/OFF texture, hollow binding posts and no USB. Canonical visual dimensions changed to [2.4, 2.8, 3.2]; electrical contracts/transport boundaries did not change. See `SOURCE_ANALYSIS_RIBBON_GIZMO_SUPPLY.md`.
-
-## Stability and reconciliation refinement — 2026-10-10
-
-SceneManager owns one target-relative dolly metric for wheel and toolbar zoom, reporting it to workspace state. Camera FOV/zoom and model scales stay fixed; Fit resets the reference distance. Controls require a positive viewport and an unsuspended/unlocked live scene. WireLayer reconciles endpoint-pair records, indexes incident edges and retains unrelated buffers/materials through previews. Same-type supply property commits reuse its existing in-place controls/display update. Model disposal collects unique owned geometry/material/texture resources, labels own their Sprite geometry and pending logo loads release their owner when disposed.
-
-Circuit history remains session-snapshot based, bounded across both directions by 20 MB/50 entries with one oversized immediate snapshot. Validation transport controllers stay outside serializable Pinia state. Station event revisions and file/module/image revisions protect asynchronous completion order and teardown. API validation stays structural and follows canonical optional-field types; no electrical evaluator or hardware capability is invented. Details and measured limits: `SOURCE_ANALYSIS_STABILITY_AUDIT.md`.
-
-## Area zoom ownership — 2026-10-11
-
-Workspace owns the temporary `zoomAreaActive` flag; useCircuitEditor owns the captured rectangle and cancellation. SceneManager raycasts the center/boundary surfaces, retains viewing direction and computes perspective framing distance from camera-relative extents/depth. HTML/CSS draws the pointer-transparent rectangle. The frame resets the wheel/toolbar reference to 100% without serializing any camera/gesture resource or modifying Circuit Graph/history. Detailed formulas and regressions: `SOURCE_ANALYSIS_ZOOM_TO_AREA.md`.
-
-## Collapsible workbench toolbars — 2026-10-11
-
-The workbench region remains sized by the title/status shell. Its stage fills the region permanently; Components and Tools are absolute overlays that allocate no flex space. Only drawer/toggle transforms transition for200 ms. Both inner panels remain mounted, with inert/aria-hidden while closed and visibility hidden only after motion. `useDrawerMotion` owns temporary obstacle occupancy, reduced-motion listener and post-commit/end settlement; desired state stays in `ui`. This is not a second layout state or an animation frame loop. Same-frame reversals with no CSS transition settle after DOM commit. Manual drawer resizing has been removed: Components is fixed at96 px; Tools is66 px or54 px when workbench width is560 px or less.
-
-`ui` retains session-only collapse flags and derives fixed/responsive overlay dimensions and insets; no manual dimension preferences or resize actions remain. Insets bound floating windows on expansion or genuine dimension changes, without rewriting `viewport`; closing does not move an instrument. Shell CSS variables keep contextual chrome outside open drawers. CircuitWorkspace3D caches DOM obstacles only when invalidated and reserves full swept corridors for drawers/edge buttons, using the fixed96 px ribbon height for the Tools toggle corridor. One local attribute observer releases an occupied drawer after its slide; it never resizes the canvas. Hidden inert openers return focus to the persistent outer toggle.
-
-`frameTasks.ts` and SceneManager remain unchanged in the drawer refinement: observer contentRect coalesces per RAF and deduplicates actual viewport changes; buffer allocation is followed by drawing in the same scheduled frame. Menu animation triggers neither observer nor camera/buffer resize. No scene resources enter Pinia and no Circuit Graph operation is introduced. Details/evidence: `SOURCE_ANALYSIS_COLLAPSIBLE_TOOLBARS.md`, `verification/2026-10-11-overlay-drawers.md`.
-
-## Instrument presentation ownership — 2026-10-12
-
-OscilloscopeWindow and SignalMonitorWindow own scoped responsive CSS and lightweight empty SVG grids. InstrumentDial is a static disabled visual control, without acquisition handlers, timers or render loops. `data/instrumentVisuals.ts` contains presentation-only scope colors/sections/control labels; OscilloscopeArtwork/Model consume the same values without geometry or behavior changes. Existing instrument state supplies configuration labels and configured channel names only. Both channels still read the existing shared scale; separate acquisition/channel contracts have not been invented. Unavailable positions/levels/source and all measurements are unknown.
-
-Window definitions provide760×530 Scope and720×500 Monitor defaults. Existing FloatingWindow/manager and UI store continue owning clamp/drag/focus/scroll and drawer safe areas; no new manager or duplicated window state is introduced. SVG grid height follows channel rows, aligning36 px rows with guides without generating digital trace values. Time markers indicate configured divisions, not measured timestamps. Browser/SSR verification and changed files: `verification/2026-10-12-instrument-gui.md`.
-
-PowerSupplyWindow600×510 derives selection and all setpoints directly from CircuitStore/workspace selection. Native change events call the existing validated property/history command; no instrument supply state or async adapter exists. Shared supply getters/limits keep GUI and model consistent. Display V/A are local setpoints, W is unknown; OFF retains configuration and an absent/non-supply selection disables controls. Visual Vcc/Gnd remain non-electrical.
-
-Generator760×530 consumes GENERATOR_LAYOUT/colors/theme/parameter labels from FunctionGeneratorArtwork; model geometry and generated assets remain unchanged. Existing flat instrument.generator fields remain CH1 configuration; nested channel2 is independent local configuration, preserving legacy readers. Window-local channel focus creates no output/editor state. Static normalized SVG shapes are explicitly schematic previews, never samples; all function/encoder/output/power controls remain disabled. Current tests/browser/files: `verification/2026-10-12-supply-generator-launchers.md`.
+After R7 leave branch refactor for user review. Do not merge or push to main.

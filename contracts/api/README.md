@@ -1,6 +1,6 @@
 # Application API Contract
 
-The FastAPI application is the public dynamic interface for the browser. Phase 1 preserves the existing wire contract. Generated/OpenAPI artifacts can be added here once API V1 stabilizes.
+FastAPI is the public dynamic interface for the Lab-First browser. Canonical authority: ../../docs/ARCHITECTURE.md. R4 adds assignment/experiment/queue/result contracts; R6 validates responses and displays SAFETY / TOPOLOGY / FUNCTION independently. Preserve health/station/structural CircuitGraph compatibility. Interfaces below describe pre-R4 source, not physical safety approval.
 
 ## Implemented endpoints
 

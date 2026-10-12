@@ -1,5 +1,7 @@
 # Web Frontend — Interactive Single Workspace
 
+Current authority: [Lab-First v3.1](../../docs/ARCHITECTURE.md). Preserve editor/rendering behavior. R6 connects backend lifecycle and independent SAFETY / TOPOLOGY / FUNCTION results; instrument acquisition stays unavailable until actual data exists. Historical UI implementation details below do not override canonical architecture.
+
 Vue 3 + TypeScript + Vite + Pinia + Three.js for **net*CIRCUIT Remote**. Phase 1 shell and Phase 2 interactive editor implemented on 2026-10-09. `/` opens the workbench; compatibility URLs redirect there. See [Phase 2 source analysis](../../docs/SOURCE_ANALYSIS_INTERACTIVE_WORKSPACE.md), [DEV_LOG](../../docs/DEV_LOG.md) and [browser evidence](../../docs/verification/2026-10-09-interactive-workspace-browser.md).
 
 ## Run and verify

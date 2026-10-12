@@ -1,3 +1,7 @@
+> SUPERSEDED source proposal; preserved as provenance, including v2 residue.
+> Do not use as current implementation authority.
+> Current authority: docs/ARCHITECTURE.md (Lab-First v3.1).
+
 # net*CIRCUIT Remote — Kiến trúc chính thức được đề xuất (Lab-First v3)
 
 > **Bản cập nhật kiến trúc Lab-First v3**  

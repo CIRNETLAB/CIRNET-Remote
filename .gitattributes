@@ -1,0 +1,2 @@
+# Icon manifests record canonical LF bytes; preserve them on Windows.
+apps/web/src/assets/icons/*.svg text eol=lf

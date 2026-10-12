@@ -1,23 +1,5 @@
-# Experiment Controller
+# Lab-First Experiment Controller
 
-## Development target
+EP4CE6E22C8N prototype, no external SDRAM; Mini PC host through FpgaTransport, transport-independent protocol. Safety lifecycle guards topology scan, infrastructure routing, protected drive and experiment clock; fault/reset must disable outputs/routes.
 
-- Intel/Altera Cyclone IV **EP4CE6E22C8N**
-- **no external SDRAM**
-- purpose: bring-up and validate the Experiment Controller architecture only
-
-Initial future scope:
-
-- reset/clock bring-up;
-- device/version identification;
-- Raspberry Pi communication interface;
-- GPIO;
-- safe-state FSM;
-- basic routing/MUX control;
-- basic experiment clock.
-
-## Migration target
-
-The same architecture is intended to migrate to **EP4CE10E22C8N** for V1. Do not treat EP4CE6 as the permanent resource ceiling.
-
-The current `rtl/top.v` is only a compile-safe placeholder. It implements no hardware protocol or experiment functionality.
+Current RTL is scaffold only. R7 adds tested control boundaries; electrical scanning, switching/protection, exact pinout and driver remain TBD_BY_HARDWARE_DESIGN. Future EP4CE10E22C8N adds instrument/SDRAM interfaces after exact parts/timing are selected. Authority: ../../docs/ARCHITECTURE.md.

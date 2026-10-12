@@ -1,6 +1,6 @@
 # Hardware Service
 
-This service owns the **Hardware Station** abstraction and is the only software layer intended to know physical FPGA transport details later.
+This local-only process owns HardwareStation, FPGA transport and the Lab-First safety lifecycle on the Mini PC. Current authority: ../../docs/ARCHITECTURE.md. Physical start requires scan/safety/plan/routing/guarded power-up. R2 versions RPC; R3 implements lifecycle. Scaffold/codegen below describes pre-migration source, not physical Run approval.
 
 ## Current scaffold
 

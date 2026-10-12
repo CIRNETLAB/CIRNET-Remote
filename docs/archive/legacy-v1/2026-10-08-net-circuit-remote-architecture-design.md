@@ -1,3 +1,7 @@
+SUPERSEDED
+Do not use as current implementation authority.
+Current authority: docs/ARCHITECTURE.md
+
 # net*CIRCUIT Remote — Project Architecture Design Specification
 
 **Date:** 2026-10-08  

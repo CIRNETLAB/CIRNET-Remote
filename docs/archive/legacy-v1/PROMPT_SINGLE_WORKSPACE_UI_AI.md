@@ -1,3 +1,7 @@
+SUPERSEDED
+Do not use as current implementation authority.
+Current authority: docs/ARCHITECTURE.md
+
 # PROMPT — THIẾT KẾ LẠI GIAO DIỆN SINGLE WORKSPACE CHO net*CIRCUIT Remote
 
 > Trạng thái 2026-10-09: Phase 1 shell và Phase 2 interactive workspace đã được triển khai; xem `docs/DEV_LOG.md`, `docs/SOURCE_ANALYSIS_INTERACTIVE_WORKSPACE.md` và báo cáo browser Phase 2. Giữ prompt làm yêu cầu kiến trúc/lịch sử; không migrate lại shell hoặc phục hồi navigation. Task tiếp theo là Phase 3 simulator/event/clock/model và output/capture thật. Hex Editor hiện chỉnh local memory image, không phải physical RAM/capture. Các mục engine/thiết bị đo bên dưới vẫn là hướng phát triển.

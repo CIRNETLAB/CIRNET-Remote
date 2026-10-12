@@ -9,7 +9,7 @@ def test_required_deployment_templates_exist():
         'nginx/netcircuit.conf',
         'systemd/netcircuit-api.service',
         'systemd/netcircuit-hardware.service',
-        'raspberry-pi/README.md',
+        'mini-pc/README.md',
         'README.md',
     ]
     missing=[p for p in required if not (DEPLOY/p).is_file()]

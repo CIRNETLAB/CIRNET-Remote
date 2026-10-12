@@ -1,3 +1,5 @@
+> Historical source audit and migration rationale. Current implementation authority: docs/ARCHITECTURE.md. Findings below describe the audited pre-migration snapshot.
+
 # net*CIRCUIT Remote — Architecture Audit & Lab-First Restructure Plan
 
 ## 1. Scope of this audit
