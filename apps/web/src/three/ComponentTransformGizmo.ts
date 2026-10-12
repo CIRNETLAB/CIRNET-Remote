@@ -54,6 +54,7 @@ export function createComponentTransformGizmo() {
   const pixelScale = (point: Vector3, camera: PerspectiveCamera, height: number) => Math.max(0.1, -point.clone().applyMatrix4(camera.matrixWorldInverse).z) * 2 * Math.tan(camera.fov * Math.PI / 360) / (height * camera.zoom) * 42
   function update(model: Group | undefined, others: Iterable<Group>, camera: PerspectiveCamera, width: number, height: number, obstacles: readonly GizmoObstacle[] = []) {
     if (!model || height <= 1) { root.visible = false; selectedId = null; hovered = null; active = null; lockedOffset = null; return }
+    for (const [id, group] of handles) group.visible = model.userData.kind !== 'placement' || (id !== 'xz' && id !== 'delete')
     if (selectedId !== model.userData.id) { hovered = null; active = null; lockedOffset = null; paint() }
     selectedId = model.userData.id; root.visible = true; camera.updateMatrixWorld()
     // World X/Z movement stays fixed. Only the Y ring and grip track object yaw,
@@ -98,18 +99,19 @@ export function createComponentTransformGizmo() {
   }
   return {
     root, update,
-    position(id: TransformHandle) { return root.visible ? id === 'rotate-y' ? grip.getWorldPosition(new Vector3()) : root.localToWorld(markers.get(id)!.clone()) : null },
+    position(id: TransformHandle) { return root.visible && handles.get(id)!.visible ? id === 'rotate-y' ? grip.getWorldPosition(new Vector3()) : root.localToWorld(markers.get(id)!.clone()) : null },
     origin() { return root.visible ? root.position.clone() : null },
     pick(ray: Raycaster) {
       if (!root.visible || !selectedId) return null
-      for (const hit of ray.intersectObject(root, true)) {
+      // Raycaster also intersects invisible objects; exclude hidden handles explicitly.
+      for (const hit of ray.intersectObjects([...handles.values()].filter((group) => group.visible), true)) {
         let object = hit.object
         while (object.parent && !object.userData.transformHandle) object = object.parent
         if (object.userData.transformHandle) return { id: selectedId, handle: object.userData.transformHandle as TransformHandle, point: hit.point.clone() }
       }
       return null
     },
-    hover(id: TransformHandle | null) { hovered = id; paint() },
-    activate(id: TransformHandle | null, model?: Group) { active = id; lockedOffset = id && model ? root.position.clone().sub(model.position) : null; hovered = null; paint() },
+    hover(id: TransformHandle | null) { hovered = id && handles.get(id)!.visible ? id : null; paint() },
+    activate(id: TransformHandle | null, model?: Group) { active = id && handles.get(id)!.visible ? id : null; lockedOffset = active && model ? root.position.clone().sub(model.position) : null; hovered = null; paint() },
   }
 }

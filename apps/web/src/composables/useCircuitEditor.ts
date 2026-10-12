@@ -12,7 +12,7 @@ type Manager = ReturnType<typeof createSceneManager>
 export type Position = { x: number; y: number; z: number }
 interface PlacementDraft { type: string; position: Position; rotation: number }
 interface DragGesture { pointer: number; start: { x: number; y: number }; dragged: boolean }
-interface MoveGesture extends DragGesture { kind: 'move'; id: string; draft: string | null; planeHeight: number; offset: Position; position: Position }
+interface MoveGesture extends DragGesture { kind: 'move'; target: 'module' | 'placement'; id: string; draft: string | null; planeHeight: number; offset: Position; initial: Position; position: Position }
 interface PanGesture extends DragGesture { kind: 'pan'; anchor: Vector3 }
 interface ZoomAreaGesture extends DragGesture { kind: 'zoom-area'; end: { x: number; y: number } }
 interface ControlGesture extends DragGesture {
@@ -157,8 +157,10 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
   const zoomAreaRect = ref<{ left: number; top: number; width: number; height: number } | null>(null)
   const hoveredHandle = ref<TransformHandle | null>(null)
   const hoveredControl = ref<SupplyControl | null>(null)
+  const hoveredPlacement = ref(false)
   const controlHint = computed(() => {
     if (hoveredHandle.value === 'delete') return workspace.placementType ? 'Click to cancel placement (or press Escape)' : 'Click to delete component (or press Delete)'
+    if (hoveredPlacement.value) return 'Drag preview freely on X/Z · Click empty space to place · Escape cancels placement'
     if (hoveredControl.value === 'power_on') return 'Click to toggle power On/Off'
     if (hoveredControl.value) return `Drag ${hoveredControl.value === 'voltage_v' ? 'Voltage (0–15 V)' : 'Ampe (0–5 A)'} knob up/right to increase, down/left to decrease. Hold Shift for fine adjustment.`
     return ''
@@ -190,9 +192,10 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     if (gesture?.kind === 'transform' && gesture.target === 'placement' && placementDraft) {
       placementDraft.position = gesture.initial; placementDraft.rotation = gesture.initialRotation
     }
+    if (gesture?.kind === 'move' && gesture.target === 'placement' && placementDraft) placementDraft.position = gesture.initial
     if (gesture) { const pointer = gesture.pointer; gesture = null; dragging.value = null; manager()?.activateGizmo(null); manager()?.lockPointer(false); if (canvas.value?.hasPointerCapture(pointer)) canvas.value.releasePointerCapture(pointer); sync() }
     zoomAreaRect.value = null; manager()?.lockPointer(false)
-    hoveredHandle.value = null; hoveredControl.value = null; manager()?.clearGizmoHover()
+    hoveredHandle.value = null; hoveredControl.value = null; hoveredPlacement.value = false; manager()?.clearGizmoHover()
     showPlacement()
   }
   function cancel() { workspace.cancelZoomArea(); cancelGesture() }
@@ -248,12 +251,21 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       gesture = { kind: 'transform', target: placing ? 'placement' : 'module', pointer: event.pointerId, start: { x, y }, dragged: false, id: transform.id, draft: circuit.activeId, handle: transform.handle, center, anchor, initial, position: initial, initialRotation, rotation: initialRotation, lastAngle: Math.atan2(-(anchor.z - center.z), anchor.x - center.x), angle: 0 }
       manager()!.activateGizmo(transform.handle); manager()!.lockPointer(true); canvas.value.setPointerCapture(event.pointerId); event.preventDefault?.(); return
     }
-    const point = manager()!.groundPoint(x, y)
     if (workspace.placementType) {
-      if (placementDraft) place(placementDraft.type, placementDraft.position, placementDraft.rotation)
-      else if (point) place(workspace.placementType, snap(point, workspace.placementType))
+      const hit = placementDraft && manager()!.pickPlacement(x, y)
+      if (hit && placementDraft) {
+        // Drag through the picked surface: keep the exact grab point even on
+        // tall instruments and above the work plane's horizon.
+        const anchor = manager()!.groundPoint(x, y, hit.point.y)
+        if (!anchor) return
+        const initial = { ...placementDraft.position }
+        gesture = { kind: 'move', target: 'placement', pointer: event.pointerId, start: { x, y }, dragged: false, id: 'PLACE', draft: circuit.activeId, planeHeight: hit.point.y, offset: { x: initial.x - anchor.x, y: initial.y, z: initial.z - anchor.z }, initial, position: initial }
+        manager()!.lockPointer(true); canvas.value.setPointerCapture(event.pointerId); event.preventDefault?.()
+      } else if (placementDraft) place(placementDraft.type, placementDraft.position, placementDraft.rotation)
+      else { const point = manager()!.groundPoint(x, y); if (point) place(workspace.placementType, snap(point, workspace.placementType)) }
       return
     }
+    const point = manager()!.groundPoint(x, y)
     const hit = manager()!.pick(x, y)
     if (workspace.tool === 'wire' && hit?.kind === 'port') { connect(hit.endpoint); return }
     if (hit?.kind === 'wire') {
@@ -283,7 +295,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       // Drag through the picked surface, including bodies above a low camera's ground horizon.
       const dragPoint = manager()!.groundPoint(x, y, hit.point.y)
       if (!dragPoint) { sync(); return }
-      gesture = { kind: 'move', pointer: event.pointerId, start: { x, y }, dragged: false, id: hit.id, draft: circuit.activeId, planeHeight: hit.point.y, offset: { x: position.x - dragPoint.x, y: position.y, z: position.z - dragPoint.z }, position }
+      gesture = { kind: 'move', target: 'module', pointer: event.pointerId, start: { x, y }, dragged: false, id: hit.id, draft: circuit.activeId, planeHeight: hit.point.y, offset: { x: position.x - dragPoint.x, y: position.y, z: position.z - dragPoint.z }, initial: position, position }
       manager()!.lockPointer(true)
       canvas.value.setPointerCapture(event.pointerId)
     }
@@ -359,6 +371,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     }
     if (!gesture) {
       hoveredHandle.value = manager()!.hoverGizmo(x, y)
+      hoveredPlacement.value = !!workspace.placementType && !hoveredHandle.value && !!manager()!.pickPlacement(x, y)
       const hit = !workspace.placementType && !hoveredHandle.value && workspace.tool === 'select' ? manager()!.pick(x, y) : null
       hoveredControl.value = hit?.kind === 'control' ? hit.control : null
       if (workspace.placementType && placementDraft) return
@@ -368,10 +381,14 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     if (gesture?.kind === 'move') {
       const move = gesture
       point.x += move.offset.x; point.z += move.offset.z
-      const module = circuit.graph?.modules.find((m) => m.id === move.id)
-      move.position = snap(point, module?.type, move.id, move.offset.y)
-      manager()!.previewMove(move.id, move.position)
-      updatePorts()
+      if (move.target === 'placement' && placementDraft) {
+        move.position = snap(point, placementDraft.type, null, move.offset.y, placementDraft.rotation)
+        placementDraft.position = move.position; showPlacement()
+      } else {
+        const module = circuit.graph?.modules.find((m) => m.id === move.id)
+        move.position = snap(point, module?.type, move.id, move.offset.y)
+        manager()!.previewMove(move.id, move.position); updatePorts()
+      }
     } else if (workspace.placementType && !placementDraft) {
       // Anchor the first preview so its adjacent handles remain reachable.
       placementDraft = { type: workspace.placementType, position: snap(point, workspace.placementType), rotation: 0 }
@@ -390,7 +407,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       manager()?.lockPointer(workspace.zoomAreaActive); updatePorts()
       return
     }
-    if (completed.kind === 'transform' && completed.target === 'placement') return
+    if ((completed.kind === 'transform' || completed.kind === 'move') && completed.target === 'placement') return
     if (completed.kind === 'control' && completed.draft === circuit.activeId) {
       if (completed.control !== 'power_on' && completed.dragged) attempt(() => circuit.updateModuleProperties(completed.id, { [completed.control]: completed.value }))
       else if (completed.control === 'power_on' && !completed.dragged && canvas.value) {
@@ -448,7 +465,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
   watch(() => [workspace.tool, workspace.placementType], () => { cancelGesture(); clearPlacement(); manager()?.lockPointer(workspace.zoomAreaActive); updatePorts() }, { flush: 'sync' })
   watch(() => workspace.zoomAreaActive, (active) => { cancelGesture(); manager()?.lockPointer(active); updatePorts() })
   watch(() => [workspace.selectedModuleId, workspace.selectedWire], () => {
-    if (gesture && gesture.kind !== 'pan' && gesture.kind !== 'zoom-area' && !(gesture.kind === 'transform' && gesture.target === 'placement') && gesture.id !== workspace.selectedModuleId) cancel()
+    if (gesture && gesture.kind !== 'pan' && gesture.kind !== 'zoom-area' && !((gesture.kind === 'transform' || gesture.kind === 'move') && gesture.target === 'placement') && gesture.id !== workspace.selectedModuleId) cancel()
     manager()?.highlight(workspace.selectedModuleId, workspace.selectedWire); updatePorts()
   })
   watch(() => selected.value?.id, (id) => {
@@ -456,6 +473,6 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     else ui.closeWindow('component-info')
   }, { immediate: true })
   onUnmounted(() => { cancel(); clearPlacement() })
-  function pointerLeave() { if (!gesture) { hoveredHandle.value = null; hoveredControl.value = null; manager()?.clearGizmoHover() } }
-  return { ports, selected, dragging, hoveredHandle, hoveredControl, controlHint, zoomAreaRect, updatePorts, sync, cancel, connect, pointerDown, pointerMove, pointerUp, pointerLeave, pointerCancel: lostPointerCapture, lostPointerCapture, contextMenu, drop, keydown, selectModule }
+  function pointerLeave() { if (!gesture) { hoveredHandle.value = null; hoveredControl.value = null; hoveredPlacement.value = false; manager()?.clearGizmoHover() } }
+  return { ports, selected, dragging, hoveredHandle, hoveredControl, hoveredPlacement, controlHint, zoomAreaRect, updatePorts, sync, cancel, connect, pointerDown, pointerMove, pointerUp, pointerLeave, pointerCancel: lostPointerCapture, lostPointerCapture, contextMenu, drop, keydown, selectModule }
 }

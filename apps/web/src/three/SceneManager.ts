@@ -13,6 +13,7 @@ import { createWireLayer } from './WireLayer'
 export interface SceneRenderer { setSize(width: number, height: number, updateStyle?: boolean): void; render(scene: Scene, camera: PerspectiveCamera): void; dispose(): void }
 interface SceneOptions { renderer: SceneRenderer; canvas?: HTMLCanvasElement; onBeforeRender?: () => void; onRender?: () => void; onZoomChange?: (percent: number) => void; requestFrame?: (callback: FrameRequestCallback) => number; cancelFrame?: (id: number) => void }
 export type PickResult = ({ kind: 'module'; id: string } | { kind: 'control'; id: string; control: SupplyControl } | { kind: 'port'; id: string; endpoint: string } | { kind: 'wire'; source: string; destination: string }) & { point: Vector3 }
+export interface PlacementPick { kind: 'placement'; id: 'PLACE'; point: Vector3 }
 export interface OrientationAxis { label: 'X' | 'Y' | 'Z'; x: number; y: number; depth: number; color: string }
 
 // Geometry is a projection of graph IDs and named logical ports, never a source of nets.
@@ -168,6 +169,12 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       attachOutline()
       wireLayer.highlight(wire)
       schedule()
+    },
+    pickPlacement(x: number, y: number): PlacementPick | null {
+      if (!validPointer(x, y) || !ghost) return null
+      ghost.updateMatrixWorld(true); ray(x, y)
+      const hit = raycaster.intersectObject(ghost, true).find((hit) => !hit.object.userData.ignorePick)
+      return hit ? { kind: 'placement', id: 'PLACE', point: hit.point.clone() } : null
     },
     pick(x: number, y: number): PickResult | null {
       if (!validPointer(x, y)) return null
