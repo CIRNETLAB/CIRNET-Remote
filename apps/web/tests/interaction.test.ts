@@ -956,26 +956,110 @@ test('rotated Breadboard cursor follow keeps current rotation in docking and ant
   } finally { h.dispose() }
 })
 
-test('placement handles can be reached by gradual mouse movement while the ghost keeps automatic follow', async () => {
+test('placement handle proximity freezes follow before picking and hysteresis prevents boundary chatter', async () => {
   for (const type of ['BREADBOARD', 'OSCILLOSCOPE', 'GENERATOR', 'POWER_SUPPLY']) {
     for (const handle of ['x', 'z', 'xz', 'rotate-y'] as const) {
       const h = setup()
       try {
         await previewPlacement(h, type)
-        const ghost = placementGhost(h), initial = ghost.position.clone(), origin = h.manager.project(initial)
+        const ghost = placementGhost(h), initial = ghost.position.clone()
         const target = h.manager.project(h.manager.gizmoHandlePosition(handle)!)
-        let followed = false
-        for (let step = 1; step <= 50; step++) {
-          h.editor.pointerMove({ ...h.pointer(origin.x + (target.x - origin.x) * step / 50, origin.y + (target.y - origin.y) * step / 50), buttons: 0 } as PointerEvent)
-          followed ||= ghost.position.distanceTo(initial) > 0.1
+        // Approach the outer edge from outside the instrument, avoiding other handles.
+        const origin = h.manager.project(h.manager.gizmoOrigin()!)
+        const dx = handle === 'xz' ? -1 : target.x - origin.x, dy = handle === 'xz' ? 0 : target.y - origin.y
+        const length = Math.hypot(dx, dy), direction = { x: dx / length, y: dy / length }
+        const near = { x: target.x + direction.x * 22, y: target.y + direction.y * 22 }
+        assert.equal(h.manager.pickGizmo(near.x, near.y), null, `${type} ${handle} outer capture zone must precede the mesh hit`)
+        h.editor.pointerMove({ ...h.pointer(near.x, near.y), buttons: 0 } as PointerEvent)
+        assert.ok(ghost.position.equals(initial), `${type} ${handle} proximity must freeze before a hit`)
+        for (const distance of [25, 31, 24, 30, 23]) {
+          h.editor.pointerMove(h.pointer(target.x + direction.x * distance, target.y + direction.y * distance))
+          assert.ok(ghost.position.equals(initial), 'entry/exit hysteresis must retain the frozen pose')
         }
-        assert.ok(followed, 'preview continues following until it reaches the handle')
-        assert.equal(h.manager.pickGizmo(target.x, target.y)?.handle, handle, `${type} ${handle} must not chase the pointer`)
+        h.editor.pointerMove(h.pointer(target.x, target.y))
+        assert.equal(h.manager.pickGizmo(target.x, target.y)?.handle, handle)
         h.editor.pointerDown(h.pointer(target.x, target.y))
         assert.equal(h.captured.size, 1); assert.equal(h.circuit.graph!.modules.length, 0)
         h.editor.pointerUp(h.pointer(target.x, target.y))
+        h.editor.pointerMove(h.pointer(120, 550))
+        assert.ok(ghost.position.distanceTo(initial) > 0.1, 'leaving the capture zone resumes cursor follow')
         assert.equal(h.circuit.past.length, 0)
       } finally { h.dispose() }
     }
+  }
+})
+
+test('rapid no-button placement movement renders a unified pose and offset without graph or history commands', async () => {
+  for (const type of ['BREADBOARD', 'OSCILLOSCOPE', 'GENERATOR', 'POWER_SUPPLY']) {
+    const h = setup()
+    try {
+      h.workspace.snap = false; await previewPlacement(h, type)
+      const ghost = placementGhost(h), offset = h.manager.gizmoOrigin()!.sub(ghost.position)
+      for (let i = 1; i <= 80; i++) {
+        const point = new Vector3(i / 100, 0, 0), screen = h.manager.project(point)
+        h.editor.pointerMove({ ...h.pointer(screen.x, screen.y), buttons: 0 } as PointerEvent)
+        assert.ok(ghost.position.distanceTo(point) < 0.00001)
+        assert.ok(h.manager.gizmoOrigin()!.sub(ghost.position).distanceTo(offset) < 0.00001)
+      }
+      assert.equal(h.circuit.graph!.modules.length, 0); assert.equal(h.circuit.past.length, 0); assert.equal(h.captured.size, 0)
+    } finally { h.dispose() }
+  }
+})
+
+test('placement capture follows the visible Y arc and does not freeze over its missing quadrant', async () => {
+  for (const visible of [true, false]) {
+    const h = setup()
+    try {
+      await previewPlacement(h)
+      const ghost = placementGhost(h), initial = ghost.position.clone()
+      const root = h.manager.scene.getObjectByName('component-transform-gizmo')!
+      const ring = root.children.find((group) => group.userData.transformHandle === 'rotate-y')!
+      const angle = visible ? 1.1 : -1.1
+      const point = h.manager.project(ring.localToWorld(new Vector3(Math.cos(angle) * 1.35, 0, Math.sin(angle) * 1.35)))
+      const origin = h.manager.project(h.manager.gizmoOrigin()!), dx = point.x - origin.x, dy = point.y - origin.y, length = Math.hypot(dx, dy)
+      const near = { x: point.x + dx / length * 22, y: point.y + dy / length * 22 }
+      assert.equal(h.manager.pickGizmo(near.x, near.y), null)
+      h.editor.pointerMove(h.pointer(near.x, near.y))
+      assert.equal(ghost.position.equals(initial), visible, 'capture zones must match the rendered arc, not its mirrored missing quadrant')
+    } finally { h.dispose() }
+  }
+})
+
+test('small-step approach can acquire every placement handle without the unified pose chasing the cursor', async () => {
+  for (const type of ['CLOCK', 'BREADBOARD', 'OSCILLOSCOPE', 'GENERATOR', 'POWER_SUPPLY']) {
+    for (const handle of ['x', 'z', 'xz', 'rotate-y'] as const) {
+      const h = setup()
+      try {
+        h.workspace.snap = false; await previewPlacement(h, type)
+        const ghost = placementGhost(h), start = h.manager.project(ghost.position)
+        const target = h.manager.project(h.manager.gizmoHandlePosition(handle)!)
+        for (let step = 1; step <= 100; step++) h.editor.pointerMove(h.pointer(start.x + (target.x - start.x) * step / 100, start.y + (target.y - start.y) * step / 100))
+        assert.equal(h.manager.pickGizmo(target.x, target.y)?.handle, handle, `${type} ${handle} must remain reachable after gradual approach`)
+        h.editor.pointerDown(h.pointer(target.x, target.y)); assert.equal(h.captured.size, 1)
+        h.editor.pointerUp(h.pointer(target.x, target.y))
+        assert.equal(h.circuit.graph!.modules.length, 0); assert.equal(h.circuit.past.length, 0)
+      } finally { h.dispose() }
+    }
+  }
+})
+
+test('placement translation clears the approach corridor at its previous screen position', async () => {
+  for (const handle of ['x', 'xz'] as const) {
+    const h = setup()
+    try {
+      h.workspace.snap = false; await previewPlacement(h)
+      const ghost = placementGhost(h), start = h.manager.project(ghost.position)
+      const target = h.manager.project(h.manager.gizmoHandlePosition(handle)!)
+      for (let step = 1; step <= 100; step++) h.editor.pointerMove(h.pointer(start.x + (target.x - start.x) * step / 100, start.y + (target.y - start.y) * step / 100))
+      const grip = h.manager.gizmoHandlePosition(handle)!, down = h.manager.project(grip)
+      const end = h.manager.project(grip.clone().add(new Vector3(4, 0, 0)))
+      h.editor.pointerDown(h.pointer(down.x, down.y)); h.editor.pointerMove(h.pointer(end.x, end.y)); h.editor.pointerUp(h.pointer(end.x, end.y))
+      const pose = ghost.position.clone(), oldCorridor = { x: start.x + (target.x - start.x) * 0.2, y: start.y + (target.y - start.y) * 0.2 }
+      assert.equal(h.manager.pickGizmo(oldCorridor.x, oldCorridor.y), null)
+      h.editor.pointerMove(h.pointer(oldCorridor.x, oldCorridor.y))
+      assert.ok(ghost.position.distanceTo(pose) > 1, `${handle} must resume follow outside the translated gizmo's current capture zone`)
+      assert.equal(h.manager.placementFollowBlocked(), false)
+      assert.equal(h.circuit.graph!.modules.length, 0); assert.equal(h.circuit.past.length, 0)
+    } finally { h.dispose() }
   }
 })

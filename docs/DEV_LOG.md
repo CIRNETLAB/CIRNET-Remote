@@ -1,7 +1,7 @@
 ---
 project: net-Circuit-Remote
-current_phase: interactive-workspace-placement-follow
-status: placement-follow-verified
+current_phase: interactive-workspace-placement-sticky-gizmo
+status: placement-sticky-gizmo-verified
 last_updated: 2026-10-12
 next_task: phase-3-simulator-event-clock-model-integration
 blocking_issue: none
@@ -15,7 +15,15 @@ fpga_development_started: false
 
 Phase 2 **Interactive Circuit Workspace** is implemented, preserving Phase 1 shell and transport boundaries. Next: Phase 3 simulator/event/clock/model adapters and real output/capture data.
 
-## Placement cursor follow restored — 2026-10-12
+## Unified placement pose and sticky Gizmo — 2026-10-12
+
+Read the editor, SceneManager, ComponentTransformGizmo and interaction/scene tests against1d1688d before editing. The old visual anchor delayed Gizmo follow through a160 ms timer, while every layout call solved16 candidates. Removed anchor/timer and made setGhost update the model and Gizmo synchronously. Placement layout caches relative offset, direction candidates, local bounds corners and conservative screen/world free cells. Ordinary follow checks constant-size data without traversing neighbors/obstacles or solving candidates. Camera/projection, dimensions, yaw, obstacles and graph revision invalidate the cache. A valid current candidate stays sticky below1500 score improvement; an invalid candidate yields to a clear alternative. The selected-model layout algorithm and captured gestures remain unchanged.
+
+Capture now uses26/42 px entry/exit zones around the actual X/Z/XZ and visible Y arc. A narrow sustained pointer approach captures a spatial corridor so slow movement can reach each handle without the unified pose chasing it. Leaving capture resumes follow; transform start/release, dependency changes and lifecycle clearing reset old input. No new timer, render loop, store state, listener, renderer allocation path or graph command was introduced.
+
+RED tests preceded each correction. Review exposed slow-approach chasing, cached clearance entering the model, invalid neighbor candidate retained below hysteresis and a stale approach corridor after X/XZ translation. All four now have passing regressions. Final frontend213/213, full Python97/97 and147-module production build pass. Native browser checks all four requested models for follow/capture/rotation/resume, empty graph/history before placement, full Delete after commit and one-step Undo/Redo. Canvas remains1280×629 CSS /1600×786 buffer; runtime warning/error logs empty. Independent final review finds no remaining critical/important issue. Existing Vite bundle advisory and three Python dependency deprecations remain. Details/files/screenshots: `verification/2026-10-12-placement-sticky-gizmo.md`. Phase3 remains next.
+
+## Placement cursor follow restored — 2026-10-12 (historical idle anchor)
 
 Read the editor, SceneManager, ComponentTransformGizmo, workspace event routing and interaction/scene tests against d6dbbc4 before editing. Removed placement-only body drag/raycast/hover state. Normal pointer movement now updates the local draft position through yaw-aware snap and setGhost, preserving rotation. Preview exposes X/Z/XZ/rotate-y, with only Delete hidden from rendering and picking. Gizmo hover/pointer capture precedes follow/commit; hover/drag pauses following and ordinary movement resumes after release/away from handles. Atomic full-pose placement and the existing selected-model behavior remain intact.
 
@@ -296,7 +304,7 @@ Device-library coverage is small. gRPC generated bindings/handlers, exact SDRAM/
 
 ### What changed
 
-Latest task restores no-button placement cursor follow while retaining draft rotation and X/Z/XZ/Rotate Y preview gizmo; only Delete is hidden. Removed placement body drag/raycast/hover state. A stable visual gizmo anchor keeps handles reachable during approach and settles after pointer idle; hover/drag pauses ghost follow and ordinary movement resumes. Atomic full-pose placement/Undo/Redo, rotation-aware snapping and selected-model behavior remain. Frontend206/206, Python97/97 and production build pass; native four-model evidence/files: `verification/2026-10-12-placement-follow.md`. Existing drawer/instrument/graph architecture remains. Phase3 capture/DDS/simulator integration remains next.
+Latest task removes the placement Gizmo anchor/idle timer. Ghost and Gizmo update together through a cached relative offset with constant-size clearance checks. Sticky layout relayouts on invalid clearance or camera/viewport/yaw/obstacle/graph changes. Spatial capture with hysteresis and directed approach keeps X/Z/XZ/Rotate Y reachable; only Delete is hidden. Capture resets at gesture boundaries to avoid stale corridors. Atomic full-pose placement/Undo/Redo, rotation-aware snapping, selected-model gestures and drawer/instrument/graph architecture remain. Frontend213/213, Python97/97 and production build pass; native four-model evidence/files: `verification/2026-10-12-placement-sticky-gizmo.md`. Phase3 capture/DDS/simulator integration remains next.
 
 Phase 2 canonical catalog, separate memory contract, graph command/history layer, scene/models/picking/wires/camera controls, pointer/drag/keyboard interactions, selected Inspector/Hex Editor, lifecycle fixes, tests and Markdown. Preserve historical specs/verification and supplied artwork/axis gizmo.
 

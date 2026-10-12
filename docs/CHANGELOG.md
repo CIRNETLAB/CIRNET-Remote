@@ -4,7 +4,14 @@ All notable project changes will be documented in this file. The project follows
 
 ## [Unreleased]
 
-### Fixed — 2026-10-12 Placement cursor follow
+### Fixed — 2026-10-12 Placement Gizmo follow latency
+
+- Remove placementGizmoAnchor and its160 ms timer. Update ghost and Gizmo together using cached relative offset and constant-size clearance checks through the existing RAF.
+- Keep candidate/direction sticky with score hysteresis; relayout on invalid clearance or camera, viewport, yaw, obstacle and graph changes. Selected-model behavior is unchanged.
+- Use spatial handle capture with entry/exit hysteresis and directed approach; freeze/resume without chasing handles or stale corridors after drag. Keep X/Z/XZ/Rotate Y, hide only Delete, preserve preview/graph/history boundaries and atomic placement.
+- Frontend213/213, Python97/97 and production build pass. Native four-model evidence and changed files: `verification/2026-10-12-placement-sticky-gizmo.md`.
+
+### Fixed — 2026-10-12 Placement cursor follow (historical idle anchor)
 
 - Restore ghost XZ follow without holding a mouse button; preserve draft rotation and rotation-aware snap/docking/anti-overlap. Remove placement body drag, pickPlacement and hoveredPlacement.
 - Restore the XZ diamond; placement hides only Delete. Prioritize gizmo picking, pause follow during hover/drag and resume on ordinary movement. Keep a visual-only gizmo anchor stable during approach and settle it after pointer idle so handles remain reachable.

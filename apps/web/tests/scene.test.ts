@@ -296,32 +296,74 @@ test('placement reuses the ghost while moving; cancel removes it and releases it
   manager.dispose()
 })
 
-test('following placement controls settle only after movement, stay reachable on hover and dispose pending layout', async () => {
+test('placement model and gizmo follow in the same frame with a stable offset and cached layout', () => {
   let nextFrame: FrameRequestCallback | undefined, requests = 0
   const manager = createSceneManager({ renderer: { setSize() {}, render() {}, dispose() {} }, requestFrame(callback) { nextFrame = callback; return ++requests }, cancelFrame() { nextFrame = undefined } })
   const draw = () => { const callback = nextFrame; nextFrame = undefined; callback?.(0) }
-  const settle = () => new Promise((resolve) => setTimeout(resolve, 190))
   try {
-    manager.resize(1000, 700); manager.setGhost('CLOCK', new Vector3(), 0, true); draw()
+    manager.resize(1000, 700); manager.setGhost('CLOCK', new Vector3(), 0); draw()
+    const ghost = manager.scene.children.find((item) => item.userData.id === 'PLACE')!
+    const root = manager.scene.getObjectByName('component-transform-gizmo')!
+    const offset = root.position.clone().sub(ghost.position), bounds = ghost.userData.visualBounds
+    let layoutReads = 0
+    Object.defineProperty(ghost.userData, 'visualBounds', { configurable: true, get() { layoutReads++; return bounds } })
+    for (let i = 1; i <= 100; i++) {
+      manager.setGhost('CLOCK', new Vector3(i / 100, 0, -i / 500), 0); draw()
+      assert.ok(root.position.clone().sub(ghost.position).distanceTo(offset) < 0.00001, 'the rendered gizmo must move with the latest ghost')
+      manager.gizmoOrigin(); manager.gizmoHandlePosition('x')
+    }
+    assert.equal(layoutReads, 0, 'ordinary follow and repeated picking queries must not solve candidates again')
+    manager.dispose(); assert.equal(nextFrame, undefined); assert.equal(manager.gizmoOrigin(), null)
+  } finally { manager.dispose() }
+})
+
+test('placement layout stays sticky under small score changes and relayouts for camera, viewport, yaw and obstacles', () => {
+  const manager = createSceneManager({ renderer: { setSize() {}, render() {}, dispose() {} }, requestFrame: () => 1, cancelFrame() {} })
+  try {
+    manager.resize(1000, 700); manager.setGhost('BREADBOARD', new Vector3())
+    const ghost = manager.scene.children.find((item) => item.userData.id === 'PLACE')!
+    const bounds = ghost.userData.visualBounds; let layoutReads = 0
+    Object.defineProperty(ghost.userData, 'visualBounds', { configurable: true, get() { layoutReads++; return bounds } })
+    const initial = manager.gizmoOrigin()!.clone().sub(ghost.position), solved = layoutReads
+    for (let i = 0; i < 80; i++) {
+      manager.setGhost('BREADBOARD', new Vector3(i % 2 ? 0.02 : -0.02, 0, i % 2 ? 0.01 : -0.01), 0)
+      assert.ok(manager.gizmoOrigin()!.sub(ghost.position).distanceTo(initial) < 0.00001, 'tiny score changes must not flip the chosen side')
+    }
+    assert.equal(layoutReads, solved)
+    const changed = (action: () => void) => { const count = layoutReads; action(); manager.gizmoOrigin(); assert.ok(layoutReads > count); const current = layoutReads; manager.gizmoOrigin(); assert.equal(layoutReads, current) }
+    changed(() => { manager.camera.position.set(9, 11, 1); manager.camera.lookAt(0, 0, 0) })
+    changed(() => manager.resize(800, 600))
+    changed(() => manager.setGhost('BREADBOARD', ghost.position.clone(), 90))
+    const p = manager.project(manager.gizmoOrigin()!)
+    changed(() => manager.setGizmoObstacles([{ left: p.x - 70, top: p.y - 65, right: p.x + 70, bottom: p.y + 65 }]))
+    const relocated = manager.project(manager.gizmoOrigin()!)
+    assert.ok(Math.abs(relocated.x - p.x) > 130 || Math.abs(relocated.y - p.y) > 120, 'an obstructed candidate must actually move out of the way')
+  } finally { manager.dispose() }
+})
+
+test('placement yields an invalid candidate to a clear neighbor alternative regardless of hysteresis', () => {
+  const manager = createSceneManager({ renderer: { setSize() {}, render() {}, dispose() {} }, requestFrame: () => 1, cancelFrame() {} })
+  try {
+    manager.resize(1000, 700); manager.setGhost('CLOCK', new Vector3())
     const origin = manager.gizmoOrigin()!
-    manager.setGhost('CLOCK', new Vector3(), 0, true); draw()
-    const unchangedRequests = requests
-    await settle()
-    assert.equal(requests, unchangedRequests, 'an unchanged pose must not trigger an idle redraw')
-    manager.setGhost('CLOCK', new Vector3(4, 0, 0), 0, true); draw()
-    assert.ok(manager.gizmoOrigin()!.distanceTo(origin) < 0.001, 'controls remain reachable during follow')
-    await settle(); draw()
-    assert.ok(manager.gizmoOrigin()!.distanceTo(origin) > 1, 'idle controls settle beside the latest ghost')
-    manager.setGhost('CLOCK', new Vector3(8, 0, 0), 0, true); draw()
-    const hover = manager.project(manager.gizmoHandlePosition('x')!), heldOrigin = manager.gizmoOrigin()!
-    assert.equal(manager.hoverGizmo(hover.x, hover.y), 'x'); draw()
-    const hoverRequests = requests
-    await settle()
-    assert.equal(requests, hoverRequests); assert.ok(manager.gizmoOrigin()!.distanceTo(heldOrigin) < 0.001)
-    manager.setGhost('CLOCK', new Vector3(9, 0, 0), 0, true); manager.dispose()
-    const disposedRequests = requests
-    await settle()
-    assert.equal(requests, disposedRequests); assert.equal(nextFrame, undefined); assert.equal(manager.gizmoOrigin(), null)
+    manager.syncGraph({ schema_version: '1.0', circuit_id: 'blocked', modules: [{ id: 'L', type: 'LED', position: { x: origin.x, y: 0, z: origin.z } }], connections: [] })
+    assert.ok(manager.gizmoOrigin()!.distanceTo(origin) > 0.5, 'a new graph neighbor must not remain under the placement gizmo')
+  } finally { manager.dispose() }
+})
+
+test('placement cached follow relayouts before its handles enter the model projected bounds', () => {
+  const manager = createSceneManager({ renderer: { setSize() {}, render() {}, dispose() {} }, requestFrame: () => 1, cancelFrame() {} })
+  try {
+    manager.resize(1000, 700); manager.setGhost('CLOCK', new Vector3())
+    const ghost = manager.scene.children.find((item) => item.userData.id === 'PLACE')!
+    const bounds = ghost.userData.visualBounds; let solves = 0
+    Object.defineProperty(ghost.userData, 'visualBounds', { configurable: true, get() { solves++; return bounds } })
+    manager.setGhost('CLOCK', new Vector3(-2.3, 0, 0))
+    const origin = manager.project(manager.gizmoOrigin()!), box = new Box3().setFromObject(ghost), projected = []
+    for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) projected.push(manager.project(new Vector3(x, y, z)))
+    const left = Math.min(...projected.map((p) => p.x)), right = Math.max(...projected.map((p) => p.x)), top = Math.min(...projected.map((p) => p.y)), bottom = Math.max(...projected.map((p) => p.y))
+    assert.ok(origin.x + 60 <= left || origin.x - 60 >= right || origin.y + 55 <= top || origin.y - 55 >= bottom, 'pose follow must invalidate a cache that no longer clears the model')
+    assert.ok(solves > 0)
   } finally { manager.dispose() }
 })
 

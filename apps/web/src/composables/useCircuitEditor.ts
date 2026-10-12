@@ -169,7 +169,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
   const coordinates = (event: { clientX: number; clientY: number }) => { const rect = canvas.value!.getBoundingClientRect(); return { x: event.clientX - rect.left, y: event.clientY - rect.top } }
   const snap = (point: { x: number; y?: number; z: number } | Vector3, activeType?: string | null, activeId?: string | null, elevation = 0, rotation?: number, axis?: 'x' | 'z'): Position =>
     snapPosition(point, workspace.snap, circuit.graph?.modules ?? [], activeType, activeId, elevation, rotation, axis)
-  function showPlacement(following = false) { if (placementDraft) manager()?.setGhost(placementDraft.type, placementDraft.position, placementDraft.rotation, following) }
+  function showPlacement() { if (placementDraft) manager()?.setGhost(placementDraft.type, placementDraft.position, placementDraft.rotation) }
   function clearPlacement() { placementDraft = null; manager()?.setGhost(null) }
   function updatePorts() {
     if (workspace.zoomAreaActive) { ports.value = []; return }
@@ -362,7 +362,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       const hit = !workspace.placementType && !hoveredHandle.value && workspace.tool === 'select' ? manager()!.pick(x, y) : null
       hoveredControl.value = hit?.kind === 'control' ? hit.control : null
       // Test the existing gizmo before following: a hovered handle must stay put.
-      if (workspace.placementType && hoveredHandle.value) return
+      if (workspace.placementType && (hoveredHandle.value || manager()!.placementFollowBlocked())) return
     }
     const point = manager()!.groundPoint(x, y, gesture?.kind === 'move' ? gesture.planeHeight : 0)
     if (!point) return
@@ -375,7 +375,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     } else if (workspace.placementType) {
       placementDraft ??= { type: workspace.placementType, position: { x: point.x, y: 0, z: point.z }, rotation: 0 }
       placementDraft.position = snap(point, placementDraft.type, null, placementDraft.position.y, placementDraft.rotation)
-      showPlacement(true)
+      showPlacement()
     }
   }
   function pointerUp(event: PointerEvent) {

@@ -34,26 +34,13 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
   scene.add(grid, ambient, light, fillLight, content, wires)
   const gizmo = createComponentTransformGizmo(); scene.add(gizmo.root)
   let gizmoObstacles: GizmoObstacle[] = []
+  let gizmoLayoutRevision = 0
   const gizmoModel = () => ghost ?? (highlightedId ? models.get(highlightedId) : undefined)
-  const updateGizmo = () => gizmo.update(gizmoModel(), models.values(), camera, width, height, gizmoObstacles, ghost ? placementGizmoAnchor ?? undefined : undefined)
+  const updateGizmo = () => gizmo.update(gizmoModel(), models.values(), camera, width, height, gizmoObstacles, gizmoLayoutRevision)
   const raycaster = new Raycaster(), plane = new Plane(new Vector3(0, 1, 0), 0)
   let width = 1, height = 1, sized = false, frame: number | null = null, disposed = false, visible = false, suspended = false, pointerLocked = false
   let bufferWidth = 0, bufferHeight = 0
   let ghost: Group | null = null
-  let placementGizmoAnchor: Vector3 | null = null, placementGizmoTimer: ReturnType<typeof setTimeout> | null = null
-  const cancelPlacementGizmoTimer = () => { if (placementGizmoTimer !== null) clearTimeout(placementGizmoTimer); placementGizmoTimer = null }
-  const updatePlacementGizmoAnchor = (following: boolean) => {
-    cancelPlacementGizmoTimer()
-    if (!ghost) return
-    placementGizmoAnchor ??= ghost.position.clone()
-    if (!following || placementGizmoAnchor.equals(ghost.position)) { placementGizmoAnchor.copy(ghost.position); return }
-    // The ghost follows every event, but its adjacent controls must remain
-    // reachable while approaching them. Re-layout once the pointer settles.
-    placementGizmoTimer = setTimeout(() => {
-      placementGizmoTimer = null
-      if (!disposed && ghost && placementGizmoAnchor) { placementGizmoAnchor.copy(ghost.position); schedule() }
-    }, 160)
-  }
   const schedule = () => {
     if (disposed || !visible || suspended || frame !== null) return
     frame = requestFrame(() => {
@@ -128,11 +115,13 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     gizmoHandlePosition(handle: TransformHandle) { if (disposed) return null; updateGizmo(); return gizmo.position(handle) },
     gizmoOrigin() { if (disposed) return null; updateGizmo(); return gizmo.origin() },
     pickGizmo(x: number, y: number) { if (!validPointer(x, y)) return null; updateGizmo(); ray(x, y); return gizmo.pick(raycaster) },
-    hoverGizmo(x: number, y: number) { if (!validPointer(x, y)) return null; updateGizmo(); ray(x, y); const handle = gizmo.pick(raycaster)?.handle ?? null; if (ghost && handle) cancelPlacementGizmoTimer(); gizmo.hover(handle); schedule(); return handle },
-    clearGizmoHover() { if (disposed) return; gizmo.hover(null); schedule() },
-    activateGizmo(handle: TransformHandle | null) { if (disposed) return; if (handle) cancelPlacementGizmoTimer(); updateGizmo(); gizmo.activate(handle, gizmoModel()); schedule() },
+    hoverGizmo(x: number, y: number) { if (!validPointer(x, y)) return null; updateGizmo(); ray(x, y); const handle = gizmo.pick(raycaster)?.handle ?? null; gizmo.capturePlacement(x, y, camera, width, height); gizmo.hover(handle); schedule(); return handle },
+    placementFollowBlocked() { return !!ghost && gizmo.placementFollowBlocked() },
+    clearGizmoHover() { if (disposed) return; gizmo.clearPlacementCapture(); gizmo.hover(null); schedule() },
+    activateGizmo(handle: TransformHandle | null) { if (disposed) return; updateGizmo(); gizmo.activate(handle, gizmoModel()); schedule() },
     syncGraph(next: CircuitGraph | null) {
       if (disposed) return
+      gizmoLayoutRevision++
       modules.clear(); for (const module of next?.modules ?? []) modules.set(module.id, module)
       const ids = new Set(next?.modules.map((module) => module.id))
       for (const [id, model] of models) if (!ids.has(id)) { if (activeOutline?.id === id) removeActiveOutline(); if (highlightedId === id) highlightedId = null; disposeObject(model); content.remove(model); models.delete(id) }
@@ -158,10 +147,9 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
         applyPowerSupplyControls(model, { ...module.properties, [control]: value }); model.updateMatrixWorld(true); schedule()
       }
     },
-    setGhost(type: string | null, position?: Required<NonNullable<CircuitModule['position']>>, rotation = 0, following = false) {
+    setGhost(type: string | null, position?: Required<NonNullable<CircuitModule['position']>>, rotation = 0) {
       if (disposed || !Number.isFinite(rotation) || (position && ![position.x, position.y, position.z].every(Number.isFinite))) return
-      if (ghost && type && position && ghost.userData.type === type) { applyPose(ghost, { id: 'PLACE', type, position, rotation }); updatePlacementGizmoAnchor(following); schedule(); return }
-      cancelPlacementGizmoTimer(); placementGizmoAnchor = null
+      if (ghost && type && position && ghost.userData.type === type) { applyPose(ghost, { id: 'PLACE', type, position, rotation }); updateGizmo(); schedule(); return }
       if (ghost) { disposeObject(ghost); scene.remove(ghost); ghost = null }
       if (type && position && getDefinition(type)) {
         // PLACE is a render-only pick target, absent from models, ports and Circuit Graph.
@@ -173,8 +161,8 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
           }
         })
         scene.add(ghost)
-        updatePlacementGizmoAnchor(following)
       }
+      updateGizmo()
       schedule()
     },
     highlight(id: string | null, wire?: { source: string; destination: string } | null) {
@@ -292,6 +280,6 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     },
     resetView() { if (disposed) return; zoomReferenceDistance = defaultDistance; zoomLimits(); viewTarget.set(0, 0, 0); camera.position.set(0, 11, 10); controls?.target.set(0, 0, 0); camera.lookAt(0, 0, 0); camera.zoom = 1; camera.far = 150; camera.updateProjectionMatrix(); camera.updateMatrixWorld(); controls?.update(); notifyZoom(); schedule() },
     suspend(value: boolean) { suspended = value; if (value && frame !== null) { cancelFrame(frame); frame = null }; updateControlsEnabled(); if (!value) schedule() },
-    dispose() { if (disposed) return; disposed = true; cancelPlacementGizmoTimer(); placementGizmoAnchor = null; if (frame !== null) cancelFrame(frame); frame = null; controls?.removeEventListener('change', viewChanged); controls?.dispose(); removeActiveOutline(); wireLayer.dispose(); disposeObject(scene); models.clear(); modules.clear(); ghost = null; highlightedId = null; gizmoObstacles = []; scene.clear(); renderer.dispose() },
+    dispose() { if (disposed) return; disposed = true; gizmo.update(undefined, [], camera, width, height); if (frame !== null) cancelFrame(frame); frame = null; controls?.removeEventListener('change', viewChanged); controls?.dispose(); removeActiveOutline(); wireLayer.dispose(); disposeObject(scene); models.clear(); modules.clear(); ghost = null; highlightedId = null; gizmoObstacles = []; scene.clear(); renderer.dispose() },
   }
 }
