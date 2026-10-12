@@ -3,6 +3,7 @@ name = "netcircuit-simulator"
 version = "0.1.0"
 description = "Virtual digital hardware simulator for net*CIRCUIT Remote"
 requires-python = ">=3.11"
+dependencies = ["netcircuit-contracts==1.0.0"]
 
 [project.optional-dependencies]
 test = ["pytest>=8"]

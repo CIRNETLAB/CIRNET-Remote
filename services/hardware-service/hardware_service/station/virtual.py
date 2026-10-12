@@ -1,22 +1,44 @@
 from copy import deepcopy
+from concurrent.futures import ProcessPoolExecutor, TimeoutError
+from threading import RLock
 from jsonschema import ValidationError
 from contracts.validation import validate
 from hardware_service.models import BreadboardCapability, StationCapabilities
 from hardware_service.station.base import HardwareStation, HardwareError, StationState as S, serialized
+from netcircuit_sim.engine import VirtualCompiler, SimulationError, run_plan
+
+_pool=None
+_pool_lock=RLock()
+
+def simulation_pool():
+    global _pool
+    with _pool_lock:
+        if _pool is None: _pool=ProcessPoolExecutor(max_workers=4)
+        return _pool
+
+def close_simulation_pool():
+    global _pool
+    with _pool_lock:
+        pool,_pool=_pool,None
+    if pool: pool.shutdown(wait=True,cancel_futures=True)
 
 class VirtualHardwareStation(HardwareStation):
-    """Virtual lifecycle; R5 supplies actual digital execution."""
+    """Independent digital session backed by bounded process-worker execution."""
     def __init__(self, station_id):
         super().__init__(station_id)
         self._circuit = None
         self._inputs = {}
         self._capture = None
+        self._virtual_plan=None
+        self._generation=0
+        self._future=None
 
     def get_capabilities(self):
         return StationCapabilities(self.station_id, "simulation", True,
+            virtual_digital=True,logic_analyzer_channels=4,
             breadboards=(BreadboardCapability("BB0"), BreadboardCapability("BB1")),
-            hardware_profile_version="virtual-1.0", firmware_version="virtual-lifecycle",
-            instruments={"logic_analyzer":{"available":False,"channels":0,"status":"NOT_IMPLEMENTED"},
+            hardware_profile_version="virtual-1.0", firmware_version="virtual-events-1.0",
+            instruments={"logic_analyzer":{"available":True,"channels":4,"status":"digital-events"},
                          "generator":{"available":False,"channels":0,"status":"NOT_IMPLEMENTED"},
                          "oscilloscope":{"available":False,"channels":0,"status":"NOT_IMPLEMENTED"}})
 
@@ -31,6 +53,12 @@ class VirtualHardwareStation(HardwareStation):
         if not isinstance(circuit, dict) or circuit.get("schema_version") != "1.0" or not isinstance(circuit.get("modules"),list) or not isinstance(circuit.get("connections"),list):
             raise HardwareError("UNEXECUTABLE")
         self._circuit = deepcopy(circuit)
+        try: self._virtual_plan=VirtualCompiler().compile(circuit)
+        except SimulationError:
+            self._circuit=self._virtual_plan=None
+            raise HardwareError('UNEXECUTABLE') from None
+        self._generation+=1
+        self._inputs.clear()
         self._plan = self._capture = None
         self._state = S.READY
         return self._reply()
@@ -54,7 +82,10 @@ class VirtualHardwareStation(HardwareStation):
             raise HardwareError("UNEXECUTABLE") from None
         if plan["station_id"] != self.station_id or not decision["decision"].startswith("RUN_"):
             raise HardwareError("UNEXECUTABLE")
+        aliases={b['endpoint_id']:b['node_id'] for b in plan['endpoint_bindings']}
+        if any(port not in self._virtual_plan.directions for port in aliases.values()): raise HardwareError('UNEXECUTABLE')
         self._plan=plan
+        self._aliases=aliases
         self._experiment_id=plan["experiment_id"]
         return self._reply()
 
@@ -91,17 +122,48 @@ class VirtualHardwareStation(HardwareStation):
         self._state=S.ARMED
         return self._reply()
 
-    @serialized
     def start_execution(self):
-        self._require_state(S.ARMED)
-        return {"accepted":False,"code":"NOT_IMPLEMENTED","state":self.state}
+        with self._lock:
+            self._require_state(S.ARMED)
+            self._state=S.RUNNING
+            generation=self._generation
+            aliases=self._aliases
+            config=deepcopy(self._plan['capture_config'])
+            config['signals']=[aliases.get(s,s) for s in config['signals']]
+            vectors=[{'time_ns':v['time_ns'],'inputs':{aliases.get(s,s):x for s,x in v['inputs'].items()}} for v in self._plan['test_vectors']]
+            clock=deepcopy(self._plan['clock_config'])
+            if clock: clock['signal']=aliases.get(clock['signal'],clock['signal'])
+            self._future=simulation_pool().submit(run_plan,self._virtual_plan,config,vectors,clock,deepcopy(self._inputs))
+            future=self._future
+        try: capture=future.result(timeout=10)
+        except TimeoutError:
+            future.cancel()
+            with self._lock: self._state=S.FAULT
+            raise HardwareError('TIMEOUT') from None
+        except SimulationError:
+            with self._lock: self._state=S.FAULT
+            raise HardwareError('UNEXECUTABLE') from None
+        except Exception:
+            with self._lock: self._state=S.FAULT
+            raise HardwareError('DRIVER_ERROR') from None
+        with self._lock:
+            if generation!=self._generation: raise HardwareError('INVALID_STATE')
+            reverse={port:endpoint for endpoint,port in aliases.items()}
+            for sample in capture['samples']: sample['signal']=reverse.get(sample['signal'],sample['signal'])
+            self._capture=capture
+            self._future=None
+            return self._reply()
 
     @serialized
     def read_capture(self):
+        if self._capture and self._state==S.RUNNING: self._state=S.CAPTURING
         return deepcopy(self._capture) if self._capture else {"available":False,"code":"NOT_IMPLEMENTED","samples":[]}
 
     @serialized
     def enter_safe_state(self):
+        self._generation+=1
+        if self._future: self._future.cancel()
+        self._future=None
         self._plan=None
         self._experiment_id=None
         self._state=S.SAFE_STATE
@@ -113,5 +175,6 @@ class VirtualHardwareStation(HardwareStation):
     @serialized
     def reset(self):
         self._circuit=self._capture=None
+        self._virtual_plan=None
         self._inputs.clear()
         return self.enter_safe_state()

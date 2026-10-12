@@ -32,6 +32,10 @@
         },
         "required": {
           "type": "boolean"
+        },
+        "design_port": {
+          "type": "string",
+          "pattern": "^[^.]+\\.[^.]+$"
         }
       },
       "required": [
@@ -1074,7 +1078,8 @@
               "value": {
                 "enum": [
                   0,
-                  1
+                  1,
+                  "X"
                 ]
               }
             },

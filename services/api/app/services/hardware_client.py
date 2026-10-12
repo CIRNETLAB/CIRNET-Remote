@@ -32,7 +32,7 @@ class HardwareServiceClient:
         return self._stub
 
     def _invoke(self,method,request):
-        try: return getattr(self._connect(),method)(request,timeout=self.timeout)
+        try: return getattr(self._connect(),method)(request,timeout=max(self.timeout,15) if method=='StartExecution' else self.timeout)
         except grpc.RpcError as error:
             raise GatewayError("TIMEOUT" if error.code()==grpc.StatusCode.DEADLINE_EXCEEDED else "HARDWARE_UNAVAILABLE") from None
 

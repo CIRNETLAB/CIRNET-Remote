@@ -8,11 +8,12 @@ class LabExecutionCompiler:
         bindings=[]; allocations=[]; instruments=[]; used=set()
         if not virtual and not endpoints: raise ValueError("UNEXECUTABLE")
         for endpoint in endpoints:
-            node=endpoint.get("node_id")
+            if virtual and endpoint['role'] in ('VCC','GND'): continue
+            node=endpoint.get('design_port',endpoint.get("node_id")) if virtual else endpoint.get("node_id")
             if not node:
                 if not virtual and endpoint.get("required",True): raise ValueError("UNEXECUTABLE")
                 continue
-            binding={key:endpoint[key] for key in ("endpoint_id","node_id","role")}
+            binding={'endpoint_id':endpoint['endpoint_id'],'node_id':node,'role':endpoint['role']}
             bindings.append(binding)
             if virtual: continue
             resource=next((r for r in capabilities["routing_resources"] if r["resource_id"] not in used and
@@ -34,6 +35,6 @@ class LabExecutionCompiler:
             "power_policy":{"profile_id":profile,"guarded":True},"endpoint_bindings":bindings,
             "routing_allocations":allocations,"instrument_allocations":instruments,
             "clock_config":config.get("clock_config",{}),"generator_config":config.get("generator_config",[]),
-            "capture_config":config.get("capture_config",{"signals":[],"duration_ns":1000}),
+            "capture_config":config.get("capture_config",{"signals":[],"duration_ns":1000000}),
             "test_vectors":config.get("test_vectors",[]),
             "runtime_safety_policy":{"profile_id":profile,"watchdog_required":True}})

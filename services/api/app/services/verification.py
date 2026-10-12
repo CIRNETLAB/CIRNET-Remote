@@ -1,4 +1,6 @@
 from contracts.validation import validate
+from bisect import bisect_right
+from collections import defaultdict
 
 def result(status,issues=None):
     return {"schema_version":"1.0","status":status,"issues":issues or []}
@@ -24,13 +26,35 @@ class TopologyVerificationService:
         return result("AMBIGUOUS" if observed["ambiguities"] else "UNKNOWN",["Semantic topology matching not resolved"])
 
 class FunctionalVerificationService:
-    def verify(self,assignment,capture):
+    def verify(self,assignment,capture,vectors=None):
         samples=capture.get("samples",[]) if capture and capture.get("available") else []
-        expected=(assignment or {}).get("expected_behavior",{}).get("expected_signals",[])
+        behavior=(assignment or {}).get('expected_behavior',{})
+        expected=list(behavior.get("expected_signals",[]))
+        missing=0
+        if not expected and behavior.get('truth_table'):
+            vectors=sorted(vectors or [],key=lambda v:v['time_ns'])
+            duration=(capture or {}).get('duration_ns',0)
+            for row in behavior['truth_table']:
+                matches=[i for i,v in enumerate(vectors) if all(v['inputs'].get(s)==level for s,level in row['inputs'].items())]
+                if not matches:
+                    missing+=len(row['outputs']); continue
+                index=matches[0]
+                timestamp=vectors[index+1]['time_ns']-1 if index+1<len(vectors) else duration
+                if timestamp<vectors[index]['time_ns']:
+                    missing+=len(row['outputs']); continue
+                expected.extend({'signal':s,'time_ns':timestamp,'value':value} for s,value in row['outputs'].items())
         if not expected:
             return result("NOT_EVALUATED",["No expected signal behavior supplied"])
         if not samples: return result("NO_RESPONSE")
-        observed={(s["signal"],s["time_ns"]):s["value"] for s in samples}
-        matched=sum(observed.get((s["signal"],s["time_ns"]))==s["value"] for s in expected)
-        if matched==len(expected): return result("PASS")
+        duration=capture.get('duration_ns',max(s['time_ns'] for s in samples))
+        grouped=defaultdict(list)
+        for sample in samples: grouped[sample['signal']].append((sample['time_ns'],sample['value']))
+        for values in grouped.values(): values.sort(key=lambda pair:pair[0])
+        times={signal:[pair[0] for pair in values] for signal,values in grouped.items()}
+        def observed_at(signal,timestamp):
+            if timestamp>duration: return None
+            index=bisect_right(times.get(signal,[]),timestamp)-1
+            return grouped[signal][index][1] if index>=0 else None
+        matched=sum(observed_at(s['signal'],s['time_ns'])==s['value'] for s in expected)
+        if matched==len(expected) and not missing: return result("PASS")
         return result("PARTIAL" if matched else "FAIL",["Observed signals differ from expected behavior"])

@@ -1,13 +1,9 @@
-# Circuit Simulator
+# Lab-First digital event simulator
 
-Software-only VirtualHardwareStation foundation for the Lab-First Mini PC. Current authority: ../../docs/ARCHITECTURE.md. R5 implements discrete-event digital execution; analog requires a real AnalogSimulationEngine/SPICEAdapter and otherwise reports unavailable. Primitive implementation below is the pre-R5 state.
+CircuitGraph 1.0 → offline schema/authoring validation → VirtualExecutionPlan → deterministic EventQueue / DigitalNet / DigitalDevice / DeviceRegistry / ClockSource → observed event capture. Supported initial models: switch/input, AND/74HC08 quad gates, NOT, OR/XOR, LED/probe, clock. Known editor board/instrument visuals create no electrical nets. Other models report UNEXECUTABLE, not a fake result.
 
-The initial implementation intentionally contains only deterministic digital primitives and a starter 74HC08 functional model. It is not a timing-accurate SPICE simulator and does not claim to model propagation delay, analog behavior, or real hardware limits.
+Nanosecond integer simulation time and configurable digital transport delay (default model 8 ns) are software models, not measured component timing or electrical limits. Floating inputs remain X. Changes at one timestamp settle before capture/evaluation, with stable ordering. Captures contain actual event transitions 0/1/X and a bounded duration; four requested probe channels max, default first four probes/sources. Defaults/budgets: 1 ms capture window, 100,000 queued events, 100,000 capture events; configured limits are software resource bounds. There is no fixed-timestep whole-circuit loop.
 
-## Test
+VirtualHardwareStation dispatches bounded simulations to a four-process pool, outside FastAPI's event loop. RPC sessions isolate experiments; stop/reset invalidates generations so late results cannot overwrite newer state. AnalogSimulationEngine / SPICEAdapter / MixedSignalCoordinator are explicit UNAVAILABLE boundaries; no SPICE dependency or fake analog capture.
 
-```bash
-pytest -q simulator/circuit-simulator/tests
-```
-
-Future work should add event scheduling, sequential devices, virtual clock/trigger behavior, Circuit Graph execution and virtual capture while keeping the same application-level contracts used by Physical Hardware.
+Install from root: pip install -e . -e './simulator/circuit-simulator[test]'. Tests: pytest -q simulator/circuit-simulator/tests. Real REST→RPC→worker AND integration is in tests/integration/test_virtual_lab_execution.py. Initial grading supports expected signal values held between event timestamps and explicit exercised truth-table vectors.

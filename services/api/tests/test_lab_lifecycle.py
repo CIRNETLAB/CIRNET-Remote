@@ -221,3 +221,37 @@ def test_unavailable_generator_is_not_silently_accepted(tmp_path):
     configuration=[{'channel':1,'waveform':'SINE','frequency_hz':100,'amplitude_vpp':1,'offset_v':0,'enabled':True}]
     with pytest.raises(ValueError,match='UNEXECUTABLE'):
         create(m,generator_config=configuration)
+
+
+def test_capture_preserves_unknown_logic_and_function_evaluates_held_values():
+    from app.services.captures import CaptureService
+    from app.services.verification import FunctionalVerificationService
+    capture=CaptureService().normalize({'available':True,'duration_ns':40,'samples':[
+        {'signal':'y','time_ns':0,'value':'X'},{'signal':'y','time_ns':8,'value':1}]},'simulation')
+    assert capture['samples'][0]['value']=='X'
+    a=assignment(); a['expected_behavior']={'expected_signals':[{'signal':'y','time_ns':20,'value':1}]}
+    assert FunctionalVerificationService().verify(a,capture)['status']=='PASS'
+
+
+def test_runtime_safety_fault_updates_safety_result_and_blocks_execution(tmp_path):
+    m,repo,g,jobs,now,events=setup_manager(tmp_path)
+    original=g.call
+    def unsafe_start(station_id,experiment_id,method,**kwargs):
+        if method=='start_execution': return {'accepted':False,'code':'UNSAFE'}
+        return original(station_id,experiment_id,method,**kwargs)
+    g.call=unsafe_start
+    e=create(m); m.run(e['experiment_id'],'student-1'); jobs.run_one()
+    result=m.get(e['experiment_id'],'student-1')
+    assert result['safety_verification']['status']=='UNSAFE'
+    assert result['execution_decision']['decision']=='BLOCK_SAFETY'
+
+
+def test_functional_truth_table_uses_exercised_vectors_and_observed_outputs():
+    from app.services.verification import FunctionalVerificationService
+    a=assignment(); a['expected_behavior']={'truth_table':[
+        {'inputs':{'x':0},'outputs':{'y':0}},{'inputs':{'x':1},'outputs':{'y':1}}]}
+    capture={'available':True,'duration_ns':40,'samples':[{'signal':'y','time_ns':0,'value':'X'},
+             {'signal':'y','time_ns':8,'value':0},{'signal':'y','time_ns':28,'value':1}]}
+    vectors=[{'time_ns':0,'inputs':{'x':0}},{'time_ns':20,'inputs':{'x':1}}]
+    assert FunctionalVerificationService().verify(a,capture,vectors)['status']=='PASS'
+    assert FunctionalVerificationService().verify(a,capture,vectors[:1])['status']!='PASS'

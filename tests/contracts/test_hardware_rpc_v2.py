@@ -48,3 +48,16 @@ def test_codegen_is_repeatable(tmp_path):
     first = (tmp_path / 'rpc_v2_pb2.py').read_bytes()
     compiled(tmp_path)
     assert (tmp_path / 'rpc_v2_pb2.py').read_bytes() == first
+
+
+def test_failed_codegen_preserves_previous_bindings(tmp_path,monkeypatch):
+    from scripts.generate_hardware_rpc import generate, protoc
+    path=tmp_path/'rpc_v2_pb2.py'; path.write_text('previous-valid-bindings')
+    def failed(args):
+        directory=Path(next(a.split('=',1)[1] for a in args if a.startswith('--python_out=')))
+        (directory/'rpc_v2_pb2.py').write_text('partial-corrupt-bindings')
+        return 1
+    monkeypatch.setattr(protoc,'main',failed)
+    import pytest
+    with pytest.raises(RuntimeError): generate(tmp_path)
+    assert path.read_text()=='previous-valid-bindings'

@@ -156,10 +156,12 @@ class ExperimentManager:
                 self._transition(eid,'SAFETY_CHECK'); safety=self.safety.verify(self._call(eid,'read_runtime_safety'))
                 topology=self.topology.verify(assignment,graph)
                 unknown=any(c['identity']=='UNKNOWN' or c['kind']=='OPAQUE_PHYSICAL_COMPONENT' for c in graph['components'])
+                self._transition(eid,'SAFETY_CHECK',safety_verification=safety,topology_verification=topology)
             else:
                 safety=result('SAFE',['Virtual execution; no electrical energization'])
                 topology=result('UNKNOWN',['Physical topology scan not applicable'])
                 unknown=False
+                self._transition(eid,'SAFETY_CHECK',safety_verification=safety,topology_verification=topology)
                 self._call(eid,'apply_circuit',circuit_graph=e['_circuit_graph'])
             try: plan=self.compiler.compile(e,assignment,caps); executable=True
             except (ValueError,ValidationError): plan=None; executable=False
@@ -174,12 +176,21 @@ class ExperimentManager:
             self._transition(eid,'RUNNING'); self._call(eid,'start_execution')
             self._transition(eid,'CAPTURING'); capture=self.captures.normalize(self._call(eid,'read_capture'),e['mode'])
             self._transition(eid,'FUNCTIONAL_VERIFY',capture=capture)
-            functional=self.functional.verify(assignment,capture)
+            functional=self.functional.verify(assignment,capture,e['_configuration'].get('test_vectors',[]))
             self._transition(eid,'COMPLETE',functional_verification=functional)
         except Cancelled:
             self._transition(eid,'COMPLETE')
         except Exception as error:
-            self._transition(eid,'FAULT',error_code=error.code if isinstance(error,GatewayError) else 'DRIVER_ERROR')
+            if self.cancel.get(eid) and self.cancel[eid].is_set(): self._transition(eid,'COMPLETE')
+            else:
+                code=error.code if isinstance(error,GatewayError) else 'DRIVER_ERROR'
+                updates={}
+                if code in ('UNSAFE','SAFETY_INDETERMINATE'):
+                    updates['safety_verification']=result('UNSAFE' if code=='UNSAFE' else 'INDETERMINATE',[code])
+                    updates['execution_decision']={'schema_version':'1.0','decision':'BLOCK_SAFETY','reasons':[code]}
+                elif code in ('UNEXECUTABLE','HARDWARE_UNAVAILABLE','PROTOCOL_MISMATCH'):
+                    updates['execution_decision']={'schema_version':'1.0','decision':'BLOCK_UNEXECUTABLE','reasons':[code]}
+                self._transition(eid,'FAULT',error_code=code,**updates)
         finally:
             e=self.repo.get_experiment(eid)
             safe=not touched

@@ -13,7 +13,7 @@ def build_server(stations=None) -> grpc.Server:
     if stations is None:
         stations = {'virtual-station-01': VirtualHardwareStation('virtual-station-01'),
                     'physical-station-01': PhysicalHardwareStation('physical-station-01')}
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=4))
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=8))
     rpc.add_HardwareServiceServicer_to_server(LifecycleRpc(stations, pb), server)
     return server
 
@@ -35,6 +35,8 @@ def serve(address: str = "127.0.0.1:50051") -> None:
         server.wait_for_termination()
     finally:
         server.stop(0).wait()
+        from hardware_service.station.virtual import close_simulation_pool
+        close_simulation_pool()
 
 if __name__ == "__main__":
     serve()

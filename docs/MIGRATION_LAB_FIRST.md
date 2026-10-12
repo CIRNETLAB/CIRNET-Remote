@@ -21,8 +21,8 @@ Authority: ARCHITECTURE.md, cleaned Lab-First v3.1; v3 proposal/audit are proven
 | R1 | DONE | 8a6b387 | 18 new RED→GREEN; 36 contracts/boundaries; 116 Python; 213 frontend; build PASS | Lab schemas 1.0; CircuitGraph unchanged |
 | R2 | DONE | 877f5e7 | 4 RED→GREEN; 50 targeted; 120 Python; 213 frontend; build PASS | RPC 2.0; generated-at-build; loopback only |
 | R3 | DONE | 0f09dcf | Physical/virtual/RPC RED→GREEN; 27 hardware; 132 Python; 213 frontend; build PASS | Safety/freshness/ownership/driver ACK enforced |
-| R4 | DONE | resolve subject refactor(r4) in Git | 13 initial RED + restart/generator RED→GREEN; 86 targeted; 149 Python; 213 frontend; build PASS | SQLAlchemy persistence/FIFO/lease/session/events; packages install PASS |
-| R5 | PENDING | — | — | Simulator |
+| R4 | DONE | 44578bf | 13 initial RED + restart/generator RED→GREEN; 86 targeted; 149 Python; 213 frontend; build PASS | SQLAlchemy persistence/FIFO/lease/session/events; packages install PASS |
+| R5 | DONE | resolve subject refactor(r5) in Git | Engine/worker/capture/RPC RED→GREEN; 169 Python; 213 frontend; build PASS | Real REST→RPC→process AND capture/function PASS; analog unavailable |
 | R6 | PENDING | — | — | Frontend |
 | R7 | PENDING | — | — | FPGA scaffold |
 
@@ -59,6 +59,18 @@ Reason: Explicit prompt requirement.
 Cost if wrong: Hardware bring-up awaits exact inputs.
 
 No merge/push to main; preserve user changes.
+
+Ruling: Virtual observations use 0/1/X, software nanosecond timing and bounded process workers.
+Finding: Floating input and primitive-only fake running/capture would misrepresent execution.
+Decision: Real deterministic event engine, model delays, default 1 ms window/100k event budget/four probes; preserve X and held signal values. Add optional Assignment LabEndpoint.design_port for virtual bindings while retaining physical node_id.
+Reason: Truthful digital execution through shared lifecycle; these are software models, not electrical ratings.
+Cost if wrong: Additional models/analog/real device timing remain explicit future support.
+
+Ruling: Normalize the empty clock message at the RPC schema boundary and refresh runtime safety results.
+Finding: Real REST→RPC test reproduced empty clock converted to zero fields; runtime UNSAFE retained a stale SAFE result. Failed codegen could corrupt existing bindings.
+Decision: Preserve empty-clock contract semantics, update safety/decision on runtime faults, and stage codegen with per-file atomic replacement.
+Reason: Integration evidence; no schema/guardrail weakening.
+Cost if wrong: Rebuild bindings; wire defaults remain documented and tested.
 
 Ruling: Generate shared wire bindings under contracts/generated for R4 gateway consumers.
 Finding: R2 output lived under the Hardware Service implementation package.

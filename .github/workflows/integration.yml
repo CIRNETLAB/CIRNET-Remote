@@ -10,5 +10,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-      - run: pip install pytest jsonschema pyyaml grpcio-tools
+      - run: pip install pyyaml -e . -e './services/api[test]' -e './simulator/circuit-simulator[test]' -e './services/hardware-service[dev]'
       - run: pytest -q tests/integration tests/contracts tests/frontend tests/deployment tests/fpga tests/test_docs_baseline.py tests/test_root_config.py
