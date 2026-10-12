@@ -1,22 +1,21 @@
-"""gRPC service entrypoint scaffold.
-
-Generated Protobuf modules are intentionally not committed at this stage. Generate them from
-`contracts/hardware/*.proto` once the RPC surface is stabilized. The station implementation is
-usable and testable independently of generated transport code.
-"""
+"""Local-only hardware RPC v2 server. Generate bindings before startup."""
 from concurrent import futures
 import grpc
 import ipaddress
 
 
-def build_server() -> grpc.Server:
-    """Create an empty gRPC server shell.
-
-    Service handlers are added when generated bindings become part of the build workflow.
-    Keeping this server handler-free prevents the scaffold from pretending a hardware RPC is
-    available before its generated contract and service implementation exist.
-    """
-    return grpc.server(futures.ThreadPoolExecutor(max_workers=4))
+def build_server(stations=None) -> grpc.Server:
+    from hardware_service.generated import rpc_v2_pb2 as pb
+    from hardware_service.generated import rpc_v2_pb2_grpc as rpc
+    from hardware_service.rpc import LifecycleRpc
+    from hardware_service.station.virtual import VirtualHardwareStation
+    from hardware_service.station.physical import PhysicalHardwareStation
+    if stations is None:
+        stations = {'virtual-station-01': VirtualHardwareStation('virtual-station-01'),
+                    'physical-station-01': PhysicalHardwareStation('physical-station-01')}
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=4))
+    rpc.add_HardwareServiceServicer_to_server(LifecycleRpc(stations, pb), server)
+    return server
 
 
 def serve(address: str = "127.0.0.1:50051") -> None:

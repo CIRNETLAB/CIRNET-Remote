@@ -19,8 +19,8 @@ Authority: ARCHITECTURE.md, cleaned Lab-First v3.1; v3 proposal/audit are proven
 |---|---|---|---|---|
 | R0 | DONE | 66dbe36 | Context PASS; 10 guardrails; 98 Python; 213 frontend; build PASS | 6 archives; Mini-PC→mini-pc; LF icons |
 | R1 | DONE | 8a6b387 | 18 new RED→GREEN; 36 contracts/boundaries; 116 Python; 213 frontend; build PASS | Lab schemas 1.0; CircuitGraph unchanged |
-| R2 | DONE | resolve subject refactor(r2) in Git | 4 RED→GREEN; 50 targeted; 120 Python; 213 frontend; build PASS | RPC 2.0; generated-at-build; loopback only |
-| R3 | PENDING | — | — | Safety lifecycle |
+| R2 | DONE | 877f5e7 | 4 RED→GREEN; 50 targeted; 120 Python; 213 frontend; build PASS | RPC 2.0; generated-at-build; loopback only |
+| R3 | DONE | resolve subject refactor(r3) in Git | Physical/virtual/RPC RED→GREEN; 27 hardware; 132 Python; 213 frontend; build PASS | Safety/freshness/ownership/driver ACK enforced |
 | R4 | PENDING | — | — | Backend lifecycle |
 | R5 | PENDING | — | — | Simulator |
 | R6 | PENDING | — | — | Frontend |
@@ -59,3 +59,9 @@ Reason: Explicit prompt requirement.
 Cost if wrong: Hardware bring-up awaits exact inputs.
 
 No merge/push to main; preserve user changes.
+
+Ruling: Replace legacy tests requiring direct physical Run success with mandatory safety lifecycle invariants.
+Finding: Old driver test explicitly bypassed scan/safety/plan/routing/power-up.
+Decision: Test guarded driver invocation, invalid sequences, unavailable/fault/freshness/acknowledgement and real loopback RPC.
+Reason: Existing test contradicted binding Lab-First safety requirements.
+Cost if wrong: Legacy physical v1 callers must migrate; v2 explicitly replaces them.

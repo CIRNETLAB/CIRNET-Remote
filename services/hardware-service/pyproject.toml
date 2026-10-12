@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Hardware abstraction service for net*CIRCUIT Remote"
 requires-python = ">=3.11"
 dependencies = [
+  "netcircuit-contracts==1.0.0",
   "grpcio>=1.60",
   "protobuf>=5"
 ]
