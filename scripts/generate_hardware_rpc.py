@@ -21,5 +21,5 @@ def generate(output: Path) -> None:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--output', type=Path, default=ROOT / 'services/hardware-service/hardware_service/generated')
+    parser.add_argument('--output', type=Path, default=ROOT / 'contracts/generated')
     generate(parser.parse_args().output)

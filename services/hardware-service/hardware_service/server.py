@@ -5,8 +5,8 @@ import ipaddress
 
 
 def build_server(stations=None) -> grpc.Server:
-    from hardware_service.generated import rpc_v2_pb2 as pb
-    from hardware_service.generated import rpc_v2_pb2_grpc as rpc
+    from contracts.generated import rpc_v2_pb2 as pb
+    from contracts.generated import rpc_v2_pb2_grpc as rpc
     from hardware_service.rpc import LifecycleRpc
     from hardware_service.station.virtual import VirtualHardwareStation
     from hardware_service.station.physical import PhysicalHardwareStation

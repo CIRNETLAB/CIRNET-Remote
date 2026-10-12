@@ -20,8 +20,8 @@ Authority: ARCHITECTURE.md, cleaned Lab-First v3.1; v3 proposal/audit are proven
 | R0 | DONE | 66dbe36 | Context PASS; 10 guardrails; 98 Python; 213 frontend; build PASS | 6 archives; Mini-PC→mini-pc; LF icons |
 | R1 | DONE | 8a6b387 | 18 new RED→GREEN; 36 contracts/boundaries; 116 Python; 213 frontend; build PASS | Lab schemas 1.0; CircuitGraph unchanged |
 | R2 | DONE | 877f5e7 | 4 RED→GREEN; 50 targeted; 120 Python; 213 frontend; build PASS | RPC 2.0; generated-at-build; loopback only |
-| R3 | DONE | resolve subject refactor(r3) in Git | Physical/virtual/RPC RED→GREEN; 27 hardware; 132 Python; 213 frontend; build PASS | Safety/freshness/ownership/driver ACK enforced |
-| R4 | PENDING | — | — | Backend lifecycle |
+| R3 | DONE | 0f09dcf | Physical/virtual/RPC RED→GREEN; 27 hardware; 132 Python; 213 frontend; build PASS | Safety/freshness/ownership/driver ACK enforced |
+| R4 | DONE | resolve subject refactor(r4) in Git | 13 initial RED + restart/generator RED→GREEN; 86 targeted; 149 Python; 213 frontend; build PASS | SQLAlchemy persistence/FIFO/lease/session/events; packages install PASS |
 | R5 | PENDING | — | — | Simulator |
 | R6 | PENDING | — | — | Frontend |
 | R7 | PENDING | — | — | FPGA scaffold |
@@ -59,6 +59,24 @@ Reason: Explicit prompt requirement.
 Cost if wrong: Hardware bring-up awaits exact inputs.
 
 No merge/push to main; preserve user changes.
+
+Ruling: Generate shared wire bindings under contracts/generated for R4 gateway consumers.
+Finding: R2 output lived under the Hardware Service implementation package.
+Decision: Keep proto/codegen policy; move default output to shared contracts, imported by both processes as wire types only.
+Reason: API depends on RPC abstraction, not station implementations.
+Cost if wrong: Re-run codegen/build; old generated files remain ignored.
+
+Ruling: One API scheduler process V1; PostgreSQL target, SQLite automated tests.
+Finding: No production database/target deployment is provided.
+Decision: SQLAlchemy persists assignments/experiments/sessions/FIFO order/leases; validate PostgreSQL production URL, include psycopg. Quarantine unacknowledged cleanup; recover persisted leases on restart.
+Reason: V1 boundaries without broker/cluster or fabricated deployment evidence.
+Cost if wrong: Multi-process scheduling/live PostgreSQL validation need follow-up.
+
+Ruling: Server-issued anonymous sessions establish ownership before login/RBAC.
+Finding: Full auth/OAuth is outside R4 scope.
+Decision: HTTP-only cookie, server lookup/expiry, owner-scoped APIs/events/disconnect cleanup; no client-supplied owner ID.
+Reason: Real isolation/rate limiting without inventing authenticated roles.
+Cost if wrong: Login/roles/production access policy remain deployment work.
 
 Ruling: Replace legacy tests requiring direct physical Run success with mandatory safety lifecycle invariants.
 Finding: Old driver test explicitly bypassed scan/safety/plan/routing/power-up.

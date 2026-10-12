@@ -1,6 +1,6 @@
 [Unit]
 Description=net*CIRCUIT Remote Application API
-After=network-online.target
+After=network-online.target postgresql.service netcircuit-hardware.service
 Wants=network-online.target
 
 [Service]
@@ -9,6 +9,7 @@ User=netcircuit
 Group=netcircuit
 WorkingDirectory=/opt/netcircuit/repo/services/api
 EnvironmentFile=-/etc/netcircuit/netcircuit.env
+Environment=NETCIRCUIT_ENV=production
 ExecStart=/opt/netcircuit/venv-api/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
 Restart=on-failure
 RestartSec=3

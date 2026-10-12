@@ -1,7 +1,7 @@
 # Hardware RPC 2.0
 
-Package netcircuit.hardware.v2. Typed InstrumentationExecutionPlan / ExecutionDecision contracts align with physical-lab 1.0; StartExecution accepts station/experiment identity only. ConfigureVirtualCircuit is explicitly virtual-only and cannot authorize physical wiring. Errors use stable enum codes rather than exception text. Domain JSON in results remains schema-validated by consumers.
+Package netcircuit.hardware.v2. Typed InstrumentationExecutionPlan/ExecutionDecision align with physical-lab 1.0. StartExecution accepts station/experiment identity only. ConfigureVirtualCircuit is virtual-only; physical stations refuse it. Stable error enum; consumers validate domain JSON results.
 
-Generate at build: python scripts/generate_hardware_rpc.py. Install grpcio-tools first; generated bindings are ignored and never committed. One proto file and deterministic package import normalization make generation reproducible within a toolchain. Compile/descriptor tests run generation in a temporary directory. Rebuild after RPC/toolchain changes. Runtime dependencies must be compatible with the generating grpcio/protobuf version.
+Generate at build: python scripts/generate_hardware_rpc.py after installing grpcio-tools. Default output contracts/generated is shared by API/Hardware Service, ignored and never committed. Generate before a wheel/package build. One proto plus deterministic relative-import normalization gives repeatable generation within a toolchain. Runtime grpcio/protobuf must match the generating toolchain.
 
-The service binds loopback/Unix only behind FastAPI. R3 registers lifecycle handlers; no raw register writer is exposed. Legacy parent-directory v1 contracts are deprecated and prohibited for new consumers.
+Handlers validate ownership, state and domain payloads; server binds loopback/Unix behind FastAPI. No raw register writer. Parent v1 protos are deprecated and unavailable to new consumers.

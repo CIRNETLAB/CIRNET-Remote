@@ -9,6 +9,7 @@ __pycache__/
 .audit-runtime/
 *.egg-info/
 services/hardware-service/hardware_service/generated/
+contracts/generated/
 
 # Node
 node_modules/

@@ -1,6 +1,10 @@
 # Application Backend
 
-FastAPI modular-monolith boundary for the Lab-First laboratory on a Linux Mini PC. Current authority: ../../docs/ARCHITECTURE.md. PostgreSQL is the production target; SQLite is optional for tests/development. R4 adds assignment/experiment/station/verification/persistence and FIFO/lease lifecycle; endpoints below describe the pre-R4 implementation.
+FastAPI modular-monolith Lab-First laboratory on a Linux Mini PC. Authority: ../../docs/ARCHITECTURE.md. R4 implements assignment/experiment/station/verification/persistence and FIFO/lease lifecycle. PostgreSQL is required in production; SQLite is optional for tests/development. Public contracts: ../../contracts/api/README.md.
+
+Install root contracts package into both service environments. API also needs grpcio/protobuf and psycopg (declared dependencies). Install Hardware Service dev extras and run python scripts/generate_hardware_rpc.py before startup/package build to create shared contracts/generated. Start hardware_service.server in its own process on localhost 50051. An absent gateway reports unavailable; R5 enables actual virtual execution.
+
+V1 uses one API worker (systemd default); do not start multiple scheduler workers against the same stations. SQLAlchemy persists definitions/results/sessions/leases and FIFO order, creates schema on bootstrap, recovers active leases on restart and quarantines failed safety cleanup. Production PostgreSQL server/deployment have not been validated here. Anonymous owner sessions isolate users; login/RBAC is a later deployment boundary.
 
 ## Local run
 
@@ -15,7 +19,7 @@ First-time setup, from the repository root (Python 3.11 or newer):
 
 ```powershell
 py -3 -m venv services/api/.venv
-.\services\api\.venv\Scripts\python.exe -m pip install -e './services/api[test]'
+.\services\api\.venv\Scripts\python.exe -m pip install -e . -e './services/api[test]'
 ```
 
 Start the API and keep this terminal running:
@@ -70,7 +74,7 @@ simulation mode should return `virtual-station-01` with state `ready`.
 cd services/api
 python -m venv .venv
 . .venv/bin/activate
-pip install -e '.[test]'
+pip install -e ../.. -e '.[test]'
 uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 

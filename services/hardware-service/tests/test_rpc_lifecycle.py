@@ -11,8 +11,8 @@ sys.path.insert(0, str(ROOT / 'services/hardware-service'))
 
 def test_registered_v2_rpc_cannot_start_physical_without_safety():
     subprocess.run([sys.executable, str(ROOT / 'scripts/generate_hardware_rpc.py')], check=True)
-    from hardware_service.generated import rpc_v2_pb2 as pb
-    from hardware_service.generated import rpc_v2_pb2_grpc as rpc
+    from contracts.generated import rpc_v2_pb2 as pb
+    from contracts.generated import rpc_v2_pb2_grpc as rpc
     from hardware_service.server import build_server
     from hardware_service.station.physical import PhysicalHardwareStation
     server = build_server({'physical-1': PhysicalHardwareStation('physical-1')})

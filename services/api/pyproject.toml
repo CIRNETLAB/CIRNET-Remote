@@ -4,6 +4,10 @@ version = "0.1.0"
 description = "Application backend for net*CIRCUIT Remote"
 requires-python = ">=3.11"
 dependencies = [
+  "netcircuit-contracts==1.0.0",
+  "grpcio>=1.60",
+  "protobuf>=5",
+  "psycopg[binary]>=3.1",
   "fastapi>=0.110",
   "uvicorn[standard]>=0.29",
   "pydantic>=2.6",

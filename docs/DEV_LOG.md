@@ -1,9 +1,9 @@
 ---
 project: net-Circuit-Remote
 current_phase: lab-first-r0-r7-migration
-status: r0-gates-passed
+status: r4-gates-passed
 last_updated: 2026-10-13
-next_task: r1-domain-contracts
+next_task: r5-discrete-event-execution
 blocking_issue: none
 hardware_mode: simulation
 fpga_development_started: false

@@ -1,43 +1,28 @@
-# Application API Contract
+# Lab-First Application API 1.0
 
-FastAPI is the public dynamic interface for the Lab-First browser. Canonical authority: ../../docs/ARCHITECTURE.md. R4 adds assignment/experiment/queue/result contracts; R6 validates responses and displays SAFETY / TOPOLOGY / FUNCTION independently. Preserve health/station/structural CircuitGraph compatibility. Interfaces below describe pre-R4 source, not physical safety approval.
+FastAPI public boundary; authority ../../docs/ARCHITECTURE.md. Browser uses REST and owner-scoped WebSocket lifecycle events. CircuitGraph schema stays 1.0, structural validation does not authorize physical execution.
 
-## Implemented endpoints
-
-| Endpoint | Response |
+| Endpoint | Contract |
 |---|---|
-| `GET /api/health` | `{status: string, service: string, hardware_mode: "simulation" \| "hardware"}` |
-| `GET /api/stations` | `[{station_id: string, mode: "simulation" \| "hardware", state: "ready" \| "unavailable" \| "busy" \| "error"}]` |
-| `POST /api/circuits/validate` | Circuit Graph v1.0 body; `{valid: boolean, code: string, message: string}`; HTTP 200 for valid structure, 422 for a rejected graph |
-| `WS /ws/events` | JSON event envelopes described below |
+| GET /api/health | Existing service/mode health descriptor |
+| POST /api/circuits/validate | Existing structural CircuitGraph validation |
+| GET /api/stations | Existing station_id/mode/state, plus validated capabilities |
+| GET /api/stations/{id}/capabilities | StationCapabilities 1.0 |
+| GET /api/stations/{id}/queue | Counts/busy and caller's positions |
+| POST /api/assignments | AssignmentDefinition 1.0 (201) |
+| GET /api/assignments, /api/assignments/{id} | Assignment list/definition |
+| POST /api/experiments | station_id, optional assignment_id; virtual circuit_graph; optional clock_config, generator_config, capture_config, test_vectors (201) |
+| GET /api/experiments, /api/experiments/{id} | Owner-scoped lifecycle/result records |
+| POST /api/experiments/{id}/run, /stop | Queue/admission or stop lifecycle |
+| GET /api/experiments/{id}/results | Independent verification and bounded digital capture |
+| POST /api/experiments/{id}/instruments | instrument/configuration; actual supported active configurations only |
 
-Validation confirms structure only; it is not execution or electrical approval. Physical mode currently reports an unavailable station rather than simulated success.
+Lifecycle records are schema_version 1.0 with experiment/circuit/station/assignment identity, mode, state/history, queue_position, lease_expires_at, execution_decision, safety_verification, topology_verification, functional_verification, capture and error_code. Unavailable/not-yet-observed results are null; function initially NOT_EVALUATED.
 
-## Frontend status adapter
+Capture metadata: schema_version, capture_id, source (simulation/hardware), instrument, encoding, available, sample_count, samples [{signal,time_ns,value}]. Bounded digital event results use JSON; no fake analog/physical acquisition. Large binary acquisition remains unavailable.
 
-The frontend keeps its presentation model separate from the station wire descriptor: error → `FAULT`, unavailable → `HARDWARE_OFFLINE`, busy → `HARDWARE_BUSY`; ready hardware → `HARDWARE_AVAILABLE`, ready simulation → `SIMULATION`. Selected targets become offline when discovery fails, events disconnect, the target disappears, or its reported mode conflicts with the explicitly selected mode. Default local simulation mode does not assert backend or simulator availability.
+Server-issued HTTP-only netcircuit_session establishes anonymous ownership; production cookie is Secure. Session identity is not a login/RBAC claim. Full authenticated roles remain deployment work. API errors expose stable code/message; owner mismatch 403, missing 404, invalid contract 422, rate/queue 429, state/resource conflict 409, gateway unavailable 503.
 
-## Events
+WebSocket retains hello/echo and binary close 1003. New event: {type:experiment.updated, experiment:<record>}, scoped to the owner. Last owner subscription disconnect cleans active work; HTTP leases/max run time also clean abandoned work. Queues/events are bounded. One API scheduler worker V1; shared physical slot=1, independent virtual sessions bounded by workers. Failed safe cleanup quarantines persisted lease; operator recovery needs acknowledged hardware safety.
 
-Implemented backend messages:
-
-```json
-{"type":"hello","service":"netcircuit-api"}
-{"type":"echo","payload":"a client message"}
-```
-
-The Phase 1 client also recognizes this reserved future envelope; the backend does not emit it yet:
-
-```json
-{"type":"station.updated","station":{"station_id":"station-01","mode":"hardware","state":"busy"}}
-```
-
-Unknown/malformed messages must not update station state. Reconnection triggers fresh station discovery; callers can close the lifecycle client with `disconnect()`.
-
-## Future backend interfaces
-
-The frontend's typed experiment service reserves `GET /api/experiments` and `GET /api/experiments/{id}` returning `{experiment_id, circuit_id, station_id, state}` (or an array). These endpoints are **not implemented**. The approved Single Workspace frontend must not depend on them until backend support exists. Persistence, experiment actions, station reservation and capture remain subsequent-phase work.
-
-## Single Workspace Phase 1 consumers
-
-The migrated shell uses station discovery/events continuously and invokes structural validation from its floating Inspector. New/Open/Save operate on local schema v1 JSON (maximum 2,000,000 UTF-8 bytes); they do not imply server persistence or issue new requests. Run/Stop/Step, waveform acquisition, generator output and Hex Editor writes remain unavailable because their public contracts are absent. This migration changes no REST/WebSocket wire format.
+Only safety/executability gates Run. Topology diagnostics never gate; function evaluates observed signals. Initial functional comparison handles explicit expected_signals; unresolved semantic topology matching reports UNKNOWN/AMBIGUOUS instead of guessing equivalence.
