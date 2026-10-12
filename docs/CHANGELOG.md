@@ -4,7 +4,14 @@ All notable project changes will be documented in this file. The project follows
 
 ## [Unreleased]
 
-### Changed — 2026-10-12 Placement ghost Gizmo
+### Fixed — 2026-10-12 Placement cursor follow
+
+- Restore ghost XZ follow without holding a mouse button; preserve draft rotation and rotation-aware snap/docking/anti-overlap. Remove placement body drag, pickPlacement and hoveredPlacement.
+- Restore the XZ diamond; placement hides only Delete. Prioritize gizmo picking, pause follow during hover/drag and resume on ordinary movement. Keep a visual-only gizmo anchor stable during approach and settle it after pointer idle so handles remain reachable.
+- Keep draft previews outside graph/history, atomic full-pose placement, one-step Undo/Redo, Escape/right-click cancellation and the complete selected-model gizmo.
+- Frontend206/206, Python97/97 and production build pass; native four-model checks and files: `verification/2026-10-12-placement-follow.md`.
+
+### Changed — 2026-10-12 Placement ghost Gizmo (historical anchored preview)
 
 - Reuse the single Component Transform Gizmo for ghost X/Z/XZ/Y transforms before placement. Anchored drafts stay outside graph/history; handle clicks cannot accidentally place a model or open Component Info.
 - Ghost Delete/right click/Escape cancel; pointer capture guards include foreign pointercancel. Commit the entire position/rotation through one placement command and Undo/Redo step.

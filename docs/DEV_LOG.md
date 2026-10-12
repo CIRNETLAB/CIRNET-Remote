@@ -1,7 +1,7 @@
 ---
 project: net-Circuit-Remote
-current_phase: interactive-workspace-placement-ghost-gizmo
-status: placement-ghost-gizmo-verified
+current_phase: interactive-workspace-placement-follow
+status: placement-follow-verified
 last_updated: 2026-10-12
 next_task: phase-3-simulator-event-clock-model-integration
 blocking_issue: none
@@ -15,7 +15,15 @@ fpga_development_started: false
 
 Phase 2 **Interactive Circuit Workspace** is implemented, preserving Phase 1 shell and transport boundaries. Next: Phase 3 simulator/event/clock/model adapters and real output/capture data.
 
-## Placement ghost Gizmo — 2026-10-12
+## Placement cursor follow restored — 2026-10-12
+
+Read the editor, SceneManager, ComponentTransformGizmo, workspace event routing and interaction/scene tests against d6dbbc4 before editing. Removed placement-only body drag/raycast/hover state. Normal pointer movement now updates the local draft position through yaw-aware snap and setGhost, preserving rotation. Preview exposes X/Z/XZ/rotate-y, with only Delete hidden from rendering and picking. Gizmo hover/pointer capture precedes follow/commit; hover/drag pauses following and ordinary movement resumes after release/away from handles. Atomic full-pose placement and the existing selected-model behavior remain intact.
+
+Initial follow/XZ regressions failed before implementation, then passed. Read-only review identified a gradual-approach defect: moving toward an adjacent handle could make the gizmo chase the pointer and a click place the model. A50-step approach regression reproduced this on Breadboard. SceneManager now keeps only the gizmo's visual anchor stable during movement, settling once after160 ms idle; the ghost still follows every ordinary move. Active gestures use the real pose. Hover/activation, removal/replacement and disposal cancel the owned timer. A further failing scene test exposed redundant idle redraw at unchanged pose; an equality guard fixes it. No new listener, graph/store state, render loop or resize pipeline was added.
+
+Final frontend206/206 includes16 gradual approaches across four models/four handles, no-button follow, retained rotation, constrained/free movement, rotated docking, hidden Delete, pointer ownership, atomic Undo/Redo and timer lifecycle. Full Python97/97 and147-module production build pass. Native browser verifies follow/rotation on Breadboard, Oscilloscope, Function Generator and Power Supply, no Info/history before commit, full Delete after commit, and one-click Undo/Redo. Canvas remains698.4×548.2 CSS /872×685 buffer; warning/error logs empty. Read-only re-review finds no critical/important issue. Existing Vite chunk advisory and three Python dependency deprecations remain. Current files/screenshots/evidence: `verification/2026-10-12-placement-follow.md`. Phase3 remains next.
+
+## Placement ghost Gizmo — 2026-10-12 (historical anchored preview)
 
 Read requested editor/scene/gizmo/workspace/circuit/model and interaction/history tests before editing. Existing pointerDown committed placement before gizmo picking; gizmo targeted only selected graph models. Editor now owns a local type/position/rotation draft. First valid preview anchors its pose so pointer approach cannot chase the adjacent handles. One existing scene gizmo targets ghost or selected model, with unchanged scale/obstacle/render logic. X/Z/XZ/Y use shared captured gesture math; preview/release never creates graph identity, ports, Info or history. Ghost Delete/right click/Escape discard placement; model deletion remains intact. Own capture interruption discards draft; foreign pointer move/up/cancel/capture loss cannot affect the active gesture. Tool/type/graph changes clear stale drafts.
 
@@ -288,7 +296,7 @@ Device-library coverage is small. gRPC generated bindings/handlers, exact SDRAM/
 
 ### What changed
 
-Latest task removes only sidebar Delete and adds Power Supply/Generator launchers preserving editing state. Supply GUI binds selected canonical graph properties/history, never telemetry; Generator has two local previews with legacy CH1 fields retained and independent nested channel2. Output controls remain disabled. Shared artwork/themes preserve 3D colors/geometry; existing window manager, drawers, Scope/Monitor and graph contracts remain. Frontend191/191, Python97/97 and production build pass; evidence/files: verification/2026-10-12-supply-generator-launchers. Phase3 capture/DDS/simulator integration remains next.
+Latest task restores no-button placement cursor follow while retaining draft rotation and X/Z/XZ/Rotate Y preview gizmo; only Delete is hidden. Removed placement body drag/raycast/hover state. A stable visual gizmo anchor keeps handles reachable during approach and settles after pointer idle; hover/drag pauses ghost follow and ordinary movement resumes. Atomic full-pose placement/Undo/Redo, rotation-aware snapping and selected-model behavior remain. Frontend206/206, Python97/97 and production build pass; native four-model evidence/files: `verification/2026-10-12-placement-follow.md`. Existing drawer/instrument/graph architecture remains. Phase3 capture/DDS/simulator integration remains next.
 
 Phase 2 canonical catalog, separate memory contract, graph command/history layer, scene/models/picking/wires/camera controls, pointer/drag/keyboard interactions, selected Inspector/Hex Editor, lifecycle fixes, tests and Markdown. Preserve historical specs/verification and supplied artwork/axis gizmo.
 

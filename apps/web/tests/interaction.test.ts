@@ -8,7 +8,6 @@ import { useCircuitStore } from '../src/stores/circuit'
 import { useWorkspaceStore, type WorkspaceTool } from '../src/stores/workspace'
 import { createSceneManager } from '../src/three/SceneManager'
 import { useUiStore } from '../src/stores/ui'
-import { getDefinition } from '../src/data/editorCatalog'
 
 // Only the DOM/canvas host and GPU boundary are replaced; picking, camera math,
 // Vue lifecycle, graph commands and history use the production implementations.
@@ -678,8 +677,8 @@ async function previewPlacement(h: ReturnType<typeof setup>, type = 'CLOCK', pos
   assert.ok(placementGhost(h))
 }
 
-test('placement ghost exposes only X/Z/Rotate Y and constrained gestures edit its stable draft', async () => {
-  for (const handle of ['x', 'z'] as const) {
+test('placement ghost exposes X/Z/XZ/Rotate Y, pauses follow on handles and resumes after the gesture', async () => {
+  for (const handle of ['x', 'z', 'xz'] as const) {
     const h = setup()
     try {
       h.circuit.placeModule('LED', { x: -3, y: 0, z: -2 }); h.circuit.undo(); await nextTick()
@@ -688,12 +687,10 @@ test('placement ghost exposes only X/Z/Rotate Y and constrained gestures edit it
       assert.equal(future.length, 1, 'editing a placement draft must preserve the existing redo branch')
       const ghost = placementGhost(h), original = ghost.position.clone(), camera = h.manager.camera.position.clone()
       assert.equal(h.manager.scene.children.filter((child) => child.name === 'component-transform-gizmo').length, 1)
-      for (const part of ['x', 'z', 'rotate-y'] as const) assert.ok(h.manager.gizmoHandlePosition(part), part)
-      for (const part of ['xz', 'delete'] as const) assert.equal(h.manager.gizmoHandlePosition(part), null, part)
+      for (const part of ['x', 'z', 'xz', 'rotate-y'] as const) assert.ok(h.manager.gizmoHandlePosition(part), part)
+      assert.equal(h.manager.gizmoHandlePosition('delete'), null)
       const origin = h.manager.gizmoHandlePosition(handle)!, start = h.manager.project(origin)
-      const initial = h.manager.project(original)
-      // Approach in small mouse steps: the ghost and handle must not chase the pointer.
-      for (let step = 1; step <= 20; step++) h.editor.pointerMove(h.pointer(initial.x + (start.x - initial.x) * step / 20, initial.y + (start.y - initial.y) * step / 20))
+      h.editor.pointerMove(h.pointer(start.x, start.y))
       assert.deepEqual(ghost.position.toArray(), original.toArray())
       assert.equal(h.manager.pickGizmo(start.x, start.y)?.handle, handle)
       h.editor.pointerDown(h.pointer(start.x, start.y))
@@ -709,8 +706,12 @@ test('placement ghost exposes only X/Z/Rotate Y and constrained gestures edit it
       assert.equal(h.workspace.selectedModuleId, null); assert.equal(h.manager.models.size, 0)
       assert.equal(h.manager.endpointPosition('PLACE.OUT'), null)
       assert.equal(useUiStore().windows.some((window) => window.kind === 'component-info' && window.open), false)
-      h.editor.pointerMove(h.pointer(120, 550)); h.editor.pointerLeave(); h.editor.cancel(); h.editor.sync(); await nextTick()
-      assert.deepEqual(placementGhost(h).position.toArray(), pose)
+      const expected = snapPosition(h.manager.groundPoint(120, 550)!, h.workspace.snap, [], 'CLOCK')
+      h.editor.pointerMove(h.pointer(120, 550))
+      assert.deepEqual(ghost.position.toArray(), [expected.x, expected.y, expected.z], 'normal movement resumes follow')
+      assert.notDeepEqual(ghost.position.toArray(), pose)
+      h.editor.pointerLeave(); h.editor.cancel(); h.editor.sync(); await nextTick()
+      assert.deepEqual(placementGhost(h).position.toArray(), [expected.x, expected.y, expected.z])
       assert.deepEqual(h.manager.camera.position.toArray(), camera.toArray())
     } finally { h.dispose() }
   }
@@ -727,9 +728,11 @@ test('placement Rotate Y and movement commit the entire pose atomically and Undo
     assert.equal(Math.round(ghost.rotation.y * 180 / Math.PI), 60)
     const x = h.manager.gizmoHandlePosition('x')!, a = h.manager.project(x), b = h.manager.project(x.clone().add(new Vector3(1.5, 0, 0)))
     h.editor.pointerDown(h.pointer(a.x, a.y)); h.editor.pointerMove(h.pointer(b.x, b.y)); h.editor.pointerUp(h.pointer(b.x, b.y))
-    const pose = { x: ghost.position.x, y: ghost.position.y, z: ghost.position.z }
     assert.equal(h.circuit.past.length, 0); assert.equal(h.circuit.graph!.modules.length, 0)
-    h.editor.pointerMove(h.pointer(120, 550)); h.editor.pointerDown(h.pointer(120, 550)); await nextTick()
+    h.editor.pointerMove(h.pointer(120, 550))
+    const pose = { x: ghost.position.x, y: ghost.position.y, z: ghost.position.z }
+    assert.equal(Math.round(ghost.rotation.y * 180 / Math.PI), 60)
+    h.editor.pointerDown(h.pointer(120, 550)); await nextTick()
     const module = h.circuit.graph!.modules[0]
     assert.deepEqual(module.position, pose); assert.equal(module.rotation, 60)
     assert.equal(h.circuit.past.length, 1); assert.equal(h.workspace.selectedModuleId, module.id)
@@ -748,7 +751,7 @@ test('Escape/right-click completely discard placement without module deletion', 
       await previewPlacement(h)
       let removals = 0; h.circuit.removeModule = () => { removals++ }
       if (action === 'escape') {
-        const point = h.manager.project(placementGhost(h).localToWorld(new Vector3(0, 0.4, 0)))
+        const point = h.manager.project(h.manager.gizmoHandlePosition('xz')!)
         h.editor.pointerDown(h.pointer(point.x, point.y)); h.editor.pointerMove(h.pointer(point.x + 50, point.y + 20))
         h.editor.keydown({ key: 'Escape' } as KeyboardEvent)
       } else if (action === 'right') h.editor.pointerDown(h.pointer(500, 350, 1, 2))
@@ -767,7 +770,7 @@ test('ghost gestures ignore foreign pointers and discard draft on tool/type/grap
     const h = setup()
     try {
       await previewPlacement(h)
-      const ghost = placementGhost(h), start = h.manager.project(ghost.localToWorld(new Vector3(0, 0.4, 0)))
+      const ghost = placementGhost(h), start = h.manager.project(h.manager.gizmoHandlePosition('xz')!)
       h.editor.pointerDown(h.pointer(start.x, start.y, 7))
       h.editor.pointerMove(h.pointer(start.x + 60, start.y + 30, 8)); h.editor.pointerUp(h.pointer(start.x + 60, start.y + 30, 8))
       h.editor.lostPointerCapture({ pointerId: 8 } as PointerEvent)
@@ -842,7 +845,7 @@ test('only the owning pointercancel can discard a ghost transform gesture', asyn
   const h = setup()
   try {
     await previewPlacement(h)
-    const ghost = placementGhost(h), start = h.manager.project(ghost.localToWorld(new Vector3(0, 0.4, 0)))
+    const ghost = placementGhost(h), start = h.manager.project(h.manager.gizmoHandlePosition('xz')!)
     h.editor.pointerDown(h.pointer(start.x, start.y, 7)); h.editor.pointerMove(h.pointer(start.x + 60, start.y + 30, 7))
     const pose = ghost.position.toArray()
     const pointerCancel = h.editor.pointerCancel
@@ -854,93 +857,90 @@ test('only the owning pointercancel can discard a ghost transform gesture', asyn
   } finally { h.dispose() }
 })
 
-function pickGhost(h: ReturnType<typeof setup>, x: number, y: number) {
-  return h.manager.pickPlacement(x, y)
-}
-
-test('Breadboard/Scope/Generator/Supply ghost body drags from multiple points retain grab offset without commands', async () => {
+test('Breadboard/Scope/Generator/Supply previews follow cursor without mouse buttons or graph/history changes', async () => {
   for (const type of ['BREADBOARD', 'OSCILLOSCOPE', 'GENERATOR', 'POWER_SUPPLY']) {
-    const [w, height, d] = getDefinition(type)!.size
-    for (const local of [new Vector3(-w * 0.3, height * 0.4, d * 0.25), new Vector3(w * 0.3, height * 0.4, d * 0.25), new Vector3(0, height * 0.8, 0)]) {
+    for (const snap of [true, false]) {
       const h = setup()
       try {
-        h.workspace.snap = false
+        h.workspace.snap = snap
+        h.circuit.placeModule('LED', { x: -3, y: 0, z: -2 }); h.circuit.undo(); await nextTick()
         await previewPlacement(h, type)
-        const ghost = placementGhost(h), original = ghost.position.clone(), camera = h.manager.camera.position.clone()
-        const snapshot = h.circuit.snapshot(), start = h.manager.project(ghost.localToWorld(local.clone()))
-        const hit = pickGhost(h, start.x, start.y)
-        assert.ok(hit, `${type} body sample must be hittable`); assert.equal(hit.kind, 'placement'); assert.equal(hit.id, 'PLACE')
-        assert.equal(h.manager.pickGizmo(start.x, start.y), null)
-        h.editor.pointerMove(h.pointer(start.x, start.y))
-        h.editor.pointerDown(h.pointer(start.x, start.y))
-        assert.equal(h.captured.size, 1); assert.deepEqual(ghost.position.toArray(), original.toArray(), 'mouse-down cannot jump to the pointer')
-        h.editor.pointerMove(h.pointer(start.x + 1, start.y + 1))
-        assert.deepEqual(ghost.position.toArray(), original.toArray(), 'subthreshold jitter cannot snap the pose')
-        const delta = new Vector3(1.25, 0, -0.75), end = h.manager.project(hit.point.clone().add(delta))
-        h.editor.pointerMove(h.pointer(end.x, end.y)); h.editor.pointerUp(h.pointer(end.x, end.y)); await nextTick()
-        assert.ok(ghost.position.distanceTo(original.clone().add(delta)) < 0.015, `${type} must translate by pointer travel, preserving offset`)
+        const ghost = placementGhost(h), camera = h.manager.camera.position.clone()
+        const snapshot = h.circuit.snapshot(), future = [...h.circuit.future]
+        for (const target of [new Vector3(-3.13, 0, -2.16), new Vector3(3.12, 0, 2.17), new Vector3(-2.14, 0, 3.18)]) {
+          const screen = h.manager.project(target)
+          assert.equal(h.manager.pickGizmo(screen.x, screen.y), null)
+          h.editor.pointerMove({ ...h.pointer(screen.x, screen.y), buttons: 0 } as PointerEvent)
+          const expected = snapPosition(target, snap, [], type, null, 0, 0)
+          assert.deepEqual(ghost.position.toArray(), [expected.x, expected.y, expected.z], `${type} must follow without dragging`)
+          assert.equal(h.circuit.snapshot(), snapshot); assert.deepEqual(h.circuit.future, future)
+        }
         assert.equal(h.captured.size, 0); assert.equal(h.circuit.snapshot(), snapshot); assert.equal(h.circuit.past.length, 0)
         assert.equal(h.workspace.placementType, type); assert.equal(h.manager.models.size, 0)
         assert.equal(h.manager.endpointPosition('PLACE.OUT'), null)
         assert.equal(useUiStore().windows.some((window) => window.kind === 'component-info' && window.open), false)
-        const pose = ghost.position.toArray()
-        h.editor.pointerMove(h.pointer(100, 550)); h.editor.pointerLeave(); assert.deepEqual(ghost.position.toArray(), pose)
         assert.deepEqual(h.manager.camera.position.toArray(), camera.toArray())
       } finally { h.dispose() }
     }
   }
 })
 
-test('click/jitter on a ghost body retains preview while a separate empty click atomically confirms its pose', async () => {
-  const h = setup()
-  try {
-    await previewPlacement(h, 'BREADBOARD')
-    const ghost = placementGhost(h), start = h.manager.project(ghost.localToWorld(new Vector3(3, 0.2, 0.8)))
-    assert.ok(pickGhost(h, start.x, start.y))
-    h.editor.pointerDown(h.pointer(start.x, start.y)); h.editor.pointerUp(h.pointer(start.x + 1, start.y + 1)); await nextTick()
-    assert.equal(h.circuit.graph!.modules.length, 0); assert.equal(h.circuit.past.length, 0)
-    h.editor.pointerDown(h.pointer(start.x, start.y))
-    const hit = pickGhost(h, start.x, start.y)!, end = h.manager.project(hit.point.clone().add(new Vector3(1.5, 0, 1)))
-    h.editor.pointerMove(h.pointer(end.x, end.y)); h.editor.pointerUp(h.pointer(end.x, end.y))
-    const pose = { x: ghost.position.x, y: ghost.position.y, z: ghost.position.z }
-    assert.equal(pickGhost(h, 120, 550), null)
-    h.editor.pointerDown(h.pointer(120, 550)); await nextTick()
-    const module = h.circuit.graph!.modules[0]
-    assert.deepEqual(module.position, pose); assert.equal(h.circuit.past.length, 1)
-    assert.equal(h.workspace.selectedModuleId, module.id)
-    for (const part of ['x', 'z', 'xz', 'rotate-y', 'delete'] as const) assert.ok(h.manager.gizmoHandlePosition(part))
-    h.circuit.undo(); await nextTick(); assert.equal(h.circuit.graph!.modules.length, 0)
-    h.circuit.redo(); await nextTick(); assert.equal(JSON.stringify(h.circuit.graph!.modules[0]), JSON.stringify(module))
-  } finally { h.dispose() }
+test('rotation survives resumed cursor follow and normal clicks commit a full pose in one step for every instrument', async () => {
+  for (const type of ['BREADBOARD', 'OSCILLOSCOPE', 'GENERATOR', 'POWER_SUPPLY']) {
+    const h = setup()
+    try {
+      await previewPlacement(h, type)
+      const ghost = placementGhost(h), center = h.manager.gizmoOrigin()!, grip = h.manager.gizmoHandlePosition('rotate-y')!
+      const start = h.manager.project(grip), radius = grip.distanceTo(center)
+      const end = h.manager.project(center.clone().add(new Vector3(-radius * Math.cos(Math.PI / 3), 0, radius * Math.sin(Math.PI / 3))))
+      h.editor.pointerMove(h.pointer(start.x, start.y)); h.editor.pointerDown(h.pointer(start.x, start.y))
+      h.editor.pointerMove(h.pointer(end.x, end.y)); h.editor.pointerUp(h.pointer(end.x, end.y))
+      assert.equal(Math.round(ghost.rotation.y * 180 / Math.PI), 60)
+      const target = new Vector3(-3, 0, -3), screen = h.manager.project(target)
+      assert.equal(h.manager.pickGizmo(screen.x, screen.y), null)
+      h.editor.pointerMove({ ...h.pointer(screen.x, screen.y), buttons: 0 } as PointerEvent)
+      assert.ok(ghost.position.distanceTo(target) < 0.001); assert.equal(Math.round(ghost.rotation.y * 180 / Math.PI), 60)
+      assert.equal(h.circuit.past.length, 0); assert.equal(h.circuit.graph!.modules.length, 0)
+      const pose = { x: ghost.position.x, y: ghost.position.y, z: ghost.position.z }
+      h.editor.pointerDown(h.pointer(screen.x, screen.y)); h.editor.pointerUp(h.pointer(screen.x, screen.y)); await nextTick()
+      const module = h.circuit.graph!.modules[0]
+      assert.deepEqual(module.position, pose); assert.equal(module.rotation, 60); assert.equal(h.circuit.past.length, 1)
+      assert.equal(h.workspace.selectedModuleId, module.id)
+      for (const part of ['x', 'z', 'xz', 'rotate-y', 'delete'] as const) assert.ok(h.manager.gizmoHandlePosition(part))
+      h.circuit.undo(); await nextTick(); assert.equal(h.circuit.graph!.modules.length, 0)
+      h.circuit.redo(); await nextTick(); assert.equal(JSON.stringify(h.circuit.graph!.modules[0]), JSON.stringify(module))
+    } finally { h.dispose() }
+  }
 })
 
-test('hidden placement XZ/Delete groups cannot render or pick and Gizmo picking precedes body picking', async () => {
+test('only Delete is hidden from placement rendering/picking and handle hover takes priority over follow', async () => {
   const h = setup()
   try {
     await previewPlacement(h)
     const root = h.manager.scene.children.find((child) => child.name === 'component-transform-gizmo')!
     h.manager.gizmoOrigin()
-    for (const part of ['xz', 'delete'] as const) {
-      assert.equal(root.children.find((group) => group.userData.transformHandle === part)!.visible, false)
-      const point = h.manager.project(root.localToWorld(new Vector3(part === 'delete' ? 1.42 : 0, 0, part === 'delete' ? 1.42 : 0)))
-      assert.notEqual(h.manager.pickGizmo(point.x, point.y)?.handle, part)
+    for (const part of ['x', 'z', 'xz', 'rotate-y', 'delete'] as const) {
+      assert.equal(root.children.find((group) => group.userData.transformHandle === part)!.visible, part !== 'delete')
     }
-    const body = h.manager.project(placementGhost(h).localToWorld(new Vector3(0, 0.4, 0)))
-    assert.ok(pickGhost(h, body.x, body.y))
-    const calls: string[] = [], originalGizmo = h.manager.pickGizmo
-    const originalPlacement = h.manager.pickPlacement
-    h.manager.pickGizmo = (x, y) => { calls.push('gizmo'); return originalGizmo(x, y) }
-    h.manager.pickPlacement = (x, y) => { calls.push('placement'); return originalPlacement(x, y) }
-    h.editor.pointerDown(h.pointer(body.x, body.y)); assert.deepEqual(calls, ['gizmo', 'placement'])
-    h.editor.pointerUp(h.pointer(body.x, body.y)); calls.length = 0
-    const handle = h.manager.project(h.manager.gizmoHandlePosition('x')!)
-    h.editor.pointerDown(h.pointer(handle.x, handle.y)); assert.deepEqual(calls, ['gizmo'])
-    h.editor.pointerUp(h.pointer(handle.x, handle.y))
+    const hidden = h.manager.project(root.localToWorld(new Vector3(1.42, 0, 1.42)))
+    assert.notEqual(h.manager.pickGizmo(hidden.x, hidden.y)?.handle, 'delete')
+    const ghost = placementGhost(h), pose = ghost.position.toArray()
+    const calls: string[] = [], originalHover = h.manager.hoverGizmo, originalGround = h.manager.groundPoint
+    h.manager.hoverGizmo = (x, y) => { calls.push('gizmo'); return originalHover(x, y) }
+    h.manager.groundPoint = (x, y, height) => { calls.push('ground'); return originalGround(x, y, height) }
+    const handle = h.manager.project(h.manager.gizmoHandlePosition('xz')!)
+    for (let i = 0; i < 4; i++) h.editor.pointerMove(h.pointer(handle.x, handle.y))
+    assert.deepEqual(calls, ['gizmo', 'gizmo', 'gizmo', 'gizmo'])
+    assert.deepEqual(ghost.position.toArray(), pose); assert.equal(h.editor.hoveredHandle.value, 'xz')
+    calls.length = 0
+    h.editor.pointerMove(h.pointer(120, 550)); assert.deepEqual(calls, ['gizmo', 'ground'])
+    assert.equal(h.editor.hoveredHandle.value, null)
+    assert.equal(Reflect.get(h.manager, 'pickPlacement'), undefined); assert.equal(Reflect.get(h.editor, 'hoveredPlacement'), undefined)
     assert.equal(h.circuit.past.length, 0)
   } finally { h.dispose() }
 })
 
-test('rotated Breadboard free body dragging keeps rotation-aware docking and anti-overlap', async () => {
+test('rotated Breadboard cursor follow keeps current rotation in docking and anti-overlap', async () => {
   const h = setup()
   try {
     h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 }); await nextTick(); h.circuit.past = []
@@ -948,11 +948,34 @@ test('rotated Breadboard free body dragging keeps rotation-aware docking and ant
     const ghost = placementGhost(h), center = h.manager.gizmoOrigin()!, grip = h.manager.gizmoHandlePosition('rotate-y')!
     const radius = grip.distanceTo(center), start = h.manager.project(grip), quarter = h.manager.project(center.clone().add(new Vector3(0, 0, radius)))
     h.editor.pointerDown(h.pointer(start.x, start.y)); h.editor.pointerMove(h.pointer(quarter.x, quarter.y)); h.editor.pointerUp(h.pointer(quarter.x, quarter.y))
-    const body = h.manager.project(ghost.localToWorld(new Vector3(2, 0.2, 0.8))), hit = pickGhost(h, body.x, body.y)!
-    assert.ok(hit)
-    const end = h.manager.project(hit.point.clone().add(new Vector3(0.1, 0, -8)))
-    h.editor.pointerDown(h.pointer(body.x, body.y)); h.editor.pointerMove(h.pointer(end.x, end.y)); h.editor.pointerUp(h.pointer(end.x, end.y))
+    const end = h.manager.project(new Vector3(0.1, 0, 1))
+    assert.equal(h.manager.pickGizmo(end.x, end.y), null)
+    h.editor.pointerMove({ ...h.pointer(end.x, end.y), buttons: 0 } as PointerEvent)
     assert.equal(ghost.position.z, 5.83); assert.equal(Math.round(ghost.rotation.y * 180 / Math.PI), 90)
     assert.equal(h.circuit.past.length, 0); assert.equal(h.circuit.graph!.modules.length, 1)
   } finally { h.dispose() }
+})
+
+test('placement handles can be reached by gradual mouse movement while the ghost keeps automatic follow', async () => {
+  for (const type of ['BREADBOARD', 'OSCILLOSCOPE', 'GENERATOR', 'POWER_SUPPLY']) {
+    for (const handle of ['x', 'z', 'xz', 'rotate-y'] as const) {
+      const h = setup()
+      try {
+        await previewPlacement(h, type)
+        const ghost = placementGhost(h), initial = ghost.position.clone(), origin = h.manager.project(initial)
+        const target = h.manager.project(h.manager.gizmoHandlePosition(handle)!)
+        let followed = false
+        for (let step = 1; step <= 50; step++) {
+          h.editor.pointerMove({ ...h.pointer(origin.x + (target.x - origin.x) * step / 50, origin.y + (target.y - origin.y) * step / 50), buttons: 0 } as PointerEvent)
+          followed ||= ghost.position.distanceTo(initial) > 0.1
+        }
+        assert.ok(followed, 'preview continues following until it reaches the handle')
+        assert.equal(h.manager.pickGizmo(target.x, target.y)?.handle, handle, `${type} ${handle} must not chase the pointer`)
+        h.editor.pointerDown(h.pointer(target.x, target.y))
+        assert.equal(h.captured.size, 1); assert.equal(h.circuit.graph!.modules.length, 0)
+        h.editor.pointerUp(h.pointer(target.x, target.y))
+        assert.equal(h.circuit.past.length, 0)
+      } finally { h.dispose() }
+    }
+  }
 })

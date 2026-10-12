@@ -52,33 +52,39 @@ export function createComponentTransformGizmo() {
     }
   }
   const pixelScale = (point: Vector3, camera: PerspectiveCamera, height: number) => Math.max(0.1, -point.clone().applyMatrix4(camera.matrixWorldInverse).z) * 2 * Math.tan(camera.fov * Math.PI / 360) / (height * camera.zoom) * 42
-  function update(model: Group | undefined, others: Iterable<Group>, camera: PerspectiveCamera, width: number, height: number, obstacles: readonly GizmoObstacle[] = []) {
+  function update(model: Group | undefined, others: Iterable<Group>, camera: PerspectiveCamera, width: number, height: number, obstacles: readonly GizmoObstacle[] = [], placementAnchor?: Vector3) {
     if (!model || height <= 1) { root.visible = false; selectedId = null; hovered = null; active = null; lockedOffset = null; return }
-    for (const [id, group] of handles) group.visible = model.userData.kind !== 'placement' || (id !== 'xz' && id !== 'delete')
+    for (const [id, group] of handles) group.visible = model.userData.kind !== 'placement' || id !== 'delete'
     if (selectedId !== model.userData.id) { hovered = null; active = null; lockedOffset = null; paint() }
     selectedId = model.userData.id; root.visible = true; camera.updateMatrixWorld()
     // World X/Z movement stays fixed. Only the Y ring and grip track object yaw,
     // including live previews while the gesture center is locked.
     rotate.rotation.y = model.rotation.y
     if (active && lockedOffset) { root.position.copy(model.position).add(lockedOffset); root.scale.setScalar(pixelScale(root.position, camera, height)); root.updateMatrixWorld(true); return }
+    const position = placementAnchor ?? model.position
     // Ground-footprint clearance alone can still cover the face of a tall model.
     model.updateMatrixWorld(true)
     const localBounds = model.userData.visualBounds as [number[], number[]] | undefined
     const [mw, mh, md] = model.userData.size as number[]
     const bounds = localBounds ? new Box3(new Vector3().fromArray(localBounds[0]), new Vector3().fromArray(localBounds[1])) : new Box3(new Vector3(-mw / 2, 0, -md / 2), new Vector3(mw / 2, mh, md / 2))
     const projected: Vector3[] = []
-    for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) projected.push(new Vector3(x, y, z).applyMatrix4(model.matrixWorld).project(camera))
+    const layoutOffset = placementAnchor?.clone().sub(model.position)
+    for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) {
+      const point = new Vector3(x, y, z).applyMatrix4(model.matrixWorld)
+      if (layoutOffset) point.add(layoutOffset)
+      projected.push(point.project(camera))
+    }
     const selectedArea = { left: Math.min(...projected.map((p) => (p.x + 1) * width / 2)), right: Math.max(...projected.map((p) => (p.x + 1) * width / 2)), top: Math.min(...projected.map((p) => (1 - p.y) * height / 2)), bottom: Math.max(...projected.map((p) => (1 - p.y) * height / 2)) }
     const neighbors = [...others] // Map.values() is single-use; all candidates need the same obstacles.
-    const near = camera.position.clone().sub(model.position).setY(0).normalize(), right = new Vector3(near.z, 0, -near.x)
+    const near = camera.position.clone().sub(position).setY(0).normalize(), right = new Vector3(near.z, 0, -near.x)
     const directions = [near, right, right.clone().negate(), near.clone().negate()]
     const candidates = [1.55, 2.7, 3.9, 5].flatMap((spacing) => directions.map((direction) => ({ direction, spacing })))
     const [w, , d] = model.userData.size as number[], angle = model.rotation.y
     const extent = (direction: Vector3) => { const local = direction.clone().applyAxisAngle(new Vector3(0, 1, 0), -angle); return Math.abs(local.x) * w / 2 + Math.abs(local.z) * d / 2 }
     let best: { point: Vector3; scale: number; score: number } | undefined
     candidates.forEach(({ direction, spacing }, index) => {
-      let scale = pixelScale(model.position, camera, height), point = model.position.clone()
-      for (let i = 0; i < 3; i++) { point = model.position.clone().addScaledVector(direction, extent(direction) + scale * spacing).add(new Vector3(0, 0.04, 0)); scale = pixelScale(point, camera, height) }
+      let scale = pixelScale(position, camera, height), point = position.clone()
+      for (let i = 0; i < 3; i++) { point = position.clone().addScaledVector(direction, extent(direction) + scale * spacing).add(new Vector3(0, 0.04, 0)); scale = pixelScale(point, camera, height) }
       const screen = point.clone().project(camera), px = (screen.x + 1) * width / 2, py = (1 - screen.y) * height / 2
       let score = index * 10
       if (screen.z < -1 || screen.z > 1) score += 10000

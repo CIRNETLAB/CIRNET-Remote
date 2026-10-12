@@ -296,6 +296,35 @@ test('placement reuses the ghost while moving; cancel removes it and releases it
   manager.dispose()
 })
 
+test('following placement controls settle only after movement, stay reachable on hover and dispose pending layout', async () => {
+  let nextFrame: FrameRequestCallback | undefined, requests = 0
+  const manager = createSceneManager({ renderer: { setSize() {}, render() {}, dispose() {} }, requestFrame(callback) { nextFrame = callback; return ++requests }, cancelFrame() { nextFrame = undefined } })
+  const draw = () => { const callback = nextFrame; nextFrame = undefined; callback?.(0) }
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 190))
+  try {
+    manager.resize(1000, 700); manager.setGhost('CLOCK', new Vector3(), 0, true); draw()
+    const origin = manager.gizmoOrigin()!
+    manager.setGhost('CLOCK', new Vector3(), 0, true); draw()
+    const unchangedRequests = requests
+    await settle()
+    assert.equal(requests, unchangedRequests, 'an unchanged pose must not trigger an idle redraw')
+    manager.setGhost('CLOCK', new Vector3(4, 0, 0), 0, true); draw()
+    assert.ok(manager.gizmoOrigin()!.distanceTo(origin) < 0.001, 'controls remain reachable during follow')
+    await settle(); draw()
+    assert.ok(manager.gizmoOrigin()!.distanceTo(origin) > 1, 'idle controls settle beside the latest ghost')
+    manager.setGhost('CLOCK', new Vector3(8, 0, 0), 0, true); draw()
+    const hover = manager.project(manager.gizmoHandlePosition('x')!), heldOrigin = manager.gizmoOrigin()!
+    assert.equal(manager.hoverGizmo(hover.x, hover.y), 'x'); draw()
+    const hoverRequests = requests
+    await settle()
+    assert.equal(requests, hoverRequests); assert.ok(manager.gizmoOrigin()!.distanceTo(heldOrigin) < 0.001)
+    manager.setGhost('CLOCK', new Vector3(9, 0, 0), 0, true); manager.dispose()
+    const disposedRequests = requests
+    await settle()
+    assert.equal(requests, disposedRequests); assert.equal(nextFrame, undefined); assert.equal(manager.gizmoOrigin(), null)
+  } finally { manager.dispose() }
+})
+
 test('scene reconciles by module ID, previews without changing graph and disposes removed models/wires', () => {
   const manager = createSceneManager({ renderer: { setSize() {}, render() {}, dispose() {} }, requestFrame: () => 1, cancelFrame() {} })
   const graph: CircuitGraph = { schema_version: '1.0', circuit_id: 'test', modules: [{ id: 'A', type: 'DIGITAL_SWITCH', position: { x: -2, y: 0, z: 0 } }, { id: 'B', type: 'LED', position: { x: 2, y: 0, z: 0 } }], connections: [{ source: 'A.OUT', destination: 'B.IN' }] }
