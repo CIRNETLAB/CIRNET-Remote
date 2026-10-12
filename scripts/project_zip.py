@@ -21,6 +21,7 @@ over the destination. If packaging or verification fails, an existing ZIP is
 left untouched.
 
 Usage:
+    cd scripts
     python project_zip.py
     python project_zip.py "D:\\Projects\\net-Circuit-Remote"
     python project_zip.py "D:\\Projects\\net-Circuit-Remote" -o "D:\\Backups\\net-Circuit-Remote.zip"
