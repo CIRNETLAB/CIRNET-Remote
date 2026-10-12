@@ -6,6 +6,7 @@ usable and testable independently of generated transport code.
 """
 from concurrent import futures
 import grpc
+import ipaddress
 
 
 def build_server() -> grpc.Server:
@@ -19,6 +20,15 @@ def build_server() -> grpc.Server:
 
 
 def serve(address: str = "127.0.0.1:50051") -> None:
+    if not address.startswith('unix:'):
+        host = address.rsplit(':', 1)[0].strip('[]')
+        if host != 'localhost':
+            try:
+                local = ipaddress.ip_address(host).is_loopback
+            except ValueError:
+                local = False
+            if not local:
+                raise ValueError('Hardware RPC must bind to a local-only address')
     server = build_server()
     try:
         server.add_insecure_port(address)

@@ -18,8 +18,8 @@ Authority: ARCHITECTURE.md, cleaned Lab-First v3.1; v3 proposal/audit are proven
 | Phase | Status | Commit | Tests | Notes |
 |---|---|---|---|---|
 | R0 | DONE | 66dbe36 | Context PASS; 10 guardrails; 98 Python; 213 frontend; build PASS | 6 archives; Mini-PC→mini-pc; LF icons |
-| R1 | DONE | resolve subject refactor(r1) in Git | 18 new RED→GREEN; 36 contracts/boundaries; 116 Python; 213 frontend; build PASS | Lab schemas 1.0; CircuitGraph unchanged |
-| R2 | PENDING | — | — | RPC v2 |
+| R1 | DONE | 8a6b387 | 18 new RED→GREEN; 36 contracts/boundaries; 116 Python; 213 frontend; build PASS | Lab schemas 1.0; CircuitGraph unchanged |
+| R2 | DONE | resolve subject refactor(r2) in Git | 4 RED→GREEN; 50 targeted; 120 Python; 213 frontend; build PASS | RPC 2.0; generated-at-build; loopback only |
 | R3 | PENDING | — | — | Safety lifecycle |
 | R4 | PENDING | — | — | Backend lifecycle |
 | R5 | PENDING | — | — | Simulator |

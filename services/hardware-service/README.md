@@ -1,24 +1,7 @@
-# Hardware Service
+# Lab-First Hardware Service
 
-This local-only process owns HardwareStation, FPGA transport and the Lab-First safety lifecycle on the Mini PC. Current authority: ../../docs/ARCHITECTURE.md. Physical start requires scan/safety/plan/routing/guarded power-up. R2 versions RPC; R3 implements lifecycle. Scaffold/codegen below describes pre-migration source, not physical Run approval.
+Local-only process on the Mini PC, behind FastAPI. Authority: ../../docs/ARCHITECTURE.md. HardwareStation abstracts Virtual/Physical; physical start requires scan/safety, typed plan, routing and guarded power-up. Unavailable hardware never returns a physical success.
 
-## Current scaffold
+RPC 2.0 lives in contracts/hardware/v2/rpc_v2.proto. Parent v1 protos are deprecated. Install the hardware package with dev extras and shared root contracts package. Generate before startup: python scripts/generate_hardware_rpc.py from repository root. Generated Python bindings are ignored, not committed. R3 registers lifecycle handlers; the R2 server still has no handlers. Bind only loopback/Unix.
 
-- `VirtualHardwareStation` is usable for early Web/backend integration.
-- `PhysicalHardwareStation` intentionally reports unavailable when no driver is provided; it does not fake successful hardware actions.
-- Protobuf contracts live in `contracts/hardware/`.
-- `server.py` creates the local gRPC server shell, but service bindings are intentionally not registered until generated Protobuf modules and RPC handlers are implemented.
-
-## Generate Protobuf bindings later
-
-From the repository root, after installing `grpcio-tools`:
-
-```bash
-python -m grpc_tools.protoc \
-  -I contracts/hardware \
-  --python_out=services/hardware-service/hardware_service/generated \
-  --grpc_python_out=services/hardware-service/hardware_service/generated \
-  contracts/hardware/*.proto
-```
-
-The Hardware Service should normally bind only to localhost/Unix-domain transport behind the Application Backend.
+Tests: pytest -q services/hardware-service/tests tests/contracts. Codegen tests compile/inspect v2 in temporary directories and verify deterministic output. Stable domain errors: HARDWARE_UNAVAILABLE, INVALID_STATE, UNSAFE, SAFETY_INDETERMINATE, UNEXECUTABLE, RESOURCE_CONFLICT, PROTOCOL_MISMATCH, TIMEOUT, DRIVER_ERROR. The browser never talks directly to this service.

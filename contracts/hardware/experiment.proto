@@ -1,4 +1,5 @@
 syntax = "proto3";
+// DEPRECATED: raw graph Run is not a physical safety contract. Use v2 lifecycle.
 package netcircuit.hardware.v1;
 
 message ExperimentRequest {

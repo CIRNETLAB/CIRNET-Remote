@@ -1,0 +1,97 @@
+syntax = "proto3";
+package netcircuit.hardware.v2;
+
+enum ErrorCode {
+  OK = 0;
+  HARDWARE_UNAVAILABLE = 1;
+  INVALID_STATE = 2;
+  UNSAFE = 3;
+  SAFETY_INDETERMINATE = 4;
+  UNEXECUTABLE = 5;
+  RESOURCE_CONFLICT = 6;
+  PROTOCOL_MISMATCH = 7;
+  TIMEOUT = 8;
+  DRIVER_ERROR = 9;
+  NOT_IMPLEMENTED = 10;
+  INVALID_CONFIGURATION = 11;
+}
+
+message Target { string station_id = 1; string experiment_id = 2; }
+message Breadboard { string id = 1; string model = 2; }
+message RoutingResource { string resource_id = 1; repeated string roles = 2; repeated string node_ids = 3; }
+message InstrumentCapability { bool available = 1; uint32 channels = 2; string status = 3; }
+message StationCapabilities {
+  string schema_version = 1;
+  string station_id = 2;
+  string mode = 3;
+  bool available = 4;
+  bool virtual_digital = 5;
+  bool virtual_analog = 6;
+  bool physical_digital = 7;
+  bool physical_analog_routing = 8;
+  uint32 physical_execution_slots = 9;
+  bool topology_scan_supported = 10;
+  bool safety_gate_supported = 11;
+  bool guarded_run_supported = 12;
+  repeated string component_resolution_modes = 13;
+  uint32 logic_analyzer_channels = 14;
+  uint32 oscilloscope_channels = 15;
+  uint32 generator_channels = 16;
+  repeated RoutingResource routing_resources = 17;
+  string hardware_rpc_version = 18;
+  string fpga_protocol_version = 19;
+  string firmware_version = 20;
+  string hardware_profile_version = 21;
+  repeated Breadboard breadboards = 22;
+  map<string, InstrumentCapability> instruments = 23;
+}
+
+message PowerPolicy { string profile_id = 1; bool guarded = 2; }
+message EndpointBinding { string endpoint_id = 1; string node_id = 2; string role = 3; }
+message RoutingAllocation { string endpoint_id = 1; string resource_id = 2; }
+message InstrumentAllocation { string endpoint_id = 1; string instrument = 2; uint32 channel = 3; }
+message ClockConfiguration { string signal = 1; uint32 period_ns = 2; uint32 cycles = 3; }
+message GeneratorConfiguration {
+  uint32 channel = 1; string waveform = 2; double frequency_hz = 3;
+  double amplitude_vpp = 4; double offset_v = 5; optional double phase_degrees = 6; bool enabled = 7;
+}
+message TriggerConfiguration { string signal = 1; string edge = 2; }
+message CaptureConfiguration { repeated string signals = 1; uint32 duration_ns = 2; optional uint32 max_events = 3; optional TriggerConfiguration trigger = 4; }
+message TestVector { uint32 time_ns = 1; map<string, uint32> inputs = 2; }
+message RuntimeSafetyPolicy { string profile_id = 1; bool watchdog_required = 2; }
+message InstrumentationExecutionPlan {
+  string schema_version = 1; string station_id = 2; string experiment_id = 3;
+  PowerPolicy power_policy = 4;
+  repeated EndpointBinding endpoint_bindings = 5;
+  repeated RoutingAllocation routing_allocations = 6;
+  repeated InstrumentAllocation instrument_allocations = 7;
+  ClockConfiguration clock_config = 8;
+  repeated GeneratorConfiguration generator_config = 9;
+  CaptureConfiguration capture_config = 10;
+  repeated TestVector test_vectors = 11;
+  RuntimeSafetyPolicy runtime_safety_policy = 12;
+}
+message ExecutionDecision { string schema_version = 1; string decision = 2; repeated string reasons = 3; }
+message PrepareExecutionRequest { Target target = 1; InstrumentationExecutionPlan plan = 2; ExecutionDecision decision = 3; }
+message ConfigureInstrumentRequest { Target target = 1; string instrument = 2; GeneratorConfiguration generator = 3; ClockConfiguration clock = 4; TriggerConfiguration trigger = 5; }
+message ArmCaptureRequest { Target target = 1; CaptureConfiguration configuration = 2; }
+// Explicit virtual-only configuration. Physical stations must refuse it.
+message ConfigureVirtualRequest { Target target = 1; bytes design_graph_json = 2; }
+message OperationReply { bool accepted = 1; ErrorCode code = 2; string state = 3; bytes result_json = 4; }
+
+service HardwareService {
+  rpc GetCapabilities(Target) returns (StationCapabilities);
+  rpc EnterSafeState(Target) returns (OperationReply);
+  rpc ScanTopology(Target) returns (OperationReply);
+  rpc ReadRuntimeSafety(Target) returns (OperationReply);
+  rpc PrepareExecution(PrepareExecutionRequest) returns (OperationReply);
+  rpc ApplyRouting(Target) returns (OperationReply);
+  rpc GuardedPowerUp(Target) returns (OperationReply);
+  rpc ConfigureInstrument(ConfigureInstrumentRequest) returns (OperationReply);
+  rpc ConfigureVirtualCircuit(ConfigureVirtualRequest) returns (OperationReply);
+  rpc ArmCapture(ArmCaptureRequest) returns (OperationReply);
+  rpc StartExecution(Target) returns (OperationReply);
+  rpc StopExecution(Target) returns (OperationReply);
+  rpc ReadCapture(Target) returns (OperationReply);
+  rpc Reset(Target) returns (OperationReply);
+}

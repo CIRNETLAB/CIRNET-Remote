@@ -8,6 +8,7 @@ __pycache__/
 .venv/
 .audit-runtime/
 *.egg-info/
+services/hardware-service/hardware_service/generated/
 
 # Node
 node_modules/

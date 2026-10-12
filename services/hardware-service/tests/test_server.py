@@ -44,3 +44,11 @@ def test_serve_releases_server_after_termination_or_interrupt(monkeypatch, inter
         entrypoint.serve()
     assert server.stop_grace == 0
     assert server.stop_waited is True
+
+
+def test_rpc_server_refuses_public_bind_before_starting(monkeypatch):
+    server = ServerLifecycle(False)
+    monkeypatch.setattr(entrypoint, 'build_server', lambda: server)
+    with pytest.raises(ValueError, match='local'):
+        entrypoint.serve('0.0.0.0:50051')
+    assert server.stop_grace is None
