@@ -21,7 +21,38 @@ Ruling: Missing pin evidence stays unknown and never supplies guessed roles; cos
 | H3 | From H2 `af0b0ce`: current physical capability slots, zero/offline refusal without lease, quarantine/resize-aware FIFO, shared positive worker setting, API/RPC control reserves, explicit spawn and serialized pool teardown/submission. RED: 3 scheduler/config cases and 15 worker/control cases (Stop deadline exceeded behind eight Start requests). GREEN: 45 focused; 271 full Python PASS / 1 Icarus SKIP; two pending H4 RED files excluded. Context PASS; frontend unchanged from H2 244 PASS/build. |
 | H4 | From H3 `6dd6c34`: sole structured instrument capability source, optional profile limits, shared API/native plan guards, lifecycle-owned live controls and honest frontend availability. RED: 10 contract/helper, 7 owner/lease/race, 17 native boundary failures (12 remaining runtime/limit failures after model acceptance), 7 browser behaviors plus semantic parity. GREEN: 51 API/21 focused, 46 native/72 RPC integration, 309 full Python PASS / 1 Icarus SKIP; frontend 253 PASS / build/context/generated check PASS. |
 | H5 | Resumed from clean `6bbd1b4`: existing user `update` already contains functional checkpoint/truth-table evidence, AssessmentService and API mapping; preserve that history and 3D navigation. Inspector now renders independent safety/topology/function, component/net/pin evidence, endpoint resolution with confidence, signal comparisons, truth tables and separate assessment. Browser RED: 4 missing feedback sections / 1 existing mapping PASS; GREEN: 269 frontend PASS, 342 full Python PASS / 1 Icarus SKIP; build/context/generated checks PASS. Existing H2 cache/Scope tests remain green. |
-| H6 | Pending: final architecture/provenance/review matrix. |
+| H6 | Complete: canonical/setup docs and provenance aligned; historical blob recovered with LF/hash guard; RefResolver migrated to registry. Independent review found three Important issues: greedy net-alias selection, >4 MiB inline RPC captures, discarded scan confidence/ambiguity. RED 7 resolver/alias/confidence cases + 2 real RPC 100k cases; GREEN after joint alias/resource allocation, withheld uncertain inference, propagated supplied confidence and NCAP RPC data plane. Extra label-collision RED→GREEN and two boolean descriptor RED→GREEN cases. Final: 355 Python PASS / 1 Icarus SKIP, 269 frontend PASS, build/context/generated checks PASS. Resolve this phase's commit by exact subject `docs(post-r7-h6): align architecture and migration evidence`; no merge/push. |
+
+### Final Post-R7 verification — 2026-10-13
+
+Supported `.audit-runtime` includes `grpcio-tools`; native/localhost tests run with approved access. No tests were deleted or excluded from the final matrix. Generated Lab snapshots match canonical schemas and RPC v2 codegen passes.
+
+| Command / group | Result |
+| --- | --- |
+| `python scripts/check_context.py` | PASS |
+| `python scripts/sync_lab_contracts.py --check` | PASS |
+| `pytest -q` | 355 PASS / 1 SKIP |
+| `pytest -q tests/contracts` | 68 PASS |
+| `pytest -q tests/integration` | 13 PASS |
+| `pytest -q tests/frontend` | 12 PASS |
+| `pytest -q tests/deployment` | 3 PASS |
+| `pytest -q tests/fpga` | 7 PASS / 1 SKIP |
+| `pytest -q services/api/tests` | 149 PASS |
+| `pytest -q services/hardware-service/tests` | 67 PASS |
+| `pytest -q simulator/circuit-simulator/tests` | 29 PASS |
+| `npm test` | 269 PASS |
+| `npm run build` | PASS; 158 modules / 977.38 kB JS |
+
+Only local tool skip: `test_iverilog_safety_behavior_when_available`, because Icarus/vvp are absent. Static RTL/testbench parsing/type checking/elaboration passed with pyslang; behavioral simulation remains required in configured FPGA CI. Remaining warnings: Starlette/httpx deprecation and pre-existing Vite chunk-size advisory; no dependency upgrade or bundle redesign added to this pass. RefResolver warning removed by bounded registry migration; four CircuitGraph tests and provenance test pass with DeprecationWarning treated as errors.
+
+Independent source review covered `f5df5ac..a0bbbb2` plus H6 docs; no Critical or Minor findings, three reproduced Important findings fixed by the author with RED→GREEN and the full final matrix. H6's final architecture-review commit includes these bounded source/RPC fixes so prior phase/user commits remain intact. Details and the 20 required regression mappings: [final hardening report](verification/2026-10-13-post-r7-hardening.md).
+
+Ruling H6: Preserve H0–H4 and user `6bbd1b4` history; finish H5 and record bounded final-review corrections in the single H6 commit — no rewrite/repeated phases — cost if wrong: reviewer must assess the H6 source diff alongside its documentation.
+Ruling H6: Select proven observed-net aliases jointly with resource matching, sharing the pure allocator with the compiler — never reconstruct student wiring — cost if wrong: revisit actual profile resources/net evidence, not reference connections.
+Ruling H6: Unscoped scan/reference ambiguity or zero-confidence continuity withholds inferred reference bindings; zero-confidence pins withhold affected component matches; fixed terminals stay executable. Propagate minimum supplied positive confidence, no invented numeric threshold — cost if wrong: conservative admission requires scoped driver evidence before more circuits can resolve.
+Ruling H6: Use bounded NCAP in unpublished RPC v2 OperationReply.capture_payload, keeping result_json metadata-only, with strict descriptor validation — fixes valid 100k captures without unbounded receive limits — cost if wrong: rebuild/restart API and Hardware Service together; mixed old/new local producers are rejected.
+Ruling H6: Preserve hardware/analog acquisition, multi-process scheduling, live PostgreSQL and automatic retention exclusions identified by review — canonical V1 boundaries, not omitted implemented behavior — cost if wrong: separately validate/develop those deployment/hardware features before enabling them. Numerical confidence thresholds await a measured profile; explicit uncertainty is already honored.
+Deferred minor findings: none. Software merge recommendation: READY for user review, with the explicit Icarus tool skip; this is not physical/electrical readiness. Do not merge or push to main.
 
 ## Historical R0–R7 ledger
 
@@ -42,7 +73,7 @@ Ruling H4: Baseline generator settings belong to the validated execution plan be
 Ruling H1: Limit deterministic matching to supported digital identities or explicit instructor profiles, with 32 components / 64 mappings / 4096 search steps; budget exhaustion remains AMBIGUOUS — avoids unbounded graph-isomorphism and guessed evidence — cost if wrong: expand supported profiles/bounds after measured performance.
 Ruling H1: Build/validate the pure infrastructure plan to establish executability before committing ExecutionDecision, then apply it only after permission — preserves independent safety/resource policy — cost if wrong: separate an equivalent resource admission pass from final compilation.
 
-Plan: docs/PROMPT_CODEX_net-Circuit-Remote_Lab-First_Refactor_R0-R7.md.
+Historical plan: [recovered R0–R7 prompt](archive/PROMPT_CODEX_net-Circuit-Remote_Lab-First_Refactor_R0-R7.md). Exact Git blob `1019e14fd1a9c9489a5353d5a539059f144b792d` present at R7 `842b3d1`; later removed by `f5df5ac`. H6 recovers that blob byte-for-byte as historical evidence, SHA256 `cce3f52cec112f5b9125d20bf48cfb68a38f290f1453714a491f7ebb0cdc4985`. The contents are a proven repository artifact; prior execution is supported by this ledger/phase commits, not a new claim from reconstruction. Canonical ARCHITECTURE.md governs any historical conflict.
 Authority: ARCHITECTURE.md, cleaned Lab-First v3.1; v3 proposal/audit are provenance.
 
 ## Pre-flight — 2026-10-13

@@ -4,6 +4,7 @@ from threading import RLock
 from google.protobuf.json_format import MessageToDict, ParseDict
 from jsonschema import ValidationError
 from hardware_service.station.base import HardwareError
+from contracts.capture_codec import encode_digital
 
 
 def wire(message):
@@ -55,9 +56,24 @@ class LifecycleRpc:
                 with self.lock: self.sessions.pop((target.station_id,target.experiment_id),None)
             if code not in self.pb.ErrorCode.keys():
                 code = 'DRIVER_ERROR'
+            capture_payload = b''
+            if action.__name__ == 'read_capture':
+                samples = result.get('samples', [])
+                if type(result.get('available')) is not bool or not isinstance(samples, list):
+                    raise HardwareError('DRIVER_ERROR')
+                if result['available']:
+                    duration = result.get('duration_ns', max((s['time_ns'] for s in samples), default=0))
+                    try:
+                        capture_payload = encode_digital(samples, duration)
+                    except (ValueError, KeyError, TypeError):
+                        raise HardwareError('DRIVER_ERROR') from None
+                    result = {**result, 'duration_ns': duration, 'sample_count': len(samples)}
+                elif samples:
+                    raise HardwareError('DRIVER_ERROR')
+                result = {key: value for key, value in result.items() if key != 'samples'}
             return self.pb.OperationReply(accepted=result.get('accepted', True),
                 code=self.pb.ErrorCode.Value(code), state=station.state,
-                result_json=json.dumps(result, allow_nan=False).encode())
+                result_json=json.dumps(result, allow_nan=False).encode(), capture_payload=capture_payload)
         except (HardwareError, ValidationError, ValueError, TypeError) as error:
             code = error.code if isinstance(error, HardwareError) else 'INVALID_CONFIGURATION'
             if code not in self.pb.ErrorCode.keys(): code='DRIVER_ERROR'

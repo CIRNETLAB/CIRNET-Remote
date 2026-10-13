@@ -1,7 +1,8 @@
 import json
 from pathlib import Path
 import pytest
-from jsonschema import Draft202012Validator, RefResolver, ValidationError
+from jsonschema import Draft202012Validator, ValidationError
+from referencing import Registry, Resource
 
 ROOT=Path(__file__).resolve().parents[2]
 SCHEMA_DIR=ROOT/'contracts/circuit-schema'
@@ -12,12 +13,12 @@ def load(name):
 
 
 def validator():
-    circuit=load('circuit.schema.json')
-    store={
-        'module.schema.json': load('module.schema.json'),
-        'connection.schema.json': load('connection.schema.json'),
-    }
-    return Draft202012Validator(circuit, resolver=RefResolver.from_schema(circuit, store=store))
+    registry = Registry()
+    for name in ['circuit.schema.json', 'module.schema.json', 'connection.schema.json']:
+        schema = load(name)
+        schema['$id'] = (SCHEMA_DIR / name).as_uri()
+        registry = registry.with_resource(schema['$id'], Resource.from_contents(schema))
+    return Draft202012Validator({'$ref': (SCHEMA_DIR / 'circuit.schema.json').as_uri()}, registry=registry)
 
 
 def valid_graph():

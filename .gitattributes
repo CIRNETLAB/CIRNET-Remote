@@ -1,2 +1,4 @@
 # Icon manifests record canonical LF bytes; preserve them on Windows.
 apps/web/src/assets/icons/*.svg text eol=lf
+# Preserve the recovered historical Git blob for provenance verification.
+docs/archive/PROMPT_CODEX_net-Circuit-Remote_Lab-First_Refactor_R0-R7.md text eol=lf

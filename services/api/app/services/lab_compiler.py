@@ -1,33 +1,7 @@
 """Compile infrastructure endpoints only; never student internal logical nets."""
 from contracts.validation import validate
 from contracts.instrument_validation import ROLE_INSTRUMENT,validate_plan_instruments
-
-
-def allocate_routes(bindings, resources):
-    """Deterministic bipartite matching; each augmenting walk visits a resource once."""
-    candidates = {binding['endpoint_id']: sorted(
-        resource['resource_id'] for resource in resources
-        if binding['role'] in resource['roles'] and binding['node_id'] in resource['node_ids'])
-        for binding in bindings}
-    assigned = {}
-
-    def assign(endpoint_id, visited):
-        for resource_id in candidates[endpoint_id]:
-            if resource_id in visited:
-                continue
-            visited.add(resource_id)
-            previous = assigned.get(resource_id)
-            if previous is None or assign(previous, visited):
-                assigned[resource_id] = endpoint_id
-                return True
-        return False
-
-    for endpoint_id in sorted(candidates, key=lambda key: (len(candidates[key]), key)):
-        if not assign(endpoint_id, set()):
-            raise ValueError('UNEXECUTABLE')
-    by_endpoint = {endpoint: resource for resource, endpoint in assigned.items()}
-    return [{'endpoint_id': binding['endpoint_id'], 'resource_id': by_endpoint[binding['endpoint_id']]}
-            for binding in bindings]
+from app.services.infrastructure_routing import allocate_routes
 
 
 class LabExecutionCompiler:

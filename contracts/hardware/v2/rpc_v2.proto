@@ -98,7 +98,11 @@ message ConfigureInstrumentRequest { Target target = 1; string instrument = 2; G
 message ArmCaptureRequest { Target target = 1; CaptureConfiguration configuration = 2; }
 // Explicit virtual-only configuration. Physical stations must refuse it.
 message ConfigureVirtualRequest { Target target = 1; bytes design_graph_json = 2; }
-message OperationReply { bool accepted = 1; ErrorCode code = 2; string state = 3; bytes result_json = 4; }
+message OperationReply {
+  bool accepted = 1; ErrorCode code = 2; string state = 3; bytes result_json = 4;
+  // ReadCapture digital data is bounded NCAP v1, not repeated signal names in JSON.
+  bytes capture_payload = 5;
+}
 
 service HardwareService {
   rpc GetCapabilities(Target) returns (StationCapabilities);

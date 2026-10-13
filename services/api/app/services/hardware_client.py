@@ -2,6 +2,7 @@
 import json
 import grpc
 from contracts.validation import validate
+from contracts.capture_codec import decode_digital
 
 class GatewayError(RuntimeError):
     def __init__(self,code):
@@ -74,7 +75,23 @@ class HardwareServiceClient:
             name=mapping[method]; request=target
         reply=self._invoke(name,request)
         if not reply.accepted: raise GatewayError(self.pb.ErrorCode.Name(reply.code))
-        try: return json.loads(reply.result_json)
+        try:
+            result = json.loads(reply.result_json)
+            if method == 'read_capture':
+                if not isinstance(result, dict) or type(result.get('available')) is not bool or 'samples' in result:
+                    raise ValueError()
+                if result['available']:
+                    data = decode_digital(reply.capture_payload)
+                    if (type(result.get('duration_ns')) is not int or type(result.get('sample_count')) is not int
+                            or result['duration_ns'] != data['duration_ns'] or result['sample_count'] != len(data['samples'])):
+                        raise ValueError()
+                    result.update(data)
+                else:
+                    if reply.capture_payload: raise ValueError()
+                    result['samples'] = []
+            elif reply.capture_payload:
+                raise ValueError()
+            return result
         except (ValueError,TypeError): raise GatewayError("PROTOCOL_MISMATCH") from None
 
     def close(self):

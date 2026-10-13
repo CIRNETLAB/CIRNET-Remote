@@ -1,6 +1,7 @@
 """Bounded, deterministic component/pin incidence resolution; no wire repair."""
 from collections import defaultdict
 from contracts.validation import validate
+from app.services.infrastructure_routing import allocate_routes
 
 # Only labels with implemented digital models are automatically supported.
 # An instructor profile can explicitly describe another known layout.
@@ -60,20 +61,30 @@ class TopologyResolver:
                     for p in assignment.get('instructor_pin_profiles', [])}
         mode = assignment.get('component_resolution_mode', 'HYBRID')
         mode_supported = not capabilities or mode in capabilities.get('component_resolution_modes', [])
+        evidence_graphs = [observed] + ([reference] if reference else [])
+        unscoped_uncertainty = any(g['ambiguities'] or any(c.get('confidence') == 0 for c in g['connections'])
+                                  for g in evidence_graphs)
+        uncertain_pins = any(p.get('confidence') == 0 for g in evidence_graphs
+                             for c in g['components'] for p in c.get('pins', []))
+        if unscoped_uncertainty:
+            result['issues'].append('Unscoped pin/net uncertainty prevents reference inference')
+            result['issues'].extend(issue for g in evidence_graphs for issue in g['ambiguities'])
         mappings, limited = [], False
-        if reference and mode_supported:
+        if reference and mode_supported and not unscoped_uncertainty:
             references = sorted(reference['components'], key=lambda c: c['component_id'])
             candidates = {}
             for ref in references:
                 profile = profiles.get(ref['identity'])
                 pins = {p['pin_id'] for p in ref.get('pins', [])}
                 supported = known(ref) and pins and (ref['identity'].upper() in SUPPORTED or profile)
+                if any(p.get('confidence') == 0 for p in ref.get('pins', [])): supported = False
                 if mode == 'INSTRUCTOR_PROFILE' and not profile: supported = False
                 options = []
                 if supported:
                     for actual in sorted(observed['components'], key=lambda c: c['component_id']):
                         actual_pins = {p['pin_id'] for p in actual.get('pins', [])}
                         if not known(actual) or actual['identity'] != ref['identity'] or actual_pins != pins: continue
+                        if any(p.get('confidence') == 0 for p in actual.get('pins', [])): continue
                         if ref.get('package') and actual.get('package') and ref['package'] != actual['package']: continue
                         if profile:
                             if not pins <= profile.keys(): continue
@@ -135,9 +146,9 @@ class TopologyResolver:
                     search(0, {}, set())
             if limited:
                 mappings = []; result['issues'].append('Resolution search budget exceeded; mapping remains ambiguous')
-        elif reference:
+        elif reference and not mode_supported:
             result['issues'].append('Requested component resolution mode is unsupported')
-        ambiguous = limited or len(mappings) > 1
+        ambiguous = limited or len(mappings) > 1 or unscoped_uncertainty or uncertain_pins
         # Keep only matches common to every candidate; never pick an arbitrary one.
         common = dict(mappings[0]) if mappings else {}
         for mapping in mappings[1:]:
@@ -145,9 +156,21 @@ class TopologyResolver:
         identities = {c['component_id']: c['identity'] for c in (reference or {}).get('components', [])}
         result['component_matches'] = [{'reference_component_id': key, 'observed_component_id': value,
                                         'identity': identities[key]} for key, value in sorted(common.items())]
+        reference_components = {c['component_id']: c for c in (reference or {}).get('components', [])}
+        observed_components = {c['component_id']: c for c in observed['components']}
+        match_confidence = {}
+        for match in result['component_matches']:
+            confidences = [p['confidence'] for component in (reference_components[match['reference_component_id']],
+                                                            observed_components[match['observed_component_id']])
+                           for p in component.get('pins', []) if 'confidence' in p]
+            if confidences:
+                match['confidence'] = min(confidences)
+                match_confidence[match['reference_component_id']] = match['confidence']
+        node_options = {}
         for endpoint in assignment.get('lab_endpoints', []):
             node = endpoint.get('fixed_node_id', endpoint.get('node_id'))
             source = 'FIXED_NODE'
+            binding_confidence = None
             if node is not None and node not in observed_nets.parent: node = None
             if 'reference_node_id' in endpoint and reference_nets:
                 source = 'REFERENCE_TOPOLOGY'
@@ -168,16 +191,43 @@ class TopologyResolver:
                         # A station terminal elsewhere on the same observed net
                         # reaches the pin without changing any student wiring.
                         net_nodes = observed_nets.nodes[observed_nets.find(min(actual_nodes))]
-                        node = min(net_nodes & routable or actual_nodes)
+                        options = net_nodes & routable or actual_nodes
+                        node_options[endpoint['endpoint_id']] = options
+                        node = min(options)
+                        confidences = [match_confidence[c] for c, _ in (direct or ref_pins) if c in match_confidence]
+                        confidences.extend(connection['confidence'] for g in evidence_graphs for connection in g['connections']
+                                           if 'confidence' in connection)
+                        if confidences: binding_confidence = min(confidences)
             if node is not None:
-                result['endpoint_bindings'].append({'endpoint_id': endpoint['endpoint_id'],
-                                                    'observed_node_id': node, 'source': source})
+                binding = {'endpoint_id': endpoint['endpoint_id'], 'observed_node_id': node, 'source': source}
+                if binding_confidence is not None: binding['confidence'] = binding_confidence
+                result['endpoint_bindings'].append(binding)
             else: result['issues'].append('Endpoint unresolved: ' + endpoint['endpoint_id'])
+        if capabilities and result['endpoint_bindings']:
+            roles = {e['endpoint_id']: e['role'] for e in assignment.get('lab_endpoints', [])}
+            resources = capabilities.get('routing_resources', [])
+            bindings = [{'endpoint_id': b['endpoint_id'], 'node_id': b['observed_node_id'], 'role': roles[b['endpoint_id']]}
+                        for b in result['endpoint_bindings']]
+            try:
+                allocations = allocate_routes(bindings, resources, node_options)
+            except ValueError:
+                # Semantic bindings remain evidence; compiler decides resource executability.
+                pass
+            else:
+                by_endpoint = {r['endpoint_id']: r['resource_id'] for r in allocations}
+                by_resource = {r['resource_id']: set(r['node_ids']) for r in resources}
+                for binding in result['endpoint_bindings']:
+                    candidates = node_options.get(binding['endpoint_id'], {binding['observed_node_id']})
+                    binding['observed_node_id'] = min(candidates & by_resource[by_endpoint[binding['endpoint_id']]])
         required = {e['endpoint_id'] for e in assignment.get('lab_endpoints', []) if e.get('required', True)}
         bound = {e['endpoint_id'] for e in result['endpoint_bindings']}
         if ambiguous:
-            result['status'] = 'AMBIGUOUS'; result['issues'].append('Multiple equally supported component mappings')
+            result['status'] = 'AMBIGUOUS'
+            result['issues'].append('Physical pin/net evidence is uncertain' if unscoped_uncertainty or uncertain_pins
+                                    else 'Multiple equally supported component mappings')
         elif required <= bound and bound:
             result['status'] = 'RESOLVED'
         elif bound or common: result['status'] = 'PARTIAL'
+        confidences = [item['confidence'] for item in result['component_matches'] + result['endpoint_bindings'] if 'confidence' in item]
+        if confidences: result['confidence'] = min(confidences)
         return validate('TopologyResolutionResult', result)

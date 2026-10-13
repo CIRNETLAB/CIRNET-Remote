@@ -1,7 +1,7 @@
 ---
 project: net-Circuit-Remote
-current_phase: lab-first-r0-r7-migration
-status: r7-gates-passed
+current_phase: post-r7-h0-h6-hardening
+status: h6-gates-passed
 last_updated: 2026-10-13
 next_task: user-review-refactor-no-merge
 blocking_issue: none
@@ -13,7 +13,11 @@ fpga_development_started: true
 
 ## Current Goal
 
-Execute the approved Lab-First R0–R7 migration on branch refactor. Current authority is ARCHITECTURE.md; status/evidence/rulings are in MIGRATION_LAB_FIRST.md. The entries and older handoff below are historical evidence and never override canonical v3.1.
+Complete the approved Post-R7 H0–H6 hardening on branch refactor and leave it for user review without merge/push. Current authority is ARCHITECTURE.md; status/evidence/rulings are in MIGRATION_LAB_FIRST.md. The entries and older handoff below are historical evidence and never override canonical v3.1.
+
+## Post-R7 H0–H6 — 2026-10-13
+
+Preserved existing H0–H4 phase commits and subsequent user changes; completed H5 structured Inspector feedback and H6 documentation/provenance/final review. Arbitrary placement resolves observed component-pin/net evidence before infrastructure compilation; capture metadata is separate from filesystem/NCAP payloads, including binary local RPC; capacity/spawn workers and instrument/runtime lifecycle share truthful capabilities. Independent review's three Important findings were reproduced and fixed: joint net-alias/resource selection, 100k capture transport, and withheld uncertain pin/net inference. Final supported Python355 PASS/1 Icarus skip, frontend269 PASS, context/generated checks and158-module production build PASS. Scope/Generator/scanner/transport/SDRAM/electrical implementation remains unavailable. Details: verification/2026-10-13-post-r7-hardening.md. Keep refactor for user review; no merge/push.
 
 ## Lab-First R0–R6 — 2026-10-13
 

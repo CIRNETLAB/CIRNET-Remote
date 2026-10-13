@@ -14,7 +14,15 @@ SafetyVerificationResult, TopologyVerificationResult and FunctionalVerificationR
 
 Host: Linux Mini PC Intel Xeon W-1370 / 16 GB RAM / 256 GB SSD. EP4CE6E22C8N prototype without SDRAM → EP4CE10E22C8N future external SDRAM, Scope 2CH / Generator 2CH / Logic Analyzer/shared arbitration. Physical analog routing V1=false; physical slot target=1. Actual board/resource/channel counts are profile-derived. Physical support stays unavailable until driver/hardware evidence.
 
-StationCapabilities: availability/mode, virtual/physical digital/analog, scan/safety/guarded support, resolution modes, channels/routing/resources and hardware_rpc_version / fpga_protocol_version / firmware_version / hardware_profile_version. Version domains are independent of CircuitGraph/transport/release.
+StationCapabilities: availability/mode, virtual/physical digital/analog, scan/safety/guarded support, resolution modes, instrument_capabilities/routing/resources and hardware_rpc_version / fpga_protocol_version / firmware_version / hardware_profile_version. Version domains are independent of CircuitGraph/transport/release.
+
+DetectedTopologyGraph → TopologyResolver → ResolvedLabBindings (`TopologyResolutionResult.endpoint_bindings`) → LabExecutionCompiler. Reference physical node != student physical node. Matching uses supported identities/profiles and component-pin/net incidence, with a multiset for repeated devices and explicit ambiguity on multiple/bounded-out mappings. It may resolve anchored instrument endpoints despite wrong internal wiring; it never restores reference connections. Malformed physical evidence is DRIVER_ERROR.
+
+Runtime instruments have one structured authority: channels=0 means unavailable; optional limits and runtime-reconfiguration flags belong to the profile. InstrumentationExecutionPlan holds baseline generator settings; live updates require declared support and legal RUNNING lifecycle/ownership/safety. Physical slots come from current capabilities; spawn pool size comes from shared NETCIRCUIT_SIMULATION_WORKERS (positive integer, default 4).
+
+CaptureMetadata separates lifecycle/SQL from CaptureStore payloads. NCAP digital_events v1 uses `NCAP` magic, uint8 version, little-endian uint32 UTF-8 JSON header length, then 11-byte events (uint16 channel, uint64 time_ns, uint8 0/1/2=X). Bounds: 100k events, 4096 channels, 64KiB header; digital time/duration integers are JavaScript-safe. Epoch timestamp_ns is a decimal string. Analog INT16/UINT16/FLOAT32 envelopes have no implemented payload; Scope remains unavailable. Owners fetch/delete payload separately; deletion preserves metadata/history and marks available=false.
+
+Functional results contain only declared expected/observed checkpoints and exercised truth cases, preserving X versus absent response. Assessment policies grade separately from safety/executability. Browser and Python response contracts share generated schema/types; run scripts/sync_lab_contracts.py --check after edits.
 
 Protection: current limiting/sensing, fast cutoff, tri-state/default-open routes, protected digital drive, guarded power-up, watchdog/runtime protection and safe-state timeout. See PHYSICAL_LAB_SAFETY.md. Software cannot prove protection exists.
 

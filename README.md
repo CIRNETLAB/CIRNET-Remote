@@ -14,6 +14,10 @@ Existing Single Workspace editing, placement/gizmo/history and instrument presen
 
 Verification from root: python scripts/check_context.py; pytest -q. Frontend: cd apps/web, npm ci --no-audit --no-fund, npm test, npm run build. Run Vite and FastAPI in separate terminals (see setup links). The browser never communicates with raw FPGA transport.
 
+For the full Python/RPC test environment, install `pip install -e . -e './services/api[test]' -e './services/hardware-service[dev]' -e './simulator/circuit-simulator[test]'`; Hardware Service dev extras provide `grpcio-tools`. Missing that dependency is an environment failure, not a source verdict.
+
+Post-R7 H0–H6: observed pin/net evidence resolves arbitrary student placement before infrastructure compilation; reference physical node != student physical node. SQL/WebSocket carry capture metadata, with owner-scoped binary payloads in `NETCIRCUIT_CAPTURE_DIR`. Hardware admission uses capability slots; `NETCIRCUIT_SIMULATION_WORKERS` (positive integer, default 4) controls spawn workers in both services. One structured instrument capability source keeps Scope/Generator unavailable; live generator control needs explicit profile support. Inspector shows independent SAFETY/TOPOLOGY/FUNCTION, resolution confidence and observed learning feedback. See the migration ledger for tests, historical provenance and physical limitations.
+
 Repository: apps/web, services/api, services/hardware-service, simulator/circuit-simulator, contracts, device-library, fpga, deployment, docs, tests, scripts. Source analyses, DEV_LOG/CHANGELOG and docs/verification preserve implementation history. Superseded architecture/prompts are in docs/archive/legacy-v1.
 
 ## Tiếng Việt
@@ -26,4 +30,6 @@ Triển khai mục tiêu: Linux Mini PC Intel Xeon W-1370, RAM 16 GB, SSD 256 GB
 
 [Xem ledger R0–R7](docs/MIGRATION_LAB_FIRST.md), [an toàn vật lý](docs/PHYSICAL_LAB_SAFETY.md), [lộ trình](docs/ROADMAP.md), [chạy API](services/api/README.md), [Web](apps/web/README.md), [Mini PC](deployment/mini-pc/README.md). Kiểm thử root: python scripts/check_context.py và pytest -q; frontend: npm test / npm run build tại apps/web. Vite và FastAPI chạy ở hai terminal riêng. Tài liệu/verification lịch sử được giữ; prompt/kiến trúc cũ lưu trong docs/archive/legacy-v1.
 
-Branch refactor dừng sau R7 để người dùng review; không tự merge/push vào main.
+Đợt H0–H6 bổ sung ánh xạ chân/net và vị trí sinh viên trước khi compiler định tuyến hạ tầng; node tham chiếu không phải node thực tế. Capture lớn lưu riêng, SQL/WebSocket chỉ giữ metadata; scheduler dùng số slot thật và worker simulation cấu hình được với spawn. Inspector hiển thị SAFETY/TOPOLOGY/FUNCTION độc lập, confidence và tín hiệu kỳ vọng/quan sát; chấm bài không quyết định quyền cấp điện. Xem ledger để đối chiếu từng commit và giới hạn phần cứng.
+
+Branch refactor dừng sau H0–H6 để người dùng review; không tự merge/push vào main.
