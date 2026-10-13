@@ -26,7 +26,7 @@ def create_app(*,repository=None,gateway=None,submit=None,configuration=None,cap
     gateway=gateway or HardwareServiceClient(config.hardware_grpc_target)
     hub=EventHub()
     captures=capture_store or FilesystemCaptureStore(config.capture_dir)
-    manager=ExperimentManager(repo,gateway,submit=submit,emit=hub.publish,capture_store=captures)
+    manager=ExperimentManager(repo,gateway,submit=submit,emit=hub.publish,capture_store=captures,simulation_workers=config.simulation_workers)
     lifespan_lock=RLock()
     lifespan_users=0
     async def monitor():
@@ -40,7 +40,7 @@ def create_app(*,repository=None,gateway=None,submit=None,configuration=None,cap
         with lifespan_lock:
             if manager.closed:
                 repo=Repository(repo.engine.url.render_as_string(hide_password=False))
-                manager=ExperimentManager(repo,gateway,submit=submit,emit=hub.publish,capture_store=captures)
+                manager=ExperimentManager(repo,gateway,submit=submit,emit=hub.publish,capture_store=captures,simulation_workers=config.simulation_workers)
                 application.state.repository=repo
                 application.state.manager=manager
                 application.state.stations=StationService(gateway,manager)

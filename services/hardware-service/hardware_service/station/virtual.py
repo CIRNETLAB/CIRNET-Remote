@@ -1,7 +1,9 @@
 from copy import deepcopy
 from concurrent.futures import ProcessPoolExecutor, TimeoutError
+from multiprocessing import get_context
 from threading import RLock
 from jsonschema import ValidationError
+from contracts.runtime_config import simulation_worker_count
 from contracts.validation import validate
 from hardware_service.models import BreadboardCapability, StationCapabilities
 from hardware_service.station.base import HardwareStation, HardwareError, StationState as S, serialized
@@ -13,14 +15,18 @@ _pool_lock=RLock()
 def simulation_pool():
     global _pool
     with _pool_lock:
-        if _pool is None: _pool=ProcessPoolExecutor(max_workers=4)
+        if _pool is None:
+            _pool=ProcessPoolExecutor(max_workers=simulation_worker_count(),mp_context=get_context('spawn'))
         return _pool
 
 def close_simulation_pool():
     global _pool
     with _pool_lock:
-        pool,_pool=_pool,None
-    if pool: pool.shutdown(wait=True,cancel_futures=True)
+        if _pool:
+            try:
+                _pool.shutdown(wait=True,cancel_futures=True)
+            finally:
+                _pool=None
 
 class VirtualHardwareStation(HardwareStation):
     """Independent digital session backed by bounded process-worker execution."""
@@ -134,7 +140,10 @@ class VirtualHardwareStation(HardwareStation):
             vectors=[{'time_ns':v['time_ns'],'inputs':{aliases.get(s,s):x for s,x in v['inputs'].items()}} for v in self._plan['test_vectors']]
             clock=deepcopy(self._plan['clock_config'])
             if clock: clock['signal']=aliases.get(clock['signal'],clock['signal'])
-            self._future=simulation_pool().submit(run_plan,self._virtual_plan,config,vectors,clock,deepcopy(self._inputs))
+            # Creation/submission and shutdown share a lock; close cannot shut
+            # down the returned executor between lookup and task submission.
+            with _pool_lock:
+                self._future=simulation_pool().submit(run_plan,self._virtual_plan,config,vectors,clock,deepcopy(self._inputs))
             future=self._future
         try: capture=future.result(timeout=10)
         except TimeoutError:

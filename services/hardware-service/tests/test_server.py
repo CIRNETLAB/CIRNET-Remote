@@ -52,3 +52,49 @@ def test_rpc_server_refuses_public_bind_before_starting(monkeypatch):
     with pytest.raises(ValueError, match='local'):
         entrypoint.serve('0.0.0.0:50051')
     assert server.stop_grace is None
+
+
+def test_rpc_control_remains_available_while_configured_simulations_wait(monkeypatch):
+    import grpc
+    from threading import Event
+    from contracts.generated import rpc_v2_pb2 as pb
+    from contracts.generated import rpc_v2_pb2_grpc as rpc
+    from hardware_service.station.virtual import VirtualHardwareStation
+
+    monkeypatch.setenv('NETCIRCUIT_SIMULATION_WORKERS', '8')
+    finish = Event()
+
+    class WaitingSimulation(VirtualHardwareStation):
+        def __init__(self, station_id):
+            super().__init__(station_id)
+            self.entered = Event()
+
+        def start_execution(self, *, experiment_id=None):
+            self.entered.set()
+            if not finish.wait(5):
+                raise RuntimeError('test request not released')
+            return self._reply()
+
+    waiting = [WaitingSimulation(f'v{index}') for index in range(8)]
+    control = VirtualHardwareStation('control')
+    server = entrypoint.build_server({station.station_id: station for station in [*waiting, control]})
+    port = server.add_insecure_port('127.0.0.1:0')
+    server.start()
+    calls = []
+    try:
+        with grpc.insecure_channel(f'127.0.0.1:{port}') as channel:
+            client = rpc.HardwareServiceStub(channel)
+            for station in waiting:
+                calls.append(client.StartExecution.future(pb.Target(station_id=station.station_id), timeout=6))
+            assert all(station.entered.wait(2) for station in waiting)
+            stopped = client.StopExecution(pb.Target(station_id='control'), timeout=1)
+            assert stopped.accepted is True
+            assert stopped.state == 'SAFE_STATE'
+    finally:
+        finish.set()
+        for call in calls:
+            try:
+                call.result(timeout=6)
+            except grpc.RpcError:
+                pass  # A failed assertion closes the channel before cleanup.
+        server.stop(0).wait()

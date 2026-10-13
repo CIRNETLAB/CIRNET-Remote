@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 import os
+from contracts.runtime_config import simulation_worker_count
 
 @dataclass(frozen=True)
 class Settings:
@@ -8,8 +9,10 @@ class Settings:
     database_url: str = field(default_factory=lambda: os.getenv("NETCIRCUIT_DATABASE_URL", "sqlite:///./netcircuit.db"))
     hardware_grpc_target: str = field(default_factory=lambda: os.getenv("NETCIRCUIT_HARDWARE_GRPC_TARGET", "127.0.0.1:50051"))
     capture_dir: str = field(default_factory=lambda: os.getenv('NETCIRCUIT_CAPTURE_DIR','.runtime/captures'))
+    simulation_workers: int = field(default_factory=simulation_worker_count)
 
     def __post_init__(self) -> None:
+        object.__setattr__(self,'simulation_workers',simulation_worker_count(self.simulation_workers))
         if self.hardware_mode not in ("simulation", "hardware"):
             raise ValueError("NETCIRCUIT_HARDWARE_MODE must be 'simulation' or 'hardware'.")
         if self.environment == 'production':

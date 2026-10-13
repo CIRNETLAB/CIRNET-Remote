@@ -7,6 +7,7 @@ import time
 import uuid
 from jsonschema import ValidationError
 from contracts.validation import validate
+from contracts.runtime_config import simulation_worker_count
 from app.services.circuit_validator import validate_circuit_graph
 from app.services.execution_policy import ExecutionPolicy
 from app.services.verification import SafetyVerificationService, TopologyVerificationService, FunctionalVerificationService, result
@@ -22,12 +23,13 @@ class Cancelled(Exception): pass
 
 
 class ExperimentManager:
-    def __init__(self,repository,gateway,*,submit=None,clock=time.time,lease_seconds=120,emit=None,capture_store=None):
+    def __init__(self,repository,gateway,*,submit=None,clock=time.time,lease_seconds=120,emit=None,capture_store=None,simulation_workers=None):
         self.repo,self.gateway=repository,gateway
         self.clock,self.lease_seconds=clock,lease_seconds
         self.emit=emit or (lambda owner,event:None)
         self.lock=RLock(); self.queues=defaultdict(deque); self.cancel={}; self.rate={}
-        self.executor=ThreadPoolExecutor(max_workers=4) if submit is None else None
+        self.simulation_workers=simulation_worker_count(simulation_workers)
+        self.executor=ThreadPoolExecutor(max_workers=self.simulation_workers+4) if submit is None else None
         self.submit=submit or self.executor.submit
         self.closed=False
         self.policy=ExecutionPolicy(); self.compiler=LabExecutionCompiler()
@@ -158,10 +160,23 @@ class ExperimentManager:
         if self.closed: return
         queue=self.queues[station_id]
         while queue:
-            e=self.repo.get_experiment(queue[0]); caps=e['_capabilities']
-            # Physical v1 has a single shared fabric; future partitions need distinct station IDs.
-            capacity=4 if e['mode']=='simulation' else 1
-            occupied={l['slot'] for l in self.repo.leases() if l['station_id']==station_id}
+            e=self.repo.get_experiment(queue[0]); eid=e['experiment_id']
+            leases=[l for l in self.repo.leases() if l['station_id']==station_id]
+            # A quarantined fabric cannot be partitioned into an assumed safe slot.
+            if any(l['quarantined'] for l in leases): return
+            try:
+                caps=validate('StationCapabilities',self.gateway.capabilities(station_id))
+                supported=caps['available'] and caps['mode']==e['mode'] and (caps['virtual_digital'] if e['mode']=='simulation' else caps['physical_digital'])
+                capacity=self.simulation_workers if e['mode']=='simulation' else caps['physical_execution_slots']
+            except (GatewayError,ValueError,ValidationError): supported=False; capacity=0
+            if not supported or capacity==0:
+                queue.popleft()
+                self._transition(eid,'COMPLETE',queue_position=None,execution_decision={'schema_version':'1.0',
+                    'decision':'BLOCK_UNEXECUTABLE','reasons':['Station unavailable or execution capacity is zero']})
+                self._refresh_queue_positions(station_id)
+                continue
+            occupied={l['slot'] for l in leases}
+            if len(occupied)>=capacity: return
             slot=next((n for n in range(capacity) if n not in occupied),None)
             if slot is None: return
             eid=queue[0]; expiry=self.clock()+self.lease_seconds

@@ -2,9 +2,13 @@
 from concurrent import futures
 import grpc
 import ipaddress
+from contracts.runtime_config import simulation_worker_count
+
+RPC_CONTROL_THREADS = 4
 
 
 def build_server(stations=None) -> grpc.Server:
+    workers = simulation_worker_count()
     from contracts.generated import rpc_v2_pb2 as pb
     from contracts.generated import rpc_v2_pb2_grpc as rpc
     from hardware_service.rpc import LifecycleRpc
@@ -13,7 +17,9 @@ def build_server(stations=None) -> grpc.Server:
     if stations is None:
         stations = {'virtual-station-01': VirtualHardwareStation('virtual-station-01'),
                     'physical-station-01': PhysicalHardwareStation('physical-station-01')}
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=8))
+    # Start RPCs wait for bounded simulation workers. Keep control threads for
+    # Stop/safety/cleanup while the API's configured simulation slots are busy.
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=max(8,workers+RPC_CONTROL_THREADS)))
     rpc.add_HardwareServiceServicer_to_server(LifecycleRpc(stations, pb), server)
     return server
 
