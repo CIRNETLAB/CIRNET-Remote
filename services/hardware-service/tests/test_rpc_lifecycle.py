@@ -32,3 +32,29 @@ def test_registered_v2_rpc_cannot_start_physical_without_safety():
             assert json.loads(safe.result_json)['hardware_applied'] is False
     finally:
         server.stop(0).wait()
+
+
+def test_stale_physical_start_rechecks_owner_under_operation_lock():
+    from contracts.generated import rpc_v2_pb2 as pb
+    from hardware_service.rpc import LifecycleRpc
+    from test_physical_station import station, prepare, plan, ProtectedTestDriver
+    s=station(ProtectedTestDriver()); prepare(s)
+    s.apply_routing(); s.guarded_power_up(); s.arm_capture(plan()['capture_config'])
+    rpc=LifecycleRpc({'physical-1':s},pb)
+    original=rpc._station
+    first=True
+    def lookup(target):
+        nonlocal first
+        current=original(target)
+        if first:
+            first=False
+            s.stop_execution(); s.enter_safe_state(); s.scan_topology(); s.read_runtime_safety()
+            next_plan=plan(); next_plan['experiment_id']='e2'
+            s.prepare_execution(next_plan,{'schema_version':'1.0','decision':'RUN_GUARDED','reasons':[]})
+            s.apply_routing(); s.guarded_power_up(); s.arm_capture(next_plan['capture_config'])
+        return current
+    rpc._station=lookup
+    reply=rpc.StartExecution(pb.Target(station_id='physical-1',experiment_id='e1'),None)
+    assert reply.accepted is False
+    assert reply.code==pb.RESOURCE_CONFLICT
+    assert s._experiment_id=='e2' and s.state=='ARMED'

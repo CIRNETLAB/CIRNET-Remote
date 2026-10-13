@@ -3,7 +3,17 @@ import { computed, ref } from 'vue'
 import { useInstrumentStore } from '../../stores/instrument'
 import { GENERATOR_LAYOUT, GENERATOR_CH1, GENERATOR_CH2, GENERATOR_SYNC, GENERATOR_THEME, GENERATOR_PARAMETER_LABELS } from '../../three/FunctionGeneratorArtwork'
 import InstrumentDial from './InstrumentDial.vue'
+import { useStationStore } from '../../stores/station'
+import { useExperimentStore } from '../../stores/experiment'
 const instrument = useInstrumentStore()
+const station=useStationStore(),experiment=useExperimentStore()
+const canConfigure=computed(()=>!!station.executionTarget?.capabilities?.instruments?.generator?.available&&!!experiment.activeId&&['GUARDED_POWER_UP','RUNNING'].includes(experiment.state))
+const acknowledgement=ref('')
+async function apply() {
+  if(!canConfigure.value||!experiment.activeId) return
+  try {const reply=await instrument.configureGenerator(experiment.activeId,selectedChannel.value as 1|2,true);acknowledgement.value=reply.accepted?'Configuration acknowledged':reply.code}
+  catch(error) {acknowledgement.value=error instanceof Error?error.message:'Configuration unavailable';instrument.log(acknowledgement.value,'error')}
+}
 // Selection changes only this window's visual focus, never output or editor mode.
 const selectedChannel = ref(1)
 const channels = computed(() => [{ id: 1, name: 'CH1', color: GENERATOR_CH1, config: instrument.generator }, { id: 2, name: 'CH2', color: GENERATOR_CH2, config: instrument.generator.channel2 }])
@@ -40,7 +50,7 @@ function parameters(config: typeof instrument.generator.channel2) {
           <p class="generator-console-note">Channel selection changes preview focus only.<br />Output controls are unavailable.</p>
         </div>
       </div>
-      <div class="generator-output-row"><div class="generator-power"><button disabled aria-label="Generator power unavailable" title="Generator contract is not connected">⏻</button><small>PREVIEW ONLY</small></div><div v-for="output in GENERATOR_LAYOUT.outputs" :key="output.name" class="generator-output" :style="{ '--output-color': output.accent }"><i aria-hidden="true" /><strong>{{ output.label }}</strong><small>UNAVAILABLE</small></div></div>
+      <div class="generator-output-row"><div class="generator-power"><button :disabled="!canConfigure" :aria-label="canConfigure ? 'Apply generator configuration' : 'Generator power unavailable'" :title="canConfigure ? 'Send channel configuration through the laboratory API' : 'Generator unavailable on the selected station'" @click="apply">⏻</button><small>{{ acknowledgement || 'PREVIEW ONLY' }}</small></div><div v-for="output in GENERATOR_LAYOUT.outputs" :key="output.name" class="generator-output" :style="{ '--output-color': output.accent }"><i aria-hidden="true" /><strong>{{ output.label }}</strong><small>UNAVAILABLE</small></div></div>
       <footer class="generator-footer"><span>LOCAL CONFIGURATION · NO DDS OUTPUT</span><small>Waveform shapes are illustrative. A supported generator contract is required to apply output.</small></footer>
     </div>
   </div>

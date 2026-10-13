@@ -86,7 +86,9 @@ class VirtualCompiler:
             elif kind=='CLOCK':
                 frequency=props.get('frequency_hz',1000)
                 if type(frequency) not in (int,float) or not math.isfinite(frequency) or frequency<=0: raise SimulationError('UNEXECUTABLE')
-                period=round(1000000000/frequency)
+                model_period=1000000000/frequency
+                if not math.isfinite(model_period): raise SimulationError('UNEXECUTABLE')
+                period=round(model_period)
                 if period<2: raise SimulationError('UNEXECUTABLE')
                 directions[mid+'.OUT']='output'; sources[mid+'.OUT']=0; clocks.append(ClockSource(mid+'.OUT',period))
             elif kind in ('LED','PROBE','OUTPUT'):
@@ -120,6 +122,7 @@ class DigitalSimulator:
         if self.stopped: return {'available':False,'state':'STOPPED','samples':[]}
         try: configuration=validate('CaptureConfiguration',configuration)
         except ValidationError: raise SimulationError('UNEXECUTABLE') from None
+        if 'trigger' in configuration: raise SimulationError('NOT_IMPLEMENTED')
         duration=configuration['duration_ns']; limit=configuration.get('max_events',100000)
         queue=EventQueue(limit); values={p:'X' for p in self.plan.directions}
         selected=configuration['signals'] or list(self.plan.probes[:4]) or sorted(self.plan.initial_sources)[:4]
@@ -138,8 +141,9 @@ class DigitalSimulator:
             if clock_config['signal'] not in {c.signal for c in self.plan.clocks}: raise SimulationError('UNEXECUTABLE')
         for clock in self.plan.clocks:
             period=clock_config.get('period_ns',clock.period_ns) if clock_config.get('signal')==clock.signal else clock.period_ns
-            cycles=min(duration//period+1,100000)
+            cycles=duration//period+1
             if clock_config.get('signal')==clock.signal: cycles=min(cycles,clock_config['cycles'])
+            if cycles>100000: raise SimulationError('EVENT_LIMIT')
             for cycle in range(cycles):
                 rise=cycle*period+period//2; fall=(cycle+1)*period
                 if rise<=duration: queue.push(rise,clock.signal,1)

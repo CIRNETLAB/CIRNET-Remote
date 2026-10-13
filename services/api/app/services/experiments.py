@@ -32,6 +32,7 @@ class ExperimentManager:
         self.policy=ExecutionPolicy(); self.compiler=LabExecutionCompiler()
         self.safety=SafetyVerificationService(); self.topology=TopologyVerificationService()
         self.functional=FunctionalVerificationService(); self.captures=CaptureService()
+        self.admission_sequence=0
         self._recover()
 
     def _recover(self):
@@ -44,22 +45,36 @@ class ExperimentManager:
             if safe: self.repo.release(eid)
             else: self.repo.quarantine(eid)
             self._transition(eid,'FAULT',error_code='RESTART_RECOVERY',lease_expires_at=None)
-        for e in self.repo.list_experiments():
+        experiments=self.repo.list_experiments()
+        self.admission_sequence=max((e.get('_queue_sequence',0) for e in experiments),default=0)
+        for e in sorted(experiments,key=lambda e:e.get('_queue_sequence',0)):
             if e['state']=='QUEUED': self.queues[e['station_id']].append(e['experiment_id'])
+        # Resume persisted FIFO work without waiting for another student's Run.
+        with self.lock:
+            for station_id in tuple(self.queues): self._dispatch(station_id)
 
     def _public(self,e):
-        return deepcopy({k:v for k,v in e.items() if not k.startswith('_')})
+        value=deepcopy({k:v for k,v in e.items() if not k.startswith('_')})
+        value.setdefault('revision',0)
+        return value
 
     def get(self,eid,owner):
-        e=self.repo.get_experiment(eid,owner)
-        e['queue_position']=(list(self.queues[e['station_id']]).index(eid)+1) if eid in self.queues[e['station_id']] else None
-        return self._public(e)
+        with self.lock:
+            e=self.repo.get_experiment(eid,owner)
+            e['queue_position']=(list(self.queues[e['station_id']]).index(eid)+1) if eid in self.queues[e['station_id']] else None
+            return self._public(e)
 
     def list(self,owner):
         return [self.get(e['experiment_id'],owner) for e in self.repo.list_experiments(owner)]
 
     def queue(self,station_id):
         with self.lock: return list(self.queues[station_id])
+
+    def _refresh_queue_positions(self,station_id):
+        for position,eid in enumerate(self.queues[station_id],1):
+            e=self.repo.get_experiment(eid)
+            if e.get('queue_position')!=position:
+                self._transition(eid,e['state'],queue_position=position)
 
     def create(self,owner,payload):
         allowed={'station_id','assignment_id','circuit_graph','capture_config','test_vectors','clock_config','generator_config'}
@@ -76,6 +91,7 @@ class ExperimentManager:
         e={'schema_version':'1.0','experiment_id':eid,'circuit_id':graph.get('circuit_id',eid) if isinstance(graph,dict) else eid,
            'station_id':caps['station_id'],'assignment_id':assignment['assignment_id'] if assignment else None,
            'mode':caps['mode'],'state':'CREATED','state_history':['CREATED'],'execution_decision':None,
+           'revision':0,
            'safety_verification':None,'topology_verification':None,'functional_verification':result('NOT_EVALUATED'),
            'capture':None,'error_code':None,'queue_position':None,'lease_expires_at':None,
            '_circuit_graph':deepcopy(graph),'_configuration':{k:deepcopy(v) for k,v in payload.items() if k not in {'station_id','assignment_id','circuit_graph'}},
@@ -93,8 +109,10 @@ class ExperimentManager:
             e=self.repo.get_experiment(eid)
             if e['state']!=state: e['state_history'].append(state)
             e.update(state=state,**values)
+            e['revision']=e.get('revision',0)+1
             self.repo.save_experiment(e)
-            self.emit(self.repo.owner(eid),{'type':'experiment.updated','experiment':self._public(e)})
+            owner=self.repo.owner(eid)
+            self.emit(owner,{'type':'experiment.updated','experiment':self.get(eid,owner)})
             return e
 
     def run(self,eid,owner):
@@ -111,7 +129,9 @@ class ExperimentManager:
             if len(self.queues[e['station_id']])>=50: raise ValueError('QUEUE_FULL')
             self.rate[owner]=self.clock(); self.cancel[eid]=Event()
             self.queues[e['station_id']].append(eid)
-            self._transition(eid,'QUEUED'); self._dispatch(e['station_id'])
+            self.admission_sequence+=1
+            self._transition(eid,'QUEUED',_queue_sequence=self.admission_sequence,queue_position=len(self.queues[e['station_id']]))
+            self._dispatch(e['station_id'])
             return self.get(eid,owner)
 
     def _dispatch(self,station_id):
@@ -127,7 +147,8 @@ class ExperimentManager:
             eid=queue[0]; expiry=self.clock()+self.lease_seconds
             if not self.repo.reserve(station_id,slot,eid,expiry): return
             self.cancel.setdefault(eid,Event())
-            queue.popleft(); self._transition(eid,'RESERVED',lease_expires_at=expiry)
+            queue.popleft(); self._transition(eid,'RESERVED',lease_expires_at=expiry,queue_position=None)
+            self._refresh_queue_positions(station_id)
             self.submit(self._execute,eid)
 
     def _check_cancel(self,eid):
@@ -181,9 +202,12 @@ class ExperimentManager:
         except Cancelled:
             self._transition(eid,'COMPLETE')
         except Exception as error:
-            if self.cancel.get(eid) and self.cancel[eid].is_set(): self._transition(eid,'COMPLETE')
+            code=error.code if isinstance(error,GatewayError) else 'DRIVER_ERROR'
+            # Stop can invalidate the current RPC generation; actual safety/driver
+            # faults must still be reported even when cancellation is concurrent.
+            if self.cancel.get(eid) and self.cancel[eid].is_set() and isinstance(error,GatewayError) and code in ('INVALID_STATE','RESOURCE_CONFLICT'):
+                self._transition(eid,'COMPLETE')
             else:
-                code=error.code if isinstance(error,GatewayError) else 'DRIVER_ERROR'
                 updates={}
                 if code in ('UNSAFE','SAFETY_INDETERMINATE'):
                     updates['safety_verification']=result('UNSAFE' if code=='UNSAFE' else 'INDETERMINATE',[code])
@@ -193,19 +217,27 @@ class ExperimentManager:
                 self._transition(eid,'FAULT',error_code=code,**updates)
         finally:
             e=self.repo.get_experiment(eid)
+            terminal_state=e['state']
             safe=not touched
             if touched:
                 try:
+                    self._transition(eid,'STOPPING')
                     reply=self.gateway.call(e['station_id'],eid,'stop_execution')
                     safe=reply.get('accepted') is True and (e['mode']=='simulation' or reply.get('hardware_applied') is True)
                 except Exception: safe=False
             with self.lock:
-                if safe: self.repo.release(eid)
+                if safe:
+                    if touched: self._transition(eid,'SAFE_STATE')
+                    self._transition(eid,'RELEASE')
+                    self.repo.release(eid)
                 else:
                     self.repo.quarantine(eid)
-                    self._transition(eid,'FAULT',error_code='SAFE_STATE_FAILED')
+                    terminal_state='FAULT'
+                    self._transition(eid,'FAULT',error_code='SAFE_STATE_FAILED',
+                        safety_verification=result('INDETERMINATE',['Safe cleanup unacknowledged']),
+                        execution_decision={'schema_version':'1.0','decision':'BLOCK_SAFETY','reasons':['SAFE_STATE_FAILED']})
                 self.cancel.pop(eid,None)
-                self._transition(eid,self.repo.get_experiment(eid)['state'],lease_expires_at=None)
+                self._transition(eid,terminal_state,lease_expires_at=None)
                 self._dispatch(e['station_id'])
 
     def stop(self,eid,owner,code='STOPPED'):
@@ -215,7 +247,8 @@ class ExperimentManager:
             if eid in self.queues[e['station_id']]:
                 self.queues[e['station_id']].remove(eid)
                 self.cancel.pop(eid,None)
-                self._transition(eid,'COMPLETE',error_code=code)
+                self._transition(eid,'COMPLETE',error_code=code,queue_position=None)
+                self._refresh_queue_positions(e['station_id'])
             elif eid in self.cancel:
                 self.cancel[eid].set()
                 self._transition(eid,'STOPPING',error_code=code)

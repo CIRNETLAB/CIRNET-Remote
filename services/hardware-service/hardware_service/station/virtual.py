@@ -110,20 +110,21 @@ class VirtualHardwareStation(HardwareStation):
 
     @serialized
     def configure_trigger(self, configuration):
-        if self._plan is None: raise HardwareError("INVALID_STATE")
-        self._plan["capture_config"]["trigger"]=deepcopy(configuration)
-        return self._reply()
+        return {'accepted':False,'code':'NOT_IMPLEMENTED','feature':'trigger'}
 
     @serialized
     def arm_capture(self, configuration):
         self._require_state(S.READY)
         if self._plan is None: raise HardwareError("INVALID_STATE")
+        if 'trigger' in configuration: raise HardwareError('NOT_IMPLEMENTED')
         self._plan["capture_config"]=validate("CaptureConfiguration",configuration)
         self._state=S.ARMED
         return self._reply()
 
-    def start_execution(self):
+    def start_execution(self,*,experiment_id=None):
         with self._lock:
+            if experiment_id is not None and self._experiment_id!=experiment_id:
+                raise HardwareError('RESOURCE_CONFLICT')
             self._require_state(S.ARMED)
             self._state=S.RUNNING
             generation=self._generation
@@ -138,13 +139,19 @@ class VirtualHardwareStation(HardwareStation):
         try: capture=future.result(timeout=10)
         except TimeoutError:
             future.cancel()
-            with self._lock: self._state=S.FAULT
+            with self._lock:
+                if generation!=self._generation: raise HardwareError('INVALID_STATE') from None
+                self._state=S.FAULT
             raise HardwareError('TIMEOUT') from None
         except SimulationError:
-            with self._lock: self._state=S.FAULT
+            with self._lock:
+                if generation!=self._generation: raise HardwareError('INVALID_STATE') from None
+                self._state=S.FAULT
             raise HardwareError('UNEXECUTABLE') from None
         except Exception:
-            with self._lock: self._state=S.FAULT
+            with self._lock:
+                if generation!=self._generation: raise HardwareError('INVALID_STATE') from None
+                self._state=S.FAULT
             raise HardwareError('DRIVER_ERROR') from None
         with self._lock:
             if generation!=self._generation: raise HardwareError('INVALID_STATE')

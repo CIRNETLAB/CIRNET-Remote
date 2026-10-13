@@ -100,3 +100,26 @@ def test_editor_breadboard_pose_is_visual_and_never_an_electrical_net():
 def test_invalid_source_state_returns_simulation_error():
     e=engine(); value=graph(); value['modules'][0]['properties']['state']='false'
     with pytest.raises(e.SimulationError): e.VirtualCompiler().compile(value)
+
+
+def test_clock_budget_fails_instead_of_returning_a_silently_truncated_capture():
+    e=engine()
+    value={'schema_version':'1.0','circuit_id':'clock-cap','modules':[
+        {'id':'C','type':'CLOCK','properties':{'frequency_hz':1000000}},
+        {'id':'B','type':'DIGITAL_SWITCH','properties':{'state':False}},{'id':'G','type':'AND'}],
+        'connections':[{'source':'C.OUT','destination':'G.A'},{'source':'B.OUT','destination':'G.B'}]}
+    with pytest.raises(e.SimulationError,match='EVENT_LIMIT'):
+        e.run_plan(e.VirtualCompiler().compile(value),{'signals':['G.Y'],'duration_ns':200000000,'max_events':1000000},
+                   [{'time_ns':150000000,'inputs':{'B.OUT':1}}])
+
+
+def test_tiny_positive_clock_frequency_has_a_stable_unexecutable_error():
+    e=engine()
+    value={'schema_version':'1.0','circuit_id':'tiny','modules':[{'id':'C','type':'CLOCK','properties':{'frequency_hz':1e-320}}], 'connections':[]}
+    with pytest.raises(e.SimulationError,match='UNEXECUTABLE'): e.VirtualCompiler().compile(value)
+
+
+def test_unimplemented_trigger_cannot_be_reported_as_successful_acquisition():
+    e=engine()
+    with pytest.raises(e.SimulationError,match='NOT_IMPLEMENTED'):
+        run(trigger={'signal':'does_not_exist','edge':'RISING'})

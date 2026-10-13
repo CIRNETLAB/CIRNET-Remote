@@ -1,9 +1,9 @@
 name: Frontend
 on:
   push:
-    paths: ['apps/web/**', 'tests/frontend/**', 'contracts/circuit-schema/**', 'contracts/memory/**', 'device-library/**', 'scripts/sync_editor_catalog.py', '.github/workflows/frontend.yml']
+    paths: ['apps/web/**', 'tests/frontend/**', 'contracts/circuit-schema/**', 'contracts/memory/**', 'contracts/physical-lab/**', 'contracts/assignment/**', 'device-library/**', 'scripts/sync_editor_catalog.py', 'scripts/sync_lab_contracts.py', '.github/workflows/frontend.yml']
   pull_request:
-    paths: ['apps/web/**', 'tests/frontend/**', 'contracts/circuit-schema/**', 'contracts/memory/**', 'device-library/**', 'scripts/sync_editor_catalog.py', '.github/workflows/frontend.yml']
+    paths: ['apps/web/**', 'tests/frontend/**', 'contracts/circuit-schema/**', 'contracts/memory/**', 'contracts/physical-lab/**', 'contracts/assignment/**', 'device-library/**', 'scripts/sync_editor_catalog.py', 'scripts/sync_lab_contracts.py', '.github/workflows/frontend.yml']
 jobs:
   build:
     runs-on: ubuntu-latest

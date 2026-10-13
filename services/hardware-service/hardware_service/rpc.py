@@ -43,7 +43,7 @@ class LifecycleRpc:
         target = request.target if hasattr(request, 'target') else request
         try:
             station = self._station(target)
-            if getattr(action,'_unlocked',False):
+            if getattr(action,'_unlocked',False) and station.get_capabilities().mode=='simulation':
                 result=action(station,target)
             else:
               with station._lock:
@@ -110,7 +110,10 @@ class LifecycleRpc:
 
 def _operation(method):
     def call(self,request,context):
-        def action(s,t): return getattr(s,method)()
+        def action(s,t):
+            if method=='start_execution' and s.get_capabilities().mode=='simulation':
+                return s.start_execution(experiment_id=t.experiment_id)
+            return getattr(s,method)()
         action.__name__=method
         if method=='start_execution': action._unlocked=True
         return self._execute(request,action)

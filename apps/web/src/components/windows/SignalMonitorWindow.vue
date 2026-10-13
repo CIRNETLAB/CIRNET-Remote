@@ -2,44 +2,56 @@
 import { computed } from 'vue'
 import { useInstrumentStore } from '../../stores/instrument'
 import { instrumentThemeStyle } from '../../data/instrumentVisuals'
+import { useExperimentStore } from '../../stores/experiment'
+import { useCircuitStore } from '../../stores/circuit'
+import { useStationStore } from '../../stores/station'
+import { digitalTrace, formatTime } from '../../services/waveforms/digital'
 const instrument = useInstrumentStore()
+const experiment=useExperimentStore(), circuit=useCircuitStore(), station=useStationStore()
+const capture=computed(()=>instrument.capture?.available?instrument.capture:null)
+const traces=computed(()=>instrument.monitor.channels.map((signal,index)=>({signal,...digitalTrace(capture.value?.samples??[],signal,capture.value?.duration_ns??0,index)})))
+const canRun=computed(()=>station.canExecute&&!experiment.busy&&(station.mode==='simulation'?!!circuit.graph:!!experiment.assignmentId))
+function runPause() {return experiment.canStop?experiment.stop():experiment.run(circuit.graph,station.executionTarget,{signals:instrument.captureSignals,duration_ns:instrument.captureDurationNs})}
 const rowCount = computed(() => Math.max(4, instrument.monitor.channels.length))
 const plotHeight = computed(() => Math.max(200, rowCount.value * 36))
 </script>
 <template>
   <div class="logic-instrument" :style="instrumentThemeStyle">
     <div class="logic-analyzer">
-      <header class="logic-header"><div><span class="logic-device">DIGITAL / 01</span><h2>Logic Analyzer</h2></div><div class="logic-status"><span>NO CAPTURE SOURCE</span><span>Trigger <b>—</b></span></div></header>
-      <fieldset disabled class="logic-controls" aria-label="Logic analyzer controls" title="Capture is not connected">
-        <legend class="visually-hidden">Capture controls unavailable</legend>
-        <label>Time Base<select v-model="instrument.monitor.timeScale"><option>1 ms</option></select></label>
-        <label>Trigger<select><option>Not configured</option></select></label>
-        <button type="button"><span aria-hidden="true">▶</span> Run / Pause</button>
+      <header class="logic-header"><div><span class="logic-device">DIGITAL / 01</span><h2>Logic Analyzer</h2></div><div class="logic-status"><span>{{ capture ? capture.source + ' · CAPTURED' : 'NO CAPTURE SOURCE' }}</span><span>Trigger <b>—</b></span></div></header>
+      <fieldset :disabled="!canRun && !experiment.canStop" class="logic-controls" aria-label="Logic analyzer controls" :title="canRun ? 'Run using backend lifecycle' : 'Capture is not connected'">
+        <legend class="visually-hidden">{{ canRun || experiment.canStop ? 'Capture controls' : 'Capture controls unavailable' }}</legend>
+        <label>Time Base<select v-model="instrument.monitor.timeScale" disabled title="Use capture duration in Inspector"><option>1 ms</option></select></label>
+        <label>Trigger<select disabled title="Trigger acquisition is unavailable"><option>Not configured</option></select></label>
+        <button type="button" @click="runPause"><span aria-hidden="true">▶</span> Run / Pause</button>
       </fieldset>
       <div class="logic-capture">
-        <aside class="logic-channels" aria-label="Logic analyzer channels"><div class="logic-column-heading">Channels <span>{{ instrument.monitor.channels.length }}</span></div><div v-if="!instrument.monitor.channels.length" class="logic-channels-empty"><i aria-hidden="true">＋</i><strong>No channels configured</strong><span>Signal inputs will appear here</span></div><ol v-else><li v-for="(channel, index) in instrument.monitor.channels" :key="index"><i aria-hidden="true" /><span :title="channel">{{ channel }}</span><small>—</small></li></ol></aside>
+        <aside class="logic-channels" aria-label="Logic analyzer channels"><div class="logic-column-heading">Channels <span>{{ instrument.monitor.channels.length }}</span></div><div v-if="!instrument.monitor.channels.length" class="logic-channels-empty"><i aria-hidden="true">＋</i><strong>No channels configured</strong><span>Signal inputs will appear here</span></div><ol v-else><li v-for="(channel, index) in instrument.monitor.channels" :key="index"><i aria-hidden="true" /><span :title="channel">{{ channel }}</span><small>{{ capture ? traces[index]?.last : '—' }}</small></li></ol></aside>
         <div class="logic-timeline">
-          <div class="logic-time-markers" aria-label="Configured time axis in divisions; no acquired timestamps"><span v-for="n in 6" :key="n">{{ (n - 1) * 2 }}<small>{{ n === 6 ? ' div' : '' }}</small></span></div>
+          <div class="logic-time-markers" :aria-label="capture ? 'Observed capture time axis' : 'Configured time axis in divisions; no acquired timestamps'"><span v-for="n in 6" :key="n">{{ capture ? formatTime((n - 1) * capture.duration_ns / 5) : (n - 1) * 2 }}<small>{{ !capture && n === 6 ? ' div' : '' }}</small></span></div>
           <div class="logic-plot" :style="{ minHeight: plotHeight + 'px' }">
-            <svg :viewBox="'0 0 600 ' + plotHeight" preserveAspectRatio="none" role="img" aria-label="Empty signal monitor; no acquired traces"><line v-for="n in 11" :key="'x' + n" :x1="(n - 1) * 60" :x2="(n - 1) * 60" y1="0" :y2="plotHeight" /><line v-for="n in rowCount" :key="'y' + n" x1="0" x2="600" :y1="n * 36" :y2="n * 36" class="logic-row-guide" /></svg>
-            <div class="logic-empty"><span aria-hidden="true">▥</span><strong>NO TRACE DATA</strong><small>Waiting for digital capture</small></div>
+            <svg :viewBox="'0 0 600 ' + plotHeight" preserveAspectRatio="none" role="img" :aria-label="capture ? 'Observed digital event traces' : 'Empty signal monitor; no acquired traces'"><line v-for="n in 11" :key="'x' + n" :x1="(n - 1) * 60" :x2="(n - 1) * 60" y1="0" :y2="plotHeight" /><line v-for="n in rowCount" :key="'y' + n" x1="0" x2="600" :y1="n * 36" :y2="n * 36" class="logic-row-guide" /><g v-if="capture"><g v-for="trace in traces" :key="trace.signal"><path :d="trace.path" :data-signal="trace.signal" class="observed-trace" /><path :d="trace.unknown" class="unknown-trace" /><text v-if="trace.unknown" x="4" :y="instrument.monitor.channels.indexOf(trace.signal) * 36 + 18" class="unknown-label">X</text></g></g></svg>
+            <div v-if="!capture" class="logic-empty"><span aria-hidden="true">▥</span><strong>NO TRACE DATA</strong><small>Waiting for digital capture</small></div>
           </div>
-          <div class="logic-axis-caption">{{ instrument.monitor.timeScale }} / div <span>Configured axis · no samples</span></div>
+          <div class="logic-axis-caption">{{ capture ? formatTime(capture.duration_ns) + ' capture' : instrument.monitor.timeScale + ' / div' }} <span>{{ capture ? 'Observed event timestamps' : 'Configured axis · no samples' }}</span></div>
         </div>
       </div>
-      <footer class="logic-measurements" aria-label="Digital capture measurements"><span>Samples <b>—</b></span><span>Duration <b>—</b></span><span>Edges <b>—</b></span><span>Trigger time <b>—</b></span></footer>
-      <div class="logic-footer"><i aria-hidden="true" /><span>Capture not connected</span><small>net*CIRCUIT · Signal Monitor</small></div>
+      <footer class="logic-measurements" aria-label="Digital capture measurements"><span>Samples <b>{{ capture?.sample_count ?? '—' }}</b></span><span>Duration <b>{{ capture ? formatTime(capture.duration_ns) : '—' }}</b></span><span>Edges <b>{{ capture ? traces.reduce((sum,t)=>sum+t.edges,0) : '—' }}</b></span><span>Trigger time <b>—</b></span></footer>
+      <div class="logic-footer"><i aria-hidden="true" /><span>{{ capture ? 'Capture ' + capture.capture_id : 'Capture not connected' }}</span><small>net*CIRCUIT · Signal Monitor</small></div>
     </div>
   </div>
 </template>
 <style scoped>
+.observed-trace { fill:none; stroke:#70d9b2; stroke-width:1.5; vector-effect:non-scaling-stroke; }
+.unknown-trace { fill:none; stroke:#c0a778; stroke-dasharray:3 3; stroke-width:1; }
+.unknown-label { fill:#c0a778; font:8px Consolas,monospace; }
 .logic-instrument { container-type: inline-size; min-width: 0; color: #d5e2e8; }
 .logic-analyzer { min-width: 0; border: 1px solid #4f687a; border-radius: 5px; background: #14222d; overflow: hidden; }
 .logic-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px; background: #233440; border-bottom: 1px solid #40596a; }
 .logic-device { font: 8px Consolas, monospace; letter-spacing: .7px; color: #92b0c0; }.logic-header h2 { margin: 3px 0 0; font-size: 13px; font-weight: 500; }
 .logic-status { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 7px; font: 9px Consolas, monospace; color: #9db5c2; }.logic-status > span:first-child { padding: 5px 6px; border: 1px solid #547180; border-radius: 3px; color: #c2d2db; font-size: 8px; }.logic-status b { font-weight: normal; }
 .logic-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; min-width: 0; margin: 0; padding: 10px 12px; border: none; border-bottom: 1px solid #40596a; background: #1b2c38; }
-.logic-controls label { display: flex; flex-direction: row; align-items: center; gap: 6px; font-size: 9px; color: #aec1ce; }.logic-controls select { width: auto; max-width: 100%; min-width: 65px; padding: 5px 7px; font-size: 10px; opacity: 1; }.logic-controls button { margin-left: auto; min-height: 28px; padding: 5px 9px; border-color: #487281; background: #27434e; color: #a8ced7; font-size: 10px; opacity: 1; cursor: not-allowed; }.logic-controls button span { margin-right: 4px; }
+.logic-controls label { display: flex; flex-direction: row; align-items: center; gap: 6px; font-size: 9px; color: #aec1ce; }.logic-controls select { width: auto; max-width: 100%; min-width: 65px; padding: 5px 7px; font-size: 10px; opacity: 1; }.logic-controls button { margin-left: auto; min-height: 28px; padding: 5px 9px; border-color: #487281; background: #27434e; color: #a8ced7; font-size: 10px; opacity: 1; cursor: pointer; }.logic-controls:disabled button { cursor: not-allowed; }.logic-controls button span { margin-right: 4px; }
 .logic-capture { display: grid; grid-template-columns: 146px minmax(0, 1fr); min-width: 0; }
 .logic-channels { min-width: 0; border-right: 1px solid #40596a; background: #192b36; }
 .logic-column-heading { display: flex; align-items: center; justify-content: space-between; height: 30px; padding: 0 10px; border-bottom: 1px solid #40596a; font-size: 10px; color: #b4cbd5; }.logic-column-heading > span { font: 9px Consolas, monospace; color: #7d9aa8; }

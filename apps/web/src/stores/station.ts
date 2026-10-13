@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { stationsApi } from '../services/api/stations'
 import { errorMessage } from '../services/api/client'
-import { stationStatus, type Station, type StationDescriptor, type HardwareMode, type LabStatus } from '../types/station'
+import { stationStatus, canStationExecute, type Station, type StationDescriptor, type HardwareMode, type LabStatus } from '../types/station'
 export type { HardwareMode, HardwareState } from '../types/station'
 
 export const useStationStore = defineStore('station', {
@@ -18,6 +18,13 @@ export const useStationStore = defineStore('station', {
     stationEventVersions: new Map<string, number>(),
   }),
   getters: {
+    executionTarget(state): Station | null {
+      if(state.stationId) return state.stations.find(s=>s.station_id===state.stationId&&s.mode===state.mode)??null
+      return state.stations.find(s=>s.mode===state.mode&&s.capabilities?.available)??null
+    },
+    canExecute():boolean {
+      return this.eventsConnected&&!this.error&&canStationExecute(this.executionTarget)
+    },
     selected: (state): Station | null => state.stations.find((station) => station.station_id === state.stationId) ?? null,
     status(): LabStatus {
       if (this.mode === 'simulation' && !this.stationId) return 'SIMULATION'
@@ -35,6 +42,8 @@ export const useStationStore = defineStore('station', {
       this.error = null
     },
     updateStation(station: StationDescriptor) {
+      const previous=this.stations.find(s=>s.station_id===station.station_id&&s.mode===station.mode)
+      station={...station,...(station.capabilities===undefined&&previous?.capabilities?{capabilities:previous.capabilities}:{})}
       this.stationEventVersions.set(station.station_id, ++this.eventVersion)
       const stations = this.stations.filter((item) => item.station_id !== station.station_id)
       this.setStations([...stations, station])

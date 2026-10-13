@@ -208,12 +208,56 @@ def test_restart_recovers_persisted_queue_in_fifo_order(tmp_path):
     m.run(first['experiment_id'],'student-1'); m.run(second['experiment_id'],'student-2')
     experiments,_=modules(); recovered_jobs=DeferredJobs()
     recovered=experiments.ExperimentManager(repo,g,submit=recovered_jobs,clock=lambda:now[0])
+    assert recovered.get(second['experiment_id'],'student-2')['state']=='RESERVED'
+    assert len(recovered_jobs.jobs)==1
     third=create(recovered,'student-3'); recovered.run(third['experiment_id'],'student-3')
     assert recovered.get(second['experiment_id'],'student-2')['state']=='RESERVED'
     recovered.stop(second['experiment_id'],'student-2')
     recovered_jobs.run_one()
     assert 'start_execution' not in g.calls
     assert recovered.get(second['experiment_id'],'student-2')['error_code']=='STOPPED'
+
+
+def test_restart_preserves_run_admission_order_instead_of_creation_order(tmp_path):
+    m,repo,g,jobs,now,events=setup_manager(tmp_path)
+    active=create(m,'active'); first_created=create(m,'first'); second_created=create(m,'second')
+    m.run(active['experiment_id'],'active')
+    m.run(second_created['experiment_id'],'second'); m.run(first_created['experiment_id'],'first')
+    recovered_jobs=DeferredJobs()
+    experiments,_=modules()
+    recovered=experiments.ExperimentManager(repo,g,submit=recovered_jobs,clock=lambda:now[0])
+    assert recovered.get(second_created['experiment_id'],'second')['state']=='RESERVED'
+    assert recovered.queue('p1')==[first_created['experiment_id']]
+
+
+def test_runtime_unsafe_is_preserved_when_stop_arrives_at_the_same_time(tmp_path):
+    m,repo,g,jobs,now,events=setup_manager(tmp_path)
+    e=create(m,'student'); eid=e['experiment_id']
+    previous=g.call
+    def call(station_id,experiment_id,method,**kwargs):
+        if method=='start_execution':
+            m.stop(eid,'student')
+            return {'accepted':False,'code':'UNSAFE'}
+        return previous(station_id,experiment_id,method,**kwargs)
+    g.call=call
+    m.run(eid,'student'); jobs.run_one()
+    final=m.get(eid,'student')
+    assert final['state']=='FAULT'
+    assert final['error_code']=='UNSAFE'
+    assert final['safety_verification']['status']=='UNSAFE'
+    assert final['execution_decision']['decision']=='BLOCK_SAFETY'
+
+
+def test_queue_position_changes_publish_a_new_revision(tmp_path):
+    m,repo,g,jobs,now,events=setup_manager(tmp_path)
+    active=create(m,'active'); second=create(m,'second'); third=create(m,'third')
+    for e,owner in [(active,'active'),(second,'second'),(third,'third')]: m.run(e['experiment_id'],owner)
+    before=m.get(third['experiment_id'],'third')
+    assert before['queue_position']==2
+    m.stop(second['experiment_id'],'second')
+    after=m.get(third['experiment_id'],'third')
+    assert after['queue_position']==1 and after['revision']>before['revision']
+    assert any(event['experiment']['experiment_id']==third['experiment_id'] and event['experiment']['revision']==after['revision'] for event in events)
 
 
 def test_unavailable_generator_is_not_silently_accepted(tmp_path):
@@ -255,3 +299,22 @@ def test_functional_truth_table_uses_exercised_vectors_and_observed_outputs():
     vectors=[{'time_ns':0,'inputs':{'x':0}},{'time_ns':20,'inputs':{'x':1}}]
     assert FunctionalVerificationService().verify(a,capture,vectors)['status']=='PASS'
     assert FunctionalVerificationService().verify(a,capture,vectors[:1])['status']!='PASS'
+
+
+def test_lifecycle_revisions_increase_and_safe_release_is_observable(tmp_path):
+    m,repo,g,jobs,now,events=setup_manager(tmp_path)
+    e=create(m); m.run(e['experiment_id'],'student-1'); jobs.run_one()
+    final=m.get(e['experiment_id'],'student-1')
+    revisions=[event['experiment']['revision'] for event in events]
+    assert revisions==sorted(set(revisions))
+    assert final['state_history'][-3:]==['SAFE_STATE','RELEASE','COMPLETE']
+
+
+def test_public_capabilities_redact_node_mapping_without_mutating_driver_profile():
+    import app.main as main
+    _,persistence=modules(); gateway=LabGateway()
+    application=main.create_app(repository=persistence.Repository('sqlite://'),gateway=gateway,submit=DeferredJobs())
+    with TestClient(application) as client:
+        caps=client.get('/api/stations/physical-station-01/capabilities').json()
+        assert all(r['node_ids']==[] for r in caps['routing_resources'])
+        assert gateway.capabilities('physical-station-01')['routing_resources'][0]['node_ids']==['N1']

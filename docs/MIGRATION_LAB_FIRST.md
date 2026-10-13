@@ -22,8 +22,8 @@ Authority: ARCHITECTURE.md, cleaned Lab-First v3.1; v3 proposal/audit are proven
 | R2 | DONE | 877f5e7 | 4 RED→GREEN; 50 targeted; 120 Python; 213 frontend; build PASS | RPC 2.0; generated-at-build; loopback only |
 | R3 | DONE | 0f09dcf | Physical/virtual/RPC RED→GREEN; 27 hardware; 132 Python; 213 frontend; build PASS | Safety/freshness/ownership/driver ACK enforced |
 | R4 | DONE | 44578bf | 13 initial RED + restart/generator RED→GREEN; 86 targeted; 149 Python; 213 frontend; build PASS | SQLAlchemy persistence/FIFO/lease/session/events; packages install PASS |
-| R5 | DONE | resolve subject refactor(r5) in Git | Engine/worker/capture/RPC RED→GREEN; 169 Python; 213 frontend; build PASS | Real REST→RPC→process AND capture/function PASS; analog unavailable |
-| R6 | PENDING | — | — | Frontend |
+| R5 | DONE | 66ab8e8 | Engine/worker/capture/RPC RED→GREEN; 169 Python; 213 frontend; build PASS | Real REST→RPC→process AND capture/function PASS; analog unavailable |
+| R6 | DONE | resolve subject refactor(r6) in Git | Parsers/UI/review fixes RED→GREEN; 180 Python; 225 frontend; build PASS | Real browser capture; independent review 42 Python/12 frontend PASS |
 | R7 | PENDING | — | — | FPGA scaffold |
 
 Phase SHAs are recorded in the next phase commit. Final phase uses its exact Git subject (self-SHA cannot be embedded in its own commit); final report records resolved HEAD without an extra implementation commit.
@@ -59,6 +59,18 @@ Reason: Explicit prompt requirement.
 Cost if wrong: Hardware bring-up awaits exact inputs.
 
 No merge/push to main; preserve user changes.
+
+Ruling: R6 publishes one canonical response/capture contract and separates requested from observed signals.
+Finding: Wire results require nested validation; Pinia proxies cannot be structured-cloned; previous capture ports could leak into a new draft.
+Decision: Generate TS/schema snapshot from Lab 1.0; validate HTTP/events identically; monotonic revisions; serialize immutable Run input; separate captureSignals configuration from observed channels. Physical Run sends assignment, never editor graph.
+Reason: Actual UI tests and browser runs; preserve editor/history and honest capture.
+Cost if wrong: Regenerate snapshot with --check; unsupported trigger/analog remain explicit.
+
+Ruling: Repair substantiated R3–R5 dependencies before committing R6.
+Finding: Independent review reproduced stale physical RPC Start ownership, restart queue inactivity/creation-order FIFO, cancellation masking UNSAFE, queue-position updates with unchanged revision, silent clock truncation and ignored trigger configuration.
+Decision: Atomic physical operation/ownership lock; virtual target/generation check; persisted private admission sequence and automatic dispatch; preserve hardware faults during Stop; publish revised queue positions; fail clock budget/tiny-frequency overflow honestly; reject unimplemented trigger acquisition. Unknown Generator waveform never falls back silently.
+Reason: All reproduced RED→GREEN, full 180 Python/225 frontend PASS; independent recheck 42 Python/12 frontend PASS, no remaining actionable R0–R6 finding.
+Cost if wrong: Single scheduler still required; legacy persisted records without admission metadata fall back to creation order, because past Run order cannot be reconstructed. No electrical/analog support is inferred.
 
 Ruling: Virtual observations use 0/1/X, software nanosecond timing and bounded process workers.
 Finding: Floating input and primitive-only fake running/capture would misrepresent execution.

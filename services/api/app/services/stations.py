@@ -20,6 +20,9 @@ class StationService:
                 "hardware_profile_version":"UNAVAILABLE"}
         if any(l["quarantined"] for l in self.manager.repo.leases() if l["station_id"]==station_id):
             value=deepcopy(value); value["available"]=False
+        # Public capability summary excludes physical node-to-resource mappings.
+        value=deepcopy(value)
+        for resource in value['routing_resources']: resource['node_ids']=[]
         return value
 
     def descriptor(self,station_id):

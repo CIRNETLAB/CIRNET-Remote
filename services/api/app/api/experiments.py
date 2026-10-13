@@ -34,4 +34,5 @@ def configure_instrument(experiment_id:str,payload:dict,request:Request):
     if e["state"] not in ("ROUTE_PREPARE","GUARDED_POWER_UP","RUNNING"):
         raise ValueError("INVALID_STATE")
     if payload["instrument"] not in ("clock","generator","trigger"): raise ValueError("INVALID_CONFIGURATION")
-    return request.app.state.gateway.call(e["station_id"],experiment_id,"configure_instrument",**payload)
+    reply=request.app.state.gateway.call(e["station_id"],experiment_id,"configure_instrument",**payload)
+    return {"accepted":reply.get("accepted") is True,"code":reply.get("code","OK")}

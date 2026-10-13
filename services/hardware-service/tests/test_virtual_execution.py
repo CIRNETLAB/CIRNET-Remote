@@ -33,3 +33,9 @@ def test_invalid_virtual_graph_returns_stable_error_without_running():
     with pytest.raises(RuntimeError) as caught:
         s.apply_circuit({'schema_version':'1.0','circuit_id':'bad','modules':[{'id':'G','type':'NO_MODEL'}],'connections':[]})
     assert getattr(caught.value,'code',None)=='UNEXECUTABLE'
+
+
+def test_virtual_trigger_configuration_is_truthfully_unavailable():
+    s=VirtualHardwareStation('v1')
+    reply=s.configure_trigger({'signal':'L.IN','edge':'RISING'})
+    assert reply['accepted'] is False and reply['code']=='NOT_IMPLEMENTED'

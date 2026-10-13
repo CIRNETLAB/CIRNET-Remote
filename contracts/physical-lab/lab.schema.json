@@ -1098,6 +1098,321 @@
         "issues"
       ],
       "additionalProperties": false
+    },
+    "DigitalObservation": {
+      "type": "object",
+      "properties": {
+        "signal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "time_ns": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {
+          "enum": [
+            0,
+            1,
+            "X"
+          ]
+        }
+      },
+      "required": [
+        "signal",
+        "time_ns",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "CaptureResult": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "capture_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "enum": [
+            "simulation",
+            "hardware"
+          ]
+        },
+        "instrument": {
+          "const": "logic_analyzer"
+        },
+        "encoding": {
+          "const": "digital_events"
+        },
+        "available": {
+          "type": "boolean"
+        },
+        "duration_ns": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sample_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "samples": {
+          "type": "array",
+          "maxItems": 100000,
+          "items": {
+            "$ref": "#/$defs/DigitalObservation"
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "capture_id",
+        "source",
+        "instrument",
+        "encoding",
+        "available",
+        "duration_ns",
+        "sample_count",
+        "samples"
+      ],
+      "additionalProperties": false
+    },
+    "ExperimentRecord": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "experiment_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "circuit_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "station_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "assignment_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mode": {
+          "enum": [
+            "simulation",
+            "hardware"
+          ]
+        },
+        "state": {
+          "enum": [
+            "CREATED",
+            "QUEUED",
+            "RESERVED",
+            "SAFE_STATE",
+            "TOPOLOGY_SCAN",
+            "SAFETY_CHECK",
+            "EXECUTION_DECISION",
+            "ROUTE_PREPARE",
+            "GUARDED_POWER_UP",
+            "READY",
+            "ARMED",
+            "RUNNING",
+            "CAPTURING",
+            "VERIFYING",
+            "FUNCTIONAL_VERIFY",
+            "STOPPING",
+            "COMPLETE",
+            "RELEASE",
+            "FAULT"
+          ]
+        },
+        "state_history": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "CREATED",
+              "QUEUED",
+              "RESERVED",
+              "SAFE_STATE",
+              "TOPOLOGY_SCAN",
+              "SAFETY_CHECK",
+              "EXECUTION_DECISION",
+              "ROUTE_PREPARE",
+              "GUARDED_POWER_UP",
+              "READY",
+              "ARMED",
+              "RUNNING",
+              "CAPTURING",
+              "VERIFYING",
+              "FUNCTIONAL_VERIFY",
+              "STOPPING",
+              "COMPLETE",
+              "RELEASE",
+              "FAULT"
+            ]
+          }
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "execution_decision": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExecutionDecision"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "safety_verification": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SafetyVerificationResult"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "topology_verification": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TopologyVerificationResult"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "functional_verification": {
+          "$ref": "#/$defs/FunctionalVerificationResult"
+        },
+        "capture": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CaptureResult"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "queue_position": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lease_expires_at": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "experiment_id",
+        "circuit_id",
+        "station_id",
+        "assignment_id",
+        "mode",
+        "state",
+        "state_history",
+        "revision",
+        "execution_decision",
+        "safety_verification",
+        "topology_verification",
+        "functional_verification",
+        "capture",
+        "error_code",
+        "queue_position",
+        "lease_expires_at"
+      ],
+      "additionalProperties": false
+    },
+    "QueueState": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "station_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "queued_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "busy": {
+          "type": "boolean"
+        },
+        "own_positions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "experiment_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "position": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "experiment_id",
+              "position"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "station_id",
+        "queued_count",
+        "busy",
+        "own_positions"
+      ],
+      "additionalProperties": false
     }
   }
 }

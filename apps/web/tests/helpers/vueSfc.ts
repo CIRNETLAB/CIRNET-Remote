@@ -12,7 +12,7 @@ export async function loadSfc(path: string): Promise<Component> {
     name: 'runtime-sfc', setup(builder) {
       builder.onLoad({ filter: /\.vue$/ }, async ({ path }) => {
         const { descriptor } = parse(await readFile(path, 'utf8'), { filename: path })
-        const script = compileScript(descriptor, { id: path, inlineTemplate: true })
+        const script = compileScript(descriptor, { id: path, inlineTemplate: true, templateOptions: { compilerOptions: { hoistStatic: false } } })
         return { contents: script.content, loader: 'ts', resolveDir: dirname(path) }
       })
     },
