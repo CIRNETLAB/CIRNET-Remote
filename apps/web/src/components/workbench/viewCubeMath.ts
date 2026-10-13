@@ -27,39 +27,27 @@ export interface CompassPoint {
   depth: number
 }
 
-// 26 Orientation Directions (Y-up, +Z Front, +X Right)
+// XZ breadboard: +Y TOP, +X RIGHT/EAST, +Z FRONT/SOUTH.
+// Only the five faces and eight upper diagonals are navigation presets.
 export const ORIENTATION_DIRECTIONS: Record<string, Vector3> = {
-  // 6 Faces
-  TOP: new Vector3(0, 1, 0.0001).normalize(),
-  BOTTOM: new Vector3(0, -1, 0.0001).normalize(),
+  // 5 Faces
+  TOP: new Vector3(0, 1, 0),
   FRONT: new Vector3(0, 0, 1),
   BACK: new Vector3(0, 0, -1),
   LEFT: new Vector3(-1, 0, 0),
   RIGHT: new Vector3(1, 0, 0),
 
-  // 12 Edges
+  // 4 Upper Edges
   'TOP-FRONT': new Vector3(0, 1, 1).normalize(),
   'TOP-BACK': new Vector3(0, 1, -1).normalize(),
-  'TOP-LEFT': new Vector3(-1, 1, 0.0001).normalize(),
-  'TOP-RIGHT': new Vector3(1, 1, 0.0001).normalize(),
-  'BOTTOM-FRONT': new Vector3(0, -1, 1).normalize(),
-  'BOTTOM-BACK': new Vector3(0, -1, -1).normalize(),
-  'BOTTOM-LEFT': new Vector3(-1, -1, 0.0001).normalize(),
-  'BOTTOM-RIGHT': new Vector3(1, -1, 0.0001).normalize(),
-  'FRONT-LEFT': new Vector3(-1, 0, 1).normalize(),
-  'FRONT-RIGHT': new Vector3(1, 0, 1).normalize(),
-  'BACK-LEFT': new Vector3(-1, 0, -1).normalize(),
-  'BACK-RIGHT': new Vector3(1, 0, -1).normalize(),
+  'TOP-LEFT': new Vector3(-1, 1, 0).normalize(),
+  'TOP-RIGHT': new Vector3(1, 1, 0).normalize(),
 
-  // 8 Corners
+  // 4 Upper Corners
   'TOP-FRONT-LEFT': new Vector3(-1, 1, 1).normalize(),
   'TOP-FRONT-RIGHT': new Vector3(1, 1, 1).normalize(),
   'TOP-BACK-LEFT': new Vector3(-1, 1, -1).normalize(),
   'TOP-BACK-RIGHT': new Vector3(1, 1, -1).normalize(),
-  'BOTTOM-FRONT-LEFT': new Vector3(-1, -1, 1).normalize(),
-  'BOTTOM-FRONT-RIGHT': new Vector3(1, -1, 1).normalize(),
-  'BOTTOM-BACK-LEFT': new Vector3(-1, -1, -1).normalize(),
-  'BOTTOM-BACK-RIGHT': new Vector3(1, -1, -1).normalize(),
 }
 
 export function buildCubeGeometry(halfSize = 25, bevel = 6.5): CubeRegion[] {
@@ -75,40 +63,30 @@ export function buildCubeGeometry(halfSize = 25, bevel = 6.5): CubeRegion[] {
   }
 
   const regions: CubeRegion[] = [
-    // 6 Faces
+    // 5 Faces
     makeRegion('TOP', 'face', v(0, 1, 0), [v(-F, S, -F), v(F, S, -F), v(F, S, F), v(-F, S, F)], 'TOP'),
-    makeRegion('BOTTOM', 'face', v(0, -1, 0), [v(-F, -S, F), v(F, -S, F), v(F, -S, -F), v(-F, -S, -F)], 'BOTTOM'),
     makeRegion('FRONT', 'face', v(0, 0, 1), [v(-F, -F, S), v(F, -F, S), v(F, F, S), v(-F, F, S)], 'FRONT'),
     makeRegion('BACK', 'face', v(0, 0, -1), [v(F, -F, -S), v(-F, -F, -S), v(-F, F, -S), v(F, F, -S)], 'BACK'),
     makeRegion('RIGHT', 'face', v(1, 0, 0), [v(S, -F, F), v(S, -F, -F), v(S, F, -F), v(S, F, F)], 'RIGHT'),
     makeRegion('LEFT', 'face', v(-1, 0, 0), [v(-S, -F, -F), v(-S, -F, F), v(-S, F, F), v(-S, F, -F)], 'LEFT'),
 
-    // 12 Edges
+    // Upper edges and decorative vertical bevels (no horizontal-diagonal preset).
     makeRegion('TOP-FRONT', 'edge', v(0, 1, 1), [v(-F, S, F), v(F, S, F), v(F, F, S), v(-F, F, S)]),
     makeRegion('TOP-BACK', 'edge', v(0, 1, -1), [v(F, S, -F), v(-F, S, -F), v(-F, F, -S), v(F, F, -S)]),
     makeRegion('TOP-LEFT', 'edge', v(-1, 1, 0), [v(-F, S, -F), v(-F, S, F), v(-S, F, F), v(-S, F, -F)]),
     makeRegion('TOP-RIGHT', 'edge', v(1, 1, 0), [v(F, S, F), v(F, S, -F), v(S, F, -F), v(S, F, F)]),
-
-    makeRegion('BOTTOM-FRONT', 'edge', v(0, -1, 1), [v(-F, -F, S), v(F, -F, S), v(F, -S, F), v(-F, -S, F)]),
-    makeRegion('BOTTOM-BACK', 'edge', v(0, -1, -1), [v(F, -F, -S), v(-F, -F, -S), v(-F, -S, -F), v(F, -S, -F)]),
-    makeRegion('BOTTOM-LEFT', 'edge', v(-1, -1, 0), [v(-S, -F, -F), v(-S, -F, F), v(-F, -S, F), v(-F, -S, -F)]),
-    makeRegion('BOTTOM-RIGHT', 'edge', v(1, -1, 0), [v(S, -F, F), v(S, -F, -F), v(F, -S, -F), v(F, -S, F)]),
 
     makeRegion('FRONT-LEFT', 'edge', v(-1, 0, 1), [v(-S, -F, F), v(-S, F, F), v(-F, F, S), v(-F, -F, S)]),
     makeRegion('FRONT-RIGHT', 'edge', v(1, 0, 1), [v(F, -F, S), v(F, F, S), v(S, F, F), v(S, -F, F)]),
     makeRegion('BACK-LEFT', 'edge', v(-1, 0, -1), [v(-F, -F, -S), v(-F, F, -S), v(-S, F, -F), v(-S, -F, -F)]),
     makeRegion('BACK-RIGHT', 'edge', v(1, 0, -1), [v(S, -F, -F), v(S, F, -F), v(F, F, -S), v(F, -F, -S)]),
 
-    // 8 Corners
+    // 4 Upper Corners
     makeRegion('TOP-FRONT-RIGHT', 'corner', v(1, 1, 1), [v(F, S, F), v(S, F, F), v(F, F, S)]),
     makeRegion('TOP-FRONT-LEFT', 'corner', v(-1, 1, 1), [v(-F, S, F), v(-F, F, S), v(-S, F, F)]),
     makeRegion('TOP-BACK-RIGHT', 'corner', v(1, 1, -1), [v(F, S, -F), v(F, F, -S), v(S, F, -F)]),
     makeRegion('TOP-BACK-LEFT', 'corner', v(-1, 1, -1), [v(-F, S, -F), v(-S, F, -F), v(-F, F, -S)]),
 
-    makeRegion('BOTTOM-FRONT-RIGHT', 'corner', v(1, -1, 1), [v(F, -S, F), v(F, -F, S), v(S, -F, F)]),
-    makeRegion('BOTTOM-FRONT-LEFT', 'corner', v(-1, -1, 1), [v(-F, -S, F), v(-S, -F, F), v(-F, -F, S)]),
-    makeRegion('BOTTOM-BACK-RIGHT', 'corner', v(1, -1, -1), [v(F, -S, -F), v(S, -F, -F), v(F, -F, -S)]),
-    makeRegion('BOTTOM-BACK-LEFT', 'corner', v(-1, -1, -1), [v(-F, -S, -F), v(-F, -F, -S), v(-S, -F, -F)]),
   ]
 
   return regions

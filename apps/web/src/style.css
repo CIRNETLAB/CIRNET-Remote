@@ -150,11 +150,12 @@ code { font-family: Consolas, monospace; }
 .compass-marker-hit { fill: transparent; }
 .compass-text { font: 700 11px Consolas, monospace; fill: #728da3; transition: fill 0.15s; }
 .compass-marker:hover .compass-text, .compass-marker.marker-active .compass-text { fill: #00e676; font-weight: 800; }
-.cube-region { cursor: pointer; pointer-events: auto; transition: filter 0.12s; outline: none; }
+.cube-region { cursor: grab; pointer-events: auto; transition: filter 0.12s; outline: none; }
+.cube-region[role=button] { cursor: pointer; }
 .region-face .region-polygon { fill: #1a2a3a; stroke: #3c546c; stroke-width: 1.1; transition: fill 0.12s, stroke 0.12s; }
 .region-face:hover .region-polygon, .region-face.hovered .region-polygon { fill: #26435d; stroke: #00e676; stroke-width: 1.5; }
 .region-edge .region-polygon { fill: #14212f; stroke: #2e4357; stroke-width: 0.8; transition: fill 0.12s, stroke 0.12s; }
-.region-edge:hover .region-polygon, .region-edge.hovered .region-polygon { fill: #398bff; stroke: #75adff; stroke-width: 1.2; }
+.region-edge[role=button]:hover .region-polygon, .region-edge.hovered .region-polygon { fill: #398bff; stroke: #75adff; stroke-width: 1.2; }
 .region-corner .region-polygon { fill: #101c27; stroke: #26384a; stroke-width: 0.7; transition: fill 0.12s, stroke 0.12s; }
 .region-corner:hover .region-polygon, .region-corner.hovered .region-polygon { fill: #00e676; stroke: #66f0a8; stroke-width: 1.2; }
 .cube-label { font: 700 9.5px Consolas, monospace; letter-spacing: 0.5px; fill: #c9def4; pointer-events: none; user-select: none; }

@@ -1,4 +1,4 @@
-import { AmbientLight, Color, DirectionalLight, Group, Mesh, MOUSE, PerspectiveCamera, Plane, Quaternion, Raycaster, Scene, Vector2, Vector3 } from 'three'
+import { AmbientLight, Color, DirectionalLight, Group, Matrix4, Mesh, MOUSE, PerspectiveCamera, Plane, Raycaster, Scene, Vector2, Vector3 } from 'three'
 import { ORIENTATION_DIRECTIONS } from '../components/workbench/viewCubeMath'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { applyPose, buildComponent, disposeObject, portAnchor } from './ComponentModel'
@@ -45,12 +45,35 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
   let transition: {
     startTime: number
     duration: number
-    targetPos: Vector3
     distance: number
-    startDir: Vector3
     targetDir: Vector3
-    qDir: Quaternion
+    startTheta: number
+    thetaDelta: number
+    startPhi: number
+    targetPhi: number
   } | null = null
+
+  const keepViewAboveBoard = () => {
+    const origin = controls?.target ?? viewTarget
+    // A side-view area selection can put its focal plane below the XZ board.
+    // Translate the view, never graph/model poses, before allowing more navigation.
+    if (origin.y < 0) { camera.position.y -= origin.y; origin.y = 0 }
+  }
+
+  const applyViewPose = (direction: Vector3, distance: number) => {
+    keepViewAboveBoard()
+    const targetPt = controls?.target ?? viewTarget
+    const position = targetPt.clone().addScaledVector(direction, distance)
+    // OrbitControls caches Y as its orbit axis and also uses camera.up for XZ panning.
+    camera.up.set(0, 1, 0)
+    camera.position.copy(position)
+    controls?.update()
+    // Controls nudges the pole for its spherical math. Presets retain exact positions.
+    camera.position.copy(position)
+    const lookUp = direction.x === 0 && direction.z === 0 ? new Vector3(0, 0, -1) : camera.up
+    camera.quaternion.setFromRotationMatrix(new Matrix4().lookAt(position, targetPt, lookUp))
+    camera.updateMatrixWorld()
+  }
 
   const cancelTransition = () => {
     transition = null
@@ -62,20 +85,17 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     const elapsed = now - transition.startTime
     const t = Math.min(1, Math.max(0, elapsed / transition.duration))
     const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
-    const targetPt = controls?.target ?? viewTarget
-
     if (t >= 1) {
-      camera.position.copy(transition.targetPos)
-      camera.lookAt(targetPt)
-      controls?.update()
+      applyViewPose(transition.targetDir, transition.distance)
       transition = null
       notifyZoom()
     } else {
-      const q = new Quaternion().identity().slerp(transition.qDir, ease)
-      const curDir = transition.startDir.clone().applyQuaternion(q).normalize()
-      camera.position.copy(targetPt).addScaledVector(curDir, transition.distance)
-      camera.lookAt(targetPt)
-      controls?.update()
+      // Interpolate bounded polar/azimuth angles, including antipodal side faces.
+      // A shortest 3D quaternion arc can otherwise pass below the breadboard.
+      const phi = transition.startPhi + (transition.targetPhi - transition.startPhi) * ease
+      const theta = transition.startTheta + transition.thetaDelta * ease
+      const curDir = new Vector3(Math.sin(phi) * Math.sin(theta), Math.cos(phi), Math.sin(phi) * Math.cos(theta))
+      applyViewPose(curDir, transition.distance)
       notifyZoom()
       schedule()
     }
@@ -83,10 +103,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
 
   const finishTransition = () => {
     if (!transition) return
-    const targetPt = controls?.target ?? viewTarget
-    camera.position.copy(transition.targetPos)
-    camera.lookAt(targetPt)
-    controls?.update()
+    applyViewPose(transition.targetDir, transition.distance)
     transition = null
     notifyZoom()
     schedule()
@@ -95,46 +112,38 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
   const setViewOrientation = (direction: string | Vector3, animate = true, duration = 200) => {
     if (disposed) return
     const targetDir = typeof direction === 'string'
-      ? ORIENTATION_DIRECTIONS[direction.toUpperCase()]?.clone()
+      ? (Object.hasOwn(ORIENTATION_DIRECTIONS, direction.toUpperCase()) ? ORIENTATION_DIRECTIONS[direction.toUpperCase()]!.clone() : undefined)
       : direction.clone()
-    if (!targetDir || !Number.isFinite(targetDir.lengthSq()) || targetDir.lengthSq() < 1e-6) return
+    if (!targetDir || !Number.isFinite(targetDir.lengthSq()) || targetDir.lengthSq() < 1e-6 || targetDir.y < 0) return
     targetDir.normalize()
 
     const targetPt = controls?.target ?? viewTarget
     const currentOffset = camera.position.clone().sub(targetPt)
     const distance = currentOffset.length() > 1e-4 && Number.isFinite(currentOffset.length()) ? currentOffset.length() : defaultDistance
-    const startDir = currentOffset.length() > 1e-4 ? currentOffset.normalize() : new Vector3(0, 1, 0.0001).normalize()
-    const targetPos = targetPt.clone().addScaledVector(targetDir, distance)
+    const startDir = currentOffset.length() > 1e-4 ? currentOffset.normalize() : new Vector3(0, 1, 0)
 
     cancelTransition()
 
     if (!animate || duration <= 0) {
-      camera.position.copy(targetPos)
-      camera.lookAt(targetPt)
-      controls?.update()
+      applyViewPose(targetDir, distance)
       notifyZoom()
       schedule()
       return
     }
 
-    const qDir = new Quaternion()
-    const dot = Math.max(-1, Math.min(1, startDir.dot(targetDir)))
-    if (dot < -0.9999) {
-      const axis = Math.abs(startDir.y) < 0.9 ? new Vector3(0, 1, 0).cross(startDir).normalize() : new Vector3(1, 0, 0).cross(startDir).normalize()
-      qDir.setFromAxisAngle(axis, Math.PI)
-    } else {
-      qDir.setFromUnitVectors(startDir, targetDir)
-    }
+    const startTheta = Math.atan2(startDir.x, startDir.z), targetTheta = Math.atan2(targetDir.x, targetDir.z)
+    const thetaDelta = Math.atan2(Math.sin(targetTheta - startTheta), Math.cos(targetTheta - startTheta))
 
     const now = typeof performance !== 'undefined' ? performance.now() : Date.now()
     transition = {
       startTime: now,
       duration,
-      targetPos,
       distance,
-      startDir,
       targetDir,
-      qDir,
+      startTheta,
+      thetaDelta,
+      startPhi: Math.acos(Math.max(0, Math.min(1, startDir.y))),
+      targetPhi: Math.acos(Math.max(0, Math.min(1, targetDir.y))),
     }
     schedule()
   }
@@ -172,11 +181,11 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     if (Number.isFinite(percent) && percent !== reportedZoom) { reportedZoom = percent; onZoomChange?.(percent) }
   }
   const zoomLimits = () => { if (controls) { controls.minDistance = zoomReferenceDistance / 2; controls.maxDistance = zoomReferenceDistance * 2 } }
-  const viewChanged = () => { notifyZoom(); schedule() }
+  const viewChanged = () => { keepViewAboveBoard(); notifyZoom(); schedule() }
   if (controls) {
     controls.mouseButtons = { LEFT: null, MIDDLE: MOUSE.PAN, RIGHT: MOUSE.ROTATE }
     controls.touches = { ONE: null, TWO: null }; controls.screenSpacePanning = false
-    zoomLimits(); controls.minPolarAngle = 0.001; controls.maxPolarAngle = Math.PI - 0.001
+    zoomLimits(); controls.minPolarAngle = 0; controls.maxPolarAngle = Math.PI / 2
     controls.addEventListener('start', cancelTransition)
     controls.addEventListener('change', viewChanged); controls.saveState()
   }
@@ -354,7 +363,8 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       }
       if (!Number.isFinite(nextDistance)) return false
       nextDistance *= 1.01
-      origin.copy(center); camera.position.copy(center).addScaledVector(direction, nextDistance); camera.lookAt(center)
+      origin.copy(center); camera.position.copy(center).addScaledVector(direction, nextDistance)
+      keepViewAboveBoard(); camera.lookAt(origin)
       camera.zoom = 1; camera.far = Math.max(camera.far, nextDistance * 4); camera.updateProjectionMatrix(); camera.updateMatrixWorld()
       zoomReferenceDistance = nextDistance; zoomLimits(); controls?.update(); notifyZoom(); schedule()
       return true
@@ -364,12 +374,14 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       cancelTransition()
       const bounds = new Box3().setFromObject(content); bounds.union(new Box3().setFromObject(wires))
       const sphere = bounds.getBoundingSphere(new Sphere()), target = controls?.target ?? viewTarget
+      const center = sphere.center.clone().setY(Math.max(0, sphere.center.y))
       const direction = camera.position.clone().sub(target).normalize()
       const half = Math.min(camera.fov * Math.PI / 360, Math.atan(Math.tan(camera.fov * Math.PI / 360) * camera.aspect))
-      const distance = Math.max(3, sphere.radius / Math.sin(half) * 1.2)
+      const radius = sphere.radius + center.distanceTo(sphere.center)
+      const distance = Math.max(3, radius / Math.sin(half) * 1.2)
       if (!Number.isFinite(distance) || !sphere.center.toArray().every(Number.isFinite)) return false
-      target.copy(sphere.center); camera.position.copy(target).addScaledVector(direction, distance); camera.lookAt(target)
-      camera.zoom = 1; camera.far = Math.max(150, distance * 4 + sphere.radius * 2); camera.updateProjectionMatrix()
+      target.copy(center); camera.position.copy(target).addScaledVector(direction, distance); camera.lookAt(target)
+      camera.zoom = 1; camera.far = Math.max(150, distance * 4 + radius * 2); camera.updateProjectionMatrix()
       zoomReferenceDistance = distance; zoomLimits(); controls?.update(); notifyZoom()
       schedule(); return true
     },
@@ -384,13 +396,11 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       let phi = Math.acos(Math.min(1, Math.max(-1, offset.y / radius)))
       theta += (degrees % 360) * Math.PI / 180
       phi += (pitch % 360) * Math.PI / 180
-      phi = Math.max(0.001, Math.min(Math.PI - 0.001, phi))
+      phi = Math.max(0, Math.min(Math.PI / 2, phi))
       offset.x = radius * Math.sin(phi) * Math.sin(theta)
       offset.y = radius * Math.cos(phi)
       offset.z = radius * Math.sin(phi) * Math.cos(theta)
-      camera.position.copy(target).add(offset)
-      camera.lookAt(target)
-      controls?.update()
+      applyViewPose(offset.divideScalar(radius), radius)
       schedule()
     },
     pan(horizontal: number, forward: number) {
@@ -406,9 +416,8 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       zoomReferenceDistance = defaultDistance
       zoomLimits()
       viewTarget.set(0, 0, 0)
-      camera.position.set(0, 11, 10)
       controls?.target.set(0, 0, 0)
-      camera.lookAt(0, 0, 0)
+      applyViewPose(new Vector3(0, 11, 10).normalize(), defaultDistance)
       camera.zoom = 1
       camera.far = 150
       camera.updateProjectionMatrix()

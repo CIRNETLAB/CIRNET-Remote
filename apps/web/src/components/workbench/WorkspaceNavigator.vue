@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { Quaternion, Matrix4, Vector3 } from 'three'
 import type { OrientationAxis } from '../../three/SceneManager'
 import WorkbenchIcon from './WorkbenchIcon.vue'
-import { buildCubeGeometry, projectCube, projectCompass } from './viewCubeMath'
+import { buildCubeGeometry, projectCube, projectCompass, ORIENTATION_DIRECTIONS } from './viewCubeMath'
 
 const props = defineProps<{
   axes?: OrientationAxis[]
@@ -59,7 +59,6 @@ const compass = computed(() => {
 const currentViewLabel = computed(() => {
   const dir = new Vector3(0, 0, 1).applyQuaternion(currentQuaternion.value)
   if (dir.y > 0.95) return 'TOP'
-  if (dir.y < -0.95) return 'BOTTOM'
   if (dir.z > 0.95) return 'FRONT'
   if (dir.z < -0.95) return 'BACK'
   if (dir.x > 0.95) return 'RIGHT'
@@ -113,9 +112,11 @@ function onPointerCancel() {
 }
 
 function onRegionClick(id: string) {
-  if (isDragging) return
+  if (isDragging || !isOrientation(id)) return
   emit('setView', id)
 }
+
+function isOrientation(id: string) { return Object.hasOwn(ORIENTATION_DIRECTIONS, id) }
 
 function onCompassClick(label: string) {
   if (isDragging) return
@@ -201,10 +202,10 @@ function onCompassClick(label: string) {
             :data-face="region.type === 'face' ? region.id.toLowerCase() : undefined"
             :data-edge="region.type === 'edge' ? region.id.toLowerCase() : undefined"
             :data-corner="region.type === 'corner' ? region.id.toLowerCase() : undefined"
-            role="button"
-            :aria-label="`View ${region.id}`"
-            tabindex="0"
-            @pointerenter="hoveredRegion = region.id"
+            :role="isOrientation(region.id) ? 'button' : undefined"
+            :aria-label="isOrientation(region.id) ? `View ${region.id}` : undefined"
+            :tabindex="isOrientation(region.id) ? 0 : undefined"
+            @pointerenter="isOrientation(region.id) && (hoveredRegion = region.id)"
             @pointerleave="hoveredRegion === region.id ? (hoveredRegion = null) : undefined"
             @click.stop="onRegionClick(region.id)"
             @keydown.enter.stop="onRegionClick(region.id)"
