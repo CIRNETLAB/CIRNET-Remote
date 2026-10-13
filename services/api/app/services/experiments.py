@@ -11,6 +11,7 @@ from app.services.circuit_validator import validate_circuit_graph
 from app.services.execution_policy import ExecutionPolicy
 from app.services.verification import SafetyVerificationService, TopologyVerificationService, FunctionalVerificationService, result
 from app.services.lab_compiler import LabExecutionCompiler
+from app.services.topology_resolver import TopologyResolver
 from app.services.captures import CaptureService
 from app.services.hardware_client import GatewayError
 
@@ -31,6 +32,7 @@ class ExperimentManager:
         self.closed=False
         self.policy=ExecutionPolicy(); self.compiler=LabExecutionCompiler()
         self.safety=SafetyVerificationService(); self.topology=TopologyVerificationService()
+        self.resolver=TopologyResolver()
         self.functional=FunctionalVerificationService(); self.captures=CaptureService()
         self.admission_sequence=0
         self._recover()
@@ -92,7 +94,7 @@ class ExperimentManager:
            'station_id':caps['station_id'],'assignment_id':assignment['assignment_id'] if assignment else None,
            'mode':caps['mode'],'state':'CREATED','state_history':['CREATED'],'execution_decision':None,
            'revision':0,
-           'safety_verification':None,'topology_verification':None,'functional_verification':result('NOT_EVALUATED'),
+           'safety_verification':None,'topology_verification':None,'topology_resolution':None,'functional_verification':result('NOT_EVALUATED'),
            'capture':None,'error_code':None,'queue_position':None,'lease_expires_at':None,
            '_circuit_graph':deepcopy(graph),'_configuration':{k:deepcopy(v) for k,v in payload.items() if k not in {'station_id','assignment_id','circuit_graph'}},
            '_capabilities':caps}
@@ -175,16 +177,18 @@ class ExperimentManager:
             if e['mode']=='hardware':
                 self._transition(eid,'TOPOLOGY_SCAN'); graph=self._call(eid,'scan_topology')
                 self._transition(eid,'SAFETY_CHECK'); safety=self.safety.verify(self._call(eid,'read_runtime_safety'))
-                topology=self.topology.verify(assignment,graph)
+                resolution=self.resolver.resolve(assignment,graph,caps)
+                topology=self.topology.verify(assignment,graph,resolution)
                 unknown=any(c['identity']=='UNKNOWN' or c['kind']=='OPAQUE_PHYSICAL_COMPONENT' for c in graph['components'])
-                self._transition(eid,'SAFETY_CHECK',safety_verification=safety,topology_verification=topology)
+                self._transition(eid,'SAFETY_CHECK',safety_verification=safety,topology_verification=topology,topology_resolution=resolution)
             else:
                 safety=result('SAFE',['Virtual execution; no electrical energization'])
                 topology=result('UNKNOWN',['Physical topology scan not applicable'])
                 unknown=False
+                resolution=None
                 self._transition(eid,'SAFETY_CHECK',safety_verification=safety,topology_verification=topology)
                 self._call(eid,'apply_circuit',circuit_graph=e['_circuit_graph'])
-            try: plan=self.compiler.compile(e,assignment,caps); executable=True
+            try: plan=self.compiler.compile(e,assignment,caps,resolution); executable=True
             except (ValueError,ValidationError): plan=None; executable=False
             decision=self.policy.decide(safety,executable,unknown)
             self._transition(eid,'EXECUTION_DECISION',safety_verification=safety,topology_verification=topology,execution_decision=decision)

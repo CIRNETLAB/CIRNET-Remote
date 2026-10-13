@@ -34,7 +34,9 @@ Each LabEndpoint selects `fixed_node_id`, `reference_node_id` or virtual `design
 
 Physical Run → scheduler/lease → SAFE_STATE → Topology Scan.
 
-Scan produces independent Safety Verify and Topology Verify (diagnostic only). ExecutionDecision consumes safety and executability; topology supports feedback.
+DetectedTopologyGraph → Safety Verify → Topology Resolver with assignment/profiles → TopologyResolutionResult / ResolvedEndpointBindings → Topology Verify (diagnostic only) → ExecutionDecision → Lab Execution Compiler and infrastructure application. Compilation validates executability before permission is committed; it performs no hardware operations. ExecutionDecision consumes safety and executability; topology supports feedback.
+
+Resolver unions observed electrical connections and compares component-pin/net incidence independent of node labels. Supported identities or explicit instructor profiles use AUTO_DISCOVERY/INSTRUCTOR_PROFILE/HYBRID evidence; missing pins/opaque devices never acquire guessed identity or pin roles. Counter preserves repeated component quantities. Matching is bounded (32 components, 64 candidate mappings, 4096 search steps), with AMBIGUOUS on exhausted/multiple candidates. Unique component anchors can resolve execution endpoints in an incorrectly wired circuit; routing never restores reference nets. Fixed required endpoints remain usable despite unrelated component ambiguity.
 
 BLOCK ends the request. RUN/GUARDED → Lab Execution Compiler → Infrastructure Routing → Guarded Power-Up → Real Student Circuit → Observed Signals → Functional Verification.
 

@@ -16,7 +16,7 @@ Ruling: Missing pin evidence stays unknown and never supplies guessed roles; cos
 | Phase | Evidence / status |
 | --- | --- |
 | H0 | Pin/endpoints/resolution/rich-result contracts; Python RED 13 failures, semantic RED 10 failures after pin schema acceptance, two additional rich-field failures; browser RED 3 failures. GREEN: Python 209 PASS / 1 SKIP, frontend 228 PASS, build/context/generated check PASS. Driver malformed scans enter FAULT and safe fallback before drive. |
-| H1 | Pending: deterministic arbitrary-placement resolution. |
+| H1 | From H0 `0619141`: deterministic component/pin/net resolver, physical compiler consumes resolved student nodes, topology Counter/incidence diagnostics. RED: 10 failures (missing resolver); GREEN: Python 221 PASS / 1 SKIP, context/generated checks PASS. Independent review added RED 3 failures: routable aliases on the same observed net, complete bipartite infrastructure allocation, and incremental repeated-component incidence pruning. GREEN: 17 targeted / 182 affected / 239 full Python PASS, 1 Icarus SKIP (includes pending H2 work). Frontend unchanged by H1. Required endpoint uncertainty blocks executability only; fixed endpoints allow safe opaque/ambiguous circuits. |
 | H2 | Pending: capture metadata and payload storage. |
 | H3 | Pending: execution capacity and process workers. |
 | H4 | Pending: authoritative instrument capabilities/control. |
@@ -24,6 +24,9 @@ Ruling: Missing pin evidence stays unknown and never supplies guessed roles; cos
 | H6 | Pending: final architecture/provenance/review matrix. |
 
 ## Historical R0–R7 ledger
+
+Ruling H1: Limit deterministic matching to supported digital identities or explicit instructor profiles, with 32 components / 64 mappings / 4096 search steps; budget exhaustion remains AMBIGUOUS — avoids unbounded graph-isomorphism and guessed evidence — cost if wrong: expand supported profiles/bounds after measured performance.
+Ruling H1: Build/validate the pure infrastructure plan to establish executability before committing ExecutionDecision, then apply it only after permission — preserves independent safety/resource policy — cost if wrong: separate an equivalent resource admission pass from final compilation.
 
 Plan: docs/PROMPT_CODEX_net-Circuit-Remote_Lab-First_Refactor_R0-R7.md.
 Authority: ARCHITECTURE.md, cleaned Lab-First v3.1; v3 proposal/audit are provenance.
