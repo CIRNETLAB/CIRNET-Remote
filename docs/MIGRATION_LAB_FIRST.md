@@ -1,5 +1,30 @@
 # Lab-First R0–R7 migration ledger
 
+## Post-R7 architecture hardening H0–H6
+
+Approved plan: [archived Post-R7 prompt](archive/PROMPT_CODEX_net-Circuit-Remote_Post-R7_Architecture_Hardening.md), exact SHA256 `D1C5608E508E9F1BB313136A08158C349D0A54A5994E33E3AEE2C7D191984CA0`, copied from the user document. Baseline `f5df5ac`, clean branch `refactor`, existing linked worktree. Execute one commit per phase; no merge or push. Authority remains canonical Lab-First v3.1.
+
+Pre-flight: context PASS; Python 184 PASS / 1 SKIP; frontend 225 PASS; build PASS. Icarus/vvp unavailable locally, static HDL compilation available. Known warnings: Starlette/httpx, jsonschema RefResolver deprecations, frontend bundle size. Native/loopback checks passed outside the restricted sandbox.
+
+Shared interfaces: H0 evidence/bindings/results feed H1 resolver and H5 display; H2 capture metadata/store feeds grading, UI and deployment; H3 worker/slot configuration feeds H4 capabilities/control; H4 capabilities feed compiler, RPC and UI. H6 repairs historical prompt provenance using Git evidence.
+
+Ruling: Direct phase gates use Windows commands and a durable ledger because helper scripts expect Task-N briefs; cost if wrong: translate evidence, no product behavior change.
+Ruling: Keep Lab schema 1.0 on this unpublished branch; cost if wrong: bump/migrate before external release.
+Ruling: Keep legacy `node_id` as deprecated fixed-only binding; cost if wrong: migrate saved assignments explicitly.
+Ruling: Missing pin evidence stays unknown and never supplies guessed roles; cost if wrong: legacy scans cannot resolve arbitrary placement until evidence exists.
+
+| Phase | Evidence / status |
+| --- | --- |
+| H0 | Pin/endpoints/resolution/rich-result contracts; Python RED 13 failures, semantic RED 10 failures after pin schema acceptance, two additional rich-field failures; browser RED 3 failures. GREEN: Python 209 PASS / 1 SKIP, frontend 228 PASS, build/context/generated check PASS. Driver malformed scans enter FAULT and safe fallback before drive. |
+| H1 | Pending: deterministic arbitrary-placement resolution. |
+| H2 | Pending: capture metadata and payload storage. |
+| H3 | Pending: execution capacity and process workers. |
+| H4 | Pending: authoritative instrument capabilities/control. |
+| H5 | Pending: resolved diagnostics and measured grading in UI. |
+| H6 | Pending: final architecture/provenance/review matrix. |
+
+## Historical R0–R7 ledger
+
 Plan: docs/PROMPT_CODEX_net-Circuit-Remote_Lab-First_Refactor_R0-R7.md.
 Authority: ARCHITECTURE.md, cleaned Lab-First v3.1; v3 proposal/audit are provenance.
 

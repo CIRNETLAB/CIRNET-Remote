@@ -26,6 +26,10 @@ In manual breadboard V1, **student wiring is physical truth**: real ICs and jump
 
 AssignmentDefinition contains optional reference design/topology, expected components, instructor pin profiles, expected behavior, assessment policy and LabEndpoint bindings. Roles: INPUT_SOURCE, OUTPUT_SENSE, CLOCK, VCC, GND, GENERATOR, SCOPE, LOGIC_ANALYZER. Resolution modes: AUTO_DISCOVERY, INSTRUCTOR_PROFILE, HYBRID (recommended V1). OPAQUE_PHYSICAL_COMPONENT means unknown observed identity, not unsafe.
 
+ObservedPinBinding records physical `pin_id` → `node_id`, with optional measured confidence, inferred role and observations; absence remains unknown. Opaque identity is UNKNOWN. Both Python and browser reject duplicate pin/connection identities and references to nonexistent detected nodes. Reference DesignGraph uses the existing CircuitGraph validator.
+
+Each LabEndpoint selects `fixed_node_id`, `reference_node_id` or virtual `design_port`; deprecated `node_id` means fixed placement only. TopologyResolutionResult independently records RESOLVED/PARTIAL/AMBIGUOUS/UNRESOLVED, component matches and ResolvedEndpointBinding to actual observed student nodes. Reference physical IDs never become routes without resolution. User-facing Scope, Generator and Logic Analyzer channels are 1-based.
+
 ## Physical Run
 
 Physical Run → scheduler/lease → SAFE_STATE → Topology Scan.
@@ -39,6 +43,8 @@ SafetyVerificationResult: SAFE / UNSAFE / INDETERMINATE. Unsafe and indeterminat
 TopologyVerificationResult: MATCH / MISMATCH / UNKNOWN / AMBIGUOUS. Diagnostics/grading/feedback only; cannot authorize or veto Run.
 
 FunctionalVerificationResult: PASS / FAIL / PARTIAL / NO_RESPONSE / NOT_EVALUATED. Evaluates observed behavior after execution.
+
+Verification contracts carry structured safety faults/notes, missing/unexpected/unknown components and nets, pin mapping issues, expected/observed signals and truth-table cases. These are observations and teaching evidence, never invented measurements or extra execution gates.
 
 | Evidence | ExecutionDecision |
 |---|---|

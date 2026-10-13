@@ -1,12 +1,25 @@
 import schema from '../data/labContracts.json'
 import { isRecord } from './api'
 import { ApiError } from '../services/api/client'
+import { parseCircuitFile } from '../services/files/circuitFile'
 
 type Schema = { $ref?:string; anyOf?:Schema[]; const?:unknown; enum?:unknown[]; type?:string;
   properties?:Record<string,Schema>; required?:string[]; additionalProperties?:boolean|Schema;
   items?:Schema; minimum?:number; maximum?:number; exclusiveMinimum?:number; minLength?:number;
   pattern?:string; minItems?:number; maxItems?:number }
 const definitions=schema.$defs as unknown as Record<string,Schema>
+
+function integrity(message:string):never { throw new ApiError(0,'INVALID_RESPONSE',message) }
+function unique(entries:Record<string,unknown>[],key:string) {
+  if(new Set(entries.map(e=>e[key])).size!==entries.length) integrity(`Duplicate ${key}.`)
+}
+function endpoint(value:Record<string,unknown>) {
+  if(['node_id','fixed_node_id','reference_node_id','design_port'].filter(key=>key in value).length>1) integrity('Endpoint binding forms are mutually exclusive.')
+}
+function component(value:Record<string,unknown>) {
+  if(value.kind==='OPAQUE_PHYSICAL_COMPONENT'&&value.identity!=='UNKNOWN') integrity('Opaque identity must be UNKNOWN.')
+  unique((value.pins??[]) as Record<string,unknown>[],'pin_id')
+}
 
 function valid(rule:Schema,value:unknown):boolean {
   if(rule.$ref) return valid(definitions[rule.$ref.split('/').at(-1)!],value)
@@ -40,8 +53,42 @@ export function parseLab<T>(name:string,value:unknown):T {
     if(value.sample_count!==samples.length || samples.some(s=>s.time_ns>(value.duration_ns as number))) throw new ApiError(0,'INVALID_RESPONSE','Capture metadata does not match samples.')
   }
   if(name==='AssignmentDefinition' && isRecord(value)) {
-    const ids=(value.lab_endpoints as {endpoint_id:string}[]).map(e=>e.endpoint_id)
-    if(new Set(ids).size!==ids.length) throw new ApiError(0,'INVALID_RESPONSE','Assignment endpoint identities are duplicated.')
+    const endpoints=value.lab_endpoints as Record<string,unknown>[]
+    unique(endpoints,'endpoint_id'); endpoints.forEach(endpoint)
+    if(value.reference_topology_graph) parseLab('DetectedTopologyGraph',value.reference_topology_graph)
+    if(value.reference_design_graph) {
+      try { parseCircuitFile(JSON.stringify(value.reference_design_graph)) } catch { integrity('Invalid reference CircuitGraph.') }
+    }
+    const profiles=(value.instructor_pin_profiles??[]) as Record<string,unknown>[]
+    unique(profiles,'profile_id'); profiles.forEach(p=>unique(p.pins as Record<string,unknown>[],'pin_id'))
+  }
+  if(name==='LabEndpoint'&&isRecord(value)) endpoint(value)
+  if(['ObservedComponent','ObservedPhysicalComponent','OpaqueComponent','OpaquePhysicalComponent'].includes(name)&&isRecord(value)) component(value)
+  if(name==='DetectedTopologyGraph'&&isRecord(value)) {
+    const nodes=value.nodes as {node_id:string}[], components=value.components as Record<string,unknown>[]
+    unique(nodes,'node_id'); unique(components,'component_id')
+    const ids=new Set(nodes.map(n=>n.node_id)), connections=new Set<string>()
+    for(const connection of value.connections as {node_ids:string[]}[]) {
+      const members=connection.node_ids, key=JSON.stringify([...members].sort())
+      if(new Set(members).size!==members.length||members.some(n=>!ids.has(n))||connections.has(key)) integrity('Duplicate or missing electrical connection node.')
+      connections.add(key)
+    }
+    for(const entry of components) {
+      component(entry)
+      const members=entry.node_ids as string[], pins=(entry.pins??[]) as {node_id:string}[]
+      if(new Set(members).size!==members.length||members.some(n=>!ids.has(n))||pins.some(p=>!members.includes(p.node_id))) integrity('Component or pin references a missing node.')
+    }
+  }
+  if(name==='TopologyResolutionResult'&&isRecord(value)) {
+    unique(value.endpoint_bindings as Record<string,unknown>[],'endpoint_id')
+    unique(value.component_matches as Record<string,unknown>[],'reference_component_id')
+    unique(value.component_matches as Record<string,unknown>[],'observed_component_id')
+  }
+  if(name==='InstrumentationExecutionPlan'&&isRecord(value)) {
+    const bindings=value.endpoint_bindings as {endpoint_id:string}[]
+    unique(bindings,'endpoint_id'); unique(value.routing_allocations as Record<string,unknown>[],'resource_id')
+    const ids=new Set(bindings.map(b=>b.endpoint_id))
+    if([...(value.routing_allocations as {endpoint_id:string}[]),...(value.instrument_allocations as {endpoint_id:string}[])].some(a=>!ids.has(a.endpoint_id))) integrity('Allocation references an unbound endpoint.')
   }
   return value as T
 }

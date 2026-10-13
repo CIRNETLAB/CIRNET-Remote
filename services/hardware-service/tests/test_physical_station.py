@@ -139,6 +139,28 @@ def test_driver_error_causes_fault_and_safe_fallback_without_exposing_exception_
     assert 'start' not in d.calls
 
 
+@pytest.mark.parametrize('malformed', ['opaque_identity', 'missing_pin_node', 'duplicate_pin'])
+def test_invalid_scan_evidence_enters_fault_before_any_drive(malformed):
+    class InvalidScanDriver(ProtectedTestDriver):
+        def scan_topology(self):
+            value = super().scan_topology()
+            component = {'component_id': 'U1', 'kind': 'OBSERVED_PHYSICAL_COMPONENT',
+                         'identity': '74HC08', 'node_ids': ['N1'],
+                         'pins': [{'pin_id': '1', 'node_id': 'N1'}]}
+            if malformed == 'opaque_identity': component['kind'] = 'OPAQUE_PHYSICAL_COMPONENT'
+            if malformed == 'missing_pin_node': component['pins'][0]['node_id'] = 'MISSING'
+            if malformed == 'duplicate_pin': component['pins'].append(copy.deepcopy(component['pins'][0]))
+            value['components'] = [component]
+            return value
+    driver = InvalidScanDriver()
+    physical = station(driver)
+    physical.enter_safe_state()
+    error_code(physical.scan_topology, 'DRIVER_ERROR')
+    assert physical.state == 'FAULT'
+    assert driver.calls[-1] == 'safe'
+    assert not {'prepare', 'power', 'start'} & set(driver.calls)
+
+
 def test_mutation_or_reentry_cannot_reuse_an_old_plan():
     d=ProtectedTestDriver()
     s=station(d)

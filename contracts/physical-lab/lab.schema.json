@@ -24,11 +24,12 @@
         },
         "node_id": {
           "type": "string",
-          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$",
+          "description": "Deprecated fixed observed node only; never a teacher reference node."
         },
         "channel": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 1
         },
         "required": {
           "type": "boolean"
@@ -36,6 +37,14 @@
         "design_port": {
           "type": "string",
           "pattern": "^[^.]+\\.[^.]+$"
+        },
+        "fixed_node_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "reference_node_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
         }
       },
       "required": [
@@ -290,6 +299,12 @@
             "type": "string",
             "minLength": 1
           }
+        },
+        "pins": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ObservedPinBinding"
+          }
         }
       },
       "required": [
@@ -329,6 +344,12 @@
           "items": {
             "type": "string",
             "minLength": 1
+          }
+        },
+        "pins": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ObservedPinBinding"
           }
         }
       },
@@ -830,7 +851,7 @@
               },
               "channel": {
                 "type": "integer",
-                "minimum": 0
+                "minimum": 1
               }
             },
             "required": [
@@ -974,6 +995,49 @@
             ],
             "additionalProperties": false
           }
+        },
+        "power_shorts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SafetyEvidence"
+          }
+        },
+        "hazardous_drive_conflicts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SafetyEvidence"
+          }
+        },
+        "protection_faults": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SafetyEvidence"
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "over_current_risks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SafetyEvidence"
+          }
+        },
+        "invalid_voltage_risks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SafetyEvidence"
+          }
+        },
+        "polarity_errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SafetyEvidence"
+          }
         }
       },
       "required": [
@@ -1031,6 +1095,77 @@
             ],
             "additionalProperties": false
           }
+        },
+        "missing_components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ComponentDiagnostic"
+          }
+        },
+        "unexpected_components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ComponentDiagnostic"
+          }
+        },
+        "unknown_components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ComponentDiagnostic"
+          }
+        },
+        "missing_nets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NetDiagnostic"
+          }
+        },
+        "unexpected_nets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NetDiagnostic"
+          }
+        },
+        "pin_mapping_issues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PinMappingDiagnostic"
+          }
+        },
+        "matched_components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ComponentMatch"
+          }
+        },
+        "matched_nets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NetDiagnostic"
+          }
+        },
+        "shorted_nets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NetDiagnostic"
+          }
+        },
+        "orientation_differences": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PinMappingDiagnostic"
+          }
+        },
+        "pin_mapping_differences": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PinMappingDiagnostic"
+          }
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
         }
       },
       "required": [
@@ -1089,6 +1224,67 @@
               "value"
             ],
             "additionalProperties": false
+          }
+        },
+        "expected_signals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DigitalObservation"
+          }
+        },
+        "mismatched_signals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SignalMismatch"
+          }
+        },
+        "expected_truth_table": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "inputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "enum": [
+                    0,
+                    1
+                  ]
+                }
+              },
+              "outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "enum": [
+                    0,
+                    1
+                  ]
+                }
+              }
+            },
+            "required": [
+              "inputs",
+              "outputs"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "observed_truth_table": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ObservedTruthTableCase"
+          }
+        },
+        "timing_results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TimingComparison"
+          }
+        },
+        "waveform_comparisons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WaveformComparison"
           }
         }
       },
@@ -1343,6 +1539,16 @@
               "type": "null"
             }
           ]
+        },
+        "topology_resolution": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TopologyResolutionResult"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -1411,6 +1617,442 @@
         "queued_count",
         "busy",
         "own_positions"
+      ],
+      "additionalProperties": false
+    },
+    "ObservedPinBinding": {
+      "type": "object",
+      "properties": {
+        "pin_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "node_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "inferred_role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "pin_id",
+        "node_id"
+      ],
+      "additionalProperties": false
+    },
+    "ComponentMatch": {
+      "type": "object",
+      "properties": {
+        "reference_component_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "observed_component_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "identity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "reference_component_id",
+        "observed_component_id"
+      ],
+      "additionalProperties": false
+    },
+    "ResolvedEndpointBinding": {
+      "type": "object",
+      "properties": {
+        "endpoint_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "observed_node_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "source": {
+          "enum": [
+            "FIXED_NODE",
+            "REFERENCE_TOPOLOGY",
+            "COMPONENT_PIN",
+            "DESIGN_PORT"
+          ]
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "endpoint_id",
+        "observed_node_id",
+        "source"
+      ],
+      "additionalProperties": false
+    },
+    "TopologyResolutionResult": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "status": {
+          "enum": [
+            "RESOLVED",
+            "PARTIAL",
+            "AMBIGUOUS",
+            "UNRESOLVED"
+          ]
+        },
+        "component_matches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ComponentMatch"
+          }
+        },
+        "endpoint_bindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResolvedEndpointBinding"
+          }
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "schema_version",
+        "status",
+        "component_matches",
+        "endpoint_bindings",
+        "issues"
+      ],
+      "additionalProperties": false
+    },
+    "ComponentDiagnostic": {
+      "type": "object",
+      "properties": {
+        "identity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "component_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "package": {
+          "type": "string",
+          "minLength": 1
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "identity"
+      ],
+      "additionalProperties": false
+    },
+    "NetDiagnostic": {
+      "type": "object",
+      "properties": {
+        "reference_nodes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "observed_nodes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "reference_pins": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "observed_pins": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "reference_nodes",
+        "observed_nodes",
+        "reference_pins",
+        "observed_pins"
+      ],
+      "additionalProperties": false
+    },
+    "PinMappingDiagnostic": {
+      "type": "object",
+      "properties": {
+        "reference_component_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "observed_component_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "pin_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "reference_node_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "observed_node_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "issue": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "reference_component_id",
+        "observed_component_id",
+        "pin_id",
+        "issue"
+      ],
+      "additionalProperties": false
+    },
+    "SafetyEvidence": {
+      "type": "object",
+      "properties": {
+        "node_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+          }
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "component_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        }
+      },
+      "required": [
+        "node_ids"
+      ],
+      "additionalProperties": false
+    },
+    "SignalMismatch": {
+      "type": "object",
+      "properties": {
+        "signal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "time_ns": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expected": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "observed": {
+          "enum": [
+            0,
+            1,
+            "X",
+            null
+          ]
+        },
+        "case_index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "signal",
+        "time_ns",
+        "expected",
+        "observed"
+      ],
+      "additionalProperties": false
+    },
+    "ObservedTruthTableCase": {
+      "type": "object",
+      "properties": {
+        "case_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "inputs": {
+          "type": "object",
+          "additionalProperties": {
+            "enum": [
+              0,
+              1
+            ]
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "additionalProperties": {
+            "enum": [
+              0,
+              1,
+              "X",
+              null
+            ]
+          }
+        },
+        "time_ns": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "status": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "NO_RESPONSE"
+          ]
+        }
+      },
+      "required": [
+        "case_index",
+        "inputs",
+        "outputs",
+        "time_ns",
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "TimingComparison": {
+      "type": "object",
+      "properties": {
+        "signal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expected_time_ns": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "observed_time_ns": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tolerance_ns": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "status": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "NO_RESPONSE"
+          ]
+        }
+      },
+      "required": [
+        "signal",
+        "expected_time_ns",
+        "observed_time_ns",
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "WaveformComparison": {
+      "type": "object",
+      "properties": {
+        "signal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expected": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DigitalObservation"
+          }
+        },
+        "observed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DigitalObservation"
+          }
+        },
+        "status": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "NO_RESPONSE"
+          ]
+        }
+      },
+      "required": [
+        "signal",
+        "expected",
+        "observed",
+        "status"
       ],
       "additionalProperties": false
     }
