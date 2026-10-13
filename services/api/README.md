@@ -22,6 +22,12 @@ py -3 -m venv services/api/.venv
 .\services\api\.venv\Scripts\python.exe -m pip install -e . -e './services/api[test]'
 ```
 
+Root contracts packaging automatically creates
+`.build/metadata/netcircuit_contracts.egg-info/` and places other build files
+under `.build/`. This ignored cache is independent of `.audit-runtime` and the
+service virtual environments. It can be deleted and is recreated on the next
+install or build; no manual directory setup is needed on a fresh checkout.
+
 Start the API and keep this terminal running:
 
 ```powershell
