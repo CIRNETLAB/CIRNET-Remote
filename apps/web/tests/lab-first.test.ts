@@ -13,13 +13,10 @@ import { useInstrumentStore } from '../src/stores/instrument'
 import { nextTick } from 'vue'
 import { loadSfc,mountSfc } from './helpers/vueSfc'
 import { captureFixture, deferred } from './helpers/capture'
+import { stationFixture, runningExperiment } from './helpers/station'
 
 function target():StationDescriptor {
-  return {station_id:'v1',mode:'simulation',state:'ready',capabilities:{schema_version:'1.0',station_id:'v1',mode:'simulation',
-    available:true,virtual_digital:true,virtual_analog:false,physical_digital:false,physical_analog_routing:false,physical_execution_slots:0,
-    topology_scan_supported:false,safety_gate_supported:false,guarded_run_supported:false,component_resolution_modes:[],
-    logic_analyzer_channels:4,oscilloscope_channels:0,generator_channels:0,routing_resources:[],hardware_rpc_version:'2.0',
-    fpga_protocol_version:'UNAVAILABLE',firmware_version:'virtual-events-1.0',hardware_profile_version:'virtual-1.0'}}
+  return stationFixture()
 }
 
 beforeEach(() => setActivePinia(createPinia()))
@@ -104,6 +101,9 @@ test('generator maps CH2 configuration and rejects unknown preview waveforms',as
     return new Response(JSON.stringify({accepted:true,code:'OK'}))
   }})
   const instrument=useInstrumentStore()
+  const generatorTarget=target(); generatorTarget.capabilities!.instrument_capabilities.generator={channels:2,runtime_reconfiguration_supported:true}
+  const station=useStationStore();station.setStations([generatorTarget]);station.setEventsConnected(true)
+  const experiment=useExperimentStore();experiment.activeId='e1';experiment.receive(runningExperiment())
   await instrument.configureGenerator('e1',2,true)
   assert.deepEqual(bodies,[{instrument:'generator',configuration:{channel:2,waveform:'SQUARE',frequency_hz:1000,amplitude_vpp:1,offset_v:0,enabled:true}}])
   instrument.generator.channel2.waveform='unsupported'

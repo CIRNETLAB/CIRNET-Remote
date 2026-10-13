@@ -29,6 +29,10 @@ class ProtectedTestDriver:
         return {'available':True,'physical_digital':True,'physical_execution_slots':1,
                 'topology_scan_supported':True,'safety_gate_supported':True,
                 'guarded_run_supported':True,'hardware_profile_version':'test-protection',
+                'instrument_capabilities':{
+                    'logic_analyzer':{'channels':1,'runtime_reconfiguration_supported':False},
+                    'oscilloscope':{'channels':0,'runtime_reconfiguration_supported':False},
+                    'generator':{'channels':0,'runtime_reconfiguration_supported':False}},
                 'routing_resources':[{'resource_id':'drive-1','roles':['INPUT_SOURCE'],'node_ids':['N1']}],
                 'breadboards':[{'id':'only-board','model':'test-board'}]}
     def enter_safe_state(self):

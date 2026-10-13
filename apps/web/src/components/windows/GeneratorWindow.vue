@@ -5,17 +5,25 @@ import { GENERATOR_LAYOUT, GENERATOR_CH1, GENERATOR_CH2, GENERATOR_SYNC, GENERAT
 import InstrumentDial from './InstrumentDial.vue'
 import { useStationStore } from '../../stores/station'
 import { useExperimentStore } from '../../stores/experiment'
+import { generatorConfigurationIssue, runtimeGeneratorIssue } from '../../types/station'
 const instrument = useInstrumentStore()
 const station=useStationStore(),experiment=useExperimentStore()
-const canConfigure=computed(()=>!!station.executionTarget?.capabilities?.instruments?.generator?.available&&!!experiment.activeId&&['GUARDED_POWER_UP','RUNNING'].includes(experiment.state))
+const selectedChannel = ref<1|2>(1)
+const controlIssue=computed(()=>{
+  const issue=runtimeGeneratorIssue(station.executionTarget,experiment.active,selectedChannel.value,station.canExecute)
+  if(issue) return issue
+  try {return generatorConfigurationIssue(station.instrumentCapabilities!.generator,instrument.generatorConfiguration(selectedChannel.value,true))}
+  catch(error) {return error instanceof Error?error.message:'Generator configuration is invalid.'}
+})
+const canConfigure=computed(()=>controlIssue.value===null)
+const generatorAvailable=computed(()=>(station.instrumentCapabilities?.generator.channels??0)>0)
 const acknowledgement=ref('')
 async function apply() {
   if(!canConfigure.value||!experiment.activeId) return
-  try {const reply=await instrument.configureGenerator(experiment.activeId,selectedChannel.value as 1|2,true);acknowledgement.value=reply.accepted?'Configuration acknowledged':reply.code}
+  try {const reply=await instrument.configureGenerator(experiment.activeId,selectedChannel.value,true);acknowledgement.value=reply.accepted?'Configuration acknowledged':reply.code}
   catch(error) {acknowledgement.value=error instanceof Error?error.message:'Configuration unavailable';instrument.log(acknowledgement.value,'error')}
 }
 // Selection changes only this window's visual focus, never output or editor mode.
-const selectedChannel = ref(1)
 const channels = computed(() => [{ id: 1, name: 'CH1', color: GENERATOR_CH1, config: instrument.generator }, { id: 2, name: 'CH2', color: GENERATOR_CH2, config: instrument.generator.channel2 }])
 const functionKeys = GENERATOR_LAYOUT.buttons.filter(key => !key.accent && key.name !== 'ok_button')
 const channelKeys = GENERATOR_LAYOUT.buttons.filter(key => key.accent || key.name === 'ok_button')
@@ -38,7 +46,7 @@ function parameters(config: typeof instrument.generator.channel2) {
 <template>
   <div class="generator-instrument" :style="{ '--generator-ch1': GENERATOR_CH1, '--generator-ch2': GENERATOR_CH2, '--generator-sync': GENERATOR_SYNC, '--generator-screen': GENERATOR_THEME.screen, '--generator-bezel': GENERATOR_THEME.bezel, '--generator-panel': GENERATOR_THEME.panel }">
     <div class="generator-faceplate">
-      <header class="generator-header"><div><strong>net<span>*CIRCUIT</span></strong><small>L1571979 · FUNCTION GENERATOR · 2 CHANNEL</small></div><span>OUTPUT UNAVAILABLE</span></header>
+      <header class="generator-header"><div><strong>net<span>*CIRCUIT</span></strong><small>L1571979 · FUNCTION GENERATOR · 2 CHANNEL</small></div><span>{{ canConfigure ? 'OUTPUT CONTROL AVAILABLE' : generatorAvailable ? 'PLAN CONFIGURATION ONLY' : 'OUTPUT UNAVAILABLE' }}</span></header>
       <div class="generator-front">
         <div class="generator-screen"><div class="generator-preview-heading">CONFIGURATION PREVIEW <span>Not generated / not captured</span></div>
           <section v-for="channel in channels" :key="channel.id" class="generator-channel" :class="{ 'is-selected': selectedChannel === channel.id }" :style="{ '--channel-color': channel.color }" :aria-label="channel.name + ' configuration preview'"><header><strong>{{ channel.name }}</strong><span>{{ channel.config.waveform }}</span><small>NOT APPLIED</small></header><div class="generator-channel-body"><dl><div v-for="parameter in parameters(channel.config)" :key="parameter.label"><dt>{{ parameter.label }}</dt><dd>{{ parameter.value }} <small>{{ parameter.unit }}</small></dd></div></dl><div class="generator-waveform"><svg viewBox="0 0 160 90" role="img" :aria-label="channel.name + ' illustrative ' + channel.config.waveform + ' shape; not generated or captured data'"><line v-for="n in 9" :key="'x' + n" :x1="(n - 1) * 20" :x2="(n - 1) * 20" y1="0" y2="90" /><line v-for="n in 5" :key="'y' + n" x1="0" x2="160" :y1="(n - 1) * 22.5" :y2="(n - 1) * 22.5" /><polyline v-if="previewShapes[channel.config.waveform]" :points="previewShapes[channel.config.waveform]" /></svg><span>SCHEMATIC PREVIEW</span></div></div></section>
@@ -47,11 +55,11 @@ function parameters(config: typeof instrument.generator.channel2) {
         <div class="generator-console">
           <fieldset disabled class="generator-functions" aria-label="Generator function controls" title="Generator contract is not connected"><legend>FUNCTION</legend><div class="generator-keypad"><button v-for="key in functionKeys" :key="key.name" :style="{ '--key-color': key.color }">{{ key.label }}</button></div><div class="generator-encoder"><InstrumentDial label="Generator encoder" caption="VALUE" value="—" unavailable-reason="Output control unavailable · generator contract is not connected" /><div class="generator-arrows"><button v-for="key in GENERATOR_LAYOUT.arrows" :key="key.name" :aria-label="key.direction < 0 ? 'Previous digit' : 'Next digit'">{{ key.direction < 0 ? '◀' : '▶' }}</button></div></div></fieldset>
           <div class="generator-channel-keys" role="group" aria-label="Configuration channel selection"><button v-for="key in channelKeys" :key="key.name" :disabled="!key.accent" :aria-label="key.accent ? 'Select ' + key.label + ' configuration' : key.label" :aria-pressed="key.accent ? selectedChannel === (key.label === 'CH1' ? 1 : 2) : undefined" :style="{ '--key-accent': key.accent || '#93aab9' }" @click="selectedChannel = key.label === 'CH1' ? 1 : 2">{{ key.label }}</button></div>
-          <p class="generator-console-note">Channel selection changes preview focus only.<br />Output controls are unavailable.</p>
+          <p class="generator-console-note">Channel selection changes preview focus only.<br />{{ controlIssue || 'Runtime configuration can be sent to the running experiment.' }}</p>
         </div>
       </div>
-      <div class="generator-output-row"><div class="generator-power"><button :disabled="!canConfigure" :aria-label="canConfigure ? 'Apply generator configuration' : 'Generator power unavailable'" :title="canConfigure ? 'Send channel configuration through the laboratory API' : 'Generator unavailable on the selected station'" @click="apply">⏻</button><small>{{ acknowledgement || 'PREVIEW ONLY' }}</small></div><div v-for="output in GENERATOR_LAYOUT.outputs" :key="output.name" class="generator-output" :style="{ '--output-color': output.accent }"><i aria-hidden="true" /><strong>{{ output.label }}</strong><small>UNAVAILABLE</small></div></div>
-      <footer class="generator-footer"><span>LOCAL CONFIGURATION · NO DDS OUTPUT</span><small>Waveform shapes are illustrative. A supported generator contract is required to apply output.</small></footer>
+      <div class="generator-output-row"><div class="generator-power"><button :disabled="!canConfigure" :aria-label="canConfigure ? 'Apply generator configuration' : 'Generator power unavailable'" :title="controlIssue || 'Send channel configuration through the laboratory API'" @click="apply">⏻</button><small>{{ acknowledgement || 'PREVIEW ONLY' }}</small></div><div v-for="output in GENERATOR_LAYOUT.outputs" :key="output.name" class="generator-output" :style="{ '--output-color': output.accent }"><i aria-hidden="true" /><strong>{{ output.label }}</strong><small>{{ output.channel !== null && output.channel <= (station.instrumentCapabilities?.generator.channels ?? 0) ? 'AVAILABLE' : 'UNAVAILABLE' }}</small></div></div>
+      <footer class="generator-footer"><span>{{ generatorAvailable ? 'CONFIGURATION PREVIEW · NO OUTPUT TELEMETRY' : 'LOCAL CONFIGURATION · NO DDS OUTPUT' }}</span><small>Waveform shapes are illustrative. A supported generator contract is required to apply output.</small></footer>
     </div>
   </div>
 </template>

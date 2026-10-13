@@ -41,6 +41,8 @@ class HardwareServiceClient:
         self._connect()
         result=self._invoke("GetCapabilities",self.pb.Target(station_id=station_id))
         value=MessageToDict(result,preserving_proto_field_name=True,always_print_fields_with_no_presence=True)
+        generator=value.get('instrument_capabilities',{}).get('generator',{})
+        if generator.get('supported_waveforms')==[]: generator.pop('supported_waveforms')
         value=validate("StationCapabilities",value)
         if value["hardware_rpc_version"]!="2.0": raise GatewayError("PROTOCOL_MISMATCH")
         return value

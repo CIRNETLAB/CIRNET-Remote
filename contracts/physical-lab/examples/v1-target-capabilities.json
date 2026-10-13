@@ -16,12 +16,26 @@
     "INSTRUCTOR_PROFILE",
     "HYBRID"
   ],
-  "logic_analyzer_channels": 0,
-  "oscilloscope_channels": 2,
-  "generator_channels": 2,
   "routing_resources": [],
   "hardware_rpc_version": "2.0",
   "fpga_protocol_version": "2.0-scaffold",
   "firmware_version": "UNAVAILABLE",
-  "hardware_profile_version": "TBD_BY_HARDWARE_DESIGN"
+  "hardware_profile_version": "TBD_BY_HARDWARE_DESIGN",
+  "instrument_capabilities": {
+    "logic_analyzer": {
+      "channels": 0,
+      "runtime_reconfiguration_supported": false,
+      "status": "UNAVAILABLE_UNTIL_HARDWARE_DESIGN"
+    },
+    "oscilloscope": {
+      "channels": 0,
+      "runtime_reconfiguration_supported": false,
+      "status": "UNAVAILABLE_UNTIL_HARDWARE_DESIGN"
+    },
+    "generator": {
+      "channels": 0,
+      "runtime_reconfiguration_supported": false,
+      "status": "UNAVAILABLE_UNTIL_HARDWARE_DESIGN"
+    }
+  }
 }

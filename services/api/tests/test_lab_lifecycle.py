@@ -33,7 +33,9 @@ class LabGateway:
                 'virtual_digital':False,'virtual_analog':False,'physical_digital':True,'physical_analog_routing':False,
                 'physical_execution_slots':1,'topology_scan_supported':True,'safety_gate_supported':True,
                 'guarded_run_supported':True,'component_resolution_modes':['HYBRID'],
-                'logic_analyzer_channels':2,'oscilloscope_channels':0,'generator_channels':0,
+                'instrument_capabilities':{'logic_analyzer':{'channels':2,'runtime_reconfiguration_supported':False},
+                    'oscilloscope':{'channels':0,'runtime_reconfiguration_supported':False},
+                    'generator':{'channels':0,'runtime_reconfiguration_supported':False}},
                 'routing_resources':[{'resource_id':'r1','roles':['INPUT_SOURCE'],'node_ids':['N1']},
                                      {'resource_id':'r2','roles':['OUTPUT_SENSE'],'node_ids':['N2']}],
                 'hardware_rpc_version':'2.0','fpga_protocol_version':'test','firmware_version':'test','hardware_profile_version':'test'}

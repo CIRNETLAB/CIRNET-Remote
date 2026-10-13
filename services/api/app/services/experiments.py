@@ -8,6 +8,7 @@ import uuid
 from jsonschema import ValidationError
 from contracts.validation import validate
 from contracts.runtime_config import simulation_worker_count
+from contracts.instrument_validation import validate_generator
 from app.services.circuit_validator import validate_circuit_graph
 from app.services.execution_policy import ExecutionPolicy
 from app.services.verification import SafetyVerificationService, TopologyVerificationService, FunctionalVerificationService, result
@@ -227,7 +228,7 @@ class ExperimentManager:
             self._transition(eid,'EXECUTION_DECISION',safety_verification=safety,topology_verification=topology,execution_decision=decision)
             if decision['decision'].startswith('BLOCK_'):
                 self._transition(eid,'COMPLETE'); return
-            self._transition(eid,'ROUTE_PREPARE'); self._call(eid,'prepare_execution',plan=plan,decision=decision)
+            self._transition(eid,'ROUTE_PREPARE',_execution_plan=plan); self._call(eid,'prepare_execution',plan=plan,decision=decision)
             self._call(eid,'apply_routing')
             self._transition(eid,'GUARDED_POWER_UP'); self._call(eid,'guarded_power_up')
             self._call(eid,'arm_capture',configuration=plan['capture_config'])
@@ -295,6 +296,30 @@ class ExperimentManager:
                 except Exception: pass
             else: self._transition(eid,'COMPLETE',error_code=code)
             return self.get(eid,owner)
+
+    def configure_instrument(self,eid,owner,payload):
+        # Short bounded control RPC shares the same lock as Stop/lease release.
+        # StartExecution remains outside this lock so Stop can interrupt it.
+        with self.lock:
+            e=self.repo.get_experiment(eid,owner)
+            if not isinstance(payload,dict) or set(payload)!={'instrument','configuration'}:
+                raise ValueError('INVALID_CONFIGURATION')
+            if payload['instrument'] not in ('generator','clock','trigger'): raise ValueError('INVALID_CONFIGURATION')
+            lease=next((l for l in self.repo.leases() if l['experiment_id']==eid),None)
+            if (self.closed or e['state']!='RUNNING' or lease is None or lease['quarantined']
+                    or lease['expires_at']<=self.clock() or self.cancel.get(eid,Event()).is_set()):
+                raise ValueError('INVALID_STATE')
+            if payload['instrument']!='generator': raise ValueError('NOT_IMPLEMENTED')
+            caps=validate('StationCapabilities',self.gateway.capabilities(e['station_id']))
+            capability=caps['instrument_capabilities']['generator']
+            if not caps['available'] or caps['mode']!=e['mode']: raise ValueError('UNEXECUTABLE')
+            if not capability['runtime_reconfiguration_supported']: raise ValueError('NOT_IMPLEMENTED')
+            config=validate_generator(payload['configuration'],capability)
+            if not any(a['instrument']=='GENERATOR' and a['channel']==config['channel']
+                       for a in (e.get('_execution_plan') or {}).get('instrument_allocations',[])):
+                raise ValueError('UNEXECUTABLE')
+            reply=self._call(eid,'configure_instrument',**payload)
+            return {'accepted':reply.get('accepted') is True,'code':reply.get('code','OK')}
 
     def _capture_record(self,capture_id,owner):
         for record in self.repo.list_experiments():

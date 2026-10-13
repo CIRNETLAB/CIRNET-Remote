@@ -2,6 +2,7 @@ from dataclasses import fields
 import time
 from jsonschema import ValidationError
 from contracts.validation import validate
+from contracts.instrument_validation import validate_generator, validate_plan_instruments
 from hardware_service.models import BreadboardCapability, StationCapabilities
 from hardware_service.station.base import HardwareStation, HardwareError, HardwareUnavailableError, StationState as S, serialized
 
@@ -149,6 +150,10 @@ class PhysicalHardwareStation(HardwareStation):
         caps = self.get_capabilities()
         if not caps.available or not caps.physical_digital or not caps.safety_gate_supported or not caps.guarded_run_supported:
             raise HardwareError("UNEXECUTABLE")
+        try:
+            validate_plan_instruments(plan, caps.to_dict())
+        except (ValueError, ValidationError):
+            raise HardwareError("UNEXECUTABLE") from None
         if plan["station_id"] != self.station_id or decision["decision"] not in ("RUN_NORMAL", "RUN_GUARDED"):
             raise HardwareError("UNEXECUTABLE")
         if any(c["kind"] == "OPAQUE_PHYSICAL_COMPONENT" for c in self._topology["components"]) and decision["decision"] != "RUN_GUARDED":
@@ -238,17 +243,35 @@ class PhysicalHardwareStation(HardwareStation):
 
     @serialized
     def configure_clock(self, configuration):
-        self._require_state(S.ROUTE_PREPARE, S.READY)
-        return self._invoke("configure_clock", validate("ClockConfiguration", configuration))
+        raise HardwareError("NOT_IMPLEMENTED")
 
     @serialized
     def configure_generator(self, configuration):
-        self._require_state(S.ROUTE_PREPARE, S.READY)
-        if configuration.get("channel", 0) > self.get_capabilities().generator_channels:
+        self._require_driver()
+        self._require_state(S.RUNNING)
+        caps = self.get_capabilities()
+        capability = caps.instrument_capabilities['generator']
+        if not caps.available or not caps.physical_analog_routing:
             raise HardwareError("UNEXECUTABLE")
-        return self._invoke("configure_generator", validate("GeneratorConfiguration", configuration))
+        if not capability['channels'] or not capability['runtime_reconfiguration_supported']:
+            raise HardwareError("NOT_IMPLEMENTED")
+        try:
+            configuration = validate("GeneratorConfiguration", configuration)
+            validate_generator(configuration, capability)
+        except (ValueError, ValidationError):
+            raise HardwareError("UNEXECUTABLE") from None
+        if self._plan is None or self._experiment_id != self._plan['experiment_id']:
+            raise HardwareError("INVALID_STATE")
+        allocated = {allocation['channel'] for allocation in self._plan['instrument_allocations']
+                     if allocation['instrument'] == 'GENERATOR'}
+        if configuration['channel'] not in allocated:
+            raise HardwareError("UNEXECUTABLE")
+        self._fresh_safe()
+        reply = self._invoke("configure_generator", configuration)
+        self._plan['generator_config'] = [entry for entry in self._plan['generator_config']
+                                         if entry['channel'] != configuration['channel']] + [configuration]
+        return reply
 
     @serialized
     def configure_trigger(self, configuration):
-        self._require_state(S.READY)
-        return self._invoke("configure_trigger", configuration)
+        raise HardwareError("NOT_IMPLEMENTED")

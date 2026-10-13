@@ -71,6 +71,19 @@ def validate(name: str, value: dict) -> dict:
                 or (not value['available'] and (value['payload_ref'] is not None or value['payload_byte_count']!=0 or value.get('sha256') is not None))
                 or (value['encoding']=='digital_events' and (value['sample_count']>100000 or value['payload_byte_count']>9+65536+100000*11))):
             raise ValidationError('Capture metadata is inconsistent')
+    if name == 'StationCapabilities':
+        validate('InstrumentCapabilities',value['instrument_capabilities'])
+    if name == 'InstrumentCapabilities':
+        validate('GeneratorCapability',value['generator'])
+    if name == 'GeneratorCapability':
+        from math import isfinite
+        for key in ['frequency_min_hz','frequency_max_hz','amplitude_max_vpp','offset_min_v','offset_max_v']:
+            if key in value and not isfinite(value[key]): raise ValidationError('Nonfinite profile limit')
+        for lower,upper in [('frequency_min_hz','frequency_max_hz'),('offset_min_v','offset_max_v')]:
+            if lower in value and upper in value and value[lower]>value[upper]:
+                raise ValidationError('Inconsistent profile limits')
+        if 'supported_waveforms' in value and len(set(value['supported_waveforms']))!=len(value['supported_waveforms']):
+            raise ValidationError('Duplicate supported waveform')
     if name == "InstrumentationExecutionPlan":
         _unique(value["endpoint_bindings"], "endpoint_id")
         _unique(value["routing_allocations"], "resource_id")

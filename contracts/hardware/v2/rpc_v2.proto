@@ -19,8 +19,32 @@ enum ErrorCode {
 message Target { string station_id = 1; string experiment_id = 2; }
 message Breadboard { string id = 1; string model = 2; }
 message RoutingResource { string resource_id = 1; repeated string roles = 2; repeated string node_ids = 3; }
-message InstrumentCapability { bool available = 1; uint32 channels = 2; string status = 3; }
+message InstrumentCapability {
+  reserved 1;
+  reserved "available";
+  uint32 channels = 2;
+  optional string status = 3;
+  bool runtime_reconfiguration_supported = 4;
+}
+message GeneratorCapability {
+  uint32 channels = 1;
+  bool runtime_reconfiguration_supported = 2;
+  optional string status = 3;
+  repeated string supported_waveforms = 4;
+  optional double frequency_min_hz = 5;
+  optional double frequency_max_hz = 6;
+  optional double amplitude_max_vpp = 7;
+  optional double offset_min_v = 8;
+  optional double offset_max_v = 9;
+}
+message InstrumentCapabilities {
+  InstrumentCapability logic_analyzer = 1;
+  InstrumentCapability oscilloscope = 2;
+  GeneratorCapability generator = 3;
+}
 message StationCapabilities {
+  reserved 14, 15, 16, 23;
+  reserved "logic_analyzer_channels", "oscilloscope_channels", "generator_channels", "instruments";
   string schema_version = 1;
   string station_id = 2;
   string mode = 3;
@@ -34,16 +58,13 @@ message StationCapabilities {
   bool safety_gate_supported = 11;
   bool guarded_run_supported = 12;
   repeated string component_resolution_modes = 13;
-  uint32 logic_analyzer_channels = 14;
-  uint32 oscilloscope_channels = 15;
-  uint32 generator_channels = 16;
   repeated RoutingResource routing_resources = 17;
   string hardware_rpc_version = 18;
   string fpga_protocol_version = 19;
   string firmware_version = 20;
   string hardware_profile_version = 21;
   repeated Breadboard breadboards = 22;
-  map<string, InstrumentCapability> instruments = 23;
+  InstrumentCapabilities instrument_capabilities = 24;
 }
 
 message PowerPolicy { string profile_id = 1; bool guarded = 2; }

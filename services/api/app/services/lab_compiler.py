@@ -1,5 +1,6 @@
 """Compile infrastructure endpoints only; never student internal logical nets."""
 from contracts.validation import validate
+from contracts.instrument_validation import ROLE_INSTRUMENT,validate_plan_instruments
 
 
 def allocate_routes(bindings, resources):
@@ -44,19 +45,16 @@ class LabExecutionCompiler:
                 continue
             binding={'endpoint_id':endpoint['endpoint_id'],'node_id':node,'role':endpoint['role']}
             bindings.append(binding)
-            if virtual: continue
             if endpoint["role"] in ("SCOPE","GENERATOR","LOGIC_ANALYZER"):
-                limit=capabilities[{"SCOPE":"oscilloscope_channels","GENERATOR":"generator_channels","LOGIC_ANALYZER":"logic_analyzer_channels"}[endpoint["role"]]]
+                limit=capabilities['instrument_capabilities'][ROLE_INSTRUMENT[endpoint['role']]]['channels']
                 channel=endpoint.get("channel",1)
                 if not 1<=channel<=limit: raise ValueError("UNEXECUTABLE")
                 instruments.append({"endpoint_id":endpoint["endpoint_id"],"instrument":endpoint["role"],"channel":channel})
         if not virtual:
             allocations=allocate_routes(bindings,capabilities['routing_resources'])
         config=experiment["_configuration"]
-        if any(g.get("enabled") for g in config.get("generator_config",[])) and not capabilities.get("instruments",{}).get("generator",{}).get("available",False):
-            raise ValueError("UNEXECUTABLE")
         profile=capabilities["hardware_profile_version"]
-        return validate("InstrumentationExecutionPlan",{
+        plan=validate("InstrumentationExecutionPlan",{
             "schema_version":"1.0","station_id":experiment["station_id"],"experiment_id":experiment["experiment_id"],
             "power_policy":{"profile_id":profile,"guarded":True},"endpoint_bindings":bindings,
             "routing_allocations":allocations,"instrument_allocations":instruments,
@@ -64,3 +62,4 @@ class LabExecutionCompiler:
             "capture_config":config.get("capture_config",{"signals":[],"duration_ns":1000000}),
             "test_vectors":config.get("test_vectors",[]),
             "runtime_safety_policy":{"profile_id":profile,"watchdog_required":True}})
+        return validate_plan_instruments(plan,capabilities)

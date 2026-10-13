@@ -15,7 +15,7 @@ class StationService:
                 "available":False,"virtual_digital":False,"virtual_analog":False,"physical_digital":False,
                 "physical_analog_routing":False,"physical_execution_slots":0,"topology_scan_supported":False,
                 "safety_gate_supported":False,"guarded_run_supported":False,"component_resolution_modes":[],
-                "logic_analyzer_channels":0,"oscilloscope_channels":0,"generator_channels":0,"routing_resources":[],
+                'instrument_capabilities':{name:{'channels':0,'runtime_reconfiguration_supported':False} for name in ('logic_analyzer','oscilloscope','generator')},'routing_resources':[],
                 "hardware_rpc_version":"2.0","fpga_protocol_version":"UNAVAILABLE","firmware_version":"UNAVAILABLE",
                 "hardware_profile_version":"UNAVAILABLE"}
         if any(l["quarantined"] for l in self.manager.repo.leases() if l["station_id"]==station_id):

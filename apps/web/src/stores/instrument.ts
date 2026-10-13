@@ -4,6 +4,9 @@ import { parseLab } from '../types/labValidation'
 import { experimentsApi } from '../services/api/experiments'
 import { errorMessage } from '../services/api/client'
 import { loadDigitalCapture } from '../services/captures/digital'
+import { useExperimentStore } from './experiment'
+import { useStationStore } from './station'
+import { generatorConfigurationIssue, runtimeGeneratorIssue } from '../types/station'
 
 const requests = new WeakMap<object, { controller: AbortController; promise: Promise<void> }>()
 function captureKey(metadata: CaptureMetadata | null) {
@@ -60,13 +63,23 @@ export const useInstrumentStore = defineStore('instrument', {
       requests.set(this,{controller,promise})
       return promise
     },
-    async configureGenerator(experimentId:string,channel:1|2,enabled=false) {
+    generatorConfiguration(channel:1|2,enabled=false):GeneratorConfiguration {
       const preview=channel===1?this.generator:this.generator.channel2
       const waveforms:Record<string,GeneratorConfiguration['waveform']>={Sine:'SINE',Square:'SQUARE',Triangle:'TRIANGLE',Ramp:'RAMP',Pulse:'PULSE',Arbitrary:'ARBITRARY'}
       const waveform=Object.hasOwn(waveforms,preview.waveform)?waveforms[preview.waveform]:undefined
       if(!waveform) throw new Error('Unsupported generator waveform.')
       const configuration:GeneratorConfiguration={channel,waveform,frequency_hz:preview.frequency,
         amplitude_vpp:preview.amplitude,offset_v:preview.offset,enabled}
+      return parseLab<GeneratorConfiguration>('GeneratorConfiguration',configuration)
+    },
+    async configureGenerator(experimentId:string,channel:1|2,enabled=false) {
+      const station=useStationStore(),experiment=useExperimentStore()
+      if(experiment.activeId!==experimentId) throw new Error('Live generator configuration requires the active running experiment.')
+      const issue=runtimeGeneratorIssue(station.executionTarget,experiment.active,channel,station.canExecute)
+      if(issue) throw new Error(issue)
+      const configuration=this.generatorConfiguration(channel,enabled)
+      const configurationIssue=generatorConfigurationIssue(station.instrumentCapabilities!.generator,configuration)
+      if(configurationIssue) throw new Error(configurationIssue)
       return experimentsApi.configureGenerator(experimentId,configuration)
     },
     log(message: string, level: ConsoleEntry['level'] = 'info') {

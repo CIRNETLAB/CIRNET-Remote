@@ -70,10 +70,11 @@ def test_safe_topology_mismatch_and_guarded_decision_are_independent_contracts()
         validate('ExecutionDecision', {'schema_version': '1.0', 'decision': 'BLOCK_WRONG', 'reasons': []})
 
 
-def test_v1_target_capability_contract_has_two_instrument_channels_and_one_slot():
+def test_v1_target_capability_contract_exposes_one_slot_but_no_unimplemented_instruments():
     value = json.loads((ROOT / 'contracts/physical-lab/examples/v1-target-capabilities.json').read_text()) if (ROOT / 'contracts/physical-lab/examples/v1-target-capabilities.json').exists() else {}
     validate('StationCapabilities', value)
-    assert (value['oscilloscope_channels'], value['generator_channels'], value['physical_execution_slots']) == (2, 2, 1)
+    assert value['physical_execution_slots']==1
+    assert all(cap['channels']==0 for cap in value['instrument_capabilities'].values())
     assert value['physical_analog_routing'] is False
 
 

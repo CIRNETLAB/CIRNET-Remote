@@ -43,6 +43,14 @@ function valid(rule:Schema,value:unknown):boolean {
 
 export function parseLab<T>(name:string,value:unknown):T {
   if(!definitions[name]||!valid(definitions[name],value)) throw new ApiError(0,'INVALID_RESPONSE',`The API returned an invalid ${name}.`)
+  if(name==='StationCapabilities'&&isRecord(value)) parseLab('InstrumentCapabilities',value.instrument_capabilities)
+  if(name==='InstrumentCapabilities'&&isRecord(value)) parseLab('GeneratorCapability',value.generator)
+  if(name==='GeneratorCapability'&&isRecord(value)) {
+    if(value.frequency_min_hz!==undefined&&value.frequency_max_hz!==undefined&&(value.frequency_min_hz as number)>(value.frequency_max_hz as number)
+      ||value.offset_min_v!==undefined&&value.offset_max_v!==undefined&&(value.offset_min_v as number)>(value.offset_max_v as number)) integrity('Generator profile limits are inconsistent.')
+    const waveforms=value.supported_waveforms as string[]|undefined
+    if(waveforms&&new Set(waveforms).size!==waveforms.length) integrity('Generator supported waveforms must be unique.')
+  }
   if(name==='ExperimentRecord' && isRecord(value)) {
     const history=value.state_history as string[]
     if(history.at(-1)!==value.state) throw new ApiError(0,'INVALID_RESPONSE','Experiment state/history disagree.')

@@ -8,11 +8,12 @@ import { useCircuitStore } from '../../stores/circuit'
 import { useStationStore } from '../../stores/station'
 const instrument = useInstrumentStore()
 const experiment=useExperimentStore(),circuit=useCircuitStore(),station=useStationStore()
-const scopeAvailable=computed(()=>!!station.executionTarget?.capabilities?.instruments?.oscilloscope?.available)
+const scopeChannels=computed(()=>station.instrumentCapabilities?.oscilloscope.channels??0)
+const scopeAvailable=computed(()=>station.canExecute&&scopeChannels.value>0)
 async function captureKey(label:string) {
   if(!scopeAvailable.value) return
   if(label===SCOPE_KEYS.run_stop_button.label&&experiment.canStop) return experiment.stop()
-  if(label===SCOPE_KEYS.run_stop_button.label||label===SCOPE_KEYS.single_button.label) return experiment.run(circuit.graph,station.executionTarget,{signals:instrument.captureSignals.slice(0,2),duration_ns:instrument.captureDurationNs})
+  if(label===SCOPE_KEYS.run_stop_button.label||label===SCOPE_KEYS.single_button.label) return experiment.run(circuit.graph,station.executionTarget,{signals:instrument.captureSignals.slice(0,Math.min(2,scopeChannels.value)),duration_ns:instrument.captureDurationNs})
 }
 const horizontalKeys = [SCOPE_KEYS.auto_set_button, SCOPE_KEYS.run_stop_button, SCOPE_KEYS.single_button, SCOPE_KEYS.default_button]
 const triggerKeys = [SCOPE_KEYS.trigger_mode_button, SCOPE_KEYS.trigger_source_button, SCOPE_KEYS.trigger_slope_button, SCOPE_KEYS.trigger_menu_button]
@@ -45,12 +46,12 @@ const channels = [{ name: 'CH1', accent: 'var(--instrument-ch1)' }, { name: 'CH2
             <div class="scope-horizontal">
               <InstrumentDial :label="SCOPE_LABELS.timeDiv" :caption="SCOPE_LABELS.timeDiv" :value="instrument.oscilloscope.timeDiv" style="--dial-accent: var(--instrument-ch2)" />
               <InstrumentDial label="Horizontal Position" :caption="SCOPE_LABELS.position" value="—" compact />
-              <div class="scope-key-stack"><button v-for="(key, index) in horizontalKeys" :key="key.label" type="button" :class="{ 'scope-action-key': index < 2 }" :style="index < 2 ? { '--key-accent': key.color } : {}" @click="captureKey(key.label)">{{ key.label }}</button></div>
+              <div class="scope-key-stack"><button v-for="(key, index) in horizontalKeys" :key="key.label" type="button" :disabled="index===0||index===3" :class="{ 'scope-action-key': index < 2 }" :style="index < 2 ? { '--key-accent': key.color } : {}" @click="captureKey(key.label)">{{ key.label }}</button></div>
             </div>
           </section>
           <section class="scope-control-panel" aria-labelledby="scope-trigger-title">
             <h3 id="scope-trigger-title">{{ SCOPE_SECTIONS[1] }}</h3>
-            <div class="scope-trigger"><InstrumentDial label="Trigger Level" :caption="SCOPE_LABELS.level" value="—" /><div class="scope-trigger-keys"><button v-for="key in triggerKeys" :key="key.label" type="button">{{ key.label }}</button><span>{{ instrument.oscilloscope.trigger }} <b>·</b> Source —</span></div></div>
+            <div class="scope-trigger"><InstrumentDial label="Trigger Level" :caption="SCOPE_LABELS.level" value="—" /><div class="scope-trigger-keys"><button v-for="key in triggerKeys" :key="key.label" type="button" disabled>{{ key.label }}</button><span>{{ instrument.oscilloscope.trigger }} <b>·</b> Source —</span></div></div>
           </section>
           <section class="scope-control-panel scope-vertical" aria-labelledby="scope-vertical-title">
             <h3 id="scope-vertical-title">{{ SCOPE_SECTIONS[2] }}</h3>

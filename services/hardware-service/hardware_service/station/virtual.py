@@ -5,6 +5,7 @@ from threading import RLock
 from jsonschema import ValidationError
 from contracts.runtime_config import simulation_worker_count
 from contracts.validation import validate
+from contracts.instrument_validation import validate_plan_instruments
 from hardware_service.models import BreadboardCapability, StationCapabilities
 from hardware_service.station.base import HardwareStation, HardwareError, StationState as S, serialized
 from netcircuit_sim.engine import VirtualCompiler, SimulationError, run_plan
@@ -41,12 +42,12 @@ class VirtualHardwareStation(HardwareStation):
 
     def get_capabilities(self):
         return StationCapabilities(self.station_id, "simulation", True,
-            virtual_digital=True,logic_analyzer_channels=4,
+            virtual_digital=True,
             breadboards=(BreadboardCapability("BB0"), BreadboardCapability("BB1")),
             hardware_profile_version="virtual-1.0", firmware_version="virtual-events-1.0",
-            instruments={"logic_analyzer":{"available":True,"channels":4,"status":"digital-events"},
-                         "generator":{"available":False,"channels":0,"status":"NOT_IMPLEMENTED"},
-                         "oscilloscope":{"available":False,"channels":0,"status":"NOT_IMPLEMENTED"}})
+            instrument_capabilities={"logic_analyzer":{"channels":4,"runtime_reconfiguration_supported":False,"status":"digital-events"},
+                         "generator":{"channels":0,"runtime_reconfiguration_supported":False,"status":"NOT_IMPLEMENTED"},
+                         "oscilloscope":{"channels":0,"runtime_reconfiguration_supported":False,"status":"NOT_IMPLEMENTED"}})
 
     @serialized
     def validate_configuration(self, configuration):
@@ -88,6 +89,10 @@ class VirtualHardwareStation(HardwareStation):
             raise HardwareError("UNEXECUTABLE") from None
         if plan["station_id"] != self.station_id or not decision["decision"].startswith("RUN_"):
             raise HardwareError("UNEXECUTABLE")
+        try:
+            validate_plan_instruments(plan, self.get_capabilities().to_dict())
+        except (ValueError, ValidationError):
+            raise HardwareError("UNEXECUTABLE") from None
         aliases={b['endpoint_id']:b['node_id'] for b in plan['endpoint_bindings']}
         if any(port not in self._virtual_plan.directions for port in aliases.values()): raise HardwareError('UNEXECUTABLE')
         self._plan=plan
@@ -107,9 +112,7 @@ class VirtualHardwareStation(HardwareStation):
 
     @serialized
     def configure_clock(self, configuration):
-        if self._plan is None: raise HardwareError("INVALID_STATE")
-        self._plan["clock_config"]=validate("ClockConfiguration",configuration)
-        return self._reply()
+        return {'accepted':False,'code':'NOT_IMPLEMENTED','feature':'clock'}
 
     def configure_generator(self, configuration):
         return {"accepted":False,"code":"NOT_IMPLEMENTED","feature":"generator"}

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { stationsApi } from '../services/api/stations'
 import { errorMessage } from '../services/api/client'
 import { stationStatus, canStationExecute, type Station, type StationDescriptor, type HardwareMode, type LabStatus } from '../types/station'
+import type { InstrumentCapabilities } from '../types/lab'
 export type { HardwareMode, HardwareState } from '../types/station'
 
 export const useStationStore = defineStore('station', {
@@ -25,6 +26,7 @@ export const useStationStore = defineStore('station', {
     canExecute():boolean {
       return this.eventsConnected&&!this.error&&canStationExecute(this.executionTarget)
     },
+    instrumentCapabilities():InstrumentCapabilities|null {return this.executionTarget?.capabilities?.instrument_capabilities??null},
     selected: (state): Station | null => state.stations.find((station) => station.station_id === state.stationId) ?? null,
     status(): LabStatus {
       if (this.mode === 'simulation' && !this.stationId) return 'SIMULATION'

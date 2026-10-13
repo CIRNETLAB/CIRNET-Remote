@@ -13,7 +13,9 @@ class StationCapabilities:
     available: bool
     schema_version: str = "1.0"
     breadboards: tuple[BreadboardCapability, ...] = field(default_factory=tuple)
-    instruments: dict[str, Any] = field(default_factory=dict)
+    instrument_capabilities: dict[str, Any] = field(default_factory=lambda: {
+        name: {'channels': 0, 'runtime_reconfiguration_supported': False}
+        for name in ('logic_analyzer', 'oscilloscope', 'generator')})
     virtual_digital: bool = False
     virtual_analog: bool = False
     physical_digital: bool = False
@@ -23,9 +25,6 @@ class StationCapabilities:
     safety_gate_supported: bool = False
     guarded_run_supported: bool = False
     component_resolution_modes: tuple[str, ...] = ()
-    logic_analyzer_channels: int = 0
-    oscilloscope_channels: int = 0
-    generator_channels: int = 0
     routing_resources: tuple[dict, ...] = ()
     hardware_rpc_version: str = "2.0"
     fpga_protocol_version: str = "UNAVAILABLE"
