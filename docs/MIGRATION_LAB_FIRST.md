@@ -23,8 +23,8 @@ Authority: ARCHITECTURE.md, cleaned Lab-First v3.1; v3 proposal/audit are proven
 | R3 | DONE | 0f09dcf | Physical/virtual/RPC RED→GREEN; 27 hardware; 132 Python; 213 frontend; build PASS | Safety/freshness/ownership/driver ACK enforced |
 | R4 | DONE | 44578bf | 13 initial RED + restart/generator RED→GREEN; 86 targeted; 149 Python; 213 frontend; build PASS | SQLAlchemy persistence/FIFO/lease/session/events; packages install PASS |
 | R5 | DONE | 66ab8e8 | Engine/worker/capture/RPC RED→GREEN; 169 Python; 213 frontend; build PASS | Real REST→RPC→process AND capture/function PASS; analog unavailable |
-| R6 | DONE | resolve subject refactor(r6) in Git | Parsers/UI/review fixes RED→GREEN; 180 Python; 225 frontend; build PASS | Real browser capture; independent review 42 Python/12 frontend PASS |
-| R7 | PENDING | — | — | FPGA scaffold |
+| R6 | DONE | 24de394 | Parsers/UI/review fixes RED→GREEN; 180 Python; 225 frontend; build PASS | Real browser capture; independent review 42 Python/12 frontend PASS |
+| R7 | DONE | resolve subject refactor(r7) in Git | 7 FPGA PASS/1 Icarus skip; slang RTL/bench compile PASS; 184 Python/1 skip; 225 frontend; build PASS | Scaffold only; independent final review 49 PASS/1 skip |
 
 Phase SHAs are recorded in the next phase commit. Final phase uses its exact Git subject (self-SHA cannot be embedded in its own commit); final report records resolved HEAD without an extra implementation commit.
 
@@ -59,6 +59,18 @@ Reason: Explicit prompt requirement.
 Cost if wrong: Hardware bring-up awaits exact inputs.
 
 No merge/push to main; preserve user changes.
+
+Ruling: R7 control behavior is abstract; software protocol and binary board ABI are separate.
+Finding: Original top only blinked reset/clock; no schematic, transport IC, pins or measured limits exist.
+Decision: Guarded scan/prepare/route/power/arm/start FSM, protected-drive/clock permits, asynchronous fault/watchdog latch and fail-closed sequence errors. Transport-independent logical 1.0-scaffold envelope; register map 1.0-reserved; Serial/USB-SPI adapters remain unavailable; future instrument RTL asserts no capabilities/data/output/SDRAM requests.
+Reason: Approved R7 control-boundary scope, with no invented electrical design or internal student wiring.
+Cost if wrong: Actual decoder/driver, synchronization/reset release, synthesis/timing, protection and all pin/part/measurement inputs still required.
+
+Ruling: Compile locally with slang; Icarus behavior is explicitly unverified locally.
+Finding: Icarus/vvp absent from PATH and checked install locations; compiler installation through PyPI provides pyslang12.0.0 for parsing/type-checking/elaboration only.
+Decision: Compile both tops + testbench locally; keep one truthful Icarus skip. FPGA CI installs Icarus and runs syntax/behavior tests. Review identified a STATUS/scan_done pulse collision; process completion independently of STATUS, with testbench assertion.
+Reason: No claim of behavioral simulation or electrical/synthesis proof from static compilation.
+Cost if wrong: Run Icarus testbench and target Quartus checks in the intended environment; local pass covers compiler/contracts only.
 
 Ruling: R6 publishes one canonical response/capture contract and separates requested from observed signals.
 Finding: Wire results require nested validation; Pinia proxies cannot be structured-cloned; previous capture ports could leak into a new draft.

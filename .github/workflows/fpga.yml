@@ -1,9 +1,9 @@
 name: FPGA Scaffold
 on:
   push:
-    paths: ['fpga/**', 'contracts/fpga-protocol/**', '.github/workflows/fpga.yml']
+    paths: ['fpga/**', 'contracts/fpga-protocol/**', 'tests/fpga/**', 'services/hardware-service/hardware_service/fpga_transport.py', '.github/workflows/fpga.yml']
   pull_request:
-    paths: ['fpga/**', 'contracts/fpga-protocol/**', '.github/workflows/fpga.yml']
+    paths: ['fpga/**', 'contracts/fpga-protocol/**', 'tests/fpga/**', 'services/hardware-service/hardware_service/fpga_transport.py', '.github/workflows/fpga.yml']
 jobs:
   syntax:
     runs-on: ubuntu-latest
@@ -12,9 +12,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-      - run: pip install pytest
-      - run: pytest -q tests/fpga
+      - run: pip install pytest jsonschema pyslang
       - name: Install Icarus Verilog
         run: sudo apt-get update && sudo apt-get install -y iverilog
-      - name: Syntax check placeholder top
-        run: iverilog -tnull fpga/experiment-controller/rtl/top.v
+      - name: Syntax check both scaffold domains
+        run: iverilog -g2012 -tnull fpga/experiment-controller/rtl/top.v fpga/instrument/rtl/top.v
+      - name: Safety and unavailable-instrument behavior
+        run: pytest -q tests/fpga

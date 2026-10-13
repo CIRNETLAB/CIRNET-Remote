@@ -1,12 +1,12 @@
 ---
 project: net-Circuit-Remote
 current_phase: lab-first-r0-r7-migration
-status: r6-gates-passed
+status: r7-gates-passed
 last_updated: 2026-10-13
-next_task: r7-fpga-scaffold
+next_task: user-review-refactor-no-merge
 blocking_issue: none
 hardware_mode: simulation
-fpga_development_started: false
+fpga_development_started: true
 ---
 
 # Development Log
@@ -18,6 +18,10 @@ Execute the approved Lab-First R0–R7 migration on branch refactor. Current aut
 ## Lab-First R0–R6 — 2026-10-13
 
 Canonical v3.1 and Lab/Assignment 1.0 + Hardware RPC 2.0 now govern typed safety/execution boundaries, persisted single-process FIFO/leases and actual virtual event workers. Existing editor/geometry/history remains unchanged. R6 connects Run/Stop, assignment/capability selection, owner-scoped ordered events, independent verification and real digital capture; Scope/Generator/trigger remain unavailable where unimplemented. Independent review's eight substantiated lifecycle/capture issues were reproduced and fixed before the R6 gate. Full Python180/180, frontend225/225 and152-module production build pass; known Vite chunk warning and three dependency deprecations remain. Actual browser AND and changed-draft probe captures pass with empty warning/error logs. Evidence: verification/2026-10-13-lab-first-r6.md. R7 is next; no merge/push authorized.
+
+## Lab-First R7 — 2026-10-13
+
+R7 adds the abstract guarded controller, honest unavailable Serial/USB-SPI and instrument interfaces, logical FPGA1.0-scaffold contract and hardware-input requirements. Reset/fault/watchdog/invalid-sequence controls deassert routing/drive/clock; STATUS cannot swallow scan completion. Both tops and testbench compile/type-check/elaborate with pyslang12; local Icarus/vvp absent, behavioral simulation explicitly skipped and configured in FPGA CI. Full Python184 PASS/1 tool skip, frontend225 PASS, production build152 modules/936.75 kB JS PASS. Independent final review49 PASS/1 tool skip, no remaining actionable findings. Exact matrix/limitations: verification/2026-10-13-lab-first-final.md. Leave refactor worktree for user review; do not merge/push.
 
 ## Unified placement pose and sticky Gizmo — 2026-10-12
 

@@ -77,6 +77,8 @@ Scope 2CH / Generator 2CH are target capacities; unavailable ADC/DAC support sta
 
 EP4CE6E22C8N prototype has no SDRAM. Compile-safe boundaries: reset/safe-state, protocol/control, topology scan, protected drive, routing, experiment clock, fault interlock. Mini PC uses FpgaTransport: serial/USB-SPI and future USB3/Ethernet; protocol is transport-independent.
 
+R7 implements an abstract control FSM and unavailable transport/instrument interfaces only. Logical FPGA envelope 1.0-scaffold is not a physical binary ABI; runtime physical capabilities remain unavailable. Compiler checks do not prove electrical safety, RTL behavioral simulation, target synthesis or timing closure.
+
 Future EP4CE10E22C8N + external SDRAM: Logic Analyzer, Scope 2CH + ADC/AFE, Generator 2CH + DAC/output stage, shared SDRAM arbiter, trigger, timestamps and explicit CDC. Pinout, switching/protection schematic, part selections, timing and electrical values: TBD_BY_HARDWARE_DESIGN. Never fabricate hardware success or measurements.
 
 ## Execution discipline
