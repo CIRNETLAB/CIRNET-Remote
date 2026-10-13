@@ -18,6 +18,7 @@ const paths: Record<string, string> = {
   inspector: 'M4 4h16v16H4z M9 4v16 M12 8h5 M12 12h5 M12 16h3',
   close: 'M6 6l12 12 M18 6 6 18',
   plus: 'M12 5v14 M5 12h14', minus: 'M5 12h14',
+  home: 'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1v-9z',
   reset: 'M4 9V4h5 M4 4l5 5 M20 9V4h-5 M20 4l-5 5 M4 15v5h5 M4 20l5-5 M20 15v5h-5 M20 20l-5-5',
   'zoom-area': 'M8 3H3v5 M16 3h5v5 M3 16v5h5 M21 16v5h-5 M15 11a4 4 0 1 1-8 0 4 4 0 0 1 8 0 M14 14l4 4',
   play: 'M7 4l14 8-14 8z', stop: 'M5 5h14v14H5z', step: 'M5 4l12 8-12 8z M20 4v16',

@@ -1,4 +1,5 @@
-import { AmbientLight, Color, DirectionalLight, Group, Mesh, MOUSE, PerspectiveCamera, Plane, Raycaster, Scene, Vector2, Vector3 } from 'three'
+import { AmbientLight, Color, DirectionalLight, Group, Mesh, MOUSE, PerspectiveCamera, Plane, Quaternion, Raycaster, Scene, Vector2, Vector3 } from 'three'
+import { ORIENTATION_DIRECTIONS } from '../components/workbench/viewCubeMath'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { applyPose, buildComponent, disposeObject, portAnchor } from './ComponentModel'
 import { getDefinition } from '../data/editorCatalog'
@@ -41,13 +42,111 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
   let width = 1, height = 1, sized = false, frame: number | null = null, disposed = false, visible = false, suspended = false, pointerLocked = false
   let bufferWidth = 0, bufferHeight = 0
   let ghost: Group | null = null
+  let transition: {
+    startTime: number
+    duration: number
+    targetPos: Vector3
+    distance: number
+    startDir: Vector3
+    targetDir: Vector3
+    qDir: Quaternion
+  } | null = null
+
+  const cancelTransition = () => {
+    transition = null
+  }
+
+  const stepTransition = (timestamp?: number) => {
+    if (!transition) return
+    const now = typeof timestamp === 'number' && timestamp > 0 ? timestamp : (typeof performance !== 'undefined' ? performance.now() : Date.now())
+    const elapsed = now - transition.startTime
+    const t = Math.min(1, Math.max(0, elapsed / transition.duration))
+    const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+    const targetPt = controls?.target ?? viewTarget
+
+    if (t >= 1) {
+      camera.position.copy(transition.targetPos)
+      camera.lookAt(targetPt)
+      controls?.update()
+      transition = null
+      notifyZoom()
+    } else {
+      const q = new Quaternion().identity().slerp(transition.qDir, ease)
+      const curDir = transition.startDir.clone().applyQuaternion(q).normalize()
+      camera.position.copy(targetPt).addScaledVector(curDir, transition.distance)
+      camera.lookAt(targetPt)
+      controls?.update()
+      notifyZoom()
+      schedule()
+    }
+  }
+
+  const finishTransition = () => {
+    if (!transition) return
+    const targetPt = controls?.target ?? viewTarget
+    camera.position.copy(transition.targetPos)
+    camera.lookAt(targetPt)
+    controls?.update()
+    transition = null
+    notifyZoom()
+    schedule()
+  }
+
+  const setViewOrientation = (direction: string | Vector3, animate = true, duration = 200) => {
+    if (disposed) return
+    const targetDir = typeof direction === 'string'
+      ? ORIENTATION_DIRECTIONS[direction.toUpperCase()]?.clone()
+      : direction.clone()
+    if (!targetDir || !Number.isFinite(targetDir.lengthSq()) || targetDir.lengthSq() < 1e-6) return
+    targetDir.normalize()
+
+    const targetPt = controls?.target ?? viewTarget
+    const currentOffset = camera.position.clone().sub(targetPt)
+    const distance = currentOffset.length() > 1e-4 && Number.isFinite(currentOffset.length()) ? currentOffset.length() : defaultDistance
+    const startDir = currentOffset.length() > 1e-4 ? currentOffset.normalize() : new Vector3(0, 1, 0.0001).normalize()
+    const targetPos = targetPt.clone().addScaledVector(targetDir, distance)
+
+    cancelTransition()
+
+    if (!animate || duration <= 0) {
+      camera.position.copy(targetPos)
+      camera.lookAt(targetPt)
+      controls?.update()
+      notifyZoom()
+      schedule()
+      return
+    }
+
+    const qDir = new Quaternion()
+    const dot = Math.max(-1, Math.min(1, startDir.dot(targetDir)))
+    if (dot < -0.9999) {
+      const axis = Math.abs(startDir.y) < 0.9 ? new Vector3(0, 1, 0).cross(startDir).normalize() : new Vector3(1, 0, 0).cross(startDir).normalize()
+      qDir.setFromAxisAngle(axis, Math.PI)
+    } else {
+      qDir.setFromUnitVectors(startDir, targetDir)
+    }
+
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now()
+    transition = {
+      startTime: now,
+      duration,
+      targetPos,
+      distance,
+      startDir,
+      targetDir,
+      qDir,
+    }
+    schedule()
+  }
+
   const schedule = () => {
     if (disposed || !visible || suspended || frame !== null) return
-    frame = requestFrame(() => {
+    frame = requestFrame((timestamp) => {
       // Layout obstacles join this draw, rather than scheduling a second draw after it.
       if (!disposed && visible && !suspended) onBeforeRender?.()
       frame = null
       if (!disposed && visible && !suspended) {
+        if (transition) stepTransition(timestamp)
         // setSize clears the drawing buffer. Refill it in this same frame.
         if (bufferWidth !== width || bufferHeight !== height) { renderer.setSize(width, height, false); bufferWidth = width; bufferHeight = height }
         const target = controls?.target ?? viewTarget
@@ -77,7 +176,8 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
   if (controls) {
     controls.mouseButtons = { LEFT: null, MIDDLE: MOUSE.PAN, RIGHT: MOUSE.ROTATE }
     controls.touches = { ONE: null, TWO: null }; controls.screenSpacePanning = false
-    zoomLimits(); controls.maxPolarAngle = Math.PI / 2 - 0.05
+    zoomLimits(); controls.minPolarAngle = 0.001; controls.maxPolarAngle = Math.PI - 0.001
+    controls.addEventListener('start', cancelTransition)
     controls.addEventListener('change', viewChanged); controls.saveState()
   }
   const validPointer = (x: number, y: number) => !disposed && Number.isFinite(x) && Number.isFinite(y)
@@ -90,7 +190,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     // Nearly horizontal rays otherwise intersect arbitrarily far away and jump the camera.
     return Number.isFinite(distance) && distance >= camera.near && distance <= camera.far ? hit : null
   }
-  const translateView = (delta: Vector3) => { camera.position.add(delta); (controls?.target ?? viewTarget).add(delta); camera.updateMatrixWorld(); controls?.update(); schedule() }
+  const translateView = (delta: Vector3) => { cancelTransition(); camera.position.add(delta); (controls?.target ?? viewTarget).add(delta); camera.updateMatrixWorld(); controls?.update(); schedule() }
   let activeOutline: { id: string; group: Group } | null = null
   const removeActiveOutline = () => {
     if (activeOutline) {
@@ -215,12 +315,14 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     zoomPercent,
     setZoom(percent: number) {
       if (disposed || !Number.isFinite(percent)) return
+      cancelTransition()
       const origin = target(), direction = camera.position.clone().sub(origin).normalize()
       camera.position.copy(origin).addScaledVector(direction, zoomReferenceDistance * 100 / Math.min(200, Math.max(50, percent)))
       camera.zoom = 1; camera.updateProjectionMatrix(); camera.updateMatrixWorld(); controls?.update(); notifyZoom(); schedule()
     },
     zoomToArea(x1: number, y1: number, x2: number, y2: number) {
       if (disposed || suspended || !visible || ![x1, y1, x2, y2].every(Number.isFinite)) return false
+      cancelTransition()
       const left = Math.max(0, Math.min(width, Math.min(x1, x2))), right = Math.max(0, Math.min(width, Math.max(x1, x2)))
       const top = Math.max(0, Math.min(height, Math.min(y1, y2))), bottom = Math.max(0, Math.min(height, Math.max(y1, y2)))
       if (right - left < 12 || bottom - top < 12) return false
@@ -259,6 +361,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     },
     fitCircuit() {
       if (disposed || !models.size) return false
+      cancelTransition()
       const bounds = new Box3().setFromObject(content); bounds.union(new Box3().setFromObject(wires))
       const sphere = bounds.getBoundingSphere(new Sphere()), target = controls?.target ?? viewTarget
       const direction = camera.position.clone().sub(target).normalize()
@@ -270,7 +373,26 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       zoomReferenceDistance = distance; zoomLimits(); controls?.update(); notifyZoom()
       schedule(); return true
     },
-    orbit(degrees: number) { if (disposed || !Number.isFinite(degrees)) return; const target = controls?.target ?? viewTarget; camera.position.sub(target).applyAxisAngle(new Vector3(0, 1, 0), (degrees % 360) * Math.PI / 180).add(target); camera.lookAt(target); controls?.update(); schedule() },
+    orbit(degrees: number, pitch = 0) {
+      if (disposed || !Number.isFinite(degrees) || !Number.isFinite(pitch)) return
+      cancelTransition()
+      const target = controls?.target ?? viewTarget
+      const offset = camera.position.clone().sub(target)
+      const radius = offset.length()
+      if (radius < 1e-4) return
+      let theta = Math.atan2(offset.x, offset.z)
+      let phi = Math.acos(Math.min(1, Math.max(-1, offset.y / radius)))
+      theta += (degrees % 360) * Math.PI / 180
+      phi += (pitch % 360) * Math.PI / 180
+      phi = Math.max(0.001, Math.min(Math.PI - 0.001, phi))
+      offset.x = radius * Math.sin(phi) * Math.sin(theta)
+      offset.y = radius * Math.cos(phi)
+      offset.z = radius * Math.sin(phi) * Math.cos(theta)
+      camera.position.copy(target).add(offset)
+      camera.lookAt(target)
+      controls?.update()
+      schedule()
+    },
     pan(horizontal: number, forward: number) {
       if (disposed || !Number.isFinite(horizontal) || !Number.isFinite(forward)) return
       camera.updateMatrixWorld()
@@ -278,8 +400,39 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       const ahead = new Vector3().crossVectors(new Vector3(0, 1, 0), right)
       translateView(right.multiplyScalar(horizontal).add(ahead.multiplyScalar(-forward)))
     },
-    resetView() { if (disposed) return; zoomReferenceDistance = defaultDistance; zoomLimits(); viewTarget.set(0, 0, 0); camera.position.set(0, 11, 10); controls?.target.set(0, 0, 0); camera.lookAt(0, 0, 0); camera.zoom = 1; camera.far = 150; camera.updateProjectionMatrix(); camera.updateMatrixWorld(); controls?.update(); notifyZoom(); schedule() },
+    resetView() {
+      if (disposed) return
+      cancelTransition()
+      zoomReferenceDistance = defaultDistance
+      zoomLimits()
+      viewTarget.set(0, 0, 0)
+      camera.position.set(0, 11, 10)
+      controls?.target.set(0, 0, 0)
+      camera.lookAt(0, 0, 0)
+      camera.zoom = 1
+      camera.far = 150
+      camera.updateProjectionMatrix()
+      camera.updateMatrixWorld()
+      controls?.update()
+      notifyZoom()
+      schedule()
+    },
+    cameraQuaternion(): [number, number, number, number] {
+      return [camera.quaternion.x, camera.quaternion.y, camera.quaternion.z, camera.quaternion.w]
+    },
+    cameraDirection(): Vector3 {
+      return camera.position.clone().sub(controls?.target ?? viewTarget).normalize()
+    },
+    target(): Vector3 {
+      return (controls?.target ?? viewTarget).clone()
+    },
+    isTransitioning(): boolean {
+      return transition !== null
+    },
+    cancelTransition,
+    finishTransition,
+    setViewOrientation,
     suspend(value: boolean) { suspended = value; if (value && frame !== null) { cancelFrame(frame); frame = null }; updateControlsEnabled(); if (!value) schedule() },
-    dispose() { if (disposed) return; disposed = true; gizmo.update(undefined, [], camera, width, height); if (frame !== null) cancelFrame(frame); frame = null; controls?.removeEventListener('change', viewChanged); controls?.dispose(); removeActiveOutline(); wireLayer.dispose(); disposeObject(scene); models.clear(); modules.clear(); ghost = null; highlightedId = null; gizmoObstacles = []; scene.clear(); renderer.dispose() },
+    dispose() { if (disposed) return; disposed = true; cancelTransition(); gizmo.update(undefined, [], camera, width, height); if (frame !== null) cancelFrame(frame); frame = null; controls?.removeEventListener('change', viewChanged); controls?.removeEventListener('start', cancelTransition); controls?.dispose(); removeActiveOutline(); wireLayer.dispose(); disposeObject(scene); models.clear(); modules.clear(); ghost = null; highlightedId = null; gizmoObstacles = []; scene.clear(); renderer.dispose() },
   }
 }

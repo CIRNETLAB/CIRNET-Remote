@@ -11,6 +11,7 @@ from contracts.runtime_config import simulation_worker_count
 from contracts.instrument_validation import validate_generator
 from app.services.circuit_validator import validate_circuit_graph
 from app.services.execution_policy import ExecutionPolicy
+from app.services.assessment import AssessmentService
 from app.services.verification import SafetyVerificationService, TopologyVerificationService, FunctionalVerificationService, result
 from app.services.lab_compiler import LabExecutionCompiler
 from app.services.topology_resolver import TopologyResolver
@@ -34,6 +35,7 @@ class ExperimentManager:
         self.submit=submit or self.executor.submit
         self.closed=False
         self.policy=ExecutionPolicy(); self.compiler=LabExecutionCompiler()
+        self.assessment=AssessmentService()
         self.safety=SafetyVerificationService(); self.topology=TopologyVerificationService()
         self.resolver=TopologyResolver()
         self.functional=FunctionalVerificationService(); self.captures=CaptureService(store=capture_store)
@@ -79,6 +81,7 @@ class ExperimentManager:
         # Recovery can emit before legacy samples have been externalized.
         value['capture']=None if capture and 'samples' in capture else deepcopy(capture)
         value.setdefault('revision',0)
+        value.setdefault('assessment',None)
         return value
 
     def get(self,eid,owner):
@@ -116,7 +119,7 @@ class ExperimentManager:
            'mode':caps['mode'],'state':'CREATED','state_history':['CREATED'],'execution_decision':None,
            'revision':0,
            'safety_verification':None,'topology_verification':None,'topology_resolution':None,'functional_verification':result('NOT_EVALUATED'),
-           'capture':None,'error_code':None,'queue_position':None,'lease_expires_at':None,
+           'capture':None,'assessment':None,'error_code':None,'queue_position':None,'lease_expires_at':None,
            '_circuit_graph':deepcopy(graph),'_configuration':{k:deepcopy(v) for k,v in payload.items() if k not in {'station_id','assignment_id','circuit_graph'}},
            '_capabilities':caps}
         # Validate requested clock/vector/capture fields at admission, before storing.
@@ -237,7 +240,8 @@ class ExperimentManager:
             self._transition(eid,'FUNCTIONAL_VERIFY',capture=capture)
             data=self.captures.load(capture) if capture['available'] else {'available':False,'samples':[]}
             functional=self.functional.verify(assignment,data,e['_configuration'].get('test_vectors',[]))
-            self._transition(eid,'COMPLETE',functional_verification=functional)
+            grade=validate('AssessmentResult',self.assessment.evaluate(assignment,topology,functional))
+            self._transition(eid,'COMPLETE',functional_verification=functional,assessment=grade)
         except Cancelled:
             self._transition(eid,'COMPLETE')
         except Exception as error:

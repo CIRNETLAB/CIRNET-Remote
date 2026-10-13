@@ -15,6 +15,7 @@ const host = ref<HTMLElement>()
 const canvas = ref<HTMLCanvasElement>()
 const graphicsError = ref('')
 const axes = ref<OrientationAxis[]>([])
+const cameraQuaternion = ref<[number, number, number, number]>([0, 0, 0, 1])
 let manager: ReturnType<typeof createSceneManager> | undefined
 let observer: ReturnType<typeof observeElementSize> | undefined
 let drawerObserver: MutationObserver | undefined
@@ -48,6 +49,10 @@ function rendered() {
   if (manager) {
     const next = manager.orientationAxes()
     if (next.some((axis, index) => axis.label !== axes.value[index]?.label || axis.x !== axes.value[index]?.x || axis.y !== axes.value[index]?.y || axis.depth !== axes.value[index]?.depth)) axes.value = next
+    const q = manager.cameraQuaternion()
+    if (q[0] !== cameraQuaternion.value[0] || q[1] !== cameraQuaternion.value[1] || q[2] !== cameraQuaternion.value[2] || q[3] !== cameraQuaternion.value[3]) {
+      cameraQuaternion.value = q
+    }
   }
 }
 function size(width: number, height: number) { obstaclesDirty = true; editor.cancel(); manager?.resize(width, height); ui.setViewport(width, height) }
@@ -89,6 +94,13 @@ onUnmounted(() => { observer?.disconnect(); drawerObserver?.disconnect(); manage
     <p v-if="workspace.editError" class="editor-error" role="alert">{{ workspace.editError }}<button @click="workspace.editError = ''">Dismiss</button></p>
     <p v-if="graphicsError" class="graphics-notice" role="status">{{ graphicsError }}</p>
     <p v-if="workspace.placementType" class="placement-notice">Preview follows pointer · X/Z/XZ/Rotate Y to adjust · Click to place · Right click or Esc to cancel</p>
-    <WorkspaceNavigator :axes="axes" @orbit="editor.cancel(); manager?.orbit($event)" @pan="(horizontal, forward) => { editor.cancel(); manager?.pan(horizontal, forward) }" />
+    <WorkspaceNavigator
+      :axes="axes"
+      :camera-quaternion="cameraQuaternion"
+      @orbit="(degrees, pitch) => { editor.cancel(); manager?.orbit(degrees, pitch) }"
+      @pan="(horizontal, forward) => { editor.cancel(); manager?.pan(horizontal, forward) }"
+      @set-view="(direction) => { editor.cancel(); manager?.setViewOrientation(direction) }"
+      @reset-view="() => { editor.cancel(); manager?.resetView() }"
+    />
   </div>
 </template>

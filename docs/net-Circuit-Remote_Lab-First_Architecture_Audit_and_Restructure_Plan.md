@@ -6,7 +6,6 @@
 
 Audited inputs:
 
-- `net-Circuit-Remote(1).zip` — latest project source provided for this review.
 - `net-Circuit-Remote_Architecture_v3_Lab-First.md` — approved Lab-First architecture baseline.
 
 This audit distinguishes:

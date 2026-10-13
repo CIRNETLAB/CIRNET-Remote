@@ -1515,6 +1515,16 @@
               "type": "null"
             }
           ]
+        },
+        "assessment": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AssessmentResult"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -2217,6 +2227,52 @@
         "logic_analyzer",
         "oscilloscope",
         "generator"
+      ],
+      "additionalProperties": false
+    },
+    "AssessmentResult": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "policy": {
+          "enum": [
+            "STRICT_TOPOLOGY",
+            "FUNCTIONAL_ONLY",
+            "TOPOLOGY_AND_FUNCTION"
+          ]
+        },
+        "status": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "PARTIAL",
+            "NO_RESPONSE",
+            "NOT_EVALUATED"
+          ]
+        },
+        "topology_evaluated": {
+          "type": "boolean"
+        },
+        "function_evaluated": {
+          "type": "boolean"
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "policy",
+        "status",
+        "topology_evaluated",
+        "function_evaluated",
+        "issues"
       ],
       "additionalProperties": false
     }

@@ -1,6 +1,7 @@
 from contracts.validation import validate
 from bisect import bisect_right
 from collections import defaultdict, Counter
+from copy import deepcopy
 from app.services.topology_resolver import TopologyResolver, ElectricalNets, known
 
 def result(status,issues=None):
@@ -77,24 +78,35 @@ class FunctionalVerificationService:
     def verify(self,assignment,capture,vectors=None):
         samples=capture.get("samples",[]) if capture and capture.get("available") else []
         behavior=(assignment or {}).get('expected_behavior',{})
-        expected=list(behavior.get("expected_signals",[]))
-        missing=0
-        if not expected and behavior.get('truth_table'):
-            vectors=sorted(vectors or [],key=lambda v:v['time_ns'])
-            duration=(capture or {}).get('duration_ns',0)
-            for row in behavior['truth_table']:
-                matches=[i for i,v in enumerate(vectors) if all(v['inputs'].get(s)==level for s,level in row['inputs'].items())]
-                if not matches:
-                    missing+=len(row['outputs']); continue
-                index=matches[0]
-                timestamp=vectors[index+1]['time_ns']-1 if index+1<len(vectors) else duration
-                if timestamp<vectors[index]['time_ns']:
-                    missing+=len(row['outputs']); continue
-                expected.extend({'signal':s,'time_ns':timestamp,'value':value} for s,value in row['outputs'].items())
-        if not expected:
-            return result("NOT_EVALUATED",["No expected signal behavior supplied"])
-        if not samples: return result("NO_RESPONSE")
-        duration=capture.get('duration_ns',max(s['time_ns'] for s in samples))
+        checkpoints=[(deepcopy(signal),None) for signal in behavior.get('expected_signals',[])]
+        rows=deepcopy(behavior.get('truth_table',[]))
+        duration=(capture or {}).get('duration_ns',max((s['time_ns'] for s in samples),default=0))
+        # Vectors update input state; omitted inputs retain their previous value.
+        # Only an exercised case receives an observation/checkpoint timestamp.
+        episodes=[]; state={}
+        for vector in sorted(vectors or [],key=lambda v:v['time_ns']):
+            state.update(vector['inputs'])
+            episode=(vector['time_ns'],dict(state))
+            if episodes and episodes[-1][0]==episode[0]: episodes[-1]=episode
+            else: episodes.append(episode)
+        cases=[]; unexercised=[]
+        for case_index,row in enumerate(rows):
+            index=next((i for i,(_,inputs) in enumerate(episodes)
+                        if all(inputs.get(signal)==value for signal,value in row['inputs'].items())),None)
+            if index is None:
+                unexercised.append(case_index); continue
+            start,inputs=episodes[index]
+            timestamp=min(episodes[index+1][0]-1,duration) if index+1<len(episodes) else duration
+            if timestamp<start:
+                unexercised.append(case_index); continue
+            cases.append({'case_index':case_index,'inputs':{signal:inputs[signal] for signal in row['inputs']},
+                          'outputs':{},'time_ns':timestamp,'status':'NO_RESPONSE'})
+            checkpoints.extend(({'signal':signal,'time_ns':timestamp,'value':value},case_index)
+                               for signal,value in row['outputs'].items())
+        details={'expected_signals':[signal for signal,_ in checkpoints],
+                 'observed_signals':[],'mismatched_signals':[]}
+        if rows:
+            details.update(expected_truth_table=rows,observed_truth_table=cases)
         grouped=defaultdict(list)
         for sample in samples: grouped[sample['signal']].append((sample['time_ns'],sample['value']))
         for values in grouped.values(): values.sort(key=lambda pair:pair[0])
@@ -103,6 +115,32 @@ class FunctionalVerificationService:
             if timestamp>duration: return None
             index=bisect_right(times.get(signal,[]),timestamp)-1
             return grouped[signal][index][1] if index>=0 else None
-        matched=sum(observed_at(s['signal'],s['time_ns'])==s['value'] for s in expected)
-        if matched==len(expected) and not missing: return result("PASS")
-        return result("PARTIAL" if matched else "FAIL",["Observed signals differ from expected behavior"])
+        matched=0; observed_count=0; by_case={case['case_index']:case for case in cases}
+        for signal,case_index in checkpoints:
+            observed=observed_at(signal['signal'],signal['time_ns'])
+            if observed is not None:
+                observed_count+=1
+                details['observed_signals'].append({**signal,'value':observed})
+            if observed==signal['value']: matched+=1
+            else:
+                mismatch={'signal':signal['signal'],'time_ns':signal['time_ns'],
+                          'expected':signal['value'],'observed':observed}
+                if case_index is not None: mismatch['case_index']=case_index
+                details['mismatched_signals'].append(mismatch)
+            if case_index is not None: by_case[case_index]['outputs'][signal['signal']]=observed
+        for case in cases:
+            expected=rows[case['case_index']]['outputs']; outputs=case['outputs']
+            if any(outputs[signal] is not None and outputs[signal]!=value for signal,value in expected.items()):
+                case['status']='FAIL'
+            elif any(outputs[signal] is None for signal in expected): case['status']='NO_RESPONSE'
+            else: case['status']='PASS'
+        issues=[]
+        if unexercised: issues.append('Truth table cases not exercised within the capture window: '+', '.join(map(str,unexercised)))
+        if not checkpoints:
+            status='NOT_EVALUATED'; issues.append('No expected signal checkpoints could be evaluated')
+        elif not observed_count: status='NO_RESPONSE'; issues.append('No requested signal response was captured')
+        elif matched==len(checkpoints) and not unexercised: status='PASS'
+        else:
+            status='PARTIAL' if matched else 'FAIL'
+            if details['mismatched_signals']: issues.append('Observed signals differ from expected behavior')
+        return validate('FunctionalVerificationResult',{**result(status,issues),**details})

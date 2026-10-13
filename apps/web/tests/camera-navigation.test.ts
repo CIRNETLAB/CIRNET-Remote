@@ -1,7 +1,8 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { Vector3 } from 'three'
+import { Quaternion, Vector3 } from 'three'
 import { createSceneManager } from '../src/three/SceneManager'
+import { buildCubeGeometry, projectCube, ORIENTATION_DIRECTIONS } from '../src/components/workbench/viewCubeMath'
 
 function setup(onZoomChange?: (percent: number) => void) {
   const canvas = Object.assign(new EventTarget(), {
@@ -291,3 +292,210 @@ test('area framing contains the nearer rectangle edges at default and near-horiz
     } finally { manager.dispose() }
   }
 })
+
+test('CAD ViewCube face views orient camera to all 6 orthogonal directions', () => {
+  const { manager } = setup()
+  try {
+    const faces = [
+      { name: 'TOP', expected: new Vector3(0, 1, 0) },
+      { name: 'BOTTOM', expected: new Vector3(0, -1, 0) },
+      { name: 'FRONT', expected: new Vector3(0, 0, 1) },
+      { name: 'BACK', expected: new Vector3(0, 0, -1) },
+      { name: 'LEFT', expected: new Vector3(-1, 0, 0) },
+      { name: 'RIGHT', expected: new Vector3(1, 0, 0) },
+    ]
+    for (const { name, expected } of faces) {
+      manager.setViewOrientation(name, false)
+      const dir = manager.cameraDirection()
+      assert.ok(dir.distanceTo(expected) < 0.01, `Face ${name} direction mismatch: ${dir.toArray()}`)
+    }
+  } finally { manager.dispose() }
+})
+
+test('CAD ViewCube edge views orient camera to all 12 edge bisectors', () => {
+  const { manager } = setup()
+  try {
+    const edges = [
+      'TOP-FRONT', 'TOP-BACK', 'TOP-LEFT', 'TOP-RIGHT',
+      'BOTTOM-FRONT', 'BOTTOM-BACK', 'BOTTOM-LEFT', 'BOTTOM-RIGHT',
+      'FRONT-LEFT', 'FRONT-RIGHT', 'BACK-LEFT', 'BACK-RIGHT',
+    ]
+    for (const edge of edges) {
+      manager.setViewOrientation(edge, false)
+      const dir = manager.cameraDirection()
+      const expected = ORIENTATION_DIRECTIONS[edge]!
+      assert.ok(dir.distanceTo(expected) < 0.01, `Edge ${edge} direction mismatch: ${dir.toArray()}`)
+    }
+  } finally { manager.dispose() }
+})
+
+test('CAD ViewCube corner views orient camera to all 8 corner trisectors', () => {
+  const { manager } = setup()
+  try {
+    const corners = [
+      'TOP-FRONT-LEFT', 'TOP-FRONT-RIGHT', 'TOP-BACK-LEFT', 'TOP-BACK-RIGHT',
+      'BOTTOM-FRONT-LEFT', 'BOTTOM-FRONT-RIGHT', 'BOTTOM-BACK-LEFT', 'BOTTOM-BACK-RIGHT',
+    ]
+    for (const corner of corners) {
+      manager.setViewOrientation(corner, false)
+      const dir = manager.cameraDirection()
+      const expected = ORIENTATION_DIRECTIONS[corner]!
+      assert.ok(dir.distanceTo(expected) < 0.01, `Corner ${corner} direction mismatch: ${dir.toArray()}`)
+    }
+  } finally { manager.dispose() }
+})
+
+test('Home view restores default camera position and target', () => {
+  const { manager } = setup()
+  try {
+    manager.pan(4, -2)
+    manager.orbit(50, 25)
+    manager.setZoom(160)
+    assert.ok(manager.camera.position.distanceTo(new Vector3(0, 11, 10)) > 1)
+    manager.resetView()
+    assert.ok(manager.camera.position.distanceTo(new Vector3(0, 11, 10)) < 0.001)
+    assert.ok(Math.abs(manager.zoomPercent() - 100) < 0.01)
+  } finally { manager.dispose() }
+})
+
+test('orbit supports combined yaw and pitch without drifting target or distance', () => {
+  const { manager } = setup()
+  try {
+    manager.pan(2, 3)
+    const target = manager.target()
+    const distanceBefore = manager.camera.position.distanceTo(target)
+    manager.orbit(35, 20)
+    const distanceAfter = manager.camera.position.distanceTo(manager.target())
+    assert.ok(Math.abs(distanceBefore - distanceAfter) < 0.01, 'Distance to target must be preserved during yaw+pitch orbit')
+    assert.ok(manager.target().distanceTo(target) < 1e-4, 'Target position must be preserved during yaw+pitch orbit')
+    // Extreme pitch bounds clamp safely without NaN
+    manager.orbit(0, 100)
+    assert.ok(manager.camera.position.toArray().every(Number.isFinite))
+    manager.orbit(0, -200)
+    assert.ok(manager.camera.position.toArray().every(Number.isFinite))
+  } finally { manager.dispose() }
+})
+
+test('ViewCube synchronizes orientation when camera orbits via right-drag', () => {
+  const { manager, canvas } = setup()
+  const pointer = (type: string, x: number, y: number) => canvas.dispatchEvent(Object.assign(new Event(type), { button: 2, pointerId: 1, pointerType: 'mouse', clientX: x, clientY: y }))
+  try {
+    const qBefore = manager.cameraQuaternion()
+    pointer('pointerdown', 500, 350)
+    pointer('pointermove', 580, 420)
+    pointer('pointerup', 580, 420)
+    const qAfter = manager.cameraQuaternion()
+    assert.notDeepEqual(qBefore, qAfter, 'Camera quaternion must update when orbiting via right-drag')
+
+    // ViewCube projection updates with the new camera orientation
+    const regions = buildCubeGeometry(24, 6)
+    const proj = projectCube(regions, new Quaternion(...qAfter), 68, 68)
+    assert.ok(proj.length > 0, 'Visible polygons projected from updated quaternion')
+  } finally { manager.dispose() }
+})
+
+test('face, edge and corner orientation changes preserve OrbitControls target and distance', () => {
+  const { manager } = setup()
+  try {
+    manager.pan(3, -1)
+    manager.setZoom(140)
+    const target = manager.target()
+    const initialDistance = manager.camera.position.distanceTo(target)
+    const testViews = ['TOP', 'FRONT-RIGHT', 'BOTTOM-BACK-LEFT', 'LEFT', 'TOP-BACK', 'FRONT']
+
+    for (const view of testViews) {
+      manager.setViewOrientation(view, false)
+      assert.ok(manager.target().distanceTo(target) < 1e-4, `Target preserved for ${view}`)
+      const currentDistance = manager.camera.position.distanceTo(manager.target())
+      assert.ok(Math.abs(currentDistance - initialDistance) < 0.01, `Distance preserved for ${view}`)
+    }
+  } finally { manager.dispose() }
+})
+
+test('ViewCube navigation never mutates CircuitGraph, models or history snapshot', () => {
+  const { manager } = setup()
+  try {
+    const graph = {
+      schema_version: '1.0' as const,
+      circuit_id: 'cad-cube',
+      modules: [
+        { id: 'CLK', type: 'CLOCK', position: { x: 1, y: 0, z: -2 } },
+        { id: 'LED', type: 'LED', position: { x: 5, y: 0, z: 2 } },
+      ],
+      connections: [{ source: 'CLK.OUT', destination: 'LED.IN' }],
+    }
+    manager.syncGraph(graph)
+    const snapshot = JSON.stringify(graph)
+    const poses = [...manager.models.values()].map((m) => m.matrixWorld.clone())
+
+    // Perform diverse ViewCube navigation actions
+    manager.setViewOrientation('TOP', false)
+    manager.setViewOrientation('FRONT-LEFT', false)
+    manager.setViewOrientation('BOTTOM-FRONT-RIGHT', false)
+    manager.orbit(45, -15)
+    manager.resetView()
+
+    assert.equal(JSON.stringify(graph), snapshot, 'CircuitGraph must never be mutated by navigation')
+    assert.ok([...manager.models.values()].every((m, idx) => m.matrixWorld.equals(poses[idx])), 'Component matrices must remain unchanged')
+  } finally { manager.dispose() }
+})
+
+test('rapid view switching cancels in-flight transition and converges to the latest target', () => {
+  let id = 0
+  const frames = new Map<number, FrameRequestCallback>()
+  const manager = createSceneManager({
+    renderer: { setSize() {}, render() {}, dispose() {} },
+    requestFrame(cb) { frames.set(++id, cb); return id },
+    cancelFrame(f) { frames.delete(f) },
+  })
+  try {
+    manager.resize(1000, 700)
+    // Start rapid switching
+    manager.setViewOrientation('TOP', true, 200)
+    assert.equal(manager.isTransitioning(), true)
+    manager.setViewOrientation('LEFT', true, 200)
+    assert.equal(manager.isTransitioning(), true)
+    manager.setViewOrientation('RIGHT', true, 200)
+    assert.equal(manager.isTransitioning(), true)
+
+    // Complete transition
+    manager.finishTransition()
+    assert.equal(manager.isTransitioning(), false)
+    const dir = manager.cameraDirection()
+    assert.ok(dir.x > 0.99, 'Camera direction must match the latest target (RIGHT)')
+  } finally { manager.dispose() }
+})
+
+test('manual camera interaction immediately cancels any active transition', () => {
+  let id = 0
+  const frames = new Map<number, FrameRequestCallback>()
+  const manager = createSceneManager({
+    renderer: { setSize() {}, render() {}, dispose() {} },
+    requestFrame(cb) { frames.set(++id, cb); return id },
+    cancelFrame(f) { frames.delete(f) },
+  })
+  try {
+    manager.resize(1000, 700)
+    manager.setViewOrientation('BACK', true, 200)
+    assert.equal(manager.isTransitioning(), true)
+
+    // Manual orbit cancels transition
+    manager.orbit(10, 0)
+    assert.equal(manager.isTransitioning(), false)
+  } finally { manager.dispose() }
+})
+
+test('orientation navigation remains stable across viewport resize', () => {
+  const { manager } = setup()
+  try {
+    const sizes = [[1920, 1080], [1000, 700], [480, 600], [320, 150]]
+    for (const [w, h] of sizes) {
+      manager.resize(w, h)
+      manager.setViewOrientation('TOP-FRONT', false)
+      const dir = manager.cameraDirection()
+      assert.ok(dir.distanceTo(ORIENTATION_DIRECTIONS['TOP-FRONT']!) < 0.01)
+      assert.ok(manager.camera.projectionMatrix.elements.every(Number.isFinite))
+    }
+  } finally { manager.dispose() }
+})
+
