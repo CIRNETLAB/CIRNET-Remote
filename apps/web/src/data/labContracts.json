@@ -1500,7 +1500,7 @@
         "capture": {
           "anyOf": [
             {
-              "$ref": "#/$defs/CaptureResult"
+              "$ref": "#/$defs/CaptureMetadata"
             },
             {
               "type": "null"
@@ -2053,6 +2053,110 @@
         "expected",
         "observed",
         "status"
+      ],
+      "additionalProperties": false
+    },
+    "CaptureMetadata": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "capture_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "enum": [
+            "simulation",
+            "hardware"
+          ]
+        },
+        "available": {
+          "type": "boolean"
+        },
+        "duration_ns": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sample_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "instrument": {
+          "enum": [
+            "logic_analyzer",
+            "oscilloscope"
+          ]
+        },
+        "encoding": {
+          "enum": [
+            "digital_events",
+            "INT16",
+            "UINT16",
+            "FLOAT32"
+          ]
+        },
+        "channel_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4096
+        },
+        "payload_ref": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "payload_byte_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "timestamp_ns": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "sample_rate_hz": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "signals": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "maxItems": 4096
+        }
+      },
+      "required": [
+        "schema_version",
+        "capture_id",
+        "source",
+        "available",
+        "duration_ns",
+        "sample_count",
+        "instrument",
+        "encoding",
+        "channel_count",
+        "payload_ref",
+        "payload_byte_count"
       ],
       "additionalProperties": false
     }

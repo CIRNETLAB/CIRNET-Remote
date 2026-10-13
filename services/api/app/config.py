@@ -7,6 +7,7 @@ class Settings:
     hardware_mode: str = field(default_factory=lambda: os.getenv("NETCIRCUIT_HARDWARE_MODE", "simulation"))
     database_url: str = field(default_factory=lambda: os.getenv("NETCIRCUIT_DATABASE_URL", "sqlite:///./netcircuit.db"))
     hardware_grpc_target: str = field(default_factory=lambda: os.getenv("NETCIRCUIT_HARDWARE_GRPC_TARGET", "127.0.0.1:50051"))
+    capture_dir: str = field(default_factory=lambda: os.getenv('NETCIRCUIT_CAPTURE_DIR','.runtime/captures'))
 
     def __post_init__(self) -> None:
         if self.hardware_mode not in ("simulation", "hardware"):

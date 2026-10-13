@@ -46,7 +46,16 @@ export function parseLab<T>(name:string,value:unknown):T {
   if(name==='ExperimentRecord' && isRecord(value)) {
     const history=value.state_history as string[]
     if(history.at(-1)!==value.state) throw new ApiError(0,'INVALID_RESPONSE','Experiment state/history disagree.')
-    if(value.capture!==null) parseLab('CaptureResult',value.capture)
+    if(value.capture!==null) parseLab('CaptureMetadata',value.capture)
+  }
+  if(name==='CaptureMetadata' && isRecord(value)) {
+    const signals=value.signals as string[]|undefined
+    if(value.instrument==='logic_analyzer'&&value.encoding!=='digital_events'
+      || value.instrument==='oscilloscope'&&value.encoding==='digital_events'
+      || signals&&(new Set(signals).size!==signals.length||signals.length!==value.channel_count)
+      || value.available&&(value.payload_ref===null||(value.payload_byte_count as number)<=0)
+      || !value.available&&(value.payload_ref!==null||value.payload_byte_count!==0||value.sha256!=null)
+      || value.encoding==='digital_events'&&((value.sample_count as number)>100000||(value.channel_count as number)>4096||(value.payload_byte_count as number)>9+65536+100000*11)) integrity('Capture metadata is inconsistent.')
   }
   if(name==='CaptureResult' && isRecord(value)) {
     const samples=value.samples as {signal:string;time_ns:number;value:0|1|'X'}[]

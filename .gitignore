@@ -19,6 +19,7 @@ dist/
 .test-build/
 
 # Runtime
+.runtime/
 .env
 *.db
 *.sqlite3

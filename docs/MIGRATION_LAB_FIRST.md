@@ -17,13 +17,19 @@ Ruling: Missing pin evidence stays unknown and never supplies guessed roles; cos
 | --- | --- |
 | H0 | Pin/endpoints/resolution/rich-result contracts; Python RED 13 failures, semantic RED 10 failures after pin schema acceptance, two additional rich-field failures; browser RED 3 failures. GREEN: Python 209 PASS / 1 SKIP, frontend 228 PASS, build/context/generated check PASS. Driver malformed scans enter FAULT and safe fallback before drive. |
 | H1 | From H0 `0619141`: deterministic component/pin/net resolver, physical compiler consumes resolved student nodes, topology Counter/incidence diagnostics. RED: 10 failures (missing resolver); GREEN: Python 221 PASS / 1 SKIP, context/generated checks PASS. Independent review added RED 3 failures: routable aliases on the same observed net, complete bipartite infrastructure allocation, and incremental repeated-component incidence pruning. GREEN: 17 targeted / 182 affected / 239 full Python PASS, 1 Icarus SKIP (includes pending H2 work). Frontend unchanged by H1. Required endpoint uncertainty blocks executability only; fixed endpoints allow safe opaque/ambiguous circuits. |
-| H2 | Pending: capture metadata and payload storage. |
+| H2 | From H1 `99b4566`: metadata-only SQL/events; atomic filesystem CaptureStore, owner-scoped binary GET/DELETE, bounded lossless NCAP digital codec, functional loader, active-only browser cache/cancellation. RED: 11 missing data-plane cases, 2 restart cleanup cases, 11 metadata/integrity cases; frontend contract/cancellation/timestamp races RED→GREEN. GREEN: 25 targeted Python, 250 full PASS / 1 Icarus SKIP (one new H3 control test deselected, new H3 worker file excluded while its RED phase runs); frontend 244 PASS, production build/context/generated checks PASS. |
 | H3 | Pending: execution capacity and process workers. |
 | H4 | Pending: authoritative instrument capabilities/control. |
 | H5 | Pending: resolved diagnostics and measured grading in UI. |
 | H6 | Pending: final architecture/provenance/review matrix. |
 
 ## Historical R0–R7 ledger
+
+Ruling H2: Keep captures until the owner explicitly deletes the payload; no automatic time expiry in V1. `NETCIRCUIT_CAPTURE_DIR` defaults to ignored `.runtime/captures`, separate from SQL. GET/DELETE `/api/captures/{capture_id}/payload` use server-session ownership; deletion is allowed only after terminal cleanup and leaves historical counts/signals/duration with `available=false`, null reference/hash and zero bytes. Cost if wrong: introduce an explicit retention policy and owner-facing expiry before operating at scale.
+
+Ruling H2: NCAP v1 uses `NCAP` + uint8 version + little-endian uint32 JSON-header byte count, then UTF-8 digital header (`encoding`, `signals`, `sample_count`, `duration_ns`) and 11-byte events (uint16 channel, uint64 time, uint8 0/1/2=X). Limits are 100k events / 4096 channels / 64KiB header; event/duration integers stay JS-safe. Epoch `timestamp_ns` is a decimal string for exact browser transport. Analog INT16/UINT16/FLOAT32 metadata is extensible, unavailable until a real payload implementation exists. Cost if wrong: version the codec for future analog/streaming support.
+
+Ruling H2: Restart stops/releases or quarantines live hardware leases before migrating legacy inline captures. Malformed old evidence becomes explicit NO_RESPONSE; storage I/O failure aborts startup after safe cleanup and preserves valid old SQL data for retry. Cost if wrong: repair storage permissions then restart; no large legacy capture reaches lifecycle events.
 
 Ruling H1: Limit deterministic matching to supported digital identities or explicit instructor profiles, with 32 components / 64 mappings / 4096 search steps; budget exhaustion remains AMBIGUOUS — avoids unbounded graph-isomorphism and guessed evidence — cost if wrong: expand supported profiles/bounds after measured performance.
 Ruling H1: Build/validate the pure infrastructure plan to establish executability before committing ExecutionDecision, then apply it only after permission — preserves independent safety/resource policy — cost if wrong: separate an equivalent resource admission pass from final compilation.

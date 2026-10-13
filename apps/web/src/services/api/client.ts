@@ -11,6 +11,8 @@ export interface RequestOptions<T> {
   body?: unknown
   signal?: AbortSignal
   acceptStatuses?: number[]
+  responseType?: 'json' | 'arrayBuffer'
+  accept?: string
   parse?: (value: unknown) => T
 }
 export interface ApiClient { request<T>(path: string, options?: RequestOptions<T>): Promise<T> }
@@ -28,11 +30,11 @@ export function createApiClient(options: { baseUrl?: string; timeoutMs?: number;
       try {
         const response = await (options.fetcher ?? globalThis.fetch)(`${baseUrl}${path}`, {
           method: request.method ?? 'GET',
-          headers: { Accept: 'application/json', ...(request.body === undefined ? {} : { 'Content-Type': 'application/json' }) },
+          headers: { Accept: request.accept ?? 'application/json', ...(request.body === undefined ? {} : { 'Content-Type': 'application/json' }) },
           body: request.body === undefined ? undefined : JSON.stringify(request.body), signal: controller.signal,
         })
         let data: unknown
-        try { data = await response.json() }
+        try { data = request.responseType === 'arrayBuffer' && response.ok ? await response.arrayBuffer() : await response.json() }
         catch {
           if (controller.signal.aborted) throw new ApiError(0, timedOut ? 'REQUEST_TIMEOUT' : 'REQUEST_CANCELLED', timedOut ? 'API request timed out. Please retry.' : 'Request cancelled.')
           throw new ApiError(response.status, 'INVALID_RESPONSE', 'The API returned an unreadable response.')

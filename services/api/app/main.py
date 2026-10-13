@@ -11,19 +11,22 @@ from app.api.circuits import router as circuits_router
 from app.api.stations import router as stations_router
 from app.api.assignments import router as assignments_router
 from app.api.experiments import router as experiments_router
+from app.api.captures import router as captures_router
 from app.websocket.events import router as websocket_router
 from app.services.persistence import Repository
 from app.services.experiments import ExperimentManager
 from app.services.hardware_client import HardwareServiceClient, GatewayError
 from app.services.events import EventHub
 from app.services.stations import StationService
+from app.services.capture_store import FilesystemCaptureStore
 
-def create_app(*,repository=None,gateway=None,submit=None,configuration=None):
+def create_app(*,repository=None,gateway=None,submit=None,configuration=None,capture_store=None):
     config=configuration or settings
     repo=repository or Repository(config.database_url)
     gateway=gateway or HardwareServiceClient(config.hardware_grpc_target)
     hub=EventHub()
-    manager=ExperimentManager(repo,gateway,submit=submit,emit=hub.publish)
+    captures=capture_store or FilesystemCaptureStore(config.capture_dir)
+    manager=ExperimentManager(repo,gateway,submit=submit,emit=hub.publish,capture_store=captures)
     lifespan_lock=RLock()
     lifespan_users=0
     async def monitor():
@@ -37,7 +40,7 @@ def create_app(*,repository=None,gateway=None,submit=None,configuration=None):
         with lifespan_lock:
             if manager.closed:
                 repo=Repository(repo.engine.url.render_as_string(hide_password=False))
-                manager=ExperimentManager(repo,gateway,submit=submit,emit=hub.publish)
+                manager=ExperimentManager(repo,gateway,submit=submit,emit=hub.publish,capture_store=captures)
                 application.state.repository=repo
                 application.state.manager=manager
                 application.state.stations=StationService(gateway,manager)
@@ -86,7 +89,7 @@ def create_app(*,repository=None,gateway=None,submit=None,configuration=None):
 
     for kind in (ValueError,PermissionError,KeyError,GatewayError,ValidationError):
         application.add_exception_handler(kind,error)
-    for router in (health_router,circuits_router,stations_router,assignments_router,experiments_router,websocket_router):
+    for router in (health_router,circuits_router,stations_router,assignments_router,experiments_router,captures_router,websocket_router):
         application.include_router(router)
     return application
 

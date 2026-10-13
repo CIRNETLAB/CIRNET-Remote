@@ -43,8 +43,12 @@ def test_real_virtual_and_run_returns_capture_and_function_after_alias_mapping()
                 time.sleep(0.05)
             assert result['state']=='COMPLETE',(result['error_code'],result['state_history'])
             assert result['functional_verification']['status']=='PASS',result
-            assert result['capture']['samples']==[{'signal':'y','time_ns':0,'value':'X'},
-                                                {'signal':'y','time_ns':8,'value':0},{'signal':'y','time_ns':28,'value':1}]
+            assert 'samples' not in result['capture']
+            from contracts.capture_codec import decode_digital
+            binary=client.get('/api/captures/'+result['capture']['capture_id']+'/payload')
+            assert binary.status_code==200,binary.text
+            assert decode_digital(binary.content)['samples']==[{'signal':'y','time_ns':0,'value':'X'},
+                                                             {'signal':'y','time_ns':8,'value':0},{'signal':'y','time_ns':28,'value':1}]
             assert application.state.repository.leases()==[]
     finally:
         server.stop(0).wait()

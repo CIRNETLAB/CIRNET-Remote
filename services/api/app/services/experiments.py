@@ -22,7 +22,7 @@ class Cancelled(Exception): pass
 
 
 class ExperimentManager:
-    def __init__(self,repository,gateway,*,submit=None,clock=time.time,lease_seconds=120,emit=None):
+    def __init__(self,repository,gateway,*,submit=None,clock=time.time,lease_seconds=120,emit=None,capture_store=None):
         self.repo,self.gateway=repository,gateway
         self.clock,self.lease_seconds=clock,lease_seconds
         self.emit=emit or (lambda owner,event:None)
@@ -33,11 +33,13 @@ class ExperimentManager:
         self.policy=ExecutionPolicy(); self.compiler=LabExecutionCompiler()
         self.safety=SafetyVerificationService(); self.topology=TopologyVerificationService()
         self.resolver=TopologyResolver()
-        self.functional=FunctionalVerificationService(); self.captures=CaptureService()
+        self.functional=FunctionalVerificationService(); self.captures=CaptureService(store=capture_store)
         self.admission_sequence=0
         self._recover()
 
     def _recover(self):
+        # Electrical cleanup must precede capture I/O: an unwritable storage
+        # directory or malformed historical payload cannot leave a live lease.
         for lease in self.repo.leases():
             eid=lease['experiment_id']; e=self.repo.get_experiment(eid)
             try:
@@ -47,6 +49,19 @@ class ExperimentManager:
             if safe: self.repo.release(eid)
             else: self.repo.quarantine(eid)
             self._transition(eid,'FAULT',error_code='RESTART_RECOVERY',lease_expires_at=None)
+        # Upgrade local unpublished R7 records without retaining samples in SQL.
+        # Storage errors abort startup only after cleanup; valid old data stays
+        # in SQL for a retry. Impossible old evidence is reported explicitly.
+        for record in self.repo.list_experiments():
+            if record.get('capture') and 'samples' in record['capture']:
+                try:
+                    record['capture']=self.captures.persist(record['capture'],record['mode'])
+                except (ValueError,ValidationError):
+                    record['capture']=None
+                    record['functional_verification']=result('NO_RESPONSE',['Malformed legacy capture: CAPTURE_CORRUPT'])
+                    record['error_code']=record.get('error_code') or 'CAPTURE_CORRUPT'
+                record['revision']=record.get('revision',0)+1
+                self.repo.save_experiment(record)
         experiments=self.repo.list_experiments()
         self.admission_sequence=max((e.get('_queue_sequence',0) for e in experiments),default=0)
         for e in sorted(experiments,key=lambda e:e.get('_queue_sequence',0)):
@@ -56,7 +71,10 @@ class ExperimentManager:
             for station_id in tuple(self.queues): self._dispatch(station_id)
 
     def _public(self,e):
-        value=deepcopy({k:v for k,v in e.items() if not k.startswith('_')})
+        value=deepcopy({k:v for k,v in e.items() if not k.startswith('_') and k!='capture'})
+        capture=e.get('capture')
+        # Recovery can emit before legacy samples have been externalized.
+        value['capture']=None if capture and 'samples' in capture else deepcopy(capture)
         value.setdefault('revision',0)
         return value
 
@@ -199,9 +217,10 @@ class ExperimentManager:
             self._transition(eid,'GUARDED_POWER_UP'); self._call(eid,'guarded_power_up')
             self._call(eid,'arm_capture',configuration=plan['capture_config'])
             self._transition(eid,'RUNNING'); self._call(eid,'start_execution')
-            self._transition(eid,'CAPTURING'); capture=self.captures.normalize(self._call(eid,'read_capture'),e['mode'])
+            self._transition(eid,'CAPTURING'); capture=self.captures.persist(self._call(eid,'read_capture'),e['mode'])
             self._transition(eid,'FUNCTIONAL_VERIFY',capture=capture)
-            functional=self.functional.verify(assignment,capture,e['_configuration'].get('test_vectors',[]))
+            data=self.captures.load(capture) if capture['available'] else {'available':False,'samples':[]}
+            functional=self.functional.verify(assignment,data,e['_configuration'].get('test_vectors',[]))
             self._transition(eid,'COMPLETE',functional_verification=functional)
         except Cancelled:
             self._transition(eid,'COMPLETE')
@@ -261,6 +280,29 @@ class ExperimentManager:
                 except Exception: pass
             else: self._transition(eid,'COMPLETE',error_code=code)
             return self.get(eid,owner)
+
+    def _capture_record(self,capture_id,owner):
+        for record in self.repo.list_experiments():
+            if (record.get('capture') or {}).get('capture_id')==capture_id:
+                self.repo.get_experiment(record['experiment_id'],owner)
+                return record
+        raise KeyError('CAPTURE_NOT_FOUND')
+
+    def capture_payload(self,capture_id,owner):
+        with self.lock:
+            metadata=self._capture_record(capture_id,owner)['capture']
+            if not metadata['available']: raise ValueError('CAPTURE_UNAVAILABLE')
+            return self.captures.store.get(metadata)
+
+    def delete_capture(self,capture_id,owner):
+        with self.lock:
+            record=self._capture_record(capture_id,owner)
+            if record['state'] not in TERMINAL or record['lease_expires_at'] is not None: raise ValueError('INVALID_STATE')
+            metadata=record['capture']
+            self.captures.store.delete(metadata)
+            metadata.update(available=False,payload_ref=None,payload_byte_count=0,sha256=None)
+            self._transition(record['experiment_id'],record['state'],capture=metadata)
+            return metadata
 
     def disconnect(self,owner):
         for e in self.repo.list_experiments(owner):

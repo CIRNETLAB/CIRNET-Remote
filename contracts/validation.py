@@ -60,6 +60,17 @@ def validate(name: str, value: dict) -> dict:
         _unique(value['endpoint_bindings'], 'endpoint_id')
         _unique(value['component_matches'], 'reference_component_id')
         _unique(value['component_matches'], 'observed_component_id')
+    if name == 'ExperimentRecord' and value.get('capture') is not None:
+        validate('CaptureMetadata',value['capture'])
+    if name == 'CaptureMetadata':
+        signals=value.get('signals')
+        if ((value['instrument']=='logic_analyzer' and value['encoding']!='digital_events')
+                or (value['instrument']=='oscilloscope' and value['encoding']=='digital_events')
+                or (signals is not None and (len(signals)!=len(set(signals)) or len(signals)!=value['channel_count']))
+                or (value['available'] and (value['payload_ref'] is None or value['payload_byte_count']<=0))
+                or (not value['available'] and (value['payload_ref'] is not None or value['payload_byte_count']!=0 or value.get('sha256') is not None))
+                or (value['encoding']=='digital_events' and (value['sample_count']>100000 or value['payload_byte_count']>9+65536+100000*11))):
+            raise ValidationError('Capture metadata is inconsistent')
     if name == "InstrumentationExecutionPlan":
         _unique(value["endpoint_bindings"], "endpoint_id")
         _unique(value["routing_allocations"], "resource_id")

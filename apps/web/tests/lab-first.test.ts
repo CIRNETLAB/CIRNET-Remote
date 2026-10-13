@@ -12,6 +12,7 @@ import { useCircuitStore } from '../src/stores/circuit'
 import { useInstrumentStore } from '../src/stores/instrument'
 import { nextTick } from 'vue'
 import { loadSfc,mountSfc } from './helpers/vueSfc'
+import { captureFixture, deferred } from './helpers/capture'
 
 function target():StationDescriptor {
   return {station_id:'v1',mode:'simulation',state:'ready',capabilities:{schema_version:'1.0',station_id:'v1',mode:'simulation',
@@ -30,24 +31,24 @@ function record(state='COMPLETE', revision=10) {
     safety_verification:{schema_version:'1.0',status:'SAFE',issues:[]},
     topology_verification:{schema_version:'1.0',status:'MISMATCH',issues:['wrong safe IC']},
     functional_verification:{schema_version:'1.0',status:'FAIL',issues:['wrong output']},
-    capture:{schema_version:'1.0',capture_id:'capture-1',source:'simulation',instrument:'logic_analyzer',encoding:'digital_events',
-      available:true,duration_ns:20,sample_count:2,samples:[{signal:'L.IN',time_ns:0,value:'X'},{signal:'L.IN',time_ns:8,value:1}]},
+    capture:captureFixture('L.IN','capture-1').metadata,
   }
 }
 
-test('API accepts independent safety/topology/function and measured digital capture',async()=>{
+test('API accepts independent safety/topology/function and digital capture metadata without samples',async()=>{
   const client=createApiClient({fetcher:async()=>new Response(JSON.stringify(record()))})
   const value=await createExperimentsApi(client).get('e1') as unknown as ReturnType<typeof record>
   assert.equal(value.safety_verification.status,'SAFE')
   assert.equal(value.topology_verification.status,'MISMATCH')
   assert.equal(value.functional_verification.status,'FAIL')
-  assert.equal(value.capture.samples[0].value,'X')
+  assert.equal(value.capture.capture_id,'capture-1')
+  assert.equal('samples' in value.capture,false)
 })
 
-test('API rejects invalid nested enum, version and capture count',async()=>{
+test('API rejects invalid nested enum, version and capture metadata',async()=>{
   for(const value of [ {...record(),schema_version:'future'},
     {...record(),safety_verification:{schema_version:'1.0',status:['SAFE'],issues:[]}},
-    {...record(),capture:{...record().capture,sample_count:100}},
+    {...record(),capture:{...record().capture,available:true,payload_ref:null}},
     {...record(),capture:{...record().capture,samples:[{signal:'L.IN',time_ns:0,value:2}]}}]) {
     const api=createExperimentsApi(createApiClient({fetcher:async()=>new Response(JSON.stringify(value))}))
     await assert.rejects(api.get('e1'),(e:unknown)=>e instanceof Error && 'code' in e && e.code==='INVALID_RESPONSE')
@@ -123,6 +124,23 @@ test('cancelled create cannot attach a late experiment or dispatch Run',async()=
   assert.deepEqual(requests,['/api/experiments'])
 })
 
+test('starting a new experiment detaches the previous capture before late lifecycle events arrive',async()=>{
+  const store=useExperimentStore(), instrument=useInstrumentStore(), created=deferred<Response>()
+  store.activeId='e1';store.receive(record())
+  configureApiClient({fetcher:async(url)=>String(url).endsWith('/run')
+    ?new Response(JSON.stringify({...record('QUEUED',2),experiment_id:'e2',capture:null}))
+    :created.promise})
+  const pending=store.run({schema_version:'1.0',circuit_id:'c2',modules:[],connections:[]},target())
+  assert.equal(instrument.captureMetadata,null)
+  store.receive(record('COMPLETE',20))
+  try {assert.equal(instrument.captureMetadata,null,'late old experiment must not restore its capture during creation')}
+  finally {
+    created.resolve(new Response(JSON.stringify({...record('CREATED',0),experiment_id:'e2',capture:null})))
+    await pending
+  }
+  assert.equal(store.activeId,'e2');assert.equal(instrument.captureMetadata,null)
+})
+
 test('physical Run sends assignment identity without logical validation or circuit rewrite',async()=>{
   const bodies:unknown[]=[]
   configureApiClient({fetcher:async(url,options)=>{
@@ -167,8 +185,13 @@ test('statusbar Run invokes backend lifecycle and preserves editor history',asyn
 test('independent safety topology function states and real trace render in existing windows',async()=>{
   const pinia=createPinia();setActivePinia(pinia)
   const experiment=useExperimentStore();experiment.activeId='e1';experiment.receive(record())
+  configureApiClient({fetcher:async(url)=>{
+    assert.equal(String(url),'/api/captures/capture-1/payload')
+    return new Response(captureFixture('L.IN','capture-1').binary)
+  }})
   const status=mountSfc(await loadSfc('components/workbench/SimulationStatusBar.vue'),pinia)
   const monitor=mountSfc(await loadSfc('components/windows/SignalMonitorWindow.vue'),pinia)
+  await useInstrumentStore().ensureCaptureLoaded(); await nextTick()
   for(const text of ['SAFETY','SAFE','TOPOLOGY','MISMATCH','FUNCTION','FAIL']) assert.ok(status.text().includes(text),text)
   assert.ok(monitor.all().some(node=>node.tag==='path'&&node.props['data-signal']==='L.IN'),'observed trace is missing')
   assert.ok(monitor.text().includes('simulation'))

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, watch } from 'vue'
 import { useInstrumentStore } from '../../stores/instrument'
 import { instrumentThemeStyle } from '../../data/instrumentVisuals'
 import { useExperimentStore } from '../../stores/experiment'
@@ -9,6 +9,9 @@ import { digitalTrace, formatTime } from '../../services/waveforms/digital'
 const instrument = useInstrumentStore()
 const experiment=useExperimentStore(), circuit=useCircuitStore(), station=useStationStore()
 const capture=computed(()=>instrument.capture?.available?instrument.capture:null)
+watch(()=>instrument.captureMetadata,()=>{void instrument.ensureCaptureLoaded()},{immediate:true})
+onBeforeUnmount(()=>instrument.cancelCaptureLoad())
+const captureStatus=computed(()=>capture.value?capture.value.source+' · CAPTURED':instrument.captureLoading?'LOADING CAPTURE':instrument.captureError?'CAPTURE ERROR':instrument.captureMetadata&&!instrument.captureMetadata.available?'CAPTURE UNAVAILABLE':'NO CAPTURE SOURCE')
 const traces=computed(()=>instrument.monitor.channels.map((signal,index)=>({signal,...digitalTrace(capture.value?.samples??[],signal,capture.value?.duration_ns??0,index)})))
 const canRun=computed(()=>station.canExecute&&!experiment.busy&&(station.mode==='simulation'?!!circuit.graph:!!experiment.assignmentId))
 function runPause() {return experiment.canStop?experiment.stop():experiment.run(circuit.graph,station.executionTarget,{signals:instrument.captureSignals,duration_ns:instrument.captureDurationNs})}
@@ -18,7 +21,7 @@ const plotHeight = computed(() => Math.max(200, rowCount.value * 36))
 <template>
   <div class="logic-instrument" :style="instrumentThemeStyle">
     <div class="logic-analyzer">
-      <header class="logic-header"><div><span class="logic-device">DIGITAL / 01</span><h2>Logic Analyzer</h2></div><div class="logic-status"><span>{{ capture ? capture.source + ' · CAPTURED' : 'NO CAPTURE SOURCE' }}</span><span>Trigger <b>—</b></span></div></header>
+      <header class="logic-header"><div><span class="logic-device">DIGITAL / 01</span><h2>Logic Analyzer</h2></div><div class="logic-status"><span>{{ captureStatus }}</span><span>Trigger <b>—</b></span></div></header>
       <fieldset :disabled="!canRun && !experiment.canStop" class="logic-controls" aria-label="Logic analyzer controls" :title="canRun ? 'Run using backend lifecycle' : 'Capture is not connected'">
         <legend class="visually-hidden">{{ canRun || experiment.canStop ? 'Capture controls' : 'Capture controls unavailable' }}</legend>
         <label>Time Base<select v-model="instrument.monitor.timeScale" disabled title="Use capture duration in Inspector"><option>1 ms</option></select></label>
@@ -31,7 +34,7 @@ const plotHeight = computed(() => Math.max(200, rowCount.value * 36))
           <div class="logic-time-markers" :aria-label="capture ? 'Observed capture time axis' : 'Configured time axis in divisions; no acquired timestamps'"><span v-for="n in 6" :key="n">{{ capture ? formatTime((n - 1) * capture.duration_ns / 5) : (n - 1) * 2 }}<small>{{ !capture && n === 6 ? ' div' : '' }}</small></span></div>
           <div class="logic-plot" :style="{ minHeight: plotHeight + 'px' }">
             <svg :viewBox="'0 0 600 ' + plotHeight" preserveAspectRatio="none" role="img" :aria-label="capture ? 'Observed digital event traces' : 'Empty signal monitor; no acquired traces'"><line v-for="n in 11" :key="'x' + n" :x1="(n - 1) * 60" :x2="(n - 1) * 60" y1="0" :y2="plotHeight" /><line v-for="n in rowCount" :key="'y' + n" x1="0" x2="600" :y1="n * 36" :y2="n * 36" class="logic-row-guide" /><g v-if="capture"><g v-for="trace in traces" :key="trace.signal"><path :d="trace.path" :data-signal="trace.signal" class="observed-trace" /><path :d="trace.unknown" class="unknown-trace" /><text v-if="trace.unknown" x="4" :y="instrument.monitor.channels.indexOf(trace.signal) * 36 + 18" class="unknown-label">X</text></g></g></svg>
-            <div v-if="!capture" class="logic-empty"><span aria-hidden="true">▥</span><strong>NO TRACE DATA</strong><small>Waiting for digital capture</small></div>
+            <div v-if="!capture" class="logic-empty"><span aria-hidden="true">▥</span><strong>NO TRACE DATA</strong><small v-if="instrument.captureLoading">Loading capture payload</small><small v-else-if="instrument.captureError" role="alert">{{ instrument.captureError }}</small><small v-else-if="instrument.captureMetadata && !instrument.captureMetadata.available">Capture payload unavailable</small><small v-else>Waiting for digital capture</small><button v-if="instrument.captureError" type="button" @click="instrument.ensureCaptureLoaded()">Retry capture</button></div>
           </div>
           <div class="logic-axis-caption">{{ capture ? formatTime(capture.duration_ns) + ' capture' : instrument.monitor.timeScale + ' / div' }} <span>{{ capture ? 'Observed event timestamps' : 'Configured axis · no samples' }}</span></div>
         </div>

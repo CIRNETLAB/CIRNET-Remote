@@ -41,7 +41,7 @@ export const useExperimentStore=defineStore('experiment',{
       const version=++this.requestVersion
       controllers.get(this)?.abort();const controller=new AbortController();controllers.set(this,controller)
       const signal=controller.signal
-      this.pending=true; this.error=null
+      this.pending=true; this.error=null; this.activeId=null
       useInstrumentStore().useCapture(null)
       try {
         const body=JSON.parse(JSON.stringify({station_id:target.station_id,
