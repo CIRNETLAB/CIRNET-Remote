@@ -21,6 +21,42 @@ function setup(onZoomChange?: (percent: number) => void) {
   return { manager, wheel, canvas }
 }
 
+test('initial placement yaw faces the camera for cardinal and ViewCube corner views after panning', () => {
+  const { manager } = setup()
+  try {
+    const facing = Reflect.get(manager, 'placementFacingYaw') as () => number
+    assert.equal(typeof facing, 'function', 'SceneManager must provide the initial placement heading')
+    manager.pan(5, -3)
+    for (const [view, expected] of [
+      ['FRONT', 0], ['RIGHT', 90], ['BACK', 180], ['LEFT', 270],
+      ['TOP-FRONT-RIGHT', 45], ['TOP-BACK-RIGHT', 135],
+      ['TOP-BACK-LEFT', 225], ['TOP-FRONT-LEFT', 315],
+    ] as const) {
+      manager.setViewOrientation(view, false)
+      assert.ok(Math.abs(facing() - expected) < 1e-8, view)
+    }
+  } finally { manager.dispose() }
+})
+
+test('TOP initial placement yaw uses screen-down heading and ignores near-pole azimuth noise', () => {
+  const { manager } = setup()
+  try {
+    const facing = Reflect.get(manager, 'placementFacingYaw') as () => number
+    assert.equal(typeof facing, 'function')
+    manager.setViewOrientation('TOP', false)
+    assert.equal(facing(), 0, 'the existing TOP screen-down points toward world +Z')
+    manager.camera.rotateZ(Math.PI / 2)
+    assert.ok(Math.abs(facing() - 90) < 1e-8, 'a rolled TOP view follows screen-down toward +X')
+    const origin = manager.target(), radius = manager.camera.position.distanceTo(origin)
+    for (const [x, z] of [[1e-10, -1e-10], [-1e-10, 1e-10], [0, 0]]) {
+      manager.camera.position.copy(origin).add(new Vector3(x * radius, radius, z * radius))
+      const yaw = facing()
+      assert.ok(Number.isFinite(yaw) && yaw >= 0 && yaw < 360)
+      assert.ok(Math.abs(yaw - 90) < 1e-8, 'tiny XZ changes cannot flip the near-TOP draft')
+    }
+  } finally { manager.dispose() }
+})
+
 test('unchanged viewport sizes do not reset the drawing buffer or camera projection', () => {
   let sizes = 0, projections = 0, renders = 0, id = 0
   const frames = new Map<number, FrameRequestCallback>()

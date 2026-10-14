@@ -550,6 +550,13 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     cameraDirection(): Vector3 {
       return camera.position.clone().sub(controls?.target ?? viewTarget).normalize()
     },
+    placementFacingYaw(): number {
+      const heading = camera.position.clone().sub(target()).normalize()
+      // At the pole, screen-down supplies a stable XZ heading without noisy azimuth.
+      if (Math.hypot(heading.x, heading.z) < 1e-6) heading.set(0, -1, 0).applyQuaternion(camera.quaternion)
+      const degrees = Math.atan2(heading.x, heading.z) * 180 / Math.PI
+      return Number.isFinite(degrees) ? ((degrees % 360) + 360) % 360 : 0
+    },
     target(): Vector3 {
       return (controls?.target ?? viewTarget).clone()
     },

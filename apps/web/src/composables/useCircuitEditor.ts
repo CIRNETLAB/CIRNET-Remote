@@ -172,6 +172,10 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
   const coordinates = (event: { clientX: number; clientY: number }) => { const rect = canvas.value!.getBoundingClientRect(); return { x: event.clientX - rect.left, y: event.clientY - rect.top } }
   const snap = (point: { x: number; y?: number; z: number } | Vector3, activeType?: string | null, activeId?: string | null, elevation = 0, rotation?: number, axis?: 'x' | 'z'): Position =>
     snapPosition(point, workspace.snap, circuit.graph?.modules ?? [], activeType, activeId, elevation, rotation, axis)
+  function createPlacementDraft(type: string, point: Position): PlacementDraft {
+    const rotation = manager()!.placementFacingYaw()
+    return { type, position: snap(point, type, null, 0, rotation), rotation }
+  }
   function showPlacement() { if (placementDraft) manager()?.setGhost(placementDraft.type, placementDraft.position, placementDraft.rotation) }
   function clearPlacement() { placementDraft = null; manager()?.setGhost(null) }
   function updatePorts() {
@@ -210,7 +214,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
   function connect(endpoint: string) {
     wireRouting.connect(endpoint)
   }
-  function place(type: string, position: Position, rotation = 0) { attempt(() => { const id = circuit.placeModule(type, position, rotation); workspace.selectModule(id); clearPlacement(); sync() }) }
+  function place(type: string, position: Position, rotation: number) { attempt(() => { const id = circuit.placeModule(type, position, rotation); workspace.selectModule(id); clearPlacement(); sync() }) }
   function pointerDown(event: PointerEvent) {
     if (workspace.zoomAreaActive) {
       event.preventDefault?.(); event.stopImmediatePropagation?.()
@@ -251,7 +255,10 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     }
     if (workspace.placementType) {
       if (placementDraft) place(placementDraft.type, placementDraft.position, placementDraft.rotation)
-      else { const point = manager()!.groundPoint(x, y); if (point) place(workspace.placementType, snap(point, workspace.placementType)) }
+      else {
+        const point = manager()!.groundPoint(x, y)
+        if (point) { const draft = createPlacementDraft(workspace.placementType, point); place(draft.type, draft.position, draft.rotation) }
+      }
       return
     }
     const point = manager()!.groundPoint(x, y)
@@ -375,8 +382,8 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       move.position = snap(point, module?.type, move.id, move.offset.y)
       manager()!.previewMove(move.id, move.position); updatePorts()
     } else if (workspace.placementType) {
-      placementDraft ??= { type: workspace.placementType, position: { x: point.x, y: 0, z: point.z }, rotation: 0 }
-      placementDraft.position = snap(point, placementDraft.type, null, placementDraft.position.y, placementDraft.rotation)
+      if (!placementDraft) placementDraft = createPlacementDraft(workspace.placementType, point)
+      else placementDraft.position = snap(point, placementDraft.type, null, placementDraft.position.y, placementDraft.rotation)
       showPlacement()
     }
   }
@@ -414,7 +421,10 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     const type = event.dataTransfer?.getData('application/x-netcircuit-component')
     if (!type || !getDefinition(type) || !manager() || !canvas.value) return
     const { x, y } = coordinates(event), point = manager()!.groundPoint(x, y)
-    if (point) { ui.activeRibbonGroup = null; place(type, snap(point, type)); canvas.value.focus() }
+    if (point) {
+      const draft = createPlacementDraft(type, point)
+      ui.activeRibbonGroup = null; place(draft.type, draft.position, draft.rotation); canvas.value.focus()
+    }
   }
   function keydown(event: KeyboardEvent) {
     if (wireRouting.keydown(event)) return
