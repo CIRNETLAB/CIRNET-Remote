@@ -20,9 +20,10 @@ test('wire layer renders explicit low routes and changes color without replacing
     layer.sync([{ ...wire, metadata: { wireVisual: { ...(wire.metadata!.wireVisual as object), color: '#397ec6' } } }, { source: 'C.OUT', destination: 'D.IN' }])
     assert.equal(mesh.geometry, geometry); assert.equal(mesh.material, material); assert.equal(other.geometry, unrelated)
     layer.highlight(wire); layer.selectSegment(0)
-    assert.equal(layer.tools.getObjectByName('wire-segment-highlight')?.visible, true)
+    assert.equal(layer.tools.getObjectByName('wire-segment-hover-line')?.visible, true)
+    assert.equal(layer.tools.getObjectByName('wire-segment-highlight'), undefined)
     layer.selectSegment(null)
-    assert.equal(layer.tools.getObjectByName('wire-segment-highlight')?.visible, false)
+    assert.equal(layer.tools.getObjectByName('wire-segment-hover-line')?.visible, false)
     layer.previewVisual(wire, { ...defaultWireVisual(), controlPoints: [{ space: 'world', position: { x: 3, y: .36, z: 1 } }] })
     layer.flush(); assert.notEqual(mesh.geometry, geometry); assert.equal(other.geometry, unrelated)
     layer.previewVisual(wire, null); layer.flush()
@@ -106,7 +107,9 @@ test('completed and preview jumpers have real narrower copper pins and insulatio
       assert.ok(core.scale.x < .026 && core.scale.x > .008)
       assert.ok((core.material as import('three').MeshStandardMaterial).metalness > .5)
       const tip = core.localToWorld(new Vector3(0, -.5, 0))
-      assert.ok(tip.distanceTo(name.endsWith('source') ? positions[wire.source] : positions[wire.destination]) < 1e-8)
+      const endpoint = name.endsWith('source') ? positions[wire.source] : positions[wire.destination]
+      assert.ok(Math.abs(tip.x - endpoint.x) < 1e-8 && Math.abs(tip.z - endpoint.z) < 1e-8)
+      assert.ok(tip.y < endpoint.y - .04, 'metal is inserted below the unchanged electrical anchor')
     }
     const vertices = body.geometry.getAttribute('position')
     assert.ok(Array.from({ length: vertices.count }, (_, i) => vertices.getY(i)).every(y => y > .335), 'red insulation ends above the plastic deck, copper alone enters the hole')
@@ -161,4 +164,55 @@ test('deleting a wire or preview does not dispose shared copper resources still 
     layer.dispose(); layer.dispose()
     assert.equal(geometryDisposals, 1); assert.equal(materialDisposals, 1)
   } finally { layer.dispose() }
+})
+
+test('opaque preview has silver deep-inserted contacts, longer free pin and only a thin segment hover line', () => {
+  const endpoints: Record<string, Vector3> = { A: new Vector3(0, .309, 0), B: new Vector3(1, .309, 1) }
+  const context = { modulePose: () => ({ id: 'BB', type: 'BREADBOARD' }), endpoint: (endpoint: string) => endpoints[endpoint] ? { endpoint, position: endpoints[endpoint], contactModuleId: 'BB' } : null }
+  const layer = createWireLayer(endpoint => endpoints[endpoint] ?? null, context)
+  const visual = { ...defaultWireVisual(), routeMode: 'FREE' as const, thickness: .052, height: .04 }
+  const wire = { source: 'A', destination: 'B', metadata: { wireVisual: visual } }
+  try {
+    layer.sync([wire]); layer.highlight(wire)
+    const body = layer.group.children[0] as Mesh, pin = body.getObjectByName('wire-terminal-source') as Mesh
+    const material = pin.material as import('three').MeshStandardMaterial
+    assert.ok(pin.localToWorld(new Vector3(0, -.5, 0)).y < .309 - .04, 'conductor extends deeply below the electrical contact')
+    assert.ok(material.color.r > .4 && material.color.g > .4 && material.color.b > .4 && Math.abs(material.color.r - material.color.b) < .12, 'light silver tinned copper')
+    assert.ok(material.metalness >= .8 && material.roughness <= .4); assert.equal(material.emissive.getHex(), 0)
+    layer.selectSegment(layer.route(wire)!.segments.find(segment => segment.editable)!.index)
+    assert.equal(layer.tools.getObjectByName('wire-segment-highlight'), undefined, 'no thick cylinder covers the wire')
+    assert.ok(layer.tools.getObjectByName('wire-handles'))
+    layer.previewDrawing({ source: 'A', destination: '' }, visual, { x: .5, y: .37, z: -.5 }); layer.flush()
+    const preview = layer.tools.getObjectByName('wire-drawing-preview') as Mesh
+    assert.equal((preview.material as import('three').Material).transparent, false)
+    assert.equal((preview.material as import('three').Material).opacity, 1)
+    const free = preview.getObjectByName('wire-terminal-free') as Mesh
+    assert.ok(free.scale.y > .05, 'the free conductor is longer and legible')
+  } finally { layer.dispose() }
+})
+
+test('same-path contact wire layers separate the whole insulation, not just its middle', () => {
+  const context = { modulePose: () => ({ id: 'BB', type: 'BREADBOARD' }), endpoint: (endpoint: string) => ({ endpoint, position: { x: endpoint.endsWith('A') ? 0 : 2, y: .309, z: endpoint.endsWith('A') ? 0 : 1 }, contactModuleId: 'BB' }) }
+  const layer = createWireLayer(() => null, context)
+  const wires = Array.from({ length: 3 }, (_, i) => ({ source: `S${i}A`, destination: `D${i}B`, metadata: { wireVisual: { ...defaultWireVisual(), routeMode: 'FREE', thickness: .052, height: .04, layer: i } } }))
+  try {
+    layer.sync(wires)
+    const bodies = layer.group.children as Mesh[]
+    bodies.forEach(body => body.geometry.computeBoundingBox())
+    for (let i = 1; i < bodies.length; i++) assert.ok(bodies[i].geometry.boundingBox!.min.y >= bodies[i - 1].geometry.boundingBox!.max.y + .0119, 'layer lift includes insulation transitions; only metal leads descend to the fixed contact')
+  } finally { layer.dispose() }
+})
+
+test('shared layer spacing clears a thicker legacy jumper and stacked logical-port insulation stays entirely raised', () => {
+  for (const contact of [true, false]) {
+    const context = { modulePose: () => ({ id: 'BB', type: 'BREADBOARD' }), endpoint: (endpoint: string) => ({ endpoint, position: { x: endpoint.endsWith('A') ? 0 : 2, y: contact ? .309 : .37, z: 0 }, ...(contact ? { contactModuleId: 'BB' } : {}) }) }
+    const layer = createWireLayer(() => null, context)
+    const wires = [.12, .052, .052].map((thickness, i) => ({ source: `S${i}A`, destination: `D${i}B`, metadata: { wireVisual: { ...defaultWireVisual(), routeMode: 'FREE', height: .04, thickness, layer: i } } }))
+    try {
+      layer.sync(wires)
+      const bodies = layer.group.children as Mesh[]
+      bodies.forEach(body => body.geometry.computeBoundingBox())
+      for (let i = 1; i < bodies.length; i++) assert.ok(bodies[i].geometry.boundingBox!.min.y >= bodies[i - 1].geometry.boundingBox!.max.y + .0119)
+    } finally { layer.dispose() }
+  }
 })

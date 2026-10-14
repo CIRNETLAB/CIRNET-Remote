@@ -79,7 +79,7 @@ test('orthogonal segment drag stays perpendicular and snap uses board frame with
   board.rotation = 90; board.position = { x: 2, y: 0, z: 3 }
   const point = moduleLocalToWorld({ x: -3.49, y: .36, z: -.7 }, board)
   const snapped = snapWirePoint(point, board, true, false)
-  close(snapped.position, { x: -3.51, y: .36, z: -.715 })
+  close(snapped.position, { x: -3.4775, y: .36, z: -.715 })
   close(snapWirePoint(point, board, true, true).position, { x: -3.49, y: .36, z: -.7 })
   close(snapWirePoint({ x: .09, y: .4, z: .04 }, null, true, false).position, { x: .065, y: .4, z: .065 })
 })
@@ -179,4 +179,23 @@ test('raised orthogonal anchors retain their exact local elbow order after board
     assert.equal(after.points.length, original.points.length)
     original.points.forEach((point, index) => close(after.points[index], moduleLocalToWorld(point, board)))
   }
+})
+
+test('routing snap offers quarter-pitch lanes without changing contacts or disabling FREE diagonals', () => {
+  const { board, wire, context } = fixture('FREE'), endpoint = context.endpoint(wire.source)!.position
+  const lane = snapWirePoint({ ...endpoint, y: .37, x: endpoint.x + .032, z: endpoint.z + .034 }, board, true, false)
+  close(lane.position, { x: endpoint.x + .0325, y: .37, z: endpoint.z + .0325 })
+  close(context.endpoint(wire.source)!.position, endpoint)
+  const unsnapped = { ...endpoint, y: .37, x: endpoint.x + .0331 }
+  close(snapWirePoint(unsnapped, board, true, true).position, unsnapped)
+})
+
+test('stacking lifts module and world user anchors uniformly and pins stay fixed', () => {
+  const { board, wire, context, visual } = fixture('FREE')
+  visual.height = .04; visual.thickness = .052
+  visual.controlPoints = [{ space: 'module', moduleId: 'BB', position: { x: -3.5, y: .6, z: -.4 } }, { space: 'world', position: { x: -3, y: .65, z: .4 } }]
+  const base = solveWireRoute(wire, visual, context)!, lifted = solveWireRoute(wire, { ...visual, layer: 2 }, context)!
+  close(base.points[0], lifted.points[0]); close(base.points.at(-1)!, lifted.points.at(-1)!)
+  for (const [index, handle] of lifted.handles.entries()) close(handle.position, { ...base.handles[index].position, y: base.handles[index].position.y + .128 })
+  assert.equal(board.rotation, 0)
 })

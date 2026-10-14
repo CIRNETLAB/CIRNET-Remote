@@ -5,8 +5,9 @@ import { useCircuitStore } from '../stores/circuit'
 import { useWorkspaceStore } from '../stores/workspace'
 import { resolveEndpoint } from '../electrical/endpoints'
 import { copyWireVisual, defaultWireVisual, readWireVisual, wireKey } from '../wires/wireVisual'
-import { controlPointWorld, endpointLeadPosition, pointDistance, snapWirePoint, solveWireRoute, type SolvedWireRoute } from '../wires/wireRouting'
+import { controlPointWorld, endpointLeadPosition, pointDistance, snapWirePoint, solveWireRoute, unstackWirePoint, type SolvedWireRoute } from '../wires/wireRouting'
 import { dragWireSegment, insertWireBend, materializeWireRoute, moveWireBend, normalizeWireVisual, removeWireBend } from '../wires/wireRouteEditing'
+import { automaticWireLayer, availableWireLayer, findWireStackConflicts, occupiedWireStackConflicts } from '../wires/wireStacking'
 import { MIN_WIRE_DIAMETER } from '../wires/wireAppearance'
 
 type Manager = ReturnType<typeof createSceneManager>
@@ -66,7 +67,9 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     else {
       try {
         const state = draft.value, route = manager() ? solveWireRoute({ source: state.source, destination: endpoint }, state.visual, manager()!.wireContext) : null
-        circuit.connectEndpoints(state.source, endpoint, normalizeWireVisual(route ? materializeWireRoute(state.visual, route) : state.visual))
+        const wire = { source: state.source, destination: endpoint }, visual = normalizeWireVisual(route ? materializeWireRoute(state.visual, route) : state.visual)
+        if (manager() && circuit.graph) visual.layer = automaticWireLayer(wire, visual, circuit.graph.connections, manager()!.wireContext)
+        circuit.connectEndpoints(state.source, endpoint, visual)
         cancel(); workspace.editError = ''
       }
       catch (error) { workspace.editError = error instanceof Error ? error.message : 'Wire connection failed.' }
@@ -116,7 +119,7 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     if (!draft.value && selectedConnection.value && ['select', 'wire'].includes(workspace.tool)) {
       const connection = selectedConnection.value, hit = scene.pickWireEdit(p.x, p.y, connection), route = scene.wireRoute(connection)
       if (hit && route && circuit.graph && canvas.value) {
-        const initial = materializeWireRoute(readWireVisual(connection), route), anchor = scene.wireRoutingPoint(p.x, p.y, route.frameModuleId, initial)
+        const initial = materializeWireRoute(readWireVisual(connection), route), anchor = scene.wireRoutingPoint(p.x, p.y, route.frameModuleId, initial, hit.point.y)
         if (anchor) {
           consume(event); canvas.value.focus(); workspace.selectedWireBend = hit.kind === 'bend' ? hit.index : null
           lastSegment.value = hit.kind === 'segment' ? hit : null
@@ -137,14 +140,14 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
       const state = edit.value, p = coordinates(event), scene = manager()
       if (event.pointerId !== state.pointer || !p || !scene) return true
       if (!state.dragged && Math.hypot(p.x - state.start.x, p.y - state.start.y) < 4) return true
-      const world = scene.wireRoutingPoint(p.x, p.y, state.route.frameModuleId, state.initial)
+      const world = scene.wireRoutingPoint(p.x, p.y, state.route.frameModuleId, state.initial, state.hit.point.y)
       if (!world) return true
       state.dragged = true
       const original = state.hit.kind === 'bend' ? state.initial.controlPoints[state.hit.index] : null
       const ownerId = original?.space === 'module' ? original.moduleId : state.hit.kind === 'segment' ? state.route.frameModuleId : null
       const pose = ownerId ? scene.wireContext.modulePose(ownerId) : null
       const point = snapWirePoint(world, pose, workspace.snap, event.altKey)
-      if (state.hit.kind === 'bend') state.visual = moveWireBend(state.initial, state.hit.index, point)
+      if (state.hit.kind === 'bend') state.visual = moveWireBend(state.initial, state.hit.index, unstackWirePoint(point, state.initial, scene.wireContext))
       else {
         const snappedWorld = controlPointWorld(point, scene.wireContext)!
         state.visual = dragWireSegment(state.initial, state.route, state.hit.index, { x: snappedWorld.x - state.anchor.x, y: 0, z: snappedWorld.z - state.anchor.z }, scene.wireContext)
@@ -219,6 +222,44 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     cancelEdit(); workspace.wireRouteMode = routeMode
     if (!draft.value && selectedConnection.value) circuit.updateWireVisual(selectedConnection.value, { ...readWireVisual(selectedConnection.value), routeMode })
   }
+  function setStackLayer(action: 'up' | 'down' | 'top') {
+    cancelEdit()
+    const wire = selectedConnection.value, scene = manager()
+    if (!wire || draft.value || !scene || !circuit.graph) return
+    const visual = readWireVisual(wire), current = visual.layer ?? 0
+    const layer = action === 'up' ? current + 1 : action === 'down' ? Math.max(0, current - 1) : Math.max(current, automaticWireLayer(wire, visual, circuit.graph.connections, scene.wireContext))
+    if (layer === current) return
+    const graph = circuit.graph
+    const changes = new Map<string, number>([[wireKey(wire), layer]])
+    const applyLayer = (connection: CircuitConnection): CircuitConnection => {
+      const nextLayer = changes.get(wireKey(connection))
+      return nextLayer === undefined ? connection : { ...connection, metadata: { ...connection.metadata, wireVisual: { ...readWireVisual(connection), layer: nextLayer } } }
+    }
+    const pending = occupiedWireStackConflicts(wire, { ...visual, layer }, graph.connections, scene.wireContext).map(peer => ({ key: wireKey(peer.wire), preferred: current }))
+    for (let index = 0; index < pending.length; index++) {
+      const item = pending[index]
+      if (changes.has(item.key)) continue
+      const peer = graph.connections.find(connection => wireKey(connection) === item.key)!
+      const peerVisual = readWireVisual(peer), fixed = graph.connections.filter(connection => changes.has(wireKey(connection))).map(applyLayer)
+      const replacement = availableWireLayer(peer, peerVisual, item.preferred, fixed, scene.wireContext)
+      changes.set(item.key, replacement)
+      // A displaced wire may also cross wires outside the selected wire's set.
+      for (const next of occupiedWireStackConflicts(peer, { ...peerVisual, layer: replacement }, graph.connections.map(applyLayer), scene.wireContext)) {
+        if (!changes.has(wireKey(next.wire))) pending.push({ key: wireKey(next.wire), preferred: peerVisual.layer ?? 0 })
+      }
+    }
+    // One atomic visual-only command, including necessary cascading swaps.
+    circuit.commitGraph({ ...graph, connections: graph.connections.map(applyLayer) })
+  }
+  function selectNextStackWire() {
+    const wire = selectedConnection.value, scene = manager()
+    if (!wire || draft.value || !scene || !circuit.graph) return
+    const peers = findWireStackConflicts(wire, readWireVisual(wire), circuit.graph.connections, scene.wireContext)
+    const connections = circuit.graph.connections
+    const stack = [wire, ...peers.map(peer => peer.wire)].sort((a, b) => (readWireVisual(b).layer ?? 0) - (readWireVisual(a).layer ?? 0) || connections.indexOf(a) - connections.indexOf(b))
+    const next = stack[(stack.findIndex(candidate => wireKey(candidate) === wireKey(wire)) + 1) % stack.length]
+    if (next && next !== wire) { cancelEdit(); workspace.selectWire(next.source, next.destination) }
+  }
   function removeSelectedBend() {
     cancelEdit()
     const wire = selectedConnection.value, index = workspace.selectedWireBend, route = wire && manager()?.wireRoute(wire)
@@ -231,7 +272,8 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     if (!wire || !hit || hit.kind !== 'segment' || !scene || !route || wireKey(hit.wire) !== wireKey(wire)) return
     const pose = route.frameModuleId ? scene.wireContext.modulePose(route.frameModuleId) : null
     const point = snapWirePoint(hit.point, pose, workspace.snap, false)
-    circuit.updateWireVisual(wire, insertWireBend(readWireVisual(wire), route, hit.index, point))
+    const visual = readWireVisual(wire)
+    circuit.updateWireVisual(wire, insertWireBend(visual, route, hit.index, unstackWirePoint(point, visual, scene.wireContext)))
   }
   function doubleClick(event: MouseEvent): boolean {
     if (draft.value || workspace.placementType || workspace.zoomAreaActive || !['select', 'wire'].includes(workspace.tool)) return false
@@ -249,7 +291,7 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
   })
   onUnmounted(cancel)
   return {
-    connect, cancel, pointerDown, pointerMove, pointerUp, keydown, setColor, setRouteMode, addBend, removeSelectedBend, doubleClick,
+    connect, cancel, pointerDown, pointerMove, pointerUp, keydown, setColor, setRouteMode, setStackLayer, selectNextStackWire, addBend, removeSelectedBend, doubleClick,
     lostPointerCapture(event: PointerEvent) { if (edit.value?.pointer !== event.pointerId) return false; cancelEdit(); return true },
     contextMenu(event: MouseEvent) { if (!draft.value && !edit.value) return false; consume(event); if (!draft.value) cancelEdit(); return true },
     pointerLeave() { manager()?.hoverEndpoint(null); if (!edit.value) manager()?.hoverWireEdit(null) },
@@ -257,6 +299,9 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     controlPoints: computed(() => draft.value?.visual.controlPoints ?? []),
     color: computed(() => draft.value?.visual.color ?? (selectedConnection.value ? readWireVisual(selectedConnection.value).color : workspace.wireColor)),
     routeMode: computed(() => draft.value?.visual.routeMode ?? (selectedConnection.value ? readWireVisual(selectedConnection.value).routeMode : workspace.wireRouteMode)),
+    layer: computed(() => selectedConnection.value ? readWireVisual(selectedConnection.value).layer ?? 0 : 0),
+    canStack: computed(() => !draft.value && !!selectedConnection.value),
+    canCycleStack: computed(() => { const wire = selectedConnection.value, scene = manager(); return !draft.value && !!wire && !!scene && !!circuit.graph && findWireStackConflicts(wire, readWireVisual(wire), circuit.graph.connections, scene.wireContext).length > 0 }),
     canAdd: computed(() => !draft.value && !!selectedConnection.value && lastSegment.value?.kind === 'segment'),
     canRemove: computed(() => !draft.value && !!selectedConnection.value && workspace.selectedWireBend !== null),
     hint: computed(() => draft.value ? 'Right: add corner; repeat here to undo · Left: finish at hole/port · Backspace: undo corner · Alt: no snap · Esc: cancel' : selectedConnection.value ? 'Drag a user bend or segment · Double-click: add an anchor · Alt: no snap' : 'Left-click a hole or port · Free: draw your own path'),

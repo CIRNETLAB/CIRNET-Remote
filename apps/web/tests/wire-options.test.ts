@@ -43,3 +43,16 @@ test('new wire options default to manual Free and explain each routing mode', as
     try { assert.ok(view.text().includes(explanation)) } finally { view.app.unmount() }
   }
 })
+
+test('selected wire exposes compact layer controls and overlapping-wire selection without model inventory', async () => {
+  const actions: string[] = []
+  const view = mountSfc(await loadSfc('components/workbench/WireOptions.vue'), createPinia(), { layer: 0, canStack: true, canCycleStack: true, onStack: (action: string) => actions.push(action), onCycleStack: () => actions.push('cycle') })
+  try {
+    const down = view.find('button', 'aria-label', 'Lower wire layer')
+    assert.equal(down.props.disabled, true)
+    dispatch(view.find('button', 'aria-label', 'Raise wire layer'), 'onClick')
+    dispatch(view.find('button', 'aria-label', 'Move wire above overlapping wires'), 'onClick')
+    dispatch(view.find('button', 'aria-label', 'Select next overlapping wire'), 'onClick')
+    assert.deepEqual(actions, ['up', 'top', 'cycle']); assert.ok(view.text().includes('Layer 0'))
+  } finally { view.app.unmount() }
+})

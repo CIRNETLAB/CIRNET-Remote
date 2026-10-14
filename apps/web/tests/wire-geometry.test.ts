@@ -99,3 +99,30 @@ test('render-only nearly collinear cleanup avoids sub-Float32 fillet faces at bo
   const geometry = buildWireGeometry({ points }, .052)
   try { assertHealthyWireGeometry(geometry) } finally { geometry.dispose() }
 })
+
+test('insulation keeps full diameter through tight flat corners and endpoint transitions', () => {
+  for (const points of [
+    [{ x: 0, y: .37, z: 0 }, { x: .02, y: .37, z: 0 }, { x: .02, y: .37, z: .02 }, { x: .4, y: .37, z: .02 }],
+    [{ x: 0, y: .37, z: 0 }, { x: .03, y: .37, z: .01 }, { x: .01, y: .37, z: .04 }, { x: .4, y: .37, z: .3 }],
+  ]) {
+    const geometry = buildWireGeometry({ points }, .052)
+    try {
+      assertHealthyWireGeometry(geometry)
+      const positions = geometry.getAttribute('position'), normals = geometry.getAttribute('normal')
+      let measured = 0
+      for (let i = 0; i < positions.count; i++) if (Math.abs(normals.getY(i)) > .9) {
+        assert.ok(Math.abs(positions.getY(i) - .37 - normals.getY(i) * .026) < 1e-6, 'every vertical radius sample stays full size; no tapered corner rings')
+        measured++
+      }
+      assert.ok(measured >= 4)
+    } finally { geometry.dispose() }
+  }
+})
+
+test('sub-Float32 arcs use a full-radius safe joint after boards move away from the origin', () => {
+  for (const offset of [20, 100]) for (const degrees of [.0007, .001, .003]) {
+    const angle = degrees * Math.PI / 180, points = [{ x: offset, y: .37, z: 0 }, { x: offset + 1, y: .37, z: 0 }, { x: offset + 1 + Math.cos(angle), y: .37, z: Math.sin(angle) }]
+    const geometry = buildWireGeometry({ points }, .052)
+    try { assertHealthyWireGeometry(geometry) } finally { geometry.dispose() }
+  }
+})

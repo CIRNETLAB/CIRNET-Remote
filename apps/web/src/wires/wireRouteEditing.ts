@@ -1,7 +1,7 @@
 import type { Point3, WireControlPoint, WireVisual } from '../types/circuit'
 import { moduleLocalToWorld, worldToModuleLocal } from '../electrical/modulePose'
 import { copyControlPoint, copyWireVisual } from './wireVisual'
-import { controlPointWorld, finitePoint, pointDistance, ownedPoint, type SolvedWireRoute, type WireRouteContext } from './wireRouting'
+import { controlPointWorld, finitePoint, pointDistance, ownedPoint, wireLayerOffset, type SolvedWireRoute, type WireRouteContext } from './wireRouting'
 
 export function normalizeWireVisual(visual: WireVisual): WireVisual {
   const next = copyWireVisual(visual)
@@ -56,7 +56,7 @@ export function dragWireSegment(visual: WireVisual, route: SolvedWireRoute, segm
     delta = { x: world.x - origin.x, y: 0, z: world.z - origin.z }
   }
   if (Math.hypot(delta.x, delta.z) < 1e-8) return next
-  const shifted = (point: Point3, index: number | null) => ownedPoint({ x: point.x + delta.x, y: point.y, z: point.z + delta.z }, index === null ? route.frameModuleId : next.controlPoints[index]?.space === 'module' ? (next.controlPoints[index] as Extract<WireControlPoint, { space: 'module' }>).moduleId : null, context)
+  const shifted = (point: Point3, index: number | null) => ownedPoint({ x: point.x + delta.x, y: point.y - (index === null ? wireLayerOffset(visual, context) : 0), z: point.z + delta.z }, index === null ? route.frameModuleId : next.controlPoints[index]?.space === 'module' ? (next.controlPoints[index] as Extract<WireControlPoint, { space: 'module' }>).moduleId : null, context)
   // Move only the user anchors bounding this semantic span. With one pinned
   // boundary the span pivots/reshapes around that pin; reuse its user boundary.
   for (const index of [segment.beforeUserIndex, segment.afterUserIndex]) {

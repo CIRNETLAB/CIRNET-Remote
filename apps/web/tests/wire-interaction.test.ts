@@ -332,7 +332,7 @@ test('same snapped corner toggles after larger screen travel and blocked surface
     h.editor.connect(`${bb}.contact:terminal:A:01`)
     const event = h.eventAt({ x: -3.25, y: .37, z: -.845 }, 1, 2)
     h.editor.pointerDown(event); assert.equal(h.editor.wireRouting.controlPoints.value.length, 1)
-    h.editor.pointerMove(h.pointer(event.clientX + 5, event.clientY)); h.editor.pointerDown(h.pointer(event.clientX + 5, event.clientY, 1, 2))
+    h.editor.pointerMove(h.pointer(event.clientX + 5, event.clientY)); h.editor.pointerDown(h.pointer(event.clientX + 1, event.clientY, 1, 2))
     assert.equal(h.editor.wireRouting.controlPoints.value.length, 0, 'same snap can toggle after traveling beyond the threshold')
     h.manager.setZoom(100)
     h.editor.pointerMove(h.eventAt({ x: -3, y: .37, z: 0 }, 1, 0, true)); h.flush()
@@ -341,5 +341,100 @@ test('same snapped corner toggles after larger screen travel and blocked surface
     assert.equal(preview.visible, true, 'an obstructed drawing plane cannot hide the source copper and entire wire')
     assert.equal(preview.geometry, geometry)
     assert.equal(h.editor.wireRouting.drawing.value, true)
+  } finally { h.dispose() }
+})
+
+test('new coincident wires stack 0/1/2 by creation and stack actions preserve nets, history and v1 files', async () => {
+  const h = wireHarness()
+  try {
+    const wires = Array.from({ length: 3 }, () => ({ source: `${h.circuit.placeModule('DIGITAL_SWITCH', { x: -2, y: 0, z: 0 })}.OUT`, destination: `${h.circuit.placeModule('LED', { x: 2, y: 0, z: 0 })}.IN` }))
+    await nextTick(); h.flush()
+    for (const [index, wire] of wires.entries()) {
+      h.editor.connect(wire.source); h.editor.connect(wire.destination); await nextTick(); h.flush()
+      assert.equal(readWireVisual(h.circuit.graph!.connections[index]).layer ?? 0, index)
+    }
+    const nets = resolveElectricalNets(h.circuit.graph!).nets, electrical = h.circuit.graph!.connections.map(({ source, destination }) => ({ source, destination }))
+    h.workspace.setTool('select'); h.workspace.selectWire(wires[0].source, wires[0].destination); await nextTick(); h.circuit.past = []
+    const stack = Reflect.get(h.editor.wireRouting, 'setStackLayer') as (action: 'up' | 'down' | 'top') => void
+    assert.equal(typeof stack, 'function')
+    stack('up'); await nextTick(); assert.equal(readWireVisual(h.circuit.graph!.connections[0]).layer, 1)
+    assert.equal(new Set(h.circuit.graph!.connections.map(wire => readWireVisual(wire).layer ?? 0)).size, 3, 'changing order must not put exact-overlap wires back at the same Y')
+    stack('down'); await nextTick(); assert.equal(readWireVisual(h.circuit.graph!.connections[0]).layer, 0)
+    stack('down'); await nextTick(); assert.equal(h.circuit.past.length, 2, 'clamped no-op creates no history')
+    stack('top'); await nextTick(); h.flush(); assert.equal(readWireVisual(h.circuit.graph!.connections[0]).layer, 3)
+    assert.equal(h.circuit.past.length, 3)
+    const route = h.manager.wireRoute(wires[0])!, p = route.segments.filter(segment => segment.editable).sort((a, b) => Math.hypot(b.end.x - b.start.x, b.end.z - b.start.z) - Math.hypot(a.end.x - a.start.x, a.end.z - a.start.z))[0]
+    const hit = h.manager.pick(h.eventAt(p.start).clientX, h.eventAt(p.start).clientY)
+    assert.ok(hit)
+    const midpoint = { x: (p.start.x + p.end.x) / 2, y: (p.start.y + p.end.y) / 2, z: (p.start.z + p.end.z) / 2 }, pointer = h.eventAt(midpoint)
+    const top = h.manager.pick(pointer.clientX, pointer.clientY)
+    assert.equal(top?.kind, 'wire'); assert.equal((top as { source: string }).source, wires[0].source)
+    h.editor.wireRouting.selectNextStackWire(); await nextTick(); assert.deepEqual(h.workspace.selectedWire, wires[2])
+    assert.equal(h.circuit.past.length, 3, 'cycling underlying wires does not create a circuit command')
+    assert.deepEqual(resolveElectricalNets(h.circuit.graph!).nets, nets)
+    assert.deepEqual(h.circuit.graph!.connections.map(({ source, destination }) => ({ source, destination })), electrical)
+    const current = h.circuit.snapshot(); h.circuit.undo(); h.circuit.redo(); await nextTick(); assert.equal(h.circuit.snapshot(), current)
+    const loaded = parseCircuitFile(h.circuit.exportGraph()); assert.deepEqual(loaded.connections, h.circuit.graph!.connections)
+  } finally { h.dispose() }
+})
+
+test('fifty elevated layer bend edits preserve the stored height, constant geometry and electrical endpoints', async () => {
+  const h = wireHarness()
+  try {
+    const bb = h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 })
+    const wire = { source: `${bb}.contact:terminal:A:01`, destination: `${bb}.contact:terminal:J:08` }
+    h.circuit.connectEndpoints(wire.source, wire.destination, { version: 1, color: '#397ec6', routeMode: 'FREE', thickness: .052, height: .04, layer: 2, controlPoints: [
+      { space: 'module', moduleId: bb, position: { x: -3.25, y: .6, z: -.4 } }, { space: 'world', position: { x: -2.99, y: .65, z: .4 } },
+    ] })
+    h.workspace.setTool('select'); h.workspace.selectWire(wire.source, wire.destination); await nextTick(); h.flush(); h.circuit.past = []
+    const nets = resolveElectricalNets(h.circuit.graph!).nets
+    for (let i = 0; i < 50; i++) {
+      const start = h.manager.wireRoute(wire)!.handles[0].position, end = { ...start, x: start.x + (i % 2 ? -.065 : .065) }
+      h.editor.pointerDown(h.eventAt(start)); h.editor.pointerMove(h.eventAt(end, 1, 0, true)); h.editor.pointerUp(h.eventAt(end, 1, 0, true)); await nextTick(); h.flush()
+      const visual = readWireVisual(h.circuit.graph!.connections[0])
+      assert.ok(Math.abs(visual.controlPoints[0].position.y - .6) < 1e-8, 'XZ edit must not flatten a raised anchor or bake in layer offset')
+      assert.equal(visual.controlPoints[1].position.y, .65); assert.equal(visual.layer, 2); assert.equal(visual.controlPoints.length, 2)
+      assert.equal(h.circuit.past.length, i + 1); assert.deepEqual(resolveElectricalNets(h.circuit.graph!).nets, nets)
+      assertHealthyWireGeometry((h.manager.wires.children[0] as Mesh).geometry)
+    }
+  } finally { h.dispose() }
+})
+
+test('ninety-degree contact crossing puts the later body above without creating a junction', async () => {
+  const h = wireHarness()
+  try {
+    const bb = h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 }); await nextTick(); h.flush()
+    const wires = [{ source: `${bb}.contact:terminal:C:01`, destination: `${bb}.contact:terminal:C:12` }, { source: `${bb}.contact:terminal:A:06`, destination: `${bb}.contact:terminal:J:06` }]
+    for (const wire of wires) { h.editor.connect(wire.source); h.editor.connect(wire.destination); await nextTick(); h.flush() }
+    assert.deepEqual(h.circuit.graph!.connections.map(wire => readWireVisual(wire).layer), [0, 1])
+    const resolved = resolveElectricalNets(h.circuit.graph!)
+    assert.notEqual(resolved.endpointNetIds[wires[0].source], resolved.endpointNetIds[wires[1].source])
+    const first = h.manager.wireRoute(wires[0])!, second = h.manager.wireRoute(wires[1])!
+    assert.ok(second.terminalLeads.source!.y - first.terminalLeads.source!.y >= .064 - 1e-8)
+    h.workspace.setTool('select'); h.workspace.selectWire(wires[0].source, wires[0].destination); await nextTick()
+    h.editor.wireRouting.setStackLayer('top'); await nextTick()
+    assert.deepEqual(resolveElectricalNets(h.circuit.graph!), resolved)
+  } finally { h.dispose() }
+})
+
+test('manual stack swaps cascade through a displaced wire own conflicts in one Undo command', async () => {
+  const h = wireHarness()
+  try {
+    const bb = h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 }); await nextTick(); h.flush()
+    const wires = [
+      { source: `${bb}.contact:terminal:C:01`, destination: `${bb}.contact:terminal:C:12` },
+      { source: `${bb}.contact:terminal:H:01`, destination: `${bb}.contact:terminal:H:12` },
+      { source: `${bb}.contact:terminal:A:06`, destination: `${bb}.contact:terminal:J:06` },
+    ]
+    for (const wire of wires) { h.editor.connect(wire.source); h.editor.connect(wire.destination); await nextTick(); h.flush() }
+    const layers = () => h.circuit.graph!.connections.map(wire => readWireVisual(wire).layer ?? 0)
+    assert.deepEqual(layers(), [0, 0, 1])
+    const nets = resolveElectricalNets(h.circuit.graph!)
+    h.workspace.setTool('select'); h.workspace.selectWire(wires[0].source, wires[0].destination); await nextTick(); h.circuit.past = []
+    h.editor.wireRouting.setStackLayer('up'); await nextTick(); h.flush()
+    assert.deepEqual(layers(), [1, 1, 0], 'moving crossing wire down also reorders its second horizontal neighbor')
+    assert.equal(h.circuit.past.length, 1); assert.deepEqual(resolveElectricalNets(h.circuit.graph!), nets)
+    h.circuit.undo(); await nextTick(); assert.deepEqual(layers(), [0, 0, 1])
+    h.circuit.redo(); await nextTick(); assert.deepEqual(layers(), [1, 1, 0])
   } finally { h.dispose() }
 })

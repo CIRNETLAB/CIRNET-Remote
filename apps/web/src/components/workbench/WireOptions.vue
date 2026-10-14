@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import type { WireRouteMode } from '../../types/circuit'
 import { JUMPER_COLORS } from '../../wires/wireVisual'
-withDefaults(defineProps<{ color?: string; routeMode?: WireRouteMode; canAdd?: boolean; canRemove?: boolean; hint?: string }>(), { color: '#d8493f', routeMode: 'FREE', canAdd: false, canRemove: false, hint: '' })
+withDefaults(defineProps<{ color?: string; routeMode?: WireRouteMode; canAdd?: boolean; canRemove?: boolean; hint?: string; layer?: number; canStack?: boolean; canCycleStack?: boolean }>(), { color: '#d8493f', routeMode: 'FREE', canAdd: false, canRemove: false, hint: '', layer: 0, canStack: false, canCycleStack: false })
 const descriptions: Record<WireRouteMode, string> = {
   FREE: 'Manual path: straight or diagonal runs through your anchors.',
   ORTHOGONAL: 'Right angles: X/Z runs; plugged endpoints stay fixed when editing.',
   AUTO: 'Convenient route: board jumpers use automatic right angles.',
 }
-const emit = defineEmits<{ color: [value: string]; mode: [value: WireRouteMode]; add: []; remove: []; routeKey: [event: KeyboardEvent] }>()
+const emit = defineEmits<{ color: [value: string]; mode: [value: WireRouteMode]; add: []; remove: []; routeKey: [event: KeyboardEvent]; stack: [action: 'up' | 'down' | 'top']; cycleStack: [] }>()
 function routeKey(event: KeyboardEvent) {
   if (event.key === 'Escape' || (['Backspace', 'Delete'].includes(event.key) && (event.target as HTMLElement)?.tagName !== 'SELECT')) emit('routeKey', event)
 }
@@ -21,6 +21,11 @@ function routeKey(event: KeyboardEvent) {
     <label class="wire-mode-label">Route<select aria-label="Wire route mode" aria-describedby="wire-route-description" :value="routeMode" @change="emit('mode', ($event.target as HTMLSelectElement).value as WireRouteMode)"><option value="FREE">Free · manual</option><option value="ORTHOGONAL">Orthogonal · 90°</option><option value="AUTO">Auto</option></select></label>
     <p id="wire-route-description" class="wire-mode-description">{{ descriptions[routeMode] }}</p>
     <div class="wire-edit-actions"><button aria-label="Add bend to selected segment" :disabled="!canAdd" @click="emit('add')">Add bend</button><button aria-label="Remove selected bend" :disabled="!canRemove" @click="emit('remove')">Remove bend</button></div>
+    <div v-if="canStack" class="wire-stack" role="group" aria-label="Wire stack order">
+      <div class="wire-stack-heading">Stack <span role="status">Layer {{ layer }}</span></div>
+      <div class="wire-edit-actions"><button aria-label="Lower wire layer" :disabled="layer === 0" @click="emit('stack', 'down')">Down</button><button aria-label="Raise wire layer" @click="emit('stack', 'up')">Up</button><button aria-label="Move wire above overlapping wires" @click="emit('stack', 'top')">Top</button></div>
+      <button v-if="canCycleStack" class="wire-stack-cycle" aria-label="Select next overlapping wire" @click="emit('cycleStack')">Select next overlapping wire</button>
+    </div>
     <p v-if="hint" class="wire-hint" role="status">{{ hint }}</p>
   </section>
 </template>
@@ -39,5 +44,9 @@ function routeKey(event: KeyboardEvent) {
 .wire-edit-actions { display: flex; gap: 6px; margin-top: 8px; }
 .wire-edit-actions button { flex: 1; color: #d7dce2; border: 1px solid #526170; background: #243240; padding: 4px; font: inherit; cursor: pointer; }
 .wire-edit-actions button:disabled { opacity: .4; cursor: default; }
+.wire-stack { border-top: 1px solid #526170; margin-top: 10px; padding-top: 8px; }
+.wire-stack-heading { display: flex; justify-content: space-between; color: #d9b66f; }
+.wire-stack-heading span { color: #aebccc; }
+.wire-stack-cycle { margin-top: 6px; width: 100%; padding: 4px; font: inherit; background: #17212d; border: 1px solid #526170; color: #aebccc; cursor: pointer; }
 .wire-hint { margin: 8px 0 0; font-size: 10px; line-height: 1.5; color: #aebccc; }
 </style>

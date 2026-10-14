@@ -48,7 +48,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     const module = modules.get(id), model = models.get(id)
     return module && model ? { ...module, position: { x: model.position.x, y: model.position.y, z: model.position.z }, rotation: model.rotation.y * 180 / Math.PI } : null
   }
-  const routeContext: WireRouteContext = { modulePose, endpoint: value => {
+  const routeContext: WireRouteContext = { modulePose, layerDiameter: () => wireLayer.layerDiameter(), endpoint: value => {
     const position = endpointPosition(value), parsed = parseEndpoint(value)
     return position && parsed ? { endpoint: value, position, ...(parsed.kind === 'contact' ? { contactModuleId: parsed.moduleId } : {}) } : null
   } }
@@ -438,15 +438,15 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       const hit = contentHit(x, y), owner = hit && pickOwner(hit.object), module = owner && modulePose(owner.userData.id)
       return module && getBreadboardTopology(module.type) ? module : null
     },
-    wireRoutingPoint(x: number, y: number, frameModuleId: string | null, visual: WireVisual): Point3 | null {
+    wireRoutingPoint(x: number, y: number, frameModuleId: string | null, visual: WireVisual, elevation?: number): Point3 | null {
       if (!validPointer(x, y)) return null
       scene.updateMatrixWorld(true)
       const hit = contentHit(x, y), owner = hit && pickOwner(hit.object), hitModule = owner && modulePose(owner.userData.id)
       const module = hitModule && getBreadboardTopology(hitModule.type) ? hitModule : frameModuleId ? modulePose(frameModuleId) : null
       const board = module && getBreadboardTopology(module.type)
-      const sourceHeight = (module?.position?.y ?? 0) + wireClearance(visual)
+      const sourceHeight = (module?.position?.y ?? 0) + wireClearance(visual, routeContext)
       ray(x, y)
-      const point = planeHit(board && module ? (module.position?.y ?? 0) + board.deckHeight + wireClearance(visual) : sourceHeight)
+      const point = planeHit(elevation !== undefined && Number.isFinite(elevation) ? elevation : board && module ? (module.position?.y ?? 0) + board.deckHeight + wireClearance(visual, routeContext) : sourceHeight)
       if (!point || hit && hit.distance < point.distanceTo(camera.position) - .02 && !getBreadboardTopology(hitModule?.type ?? '')) return null
       return { x: point.x, y: point.y, z: point.z }
     },

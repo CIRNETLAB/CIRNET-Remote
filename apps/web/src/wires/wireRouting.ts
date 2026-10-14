@@ -2,10 +2,10 @@ import type { CircuitModule, Point3, WireControlPoint, WireIdentity, WireVisual 
 import { getBreadboardTopology } from '../electrical/BreadboardTopology'
 import { moduleLocalToWorld, worldToModuleLocal } from '../electrical/modulePose'
 import { copyControlPoint } from './wireVisual'
-import { renderWireDiameter } from './wireAppearance'
+import { renderWireDiameter, WIRE_LAYER_GAP } from './wireAppearance'
 
 export interface WireRouteEndpoint { endpoint: string; position: Point3; contactModuleId?: string }
-export interface WireRouteContext { endpoint(value: string): WireRouteEndpoint | null; modulePose(id: string): CircuitModule | null }
+export interface WireRouteContext { endpoint(value: string): WireRouteEndpoint | null; modulePose(id: string): CircuitModule | null; layerDiameter?(): number }
 export type RoutePointKind = 'ENDPOINT' | 'TERMINAL_LEAD' | 'USER_ANCHOR' | 'GENERATED_ELBOW'
 export interface SemanticRoutePoint { position: Point3; kind: RoutePointKind; userIndex: number | null }
 export interface RouteHandle { index: number; position: Point3 }
@@ -17,6 +17,8 @@ export interface SolvedWireRoute {
   points: Point3[]; semanticPoints: SemanticRoutePoint[]; handles: RouteHandle[]; segments: RouteSegment[]
   frameModuleId: string | null; orthogonal: boolean
   terminalLeads: { source: Point3 | null; destination: Point3 | null }
+  contactPitch?: { source: number | null; destination: number | null }
+  layerOffset?: number
 }
 export const finitePoint = (point: Point3) => [point.x, point.y, point.z].every(Number.isFinite)
 export const pointDistance = (a: Point3, b: Point3) => Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z)
@@ -29,12 +31,17 @@ export function ownedPoint(world: Point3, moduleId: string | null, context: Wire
   const module = moduleId && context.modulePose(moduleId)
   return module ? { space: 'module', moduleId: module.id, position: worldToModuleLocal(world, module) } : { space: 'world', position: { ...world } }
 }
-export function wireClearance(visual: WireVisual): number { const diameter = renderWireDiameter(visual); return Math.max(visual.height ?? .03, diameter / 2 + .004) + (visual.layer ?? 0) * (diameter + .012) }
+export function wireBaseClearance(visual: WireVisual): number { return Math.max(visual.height ?? .03, renderWireDiameter(visual) / 2 + .004) }
+export function wireLayerOffset(visual: WireVisual, context?: WireRouteContext): number { return (visual.layer ?? 0) * (Math.max(renderWireDiameter(visual), context?.layerDiameter?.() ?? 0) + WIRE_LAYER_GAP) }
+export function wireClearance(visual: WireVisual, context?: WireRouteContext): number { return wireBaseClearance(visual) + wireLayerOffset(visual, context) }
+export function unstackWirePoint(point: WireControlPoint, visual: WireVisual, context?: WireRouteContext): WireControlPoint {
+  const stored = copyControlPoint(point); stored.position.y -= wireLayerOffset(visual, context); return stored
+}
 export function snapWirePoint(point: Point3, module: CircuitModule | null, snap: boolean, bypass: boolean): WireControlPoint {
   const topology = module && getBreadboardTopology(module.type)
   const local = topology && module ? worldToModuleLocal(point, module) : { ...point }
   if (snap && !bypass) {
-    const pitch = topology?.pitch ?? .065, origin = topology?.contacts[0].localPosition ?? [0, 0, 0]
+    const pitch = topology ? topology.pitch / 4 : .065, origin = topology?.contacts[0].localPosition ?? [0, 0, 0]
     local.x = Math.round(((local.x - origin[0]) / pitch)) * pitch + origin[0]
     local.z = Math.round(((local.z - origin[2]) / pitch)) * pitch + origin[2]
     local.x = Math.round(local.x * 1e9) / 1e9; local.z = Math.round(local.z * 1e9) / 1e9
@@ -45,7 +52,7 @@ export function snapWirePoint(point: Point3, module: CircuitModule | null, snap:
 export function endpointLeadPosition(endpoint: WireRouteEndpoint, visual: WireVisual, context: WireRouteContext): Point3 {
   const module = endpoint.contactModuleId && context.modulePose(endpoint.contactModuleId)
   const board = module && getBreadboardTopology(module.type)
-  return board && module ? { ...endpoint.position, y: (module.position?.y ?? 0) + board.deckHeight + wireClearance(visual) } : { ...endpoint.position }
+  return board && module ? { ...endpoint.position, y: (module.position?.y ?? 0) + board.deckHeight + wireClearance(visual, context) } : { ...endpoint.position, y: endpoint.position.y + wireLayerOffset(visual, context) }
 }
 
 export function solveWireRoute(wire: WireIdentity, visual: WireVisual, context: WireRouteContext): SolvedWireRoute | null {
@@ -57,19 +64,21 @@ export function solveWireRoute(wire: WireIdentity, visual: WireVisual, context: 
   const toLocal = (p: Point3) => frame ? worldToModuleLocal(p, frame) : { ...p }
   const toWorld = (p: Point3) => frame ? moduleLocalToWorld(p, frame) : { ...p }
   const start = endpointLeadPosition(a, visual, context), end = endpointLeadPosition(b, visual, context)
-  const anchors: SemanticRoutePoint[] = [{ position: start, kind: a.contactModuleId ? 'TERMINAL_LEAD' : 'ENDPOINT', userIndex: null }]
+  const layerOffset = wireLayerOffset(visual, context)
+  const anchors: SemanticRoutePoint[] = [{ position: start, kind: a.contactModuleId || layerOffset > 0 ? 'TERMINAL_LEAD' : 'ENDPOINT', userIndex: null }]
   const handles: RouteHandle[] = []
   for (const [index, raw] of visual.controlPoints.entries()) {
     const point = copyControlPoint(raw)
     if (point.space === 'module') {
       const board = getBreadboardTopology(context.modulePose(point.moduleId)?.type ?? '')
-      if (board) point.position.y = Math.max(point.position.y, board.deckHeight + wireClearance(visual))
+      if (board) point.position.y = Math.max(point.position.y, board.deckHeight + wireBaseClearance(visual))
     }
     const world = controlPointWorld(point, context)
     if (!world || !finitePoint(world)) return null
+    world.y += layerOffset
     anchors.push({ position: world, kind: 'USER_ANCHOR', userIndex: index }); handles.push({ index, position: { ...world } })
   }
-  anchors.push({ position: end, kind: b.contactModuleId ? 'TERMINAL_LEAD' : 'ENDPOINT', userIndex: null })
+  anchors.push({ position: end, kind: b.contactModuleId || layerOffset > 0 ? 'TERMINAL_LEAD' : 'ENDPOINT', userIndex: null })
   const orthogonal = visual.routeMode === 'ORTHOGONAL' || visual.routeMode === 'AUTO' && !!frame
   const semanticPoints: SemanticRoutePoint[] = [], segments: RouteSegment[] = []
   const append = (point: SemanticRoutePoint, beforeUserIndex: number | null, afterUserIndex: number | null, insertIndex: number, editable = true) => {
@@ -113,5 +122,6 @@ export function solveWireRoute(wire: WireIdentity, visual: WireVisual, context: 
   append({ position: { ...b.position }, kind: 'ENDPOINT', userIndex: null }, null, null, visual.controlPoints.length, false)
   const points = semanticPoints.map(p => p.position)
   if (points.length < 2 || !points.every(finitePoint)) return null
-  return { points, semanticPoints, handles, segments, frameModuleId, orthogonal, terminalLeads: { source: a.contactModuleId ? start : null, destination: b.contactModuleId ? end : null } }
+  const pitch = (endpoint: WireRouteEndpoint) => endpoint.contactModuleId ? getBreadboardTopology(context.modulePose(endpoint.contactModuleId)?.type ?? '')?.pitch ?? null : null
+  return { points, semanticPoints, handles, segments, frameModuleId, orthogonal, terminalLeads: { source: a.contactModuleId ? start : null, destination: b.contactModuleId ? end : null }, contactPitch: { source: pitch(a), destination: pitch(b) }, layerOffset }
 }
