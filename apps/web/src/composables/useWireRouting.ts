@@ -4,14 +4,14 @@ import type { CircuitConnection, CircuitGraph, Point3, WireControlPoint, WireIde
 import { useCircuitStore } from '../stores/circuit'
 import { useWorkspaceStore } from '../stores/workspace'
 import { resolveEndpoint } from '../electrical/endpoints'
-import { assertConnectionAllowed } from '../electrical/nets'
 import { copyWireVisual, defaultWireVisual, readWireVisual, wireKey } from '../wires/wireVisual'
-import { controlPointWorld, pointDistance, snapWirePoint, solveWireRoute, type SolvedWireRoute } from '../wires/wireRouting'
-import { dragWireSegment, insertWireBend, materializeWireRoute, moveWireBend, removeWireBend } from '../wires/wireRouteEditing'
+import { controlPointWorld, endpointLeadPosition, pointDistance, snapWirePoint, solveWireRoute, type SolvedWireRoute } from '../wires/wireRouting'
+import { dragWireSegment, insertWireBend, materializeWireRoute, moveWireBend, normalizeWireVisual, removeWireBend } from '../wires/wireRouteEditing'
 import { MIN_WIRE_DIAMETER } from '../wires/wireAppearance'
 
 type Manager = ReturnType<typeof createSceneManager>
-interface DrawingDraft { source: string; frameModuleId: string | null; visual: WireVisual; cursor: Point3 | null; hovered: string | null }
+type CornerState = { kind: 'none' } | { kind: 'provisional'; controlIndex: number; anchor: WireControlPoint; screenOrigin: { x: number; y: number }; travel: 'within-threshold' | 'away' }
+interface DrawingDraft { source: string; frameModuleId: string | null; visual: WireVisual; cursor: Point3 | null; hovered: string | null; corner: CornerState }
 interface WireEditGesture {
   pointer: number; circuitId: string | null; graph: CircuitGraph; connection: CircuitConnection; wire: WireIdentity
   hit: WireEditPick; route: SolvedWireRoute; initial: WireVisual; visual: WireVisual
@@ -54,14 +54,19 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
       workspace.selectModule(null); workspace.selectedWireBend = null
       workspace.pendingPort = endpoint; workspace.editError = ''
       draft.value = { source: endpoint, frameModuleId: resolved.endpoint.kind === 'contact' ? resolved.module.id : null,
-        visual: { ...defaultWireVisual(), thickness: MIN_WIRE_DIAMETER, height: .04, color: workspace.wireColor, routeMode: workspace.wireRouteMode }, cursor: null, hovered: null }
+        visual: { ...defaultWireVisual(), thickness: MIN_WIRE_DIAMETER, height: .04, color: workspace.wireColor, routeMode: workspace.wireRouteMode }, cursor: null, hovered: null, corner: { kind: 'none' } }
       manager()?.setWireDrawingActive(true); manager()?.highlight(null); manager()?.hoverEndpoint(endpoint)
+      const scene = manager(), source = scene?.wireContext.endpoint(endpoint)
+      if (scene && source) {
+        const lead = endpointLeadPosition(source, draft.value.visual, scene.wireContext)
+        draft.value = { ...draft.value, cursor: pointDistance(lead, source.position) > 1e-8 ? lead : { ...lead, y: lead.y + .1 } }
+        preview()
+      }
     } else if (draft.value.source === endpoint) workspace.editError = 'Choose a different endpoint, or press Esc to cancel.'
     else {
       try {
-        const state = draft.value, normalized = assertConnectionAllowed(circuit.graph!, state.source, endpoint)
-        const route = normalized.reversed && manager() ? solveWireRoute({ source: state.source, destination: endpoint }, state.visual, manager()!.wireContext) : null
-        circuit.connectEndpoints(state.source, endpoint, route ? materializeWireRoute(state.visual, route) : state.visual)
+        const state = draft.value, route = manager() ? solveWireRoute({ source: state.source, destination: endpoint }, state.visual, manager()!.wireContext) : null
+        circuit.connectEndpoints(state.source, endpoint, normalizeWireVisual(route ? materializeWireRoute(state.visual, route) : state.visual))
         cancel(); workspace.editError = ''
       }
       catch (error) { workspace.editError = error instanceof Error ? error.message : 'Wire connection failed.' }
@@ -81,9 +86,21 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
       const p = coordinates(event), scene = manager()
       const point = p && routingPoint(p.x, p.y, event.altKey)
       if (point && scene) {
-        const visual = copyWireVisual(draft.value.visual), previous = visual.controlPoints.at(-1)
-        if (!previous || JSON.stringify(previous) !== JSON.stringify(point)) visual.controlPoints.push(point)
-        draft.value = { ...draft.value, visual, cursor: controlPointWorld(point, scene.wireContext), frameModuleId: draft.value.frameModuleId ?? (point.space === 'module' ? point.moduleId : null), hovered: null }
+        const state = draft.value, visual = copyWireVisual(state.visual), world = controlPointWorld(point, scene.wireContext)!
+        const last = state.corner.kind === 'provisional' && state.corner.controlIndex === visual.controlPoints.length - 1 ? state.corner : null
+        const previousWorld = last && controlPointWorld(last.anchor, scene.wireContext)
+        const sameSnap = previousWorld && pointDistance(previousWorld, world) < 1e-5
+        const smallMotion = last && last.travel === 'within-threshold' && Math.hypot(p!.x - last.screenOrigin.x, p!.y - last.screenOrigin.y) < 4
+        let corner: CornerState = { kind: 'none' }
+        if (last && (sameSnap || smallMotion)) visual.controlPoints.pop()
+        else {
+          const previous = visual.controlPoints.at(-1), previousPoint = previous && controlPointWorld(previous, scene.wireContext)
+          if (!previousPoint || pointDistance(previousPoint, world) > 1e-5) {
+            visual.controlPoints.push(point)
+            corner = { kind: 'provisional', controlIndex: visual.controlPoints.length - 1, anchor: point, screenOrigin: p!, travel: 'within-threshold' }
+          }
+        }
+        draft.value = { ...state, visual, corner, cursor: world, frameModuleId: state.frameModuleId ?? (point.space === 'module' ? point.moduleId : null), hovered: null }
         preview()
       }
       return true
@@ -156,7 +173,9 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     if (draft.value) {
       const point = routingPoint(p.x, p.y, event.altKey)
       const world = point ? controlPointWorld(point, scene.wireContext) : null
-      draft.value = { ...draft.value, cursor: world, hovered: hit?.endpoint !== draft.value.source ? hit?.endpoint ?? null : null }
+      let corner = draft.value.corner
+      if (corner.kind === 'provisional' && Math.hypot(p.x - corner.screenOrigin.x, p.y - corner.screenOrigin.y) >= 4) corner = { ...corner, travel: 'away' }
+      draft.value = { ...draft.value, corner, cursor: world ?? draft.value.cursor, hovered: hit?.endpoint !== draft.value.source ? hit?.endpoint ?? null : null }
       preview()
     }
     return true
@@ -170,7 +189,7 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     if (!event.ctrlKey && !event.metaKey && ['Backspace', 'Delete'].includes(event.key)) {
       consume(event)
       const visual = copyWireVisual(draft.value.visual); visual.controlPoints.pop()
-      draft.value = { ...draft.value, visual }; preview(); return true
+      draft.value = { ...draft.value, visual, corner: { kind: 'none' } }; preview(); return true
     }
     return false
   }
@@ -185,7 +204,7 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     if (state.dragged && state.circuitId === circuit.activeId && circuit.graph === state.graph && selectedConnection.value === state.connection) {
       const route = manager() && solveWireRoute(state.wire, state.visual, manager()!.wireContext)
       const unchanged = route && route.points.length === state.route.points.length && route.points.every((point, index) => pointDistance(point, state.route.points[index]) < 1e-7)
-      try { if (route && !unchanged) circuit.updateWireVisual(state.wire, state.visual); workspace.editError = '' }
+      try { if (route && !unchanged) circuit.updateWireVisual(state.wire, normalizeWireVisual(state.visual)); workspace.editError = '' }
       catch (error) { workspace.editError = error instanceof Error ? error.message : 'Wire route edit failed.' }
     }
     return true
@@ -240,6 +259,6 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     routeMode: computed(() => draft.value?.visual.routeMode ?? (selectedConnection.value ? readWireVisual(selectedConnection.value).routeMode : workspace.wireRouteMode)),
     canAdd: computed(() => !draft.value && !!selectedConnection.value && lastSegment.value?.kind === 'segment'),
     canRemove: computed(() => !draft.value && !!selectedConnection.value && workspace.selectedWireBend !== null),
-    hint: computed(() => draft.value ? 'Right: add corner · Left: finish at hole/port · Alt: no snap · Backspace: undo corner · Esc: cancel' : selectedConnection.value ? 'Drag a bend or segment · Double-click a segment to add a bend · Alt: no snap' : 'Left-click a hole or port to begin a wire'),
+    hint: computed(() => draft.value ? 'Right: add corner; repeat here to undo · Left: finish at hole/port · Backspace: undo corner · Alt: no snap · Esc: cancel' : selectedConnection.value ? 'Drag a user bend or segment · Double-click: add an anchor · Alt: no snap' : 'Left-click a hole or port · Free: draw your own path'),
   }
 }

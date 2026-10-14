@@ -96,3 +96,87 @@ test('materialized routing retains its frame when point order reverses across di
   const expected = [...route.points].reverse()
   expected.forEach((point, i) => close(reversed.points[i], point))
 })
+
+test('generated orthogonal elbows are render-only and bend handles retain original user indices', () => {
+  const { wire, context, visual } = fixture()
+  visual.controlPoints[0].position.z = -.4
+  const saved = JSON.stringify(visual), route = solveWireRoute(wire, visual, context)!
+  assert.equal(route.handles.length, 2, 'only the two user bends may become edit handles')
+  assert.deepEqual(route.handles.map(handle => handle.index), [0, 1])
+  assert.ok(route.points.length > visual.controlPoints.length + 4, 'the route still contains generated elbows')
+  assert.deepEqual(materializeWireRoute(visual, route).controlPoints, visual.controlPoints, 'deriving a route cannot turn elbows into persisted anchors')
+  const moved = moveWireBend(materializeWireRoute(visual, route), 1, { space: 'module', moduleId: 'BB', position: { x: -3.2, y: .36, z: .5 } })
+  assert.deepEqual(moved.controlPoints[0], visual.controlPoints[0])
+  assert.equal(moved.controlPoints.length, 2)
+  assert.equal(JSON.stringify(visual), saved)
+})
+
+test('FREE keeps direct diagonals and an intentional crossing polyline without generated elbows', () => {
+  const { wire, visual, context } = fixture('FREE')
+  visual.controlPoints = []
+  let route = solveWireRoute(wire, visual, context)!
+  assert.equal(route.points.length, 4, 'pins, raised leads and one diagonal body segment')
+  assert.notEqual(route.points[1].x, route.points[2].x); assert.notEqual(route.points[1].z, route.points[2].z)
+  visual.controlPoints = [
+    { space: 'world', position: { x: -2, y: .36, z: -1 } }, { space: 'world', position: { x: 0, y: .36, z: 1 } },
+    { space: 'world', position: { x: -2, y: .36, z: 1 } }, { space: 'world', position: { x: 0, y: .36, z: -1 } },
+  ]
+  route = solveWireRoute(wire, visual, context)!
+  assert.deepEqual(route.points.slice(2, -2), visual.controlPoints.map(point => point.position))
+  assert.equal(route.handles.length, 4)
+})
+
+test('fifty orthogonal edits keep only adjacent user anchors and never accumulate solver elbows', () => {
+  const { wire, visual, context } = fixture()
+  visual.controlPoints[0].position.z = -.4
+  let edited = visual
+  for (let i = 0; i < 50; i++) {
+    const route = solveWireRoute(wire, edited, context)!
+    const middle = route.segments.find(segment => segment.editable && segment.start.x === segment.end.x && segment.start.z > -.5 && segment.end.z >= .4)!
+    edited = dragWireSegment(edited, route, middle.index, { x: i % 2 ? -.013 : .013, y: 0, z: .02 }, context)
+    assert.equal(edited.controlPoints.length, 2, 'editing does not persist derived elbows or copy the whole path')
+    assert.ok(edited.controlPoints.every(point => Object.values(point.position).every(Number.isFinite)))
+  }
+})
+
+test('anchor edits reject non-finite input and collapse a duplicate insertion without erasing intentional collinear handles', () => {
+  const { wire, visual, context } = fixture('FREE'), route = solveWireRoute(wire, visual, context)!
+  assert.throws(() => moveWireBend(visual, 0, { space: 'world', position: { x: NaN, y: .36, z: 0 } }))
+  assert.throws(() => dragWireSegment(visual, route, 1, { x: Infinity, y: 0, z: 0 }, context))
+  const middle = route.segments.find(segment => segment.fromHandle === 0 && segment.toHandle === 1)!
+  const duplicate = insertWireBend(visual, route, middle.index, { ...visual.controlPoints[0], position: { ...visual.controlPoints[0].position, x: visual.controlPoints[0].position.x + 1e-7 } })
+  assert.equal(duplicate.controlPoints.length, 2)
+  const inserted = insertWireBend(visual, route, middle.index, { space: 'module', moduleId: 'BB', position: { x: -3.51, y: .36, z: 0 } })
+  assert.equal(inserted.controlPoints.length, 3, 'an explicit collinear anchor remains available to drag')
+})
+
+test('fifty endpoint-adjacent segment drags reuse bounded anchors and keep both pins fixed', () => {
+  for (const mode of ['FREE', 'ORTHOGONAL'] as const) {
+    const { wire, context, visual } = fixture(mode)
+    visual.controlPoints = []
+    const original = solveWireRoute(wire, visual, context)!
+    let edited = visual
+    for (let i = 0; i < 50; i++) {
+      const route = solveWireRoute(wire, edited, context)!
+      const first = route.segments.find(segment => segment.editable)!
+      edited = dragWireSegment(edited, route, first.index, { x: .1 + i * .001, y: 0, z: .13 + i * .001 }, context)
+      assert.equal(edited.controlPoints.length, 2, 'seed a bare route once; subsequent pinned-span drags must reuse those anchors')
+      const after = solveWireRoute(wire, edited, context)!
+      close(after.points[0], original.points[0]); close(after.points.at(-1)!, original.points.at(-1)!)
+      assert.ok(after.points.every(point => Object.values(point).every(Number.isFinite)))
+    }
+  }
+})
+
+test('raised orthogonal anchors retain their exact local elbow order after board move and small yaw', () => {
+  const { board, wire, context, visual } = fixture()
+  visual.height = .04
+  visual.controlPoints = [{ space: 'module', moduleId: 'BB', position: { x: -4.03, y: .6, z: .13 } }]
+  const original = solveWireRoute(wire, visual, context)!
+  for (const rotation of [4, 37, 90, 180, 270]) {
+    board.rotation = rotation; board.position = { x: 5.123, y: .4, z: -2.17 }
+    const after = solveWireRoute(wire, visual, context)!
+    assert.equal(after.points.length, original.points.length)
+    original.points.forEach((point, index) => close(after.points[index], moduleLocalToWorld(point, board)))
+  }
+})

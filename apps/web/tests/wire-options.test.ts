@@ -30,3 +30,16 @@ test('palette keyboard forwards Escape and draft bend deletion while preserving 
     assert.deepEqual(keys, ['Escape', 'Backspace', 'Delete'])
   } finally { view.app.unmount() }
 })
+
+test('new wire options default to manual Free and explain each routing mode', async () => {
+  const component = await loadSfc('components/workbench/WireOptions.vue')
+  const free = mountSfc(component, createPinia())
+  try {
+    assert.equal(free.find('select', 'aria-label', 'Wire route mode').props.value, 'FREE')
+    assert.ok(free.text().includes('straight or diagonal'))
+  } finally { free.app.unmount() }
+  for (const [mode, explanation] of [['ORTHOGONAL', 'X/Z runs'], ['AUTO', 'automatic right angles']]) {
+    const view = mountSfc(component, createPinia(), { routeMode: mode })
+    try { assert.ok(view.text().includes(explanation)) } finally { view.app.unmount() }
+  }
+})

@@ -185,7 +185,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
         const focus = highlightedId ? models.get(highlightedId)?.position ?? target : target
         updateTechnicalGrid(grid, camera, target, focus, height)
         updateGizmo()
-        wireLayer.flush(); scene.updateMatrixWorld(true)
+        wireLayer.updateCamera(camera, height); wireLayer.flush(); scene.updateMatrixWorld(true)
         if (activeOutline) updateSelectionOutline(activeOutline.group, camera.position, width, height)
         renderer.render(scene, camera); onRender?.()
       }
@@ -236,6 +236,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
   const ray = (x: number, y: number) => { camera.updateMatrixWorld(); raycaster.params.Line.threshold = camera.position.distanceTo(controls?.target ?? viewTarget) * 2 * Math.tan(camera.fov * Math.PI / 360) / (height * camera.zoom) * 6; raycaster.setFromCamera(new Vector2(x / width * 2 - 1, -(y / height) * 2 + 1), camera) }
   const pickOwner = (object: Object3D) => { while (object.parent && !object.userData.kind) object = object.parent; return object }
   const ignored = (object: Object3D) => { let current: Object3D | null = object; while (current) { if (current.userData.ignorePick) return true; current = current.parent }; return false }
+  const wireMeshes = (root?: Object3D) => (root ? [root] : wires.children).flatMap(mesh => [mesh, ...mesh.children.filter(child => child instanceof Mesh)])
   const contentHit = (x: number, y: number) => { ray(x, y); return raycaster.intersectObjects(content.children, true).find(hit => !ignored(hit.object)) ?? null }
   const screenPoint = (point: Point3) => {
     const world = new Vector3(point.x, point.y, point.z), projected = world.clone().project(camera), depth = -world.clone().applyMatrix4(camera.matrixWorldInverse).z
@@ -355,7 +356,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       const body = contentHit(x, y)
       // Close-up tubes can occupy many pixels: their visible surface is a hit
       // even when the forgiving centerline margin is outside the cursor.
-      const tube = raycaster.intersectObjects(wires.children, false)[0]
+      const tube = raycaster.intersectObjects(wireMeshes(), false)[0]
       if (tube && (!body || tube.distance <= body.distance + .015)) return { kind: 'wire', ...tube.object.userData as WireIdentity, point: tube.point.clone() }
       let best: { wire: WireIdentity; point: Vector3; distance: number; pixels: number } | null = null
       for (const mesh of wires.children) {
@@ -419,7 +420,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       }
       if (best) return { kind: 'segment', wire, index: best.index, point: best.point }
       const body = contentHit(x, y), mesh = wires.children.find(mesh => mesh.userData.source === wire.source && mesh.userData.destination === wire.destination)
-      const tube = mesh && raycaster.intersectObject(mesh, false)[0]
+      const tube = mesh && raycaster.intersectObjects(wireMeshes(mesh), false)[0]
       if (!tube || body && tube.distance > body.distance + .015) return null
       // At close magnification, a tube is much wider than the centerline margin.
       // Map its surface to the nearest solved segment, retaining pinned leads.
@@ -510,7 +511,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
           // instead focuses the rendered tube surface to keep close dolly outside.
           ray(sx, sy)
           const mesh = wires.children.find(mesh => mesh.userData.source === hit.source && mesh.userData.destination === hit.destination)
-          const surface = mesh && raycaster.intersectObject(mesh, false)[0]
+          const surface = mesh && raycaster.intersectObjects(wireMeshes(mesh), false)[0]
           if (surface) return surface.point
         }
         return hit?.point ?? this.groundPoint(sx, sy)

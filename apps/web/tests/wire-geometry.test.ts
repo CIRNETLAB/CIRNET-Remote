@@ -2,6 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { Vector3 } from 'three'
 import { buildWireGeometry, roundedWirePoints } from '../src/three/WireGeometry'
+import { assertHealthyWireGeometry } from './helpers/wireGeometryAssertions'
 
 test('jumper corners are tangent circular fillets contained by the XZ route, with pinned endpoints', () => {
   const points = [{ x: 0, y: .37, z: 0 }, { x: 1, y: .37, z: 0 }, { x: 1, y: .37, z: 1 }]
@@ -48,4 +49,53 @@ test('legacy and new contact insertion elbows have no folded tube faces', () => 
       }
     } finally { geometry.dispose() }
   }
+})
+
+test('straight diagonal insulation is sealed and short 3D corners do not produce degenerate or inverted faces', () => {
+  const paths = [
+    [{ x: 0, y: .37, z: 0 }, { x: 2, y: .37, z: 2 }],
+    [{ x: 0, y: .37, z: 0 }, { x: .03, y: .37, z: 0 }, { x: .03, y: .37, z: .03 }, { x: .03, y: .4, z: .03 }, { x: .4, y: .4, z: .4 }],
+  ]
+  for (const [pathIndex, points] of paths.entries()) {
+    const geometry = buildWireGeometry({ points, handles: [], segments: [], frameModuleId: null, materializedControlPoints: [] }, .052)
+    try {
+      const vertices = geometry.getAttribute('position'), normals = geometry.getAttribute('normal'), indices = geometry.index!, edges = new Map<string, number>()
+      const vertex = (i: number) => new Vector3().fromBufferAttribute(vertices, i)
+      const key = (i: number) => vertex(i).toArray().map(value => Math.round(value * 1e6)).join(',')
+      for (let i = 0; i < indices.count; i += 3) {
+        const ids = [indices.getX(i), indices.getX(i + 1), indices.getX(i + 2)], [a, b, c] = ids
+        const face = vertex(b).sub(vertex(a)).cross(vertex(c).sub(vertex(a)))
+        assert.ok(face.lengthSq() > 1e-20, 'no zero-area tube triangles')
+        const average = ids.reduce((normal, id) => normal.add(new Vector3().fromBufferAttribute(normals, id)), new Vector3())
+        assert.ok(face.dot(average) >= -1e-10, 'short corners must not fold inward')
+        for (let side = 0; side < 3; side++) { const edge = [key(ids[side]), key(ids[(side + 1) % 3])].sort().join('|'); edges.set(edge, (edges.get(edge) ?? 0) + 1) }
+      }
+      if (pathIndex === 0) assert.ok([...edges.values()].every(count => count === 2), 'insulation end caps close the tube')
+    } finally { geometry.dispose() }
+  }
+})
+
+test('very short shallow FREE corners use bounded fillets rather than full-radius sharp rings', () => {
+  for (const [length, degrees] of [[.001, 2.55], [.0001, 1], [.0001, 2.55], [.01, 1]]) {
+    const angle = degrees * Math.PI / 180
+    const points = [{ x: 0, y: .37, z: 0 }, { x: length, y: .37, z: 0 }, { x: length * (1 + Math.cos(angle)), y: .37, z: length * Math.sin(angle) }]
+    const geometry = buildWireGeometry({ points }, .052)
+    try { assertHealthyWireGeometry(geometry) } finally { geometry.dispose() }
+  }
+})
+
+test('an intentional antiparallel return stays finite in both the body and the unsplit picking polyline', () => {
+  const points = [{ x: 0, y: .37, z: 0 }, { x: 1, y: .37, z: 0 }, { x: 0, y: .37, z: 0 }]
+  const rounded = roundedWirePoints(points)
+  assert.ok(rounded.every(point => point.toArray().every(Number.isFinite)))
+  assert.ok(rounded.some(point => point.distanceTo(new Vector3(1, .37, 0)) < 1e-8), 'an intentional return cannot be erased')
+  const geometry = buildWireGeometry({ points }, .052)
+  try { assertHealthyWireGeometry(geometry) } finally { geometry.dispose() }
+})
+
+test('render-only nearly collinear cleanup avoids sub-Float32 fillet faces at board coordinates', () => {
+  const angle = .0001 * Math.PI / 180
+  const points = [{ x: -4.03, y: .37, z: 0 }, { x: -3.03, y: .37, z: 0 }, { x: -3.03 + Math.cos(angle), y: .37, z: Math.sin(angle) }]
+  const geometry = buildWireGeometry({ points }, .052)
+  try { assertHealthyWireGeometry(geometry) } finally { geometry.dispose() }
 })

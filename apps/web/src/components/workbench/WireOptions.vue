@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import type { WireRouteMode } from '../../types/circuit'
 import { JUMPER_COLORS } from '../../wires/wireVisual'
-withDefaults(defineProps<{ color?: string; routeMode?: WireRouteMode; canAdd?: boolean; canRemove?: boolean; hint?: string }>(), { color: '#d8493f', routeMode: 'AUTO', canAdd: false, canRemove: false, hint: '' })
+withDefaults(defineProps<{ color?: string; routeMode?: WireRouteMode; canAdd?: boolean; canRemove?: boolean; hint?: string }>(), { color: '#d8493f', routeMode: 'FREE', canAdd: false, canRemove: false, hint: '' })
+const descriptions: Record<WireRouteMode, string> = {
+  FREE: 'Manual path: straight or diagonal runs through your anchors.',
+  ORTHOGONAL: 'Right angles: X/Z runs; plugged endpoints stay fixed when editing.',
+  AUTO: 'Convenient route: board jumpers use automatic right angles.',
+}
 const emit = defineEmits<{ color: [value: string]; mode: [value: WireRouteMode]; add: []; remove: []; routeKey: [event: KeyboardEvent] }>()
 function routeKey(event: KeyboardEvent) {
   if (event.key === 'Escape' || (['Backspace', 'Delete'].includes(event.key) && (event.target as HTMLElement)?.tagName !== 'SELECT')) emit('routeKey', event)
@@ -13,7 +18,8 @@ function routeKey(event: KeyboardEvent) {
     <div class="wire-palette" role="group" aria-label="Wire colors">
       <button v-for="swatch in JUMPER_COLORS" :key="swatch.name" :aria-label="swatch.name + ' wire'" :title="swatch.name" :aria-pressed="color === swatch.value" :style="{ '--swatch': swatch.value }" @click="emit('color', swatch.value)" />
     </div>
-    <label class="wire-mode-label">Route<select aria-label="Wire route mode" :value="routeMode" @change="emit('mode', ($event.target as HTMLSelectElement).value as WireRouteMode)"><option value="AUTO">Auto</option><option value="ORTHOGONAL">Orthogonal</option><option value="FREE">Free</option></select></label>
+    <label class="wire-mode-label">Route<select aria-label="Wire route mode" aria-describedby="wire-route-description" :value="routeMode" @change="emit('mode', ($event.target as HTMLSelectElement).value as WireRouteMode)"><option value="FREE">Free · manual</option><option value="ORTHOGONAL">Orthogonal · 90°</option><option value="AUTO">Auto</option></select></label>
+    <p id="wire-route-description" class="wire-mode-description">{{ descriptions[routeMode] }}</p>
     <div class="wire-edit-actions"><button aria-label="Add bend to selected segment" :disabled="!canAdd" @click="emit('add')">Add bend</button><button aria-label="Remove selected bend" :disabled="!canRemove" @click="emit('remove')">Remove bend</button></div>
     <p v-if="hint" class="wire-hint" role="status">{{ hint }}</p>
   </section>
@@ -29,6 +35,7 @@ function routeKey(event: KeyboardEvent) {
 .wire-palette button[aria-pressed=true] { outline: 2px solid #e4c378; outline-offset: 2px; }
 .wire-mode-label { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .wire-mode-label select { width: 155px; background: #101925; color: #d7dce2; border: 1px solid #526170; padding: 3px 5px; font: inherit; }
+.wire-mode-description { margin: 6px 0 0; font-size: 10px; line-height: 1.4; color: #aebccc; }
 .wire-edit-actions { display: flex; gap: 6px; margin-top: 8px; }
 .wire-edit-actions button { flex: 1; color: #d7dce2; border: 1px solid #526170; background: #243240; padding: 4px; font: inherit; cursor: pointer; }
 .wire-edit-actions button:disabled { opacity: .4; cursor: default; }

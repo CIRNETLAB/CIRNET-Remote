@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { Mesh, Vector3 } from 'three'
+import { InstancedMesh, Matrix4, Mesh, PerspectiveCamera, Vector3 } from 'three'
 import { createWireLayer } from '../src/three/WireLayer'
 import { defaultWireVisual } from '../src/wires/wireVisual'
 import type { CircuitConnection } from '../src/types/circuit'
@@ -87,5 +87,78 @@ test('legacy thin wires render round and clearly, with a reusable gold overlay a
     layer.sync([]); assert.equal(halo.visible, false); assert.equal(hover.visible, false)
     layer.dispose(); layer.dispose()
     assert.equal(haloDisposals, 1); assert.equal(hoverDisposals, 1)
+  } finally { layer.dispose() }
+})
+
+test('completed and preview jumpers have real narrower copper pins and insulation ends above the socket', () => {
+  const positions: Record<string, Vector3> = { 'BB.contact:A': new Vector3(0, .309, 0), 'BB.contact:B': new Vector3(1, .309, 1) }
+  const context = { modulePose: () => ({ id: 'BB', type: 'BREADBOARD' }), endpoint: (endpoint: string) => positions[endpoint] ? { endpoint, position: positions[endpoint], contactModuleId: 'BB' } : null }
+  const layer = createWireLayer(e => positions[e] ?? null, context)
+  const visual = { ...defaultWireVisual(), routeMode: 'FREE' as const, thickness: .052, height: .04 }
+  const wire = { source: 'BB.contact:A', destination: 'BB.contact:B', metadata: { wireVisual: visual } }, saved = JSON.stringify(wire)
+  try {
+    layer.sync([wire])
+    const body = layer.group.children[0] as Mesh
+    for (const name of ['wire-terminal-source', 'wire-terminal-destination']) {
+      const core = body.getObjectByName(name) as Mesh
+      assert.ok(core instanceof Mesh, 'terminal must be actual metal geometry')
+      assert.equal(core.geometry.type, 'CylinderGeometry')
+      assert.ok(core.scale.x < .026 && core.scale.x > .008)
+      assert.ok((core.material as import('three').MeshStandardMaterial).metalness > .5)
+      const tip = core.localToWorld(new Vector3(0, -.5, 0))
+      assert.ok(tip.distanceTo(name.endsWith('source') ? positions[wire.source] : positions[wire.destination]) < 1e-8)
+    }
+    const vertices = body.geometry.getAttribute('position')
+    assert.ok(Array.from({ length: vertices.count }, (_, i) => vertices.getY(i)).every(y => y > .335), 'red insulation ends above the plastic deck, copper alone enters the hole')
+    layer.previewDrawing({ source: wire.source, destination: '' }, visual, { x: .5, y: .37, z: -.5 }); layer.flush()
+    const preview = layer.tools.getObjectByName('wire-drawing-preview') as Mesh
+    const free = preview.getObjectByName('wire-terminal-free') as Mesh
+    assert.ok(free instanceof Mesh)
+    assert.ok(free.localToWorld(new Vector3(0, -.5, 0)).distanceTo(new Vector3(.5, .37, -.5)) < 1e-8)
+    layer.previewDrawing({ source: wire.source, destination: '' }, { ...visual, controlPoints: [{ space: 'world', position: { x: .5, y: .37, z: -.5 } }] }, { x: .9, y: .37, z: .3 }); layer.flush()
+    assert.equal(preview.getObjectByName('wire-terminal-free'), free, 'one moving free copper tip, no terminal at each bend')
+    assert.ok(free.localToWorld(new Vector3(0, -.5, 0)).distanceTo(new Vector3(.9, .37, .3)) < 1e-8)
+    assert.equal(JSON.stringify(wire), saved)
+  } finally { layer.dispose() }
+})
+
+test('selected user handles stay small in screen pixels at close zoom without rebuilding the wire', () => {
+  const layer = createWireLayer(e => new Vector3(e.endsWith('OUT') ? 0 : 1, .37, e.endsWith('OUT') ? 0 : 1))
+  const wire = { source: 'A.OUT', destination: 'B.IN', metadata: { wireVisual: { ...defaultWireVisual(), routeMode: 'FREE', controlPoints: [{ space: 'world', position: { x: .26, y: .37, z: 0 } }] } } }
+  try {
+    layer.sync([wire]); layer.highlight(wire)
+    const geometry = (layer.group.children[0] as Mesh).geometry, camera = new PerspectiveCamera(42, 1000 / 700, .005, 150)
+    camera.up.set(0, 0, -1)
+    const update = Reflect.get(layer, 'updateCamera') as (camera: PerspectiveCamera, height: number) => void
+    assert.equal(typeof update, 'function')
+    for (const height of [1.5, .4]) {
+      camera.position.set(.26, height, 0); camera.lookAt(.26, .37, 0); camera.updateMatrixWorld()
+      update(camera, 700)
+      const handles = layer.tools.getObjectByName('wire-handles') as InstancedMesh, matrix = new Matrix4()
+      handles.getMatrixAt(0, matrix)
+      const point = new Vector3().setFromMatrixPosition(matrix), scale = new Vector3().setFromMatrixScale(matrix).x
+      const center = point.clone().project(camera), edge = point.clone().add(new Vector3(.04 * scale, 0, 0)).project(camera)
+      const pixels = Math.abs(edge.x - center.x) * 500
+      assert.ok(pixels >= 2.5 && pixels <= 4.5, 'handle is legible without covering the enlarged insulation')
+      assert.equal((layer.group.children[0] as Mesh).geometry, geometry)
+    }
+  } finally { layer.dispose() }
+})
+
+test('deleting a wire or preview does not dispose shared copper resources still used by other jumpers', () => {
+  const layer = createWireLayer(e => new Vector3(e.endsWith('OUT') ? 0 : 2, .37, e.startsWith('C') || e.startsWith('D') ? 1 : 0))
+  const first = { source: 'A.OUT', destination: 'B.IN' }, second = { source: 'C.OUT', destination: 'D.IN' }
+  try {
+    layer.sync([first, second])
+    const copper = layer.group.children[0].getObjectByName('wire-terminal-source') as Mesh, other = layer.group.children[1].getObjectByName('wire-terminal-source') as Mesh
+    assert.equal(copper.geometry, other.geometry); assert.equal(copper.material, other.material)
+    let geometryDisposals = 0, materialDisposals = 0
+    copper.geometry.addEventListener('dispose', () => geometryDisposals++)
+    ;(copper.material as import('three').Material).addEventListener('dispose', () => materialDisposals++)
+    layer.sync([second]); assert.equal(geometryDisposals, 0); assert.equal(materialDisposals, 0)
+    layer.previewDrawing({ source: second.source, destination: '' }, defaultWireVisual(), { x: .5, y: .37, z: 1.5 }); layer.flush(); layer.clearDrawing()
+    assert.equal(geometryDisposals, 0); assert.equal(materialDisposals, 0)
+    layer.dispose(); layer.dispose()
+    assert.equal(geometryDisposals, 1); assert.equal(materialDisposals, 1)
   } finally { layer.dispose() }
 })

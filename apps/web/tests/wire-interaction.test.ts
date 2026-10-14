@@ -4,6 +4,9 @@ import { nextTick } from 'vue'
 import { wireHarness } from './helpers/wireHarness'
 import { readWireVisual } from '../src/wires/wireVisual'
 import { resolveElectricalNets } from '../src/electrical/nets'
+import { Mesh, Vector3 } from 'three'
+import { parseCircuitFile } from '../src/services/files/circuitFile'
+import { assertHealthyWireGeometry } from './helpers/wireGeometryAssertions'
 
 test('right-click adds repeated corners, left empty clicks do not bend, and endpoint commit stays atomic', async () => {
   const h = wireHarness()
@@ -204,5 +207,139 @@ test('Wire mode endpoints win over selected segment margins at occupied and adja
       h.workspace.selectWire(wire.source, wire.destination); await nextTick(); h.flush()
     }
     assert.equal(h.circuit.past.length, 0)
+  } finally { h.dispose() }
+})
+
+test('RMB toggles the last provisional corner by snapped position or small motion without cancelling the draft', async () => {
+  const h = wireHarness()
+  try {
+    const bb = h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 }); await nextTick(); h.flush(); h.circuit.past = []
+    const first = `${bb}.contact:terminal:A:01`
+    h.editor.connect(first)
+    const point = h.eventAt({ x: -3.25, y: .37, z: -.845 }, 1, 2)
+    h.editor.pointerDown(point); assert.equal(h.editor.wireRouting.controlPoints.value.length, 1)
+    h.editor.pointerDown(point); assert.equal(h.editor.wireRouting.controlPoints.value.length, 0)
+    assert.equal(h.workspace.pendingPort, first)
+    h.editor.pointerDown(h.eventAt({ x: -3.25, y: .37, z: -.845 }, 1, 2, true))
+    h.editor.pointerMove(h.pointer(point.clientX + 1, point.clientY + 1, 1, 0, true))
+    h.editor.pointerDown(h.pointer(point.clientX + 1, point.clientY + 1, 1, 2, true))
+    assert.equal(h.editor.wireRouting.controlPoints.value.length, 0)
+    for (const p of [{ x: -3.25, y: .37, z: -.845 }, { x: -3, y: .37, z: -.2 }, { x: -3.5, y: .37, z: .4 }, { x: -2.8, y: .37, z: .9 }]) {
+      const event = h.eventAt(p, 1, 2); h.editor.pointerMove(event); h.editor.pointerDown(event)
+    }
+    assert.equal(h.editor.wireRouting.controlPoints.value.length, 4)
+    assert.equal(h.workspace.pendingPort, first); assert.equal(h.circuit.past.length, 0)
+    assert.equal(h.editor.wireRouting.routeMode.value, 'FREE')
+    h.editor.keydown({ key: 'Escape' } as KeyboardEvent); assert.equal(h.workspace.pendingPort, null)
+  } finally { h.dispose() }
+})
+
+test('fifty completed bend and segment gestures keep stable user anchors, geometry, nets and v1 history/files', async () => {
+  for (const mode of ['FREE', 'ORTHOGONAL'] as const) {
+    const h = wireHarness()
+    try {
+      const bb = h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 })
+      const wire = { source: `${bb}.contact:terminal:A:01`, destination: `${bb}.contact:terminal:J:08` }
+      h.circuit.connectEndpoints(wire.source, wire.destination, { version: 1, routeMode: mode, color: '#d8493f', thickness: .052, height: .04, controlPoints: [
+        { space: 'module', moduleId: bb, position: { x: -3.25, y: .37, z: -.845 } },
+        { space: 'module', moduleId: bb, position: { x: -2.99, y: .37, z: .845 } },
+      ] })
+      h.workspace.setTool('select'); h.workspace.selectWire(wire.source, wire.destination); await nextTick(); h.flush(); h.circuit.past = []
+      const nets = resolveElectricalNets(h.circuit.graph!).nets
+      for (let i = 0; i < 50; i++) {
+        const route = h.manager.wireRoute(wire)!, sign = i % 4 < 2 ? 1 : -1
+        let start: { x: number; y: number; z: number }
+        if (i % 2 === 0) start = route.handles.find(handle => handle.index === 0)!.position
+        else {
+          const segment = route.segments.filter(segment => segment.beforeUserIndex === 0 && segment.afterUserIndex === 1).sort((a, b) => Math.hypot(b.end.x - b.start.x, b.end.z - b.start.z) - Math.hypot(a.end.x - a.start.x, a.end.z - a.start.z))[0]
+          start = { x: (segment.start.x + segment.end.x) / 2, y: .37, z: (segment.start.z + segment.end.z) / 2 }
+        }
+        const end = { ...start, x: start.x + .13 * sign, z: start.z + .13 * sign }
+        h.editor.pointerDown(h.eventAt(start)); assert.equal(h.editor.wireRouting.editing.value, true)
+        const history = h.circuit.past.length
+        for (let burst = 0; burst < 3; burst++) h.editor.pointerMove(h.eventAt(end, 1, 0, true))
+        assert.equal(h.circuit.past.length, history)
+        h.editor.pointerUp(h.eventAt(end, 1, 0, true)); await nextTick(); h.flush()
+        assert.equal(h.circuit.past.length, i + 1, 'one history entry per completed gesture')
+        assert.equal(readWireVisual(h.circuit.graph!.connections[0]).controlPoints.length, 2)
+        assert.deepEqual({ source: h.circuit.graph!.connections[0].source, destination: h.circuit.graph!.connections[0].destination }, wire)
+        assert.deepEqual(resolveElectricalNets(h.circuit.graph!).nets, nets)
+        assertHealthyWireGeometry((h.manager.wires.children[0] as Mesh).geometry)
+        assert.equal(h.captured.size, 0)
+      }
+      const current = h.circuit.snapshot()
+      h.circuit.undo(); h.circuit.redo(); await nextTick(); assert.equal(h.circuit.snapshot(), current)
+      const saved = h.circuit.exportGraph(), reopened = parseCircuitFile(saved)
+      assert.deepEqual(reopened.connections, h.circuit.graph!.connections)
+      h.circuit.importGraph(reopened); await nextTick(); h.flush()
+      assert.deepEqual(resolveElectricalNets(h.circuit.graph!).nets, nets)
+      assertHealthyWireGeometry((h.manager.wires.children[0] as Mesh).geometry)
+    } finally { h.dispose() }
+  }
+})
+
+test('draft copper appears on start and its free tip stays at the preview end through provisional corners', async () => {
+  const h = wireHarness()
+  try {
+    const bb = h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 }); await nextTick(); h.flush()
+    h.editor.connect(`${bb}.contact:terminal:A:01`); h.flush()
+    const preview = h.manager.scene.getObjectByName('wire-drawing-preview') as Mesh
+    assert.ok(preview.getObjectByName('wire-terminal-source')); assert.ok(preview.getObjectByName('wire-terminal-free'))
+    for (const point of [{ x: -3.25, y: .37, z: -.845 }, { x: -3, y: .37, z: 0 }]) {
+      const event = h.eventAt(point, 1, 2, true); h.editor.pointerMove(event); h.editor.pointerDown(event); h.flush()
+      const tip = preview.getObjectByName('wire-terminal-free') as Mesh
+      assert.ok(tip.localToWorld(new Vector3(0, -.5, 0)).distanceTo(new Vector3(point.x, point.y, point.z)) < 1e-8)
+      assertHealthyWireGeometry(preview.geometry)
+    }
+  } finally { h.dispose() }
+})
+
+test('fifty terminal-adjacent segment gestures seed anchors once without changing connectivity', async () => {
+  for (const mode of ['FREE', 'ORTHOGONAL'] as const) {
+    const h = wireHarness()
+    try {
+      const bb = h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 })
+      const wire = { source: `${bb}.contact:terminal:A:01`, destination: `${bb}.contact:terminal:J:08` }
+      h.circuit.connectEndpoints(wire.source, wire.destination, { version: 1, routeMode: mode, color: '#d8493f', thickness: .052, height: .04, controlPoints: [] })
+      h.workspace.setTool('select'); h.workspace.selectWire(wire.source, wire.destination)
+      await nextTick(); h.flush(); h.circuit.past = []
+      h.manager.setZoom(250)
+      const nets = resolveElectricalNets(h.circuit.graph!).nets
+      for (let i = 0; i < 50; i++) {
+        const segment = h.manager.wireRoute(wire)!.segments.find(segment => segment.editable)!
+        const start = { x: (segment.start.x + segment.end.x) / 2, y: .37, z: (segment.start.z + segment.end.z) / 2 }
+        const end = { ...start, x: start.x + .13 + i * .003, z: start.z + .17 + i * .003 }
+        h.editor.pointerDown(h.eventAt(start)); assert.equal(h.editor.wireRouting.editing.value, true)
+        const history = h.circuit.past.length
+        h.editor.pointerMove(h.eventAt(end, 1, 0, true)); assert.equal(h.circuit.past.length, history)
+        h.editor.pointerUp(h.eventAt(end, 1, 0, true)); await nextTick(); h.flush()
+        assert.equal(h.circuit.past.length, i + 1)
+        assert.equal(readWireVisual(h.circuit.graph!.connections[0]).controlPoints.length, 2)
+        assert.deepEqual({ source: h.circuit.graph!.connections[0].source, destination: h.circuit.graph!.connections[0].destination }, wire)
+        assert.deepEqual(resolveElectricalNets(h.circuit.graph!).nets, nets)
+        assertHealthyWireGeometry((h.manager.wires.children[0] as Mesh).geometry)
+      }
+    } finally { h.dispose() }
+  }
+})
+
+test('same snapped corner toggles after larger screen travel and blocked surfaces retain the last valid preview', async () => {
+  const h = wireHarness()
+  try {
+    const bb = h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 })
+    h.circuit.placeModule('POWER_SUPPLY', { x: 4, y: 0, z: 0 }); await nextTick(); h.flush()
+    h.manager.setZoom(250)
+    h.editor.connect(`${bb}.contact:terminal:A:01`)
+    const event = h.eventAt({ x: -3.25, y: .37, z: -.845 }, 1, 2)
+    h.editor.pointerDown(event); assert.equal(h.editor.wireRouting.controlPoints.value.length, 1)
+    h.editor.pointerMove(h.pointer(event.clientX + 5, event.clientY)); h.editor.pointerDown(h.pointer(event.clientX + 5, event.clientY, 1, 2))
+    assert.equal(h.editor.wireRouting.controlPoints.value.length, 0, 'same snap can toggle after traveling beyond the threshold')
+    h.manager.setZoom(100)
+    h.editor.pointerMove(h.eventAt({ x: -3, y: .37, z: 0 }, 1, 0, true)); h.flush()
+    const preview = h.manager.scene.getObjectByName('wire-drawing-preview') as Mesh, geometry = preview.geometry
+    h.editor.pointerMove(h.eventAt({ x: 4, y: 2.8, z: 0 })); h.flush()
+    assert.equal(preview.visible, true, 'an obstructed drawing plane cannot hide the source copper and entire wire')
+    assert.equal(preview.geometry, geometry)
+    assert.equal(h.editor.wireRouting.drawing.value, true)
   } finally { h.dispose() }
 })
