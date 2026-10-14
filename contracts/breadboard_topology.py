@@ -1,6 +1,6 @@
 """Declared virtual breadboard topology; never a station/GPIO routing profile."""
 import json
-from importlib.resources import files
+from pathlib import Path
 from types import MappingProxyType
 
 
@@ -12,7 +12,12 @@ def _freeze(value):
     return value
 
 
-_data = json.loads(files('contracts').joinpath('design-models/breadboards.json').read_text(encoding='utf-8'))
+# Resolve package data relative to this module instead of asking
+# importlib.resources to resolve the top-level name "contracts" again.
+# Pytest can temporarily expose tests/contracts on sys.path; resolving from
+# __file__ prevents that test directory from being mistaken for this package.
+_data_path = Path(__file__).resolve().parent / 'design-models' / 'breadboards.json'
+_data = json.loads(_data_path.read_text(encoding='utf-8'))
 _profiles = {}
 _contacts = {}
 for _raw in _data['profiles']:

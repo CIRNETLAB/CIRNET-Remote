@@ -18,6 +18,16 @@ def compiled(tmp_path):
     return module
 
 
+def load_codegen_module():
+    """Load the repository codegen script without depending on sys.path."""
+    path = ROOT / 'scripts/generate_hardware_rpc.py'
+    spec = importlib.util.spec_from_file_location('netcircuit_generate_hardware_rpc', path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def test_v2_compiles_and_exposes_lifecycle_without_direct_raw_graph_run(tmp_path):
     module = compiled(tmp_path)
     descriptor = module.DESCRIPTOR
@@ -51,7 +61,8 @@ def test_codegen_is_repeatable(tmp_path):
 
 
 def test_failed_codegen_preserves_previous_bindings(tmp_path,monkeypatch):
-    from scripts.generate_hardware_rpc import generate, protoc
+    codegen = load_codegen_module()
+    generate, protoc = codegen.generate, codegen.protoc
     path=tmp_path/'rpc_v2_pb2.py'; path.write_text('previous-valid-bindings')
     def failed(args):
         directory=Path(next(a.split('=',1)[1] for a in args if a.startswith('--python_out=')))
