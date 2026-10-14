@@ -20,6 +20,7 @@ const emit = defineEmits<{
 const hoveredRegion = ref<string | null>(null)
 let isPointerDown = false
 let isDragging = false
+let suppressClick = false
 let startX = 0
 let startY = 0
 let lastX = 0
@@ -46,24 +47,18 @@ const currentQuaternion = computed(() => {
   return new Quaternion()
 })
 
-const regions = buildCubeGeometry(24, 6)
+const regions = buildCubeGeometry(27, 4)
 
 const projectedRegions = computed(() => {
-  return projectCube(regions, currentQuaternion.value, 68, 68)
+  return projectCube(regions, currentQuaternion.value, 55, 68)
 })
 
-const compass = computed(() => {
-  return projectCompass(currentQuaternion.value, 46, -26, 68, 68)
-})
+const compass = computed(() => projectCompass(currentQuaternion.value))
+const compassViews = { W: 'LEFT', N: 'BACK', E: 'RIGHT', S: 'FRONT' } as const
 
-const currentViewLabel = computed(() => {
+const activeOrientation = computed(() => {
   const dir = new Vector3(0, 0, 1).applyQuaternion(currentQuaternion.value)
-  if (dir.y > 0.95) return 'TOP'
-  if (dir.z > 0.95) return 'FRONT'
-  if (dir.z < -0.95) return 'BACK'
-  if (dir.x > 0.95) return 'RIGHT'
-  if (dir.x < -0.95) return 'LEFT'
-  return 'WCS'
+  return Object.entries(ORIENTATION_DIRECTIONS).find(([, direction]) => dir.dot(direction) > 0.9995)?.[0] ?? null
 })
 
 function onPointerDown(e: PointerEvent) {
@@ -71,11 +66,11 @@ function onPointerDown(e: PointerEvent) {
   e.stopPropagation()
   isPointerDown = true
   isDragging = false
+  suppressClick = false
   startX = e.clientX
   startY = e.clientY
   lastX = e.clientX
   lastY = e.clientY
-  ;(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId)
 }
 
 function onPointerMove(e: PointerEvent) {
@@ -85,6 +80,7 @@ function onPointerMove(e: PointerEvent) {
   const dy = e.clientY - lastY
   const dist = Math.hypot(e.clientX - startX, e.clientY - startY)
   if (dist > 3) {
+    if (!isDragging) (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId)
     isDragging = true
     const yaw = -dx * 0.5
     const pitch = dy * 0.5
@@ -98,6 +94,7 @@ function onPointerUp(e: PointerEvent) {
   if (!isPointerDown) return
   e.stopPropagation()
   isPointerDown = false
+  suppressClick = isDragging
   try {
     ;(e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId)
   } catch {}
@@ -109,6 +106,14 @@ function onPointerUp(e: PointerEvent) {
 function onPointerCancel() {
   isPointerDown = false
   isDragging = false
+  suppressClick = false
+}
+
+function onPointerLeave() { if (isPointerDown && !isDragging) onPointerCancel() }
+
+function onWidgetClick(e: MouseEvent) {
+  if (!suppressClick) return
+  e.stopPropagation(); e.preventDefault(); suppressClick = false
 }
 
 function onRegionClick(id: string) {
@@ -118,13 +123,6 @@ function onRegionClick(id: string) {
 
 function isOrientation(id: string) { return Object.hasOwn(ORIENTATION_DIRECTIONS, id) }
 
-function onCompassClick(label: string) {
-  if (isDragging) return
-  if (label === 'N') emit('setView', 'BACK')
-  else if (label === 'S') emit('setView', 'FRONT')
-  else if (label === 'E') emit('setView', 'RIGHT')
-  else if (label === 'W') emit('setView', 'LEFT')
-}
 </script>
 
 <template>
@@ -140,52 +138,51 @@ function onCompassClick(label: string) {
     </button>
     <div
       class="view-cube-widget"
-      role="application"
+      role="group"
       aria-label="Interactive 3D ViewCube"
       @pointerdown="onPointerDown"
       @pointermove="onPointerMove"
       @pointerup="onPointerUp"
       @pointercancel="onPointerCancel"
+      @pointerleave="onPointerLeave"
+      @click.capture="onWidgetClick"
     >
       <svg
-        viewBox="0 0 136 136"
+        viewBox="0 0 110 120"
         class="view-cube-svg"
-        role="img"
+        role="group"
         aria-label="CAD ViewCube orientation controls"
       >
         <defs>
-          <filter id="cube-glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="0" stdDeviation="2.5" flood-color="#00e676" flood-opacity="0.6" />
-          </filter>
-          <linearGradient id="face-grad-front" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#24384d" />
-            <stop offset="100%" stop-color="#182736" />
+          <linearGradient id="view-cube-front" x1="0" y1="0" x2="0.8" y2="1">
+            <stop offset="0%" stop-color="#344a5d" />
+            <stop offset="100%" stop-color="#223342" />
           </linearGradient>
-          <linearGradient id="face-grad-top" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#2c455e" />
-            <stop offset="100%" stop-color="#1c2d3d" />
+          <linearGradient id="view-cube-top" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#617d90" />
+            <stop offset="100%" stop-color="#40596c" />
+          </linearGradient>
+          <linearGradient id="view-cube-side" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#3e566a" />
+            <stop offset="100%" stop-color="#293d4e" />
           </linearGradient>
         </defs>
 
-        <!-- Compass Ring -->
         <g class="compass-group">
-          <path :d="compass.path" class="compass-ring" />
+          <path :d="compass.path" class="compass-ring" vector-effect="non-scaling-stroke" />
           <g
             v-for="marker in compass.markers"
             :key="marker.label"
             class="compass-marker"
-            :class="{ 'marker-active': hoveredRegion === marker.label }"
             :data-compass="marker.label"
             role="button"
             :aria-label="`Orient to ${marker.label}`"
             tabindex="0"
-            @pointerenter="hoveredRegion = marker.label"
-            @pointerleave="hoveredRegion === marker.label ? (hoveredRegion = null) : undefined"
-            @click.stop="onCompassClick(marker.label)"
-            @keydown.enter.stop="onCompassClick(marker.label)"
-            @keydown.space.stop="onCompassClick(marker.label)"
+            @click.stop="onRegionClick(compassViews[marker.label])"
+            @keydown.enter.stop="onRegionClick(compassViews[marker.label])"
+            @keydown.space.stop="onRegionClick(compassViews[marker.label])"
           >
-            <circle :cx="marker.x" :cy="marker.y" r="8" class="compass-marker-hit" />
+            <circle :cx="marker.x" :cy="marker.y" r="8" class="compass-hit" />
             <text :x="marker.x" :y="marker.y" text-anchor="middle" dominant-baseline="central" class="compass-text">
               {{ marker.label }}
             </text>
@@ -197,12 +194,13 @@ function onCompassClick(label: string) {
           <g
             v-for="region in projectedRegions"
             :key="region.id"
-            :class="['cube-region', `region-${region.type}`, { hovered: hoveredRegion === region.id }]"
+            :class="['cube-region', `region-${region.type}`, { hovered: hoveredRegion === region.id, selected: activeOrientation === region.id, 'face-top': region.id === 'TOP', 'face-front': region.id === 'FRONT' || region.id === 'BACK' }]"
             :data-region-id="region.id"
             :data-face="region.type === 'face' ? region.id.toLowerCase() : undefined"
             :data-edge="region.type === 'edge' ? region.id.toLowerCase() : undefined"
             :data-corner="region.type === 'corner' ? region.id.toLowerCase() : undefined"
             :role="isOrientation(region.id) ? 'button' : undefined"
+            :aria-pressed="isOrientation(region.id) ? activeOrientation === region.id : undefined"
             :aria-label="isOrientation(region.id) ? `View ${region.id}` : undefined"
             :tabindex="isOrientation(region.id) ? 0 : undefined"
             @pointerenter="isOrientation(region.id) && (hoveredRegion = region.id)"
@@ -211,11 +209,10 @@ function onCompassClick(label: string) {
             @keydown.enter.stop="onRegionClick(region.id)"
             @keydown.space.stop="onRegionClick(region.id)"
           >
-            <polygon :points="region.points" class="region-polygon" />
+            <polygon :points="region.points" class="region-polygon" vector-effect="non-scaling-stroke" />
             <text
-              v-if="region.label && region.normalDepth > 0.18"
-              :x="region.centerX"
-              :y="region.centerY"
+              v-if="region.label && region.normalDepth > 0.25"
+              :transform="region.labelTransform"
               text-anchor="middle"
               dominant-baseline="central"
               class="cube-label"
@@ -225,13 +222,6 @@ function onCompassClick(label: string) {
           </g>
         </g>
 
-        <!-- Technical Coordinate Badge -->
-        <g class="cube-badge" role="presentation" aria-hidden="true">
-          <rect x="47" y="119" width="42" height="14" rx="2" class="badge-bg" />
-          <text x="68" y="126" text-anchor="middle" dominant-baseline="central" class="badge-text">
-            {{ currentViewLabel }}
-          </text>
-        </g>
       </svg>
     </div>
   </div>

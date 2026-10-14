@@ -18,13 +18,7 @@ export interface ProjectedPolygon {
   normalDepth: number
   centerX: number
   centerY: number
-}
-
-export interface CompassPoint {
-  label: string
-  x: number
-  y: number
-  depth: number
+  labelTransform?: string
 }
 
 // XZ breadboard: +Y TOP, +X RIGHT/EAST, +Z FRONT/SOUTH.
@@ -117,6 +111,14 @@ export function projectCube(
 
     const centerCam = region.center.clone().applyQuaternion(inv)
     const pointsStr = pts.map((p) => `${p.x},${p.y}`).join(' ')
+    let labelTransform: string | undefined
+    if (region.type === 'face') {
+      const right = region.normal.y > 0 ? new Vector3(1, 0, 0) : new Vector3().crossVectors(new Vector3(0, 1, 0), region.normal)
+      const up = region.normal.y > 0 ? new Vector3(0, 0, -1) : new Vector3(0, 1, 0)
+      right.applyQuaternion(inv); up.applyQuaternion(inv)
+      const values = [right.x, -right.y, -up.x, up.y, centerX + centerCam.x, centerY - centerCam.y]
+      labelTransform = `matrix(${values.map(value => Math.round(value * 10000) / 10000).join(' ')})`
+    }
 
     projected.push({
       id: region.id,
@@ -127,6 +129,7 @@ export function projectCube(
       normalDepth: normalCam.z,
       centerX: Math.round((centerX + centerCam.x) * 10) / 10,
       centerY: Math.round((centerY - centerCam.y) * 10) / 10,
+      labelTransform,
     })
   }
 
@@ -135,46 +138,22 @@ export function projectCube(
   return projected
 }
 
-export function projectCompass(
-  quaternion: Quaternion,
-  radius = 48,
-  baseY = -27,
-  centerX = 68,
-  centerY = 68
-): { path: string; markers: CompassPoint[] } {
-  const inv = quaternion.clone().invert()
-  const points: { x: number; y: number; z: number }[] = []
-  const steps = 36
-
-  for (let i = 0; i < steps; i++) {
-    const theta = (i / steps) * Math.PI * 2
-    const p = new Vector3(radius * Math.sin(theta), baseY, radius * Math.cos(theta)).applyQuaternion(inv)
-    points.push({
-      x: Math.round((centerX + p.x) * 10) / 10,
-      y: Math.round((centerY - p.y) * 10) / 10,
-      z: p.z,
-    })
-  }
-
-  const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z'
-
-  // Cardinal markers: N (-Z), S (+Z), E (+X), W (-X)
+export function projectCompass(quaternion: Quaternion, radius = 49, centerX = 55, centerY = 68) {
+  const direction = new Vector3(0, 0, 1).applyQuaternion(quaternion)
+  const right = new Vector3(1, 0, 0).applyQuaternion(quaternion)
+  // Keep the ring readable edge-on; at TOP derive heading from the screen-right axis.
+  const yaw = Math.hypot(direction.x, direction.z) > 1e-6
+    ? Math.atan2(direction.x, direction.z) : Math.atan2(-right.z, right.x)
   const cardinal = [
-    { label: 'N', vec: new Vector3(0, baseY, -radius - 8) },
-    { label: 'S', vec: new Vector3(0, baseY, radius + 8) },
-    { label: 'E', vec: new Vector3(radius + 8, baseY, 0) },
-    { label: 'W', vec: new Vector3(-radius - 8, baseY, 0) },
-  ]
-
-  const markers: CompassPoint[] = cardinal.map(({ label, vec }) => {
-    const pc = vec.applyQuaternion(inv)
-    return {
+    { label: 'W', angle: Math.PI }, { label: 'N', angle: -Math.PI / 2 },
+    { label: 'E', angle: 0 }, { label: 'S', angle: Math.PI / 2 },
+  ] as const
+  return {
+    path: `M ${centerX - radius} ${centerY} A ${radius} ${radius} 0 1 1 ${centerX + radius} ${centerY} A ${radius} ${radius} 0 1 1 ${centerX - radius} ${centerY} Z`,
+    markers: cardinal.map(({ label, angle }) => ({
       label,
-      x: Math.round((centerX + pc.x) * 10) / 10,
-      y: Math.round((centerY - pc.y) * 10) / 10,
-      depth: pc.z,
-    }
-  })
-
-  return { path, markers }
+      x: Math.round((centerX + Math.cos(angle + yaw) * radius) * 10) / 10,
+      y: Math.round((centerY + Math.sin(angle + yaw) * radius) * 10) / 10,
+    })),
+  }
 }

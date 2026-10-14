@@ -139,29 +139,37 @@ code { font-family: Consolas, monospace; }
 .workspace-quick { display: flex; justify-content: center; gap: 7px; margin-top: 21px; pointer-events: auto; }
 .workspace-quick button { font-size: 10px; background: #1e3040; border-color: #3d5766; padding: 6px 10px; color: #a2c4ca; }
 .placement-notice { position: absolute; bottom: 20px; left: 22px; margin-left: var(--drawer-left); max-width: calc(100% - 250px); font-size: 10px; color: #8ca4b7; background: #101925b3; padding: 5px 7px; pointer-events: none; }
-.workspace-navigator { position: absolute; right: 14px; bottom: 12px; display: flex; flex-direction: column; align-items: flex-start; user-select: none; pointer-events: none; z-index: 4; }
-.view-cube-home { position: absolute; top: 4px; left: 4px; z-index: 5; width: 24px; height: 24px; min-height: 24px; padding: 3px; display: grid; place-items: center; background: #142230dd; border: 1px solid #2d4357; border-radius: 4px; color: #8ca4b9; cursor: pointer; pointer-events: auto; transition: background 0.15s, color 0.15s, border-color 0.15s; }
-.view-cube-home:hover { background: #1e354c; border-color: #00e676; color: #ffffff; }
-.view-cube-home .workbench-icon { width: 14px; height: 14px; }
-.view-cube-widget { position: relative; width: 136px; height: 136px; touch-action: none; pointer-events: none; }
-.view-cube-svg { width: 100%; height: 100%; pointer-events: none; filter: drop-shadow(0 4px 12px #0009); }
-.compass-ring { fill: #101925cc; stroke: #2b3e52; stroke-width: 1.2; pointer-events: auto; cursor: grab; }
-.compass-marker { cursor: pointer; pointer-events: auto; }
-.compass-marker-hit { fill: transparent; }
-.compass-text { font: 700 11px Consolas, monospace; fill: #728da3; transition: fill 0.15s; }
-.compass-marker:hover .compass-text, .compass-marker.marker-active .compass-text { fill: #00e676; font-weight: 800; }
-.cube-region { cursor: grab; pointer-events: auto; transition: filter 0.12s; outline: none; }
+.workspace-navigator { position: absolute; right: 14px; bottom: 12px; width: 110px; height: 120px; user-select: none; pointer-events: none; z-index: 4; }
+.view-cube-home { position: absolute; top: 0; left: 0; z-index: 2; width: 25px; height: 23px; min-height: 23px; padding: 4px; display: grid; place-items: center; background: #23354480; border: 1px solid #536c814d; border-radius: 5px; color: #a8bdcc; cursor: pointer; pointer-events: auto; transition: background 0.15s, color 0.15s, border-color 0.15s; }
+.view-cube-home:hover { background: #304a58; border-color: #5ccbb88c; color: #e4f8f4; }
+.view-cube-home .workbench-icon { width: 13px; height: 13px; }
+.view-cube-widget { position: relative; width: 110px; height: 120px; touch-action: none; pointer-events: auto; cursor: grab; }
+.view-cube-widget:active { cursor: grabbing; }
+.view-cube-svg { width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.compass-ring { fill: none; stroke: #9caeba33; stroke-width: 5; pointer-events: auto; cursor: grab; }
+.compass-marker { pointer-events: auto; cursor: pointer; outline: none; }
+.compass-hit { fill: transparent; }
+.compass-text { font: 600 12px 'Segoe UI', sans-serif; fill: #a3b1bc; paint-order: stroke; stroke: #101925; stroke-width: 3; pointer-events: none; transition: fill 0.14s; }
+.compass-marker:is(:hover, :focus-visible) .compass-text { fill: #e7f2f5; }
+.cube-mesh { filter: drop-shadow(0 3px 4px #0005); }
+.cube-region { cursor: grab; pointer-events: auto; outline: none; }
 .cube-region[role=button] { cursor: pointer; }
-.region-face .region-polygon { fill: #1a2a3a; stroke: #3c546c; stroke-width: 1.1; transition: fill 0.12s, stroke 0.12s; }
-.region-face:hover .region-polygon, .region-face.hovered .region-polygon { fill: #26435d; stroke: #00e676; stroke-width: 1.5; }
-.region-edge .region-polygon { fill: #14212f; stroke: #2e4357; stroke-width: 0.8; transition: fill 0.12s, stroke 0.12s; }
-.region-edge[role=button]:hover .region-polygon, .region-edge.hovered .region-polygon { fill: #398bff; stroke: #75adff; stroke-width: 1.2; }
-.region-corner .region-polygon { fill: #101c27; stroke: #26384a; stroke-width: 0.7; transition: fill 0.12s, stroke 0.12s; }
-.region-corner:hover .region-polygon, .region-corner.hovered .region-polygon { fill: #00e676; stroke: #66f0a8; stroke-width: 1.2; }
-.cube-label { font: 700 9.5px Consolas, monospace; letter-spacing: 0.5px; fill: #c9def4; pointer-events: none; user-select: none; }
-.cube-badge { pointer-events: none; }
-.badge-bg { fill: #101925ee; stroke: #2f4357; stroke-width: 0.8; }
-.badge-text { font: 700 9px Consolas, monospace; letter-spacing: 0.8px; fill: #8ca4b9; }
+.region-polygon { stroke-linejoin: round; transition: fill 0.14s, stroke 0.14s; }
+.region-face .region-polygon { fill: url(#view-cube-side); stroke: #93aebe85; stroke-width: 0.8; }
+.face-front .region-polygon { fill: url(#view-cube-front); }
+.face-top .region-polygon { fill: url(#view-cube-top); }
+.region-edge .region-polygon { fill: #2c4355; stroke: #7d9aaf66; stroke-width: 0.7; }
+.region-corner .region-polygon { fill: #263b4d; stroke: #7d9aaf66; stroke-width: 0.7; }
+.cube-region.selected .region-polygon { stroke: #7cdbc6; stroke-width: 1.3; }
+.cube-region[role=button]:is(:hover, :focus-visible) .region-polygon, .cube-region.hovered .region-polygon { fill: #3d6c67; stroke: #9ce9d8; stroke-width: 1.3; }
+.cube-label { font: 600 10px 'Segoe UI', sans-serif; letter-spacing: 0.45px; fill: #edf5f8; paint-order: stroke; stroke: #172b3b80; stroke-width: 0.6; pointer-events: none; user-select: none; }
+@media (max-width: 700px) {
+  .workspace-navigator { right: 8px; bottom: 8px; width: 96px; height: 108px; }
+  .view-cube-widget { width: 96px; height: 108px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .workspace-navigator *, .workspace-navigator .region-polygon { transition: none; }
+}
 .graphics-notice, .graph-loaded { position: absolute; bottom: 60px; left: 22px; max-width: calc(100% - 44px); padding: 8px 12px; background: #293c4d; color: #c6d7e4; font-size: 11px; }
 .floating-window-manager { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
 .floating-window { display: flex; flex-direction: column; position: absolute; pointer-events: auto; border: 1px solid #52677e; background: #1d2a3a; border-radius: 6px; box-shadow: 0 15px 45px #0009; overflow: hidden; min-width: 0; }
@@ -195,6 +203,6 @@ code { font-family: Consolas, monospace; }
 .connection-status { display: flex; align-items: center; gap: 12px; margin-left: auto; }.connection-status button { display: flex; align-items: center; gap: 5px; background: transparent; border-color: transparent; color: #9aabbb; font-size: 10px; padding: 2px 3px; white-space: nowrap; }.connection-status i, .status-badge i { width: 5px; height: 5px; background: #d59e65; border-radius: 50%; display: inline-block; flex-shrink: 0; }.connection-status .connected i { background: #75bca2; }.status-badge { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; font-size: 10px; color: #95cabc; }.status-badge.simulation i, .status-badge.hardware_available i { background: #75bca2; }.status-badge.hardware_busy { color: #d2b379; }.status-badge.hardware_offline, .status-badge.fault { color: #db969a; }.status-badge.hardware_offline i, .status-badge.fault i { background: #c7787f; }
 @media (max-width: 1200px) { .app-titlebar { gap: 12px; }.simulation-statusbar { gap: 10px; }.simulation-state small { display: none; }.connection-status { gap: 8px; }.project-title small { display: none; } }
 @media (max-width: 900px) { .brand strong { display: none; }.app-titlebar { gap: 9px; padding: 0 10px; }.file-actions button { padding: 5px 6px; font-size: 11px; }.inspector-toggle span { display: none; }.simulation-statusbar { flex-wrap: wrap; row-gap: 3px; column-gap: 10px; }.connection-status { margin-left: 0; } }
-@media (max-width: 560px) { .project-title { display: none; }.file-actions { gap: 1px; }.file-actions .workbench-icon { display: none; }.toolbar-divider { margin: 0 2px; }.file-actions button { font-size: 10px; padding: 5px; }.inspector-toggle { margin-left: auto; padding: 3px; }.tool-rail { padding-inline: 4px; }.tool-rail button { height: 47px; }.workspace-empty p { font-size: 15px; }.workspace-empty > span:last-of-type { font-size: 10px; }.workspace-quick { flex-wrap: wrap; gap: 4px; }.workspace-quick button { font-size: 9px; padding: 4px 6px; }.placement-notice { left: 6px; bottom: 10px; }.workspace-navigator { right: 8px; bottom: 8px; }.view-cube-widget { width: 104px; height: 104px; }.placement-notice { max-width: calc(100% - 200px); }.palette-heading { flex-wrap: wrap; gap: 5px; }.floating-body { padding: 10px; }.simulation-statusbar { padding-inline: 7px; font-size: 9px; }.simulation-statusbar > span:nth-of-type(2), .simulation-statusbar > span:nth-of-type(3) { display: none; } }
+@media (max-width: 560px) { .project-title { display: none; }.file-actions { gap: 1px; }.file-actions .workbench-icon { display: none; }.toolbar-divider { margin: 0 2px; }.file-actions button { font-size: 10px; padding: 5px; }.inspector-toggle { margin-left: auto; padding: 3px; }.tool-rail { padding-inline: 4px; }.tool-rail button { height: 47px; }.workspace-empty p { font-size: 15px; }.workspace-empty > span:last-of-type { font-size: 10px; }.workspace-quick { flex-wrap: wrap; gap: 4px; }.workspace-quick button { font-size: 9px; padding: 4px 6px; }.placement-notice { left: 6px; bottom: 10px; }.workspace-navigator { right: 8px; bottom: 8px; }.placement-notice { max-width: calc(100% - 200px); }.palette-heading { flex-wrap: wrap; gap: 5px; }.floating-body { padding: 10px; }.simulation-statusbar { padding-inline: 7px; font-size: 9px; }.simulation-statusbar > span:nth-of-type(2), .simulation-statusbar > span:nth-of-type(3) { display: none; } }
 @media (prefers-reduced-motion: reduce) { .component-drawer, .tools-drawer, .toolbar-collapse-toggle { transition: none; } }
 @media (max-height: 700px) { .tool-rail { padding-top: 8px; }.rail-label { margin-bottom: 6px; }.tool-rail [role=toolbar] { gap: 3px; }.tool-rail button { height: 42px; }.workspace-empty { top: 47%; }.workspace-empty p { margin-top: 10px; }.workspace-quick { margin-top: 12px; } }

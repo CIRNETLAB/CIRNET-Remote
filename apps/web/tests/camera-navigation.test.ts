@@ -6,7 +6,7 @@ import { defineComponent, h, nextTick, ref } from 'vue'
 import { useCircuitStore } from '../src/stores/circuit'
 import { loadSfc, mountSfc } from './helpers/vueSfc'
 import { createSceneManager } from '../src/three/SceneManager'
-import { buildCubeGeometry, projectCube, projectCompass, ORIENTATION_DIRECTIONS } from '../src/components/workbench/viewCubeMath'
+import { buildCubeGeometry, projectCube, ORIENTATION_DIRECTIONS } from '../src/components/workbench/viewCubeMath'
 
 function setup(onZoomChange?: (percent: number) => void) {
   const canvas = Object.assign(new EventTarget(), {
@@ -379,9 +379,6 @@ test('TOP has exact North-up and East-right screen axes after any previous view 
         assert.ok(Math.abs(east.y - center.y) < 1e-8 && east.x > center.x)
         assert.ok(new Vector3(0, 1, 0).applyQuaternion(manager.camera.quaternion).distanceTo(new Vector3(0, 0, -1)) < 1e-9)
         assert.ok(new Vector3(1, 0, 0).applyQuaternion(manager.camera.quaternion).distanceTo(new Vector3(1, 0, 0)) < 1e-9)
-        const compass = projectCompass(manager.camera.quaternion).markers
-        assert.ok(compass.find(p => p.label === 'N')!.y < 68)
-        assert.ok(compass.find(p => p.label === 'E')!.x > 68)
       }
     } finally { manager.dispose() }
   }
@@ -513,18 +510,26 @@ test('animated opposite face transitions stay above the board and finish with ca
   } finally { manager.dispose() }
 })
 
-test('rendered ViewCube only exposes upper presets and compass actions use the same face mapping', async () => {
+test('cardinal ring follows camera heading while Cube presets and Home keep their behavior', async () => {
   const { manager } = setup()
   const Navigator = await loadSfc('components/workbench/WorkspaceNavigator.vue')
   const quaternion = ref(manager.cameraQuaternion()), emitted: string[] = []
   const mounted = mountSfc(defineComponent({ setup: () => () => h(Navigator, {
     cameraQuaternion: quaternion.value,
     onSetView(direction: string) { emitted.push(direction); manager.setViewOrientation(direction, false); quaternion.value = manager.cameraQuaternion() },
+    onResetView() { manager.resetView(); quaternion.value = manager.cameraQuaternion() },
   }) }), createPinia())
   const click = (node: ReturnType<typeof mounted.find>) => (node.props.onClick as (event: unknown) => void)({ stopPropagation() {} })
   const allowed = new Set(['TOP', 'FRONT', 'BACK', 'LEFT', 'RIGHT', 'TOP-FRONT', 'TOP-BACK', 'TOP-LEFT', 'TOP-RIGHT',
     'TOP-FRONT-LEFT', 'TOP-FRONT-RIGHT', 'TOP-BACK-LEFT', 'TOP-BACK-RIGHT'])
   try {
+    assert.ok(!mounted.text().includes('VIEWCUBE') && !mounted.text().includes('XZ'))
+    assert.deepEqual(mounted.all().filter(node => node.props['data-compass']).map(node => node.props['data-compass']), ['W', 'N', 'E', 'S'])
+    const marker = (label: string) => mounted.find('g', 'data-compass', label).children.find(node => node.tag === 'text')!
+    const headings: Record<string, [number, number, number, number]> = {
+      TOP: [55, 19, 104, 68], FRONT: [55, 19, 104, 68], BACK: [55, 117, 6, 68],
+      RIGHT: [104, 68, 55, 117], LEFT: [6, 68, 55, 19],
+    }
     for (const view of allowed) {
       manager.setViewOrientation(view, false); quaternion.value = manager.cameraQuaternion(); await nextTick()
       for (const node of mounted.all().filter(node => node.props['data-region-id'])) {
@@ -533,19 +538,75 @@ test('rendered ViewCube only exposes upper presets and compass actions use the s
       }
       const region = mounted.find('g', 'data-region-id', view)
       assert.ok(region && region.props.role === 'button', view)
-      click(region); assert.equal(emitted.at(-1), view)
+      click(region); assert.equal(emitted.at(-1), view); await nextTick()
+      assert.equal(region.props['aria-pressed'], true, 'the aligned preset must be visibly selected')
+      if (headings[view]) {
+        assert.deepEqual([marker('N').props.x, marker('N').props.y, marker('E').props.x, marker('E').props.y], headings[view])
+      }
     }
     for (const [label, face, direction] of [
-      ['N', 'BACK', new Vector3(0, 0, -1)], ['S', 'FRONT', new Vector3(0, 0, 1)],
-      ['E', 'RIGHT', new Vector3(1, 0, 0)], ['W', 'LEFT', new Vector3(-1, 0, 0)],
+      ['W', 'LEFT', new Vector3(-1, 0, 0)], ['N', 'BACK', new Vector3(0, 0, -1)],
+      ['E', 'RIGHT', new Vector3(1, 0, 0)], ['S', 'FRONT', new Vector3(0, 0, 1)],
     ] as const) {
       click(mounted.find('g', 'data-compass', label)); await nextTick()
       assert.equal(emitted.at(-1), face)
       assert.ok(manager.cameraDirection().distanceTo(direction) < 1e-9)
     }
+    click(mounted.find('button', 'aria-label', 'Home view')); await nextTick()
+    assert.ok(manager.camera.position.distanceTo(new Vector3(0, 11, 10)) < 1e-8)
     quaternion.value = new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2).toArray(); await nextTick()
     assert.ok(!mounted.text().includes('BOTTOM'), 'even an invalid incoming quaternion cannot expose a bottom label')
   } finally { mounted.app.unmount(); manager.dispose() }
+})
+
+test('ViewCube face labels follow the face plane with East-right and North-up at TOP', () => {
+  const geometry = buildCubeGeometry()
+  for (const [quaternion, face] of [
+    [new Quaternion(), 'FRONT'],
+    [new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -Math.PI / 2), 'TOP'],
+  ] as const) {
+    const polygon = projectCube(geometry, quaternion).find(region => region.id === face)!
+    const transform = (polygon as unknown as { labelTransform?: string }).labelTransform
+    assert.ok(transform, `${face} label needs a face-plane transform`)
+    const values = transform.replace(/^matrix\(|\)$/g, '').split(/[ ,]+/).map(Number)
+    assert.deepEqual(values.slice(0, 4), [1, 0, 0, 1])
+    assert.deepEqual(values.slice(4), [polygon.centerX, polygon.centerY])
+  }
+})
+
+test('ViewCube pointer taps select a face while captured drags never become a face click', async () => {
+  const Navigator = await loadSfc('components/workbench/WorkspaceNavigator.vue')
+  const selected: string[] = [], orbits: number[] = []
+  const mounted = mountSfc(defineComponent({ setup: () => () => h(Navigator, {
+    cameraQuaternion: [0, 0, 0, 1], onSetView: (direction: string) => selected.push(direction),
+    onOrbit: (degrees: number) => orbits.push(degrees),
+  }) }), createPinia())
+  let captured = false
+  const widget = mounted.find('div', 'aria-label', 'Interactive 3D ViewCube')
+  const face = mounted.find('g', 'data-region-id', 'FRONT')
+  const pointer = (handler: string, x: number) => (widget.props[handler] as (event: unknown) => void)({
+    button: 0, pointerId: 1, clientX: x, clientY: 70, stopPropagation() {},
+    currentTarget: { setPointerCapture() { captured = true }, releasePointerCapture() { captured = false } },
+  })
+  const finish = () => {
+    // Browser clicks are retargeted to the capturing widget when capture was active.
+    const target = captured ? widget : face
+    pointer('onPointerup', 80)
+    let stopped = false
+    const event = { stopPropagation() { stopped = true }, preventDefault() {} }
+    ;(widget.props.onClickCapture as ((event: unknown) => void) | undefined)?.(event)
+    if (!stopped) (target.props.onClick as ((event: unknown) => void) | undefined)?.(event)
+  }
+  try {
+    pointer('onPointerdown', 80); finish()
+    assert.deepEqual(selected, ['FRONT'], 'a simple tap must reach the face handler')
+    pointer('onPointerdown', 80); pointer('onPointermove', 95); finish()
+    assert.ok(orbits.length > 0)
+    assert.deepEqual(selected, ['FRONT'], 'a drag must only orbit')
+    const keydown = face.props.onKeydown as ((event: unknown) => void) | ((event: unknown) => void)[]
+    for (const handler of Array.isArray(keydown) ? keydown : [keydown]) handler({ key: 'Enter', stopPropagation() {} })
+    assert.deepEqual(selected, ['FRONT', 'FRONT'], 'keyboard alignment remains usable after dragging')
+  } finally { mounted.app.unmount() }
 })
 
 test('Home view restores default camera position and target', () => {
