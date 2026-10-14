@@ -4,6 +4,14 @@ All notable project changes will be documented in this file. The project follows
 
 ## [Unreleased]
 
+### Added — 2026-10-14 CRUMB Wire Tool
+
+- Explicit shared breadboard contacts/five-hole nodes/continuous rails and exact instanced socket picking.
+- Colored low jumper drawing with multiple bends, FREE/ORTHOGONAL/AUTO, snap/Alt and cancel/last-bend controls.
+- Bend/segment drag, insertion/removal, color/mode edits and pose-following routes; endpoints/net identity remain fixed and each completed action records one history entry.
+- CircuitGraph1.0 visual metadata/file compatibility and virtual intrinsic-node/jumper/terminal union; Physical Lab routing/safety contracts remain separate.
+- Automated tests/build and environment/browser limits are recorded in verification/2026-10-14-crumb-wire-tool.md.
+
 ### Fixed — 2026-10-12 Placement Gizmo follow latency
 
 - Remove placementGizmoAnchor and its160 ms timer. Update ghost and Gizmo together using cached relative offset and constant-size clearance checks through the existing RAF.

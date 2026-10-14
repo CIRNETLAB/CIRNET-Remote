@@ -6,6 +6,7 @@ import math
 from jsonschema import ValidationError
 from contracts.design_validation import validate_design_graph
 from contracts.validation import validate
+from .nets import resolve_design_nets
 
 class SimulationError(RuntimeError): pass
 
@@ -106,13 +107,11 @@ class VirtualCompiler:
                 directions[output]='output'
                 devices.append(DigitalDevice(mid,kind,inputs,output,delay))
             else: raise SimulationError('UNEXECUTABLE')
-        nets=defaultdict(list); destinations=set(); edges=set()
-        for edge in graph['connections']:
-            source,destination=edge['source'],edge['destination']
-            if directions.get(source)!='output' or directions.get(destination)!='input' or destination in destinations or (source,destination) in edges:
-                raise SimulationError('UNEXECUTABLE')
-            destinations.add(destination); edges.add((source,destination)); nets[source].append(destination)
-        return VirtualExecutionPlan(tuple(devices),tuple(DigitalNet(s,tuple(sorted(ds))) for s,ds in sorted(nets.items())),directions,sources,tuple(clocks),tuple(sorted(probes)))
+        try:
+            nets = resolve_design_nets(graph, directions)
+        except ValueError:
+            raise SimulationError('UNEXECUTABLE') from None
+        return VirtualExecutionPlan(tuple(devices),tuple(DigitalNet(s,ds) for s,ds in nets),directions,sources,tuple(clocks),tuple(sorted(probes)))
 
 class DigitalSimulator:
     def __init__(self,plan): self.plan=plan; self.stopped=False

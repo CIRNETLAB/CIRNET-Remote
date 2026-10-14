@@ -27,3 +27,7 @@ Functional results contain only declared expected/observed checkpoints and exerc
 Protection: current limiting/sensing, fast cutoff, tri-state/default-open routes, protected digital drive, guarded power-up, watchdog/runtime protection and safe-state timeout. See PHYSICAL_LAB_SAFETY.md. Software cannot prove protection exists.
 
 Pinout/bank voltages, switching/protection schematic, ADC/DAC/AFE parts, SDRAM part/timing, transport IC, current/voltage/sample/frequency limits and measurements: TBD_BY_HARDWARE_DESIGN.
+
+## Editor breadboard jumper authoring (2026-10-14)
+
+CircuitGraph 1.0 keeps source/destination endpoint strings. Breadboard contact IDs (for example BB.contact:terminal:A:01) resolve through contracts/design-models/breadboards.json; intrinsic five-hole nodes and continuous rail rows are explicit. Bend points, colors and route mode live only in metadata.wireVisual, with world/module-local anchors. Geometry or component overlap never attaches a terminal. Virtual compilation unions intrinsic nodes, explicit jumpers and supported component terminals before lowering digital nets. Physical execution still uses detected evidence and station resources; no editor contact is an FPGA GPIO/routing resource. See SOURCE_ANALYSIS_CRUMB_WIRE_TOOL.md.

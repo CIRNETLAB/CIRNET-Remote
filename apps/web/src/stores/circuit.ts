@@ -1,7 +1,10 @@
 import { defineStore } from 'pinia'
-import type { CircuitGraph, CircuitModule } from '../types/circuit'
+import type { CircuitGraph, CircuitModule, WireIdentity, WireVisual } from '../types/circuit'
 import type { MemoryImage } from '../types/memory'
-import { getDefinition, getPort, validateProperties } from '../data/editorCatalog'
+import { getDefinition, validateProperties } from '../data/editorCatalog'
+import { assertConnectionAllowed } from '../electrical/nets'
+import { copyWireVisual, readWireVisual, validateWireVisual } from '../wires/wireVisual'
+import { moduleLocalToWorld } from '../electrical/modulePose'
 import { createMemoryImage, parseMemoryImage } from '../services/files/memoryImage'
 import type { CircuitValidation } from '../types/api'
 import { circuitsApi } from '../services/api/circuits'
@@ -59,20 +62,31 @@ export const useCircuitStore = defineStore('circuit', {
     },
     removeModule(id: string) {
       if (!this.graph?.modules.some((module) => module.id === id)) return
-      this.commitGraph({ ...this.graph, modules: this.graph.modules.filter((module) => module.id !== id), connections: this.graph.connections.filter((wire) => wire.source.split('.')[0] !== id && wire.destination.split('.')[0] !== id) })
+      const removed = this.graph.modules.find(module => module.id === id)!
+      const connections = this.graph.connections.filter(wire => wire.source.split('.')[0] !== id && wire.destination.split('.')[0] !== id).map(wire => {
+        const visual = readWireVisual(wire)
+        if (visual.frameModuleId !== id && !visual.controlPoints.some(p => p.space === 'module' && p.moduleId === id)) return wire
+        return { ...wire, metadata: { ...wire.metadata, wireVisual: { ...visual, ...(visual.frameModuleId === id ? { frameModuleId: null } : {}), controlPoints: visual.controlPoints.map(p => p.space === 'module' && p.moduleId === id ? { space: 'world' as const, position: moduleLocalToWorld(p.position, removed) } : p) } } }
+      })
+      this.commitGraph({ ...this.graph, modules: this.graph.modules.filter((module) => module.id !== id), connections })
     },
     connectPorts(first: string, second: string) {
+      this.connectEndpoints(first, second)
+    },
+    connectEndpoints(first: string, second: string, visual?: WireVisual) {
       if (!this.graph) throw new Error('Create a circuit first.')
-      let source = first, destination = second
-      let a = getPort(this.graph.modules, source), b = getPort(this.graph.modules, destination)
-      if (!a || !b) throw new Error('Choose two known logical ports. Visual structures have no electrical terminals.')
-      if (source === destination) throw new Error('Choose different ports.')
-      if (a.direction === 'input' || b.direction === 'output') { [source, destination] = [destination, source]; [a, b] = [b, a] }
-      if (a.direction === 'input' || b.direction === 'output') throw new Error('Connect an output/terminal to an input/terminal.')
-      if ((a.width ?? 1) !== (b.width ?? 1)) throw new Error('Logical port widths must match; use an explicit adapter.')
-      if (this.graph.connections.some((wire) => (wire.source === source && wire.destination === destination) || (wire.source === destination && wire.destination === source))) throw new Error('These ports are already connected.')
-      if (b.direction === 'input' && this.graph.connections.some((wire) => wire.destination === destination || wire.source === destination)) throw new Error('This input already has a driver. Disconnect it first.')
-      this.commitGraph({ ...this.graph, connections: [...this.graph.connections, { source, destination }] })
+      const { source, destination, reversed } = assertConnectionAllowed(this.graph, first, second)
+      if (visual) validateWireVisual(visual, this.graph.modules)
+      const copy = visual ? copyWireVisual(visual) : undefined
+      if (copy && reversed) copy.controlPoints.reverse()
+      this.commitGraph({ ...this.graph, connections: [...this.graph.connections, { source, destination, ...(copy ? { metadata: { wireVisual: copy } } : {}) }] })
+    },
+    updateWireVisual(wire: WireIdentity, visual: WireVisual) {
+      if (!this.graph) return
+      if (!this.graph.connections.some(c => c.source === wire.source && c.destination === wire.destination)) return
+      validateWireVisual(visual, this.graph.modules)
+      const copy = copyWireVisual(visual)
+      this.commitGraph({ ...this.graph, connections: this.graph.connections.map(c => c.source === wire.source && c.destination === wire.destination ? { ...c, metadata: { ...c.metadata, wireVisual: copy } } : c) })
     },
     disconnectPorts(source: string, destination: string) {
       if (!this.graph) return

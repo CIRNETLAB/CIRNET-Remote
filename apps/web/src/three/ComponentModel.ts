@@ -329,11 +329,11 @@ export function buildComponent(module: CircuitModule): Group {
     const body = cylinder(w * 0.35, h, color); body.position.y = h / 2 + 0.05; group.add(body)
     if (definition.visual === 'led') { const dome = new Mesh(new SphereGeometry(w * 0.35, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), material(color)); dome.userData.selectionSurface = true; dome.position.y = h; group.add(dome) }
   } else if (definition?.visual === 'breadboard') {
-    addBreadboardHousing(group, [w, h, d], color, createBreadboardTexture(), true, true)
+    addBreadboardHousing(group, [w, h, d], color, createBreadboardTexture(), true, true, module.type)
   } else if (definition?.visual === 'breadboard_630') {
-    addBreadboardHousing(group, [w, h, d], color, createBreadboard630Texture(), true, false)
+    addBreadboardHousing(group, [w, h, d], color, createBreadboard630Texture(), true, false, module.type)
   } else if (definition?.visual === 'breadboard_100') {
-    addBreadboardHousing(group, [w, h, d], color, createBreadboard100Texture(), false, false)
+    addBreadboardHousing(group, [w, h, d], color, createBreadboard100Texture(), false, false, module.type)
   } else if (definition?.visual === 'supply') {
     addPowerSupplyModel(group, [w, h, d])
   } else if (definition?.visual === 'oscilloscope') {

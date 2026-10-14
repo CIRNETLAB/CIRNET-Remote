@@ -4,7 +4,12 @@ import { Mesh, MeshStandardMaterial, Vector3 } from 'three'
 import { createSceneManager } from '../src/three/SceneManager'
 import type { CircuitGraph } from '../src/types/circuit'
 
-const setup = () => createSceneManager({ renderer: { setSize() {}, render() {}, dispose() {} }, requestFrame: () => 1, cancelFrame() {} })
+const setup = () => {
+  let callback: FrameRequestCallback | null = null
+  const manager = createSceneManager({ renderer: { setSize() {}, render() {}, dispose() {} }, requestFrame: cb => { callback = cb; return 1 }, cancelFrame() { callback = null } })
+  manager.resize(1000, 700)
+  return Object.assign(manager, { flushFrame() { const next = callback; callback = null; next?.(0) } })
+}
 const graph: CircuitGraph = { schema_version: '1.0', circuit_id: 'wires', modules: [
   { id: 'A', type: 'CLOCK', position: { x: -3, y: 0, z: 0 } }, { id: 'B', type: 'LED' },
   { id: 'C', type: 'CLOCK', position: { x: -3, y: 0, z: -4 } }, { id: 'D', type: 'LED', position: { x: 0, y: 0, z: -4 } },
@@ -21,6 +26,7 @@ test('movement updates incident wires only and retains selection, material and u
     untouchedGeometry.addEventListener('dispose', () => unrelatedDisposals++)
     manager.highlight(null, graph.connections[0])
     manager.previewMove('A', { x: -4, y: 0.2, z: 1 })
+    manager.flushFrame()
     assert.ok(manager.wires.children[1] === unrelated, 'unrelated wire identity must survive movement'); assert.ok(unrelated.geometry === untouchedGeometry)
     assert.equal(unrelatedDisposals, 0); assert.equal(incidentDisposals, 1)
     assert.ok(manager.wires.children[0] === moved); assert.ok(moved.material === material)

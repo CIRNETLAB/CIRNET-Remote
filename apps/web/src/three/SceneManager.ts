@@ -1,9 +1,12 @@
-import { AmbientLight, Color, DirectionalLight, Group, Matrix4, Mesh, MOUSE, PerspectiveCamera, Plane, Raycaster, Scene, Vector2, Vector3 } from 'three'
+import { AmbientLight, BufferGeometry, Color, DirectionalLight, Group, LineBasicMaterial, LineLoop, Matrix4, Mesh, MOUSE, PerspectiveCamera, Plane, Raycaster, Scene, Vector2, Vector3, type Object3D } from 'three'
 import { ORIENTATION_DIRECTIONS } from '../components/workbench/viewCubeMath'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { applyPose, buildComponent, disposeObject, portAnchor } from './ComponentModel'
 import { getDefinition } from '../data/editorCatalog'
-import type { CircuitGraph, CircuitModule } from '../types/circuit'
+import type { CircuitGraph, CircuitModule, Point3, WireIdentity, WireVisual } from '../types/circuit'
+import { contactFromInstance, getBreadboardContact, getBreadboardTopology } from '../electrical/BreadboardTopology'
+import { parseEndpoint } from '../electrical/endpoints'
+import { wireClearance, type WireRouteContext } from '../wires/wireRouting'
 import { createSelectionOutline, updateSelectionOutline } from './SelectionOutline'
 import { createTechnicalGrid, updateTechnicalGrid } from './TechnicalGrid'
 import { Box3, Sphere } from 'three'
@@ -14,6 +17,8 @@ import { createWireLayer } from './WireLayer'
 export interface SceneRenderer { setSize(width: number, height: number, updateStyle?: boolean): void; render(scene: Scene, camera: PerspectiveCamera): void; dispose(): void }
 interface SceneOptions { renderer: SceneRenderer; canvas?: HTMLCanvasElement; onBeforeRender?: () => void; onRender?: () => void; onZoomChange?: (percent: number) => void; requestFrame?: (callback: FrameRequestCallback) => number; cancelFrame?: (id: number) => void }
 export type PickResult = ({ kind: 'module'; id: string } | { kind: 'control'; id: string; control: SupplyControl } | { kind: 'port'; id: string; endpoint: string } | { kind: 'wire'; source: string; destination: string }) & { point: Vector3 }
+export interface EndpointPick { kind: 'port' | 'contact'; id: string; endpoint: string; point: Vector3; contactId?: string }
+export type WireEditPick = { kind: 'bend' | 'segment'; wire: WireIdentity; index: number; point: Vector3 }
 export interface OrientationAxis { label: 'X' | 'Y' | 'Z'; x: number; y: number; depth: number; color: string }
 
 // Geometry is a projection of graph IDs and named logical ports, never a source of nets.
@@ -27,12 +32,29 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
   const content = new Group(), models = new Map<string, Group>(), modules = new Map<string, CircuitModule>()
   const endpointPosition = (endpoint: string): Vector3 | null => {
     if (disposed) return null
-    const [id, name] = endpoint.split('.'), model = models.get(id), module = modules.get(id)
+    const parsed = parseEndpoint(endpoint)
+    if (!parsed) return null
+    const id = parsed.moduleId, model = models.get(id), module = modules.get(id)
+    if (parsed.kind === 'contact') {
+      const contact = module && getBreadboardContact(module.type, parsed.contactId)
+      return model && contact ? model.localToWorld(new Vector3(...contact.localPosition)) : null
+    }
+    const name = parsed.portId
     const port = module && getDefinition(module.type)?.ports.find((item) => item.id === name)
     return model && module && port ? model.localToWorld(portAnchor(module.type, port)) : null
   }
-  const wireLayer = createWireLayer(endpointPosition), wires = wireLayer.group
-  scene.add(grid, ambient, light, fillLight, content, wires)
+  const modulePose = (id: string): CircuitModule | null => {
+    const module = modules.get(id), model = models.get(id)
+    return module && model ? { ...module, position: { x: model.position.x, y: model.position.y, z: model.position.z }, rotation: model.rotation.y * 180 / Math.PI } : null
+  }
+  const routeContext: WireRouteContext = { modulePose, endpoint: value => {
+    const position = endpointPosition(value), parsed = parseEndpoint(value)
+    return position && parsed ? { endpoint: value, position, ...(parsed.kind === 'contact' ? { contactModuleId: parsed.moduleId } : {}) } : null
+  } }
+  const wireLayer = createWireLayer(endpointPosition, routeContext), wires = wireLayer.group
+  const contactHover = new LineLoop(new BufferGeometry().setFromPoints([new Vector3(-.043, 0, -.043), new Vector3(.043, 0, -.043), new Vector3(.043, 0, .043), new Vector3(-.043, 0, .043)]), new LineBasicMaterial({ color: '#f1cd77' }))
+  contactHover.name = 'contact-hover'; contactHover.visible = false; contactHover.userData.ignorePick = true
+  scene.add(grid, ambient, light, fillLight, content, wires, wireLayer.tools, contactHover)
   const gizmo = createComponentTransformGizmo(); scene.add(gizmo.root)
   let gizmoObstacles: GizmoObstacle[] = []
   let gizmoLayoutRevision = 0
@@ -162,7 +184,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
         const focus = highlightedId ? models.get(highlightedId)?.position ?? target : target
         updateTechnicalGrid(grid, camera, target, focus, height)
         updateGizmo()
-        scene.updateMatrixWorld(true)
+        wireLayer.flush(); scene.updateMatrixWorld(true)
         if (activeOutline) updateSelectionOutline(activeOutline.group, camera.position, width, height)
         renderer.render(scene, camera); onRender?.()
       }
@@ -191,6 +213,29 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
   }
   const validPointer = (x: number, y: number) => !disposed && Number.isFinite(x) && Number.isFinite(y)
   const ray = (x: number, y: number) => { camera.updateMatrixWorld(); raycaster.params.Line.threshold = camera.position.distanceTo(controls?.target ?? viewTarget) * 2 * Math.tan(camera.fov * Math.PI / 360) / (height * camera.zoom) * 6; raycaster.setFromCamera(new Vector2(x / width * 2 - 1, -(y / height) * 2 + 1), camera) }
+  const pickOwner = (object: Object3D) => { while (object.parent && !object.userData.kind) object = object.parent; return object }
+  const ignored = (object: Object3D) => { let current: Object3D | null = object; while (current) { if (current.userData.ignorePick) return true; current = current.parent }; return false }
+  const contentHit = (x: number, y: number) => { ray(x, y); return raycaster.intersectObjects(content.children, true).find(hit => !ignored(hit.object)) ?? null }
+  const screenPoint = (point: Point3) => {
+    const world = new Vector3(point.x, point.y, point.z), projected = world.clone().project(camera), depth = -world.clone().applyMatrix4(camera.matrixWorldInverse).z
+    return { x: (projected.x + 1) * width / 2, y: (1 - projected.y) * height / 2, depth, visible: projected.z >= -1 && projected.z <= 1 }
+  }
+  const segmentHit = (a: Point3, b: Point3, x: number, y: number) => {
+    const p = screenPoint(a), q = screenPoint(b)
+    if (!p.visible || !q.visible || p.depth <= 0 || q.depth <= 0) return null
+    const dx = q.x - p.x, dy = q.y - p.y, length = dx * dx + dy * dy
+    const t = length > 1e-8 ? Math.max(0, Math.min(1, ((x - p.x) * dx + (y - p.y) * dy) / length)) : 0
+    // Screen interpolation is perspective divided; undo it before locating the world point.
+    const worldT = t * p.depth / ((1 - t) * q.depth + t * p.depth)
+    const point = new Vector3(a.x, a.y, a.z).lerp(new Vector3(b.x, b.y, b.z), worldT)
+    return { point, pixels: Math.hypot(x - p.x - dx * t, y - p.y - dy * t), distance: point.distanceTo(camera.position) }
+  }
+  const visiblePoint = (point: Point3) => {
+    const p = screenPoint(point)
+    if (!p.visible) return false
+    const hit = contentHit(p.x, p.y)
+    return !hit || hit.distance >= new Vector3(point.x, point.y, point.z).distanceTo(camera.position) - .018
+  }
   const planeHit = (elevation: number) => {
     plane.constant = -elevation
     const hit = raycaster.ray.intersectPlane(plane, new Vector3())
@@ -230,6 +275,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     activateGizmo(handle: TransformHandle | null) { if (disposed) return; updateGizmo(); gizmo.activate(handle, gizmoModel()); schedule() },
     syncGraph(next: CircuitGraph | null) {
       if (disposed) return
+      contactHover.visible = false
       gizmoLayoutRevision++
       modules.clear(); for (const module of next?.modules ?? []) modules.set(module.id, module)
       const ids = new Set(next?.modules.map((module) => module.id))
@@ -284,15 +330,87 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     },
     pick(x: number, y: number): PickResult | null {
       if (!validPointer(x, y)) return null
-      scene.updateMatrixWorld(true); ray(x, y)
-      const hits = raycaster.intersectObjects([...content.children, ...wires.children], true)
-      for (const hit of hits) {
-        if (hit.object.userData.ignorePick) continue
-        let object = hit.object
-        while (object.parent && !object.userData.kind) object = object.parent
-        if (object.userData.kind) return { ...object.userData, point: hit.point.clone() } as PickResult
+      wireLayer.flush(); scene.updateMatrixWorld(true)
+      const body = contentHit(x, y)
+      let best: { wire: WireIdentity; point: Vector3; distance: number; pixels: number } | null = null
+      for (const mesh of wires.children) {
+        const wire = mesh.userData as WireIdentity, route = wireLayer.route(wire)
+        for (const segment of route?.segments ?? []) {
+          const hit = segmentHit(segment.start, segment.end, x, y)
+          if (hit && hit.pixels <= 6 && (!body || hit.distance <= body.distance + .015) && (!best || hit.pixels < best.pixels - .1 || Math.abs(hit.pixels - best.pixels) <= .1 && hit.distance < best.distance)) best = { wire, ...hit }
+        }
+      }
+      if (best) return { kind: 'wire', ...best.wire, point: best.point }
+      const owner = body && pickOwner(body.object)
+      return owner?.userData.kind ? { ...owner.userData, point: body!.point.clone() } as PickResult : null
+    },
+    pickEndpoint(x: number, y: number): EndpointPick | null {
+      if (!validPointer(x, y)) return null
+      scene.updateMatrixWorld(true)
+      const hit = contentHit(x, y)
+      if (!hit) return null
+      const owner = pickOwner(hit.object)
+      if (owner.userData.kind === 'port') return { kind: 'port', id: owner.userData.id, endpoint: owner.userData.endpoint, point: hit.point.clone() }
+      if (hit.object.userData.breadboardSockets && hit.instanceId !== undefined) {
+        const id = owner.userData.id as string, module = modules.get(id), contact = module && contactFromInstance(module.type, hit.instanceId)
+        if (contact && hit.object.userData.contactIds?.[hit.instanceId] === contact.contactId) return { kind: 'contact', id, contactId: contact.contactId, endpoint: `${id}.contact:${contact.contactId}`, point: hit.point.clone() }
       }
       return null
+    },
+    hoverEndpoint(endpoint: string | null) {
+      if (disposed) return
+      contactHover.visible = false
+      const parsed = endpoint && parseEndpoint(endpoint), module = parsed && modules.get(parsed.moduleId), model = parsed && models.get(parsed.moduleId)
+      if (parsed && module && model) {
+        const anchor = endpointPosition(endpoint!)
+        if (anchor) {
+          contactHover.position.copy(anchor)
+          if (parsed.kind === 'contact') contactHover.position.y = model.position.y + (getBreadboardTopology(module.type)?.deckHeight ?? .33) + .004
+          contactHover.rotation.y = model.rotation.y; contactHover.visible = true
+        }
+      }
+      schedule()
+    },
+    wireContext: routeContext,
+    wireRoute(wire: WireIdentity) { if (disposed) return null; wireLayer.flush(); return wireLayer.route(wire) },
+    previewWireVisual(wire: WireIdentity, visual: WireVisual | null) { wireLayer.previewVisual(wire, visual); schedule() },
+    previewWireDrawing(wire: WireIdentity, visual: WireVisual, cursor: Point3 | null) { wireLayer.previewDrawing(wire, visual, cursor); schedule() },
+    clearWireDrawing() { wireLayer.clearDrawing(); schedule() },
+    hoverWireEdit(hit: WireEditPick | null) { wireLayer.hover(hit?.wire ?? null); wireLayer.selectHandle(hit?.kind === 'bend' ? hit.index : null); wireLayer.selectSegment(hit?.kind === 'segment' ? hit.index : null); schedule() },
+    pickWireEdit(x: number, y: number, wire: WireIdentity): WireEditPick | null {
+      if (!validPointer(x, y)) return null
+      wireLayer.flush(); scene.updateMatrixWorld(true)
+      const route = wireLayer.route(wire)
+      if (!route) return null
+      for (const handle of route.handles) {
+        const p = screenPoint(handle.position)
+        if (p.visible && Math.hypot(x - p.x, y - p.y) <= 8 && visiblePoint(handle.position)) return { kind: 'bend', wire, index: handle.index, point: new Vector3(handle.position.x, handle.position.y, handle.position.z) }
+      }
+      let best: { index: number; point: Vector3; pixels: number } | null = null
+      for (const segment of route.segments) {
+        if (!segment.editable) continue
+        const hit = segmentHit(segment.start, segment.end, x, y)
+        if (hit && hit.pixels <= 6 && visiblePoint(hit.point) && (!best || hit.pixels < best.pixels)) best = { index: segment.index, ...hit }
+      }
+      return best ? { kind: 'segment', wire, index: best.index, point: best.point } : null
+    },
+    wireSupportModule(x: number, y: number): CircuitModule | null {
+      if (!validPointer(x, y)) return null
+      scene.updateMatrixWorld(true)
+      const hit = contentHit(x, y), owner = hit && pickOwner(hit.object), module = owner && modulePose(owner.userData.id)
+      return module && getBreadboardTopology(module.type) ? module : null
+    },
+    wireRoutingPoint(x: number, y: number, frameModuleId: string | null, visual: WireVisual): Point3 | null {
+      if (!validPointer(x, y)) return null
+      scene.updateMatrixWorld(true)
+      const hit = contentHit(x, y), owner = hit && pickOwner(hit.object), hitModule = owner && modulePose(owner.userData.id)
+      const module = hitModule && getBreadboardTopology(hitModule.type) ? hitModule : frameModuleId ? modulePose(frameModuleId) : null
+      const board = module && getBreadboardTopology(module.type)
+      const sourceHeight = (module?.position?.y ?? 0) + wireClearance(visual)
+      ray(x, y)
+      const point = planeHit(board && module ? (module.position?.y ?? 0) + board.deckHeight + wireClearance(visual) : sourceHeight)
+      if (!point || hit && hit.distance < point.distanceTo(camera.position) - .02 && !getBreadboardTopology(hitModule?.type ?? '')) return null
+      return { x: point.x, y: point.y, z: point.z }
     },
     groundPoint(x: number, y: number, elevation = 0) { if (!validPointer(x, y) || !Number.isFinite(elevation)) return null; ray(x, y); return planeHit(elevation) },
     panGrab(anchor: Vector3, x: number, y: number) {

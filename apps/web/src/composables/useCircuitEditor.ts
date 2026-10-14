@@ -8,6 +8,7 @@ import { useUiStore } from '../stores/ui'
 import type { CircuitModule } from '../types/circuit'
 import type { TransformHandle } from '../three/ComponentTransformGizmo'
 import { supplyControlMaximum, supplyControlValue, type SupplyControl } from '../three/PowerSupplyModel'
+import { useWireRouting } from './useWireRouting'
 type Manager = ReturnType<typeof createSceneManager>
 export type Position = { x: number; y: number; z: number }
 interface PlacementDraft { type: string; position: Position; rotation: number }
@@ -150,6 +151,7 @@ export function snapPosition(
 
 export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, manager: () => Manager | undefined) {
   const circuit = useCircuitStore(), workspace = useWorkspaceStore(), ui = useUiStore()
+  const wireRouting = useWireRouting(canvas, manager)
   let gesture: MoveGesture | PanGesture | TransformGesture | ControlGesture | ZoomAreaGesture | null = null
   // A pose only: never a graph module, electrical identity or history entry.
   let placementDraft: PlacementDraft | null = null
@@ -158,6 +160,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
   const hoveredHandle = ref<TransformHandle | null>(null)
   const hoveredControl = ref<SupplyControl | null>(null)
   const controlHint = computed(() => {
+    if (workspace.tool === 'wire' || workspace.selectedWire) return wireRouting.hint.value
     if (hoveredHandle.value === 'delete') return workspace.placementType ? 'Click to cancel placement (or press Escape)' : 'Click to delete component (or press Delete)'
     if (hoveredControl.value === 'power_on') return 'Click to toggle power On/Off'
     if (hoveredControl.value) return `Drag ${hoveredControl.value === 'voltage_v' ? 'Voltage (0–15 V)' : 'Ampe (0–5 A)'} knob up/right to increase, down/left to decrease. Hold Shift for fine adjustment.`
@@ -195,20 +198,17 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     hoveredHandle.value = null; hoveredControl.value = null; manager()?.clearGizmoHover()
     showPlacement()
   }
-  function cancel() { workspace.cancelZoomArea(); cancelGesture() }
+  function cancel() { workspace.cancelZoomArea(); wireRouting.cancel(); cancelGesture() }
   function cancelPlacement() { cancel(); workspace.cancelPlacement(); clearPlacement(); workspace.editError = '' }
-  function lostPointerCapture(event: PointerEvent) { if (gesture?.pointer === event.pointerId) { cancel(); clearPlacement() } }
-  function contextMenu(event: MouseEvent) { event.preventDefault(); if (workspace.placementType) cancelPlacement(); else if (workspace.zoomAreaActive) cancel() }
+  function lostPointerCapture(event: PointerEvent) { if (wireRouting.lostPointerCapture(event)) return; if (gesture?.pointer === event.pointerId) { cancel(); clearPlacement() } }
+  function contextMenu(event: MouseEvent) { if (wireRouting.contextMenu(event)) return; event.preventDefault(); if (workspace.placementType) cancelPlacement(); else if (workspace.zoomAreaActive) cancel() }
   function areaCoordinates(event: PointerEvent) {
     const rect = canvas.value!.getBoundingClientRect()
     if (rect.width <= 0 || rect.height <= 0 || ![event.clientX, event.clientY].every(Number.isFinite)) return null
     return { x: Math.max(0, Math.min(rect.width, event.clientX - rect.left)), y: Math.max(0, Math.min(rect.height, event.clientY - rect.top)) }
   }
   function connect(endpoint: string) {
-    if (workspace.tool !== 'wire') { workspace.setTool('wire'); workspace.pendingPort = endpoint; return }
-    if (!workspace.pendingPort) workspace.pendingPort = endpoint
-    else if (workspace.pendingPort === endpoint) workspace.pendingPort = null
-    else attempt(() => { circuit.connectPorts(workspace.pendingPort!, endpoint); workspace.pendingPort = null })
+    wireRouting.connect(endpoint)
   }
   function place(type: string, position: Position, rotation = 0) { attempt(() => { const id = circuit.placeModule(type, position, rotation); workspace.selectModule(id); clearPlacement(); sync() }) }
   function pointerDown(event: PointerEvent) {
@@ -230,6 +230,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       cancelPlacement()
       return
     }
+    if (!gesture && !workspace.placementType && wireRouting.pointerDown(event)) return
     if (event.button !== 0 || gesture || !manager() || !canvas.value) return
     canvas.value.focus(); const { x, y } = coordinates(event)
     const transform = manager()!.pickGizmo(x, y), module = selected.value
@@ -291,6 +292,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
   }
   function pointerMove(event: PointerEvent) {
     if (!manager() || !canvas.value) return
+    if (!gesture && wireRouting.pointerMove(event)) return
     const { x, y } = coordinates(event)
     if (workspace.zoomAreaActive && !gesture) return
     if (gesture) {
@@ -379,6 +381,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     }
   }
   function pointerUp(event: PointerEvent) {
+    if (wireRouting.pointerUp(event)) return
     if (!gesture || event.pointerId !== gesture.pointer) return
     pointerMove(event)
     if (!gesture) return
@@ -414,6 +417,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     if (point) { ui.activeRibbonGroup = null; place(type, snap(point, type)); canvas.value.focus() }
   }
   function keydown(event: KeyboardEvent) {
+    if (wireRouting.keydown(event)) return
     if (event.key === 'Escape') { cancelPlacement(); return }
     if (workspace.zoomAreaActive) {
       if (['Delete', 'Backspace', 'r', 'R', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) event.preventDefault()
@@ -456,6 +460,6 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     else ui.closeWindow('component-info')
   }, { immediate: true })
   onUnmounted(() => { cancel(); clearPlacement() })
-  function pointerLeave() { if (!gesture) { hoveredHandle.value = null; hoveredControl.value = null; manager()?.clearGizmoHover() } }
-  return { ports, selected, dragging, hoveredHandle, hoveredControl, controlHint, zoomAreaRect, updatePorts, sync, cancel, connect, pointerDown, pointerMove, pointerUp, pointerLeave, pointerCancel: lostPointerCapture, lostPointerCapture, contextMenu, drop, keydown, selectModule }
+  function pointerLeave() { wireRouting.pointerLeave(); if (!gesture) { hoveredHandle.value = null; hoveredControl.value = null; manager()?.clearGizmoHover() } }
+  return { ports, selected, dragging, hoveredHandle, hoveredControl, controlHint, zoomAreaRect, updatePorts, sync, cancel, connect, pointerDown, pointerMove, pointerUp, pointerLeave, pointerCancel: lostPointerCapture, lostPointerCapture, contextMenu, drop, keydown, selectModule, wireRouting }
 }

@@ -48,7 +48,8 @@
       "ports": [],
       "defaults": {},
       "parameters": [],
-      "visualOnly": true
+      "visualOnly": true,
+      "breadboardTopologyRef": "breadboard-830-v1"
     },
     {
       "type": "BREADBOARD_630",
@@ -64,7 +65,8 @@
       "ports": [],
       "defaults": {},
       "parameters": [],
-      "visualOnly": true
+      "visualOnly": true,
+      "breadboardTopologyRef": "breadboard-630-v1"
     },
     {
       "type": "BREADBOARD_100",
@@ -80,7 +82,8 @@
       "ports": [],
       "defaults": {},
       "parameters": [],
-      "visualOnly": true
+      "visualOnly": true,
+      "breadboardTopologyRef": "breadboard-100-v1"
     },
     {
       "type": "BOARD",

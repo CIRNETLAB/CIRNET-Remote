@@ -13,4 +13,4 @@ include = ["contracts*"]
 namespaces = false
 
 [tool.setuptools.package-data]
-contracts = ["assignment/*.json", "physical-lab/*.json", "physical-lab/examples/*.json", "circuit-schema/*.json", "memory/*.json"]
+contracts = ["assignment/*.json", "physical-lab/*.json", "physical-lab/examples/*.json", "circuit-schema/*.json", "memory/*.json", "design-models/*.json"]

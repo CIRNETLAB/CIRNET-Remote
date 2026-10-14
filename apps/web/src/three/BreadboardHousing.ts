@@ -1,8 +1,9 @@
 import { CanvasTexture, ExtrudeGeometry, Group, Mesh, MeshStandardMaterial, Path, Shape, ShapeGeometry } from 'three'
-import { addBreadboardSockets, breadboardSocketPositions, SOCKET_HALF_OPENING } from './BreadboardSockets'
+import { addBreadboardSockets, SOCKET_HALF_OPENING } from './BreadboardSockets'
+import { getBreadboardTopology } from '../electrical/BreadboardTopology'
 
 // Visual housing only. These contours and recesses never define electrical nets.
-export function addBreadboardHousing(group: Group, size: number[], color: string, texture: CanvasTexture | null, terminal: boolean, rails: boolean) {
+export function addBreadboardHousing(group: Group, size: number[], color: string, texture: CanvasTexture | null, terminal: boolean, rails: boolean, type = terminal ? rails ? 'BREADBOARD' : 'BREADBOARD_630' : 'BREADBOARD_100') {
   const [w, h, d] = size
   const points: [number, number][] = [[-w / 2, -d / 2]]
   for (const x of [-w * 0.3, 0, w * 0.3]) points.push([x - 0.16, -d / 2], [x - 0.12, -d / 2 - 0.055], [x + 0.12, -d / 2 - 0.055], [x + 0.16, -d / 2])
@@ -26,7 +27,8 @@ export function addBreadboardHousing(group: Group, size: number[], color: string
   }
   if (terminal) slot(0, 0.21)
   if (rails) { slot(-0.93, 0.025); slot(0.93, 0.025) }
-  const sockets = breadboardSocketPositions(terminal, rails)
+  const topology = getBreadboardTopology(type)!
+  const sockets: [number, number][] = topology.contacts.map(c => [c.localPosition[0], c.localPosition[2]])
   for (const [x, z] of sockets) {
     const r = SOCKET_HALF_OPENING, path = new Path()
     path.moveTo(x - r, -z - r); path.lineTo(x + r, -z - r)
@@ -53,5 +55,5 @@ export function addBreadboardHousing(group: Group, size: number[], color: string
   }
   group.userData.selectionProfile = points
   group.userData.selectionHeight = h + 0.031
-  addBreadboardSockets(group, sockets, h)
+  addBreadboardSockets(group, sockets, h, type)
 }

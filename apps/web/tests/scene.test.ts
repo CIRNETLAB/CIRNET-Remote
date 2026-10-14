@@ -459,7 +459,7 @@ test('thin wires have a picking margin for normal pointer precision', () => {
   manager.resize(1000, 700)
   manager.syncGraph({ schema_version: '1.0', circuit_id: 'wire', modules: [{ id: 'A', type: 'CLOCK', position: { x: -2, y: 0, z: 0 } }, { id: 'B', type: 'LED', position: { x: 2, y: 0, z: 0 } }], connections: [{ source: 'A.OUT', destination: 'B.IN' }] })
   const a = manager.endpointPosition('A.OUT')!, b = manager.endpointPosition('B.IN')!
-  const middle = a.clone().add(b).multiplyScalar(0.5); middle.y += Math.min(1.2, a.distanceTo(b) * 0.2 + 0.3) / 2
+  const middle = a.clone().add(b).multiplyScalar(0.5)
   const point = manager.project(middle)
   assert.equal(manager.pick(point.x, point.y + 4)?.kind, 'wire')
   manager.dispose()

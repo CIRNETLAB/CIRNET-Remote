@@ -74,6 +74,25 @@ def create(manager,owner='student-1',**extra):
     return manager.create(owner,{'station_id':'p1','assignment_id':'a1',**extra})
 
 
+def test_editor_breadboard_graph_does_not_replace_observed_physical_bindings(tmp_path):
+    manager, repo, gateway, jobs, now, events = setup_manager(tmp_path)
+    plans = []
+    original = gateway.call
+    def record(station_id, experiment_id, method, **kwargs):
+        if method == 'prepare_execution': plans.append(copy.deepcopy(kwargs['plan']))
+        return original(station_id, experiment_id, method, **kwargs)
+    gateway.call = record
+    circuit = {'schema_version': '1.0', 'circuit_id': 'editor', 'modules': [{'id': 'BB', 'type': 'BREADBOARD'}],
+               'connections': [{'source': 'BB.contact:terminal:A:01', 'destination': 'BB.contact:terminal:J:03', 'metadata': {'wireVisual': {'color': '#d8493f'}}}]}
+    experiment = create(manager, circuit_graph=circuit)
+    manager.run(experiment['experiment_id'], 'student-1'); jobs.run_one()
+    assert 'apply_circuit' not in gateway.calls
+    assert len(plans) == 1
+    assert {b['node_id'] for b in plans[0]['endpoint_bindings']} == {'N1', 'N2'}
+    assert {r['resource_id'] for r in plans[0]['routing_allocations']} == {'r1', 'r2'}
+    repo.close()
+
+
 def test_assignment_persists_and_duplicate_id_cannot_overwrite(tmp_path):
     _,persistence=modules()
     url='sqlite:///'+str(tmp_path/'lab.db')

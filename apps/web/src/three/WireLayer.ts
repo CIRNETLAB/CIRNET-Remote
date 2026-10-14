@@ -1,62 +1,148 @@
-import { BufferGeometry, Group, Line, LineBasicMaterial, Mesh, MeshStandardMaterial, QuadraticBezierCurve3, TubeGeometry, Vector3 } from 'three'
-import type { CircuitConnection } from '../types/circuit'
+import { BufferGeometry, Color, Group, InstancedMesh, Line, LineBasicMaterial, Matrix4, Mesh, MeshStandardMaterial, SphereGeometry, Vector3 } from 'three'
+import type { CircuitConnection, Point3, WireIdentity, WireVisual } from '../types/circuit'
+import { copyWireVisual, readWireVisual, wireKey } from '../wires/wireVisual'
+import { solveWireRoute, type SolvedWireRoute, type WireRouteContext } from '../wires/wireRouting'
+import { buildWireGeometry, roundedWirePoints } from './WireGeometry'
 import { disposeObject } from './ComponentModel'
 
-interface WireRecord { mesh: Mesh<TubeGeometry, MeshStandardMaterial>; pick: Line; start: Vector3; end: Vector3 }
-const keyOf = (connection: CircuitConnection) => JSON.stringify([connection.source, connection.destination])
+interface WireRecord { mesh: Mesh<BufferGeometry, MeshStandardMaterial>; pick: Line; connection: CircuitConnection; signature: string; route: SolvedWireRoute }
 
-// Reconcile logical connections independently of model/property synchronization.
-export function createWireLayer(endpointPosition: (endpoint: string) => Vector3 | null) {
-  const group = new Group(), records = new Map<string, WireRecord>()
-  const incident = new Map<string, Map<string, CircuitConnection>>()
-  let selected: { source: string; destination: string } | null = null
-  const color = (connection: CircuitConnection) => selected?.source === connection.source && selected.destination === connection.destination ? '#f1cd77' : '#71b3ce'
+export function createWireLayer(endpointPosition: (endpoint: string) => Vector3 | null, routeContext?: WireRouteContext) {
+  const group = new Group(), tools = new Group(), records = new Map<string, WireRecord>()
+  const connections = new Map<string, CircuitConnection>(), incident = new Map<string, Set<string>>(), overrides = new Map<string, WireVisual>(), dirty = new Set<string>()
+  const context: WireRouteContext = routeContext ?? { endpoint: value => { const position = endpointPosition(value); return position ? { endpoint: value, position } : null }, modulePose: () => null }
+  let selected: WireIdentity | null = null, hovered: WireIdentity | null = null, selectedHandle: number | null = null
+  let handleMesh: InstancedMesh | null = null, drawingMesh: Mesh<BufferGeometry, MeshStandardMaterial> | null = null
+  let segmentMesh: Mesh<BufferGeometry, MeshStandardMaterial> | null = null, selectedSegment: number | null = null, segmentSignature = ''
+  let drawing: { wire: WireIdentity; visual: WireVisual; cursor: Point3 | null } | null = null, drawingDirty = false, disposed = false
+  group.name = 'committed-wires'; tools.name = 'wire-tools'
+  const same = (a: WireIdentity | null, b: WireIdentity) => !!a && wireKey(a) === wireKey(b)
+  const style = (record: WireRecord) => {
+    const visual = overrides.get(wireKey(record.connection)) ?? readWireVisual(record.connection)
+    const explicit = !!record.connection.metadata?.wireVisual || overrides.has(wireKey(record.connection))
+    record.mesh.material.color.set(same(selected, record.connection) && !explicit ? '#f1cd77' : visual.color)
+    record.mesh.material.emissive.set(same(selected, record.connection) ? '#55431f' : same(hovered, record.connection) ? '#263642' : '#000000')
+  }
   const remove = (key: string) => {
     const record = records.get(key)
     if (record) { group.remove(record.mesh); disposeObject(record.mesh); records.delete(key) }
   }
   const update = (connection: CircuitConnection) => {
-    const key = keyOf(connection), a = endpointPosition(connection.source), b = endpointPosition(connection.destination)
-    if (!a || !b) { remove(key); return } // Preserve unknown imported endpoints in the logical graph.
-    const record = records.get(key)
-    if (record && record.start.equals(a) && record.end.equals(b)) return
-    const mid = a.clone().add(b).multiplyScalar(0.5); mid.y += Math.min(1.2, a.distanceTo(b) * 0.2 + 0.3)
-    const curve = new QuadraticBezierCurve3(a, mid, b), geometry = new TubeGeometry(curve, 24, 0.035, 6, false)
-    const pickGeometry = new BufferGeometry().setFromPoints(curve.getPoints(24))
-    if (record) {
-      record.mesh.geometry.dispose(); record.pick.geometry.dispose()
-      record.mesh.geometry = geometry; record.pick.geometry = pickGeometry
-      record.start.copy(a); record.end.copy(b)
-    } else {
-      const mesh = new Mesh(geometry, new MeshStandardMaterial({ color: color(connection), roughness: 0.65 }))
-      const pick = new Line(pickGeometry, new LineBasicMaterial()); pick.visible = false
-      // Invisible ray target provides a CSS-pixel margin without changing electrical geometry.
-      mesh.userData = { kind: 'wire', source: connection.source, destination: connection.destination }; pick.userData = { ...mesh.userData }
-      mesh.add(pick); group.add(mesh); records.set(key, { mesh, pick, start: a.clone(), end: b.clone() })
+    const key = wireKey(connection), visual = overrides.get(key) ?? readWireVisual(connection), route = solveWireRoute(connection, visual, context)
+    if (!route) { remove(key); return }
+    const signature = JSON.stringify([route.points, visual.thickness])
+    let record = records.get(key)
+    if (!record || record.signature !== signature) {
+      const geometry = buildWireGeometry(route, visual.thickness)
+      const pickGeometry = new BufferGeometry().setFromPoints(roundedWirePoints(route.points))
+      if (record) { record.mesh.geometry.dispose(); record.pick.geometry.dispose(); record.mesh.geometry = geometry; record.pick.geometry = pickGeometry }
+      else {
+        const mesh = new Mesh(geometry, new MeshStandardMaterial({ color: visual.color, roughness: .65 }))
+        const pick = new Line(pickGeometry, new LineBasicMaterial()); pick.visible = false
+        mesh.userData = { kind: 'wire', source: connection.source, destination: connection.destination }; pick.userData = { ...mesh.userData }
+        mesh.add(pick); group.add(mesh)
+        record = { mesh, pick, connection, signature, route }; records.set(key, record)
+      }
     }
+    record.connection = connection; record.signature = signature; record.route = route; style(record)
+  }
+  const updateHandles = () => {
+    const route = selected && records.get(wireKey(selected))?.route
+    const count = route ? route.handles.length + 2 : 0
+    if (count && (!handleMesh || handleMesh.instanceMatrix.count < count)) {
+      if (handleMesh) { tools.remove(handleMesh); disposeObject(handleMesh) }
+      handleMesh = new InstancedMesh(new SphereGeometry(.04, 8, 5), new MeshStandardMaterial({ color: '#ffffff', roughness: .8, depthTest: true }), 2 ** Math.ceil(Math.log2(Math.max(8, count))))
+      handleMesh.name = 'wire-handles'; tools.add(handleMesh)
+    }
+    if (!handleMesh) return
+    handleMesh.count = count
+    if (!route) return
+    const points = [...route.handles.map(h => h.position), route.points[0], route.points.at(-1)!]
+    points.forEach((p, i) => {
+      handleMesh!.setMatrixAt(i, new Matrix4().makeTranslation(p.x, p.y, p.z))
+      handleMesh!.setColorAt(i, new Color(i >= route.handles.length ? '#8ebf75' : i === selectedHandle ? '#fff1bd' : '#d9b66f'))
+    })
+    handleMesh.instanceMatrix.needsUpdate = true
+    if (handleMesh.instanceColor) handleMesh.instanceColor.needsUpdate = true
+    handleMesh.computeBoundingSphere()
+  }
+  const updateSegment = () => {
+    const record = selected && records.get(wireKey(selected)), segment = selectedSegment !== null && record ? record.route.segments[selectedSegment] : null
+    if (!segment || !segment.editable || !record) { if (segmentMesh) segmentMesh.visible = false; return }
+    const diameter = (overrides.get(wireKey(record.connection)) ?? readWireVisual(record.connection)).thickness * 1.25
+    const signature = JSON.stringify([segment.start, segment.end, diameter])
+    if (!segmentMesh || signature !== segmentSignature) {
+      const geometry = buildWireGeometry({ ...record.route, points: [segment.start, segment.end] }, diameter)
+      if (segmentMesh) { segmentMesh.geometry.dispose(); segmentMesh.geometry = geometry }
+      else { segmentMesh = new Mesh(geometry, new MeshStandardMaterial({ color: '#d9b66f', emissive: '#2d2310', roughness: .7 })); segmentMesh.name = 'wire-segment-highlight'; tools.add(segmentMesh) }
+      segmentSignature = signature
+    }
+    segmentMesh.visible = true
+  }
+  const clearDrawing = () => { drawing = null; drawingDirty = false; if (drawingMesh) { tools.remove(drawingMesh); disposeObject(drawingMesh); drawingMesh = null } }
+  const updateDrawing = () => {
+    if (!drawing) return
+    const state = drawing, destination = state.wire.destination || '@cursor'
+    const previewContext: WireRouteContext = { ...context, endpoint: value => value === '@cursor' ? state.cursor ? { endpoint: value, position: state.cursor } : null : context.endpoint(value) }
+    const route = solveWireRoute({ ...state.wire, destination }, state.visual, previewContext)
+    if (!route) { if (drawingMesh) drawingMesh.visible = false; return }
+    const geometry = buildWireGeometry(route, state.visual.thickness)
+    if (drawingMesh) { drawingMesh.geometry.dispose(); drawingMesh.geometry = geometry }
+    else { drawingMesh = new Mesh(geometry, new MeshStandardMaterial({ color: state.visual.color, roughness: .7, transparent: true, opacity: .75 })); drawingMesh.name = 'wire-drawing-preview'; tools.add(drawingMesh) }
+    drawingMesh.material.color.set(state.visual.color); drawingMesh.visible = true
+    drawingMesh.userData.route = route
   }
   return {
-    group,
-    sync(connections: CircuitConnection[]) {
-      const keys = new Set(connections.map(keyOf))
+    group, tools,
+    sync(next: CircuitConnection[]) {
+      if (disposed) return
+      const keys = new Set(next.map(wireKey))
       for (const key of records.keys()) if (!keys.has(key)) remove(key)
-      incident.clear()
-      for (const connection of connections) {
-        const key = keyOf(connection)
-        for (const endpoint of [connection.source, connection.destination]) {
-          const id = endpoint.split('.')[0]
-          let links = incident.get(id)
-          if (!links) { links = new Map(); incident.set(id, links) }
-          links.set(key, connection)
-        }
+      connections.clear(); incident.clear(); overrides.clear(); dirty.clear()
+      for (const connection of next) {
+        const key = wireKey(connection); connections.set(key, connection)
+        const visual = readWireVisual(connection)
+        const owners = [connection.source.split('.')[0], connection.destination.split('.')[0], ...(visual.frameModuleId ? [visual.frameModuleId] : []), ...visual.controlPoints.flatMap(p => p.space === 'module' ? [p.moduleId] : [])]
+        for (const id of owners) { const links = incident.get(id) ?? new Set<string>(); links.add(key); incident.set(id, links) }
         update(connection)
       }
+      updateHandles(); updateSegment()
     },
-    updateModule(id: string) { for (const connection of incident.get(id)?.values() ?? []) update(connection) },
-    highlight(connection?: { source: string; destination: string } | null) {
-      selected = connection ? { ...connection } : null
-      for (const record of records.values()) record.mesh.material.color.set(color(record.mesh.userData as CircuitConnection))
+    updateModule(id: string) {
+      if (disposed) return
+      for (const key of incident.get(id) ?? []) {
+        if (routeContext) dirty.add(key)
+        else update(connections.get(key)!)
+      }
+      if (drawing) drawingDirty = true
     },
-    dispose() { for (const key of records.keys()) remove(key); incident.clear(); selected = null },
+    previewVisual(wire: WireIdentity, visual: WireVisual | null) {
+      if (disposed) return
+      const key = wireKey(wire)
+      if (visual) overrides.set(key, copyWireVisual(visual)); else overrides.delete(key)
+      dirty.add(key)
+    },
+    previewDrawing(wire: WireIdentity, visual: WireVisual, cursor: Point3 | null) { if (!disposed) { drawing = { wire: { ...wire }, visual: copyWireVisual(visual), cursor: cursor ? { ...cursor } : null }; drawingDirty = true } },
+    clearDrawing,
+    flush() {
+      if (disposed) return
+      const changed = dirty.size > 0
+      for (const key of dirty) { const connection = connections.get(key); if (connection) update(connection) }
+      dirty.clear()
+      if (changed) { updateHandles(); updateSegment() }
+      if (drawingDirty) { drawingDirty = false; updateDrawing() }
+    },
+    route(wire: WireIdentity) { return records.get(wireKey(wire))?.route ?? null },
+    highlight(wire?: WireIdentity | null) { if (disposed) return; selected = wire ? { ...wire } : null; selectedHandle = null; selectedSegment = null; for (const record of records.values()) style(record); updateHandles(); updateSegment() },
+    hover(wire: WireIdentity | null) { if (disposed) return; hovered = wire; for (const record of records.values()) style(record) },
+    selectHandle(index: number | null) { if (disposed) return; selectedHandle = index; updateHandles() },
+    selectSegment(index: number | null) { if (disposed) return; selectedSegment = index; updateSegment() },
+    dispose() {
+      if (disposed) return; disposed = true
+      clearDrawing(); if (handleMesh) { tools.remove(handleMesh); disposeObject(handleMesh); handleMesh = null }
+      if (segmentMesh) { tools.remove(segmentMesh); disposeObject(segmentMesh); segmentMesh = null }
+      for (const key of records.keys()) remove(key)
+      connections.clear(); incident.clear(); overrides.clear(); dirty.clear(); selected = null; hovered = null
+    },
   }
 }

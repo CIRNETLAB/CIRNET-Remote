@@ -28,7 +28,7 @@ function select(tool: WorkspaceTool) {
   <aside id="tools-sidebar" class="tool-rail" aria-label="Workspace tools">
     <div class="rail-label">TOOLS</div>
     <div id="editing-tools" role="toolbar" aria-label="Editing tools" aria-orientation="vertical">
-      <button v-for="tool in tools" :key="tool.id" :aria-label="tool.name" :aria-pressed="workspace.tool === tool.id" :title="tool.name + (['scope', 'probe'].includes(tool.id) ? ' · open instrument' : ' · edit logical graph')" @click="select(tool.id)"><WorkbenchIcon :name="tool.id" /><span>{{ tool.name }}</span></button>
+      <button v-for="tool in tools" :key="tool.id" :aria-label="tool.name" :aria-pressed="workspace.tool === tool.id" :title="tool.name + (tool.id === 'wire' ? ' · connect holes and ports' : ['scope', 'probe'].includes(tool.id) ? ' · open instrument' : ' · edit graph')" @click="select(tool.id)"><WorkbenchIcon :name="tool.id" /><span>{{ tool.name }}</span></button>
       <button class="instrument-launcher" aria-label="Power Supply" title="Open Power Supply" @click="ui.openWindow('power-supply')"><WorkbenchIcon name="power-supply" /><span>Power<br />Supply</span></button>
       <button class="instrument-launcher" aria-label="Function Generator" title="Open Function Generator" @click="ui.openWindow('generator')"><WorkbenchIcon name="generator" /><span>Function<br />Generator</span></button>
     </div>

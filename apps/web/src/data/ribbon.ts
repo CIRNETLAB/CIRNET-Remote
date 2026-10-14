@@ -16,7 +16,7 @@ export const ribbonGroups: RibbonGroup[] = [
     { ...artwork('BREADBOARD_630', 'Breadboard 630', 'breadboard_630'), description: '630 tie-point half-size solderless breadboard terminal strip without power distribution rails.' },
     { ...artwork('BREADBOARD_100', 'Solderless Breadboard', 'breadboard_100'), description: '100 tie-point dual bus power distribution strip (+ / - rails) for modular breadboard assembly.' },
     artwork('POWER_SUPPLY', 'Power supply visual', 'power_supply_upright'),
-    { ...artwork('JUMPER', 'Wire tool', 'Wire'), description: 'Connect explicitly named logical ports.' },
+    { ...artwork('JUMPER', 'Wire tool', 'Wire'), description: 'Connect holes or ports and route colored jumper wires.' },
   ] },
   { id: 'passive', label: 'Passive', icon: 'resistor', items: [artwork('RESISTOR', 'Resistor', 'resistor'), artwork('CAPACITOR', 'Capacitor', 'capacitor')] },
   { id: 'active', label: 'Active', icon: 'transistor', items: [artwork('TRANSISTOR', 'Transistor', 'transistor'), artwork('DIODE', 'Diode', 'diode'), artwork('ZENER', 'Zener diode', 'diode_zener')] },
@@ -40,7 +40,7 @@ export const libraryComponents = ribbonGroups.flatMap((group) => group.items)
 for (const item of libraryComponents) {
   const definition = getDefinition(item.type)
   if (definition) {
-    item.description = definition.visualOnly ? 'Visual structure only. Placement creates no source, electrical nodes or physical hardware.' : 'Functional editor model with named logical ports. Simulation and physical pin mapping are not connected.'
+    item.description = definition.breadboardTopologyRef ? 'Breadboard contacts with declared virtual strip and continuous rail nodes. Click holes with Wire; physical station mapping is separate.' : definition.visualOnly ? 'Visual structure only. Placement creates no source, electrical nodes or physical hardware.' : 'Functional editor model with named logical ports. Physical pin mapping is separate.'
     item.metadata = { ...item.metadata, editor_contract: definition }
   }
 }

@@ -47,3 +47,13 @@ def test_module_requires_id_and_type():
 def test_connection_requires_source_and_destination():
     graph=valid_graph(); graph['connections']=[{'source':'SW1.OUT'}]
     with pytest.raises(ValidationError): validator().validate(graph)
+
+
+def test_contact_endpoints_and_visual_routing_keep_circuitgraph_1_0_contract():
+    graph = valid_graph()
+    graph['modules'].append({'id': 'BB', 'type': 'BREADBOARD'})
+    graph['connections'] = [{'source': 'SW1.OUT', 'destination': 'BB.contact:terminal:A:01', 'metadata': {
+        'wireVisual': {'version': 1, 'color': '#d8493f', 'routeMode': 'ORTHOGONAL', 'controlPoints': [{'space': 'module', 'moduleId': 'BB', 'position': {'x': 1, 'y': .36, 'z': 2}}], 'thickness': .036}}}]
+    validator().validate(graph)
+    graph['connections'][0]['controlPoints'] = []
+    with pytest.raises(ValidationError): validator().validate(graph)

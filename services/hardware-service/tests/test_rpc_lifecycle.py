@@ -58,3 +58,14 @@ def test_stale_physical_start_rechecks_owner_under_operation_lock():
     assert reply.accepted is False
     assert reply.code==pb.RESOURCE_CONFLICT
     assert s._experiment_id=='e2' and s.state=='ARMED'
+
+
+def test_physical_rpc_rejects_virtual_contact_graph_even_when_structurally_valid():
+    from contracts.generated import rpc_v2_pb2 as pb
+    from hardware_service.rpc import LifecycleRpc
+    from hardware_service.station.physical import PhysicalHardwareStation
+    rpc = LifecycleRpc({'physical-1': PhysicalHardwareStation('physical-1')}, pb)
+    graph = {'schema_version': '1.0', 'circuit_id': 'editor', 'modules': [{'id': 'BB', 'type': 'BREADBOARD'}],
+             'connections': [{'source': 'BB.contact:terminal:A:01', 'destination': 'BB.contact:terminal:J:03'}]}
+    reply = rpc.ConfigureVirtualCircuit(pb.ConfigureVirtualRequest(target=pb.Target(station_id='physical-1', experiment_id='e1'), design_graph_json=json.dumps(graph).encode()), None)
+    assert reply.accepted is False and reply.code == pb.UNEXECUTABLE

@@ -107,6 +107,18 @@ def test_start_and_legacy_run_cannot_bypass_safety_with_a_driver():
     assert 'start' not in d.calls
 
 
+@pytest.mark.parametrize('field', ['node', 'resource'])
+def test_editor_contacts_cannot_be_allocated_as_physical_nodes_or_gpio_resources(field):
+    driver = ProtectedTestDriver()
+    physical = station(driver)
+    physical.enter_safe_state(); physical.scan_topology(); physical.read_runtime_safety()
+    value = plan()
+    if field == 'node': value['endpoint_bindings'][0]['node_id'] = 'BB.contact:terminal:A:01'
+    else: value['routing_allocations'][0]['resource_id'] = 'BB.contact:rail:top-positive:01'
+    error_code(lambda: physical.prepare_execution(value, {'schema_version': '1.0', 'decision': 'RUN_GUARDED', 'reasons': []}), 'UNEXECUTABLE')
+    assert 'prepare' not in driver.calls
+
+
 @pytest.mark.parametrize('safety,code',[('UNSAFE','UNSAFE'),('INDETERMINATE','SAFETY_INDETERMINATE')])
 def test_unsafe_or_indeterminate_blocks_power_up(safety,code):
     d=ProtectedTestDriver(safety=safety)

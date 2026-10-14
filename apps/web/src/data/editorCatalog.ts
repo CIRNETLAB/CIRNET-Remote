@@ -5,7 +5,7 @@ export interface ComponentParameter { key: string; label: string; kind: 'number'
 export interface ComponentDefinition {
   type: string; name: string; family: string; visual: string; size: number[]; color: string
   ports: LogicalPort[]; defaults: Record<string, unknown>; parameters: ComponentParameter[]
-  visualOnly?: boolean; metadataRef?: string; memoryContract?: string; partNumber?: string
+  visualOnly?: boolean; metadataRef?: string; memoryContract?: string; partNumber?: string; breadboardTopologyRef?: string
 }
 export const componentCatalog = catalog.components as ComponentDefinition[]
 export const getDefinition = (type: string) => componentCatalog.find((definition) => definition.type === type)

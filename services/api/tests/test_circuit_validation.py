@@ -16,6 +16,14 @@ def test_valid_circuit_returns_structured_success():
     assert response.status_code==200
     assert response.json()=={'valid':True,'code':'OK','message':'Circuit Graph is structurally valid.'}
 
+
+def test_contact_wire_visual_metadata_remains_accepted_by_unchanged_api_contract():
+    graph = {'schema_version': '1.0', 'circuit_id': 'contact', 'modules': [{'id': 'BB', 'type': 'BREADBOARD'}],
+             'connections': [{'source': 'BB.contact:terminal:A:01', 'destination': 'BB.contact:terminal:J:03',
+                              'metadata': {'wireVisual': {'version': 1, 'color': '#397ec6', 'routeMode': 'ORTHOGONAL', 'controlPoints': [], 'thickness': .036}}}]}
+    response = client.post('/api/circuits/validate', json=graph)
+    assert response.status_code == 200 and response.json()['valid'] is True
+
 def test_missing_schema_version_returns_structured_error():
     graph=valid_graph(); graph.pop('schema_version')
     response=client.post('/api/circuits/validate',json=graph)

@@ -24,7 +24,7 @@ export interface HostNode { tag: string; text: string; props: Record<string, unk
 // Minimal DOM boundary for pre-existing disabled v-model directives. App events
 // are still invoked from the compiled component's production event props.
 const node = (tag: string, text = ''): HostNode => ({ tag, text, props: {}, children: [], parent: null, tagName: tag.toUpperCase(), options: [], addEventListener() {}, removeEventListener() {} } as HostNode)
-export function mountSfc(component: Component, pinia: Pinia) {
+export function mountSfc(component: Component, pinia: Pinia, props: Record<string, unknown> | null = null) {
   const renderer = createRenderer<HostNode, HostNode>({
     createElement: (tag) => node(tag), createText: (text) => node('#text', text), createComment: (text) => node('#comment', text),
     setText: (node, text) => { node.text = text }, setElementText: (node, text) => { node.text = text; node.children = [] },
@@ -38,7 +38,7 @@ export function mountSfc(component: Component, pinia: Pinia) {
     },
     remove(node) { node.parent?.children.splice(node.parent.children.indexOf(node), 1); node.parent = null },
   })
-  const root = node('root'), app = renderer.createApp(component).use(pinia)
+  const root = node('root'), app = renderer.createApp(component, props).use(pinia)
   app.mount(root)
   const all = (parent = root): HostNode[] => parent.children.flatMap(child => [child, ...all(child)])
   return { app, all, text: () => all().map(node => node.text).join(' '), find: (tag: string, key: string, value: unknown) => all().find(node => node.tag === tag && node.props[key] === value)! }
