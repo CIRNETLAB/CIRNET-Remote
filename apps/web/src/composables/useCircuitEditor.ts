@@ -2,6 +2,8 @@ import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue'
 import type { Vector3 } from 'three'
 import type { createSceneManager } from '../three/SceneManager'
 import { getDefinition } from '../data/editorCatalog'
+import { getBreadboardGeometrySpec } from '../geometry/BreadboardGeometrySpec'
+import { snapBreadboardPosition } from '../geometry/breadboardDocking'
 import { useCircuitStore } from '../stores/circuit'
 import { useWorkspaceStore } from '../stores/workspace'
 import { useUiStore } from '../stores/ui'
@@ -26,11 +28,6 @@ interface TransformGesture extends DragGesture {
   initial: Position; position: Position; initialRotation: number; rotation: number; lastAngle: number; angle: number
 }
 
-function footprint(size: readonly number[], degrees: number) {
-  const angle = (degrees % 360) * Math.PI / 180, c = Math.abs(Math.cos(angle)), s = Math.abs(Math.sin(angle))
-  return [size[0] * c + size[2] * s, size[0] * s + size[2] * c]
-}
-
 export function snapPosition(
   point: { x: number; y?: number; z: number },
   snapEnabled: boolean,
@@ -41,112 +38,18 @@ export function snapPosition(
   rotation?: number,
   axis?: 'x' | 'z'
 ): Position {
-  const clean = (n: number) => Math.round(n * 10000) / 10000
+  const clean = (n: number) => Math.round(n * 10000) / 10000 || 0
   const baseX = axis === 'z' ? point.x : snapEnabled ? Math.round(point.x * 2) / 2 : Math.round(point.x * 100) / 100
   const baseZ = axis === 'x' ? point.z : snapEnabled ? Math.round(point.z * 2) / 2 : Math.round(point.z * 100) / 100
 
   if (!snapEnabled || !activeType) return { x: clean(baseX), y: elevation, z: clean(baseZ) }
 
-  const activeDef = getDefinition(activeType)
-  if (!activeDef?.visual?.startsWith('breadboard')) return { x: clean(baseX), y: elevation, z: clean(baseZ) }
-
-  const otherBoards = modules.flatMap((m) => {
-    if (activeId && m.id === activeId) return []
-    const def = getDefinition(m.type)
-    if (!def?.visual?.startsWith('breadboard')) return []
-    const [w, d] = footprint(def.size, m.rotation ?? 0)
-    return [{ id: m.id, x: m.position?.x ?? 0, z: m.position?.z ?? 0, w, d }]
-  })
-  if (otherBoards.length === 0) return { x: clean(baseX), y: elevation, z: clean(baseZ) }
-
-  const activeModule = activeId ? modules.find((m) => m.id === activeId) : null
-  const activeRot = rotation ?? activeModule?.rotation ?? 0
-  const [activeW, activeD] = footprint(activeDef.size, activeRot)
-
-  // 1. Magnetic docking candidates
-  let bestCandidate: { x: number; z: number } | null = null
-  let minDist = Infinity
-
-  for (const m of otherBoards) {
-    const { x: mX, z: mZ, w: mW, d: mD } = m
-
-    const sites = [
-      // Top (North)
-      { axis: 'z', x: mX, z: mZ - (mD + activeD) / 2, threshZ: 0.65, threshX: 1.5 },
-      // Bottom (South)
-      { axis: 'z', x: mX, z: mZ + (mD + activeD) / 2, threshZ: 0.65, threshX: 1.5 },
-      // Left (West)
-      { axis: 'x', x: mX - (mW + activeW) / 2, z: mZ, threshZ: 1.2, threshX: 0.65 },
-      // Right (East)
-      { axis: 'x', x: mX + (mW + activeW) / 2, z: mZ, threshZ: 1.2, threshX: 0.65 }
-    ]
-
-    for (const site of sites) {
-      // Placement axis handles dock/push only along their axis. They must not
-      // snap the transverse coordinate or magnetize a distant, non-overlapping row.
-      if (axis && site.axis !== axis) continue
-      if (axis === 'x' && Math.abs(point.z - mZ) >= (mD + activeD) / 2 - 0.005) continue
-      if (axis === 'z' && Math.abs(point.x - mX) >= (mW + activeW) / 2 - 0.005) continue
-      const s = axis === 'x' ? { ...site, z: point.z } : axis === 'z' ? { ...site, x: point.x } : site
-      const dx = Math.abs(point.x - s.x), dz = Math.abs(point.z - s.z)
-      if (dx > s.threshX || dz > s.threshZ) continue
-      const eps = 0.005
-      const siteOverlapsOther = otherBoards.some((b) => {
-        if (b.id === m.id) return false
-        const { x: bX, z: bZ, w: bW, d: bD } = b
-        return (s.x - activeW / 2 < bX + bW / 2 - eps) &&
-               (s.x + activeW / 2 > bX - bW / 2 + eps) &&
-               (s.z - activeD / 2 < bZ + bD / 2 - eps) &&
-               (s.z + activeD / 2 > bZ - bD / 2 + eps)
-      })
-      if (siteOverlapsOther) continue
-
-      if (dx <= s.threshX && dz <= s.threshZ) {
-        const dist = Math.hypot(dx, dz)
-        if (dist < minDist) {
-          minDist = dist
-          bestCandidate = { x: s.x, z: s.z }
-        }
-      }
-    }
-  }
-
-  let candX = bestCandidate ? bestCandidate.x : baseX
-  let candZ = bestCandidate ? bestCandidate.z : baseZ
-
-  // 2. Anti-overlap resolution: if active board collides with any other board, push out to nearest edge
-  for (let iter = 0; iter < 3; iter++) {
-    let collided = false
-    for (const m of otherBoards) {
-      const { x: mX, z: mZ, w: mW, d: mD } = m
-
-      const eps = 0.005
-      const overlapX = (candX - activeW / 2 < mX + mW / 2 - eps) && (candX + activeW / 2 > mX - mW / 2 + eps)
-      const overlapZ = (candZ - activeD / 2 < mZ + mD / 2 - eps) && (candZ + activeD / 2 > mZ - mD / 2 + eps)
-
-      if (overlapX && overlapZ) {
-        collided = true
-        const pushes = [
-          { dir: 'south', target: mZ + (mD + activeD) / 2, dist: Math.abs(candZ - (mZ + (mD + activeD) / 2)) },
-          { dir: 'north', target: mZ - (mD + activeD) / 2, dist: Math.abs(candZ - (mZ - (mD + activeD) / 2)) },
-          { dir: 'east', target: mX + (mW + activeW) / 2, dist: Math.abs(candX - (mX + (mW + activeW) / 2)) },
-          { dir: 'west', target: mX - (mW + activeW) / 2, dist: Math.abs(candX - (mX - (mW + activeW) / 2)) }
-        ].filter((push) => !axis || (axis === 'x' ? push.dir === 'east' || push.dir === 'west' : push.dir === 'north' || push.dir === 'south'))
-        pushes.sort((a, b) => a.dist - b.dist)
-        const best = pushes[0]
-        if (best.dir === 'north' || best.dir === 'south') {
-          candZ = best.target
-          if (!axis && Math.abs(candX - mX) < 1.5) candX = mX
-        } else {
-          candX = best.target
-          if (!axis && Math.abs(candZ - mZ) < 1.2) candZ = mZ
-        }
-      }
-    }
-    if (!collided) break
-  }
-
-  return { x: clean(candX), y: elevation, z: clean(candZ) }
+  if (!getBreadboardGeometrySpec(activeType)) return { x: clean(baseX), y: elevation, z: clean(baseZ) }
+  const activeModule = activeId ? modules.find(module => module.id === activeId) : null
+  const position = snapBreadboardPosition(point, { x: baseX, z: baseZ }, modules, activeType, activeId, elevation, rotation ?? activeModule?.rotation ?? 0, axis)
+  // A mating plane is exact; rounding it can move plastic through a rotated neighbor.
+  const coordinate = position.docked ? (n: number) => Math.abs(n) < 1e-12 ? 0 : n : clean
+  return { x: coordinate(position.x), y: elevation, z: coordinate(position.z) }
 }
 
 export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, manager: () => Manager | undefined) {

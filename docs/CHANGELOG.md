@@ -4,6 +4,12 @@ All notable project changes will be documented in this file. The project follows
 
 ## [Unreleased]
 
+### Fixed — 2026-10-14 Breadboard mechanical docking
+
+- Share local mating planes, keyed contours, small joint clearance and bevel seam compensation between housing and docking for 830/630/100, including mixed pairs and rotated boards.
+- Check actual concave contours for interference, preserve exact mating positions/locked axes and cache settled geometry; keep camera-facing placement, contacts, wires and atomic history.
+- Production-mesh/2×3 cluster/TOP/oblique regressions and independent review fixes pass; final frontend327/327. Evidence and labelled software previews: `verification/2026-10-14-breadboard-mechanical-docking.md`.
+
 ### Added — 2026-10-14 CRUMB Wire Tool
 
 - Explicit shared breadboard contacts/five-hole nodes/continuous rails and exact instanced socket picking.

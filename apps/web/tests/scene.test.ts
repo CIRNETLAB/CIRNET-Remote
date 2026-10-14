@@ -691,7 +691,7 @@ test('modular breadboards share mating keys with clearance for beveled joints', 
       const halfDepth = Number(board.userData.size[2]) / 2
       const tab = -halfDepth - Math.min(...profile.map(([, z]) => z))
       const notch = halfDepth - Math.min(...profile.filter(([x, z]) => Math.abs(x) < 0.2 && z > 0).map(([, z]) => z))
-      assert.ok(notch > tab + 0.004, `${type} tab must fit its neighbor's notch without bevel collision`)
+      assert.ok(notch - tab >= .0014 && notch - tab <= .0016, `${type} tab must fit with small clearance instead of a dark joint gap`)
       assert.equal(profile.filter(([, z]) => z < -halfDepth).length, 6, 'all strips share the same three mating keys')
     } finally { disposeObject(board) }
   }

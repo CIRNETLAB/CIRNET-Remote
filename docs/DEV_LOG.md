@@ -1,6 +1,6 @@
 ---
 project: net-Circuit-Remote
-current_phase: crumb-wire-tool
+current_phase: breadboard-mechanical-docking
 status: implemented-reviewed
 last_updated: 2026-10-14
 next_task: user-review-refactor-no-merge
@@ -11,13 +11,17 @@ fpga_development_started: true
 
 # Development Log
 
+## Breadboard mechanical docking — 2026-10-14
+
+Housing and docking now share a local four-side GeometrySpec with explicit mating planes, compatible male/female strip/end keys, 0.0015 joint clearance and a 0.0005 seam bevel inset. Actual concave contours govern collision; cached poses/lazy triangles keep settled-board pointer-follow inexpensive. All 830/630/100 pairs and quarter turns, non-quarter yaw/imported precision, third-board interference, locked axes and the 2×3 cluster have production-mesh regressions. Independent review's performance and rounding findings have RED→GREEN fixes. Final frontend327 PASS; Vite invocation build and topology/context checks PASS. Camera-facing placement, history, contacts/wires/catalog dimensions remain unchanged. CPU geometry previews and limits: verification/2026-10-14-breadboard-mechanical-docking.md. Keep refactor for review; no merge/push.
+
 ## CRUMB Wire Tool — 2026-10-14
 
 Implemented the approved Native plan: explicit shared 830/630/100 topology, InstancedMesh contact picking, colored multi-bend jumper drawing/editing and virtual net union. CircuitGraph 1.0, atomic history/file lifecycle, placement/Gizmo/camera/ViewCube and Physical Lab boundaries remain. Frontend309 pass; Python367 pass/1 Icarus skip with documented native-file sandbox adapters; Vite API build/provenance/context pass. Fresh whole-change review found three Important issues: perspective segment interpolation, outside-board bend ownership and Wire-mode socket priority; each has a verified RED→GREEN regression. Browser local URL permission was denied, so no visual browser proof is claimed. Evidence: verification/2026-10-14-crumb-wire-tool.md; source map: SOURCE_ANALYSIS_CRUMB_WIRE_TOOL.md. Leave changes in refactor; no merge/push.
 
 ## Current Goal
 
-The approved CRUMB Wire Tool implementation and final review are complete in refactor; leave the source for user review without merge/push. Verification and remaining browser/environment limitations are in verification/2026-10-14-crumb-wire-tool.md. ARCHITECTURE.md remains authoritative for lab contracts; the entries and older handoffs below are historical evidence and never override canonical v3.1.
+Breadboard mechanical docking and its final review are complete in refactor; leave the source for user review without merge/push. Current evidence and browser/environment limitations are in verification/2026-10-14-breadboard-mechanical-docking.md. ARCHITECTURE.md remains authoritative for lab contracts; the entries and older handoffs below are historical evidence and never override canonical v3.1.
 
 ## Post-R7 H0–H6 — 2026-10-13
 

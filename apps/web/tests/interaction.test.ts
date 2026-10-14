@@ -7,6 +7,7 @@ import { useCircuitEditor, snapPosition } from '../src/composables/useCircuitEdi
 import { useCircuitStore } from '../src/stores/circuit'
 import { useWorkspaceStore, type WorkspaceTool } from '../src/stores/workspace'
 import { createSceneManager } from '../src/three/SceneManager'
+import { breadboardBodiesOverlap, isMechanicalBreadboardDock } from '../src/geometry/breadboardDocking'
 import { useUiStore } from '../src/stores/ui'
 
 // Only the DOM/canvas host and GPU boundary are replaced; picking, camera math,
@@ -336,11 +337,10 @@ test('gizmo cancellation and selection changes roll preview back and ignore fore
   } finally { h.dispose() }
 })
 
-test('breadboard snap uses the rotated footprint after a non-quarter-turn gizmo rotation', () => {
+test('breadboard snap separates the actual rotated housing after a non-quarter-turn gizmo rotation', () => {
   const modules = [{ id: 'A', type: 'BREADBOARD', position: { x: 0, y: 0, z: 0 } }, { id: 'B', type: 'BREADBOARD', rotation: 30, position: { x: 0, y: 0, z: 3 } }]
   const position = snapPosition({ x: 0, z: 3 }, true, modules, 'BREADBOARD', 'B')
-  const rotatedDepth = 9 * Math.sin(Math.PI / 6) + 2.66 * Math.cos(Math.PI / 6)
-  assert.ok(position.z - rotatedDepth / 2 >= 2.66 / 2 - 0.005, 'snap must not overlap rotated housing')
+  assert.equal(breadboardBodiesOverlap(modules[0], { ...modules[1], position }), false, 'snap must not overlap the rotated housing contour')
 })
 
 test('extreme finite imported yaw docks and rotates like its equivalent heading, with one undo', async () => {
@@ -870,11 +870,13 @@ test('ghost gestures ignore foreign pointers and discard draft on tool/type/grap
 
 test('draft breadboard docking and anti-overlap use its explicit 90/180 degree rotation', () => {
   const boards = [{ id: 'A', type: 'BREADBOARD', rotation: 0, position: { x: 0, y: 0, z: 0 } }]
-  for (const rotation of [90, 180]) {
+  for (const rotation of [0, 90, 180, 270]) {
     const depth = rotation === 90 ? 9 : 2.66, dock = (2.66 + depth) / 2
-    assert.deepEqual(snapPosition({ x: 0.1, z: dock + 0.2 }, true, boards, 'BREADBOARD', null, 0, rotation), { x: 0, y: 0, z: dock })
+    const approached = { id: 'B', type: 'BREADBOARD', rotation, position: snapPosition({ x: 0.1, z: dock + 0.2 }, true, boards, 'BREADBOARD', null, 0, rotation) }
+    assert.equal(breadboardBodiesOverlap(boards[0], approached), false)
+    assert.equal(isMechanicalBreadboardDock(boards[0], approached), rotation === 0, 'only compatible male/female sides magnetically mate')
     const pushed = snapPosition({ x: 0, z: 1 }, true, boards, 'BREADBOARD', null, 0, rotation)
-    assert.ok(pushed.z - depth / 2 >= 2.66 / 2 - 0.005)
+    assert.equal(breadboardBodiesOverlap(boards[0], { ...approached, position: pushed }), false)
   }
 })
 
@@ -889,11 +891,16 @@ test('rotating a breadboard draft re-snaps from its gesture origin without accum
     const quarter = h.manager.project(center.clone().add(new Vector3(0, 0, radius)))
     h.editor.pointerMove(h.pointer(quarter.x, quarter.y))
     assert.equal(Math.round(ghost.rotation.y * 180 / Math.PI), 90)
-    assert.equal(ghost.position.z, 5.83, 'quarter-turn housing cannot overlap the placed board')
+    assert.equal(breadboardBodiesOverlap(h.circuit.graph!.modules[0], { id: 'PLACE', type: 'BREADBOARD', rotation: 90, position: { x: ghost.position.x, y: ghost.position.y, z: ghost.position.z } }), false, 'mismatched quarter-turn tabs must not enter the placed housing')
     const half = h.manager.project(center.clone().add(new Vector3(radius, 0, 0)))
-    h.editor.pointerMove(h.pointer(half.x, half.y)); h.editor.pointerUp(h.pointer(half.x, half.y))
+    h.editor.pointerMove(h.pointer(half.x, half.y))
     assert.equal(Math.round(ghost.rotation.y * 180 / Math.PI), 180)
-    assert.deepEqual(ghost.position.toArray(), initial.toArray(), 'half-turn restores the original valid dock')
+    const threeQuarters = h.manager.project(center.clone().add(new Vector3(0, 0, -radius)))
+    h.editor.pointerMove(h.pointer(threeQuarters.x, threeQuarters.y))
+    const full = h.manager.project(center.clone().add(new Vector3(-radius, 0, 0)))
+    h.editor.pointerMove(h.pointer(full.x, full.y)); h.editor.pointerUp(h.pointer(full.x, full.y))
+    assert.equal(Math.round(ghost.rotation.y * 180 / Math.PI), 0)
+    assert.deepEqual(ghost.position.toArray(), initial.toArray(), 'a full turn restores the original compatible dock without drift')
     assert.equal(h.circuit.past.length, 0); assert.equal(h.circuit.graph!.modules.length, 1)
   } finally { h.dispose() }
 })
@@ -911,11 +918,12 @@ test('rotated placement Breadboard X/Z drags prevent overlap while keeping the o
       const handle = h.manager.gizmoHandlePosition(axis)!, a = h.manager.project(handle)
       const b = h.manager.project(handle.clone().add(new Vector3(axis === 'x' ? -8 : 0, 0, axis === 'z' ? -8 : 0)))
       h.editor.pointerDown(h.pointer(a.x, a.y)); h.editor.pointerMove(h.pointer(b.x, b.y)); h.editor.pointerUp(h.pointer(b.x, b.y))
-      assert.equal(ghost.position[axis], 5.83, 'snap uses the rotated footprint along the constrained axis')
+      assert.equal(breadboardBodiesOverlap(h.circuit.graph!.modules[0], { id: 'PLACE', type: 'BREADBOARD', rotation: 90, position: { x: ghost.position.x, y: ghost.position.y, z: ghost.position.z } }), false, 'axis snap separates actual tabs and plastic')
       assert.equal(ghost.position[axis === 'x' ? 'z' : 'x'], 0)
       assert.equal(h.circuit.past.length, 0); assert.equal(h.circuit.graph!.modules.length, 1)
+      const coordinate = ghost.position[axis]
       h.editor.pointerDown(h.pointer(120, 550)); await nextTick()
-      assert.equal(h.circuit.graph!.modules[1].position![axis], 5.83)
+      assert.equal(h.circuit.graph!.modules[1].position![axis], coordinate)
       assert.equal(h.circuit.past.length, 1)
     } finally { h.dispose() }
   }
@@ -1031,7 +1039,8 @@ test('rotated Breadboard cursor follow keeps current rotation in docking and ant
     const end = h.manager.project(new Vector3(0.1, 0, 1))
     assert.equal(h.manager.pickGizmo(end.x, end.y), null)
     h.editor.pointerMove({ ...h.pointer(end.x, end.y), buttons: 0 } as PointerEvent)
-    assert.equal(ghost.position.z, 5.83); assert.equal(Math.round(ghost.rotation.y * 180 / Math.PI), 90)
+    assert.equal(breadboardBodiesOverlap(h.circuit.graph!.modules[0], { id: 'PLACE', type: 'BREADBOARD', rotation: 90, position: { x: ghost.position.x, y: ghost.position.y, z: ghost.position.z } }), false)
+    assert.equal(Math.round(ghost.rotation.y * 180 / Math.PI), 90)
     assert.equal(h.circuit.past.length, 0); assert.equal(h.circuit.graph!.modules.length, 1)
   } finally { h.dispose() }
 })

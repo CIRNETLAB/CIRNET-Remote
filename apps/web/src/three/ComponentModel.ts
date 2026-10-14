@@ -2,6 +2,7 @@ import { Box3, BoxGeometry, CanvasTexture, CylinderGeometry, Group, InstancedMes
 import { getDefinition, type LogicalPort } from '../data/editorCatalog'
 import type { CircuitModule } from '../types/circuit'
 import { addBreadboardHousing } from './BreadboardHousing'
+import { getBreadboardGeometrySpec } from '../geometry/BreadboardGeometrySpec'
 import { addPowerSupplyModel, applyPowerSupplyControls } from './PowerSupplyModel'
 import { addOscilloscopeModel } from './OscilloscopeModel'
 import { addFunctionGeneratorModel } from './FunctionGeneratorModel'
@@ -24,7 +25,7 @@ export function disposeObject(root: Object3D) {
   materials.forEach((material) => material.dispose())
 }
 
-function createBreadboardTexture(): CanvasTexture | null {
+function createBreadboardTexture(type: string): CanvasTexture | null {
   if (typeof document === 'undefined') return null
   const width = 2400
   const height = 710
@@ -34,8 +35,7 @@ function createBreadboardTexture(): CanvasTexture | null {
   const ctx = canvas.getContext('2d')
   if (!ctx) return null
 
-  const w = 9.0
-  const d = 2.66
+  const [w, , d] = getBreadboardGeometrySpec(type)!.size
   const pitch = 0.13
   const spanX = 62 * pitch
 
@@ -148,7 +148,7 @@ function createBreadboardTexture(): CanvasTexture | null {
   return texture
 }
 
-function createBreadboard630Texture(): CanvasTexture | null {
+function createBreadboard630Texture(type: string): CanvasTexture | null {
   if (typeof document === 'undefined') return null
   const width = 2400
   const height = 496
@@ -158,8 +158,7 @@ function createBreadboard630Texture(): CanvasTexture | null {
   const ctx = canvas.getContext('2d')
   if (!ctx) return null
 
-  const w = 9.0
-  const d = 1.86
+  const [w, , d] = getBreadboardGeometrySpec(type)!.size
   const pitch = 0.13
   const spanX = 62 * pitch
 
@@ -235,7 +234,7 @@ function createBreadboard630Texture(): CanvasTexture | null {
   return texture
 }
 
-function createBreadboard100Texture(): CanvasTexture | null {
+function createBreadboard100Texture(type: string): CanvasTexture | null {
   if (typeof document === 'undefined') return null
   const width = 2400
   const height = 140
@@ -245,8 +244,7 @@ function createBreadboard100Texture(): CanvasTexture | null {
   const ctx = canvas.getContext('2d')
   if (!ctx) return null
 
-  const w = 9.0
-  const d = 0.52
+  const [w, , d] = getBreadboardGeometrySpec(type)!.size
   const pitch = 0.13
   const spanX = 62 * pitch
 
@@ -329,11 +327,11 @@ export function buildComponent(module: CircuitModule): Group {
     const body = cylinder(w * 0.35, h, color); body.position.y = h / 2 + 0.05; group.add(body)
     if (definition.visual === 'led') { const dome = new Mesh(new SphereGeometry(w * 0.35, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), material(color)); dome.userData.selectionSurface = true; dome.position.y = h; group.add(dome) }
   } else if (definition?.visual === 'breadboard') {
-    addBreadboardHousing(group, [w, h, d], color, createBreadboardTexture(), true, true, module.type)
+    addBreadboardHousing(group, module.type, color, createBreadboardTexture(module.type))
   } else if (definition?.visual === 'breadboard_630') {
-    addBreadboardHousing(group, [w, h, d], color, createBreadboard630Texture(), true, false, module.type)
+    addBreadboardHousing(group, module.type, color, createBreadboard630Texture(module.type))
   } else if (definition?.visual === 'breadboard_100') {
-    addBreadboardHousing(group, [w, h, d], color, createBreadboard100Texture(), false, false, module.type)
+    addBreadboardHousing(group, module.type, color, createBreadboard100Texture(module.type))
   } else if (definition?.visual === 'supply') {
     addPowerSupplyModel(group, [w, h, d])
   } else if (definition?.visual === 'oscilloscope') {
