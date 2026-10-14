@@ -156,8 +156,8 @@ test('wheel and toolbar use target-relative dolly with one reported zoom and rev
     assert.equal(reports.at(-1), 150)
     wheel(-100)
     assert.ok(reports.at(-1)! > 150, 'wheel changes must be visible to the toolbar')
-    for (let i = 0; i < 40; i++) wheel(-100)
-    assert.ok(Math.abs(manager.camera.position.length() - distance / 2) < 1e-6)
+    for (let i = 0; i < 50; i++) wheel(-100)
+    assert.ok(Math.abs(manager.camera.position.length() - distance / 10) < 1e-6)
     for (let i = 0; i < 60; i++) wheel(100)
     assert.ok(Math.abs(manager.camera.position.length() - distance * 2) < 1e-6)
     manager.setZoom(100)
@@ -167,6 +167,101 @@ test('wheel and toolbar use target-relative dolly with one reported zoom and rev
     manager.setZoom(200); manager.setZoom(100)
     assert.ok(manager.camera.position.distanceTo(before) < 1e-6)
     assert.ok(manager.camera.quaternion.angleTo(heading) < 1e-6)
+  } finally { manager.dispose() }
+})
+
+test('toolbar and wheel reach 1000 percent with a close near plane and preserve model world poses', () => {
+  const { manager, wheel } = setup()
+  try {
+    manager.syncGraph({ schema_version: '1.0', circuit_id: 'close', modules: [{ id: 'BB', type: 'BREADBOARD' }], connections: [] })
+    manager.setViewOrientation('TOP', false)
+    const model = manager.models.get('BB')!, pose = model.matrixWorld.clone(), reference = manager.camera.position.distanceTo(manager.target())
+    manager.setZoom(1000)
+    assert.ok(Math.abs(manager.zoomPercent() - 1000) < 1e-6)
+    assert.ok(Math.abs(manager.camera.position.distanceTo(manager.target()) - reference / 10) < 1e-6)
+    assert.ok(manager.camera.near <= .01)
+    const p = manager.project(manager.endpointPosition('BB.contact:terminal:A:32')!)
+    assert.equal(manager.pickEndpoint(p.x, p.y)?.endpoint, 'BB.contact:terminal:A:32')
+    manager.setZoom(100)
+    for (let i = 0; i < 80; i++) wheel(-100)
+    assert.ok(Math.abs(manager.zoomPercent() - 1000) < 1e-6)
+    assert.ok(model.matrixWorld.equals(pose)); assert.equal(model.scale.x, 1)
+    assert.ok(manager.camera.position.toArray().every(Number.isFinite))
+  } finally { manager.dispose() }
+})
+
+test('surface-plane panGrab keeps an elevated grabbed point under the pointer without changing zoom or heading', () => {
+  const { manager } = setup()
+  try {
+    manager.setViewOrientation('TOP-FRONT', false); manager.setZoom(500)
+    const anchor = new Vector3(0, .8, 0), camera = manager.camera.position.clone(), target = manager.target(), heading = manager.camera.quaternion.clone(), zoom = manager.zoomPercent()
+    const screen = manager.project(anchor), x = screen.x + 40, y = screen.y + 20
+    manager.panGrab(anchor, x, y)
+    const moved = manager.project(anchor)
+    assert.ok(Math.hypot(moved.x - x, moved.y - y) < 1e-6)
+    assert.ok(manager.camera.position.clone().sub(camera).distanceTo(manager.target().sub(target)) < 1e-6)
+    assert.ok(manager.camera.quaternion.angleTo(heading) < 1e-6)
+    assert.ok(Math.abs(manager.zoomPercent() - zoom) < 1e-6)
+  } finally { manager.dispose() }
+})
+
+test('close dolly stops before tall model surfaces for toolbar and native wheel, and zoom-out stays reversible', () => {
+  const { manager, wheel } = setup()
+  try {
+    manager.syncGraph({ schema_version: '1.0', circuit_id: 'collision', modules: [{ id: 'PS', type: 'POWER_SUPPLY' }], connections: [] })
+    const initial = manager.camera.position.clone()
+    manager.setZoom(1000)
+    assert.ok(manager.camera.position.z > 1.6, 'camera must stay outside the power supply front face')
+    const stopped = manager.camera.position.clone(), zoom = manager.zoomPercent()
+    for (let i = 0; i < 30; i++) wheel(-100)
+    assert.ok(manager.camera.position.distanceTo(stopped) < 1e-6, 'repeated zoom must not tunnel or jitter at a surface')
+    assert.ok(Math.abs(manager.zoomPercent() - zoom) < 1e-6)
+    wheel(100); assert.ok(manager.camera.position.z > stopped.z)
+    manager.setZoom(100); assert.ok(manager.camera.position.distanceTo(initial) < 1e-6)
+  } finally { manager.dispose() }
+})
+
+test('native right orbit is paused only during wire drawing while wheel dolly stays enabled', () => {
+  const { manager, wheel, canvas } = setup()
+  const event = (type: string, x: number, y: number) => canvas.dispatchEvent(Object.assign(new Event(type, { cancelable: true }), { pointerId: 1, pointerType: 'mouse', button: 2, clientX: x, clientY: y, ctrlKey: false, metaKey: false, shiftKey: false }))
+  const drag = () => { event('pointerdown', 500, 350); event('pointermove', 550, 370); event('pointerup', 550, 370) }
+  try {
+    const initial = manager.camera.quaternion.clone(); drag()
+    assert.ok(manager.camera.quaternion.angleTo(initial) > .01)
+    manager.setWireDrawingActive(true)
+    const draftHeading = manager.camera.quaternion.clone(), zoom = manager.zoomPercent()
+    drag(); assert.ok(manager.camera.quaternion.angleTo(draftHeading) < 1e-6)
+    wheel(-100); assert.ok(manager.zoomPercent() > zoom)
+    manager.setWireDrawingActive(false); drag()
+    assert.ok(manager.camera.quaternion.angleTo(draftHeading) > .01)
+  } finally { manager.dispose() }
+})
+
+test('Zoom To Area focuses the actual wire surface and close dolly cannot enter its tube', () => {
+  const { manager, wheel } = setup()
+  try {
+    const wire = { source: 'BB.contact:terminal:A:30', destination: 'BB.contact:terminal:J:34', metadata: { wireVisual: { version: 1, color: '#d8493f', routeMode: 'AUTO', thickness: .052, height: .04, controlPoints: [] } } }
+    manager.syncGraph({ schema_version: '1.0', circuit_id: 'wire-inspection', modules: [{ id: 'BB', type: 'BREADBOARD' }], connections: [wire] })
+    manager.setViewOrientation('TOP', false)
+    const p = manager.project(new Vector3(.26, .37, 0))
+    assert.equal(manager.pick(p.x, p.y)?.kind, 'wire')
+    assert.equal(manager.zoomToArea(p.x - 6, p.y - 6, p.x + 6, p.y + 6), true)
+    assert.ok(manager.target().y >= .394, 'camera focus uses the tube surface, not its electrical/route centerline')
+    assert.ok(Math.abs(manager.zoomPercent() - 100) < 1e-6)
+    manager.setZoom(1000)
+    for (let i = 0; i < 30; i++) wheel(-100)
+    assert.ok(manager.camera.position.y > .396, 'camera remains outside the .026-radius tube')
+    assert.ok(Math.abs(manager.zoomPercent() - 1000) < 1e-6)
+    assert.equal(manager.pick(500, 350)?.kind, 'wire', JSON.stringify({ camera: manager.camera.position.toArray(), target: manager.target().toArray(), route: manager.wireRoute(wire)?.points, projected: manager.project(new Vector3(.26, .37, 0)) }))
+    manager.highlight(null, wire)
+    assert.equal(manager.pickWireEdit(500, 350, wire)?.kind, 'segment', 'the visible tube remains editable away from its narrow centerline')
+    for (let i = 0; i < 3; i++) {
+      assert.equal(manager.zoomToArea(494, 344, 506, 356), true)
+      assert.ok(Math.abs(manager.zoomPercent() - 100) < 1e-6, 'each area sets an accurate new reference')
+      manager.setZoom(1000)
+      assert.ok(Math.abs(manager.zoomPercent() - 1000) < 1e-6, 'close references remain compatible with the shared zoom range')
+      assert.equal(manager.pick(500, 350)?.kind, 'wire')
+    }
   } finally { manager.dispose() }
 })
 

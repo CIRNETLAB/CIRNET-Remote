@@ -2,6 +2,7 @@ import type { CircuitModule, Point3, WireControlPoint, WireIdentity, WireVisual 
 import { getBreadboardTopology } from '../electrical/BreadboardTopology'
 import { moduleLocalToWorld, worldToModuleLocal } from '../electrical/modulePose'
 import { copyControlPoint } from './wireVisual'
+import { renderWireDiameter } from './wireAppearance'
 
 export interface WireRouteEndpoint { endpoint: string; position: Point3; contactModuleId?: string }
 export interface WireRouteContext { endpoint(value: string): WireRouteEndpoint | null; modulePose(id: string): CircuitModule | null }
@@ -19,7 +20,7 @@ export function ownedPoint(world: Point3, moduleId: string | null, context: Wire
   const module = moduleId && context.modulePose(moduleId)
   return module ? { space: 'module', moduleId: module.id, position: worldToModuleLocal(world, module) } : { space: 'world', position: { ...world } }
 }
-export function wireClearance(visual: WireVisual): number { return Math.max(visual.height ?? .03, visual.thickness / 2 + .006) + (visual.layer ?? 0) * (visual.thickness + .012) }
+export function wireClearance(visual: WireVisual): number { const diameter = renderWireDiameter(visual); return Math.max(visual.height ?? .03, diameter / 2 + .004) + (visual.layer ?? 0) * (diameter + .012) }
 export function snapWirePoint(point: Point3, module: CircuitModule | null, snap: boolean, bypass: boolean): WireControlPoint {
   const topology = module && getBreadboardTopology(module.type)
   const local = topology && module ? worldToModuleLocal(point, module) : { ...point }

@@ -1,10 +1,10 @@
 import type { CircuitConnection, CircuitModule, WireControlPoint, WireIdentity, WireVisual } from '../types/circuit'
 
 export const JUMPER_COLORS = [
-  { name: 'Red', value: '#d8493f' }, { name: 'Blue', value: '#397ec6' },
-  { name: 'Green', value: '#3a9d58' }, { name: 'Yellow', value: '#e2c444' },
-  { name: 'Orange', value: '#dc8737' }, { name: 'Purple', value: '#8656a8' },
-  { name: 'Black', value: '#24272a' }, { name: 'White', value: '#e6e6de' },
+  { name: 'Black', value: '#24272a' }, { name: 'Gray', value: '#858b91' }, { name: 'White', value: '#e6e6de' },
+  { name: 'Red', value: '#d8493f' }, { name: 'Brown', value: '#895c3a' }, { name: 'Orange', value: '#dc8737' },
+  { name: 'Yellow', value: '#e2c444' }, { name: 'Green', value: '#3a9d58' },
+  { name: 'Blue', value: '#397ec6' }, { name: 'Purple', value: '#8656a8' },
 ] as const
 export const wireKey = (wire: WireIdentity): string => JSON.stringify([wire.source, wire.destination])
 export const defaultWireVisual = (): WireVisual => ({ version: 1, color: '#71b3ce', routeMode: 'AUTO', controlPoints: [], thickness: .036, height: .03 })

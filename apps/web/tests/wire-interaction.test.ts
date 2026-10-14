@@ -5,7 +5,34 @@ import { wireHarness } from './helpers/wireHarness'
 import { readWireVisual } from '../src/wires/wireVisual'
 import { resolveElectricalNets } from '../src/electrical/nets'
 
-test('Wire clicks exact holes and multiple blank bends before one atomic commit', async () => {
+test('right-click adds repeated corners, left empty clicks do not bend, and endpoint commit stays atomic', async () => {
+  const h = wireHarness()
+  try {
+    const bb = h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 }); await nextTick(); h.flush(); h.circuit.past = []
+    const first = `${bb}.contact:terminal:A:01`, last = `${bb}.contact:terminal:J:08`
+    h.editor.pointerDown(h.endpointEvent(first))
+    for (const [index, point] of [{ x: -3.25, y: .36, z: -.845 }, { x: -3.25, y: .36, z: 0 }, { x: -3.25, y: .36, z: .845 }].entries()) {
+      const event = h.eventAt(point, 1, 2, true)
+      h.editor.pointerMove(event); h.editor.pointerDown(event)
+      let prevented = false
+      h.editor.contextMenu({ clientX: event.clientX, clientY: event.clientY, preventDefault() { prevented = true }, stopPropagation() {}, stopImmediatePropagation() {} } as unknown as MouseEvent)
+      assert.equal(prevented, true); assert.equal(h.workspace.pendingPort, first)
+      assert.equal(h.editor.wireRouting.controlPoints.value.length, index + 1, 'contextmenu cannot add the same corner twice')
+    }
+    h.editor.pointerDown(h.eventAt({ x: -2, y: .36, z: 0 }))
+    assert.equal(h.editor.wireRouting.controlPoints.value.length, 3)
+    h.editor.keydown({ key: 'Backspace', preventDefault() {} } as KeyboardEvent)
+    assert.equal(h.editor.wireRouting.controlPoints.value.length, 2)
+    assert.equal(h.circuit.past.length, 0)
+    h.editor.pointerDown(h.endpointEvent(last)); await nextTick()
+    assert.equal(h.circuit.graph!.connections.length, 1); assert.equal(h.circuit.past.length, 1)
+    h.circuit.undo(); await nextTick(); assert.equal(h.circuit.graph!.connections.length, 0)
+    h.editor.connect(first); h.editor.keydown({ key: 'Escape' } as KeyboardEvent)
+    assert.equal(h.workspace.pendingPort, null)
+  } finally { h.dispose() }
+})
+
+test('Wire clicks exact holes and multiple right-click bends before one atomic commit', async () => {
   const h = wireHarness()
   try {
     const bb = h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 }); await nextTick(); h.flush(); h.circuit.past = []
@@ -13,7 +40,7 @@ test('Wire clicks exact holes and multiple blank bends before one atomic commit'
     h.editor.pointerDown(h.endpointEvent(first))
     assert.equal(h.workspace.pendingPort, first)
     for (const point of [{ x: -3.25, y: .36, z: -.845 }, { x: -3.25, y: .36, z: .845 }]) {
-      const event = h.eventAt(point, 1, 0, true)
+      const event = h.eventAt(point, 1, 2, true)
       h.editor.pointerMove(event); h.editor.pointerDown(event); h.editor.pointerUp(event)
     }
     h.editor.pointerMove(h.endpointEvent(second)); h.flush()
@@ -29,19 +56,21 @@ test('Wire clicks exact holes and multiple blank bends before one atomic commit'
   } finally { h.dispose() }
 })
 
-test('routing keyboard and right-click cancel without pan or history and logical ports still connect', async () => {
+test('right-click adds corners and keyboard cancels without pan or history; logical ports still connect', async () => {
   const h = wireHarness()
   try {
     const bb = h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 }), sw = h.circuit.placeModule('DIGITAL_SWITCH', { x: -6, y: 0, z: 0 })
     await nextTick(); h.flush(); h.circuit.past = []
     const first = `${bb}.contact:terminal:A:01`
     h.editor.connect(first)
-    const camera = h.manager.camera.position.clone(), empty = h.eventAt({ x: -3.25, y: .36, z: -.845 })
+    const camera = h.manager.camera.position.clone(), empty = h.eventAt({ x: -3.25, y: .37, z: -.845 }, 1, 2)
     h.editor.pointerMove(empty); h.editor.pointerDown(empty); h.editor.pointerUp(empty)
     assert.equal(h.editor.wireRouting.controlPoints.value.length, 1)
     h.editor.keydown({ key: 'Backspace', preventDefault() {} } as KeyboardEvent)
     assert.equal(h.editor.wireRouting.controlPoints.value.length, 0); assert.equal(h.workspace.pendingPort, first)
     h.editor.pointerDown(h.pointer(500, 350, 1, 2))
+    assert.equal(h.workspace.pendingPort, first); assert.equal(h.editor.wireRouting.controlPoints.value.length, 1)
+    h.editor.keydown({ key: 'Escape' } as KeyboardEvent)
     assert.equal(h.workspace.pendingPort, null); assert.equal(h.circuit.past.length, 0); assert.ok(h.manager.camera.position.equals(camera))
     h.editor.connect(`${sw}.OUT`); h.editor.connect(first); await nextTick()
     assert.equal(h.circuit.graph!.connections.length, 1); assert.equal(h.circuit.past.length, 1)
@@ -146,7 +175,7 @@ test('outside-board bends are world anchored and use the outside grid after the 
   try {
     const bb = h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 }); await nextTick(); h.flush()
     h.editor.connect(`${bb}.contact:terminal:A:01`)
-    h.editor.pointerDown(h.eventAt({ x: 6, y: .36, z: 3 }))
+    h.editor.pointerDown(h.eventAt({ x: 6, y: .37, z: 3 }, 1, 2))
     const point = h.editor.wireRouting.controlPoints.value[0]
     assert.equal(point.space, 'world')
     assert.ok(Math.abs(point.position.x - 5.98) < 1e-8); assert.ok(Math.abs(point.position.z - 2.99) < 1e-8)
@@ -156,7 +185,7 @@ test('outside-board bends are world anchored and use the outside grid after the 
     const stored = readWireVisual(h.circuit.graph!.connections[0]).controlPoints[0]
     assert.deepEqual(stored, point)
     const handle = h.manager.wireRoute(wire)!.handles.find(p => Math.abs(p.position.x - 5.98) < 1e-8 && Math.abs(p.position.z - 2.99) < 1e-8)
-    assert.ok(handle); assert.ok(Math.abs(handle.position.y - .36) < 1e-8)
+    assert.ok(handle); assert.ok(Math.abs(handle.position.y - .37) < 1e-8)
   } finally { h.dispose() }
 })
 

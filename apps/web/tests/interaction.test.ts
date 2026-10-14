@@ -463,6 +463,29 @@ test('pan preserves selection/pending wire; a blank click clears them without mo
   } finally { h.dispose() }
 })
 
+test('Select drags a viewport-filling breadboard to pan and only selects on a click release', async () => {
+  const h = setup()
+  try {
+    const bb = h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 }); await nextTick(); h.circuit.past = []
+    h.manager.setViewOrientation('TOP', false); h.manager.setZoom(1000)
+    const hit = h.manager.pick(500, 350)!
+    assert.equal(hit.kind, 'module')
+    const anchor = hit.point.clone(), camera = h.manager.camera.position.clone(), target = h.manager.target(), heading = h.manager.camera.quaternion.clone(), graph = h.circuit.snapshot()
+    h.editor.pointerDown(h.pointer(500, 350))
+    assert.equal(h.workspace.selectedModuleId, null)
+    h.editor.pointerMove(h.pointer(560, 390)); h.editor.pointerUp(h.pointer(560, 390)); await nextTick()
+    assert.equal(h.workspace.selectedModuleId, null)
+    assert.ok(h.manager.camera.position.distanceTo(camera) > .01)
+    assert.ok(h.manager.camera.position.clone().sub(camera).distanceTo(h.manager.target().sub(target)) < 1e-6)
+    assert.ok(h.manager.camera.quaternion.angleTo(heading) < 1e-6)
+    const projected = h.manager.project(anchor)
+    assert.ok(Math.hypot(projected.x - 560, projected.y - 390) < 1e-6)
+    assert.equal(h.circuit.snapshot(), graph); assert.equal(h.circuit.past.length, 0)
+    h.editor.pointerDown(h.pointer(500, 350)); h.editor.pointerUp(h.pointer(501, 351)); await nextTick()
+    assert.equal(h.workspace.selectedModuleId, bb); assert.equal(h.captured.size, 0)
+  } finally { h.dispose() }
+})
+
 test('only the captured pointer can move/finish a model; changing tools cancels its preview', async () => {
   const h = setup('move')
   try {
@@ -524,7 +547,7 @@ test('a visible model can be dragged at a low orbit angle even when its ray miss
   } finally { h.dispose() }
 })
 
-test('Select picks breadboards and other models without dragging geometry, camera or history', async () => {
+test('Select click releases pick models without changing camera, geometry or history', async () => {
   for (const type of ['BREADBOARD', 'LED']) {
     const h = setup()
     try {
@@ -535,10 +558,11 @@ test('Select picks breadboards and other models without dragging geometry, camer
       const p = h.manager.project(new Vector3(0, type === 'LED' ? 0.45 : 0.12, 0))
       assert.equal(h.manager.pick(p.x, p.y)?.kind, 'module')
       h.editor.pointerDown(h.pointer(p.x, p.y))
-      h.editor.pointerMove(h.pointer(p.x + 100, p.y + 50))
+      assert.equal(h.workspace.selectedModuleId, null, 'selection waits until release below the drag threshold')
+      h.editor.pointerMove(h.pointer(p.x + 1, p.y + 1))
+      h.editor.pointerUp(h.pointer(p.x + 1, p.y + 1))
       assert.equal(h.workspace.selectedModuleId, id)
       assert.deepEqual(h.manager.models.get(id)!.position.toArray(), [0, 0, 0])
-      h.editor.pointerUp(h.pointer(p.x + 100, p.y + 50))
       assert.deepEqual(h.circuit.graph!.modules[0].position, original)
       assert.ok(h.manager.camera.position.distanceTo(camera) < 0.0001)
       assert.equal(h.captured.size, 0)

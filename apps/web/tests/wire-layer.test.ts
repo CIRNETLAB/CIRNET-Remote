@@ -43,6 +43,49 @@ test('hundreds of wires retain unchanged buffers and preview bursts build only t
     assert.equal(meshes[0].geometry, buffers[0])
     layer.flush(); assert.notEqual(meshes[0].geometry, buffers[0]); assert.equal(meshes[1].geometry, buffers[1])
     layer.previewDrawing({ source: wires[0].source, destination: '' }, defaultWireVisual(), { x: 2, y: .36, z: 1 })
-    layer.flush(); layer.clearDrawing()
+    layer.flush()
+    const preview = layer.tools.getObjectByName('wire-drawing-preview') as Mesh, previewGeometry = preview.geometry
+    let disposals = 0
+    previewGeometry.addEventListener('dispose', () => disposals++)
+    for (let i = 0; i < 30; i++) {
+      layer.previewDrawing({ source: wires[0].source, destination: '' }, { ...defaultWireVisual(), color: '#8656a8' }, { x: 2, y: .36, z: 1 })
+      layer.flush(); assert.equal(preview.geometry, previewGeometry)
+    }
+    assert.equal(disposals, 0, 'unchanged path and color-only preview never allocate another buffer')
+    layer.clearDrawing(); assert.equal(disposals, 1)
+  } finally { layer.dispose() }
+})
+
+test('legacy thin wires render round and clearly, with a reusable gold overlay and no graph mutation', () => {
+  const layer = createWireLayer(e => new Vector3(e.endsWith('OUT') ? 0 : 2, .36, 0))
+  const wire = { source: 'A.OUT', destination: 'B.IN', metadata: { wireVisual: { ...defaultWireVisual(), thickness: .01 } } }
+  const snapshot = JSON.stringify(wire)
+  try {
+    layer.sync([wire])
+    const mesh = layer.group.children[0] as Mesh, vertices = mesh.geometry.getAttribute('position')
+    assert.ok(vertices.count >= 20, 'round tube must have at least ten vertices per ring')
+    const heights = Array.from({ length: vertices.count }, (_, i) => vertices.getY(i))
+    assert.ok(Math.max(...heights) - Math.min(...heights) >= .049)
+    const geometry = mesh.geometry
+    layer.highlight(wire)
+    const halo = layer.tools.getObjectByName('wire-selection-outline') as Mesh
+    assert.ok(halo?.visible, 'explicit colored wires need a clear gold silhouette')
+    const haloGeometry = halo.geometry
+    const materialColor = (mesh.material as import('three').MeshStandardMaterial).color.getHexString()
+    for (let i = 0; i < 30; i++) { layer.highlight(wire); layer.hover(wire) }
+    assert.equal(mesh.geometry, geometry); assert.equal(halo.geometry, haloGeometry)
+    assert.equal((mesh.material as import('three').MeshStandardMaterial).color.getHexString(), materialColor)
+    assert.equal(JSON.stringify(wire), snapshot)
+    layer.highlight(null); assert.equal(halo.visible, false)
+    const hover = layer.tools.getObjectByName('wire-hover-outline') as Mesh
+    assert.equal(hover.visible, true)
+    const hoverGeometry = hover.geometry
+    layer.hover(wire); assert.equal(hover.geometry, hoverGeometry)
+    let haloDisposals = 0, hoverDisposals = 0
+    haloGeometry.addEventListener('dispose', () => haloDisposals++)
+    hoverGeometry.addEventListener('dispose', () => hoverDisposals++)
+    layer.sync([]); assert.equal(halo.visible, false); assert.equal(hover.visible, false)
+    layer.dispose(); layer.dispose()
+    assert.equal(haloDisposals, 1); assert.equal(hoverDisposals, 1)
   } finally { layer.dispose() }
 })

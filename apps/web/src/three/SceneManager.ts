@@ -9,10 +9,11 @@ import { parseEndpoint } from '../electrical/endpoints'
 import { wireClearance, type WireRouteContext } from '../wires/wireRouting'
 import { createSelectionOutline, updateSelectionOutline } from './SelectionOutline'
 import { createTechnicalGrid, updateTechnicalGrid } from './TechnicalGrid'
-import { Box3, Sphere } from 'three'
+import { Box3, Line3, Sphere } from 'three'
 import { createComponentTransformGizmo, type GizmoObstacle, type TransformHandle } from './ComponentTransformGizmo'
 import { applyPowerSupplyControls, type SupplyControl } from './PowerSupplyModel'
 import { createWireLayer } from './WireLayer'
+import { CAMERA_NEAR, CAMERA_FAR, ZOOM_MIN, ZOOM_MAX, ZOOM_DEFAULT, MIN_ZOOM_REFERENCE_DISTANCE, cameraNearForDistance, clampZoom } from '../config/workbenchViewport'
 
 export interface SceneRenderer { setSize(width: number, height: number, updateStyle?: boolean): void; render(scene: Scene, camera: PerspectiveCamera): void; dispose(): void }
 interface SceneOptions { renderer: SceneRenderer; canvas?: HTMLCanvasElement; onBeforeRender?: () => void; onRender?: () => void; onZoomChange?: (percent: number) => void; requestFrame?: (callback: FrameRequestCallback) => number; cancelFrame?: (id: number) => void }
@@ -24,7 +25,7 @@ export interface OrientationAxis { label: 'X' | 'Y' | 'Z'; x: number; y: number;
 // Geometry is a projection of graph IDs and named logical ports, never a source of nets.
 export function createSceneManager({ renderer, canvas, onBeforeRender, onRender, onZoomChange, requestFrame = requestAnimationFrame, cancelFrame = cancelAnimationFrame }: SceneOptions) {
   const scene = new Scene(); scene.background = new Color('#101925')
-  const camera = new PerspectiveCamera(42, 1, 0.1, 150); camera.position.set(0, 11, 10); camera.lookAt(0, 0, 0); camera.updateMatrixWorld()
+  const camera = new PerspectiveCamera(42, 1, CAMERA_NEAR, CAMERA_FAR); camera.position.set(0, 11, 10); camera.lookAt(0, 0, 0); camera.updateMatrixWorld()
   const grid = createTechnicalGrid()
   const ambient = new AmbientLight('#c9def4', 1.1)
   const light = new DirectionalLight('#fff5dc', 1.9); light.position.set(-5, 10, 5)
@@ -196,14 +197,34 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
   const viewTarget = new Vector3()
   const target = () => controls?.target ?? viewTarget
   const defaultDistance = Math.hypot(11, 10)
-  let zoomReferenceDistance = defaultDistance, reportedZoom = 100
-  const zoomPercent = () => zoomReferenceDistance / camera.position.distanceTo(target()) * 100
+  let zoomReferenceDistance = defaultDistance, reportedZoom = ZOOM_DEFAULT
+  const lastViewPosition = camera.position.clone(), lastViewTarget = target().clone(), dollyRay = new Raycaster()
+  const guardDolly = () => {
+    const origin = target(), previous = lastViewPosition.clone().sub(origin), next = camera.position.clone().sub(origin)
+    // Only inward dolly is guarded; pan, orbit, Fit and changes of focal target
+    // keep their own navigation contracts and never move model geometry.
+    if (lastViewTarget.distanceToSquared(origin) > 1e-12 || next.length() >= previous.length() - 1e-9 || previous.clone().normalize().dot(next.clone().normalize()) < 1 - 1e-8) return
+    const travel = lastViewPosition.distanceTo(camera.position)
+    if (travel < 1e-9) return
+    const direction = camera.position.clone().sub(lastViewPosition).normalize()
+    const padding = Math.max(cameraNearForDistance(next.length()) * 4, Math.min(.015, next.length() * .05))
+    scene.updateMatrixWorld(true)
+    dollyRay.set(lastViewPosition, direction); dollyRay.near = 0; dollyRay.far = travel + padding
+    wireLayer.flush()
+    const hit = dollyRay.intersectObjects([...content.children, ...wires.children], true).find(hit => hit.object instanceof Mesh && !ignored(hit.object))
+    if (hit) camera.position.copy(lastViewPosition).addScaledVector(direction, Math.max(0, hit.distance - padding))
+    camera.updateMatrixWorld()
+  }
+  const zoomPercent = () => zoomReferenceDistance / camera.position.distanceTo(target()) * ZOOM_DEFAULT
   const notifyZoom = () => {
+    const near = cameraNearForDistance(camera.position.distanceTo(target()))
+    if (near !== camera.near) { camera.near = near; camera.updateProjectionMatrix() }
+    lastViewPosition.copy(camera.position); lastViewTarget.copy(target())
     const percent = Math.round(zoomPercent() * 100) / 100
     if (Number.isFinite(percent) && percent !== reportedZoom) { reportedZoom = percent; onZoomChange?.(percent) }
   }
-  const zoomLimits = () => { if (controls) { controls.minDistance = zoomReferenceDistance / 2; controls.maxDistance = zoomReferenceDistance * 2 } }
-  const viewChanged = () => { keepViewAboveBoard(); notifyZoom(); schedule() }
+  const zoomLimits = () => { if (controls) { controls.minDistance = zoomReferenceDistance * ZOOM_DEFAULT / ZOOM_MAX; controls.maxDistance = zoomReferenceDistance * ZOOM_DEFAULT / ZOOM_MIN } }
+  const viewChanged = () => { keepViewAboveBoard(); guardDolly(); notifyZoom(); schedule() }
   if (controls) {
     controls.mouseButtons = { LEFT: null, MIDDLE: MOUSE.PAN, RIGHT: MOUSE.ROTATE }
     controls.touches = { ONE: null, TWO: null }; controls.screenSpacePanning = false
@@ -332,6 +353,10 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       if (!validPointer(x, y)) return null
       wireLayer.flush(); scene.updateMatrixWorld(true)
       const body = contentHit(x, y)
+      // Close-up tubes can occupy many pixels: their visible surface is a hit
+      // even when the forgiving centerline margin is outside the cursor.
+      const tube = raycaster.intersectObjects(wires.children, false)[0]
+      if (tube && (!body || tube.distance <= body.distance + .015)) return { kind: 'wire', ...tube.object.userData as WireIdentity, point: tube.point.clone() }
       let best: { wire: WireIdentity; point: Vector3; distance: number; pixels: number } | null = null
       for (const mesh of wires.children) {
         const wire = mesh.userData as WireIdentity, route = wireLayer.route(wire)
@@ -392,7 +417,19 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
         const hit = segmentHit(segment.start, segment.end, x, y)
         if (hit && hit.pixels <= 6 && visiblePoint(hit.point) && (!best || hit.pixels < best.pixels)) best = { index: segment.index, ...hit }
       }
-      return best ? { kind: 'segment', wire, index: best.index, point: best.point } : null
+      if (best) return { kind: 'segment', wire, index: best.index, point: best.point }
+      const body = contentHit(x, y), mesh = wires.children.find(mesh => mesh.userData.source === wire.source && mesh.userData.destination === wire.destination)
+      const tube = mesh && raycaster.intersectObject(mesh, false)[0]
+      if (!tube || body && tube.distance > body.distance + .015) return null
+      // At close magnification, a tube is much wider than the centerline margin.
+      // Map its surface to the nearest solved segment, retaining pinned leads.
+      let nearest: { index: number; editable: boolean; point: Vector3; distance: number } | null = null
+      for (const segment of route.segments) {
+        const line = new Line3(new Vector3(segment.start.x, segment.start.y, segment.start.z), new Vector3(segment.end.x, segment.end.y, segment.end.z))
+        const point = line.closestPointToPoint(tube.point, true, new Vector3()), distance = point.distanceToSquared(tube.point)
+        if (!nearest || distance < nearest.distance) nearest = { index: segment.index, editable: segment.editable, point, distance }
+      }
+      return nearest?.editable ? { kind: 'segment', wire, index: nearest.index, point: nearest.point } : null
     },
     wireSupportModule(x: number, y: number): CircuitModule | null {
       if (!validPointer(x, y)) return null
@@ -416,10 +453,12 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     panGrab(anchor: Vector3, x: number, y: number) {
       if (!validPointer(x, y) || suspended || !anchor.toArray().every(Number.isFinite)) return
       ray(x, y)
-      const current = planeHit(0)
+      const current = planeHit(anchor.y)
       if (current) translateView(anchor.clone().sub(current).setY(0))
     },
     lockPointer(value: boolean) { pointerLocked = value; updateControlsEnabled() },
+    setWireDrawingActive(value: boolean) { if (!disposed && controls) controls.mouseButtons.RIGHT = value ? null : MOUSE.ROTATE },
+    hoverWire(wire: WireIdentity | null) { wireLayer.hover(wire); schedule() },
     orientationAxes(): OrientationAxis[] {
       const inverse = camera.quaternion.clone().invert()
       const axes = [
@@ -444,7 +483,8 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       if (disposed || !Number.isFinite(percent)) return
       cancelTransition()
       const origin = target(), direction = camera.position.clone().sub(origin).normalize()
-      camera.position.copy(origin).addScaledVector(direction, zoomReferenceDistance * 100 / Math.min(200, Math.max(50, percent)))
+      camera.position.copy(origin).addScaledVector(direction, zoomReferenceDistance * ZOOM_DEFAULT / clampZoom(percent))
+      guardDolly()
       camera.zoom = 1; camera.updateProjectionMatrix(); camera.updateMatrixWorld(); controls?.update(); notifyZoom(); schedule()
     },
     zoomToArea(x1: number, y1: number, x2: number, y2: number) {
@@ -456,24 +496,38 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       const origin = target(), direction = camera.position.clone().sub(origin), distance = direction.length()
       if (!Number.isFinite(distance) || distance <= camera.near) return false
       if (left === 0 && top === 0 && right === width && bottom === height) {
-        zoomReferenceDistance = distance; zoomLimits(); notifyZoom(); schedule(); return true
+        zoomReferenceDistance = Math.max(distance, MIN_ZOOM_REFERENCE_DISTANCE)
+        camera.position.copy(origin).addScaledVector(direction, zoomReferenceDistance / distance)
+        zoomLimits(); controls?.update(); notifyZoom(); schedule(); return true
       }
       direction.normalize()
       const x = (left + right) / 2, y = (top + bottom) / 2
       // Focus the actual surface under the rectangle, keeping a finite fallback above the horizon.
-      const focus = this.pick(x, y)?.point ?? this.groundPoint(x, y) ?? origin
+      const surfacePoint = (sx: number, sy: number) => {
+        const hit = this.pick(sx, sy)
+        if (hit?.kind === 'wire') {
+          // Wire picking uses a forgiving centerline for editing. Area framing
+          // instead focuses the rendered tube surface to keep close dolly outside.
+          ray(sx, sy)
+          const mesh = wires.children.find(mesh => mesh.userData.source === hit.source && mesh.userData.destination === hit.destination)
+          const surface = mesh && raycaster.intersectObject(mesh, false)[0]
+          if (surface) return surface.point
+        }
+        return hit?.point ?? this.groundPoint(sx, sy)
+      }
+      const focus = surfacePoint(x, y) ?? origin
       const depth = camera.position.clone().sub(focus).dot(direction)
       if (!Number.isFinite(depth) || depth <= camera.near) return false
       ray(x, y)
       const focalPlane = new Plane().setFromNormalAndCoplanarPoint(direction, focus)
       const center = raycaster.ray.intersectPlane(focalPlane, new Vector3())
       if (!center || !center.toArray().every(Number.isFinite)) return false
-      let nextDistance = Math.max(camera.near * 4, depth * Math.max((right - left) / width, (bottom - top) / height))
+      let nextDistance = Math.max(MIN_ZOOM_REFERENCE_DISTANCE, camera.near * 4, depth * Math.max((right - left) / width, (bottom - top) / height))
       const screenRight = new Vector3().setFromMatrixColumn(camera.matrixWorld, 0), screenUp = new Vector3().setFromMatrixColumn(camera.matrixWorld, 1)
       const verticalTangent = Math.tan(camera.fov * Math.PI / 360), horizontalTangent = verticalTangent * camera.aspect
       // Fit boundary surface depths too: a low-angle dolly must not pass the nearer edge.
       for (const sx of [left, x, right]) for (const sy of [top, y, bottom]) {
-        let point = this.pick(sx, sy)?.point ?? this.groundPoint(sx, sy)
+        let point = surfacePoint(sx, sy)
         if (!point) { ray(sx, sy); point = raycaster.ray.intersectPlane(focalPlane, new Vector3()) }
         if (!point || !point.toArray().every(Number.isFinite)) continue
         const offset = point.clone().sub(center)
@@ -499,7 +553,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       const distance = Math.max(3, radius / Math.sin(half) * 1.2)
       if (!Number.isFinite(distance) || !sphere.center.toArray().every(Number.isFinite)) return false
       target.copy(center); camera.position.copy(target).addScaledVector(direction, distance); camera.lookAt(target)
-      camera.zoom = 1; camera.far = Math.max(150, distance * 4 + radius * 2); camera.updateProjectionMatrix()
+      camera.zoom = 1; camera.far = Math.max(CAMERA_FAR, distance * 4 + radius * 2); camera.updateProjectionMatrix()
       zoomReferenceDistance = distance; zoomLimits(); controls?.update(); notifyZoom()
       schedule(); return true
     },
@@ -537,7 +591,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       controls?.target.set(0, 0, 0)
       applyViewPose(new Vector3(0, 11, 10).normalize(), defaultDistance)
       camera.zoom = 1
-      camera.far = 150
+      camera.far = CAMERA_FAR
       camera.updateProjectionMatrix()
       camera.updateMatrixWorld()
       controls?.update()

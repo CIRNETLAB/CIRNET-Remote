@@ -30,7 +30,8 @@ test('movement updates incident wires only and retains selection, material and u
     assert.ok(manager.wires.children[1] === unrelated, 'unrelated wire identity must survive movement'); assert.ok(unrelated.geometry === untouchedGeometry)
     assert.equal(unrelatedDisposals, 0); assert.equal(incidentDisposals, 1)
     assert.ok(manager.wires.children[0] === moved); assert.ok(moved.material === material)
-    assert.equal((moved.material as MeshStandardMaterial).color.getHexString(), 'f1cd77')
+    assert.equal((moved.material as MeshStandardMaterial).color.getHexString(), '71b3ce', 'selection keeps the saved wire color')
+    assert.equal(manager.scene.getObjectByName('wire-selection-outline')?.visible, true)
     assert.notEqual(moved.geometry, oldGeometry)
     manager.syncGraph(graph)
     const restoredGeometry = moved.geometry
