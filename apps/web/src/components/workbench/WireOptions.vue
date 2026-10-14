@@ -13,7 +13,7 @@ function routeKey(event: KeyboardEvent) {
 }
 </script>
 <template>
-  <section class="wire-options" aria-label="Jumper wire options" @pointerdown.stop @keydown.stop="routeKey">
+  <section class="wire-options contextual-panel" aria-label="Jumper wire options" @pointerdown.stop @keydown.stop="routeKey">
     <div class="wire-options-heading">WIRE <span>JUMPER</span></div>
     <div class="wire-palette" role="group" aria-label="Wire colors">
       <button v-for="swatch in JUMPER_COLORS" :key="swatch.name" :aria-label="swatch.name + ' wire'" :title="swatch.name" :aria-pressed="color === swatch.value" :style="{ '--swatch': swatch.value }" @click="emit('color', swatch.value)" />
@@ -25,7 +25,7 @@ function routeKey(event: KeyboardEvent) {
   </section>
 </template>
 <style scoped>
-.wire-options { position: absolute; bottom: 42px; width: 230px; max-width: calc(100% - 70px); padding: 12px; border: 1px solid #526170; border-radius: 3px; background: #17212d; box-shadow: 0 3px 12px #0005; color: #d7dce2; z-index: 4; font-size: 11px; }
+.wire-options { padding: 12px; border: 1px solid #526170; border-radius: 3px; background: #17212d; box-shadow: 0 3px 12px #0005; color: #d7dce2; z-index: 4; font-size: 11px; pointer-events: auto; }
 .wire-options-heading { font-size: 10px; letter-spacing: 1.2px; color: #d9b66f; margin-bottom: 8px; }
 .wire-options-heading span { float: right; color: #92a2b2; font-size: 9px; }
 .wire-palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; justify-items: center; margin: 12px 0 14px; }

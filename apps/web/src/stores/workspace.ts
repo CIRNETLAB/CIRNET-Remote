@@ -5,6 +5,9 @@ export type WorkspaceTool = 'select' | 'wire' | 'move' | 'rotate' | 'delete' | '
 
 export const useWorkspaceStore = defineStore('workspace', {
   state: () => ({ selectedModuleId: null as string | null, selectedWire: null as { source: string; destination: string } | null, pendingPort: null as string | null, wireColor: '#d8493f', wireRouteMode: 'FREE' as WireRouteMode, selectedWireBend: null as number | null, previewType: null as string | null, placementType: null as string | null, snap: true, zoom: ZOOM_DEFAULT, fitRequest: 0, zoomAreaActive: false, tool: 'select' as WorkspaceTool, editError: '' }),
+  getters: {
+    wireOptionsActive: (state) => (state.tool === 'wire' || Boolean(state.selectedWire)) && !state.placementType && !state.zoomAreaActive,
+  },
   actions: {
     setTool(tool: WorkspaceTool) { this.cancelZoomArea(); this.tool = tool; this.cancelPlacement() },
     preview(type: string) { this.cancelZoomArea(); this.previewType = type; this.selectedModuleId = null },

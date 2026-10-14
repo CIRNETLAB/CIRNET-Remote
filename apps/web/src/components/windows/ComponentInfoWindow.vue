@@ -31,7 +31,7 @@ function close() { ui.closeWindow('component-info'); void nextTick(() => documen
 watch(() => window.value?.activation, (activation) => { if (activation) void nextTick(() => header.value?.focus()) })
 </script>
 <template>
-  <aside v-if="window?.open && selected" class="component-information" aria-labelledby="component-information-title" :style="{ zIndex: window.z }" @pointerdown="ui.focusWindow('component-info')" @focusin="ui.focusWindow('component-info')" @keydown.esc.stop.prevent="close">
+  <aside v-if="window?.open && selected && !workspace.wireOptionsActive" class="component-information contextual-panel" aria-labelledby="component-information-title" :style="{ zIndex: window.z }" @pointerdown="ui.focusWindow('component-info')" @focusin="ui.focusWindow('component-info')" @keydown.esc.stop.prevent="close">
     <header ref="header" class="component-information-header" tabindex="0">
       <WorkbenchIcon name="chip" /><strong id="component-information-title">Component Info</strong>
       <button aria-label="Close Component Info" @click="close"><WorkbenchIcon name="close" /></button>

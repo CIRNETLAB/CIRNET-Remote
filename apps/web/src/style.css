@@ -67,12 +67,9 @@ code { font-family: Consolas, monospace; }
 .port-anchor { position: absolute; transform: translate(-50%, -50%); pointer-events: auto; min-height: 18px; font: 9px/1.2 Consolas, monospace; padding: 2px 4px; border-radius: 3px; color: #baf0e5; border-color: #6bbcae; background: #142a2cf0; }
 .port-anchor.output { color: #f1d597; border-color: #b99d5d; background: #302a1bf0; }
 .port-anchor.pending { box-shadow: 0 0 0 3px #a5e8bc8a; }
-.scene-inventory { position: absolute; top: calc(var(--drawer-top) + 20px); left: calc(var(--drawer-left) + 22px); max-width: 240px; background: #172534ea; border: 1px solid #344c60; border-radius: 4px; font-size: 11px; }
-.scene-inventory summary { padding: 7px 9px; cursor: pointer; color: #9fbaca; }
-.scene-inventory > div { display: flex; flex-direction: column; gap: 3px; padding: 5px; max-height: 210px; overflow: auto; }
-.scene-inventory button { font-size: 10px; text-align: left; padding: 4px 6px; }
-.scene-inventory button[aria-pressed=true] { border-color: #6ac6b5; }
-.component-information { position: absolute; top: calc(var(--drawer-top) + 20px); right: 20px; width: min(300px, calc(100% - var(--drawer-left) - 40px)); max-height: calc(100% - var(--drawer-top) - 142px); display: flex; flex-direction: column; background: #1b2733; border: 1px solid #425468; border-radius: 3px; box-shadow: 0 4px 14px #0005; pointer-events: auto; overflow: hidden; }
+.contextual-panel, .component-information, .wire-options { position: absolute; top: calc(var(--drawer-top) + 20px); right: 20px; width: min(300px, calc(100% - var(--drawer-left) - 40px)); }
+.component-information { max-height: calc(100% - var(--drawer-top) - 142px); display: flex; flex-direction: column; background: #1b2733; border: 1px solid #425468; border-radius: 3px; box-shadow: 0 4px 14px #0005; pointer-events: auto; overflow: hidden; }
+.wire-options { padding: 12px; border: 1px solid #526170; border-radius: 3px; background: #17212d; box-shadow: 0 3px 12px #0005; color: #d7dce2; z-index: 4; font-size: 11px; pointer-events: auto; }
 .component-information-header { display: flex; align-items: center; gap: 8px; min-height: 32px; flex-shrink: 0; padding: 0 10px; border-bottom: 1px solid #3b4d5f; background: #263544; }
 .component-information-header > .workbench-icon { width: 15px; height: 15px; color: #95afbf; }
 .component-information-header strong { font-size: 11px; font-weight: 600; letter-spacing: .15px; }
