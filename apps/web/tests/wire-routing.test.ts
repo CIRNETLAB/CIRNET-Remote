@@ -190,12 +190,12 @@ test('routing snap offers quarter-pitch lanes without changing contacts or disab
   close(snapWirePoint(unsnapped, board, true, true).position, unsnapped)
 })
 
-test('stacking lifts module and world user anchors uniformly and pins stay fixed', () => {
+test('order priority never raises semantic routes, module/world user anchors or pins', () => {
   const { board, wire, context, visual } = fixture('FREE')
   visual.height = .04; visual.thickness = .052
   visual.controlPoints = [{ space: 'module', moduleId: 'BB', position: { x: -3.5, y: .6, z: -.4 } }, { space: 'world', position: { x: -3, y: .65, z: .4 } }]
   const base = solveWireRoute(wire, visual, context)!, lifted = solveWireRoute(wire, { ...visual, layer: 2 }, context)!
   close(base.points[0], lifted.points[0]); close(base.points.at(-1)!, lifted.points.at(-1)!)
-  for (const [index, handle] of lifted.handles.entries()) close(handle.position, { ...base.handles[index].position, y: base.handles[index].position.y + .128 })
+  assert.deepEqual(lifted, base)
   assert.equal(board.rotation, 0)
 })

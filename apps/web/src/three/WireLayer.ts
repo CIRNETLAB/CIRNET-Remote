@@ -4,17 +4,18 @@ import { copyWireVisual, readWireVisual, wireKey } from '../wires/wireVisual'
 import { solveWireRoute, type SolvedWireRoute, type WireRouteContext } from '../wires/wireRouting'
 import { buildWireGeometry, roundedWirePoints } from './WireGeometry'
 import { disposeObject } from './ComponentModel'
-import { MIN_WIRE_DIAMETER, renderWireDiameter } from '../wires/wireAppearance'
+import { renderWireDiameter } from '../wires/wireAppearance'
 import { createWireTerminals, deriveWireParts, type WireParts } from './WireTerminals'
+import { createWireLayoutCache, type WireLayoutInput } from '../wires/wireLayout'
 
 interface WireRecord { mesh: Mesh<BufferGeometry, MeshStandardMaterial>; pick: Line; connection: CircuitConnection; signature: string; route: SolvedWireRoute; parts: WireParts }
 
 export function createWireLayer(endpointPosition: (endpoint: string) => Vector3 | null, routeContext?: WireRouteContext) {
   const group = new Group(), tools = new Group(), records = new Map<string, WireRecord>()
   const terminals = createWireTerminals()
+  const layoutCache = createWireLayoutCache()
   const connections = new Map<string, CircuitConnection>(), incident = new Map<string, Set<string>>(), overrides = new Map<string, WireVisual>(), dirty = new Set<string>()
-  let largestDiameter = MIN_WIRE_DIAMETER
-  const context: WireRouteContext = { ...(routeContext ?? { endpoint: (value: string) => { const position = endpointPosition(value); return position ? { endpoint: value, position } : null }, modulePose: () => null }), layerDiameter: () => Math.max(largestDiameter, routeContext?.layerDiameter?.() ?? 0) }
+  const context: WireRouteContext = routeContext ?? { endpoint: (value: string) => { const position = endpointPosition(value); return position ? { endpoint: value, position } : null }, modulePose: () => null }
   let selected: WireIdentity | null = null, hovered: WireIdentity | null = null, selectedHandle: number | null = null
   let handleMesh: InstancedMesh | null = null, drawingMesh: Mesh<BufferGeometry, MeshStandardMaterial> | null = null
   let segmentLine: Line | null = null, selectedSegment: number | null = null, segmentSignature = ''
@@ -50,15 +51,15 @@ export function createWireLayer(endpointPosition: (endpoint: string) => Vector3 
     const record = records.get(key)
     if (record) { group.remove(record.mesh); terminals.detach(record.mesh); disposeObject(record.mesh); records.delete(key) }
   }
-  const update = (connection: CircuitConnection) => {
-    const key = wireKey(connection), visual = overrides.get(key) ?? readWireVisual(connection), route = solveWireRoute(connection, visual, context)
+  const update = (connection: CircuitConnection, route: SolvedWireRoute | null) => {
+    const key = wireKey(connection), visual = overrides.get(key) ?? readWireVisual(connection)
     if (!route) { remove(key); return }
     const diameter = renderWireDiameter(visual), parts = deriveWireParts(route, diameter), signature = JSON.stringify([parts, diameter])
     let record = records.get(key)
     const geometryChanged = !record || record.signature !== signature
     if (geometryChanged) {
       const geometry = buildWireGeometry({ points: parts.bodyPoints }, diameter, { capHoleRadius: parts.capHoleRadius })
-      const pickGeometry = new BufferGeometry().setFromPoints(roundedWirePoints(route.points, diameter / 2))
+      const pickGeometry = new BufferGeometry().setFromPoints(roundedWirePoints(parts.bodyPoints, diameter / 2))
       if (record) { record.mesh.geometry.dispose(); record.pick.geometry.dispose(); record.mesh.geometry = geometry; record.pick.geometry = pickGeometry }
       else {
         const mesh = new Mesh(geometry, new MeshStandardMaterial({ color: visual.color, roughness: .62, metalness: 0 }))
@@ -83,7 +84,7 @@ export function createWireLayer(endpointPosition: (endpoint: string) => Vector3 
     if (!handleMesh) return
     handleMesh.count = count
     if (!route) return
-    const points = [...route.handles.map(h => h.position), route.points[0], route.points.at(-1)!]
+    const points = [...(route.renderHandles ?? route.handles).map(h => h.position), route.points[0], route.points.at(-1)!]
     points.forEach((p, i) => {
       const depth = viewCamera ? -new Vector3(p.x, p.y, p.z).applyMatrix4(viewCamera.matrixWorldInverse).z : 0
       const radius = viewCamera ? Math.max(viewCamera.near, depth) * 2 * Math.tan(viewCamera.fov * Math.PI / 360) / (viewHeight * viewCamera.zoom) * 3.5 : .04
@@ -95,23 +96,22 @@ export function createWireLayer(endpointPosition: (endpoint: string) => Vector3 
     handleMesh.computeBoundingSphere()
   }
   const updateSegment = () => {
-    const record = selected && records.get(wireKey(selected)), segment = selectedSegment !== null && record ? record.route.segments[selectedSegment] : null
-    if (!segment || !segment.editable || !record) { if (segmentLine) segmentLine.visible = false; return }
-    const signature = JSON.stringify([segment.start, segment.end])
+    const record = selected && records.get(wireKey(selected)), segments = record && selectedSegment !== null ? (record.route.renderSegments ?? record.route.segments).filter(segment => segment.index === selectedSegment && segment.editable) : []
+    if (!segments.length || !record) { if (segmentLine) segmentLine.visible = false; return }
+    const points = [segments[0].start, ...segments.map(segment => segment.end)]
+    const signature = JSON.stringify(points)
     if (!segmentLine || signature !== segmentSignature) {
-      const geometry = new BufferGeometry().setFromPoints([new Vector3(segment.start.x, segment.start.y, segment.start.z), new Vector3(segment.end.x, segment.end.y, segment.end.z)])
+      const geometry = new BufferGeometry().setFromPoints(points.map(point => new Vector3(point.x, point.y, point.z)))
       if (segmentLine) { segmentLine.geometry.dispose(); segmentLine.geometry = geometry }
       else { segmentLine = new Line(geometry, new LineBasicMaterial({ color: '#e4c378', depthTest: false, depthWrite: false })); segmentLine.name = 'wire-segment-hover-line'; segmentLine.userData.ignorePick = true; tools.add(segmentLine) }
       segmentSignature = signature
     }
     segmentLine.visible = true
   }
-  const clearDrawing = () => { drawing = null; drawingDirty = false; drawingSignature = ''; if (drawingMesh) { tools.remove(drawingMesh); terminals.detach(drawingMesh); disposeObject(drawingMesh); drawingMesh = null } }
-  const updateDrawing = () => {
+  const clearDrawing = () => { const active = !!drawing; drawing = null; drawingDirty = false; drawingSignature = ''; if (drawingMesh) { tools.remove(drawingMesh); terminals.detach(drawingMesh); disposeObject(drawingMesh); drawingMesh = null }; if (active && !disposed) refresh() }
+  const updateDrawing = (route: SolvedWireRoute | null) => {
     if (!drawing) return
     const state = drawing, destination = state.wire.destination || '@cursor'
-    const previewContext: WireRouteContext = { ...context, endpoint: value => value === '@cursor' ? state.cursor ? { endpoint: value, position: state.cursor } : null : context.endpoint(value) }
-    const route = solveWireRoute({ ...state.wire, destination }, state.visual, previewContext)
     if (!route) { if (drawingMesh) drawingMesh.visible = false; return }
     const diameter = renderWireDiameter(state.visual), parts = deriveWireParts(route, diameter), signature = JSON.stringify([parts, diameter])
     if (!drawingMesh || signature !== drawingSignature) {
@@ -124,9 +124,26 @@ export function createWireLayer(endpointPosition: (endpoint: string) => Vector3 
     terminals.update(drawingMesh, parts, destination === '@cursor')
     drawingMesh.userData.route = route
   }
+  const refresh = () => {
+    const inputs: WireLayoutInput[] = []
+    for (const connection of connections.values()) {
+      const visual = overrides.get(wireKey(connection)) ?? readWireVisual(connection), route = solveWireRoute(connection, visual, context)
+      if (route) inputs.push({ wire: connection, visual, route })
+    }
+    const drawingKey = { source: '@drawing', destination: '@preview' }
+    if (drawing) {
+      const state = drawing, destination = state.wire.destination || '@cursor'
+      const previewContext: WireRouteContext = { ...context, endpoint: value => value === '@cursor' ? state.cursor ? { endpoint: value, position: state.cursor } : null : context.endpoint(value) }
+      const route = solveWireRoute({ ...state.wire, destination }, state.visual, previewContext)
+      if (route) inputs.push({ wire: drawingKey, visual: { ...state.visual, layer: Math.max(0, ...inputs.map(input => input.visual.layer ?? 0)) + 1 }, route })
+    }
+    const layouts = layoutCache.sync(inputs)
+    for (const connection of connections.values()) update(connection, layouts.get(wireKey(connection)) ?? null)
+    if (drawing) updateDrawing(layouts.get(wireKey(drawingKey)) ?? null)
+    updateHandles(); updateSegment(); updateOutlines()
+  }
   return {
     group, tools,
-    layerDiameter: () => largestDiameter,
     updateCamera(camera: PerspectiveCamera, height: number) {
       if (disposed || height <= 0) return
       viewCamera = camera; viewHeight = height
@@ -135,7 +152,6 @@ export function createWireLayer(endpointPosition: (endpoint: string) => Vector3 
     },
     sync(next: CircuitConnection[]) {
       if (disposed) return
-      largestDiameter = next.reduce((diameter, connection) => Math.max(diameter, renderWireDiameter(readWireVisual(connection))), MIN_WIRE_DIAMETER)
       const keys = new Set(next.map(wireKey))
       for (const key of records.keys()) if (!keys.has(key)) remove(key)
       connections.clear(); incident.clear(); overrides.clear(); dirty.clear()
@@ -144,15 +160,13 @@ export function createWireLayer(endpointPosition: (endpoint: string) => Vector3 
         const visual = readWireVisual(connection)
         const owners = [connection.source.split('.')[0], connection.destination.split('.')[0], ...(visual.frameModuleId ? [visual.frameModuleId] : []), ...visual.controlPoints.flatMap(p => p.space === 'module' ? [p.moduleId] : [])]
         for (const id of owners) { const links = incident.get(id) ?? new Set<string>(); links.add(key); incident.set(id, links) }
-        update(connection)
       }
-      updateHandles(); updateSegment(); updateOutlines()
+      refresh()
     },
     updateModule(id: string) {
       if (disposed) return
       for (const key of incident.get(id) ?? []) {
-        if (routeContext) dirty.add(key)
-        else update(connections.get(key)!)
+        dirty.add(key)
       }
       if (drawing) drawingDirty = true
     },
@@ -166,13 +180,10 @@ export function createWireLayer(endpointPosition: (endpoint: string) => Vector3 
     clearDrawing,
     flush() {
       if (disposed) return
-      const changed = dirty.size > 0
-      for (const key of dirty) { const connection = connections.get(key); if (connection) update(connection) }
-      dirty.clear()
-      if (changed) { updateHandles(); updateSegment(); updateOutlines() }
-      if (drawingDirty) { drawingDirty = false; updateDrawing() }
+      if (dirty.size || drawingDirty) { dirty.clear(); drawingDirty = false; refresh() }
     },
     route(wire: WireIdentity) { return records.get(wireKey(wire))?.route ?? null },
+    orderPeers(wire: WireIdentity, connected = false) { return layoutCache.peers(wireKey(wire), connected).flatMap(key => { const connection = connections.get(key); return connection ? [{ source: connection.source, destination: connection.destination }] : [] }) },
     highlight(wire?: WireIdentity | null) { if (disposed) return; selected = wire ? { ...wire } : null; selectedHandle = null; selectedSegment = null; updateHandles(); updateSegment(); updateOutlines() },
     hover(wire: WireIdentity | null) { if (disposed) return; hovered = wire; updateOutlines() },
     selectHandle(index: number | null) { if (disposed) return; selectedHandle = index; updateHandles() },
@@ -185,6 +196,7 @@ export function createWireLayer(endpointPosition: (endpoint: string) => Vector3 
       outlines.clear()
       for (const key of records.keys()) remove(key)
       terminals.dispose()
+      layoutCache.clear()
       connections.clear(); incident.clear(); overrides.clear(); dirty.clear(); selected = null; hovered = null
     },
   }

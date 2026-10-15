@@ -19,7 +19,7 @@ export interface SceneRenderer { setSize(width: number, height: number, updateSt
 interface SceneOptions { renderer: SceneRenderer; canvas?: HTMLCanvasElement; onBeforeRender?: () => void; onRender?: () => void; onZoomChange?: (percent: number) => void; requestFrame?: (callback: FrameRequestCallback) => number; cancelFrame?: (id: number) => void }
 export type PickResult = ({ kind: 'module'; id: string } | { kind: 'control'; id: string; control: SupplyControl } | { kind: 'port'; id: string; endpoint: string } | { kind: 'wire'; source: string; destination: string }) & { point: Vector3 }
 export interface EndpointPick { kind: 'port' | 'contact'; id: string; endpoint: string; point: Vector3; contactId?: string }
-export type WireEditPick = { kind: 'bend' | 'segment'; wire: WireIdentity; index: number; point: Vector3 }
+export type WireEditPick = { kind: 'bend' | 'segment'; wire: WireIdentity; index: number; point: Vector3; basePoint?: Vector3 }
 export interface OrientationAxis { label: 'X' | 'Y' | 'Z'; x: number; y: number; depth: number; color: string }
 
 // Geometry is a projection of graph IDs and named logical ports, never a source of nets.
@@ -48,7 +48,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     const module = modules.get(id), model = models.get(id)
     return module && model ? { ...module, position: { x: model.position.x, y: model.position.y, z: model.position.z }, rotation: model.rotation.y * 180 / Math.PI } : null
   }
-  const routeContext: WireRouteContext = { modulePose, layerDiameter: () => wireLayer.layerDiameter(), endpoint: value => {
+  const routeContext: WireRouteContext = { modulePose, endpoint: value => {
     const position = endpointPosition(value), parsed = parseEndpoint(value)
     return position && parsed ? { endpoint: value, position, ...(parsed.kind === 'contact' ? { contactModuleId: parsed.moduleId } : {}) } : null
   } }
@@ -361,7 +361,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       let best: { wire: WireIdentity; point: Vector3; distance: number; pixels: number } | null = null
       for (const mesh of wires.children) {
         const wire = mesh.userData as WireIdentity, route = wireLayer.route(wire)
-        for (const segment of route?.segments ?? []) {
+        for (const segment of route?.renderSegments ?? route?.segments ?? []) {
           const hit = segmentHit(segment.start, segment.end, x, y)
           if (hit && hit.pixels <= 6 && (!body || hit.distance <= body.distance + .015) && (!best || hit.pixels < best.pixels - .1 || Math.abs(hit.pixels - best.pixels) <= .1 && hit.distance < best.distance)) best = { wire, ...hit }
         }
@@ -399,6 +399,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     },
     wireContext: routeContext,
     wireRoute(wire: WireIdentity) { if (disposed) return null; wireLayer.flush(); return wireLayer.route(wire) },
+    wireOrderPeers(wire: WireIdentity, connected = false) { if (disposed) return []; wireLayer.flush(); return wireLayer.orderPeers(wire, connected) },
     previewWireVisual(wire: WireIdentity, visual: WireVisual | null) { wireLayer.previewVisual(wire, visual); schedule() },
     previewWireDrawing(wire: WireIdentity, visual: WireVisual, cursor: Point3 | null) { wireLayer.previewDrawing(wire, visual, cursor); schedule() },
     clearWireDrawing() { wireLayer.clearDrawing(); schedule() },
@@ -408,29 +409,37 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       wireLayer.flush(); scene.updateMatrixWorld(true)
       const route = wireLayer.route(wire)
       if (!route) return null
-      for (const handle of route.handles) {
+      for (const handle of route.renderHandles ?? route.handles) {
         const p = screenPoint(handle.position)
-        if (p.visible && Math.hypot(x - p.x, y - p.y) <= 8 && visiblePoint(handle.position)) return { kind: 'bend', wire, index: handle.index, point: new Vector3(handle.position.x, handle.position.y, handle.position.z) }
+        if (p.visible && Math.hypot(x - p.x, y - p.y) <= 8 && visiblePoint(handle.position)) { const base = route.handles.find(value => value.index === handle.index)!.position; return { kind: 'bend', wire, index: handle.index, point: new Vector3(handle.position.x, handle.position.y, handle.position.z), basePoint: new Vector3(base.x, base.y, base.z) } }
       }
-      let best: { index: number; point: Vector3; pixels: number } | null = null
-      for (const segment of route.segments) {
+      const segments = route.renderSegments ?? route.segments
+      const basePoint = (segment: typeof segments[number], point: Vector3) => {
+        if (!('baseStart' in segment) || !('baseEnd' in segment)) return point.clone()
+        const start = new Vector3(segment.start.x, segment.start.y, segment.start.z), end = new Vector3(segment.end.x, segment.end.y, segment.end.z)
+        const t = new Line3(start, end).closestPointToPointParameter(point, true)
+        const a = segment.baseStart as Point3, b = segment.baseEnd as Point3
+        return new Vector3(a.x, a.y, a.z).lerp(new Vector3(b.x, b.y, b.z), t)
+      }
+      let best: { index: number; point: Vector3; pixels: number; basePoint: Vector3 } | null = null
+      for (const segment of segments) {
         if (!segment.editable) continue
         const hit = segmentHit(segment.start, segment.end, x, y)
-        if (hit && hit.pixels <= 6 && visiblePoint(hit.point) && (!best || hit.pixels < best.pixels)) best = { index: segment.index, ...hit }
+        if (hit && hit.pixels <= 6 && visiblePoint(hit.point) && (!best || hit.pixels < best.pixels)) best = { index: segment.index, ...hit, basePoint: basePoint(segment, hit.point) }
       }
-      if (best) return { kind: 'segment', wire, index: best.index, point: best.point }
+      if (best) return { kind: 'segment', wire, index: best.index, point: best.point, basePoint: best.basePoint }
       const body = contentHit(x, y), mesh = wires.children.find(mesh => mesh.userData.source === wire.source && mesh.userData.destination === wire.destination)
       const tube = mesh && raycaster.intersectObjects(wireMeshes(mesh), false)[0]
       if (!tube || body && tube.distance > body.distance + .015) return null
       // At close magnification, a tube is much wider than the centerline margin.
       // Map its surface to the nearest solved segment, retaining pinned leads.
-      let nearest: { index: number; editable: boolean; point: Vector3; distance: number } | null = null
-      for (const segment of route.segments) {
+      let nearest: { index: number; editable: boolean; point: Vector3; distance: number; basePoint: Vector3 } | null = null
+      for (const segment of segments) {
         const line = new Line3(new Vector3(segment.start.x, segment.start.y, segment.start.z), new Vector3(segment.end.x, segment.end.y, segment.end.z))
         const point = line.closestPointToPoint(tube.point, true, new Vector3()), distance = point.distanceToSquared(tube.point)
-        if (!nearest || distance < nearest.distance) nearest = { index: segment.index, editable: segment.editable, point, distance }
+        if (!nearest || distance < nearest.distance) nearest = { index: segment.index, editable: segment.editable, point, distance, basePoint: basePoint(segment, point) }
       }
-      return nearest?.editable ? { kind: 'segment', wire, index: nearest.index, point: nearest.point } : null
+      return nearest?.editable ? { kind: 'segment', wire, index: nearest.index, point: nearest.point, basePoint: nearest.basePoint } : null
     },
     wireSupportModule(x: number, y: number): CircuitModule | null {
       if (!validPointer(x, y)) return null
@@ -444,9 +453,9 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       const hit = contentHit(x, y), owner = hit && pickOwner(hit.object), hitModule = owner && modulePose(owner.userData.id)
       const module = hitModule && getBreadboardTopology(hitModule.type) ? hitModule : frameModuleId ? modulePose(frameModuleId) : null
       const board = module && getBreadboardTopology(module.type)
-      const sourceHeight = (module?.position?.y ?? 0) + wireClearance(visual, routeContext)
+      const sourceHeight = (module?.position?.y ?? 0) + wireClearance(visual)
       ray(x, y)
-      const point = planeHit(elevation !== undefined && Number.isFinite(elevation) ? elevation : board && module ? (module.position?.y ?? 0) + board.deckHeight + wireClearance(visual, routeContext) : sourceHeight)
+      const point = planeHit(elevation !== undefined && Number.isFinite(elevation) ? elevation : board && module ? (module.position?.y ?? 0) + board.deckHeight + wireClearance(visual) : sourceHeight)
       if (!point || hit && hit.distance < point.distanceTo(camera.position) - .02 && !getBreadboardTopology(hitModule?.type ?? '')) return null
       return { x: point.x, y: point.y, z: point.z }
     },

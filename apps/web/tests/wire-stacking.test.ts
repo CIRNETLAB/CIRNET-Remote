@@ -34,19 +34,19 @@ test('automatic layers retain creation order for exact and near overlaps, treat 
   assert.equal(findWireStackConflicts(connections[0], visual, [connections[0]], context).length, 0)
 })
 
-test('automatic stacking clears actual body heights when the first nominal layer would intersect a raised route', () => {
+test('automatic priority depends on ordering alone even when an existing crossing has a raised anchor', () => {
   const positions: Record<string, Point3> = { E: { x: -1, y: .434, z: 0 }, F: { x: 1, y: .434, z: 0 }, A: { x: 0, y: .37, z: -1 }, B: { x: 0, y: .37, z: 1 } }
   const context: WireRouteContext = { modulePose: () => null, endpoint: endpoint => ({ endpoint, position: positions[endpoint] }) }
   const existing: CircuitConnection = { source: 'E', destination: 'F', metadata: { wireVisual: visual } }
-  assert.equal(automaticWireLayer({ source: 'A', destination: 'B' }, visual, [existing], context), 2, 'nominal layer 1 equals the existing .434 body height; choose the first physically clear layer')
+  assert.equal(automaticWireLayer({ source: 'A', destination: 'B' }, visual, [existing], context), 1, 'actual clearance belongs to the local bridge, not priority arithmetic')
   assert.equal(positions.A.y, .37); assert.equal(positions.E.y, .434)
 })
 
-test('stacking uses vertical cylinder support for steep same-path routes rather than just ring height', () => {
+test('steep same-path routes receive creation priority without turning it into a vertical height', () => {
   const positions: Record<string, Point3> = { E: { x: 0, y: .37, z: 0 }, F: { x: .5, y: 2.37, z: 0 }, A: { x: 0, y: .37, z: 0 }, B: { x: .5, y: 2.37, z: 0 } }
   const context: WireRouteContext = { modulePose: () => null, endpoint: endpoint => ({ endpoint, position: positions[endpoint] }) }
   const existing: CircuitConnection = { source: 'E', destination: 'F', metadata: { wireVisual: visual } }
   const layer = automaticWireLayer({ source: 'A', destination: 'B' }, visual, [existing], context)
-  assert.ok(layer * .064 * (.5 / Math.hypot(.5, 2)) >= .055, 'the perpendicular distance between the tilted bodies clears their full diameters')
+  assert.equal(layer, 1)
   assert.equal(positions.E.y, .37)
 })

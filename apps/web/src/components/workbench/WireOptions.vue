@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { WireRouteMode } from '../../types/circuit'
 import { JUMPER_COLORS } from '../../wires/wireVisual'
-withDefaults(defineProps<{ color?: string; routeMode?: WireRouteMode; canAdd?: boolean; canRemove?: boolean; hint?: string; layer?: number; canStack?: boolean; canCycleStack?: boolean }>(), { color: '#d8493f', routeMode: 'FREE', canAdd: false, canRemove: false, hint: '', layer: 0, canStack: false, canCycleStack: false })
+withDefaults(defineProps<{ color?: string; routeMode?: WireRouteMode; canAdd?: boolean; canRemove?: boolean; hint?: string; layer?: number; canStack?: boolean; canCycleStack?: boolean; canLowerStack?: boolean; canRaiseStack?: boolean }>(), { color: '#d8493f', routeMode: 'FREE', canAdd: false, canRemove: false, hint: '', layer: 0, canStack: false, canCycleStack: false, canLowerStack: false, canRaiseStack: true })
 const descriptions: Record<WireRouteMode, string> = {
   FREE: 'Manual path: straight or diagonal runs through your anchors.',
   ORTHOGONAL: 'Right angles: X/Z runs; plugged endpoints stay fixed when editing.',
@@ -22,8 +22,9 @@ function routeKey(event: KeyboardEvent) {
     <p id="wire-route-description" class="wire-mode-description">{{ descriptions[routeMode] }}</p>
     <div class="wire-edit-actions"><button aria-label="Add bend to selected segment" :disabled="!canAdd" @click="emit('add')">Add bend</button><button aria-label="Remove selected bend" :disabled="!canRemove" @click="emit('remove')">Remove bend</button></div>
     <div v-if="canStack" class="wire-stack" role="group" aria-label="Wire stack order">
-      <div class="wire-stack-heading">Stack <span role="status">Layer {{ layer }}</span></div>
-      <div class="wire-edit-actions"><button aria-label="Lower wire layer" :disabled="layer === 0" @click="emit('stack', 'down')">Down</button><button aria-label="Raise wire layer" @click="emit('stack', 'up')">Up</button><button aria-label="Move wire above overlapping wires" @click="emit('stack', 'top')">Top</button></div>
+      <div class="wire-stack-heading">Order <span role="status">Priority {{ layer }}</span></div>
+      <div class="wire-edit-actions"><button aria-label="Lower wire priority" :disabled="!canLowerStack" @click="emit('stack', 'down')">Down</button><button aria-label="Raise wire priority" :disabled="!canRaiseStack" @click="emit('stack', 'up')">Up</button><button aria-label="Move wire above overlapping wires" :disabled="!canRaiseStack" @click="emit('stack', 'top')">Top</button></div>
+      <p class="wire-mode-description">Parallel: lane order · Crossing: over/under</p>
       <button v-if="canCycleStack" class="wire-stack-cycle" aria-label="Select next overlapping wire" @click="emit('cycleStack')">Select next overlapping wire</button>
     </div>
     <p v-if="hint" class="wire-hint" role="status">{{ hint }}</p>

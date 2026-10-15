@@ -48,11 +48,18 @@ test('selected wire exposes compact layer controls and overlapping-wire selectio
   const actions: string[] = []
   const view = mountSfc(await loadSfc('components/workbench/WireOptions.vue'), createPinia(), { layer: 0, canStack: true, canCycleStack: true, onStack: (action: string) => actions.push(action), onCycleStack: () => actions.push('cycle') })
   try {
-    const down = view.find('button', 'aria-label', 'Lower wire layer')
+    const down = view.find('button', 'aria-label', 'Lower wire priority')
     assert.equal(down.props.disabled, true)
-    dispatch(view.find('button', 'aria-label', 'Raise wire layer'), 'onClick')
+    dispatch(view.find('button', 'aria-label', 'Raise wire priority'), 'onClick')
     dispatch(view.find('button', 'aria-label', 'Move wire above overlapping wires'), 'onClick')
     dispatch(view.find('button', 'aria-label', 'Select next overlapping wire'), 'onClick')
-    assert.deepEqual(actions, ['up', 'top', 'cycle']); assert.ok(view.text().includes('Layer 0'))
+    assert.deepEqual(actions, ['up', 'top', 'cycle']); assert.ok(view.text().includes('Priority 0'))
+    assert.ok(view.text().includes('lane order')); assert.ok(view.text().includes('over/under'))
   } finally { view.app.unmount() }
+})
+
+test('legacy equal-zero priorities can move down when creation ordering gives them an earlier neighbor', async () => {
+  const view = mountSfc(await loadSfc('components/workbench/WireOptions.vue'), createPinia(), { layer: 0, canStack: true, canLowerStack: true })
+  try { assert.equal(view.find('button', 'aria-label', 'Lower wire priority').props.disabled, false) }
+  finally { view.app.unmount() }
 })

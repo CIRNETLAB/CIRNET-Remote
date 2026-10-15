@@ -1,20 +1,26 @@
 import { CylinderGeometry, Mesh, MeshStandardMaterial, Vector3, type Object3D } from 'three'
 import type { Point3 } from '../types/circuit'
 import type { SolvedWireRoute } from '../wires/wireRouting'
-import { CONTACT_COPPER_LENGTH, COPPER_COLOR, COPPER_EMBED_LENGTH, COPPER_RADIUS_RATIO, FREE_COPPER_LENGTH, WIRE_RADIAL_SEGMENTS } from '../wires/wireAppearance'
+import { CONTACT_COPPER_LENGTH, COPPER_COLOR, COPPER_EMBED_LENGTH, COPPER_RADIUS_RATIO, FREE_COPPER_LENGTH, TERMINAL_CLEARANCE, WIRE_RADIAL_SEGMENTS } from '../wires/wireAppearance'
 
 export interface WireTerminal { tip: Point3; endpoint: Point3; junction: Point3; radius: number; overlap: number }
 export interface WireParts { bodyPoints: Point3[]; terminals: [WireTerminal, WireTerminal]; capHoleRadius: number }
 
 export function deriveWireParts(route: SolvedWireRoute, diameter: number): WireParts {
-  const points = route.points.map(point => new Vector3(point.x, point.y, point.z))
+  const path = route.renderPoints ?? route.points
+  const points = path.map(point => new Vector3(point.x, point.y, point.z))
   const first = points[1].clone().sub(points[0]), last = points.at(-2)!.clone().sub(points.at(-1)!)
   const sourceLimit = route.terminalLeads.source ? CONTACT_COPPER_LENGTH : FREE_COPPER_LENGTH
   const destinationLimit = route.terminalLeads.destination ? CONTACT_COPPER_LENGTH : FREE_COPPER_LENGTH
-  const lift = route.layerOffset ?? 0
-  const length = (segment: Vector3, limit: number, contact: boolean) => contact ? Math.min(limit, Math.max(0, segment.length() - lift) * .65) + lift : lift > 0 ? segment.length() : Math.min(limit, segment.length() * .45)
-  let sourceLength = length(first, sourceLimit, !!route.terminalLeads.source)
-  let destinationLength = length(last, destinationLimit, !!route.terminalLeads.destination)
+  const length = (segment: Vector3, limit: number, contact: boolean, end: 'source' | 'destination') => {
+    if (!contact) return Math.min(limit, segment.length() * .45)
+    const endpoint = end === 'source' ? points[0] : points.at(-1)!
+    const deck = route.contactDeckY?.[end]
+    const exposure = deck === null || deck === undefined ? limit : Math.max(0, deck + diameter * TERMINAL_CLEARANCE - endpoint.y)
+    return Math.min(limit, exposure, segment.length() * .9)
+  }
+  let sourceLength = length(first, sourceLimit, !!route.terminalLeads.source, 'source')
+  let destinationLength = length(last, destinationLimit, !!route.terminalLeads.destination, 'destination')
   if (points.length === 2) {
     if (route.terminalLeads.source && !route.terminalLeads.destination) destinationLength = Math.min(destinationLength, (first.length() - sourceLength) * .6)
     else if (!route.terminalLeads.source && route.terminalLeads.destination) sourceLength = Math.min(sourceLength, (last.length() - destinationLength) * .6)
@@ -30,7 +36,7 @@ export function deriveWireParts(route: SolvedWireRoute, diameter: number): WireP
     const depth = contact ? Math.min(diameter * 1.2, (route.contactPitch?.[index === 0 ? 'source' : 'destination'] ?? .13) * .65) : 0
     return { tip: plain(points[index].clone().addScaledVector(axis, -depth)), endpoint: plain(points[index]), junction: plain(junction), radius, overlap: Math.min(diameter * .12, COPPER_EMBED_LENGTH) }
   }
-  return { bodyPoints: [plain(start), ...route.points.slice(1, -1).map(point => ({ ...point })), plain(end)], capHoleRadius: lift > 0 && (!route.terminalLeads.source || !route.terminalLeads.destination) ? 0 : radius * .9,
+  return { bodyPoints: [plain(start), ...path.slice(1, -1).map(point => ({ ...point })), plain(end)], capHoleRadius: radius * .9,
     terminals: [terminal(0, first, start, !!route.terminalLeads.source), terminal(points.length - 1, last, end, !!route.terminalLeads.destination)] }
 }
 
@@ -38,7 +44,7 @@ export function deriveWireParts(route: SolvedWireRoute, diameter: number): WireP
 // Ownership stays here so deleting one wire cannot dispose another wire's pins.
 export function createWireTerminals() {
   const geometry = new CylinderGeometry(1, 1, 1, WIRE_RADIAL_SEGMENTS, 1, false)
-  const material = new MeshStandardMaterial({ color: COPPER_COLOR, roughness: .29, metalness: .86 })
+  const material = new MeshStandardMaterial({ color: COPPER_COLOR, roughness: .2, metalness: .95 })
   const up = new Vector3(0, 1, 0)
   let disposed = false
   const detach = (root: Object3D) => { for (const child of [...root.children]) if (child.userData.wireTerminal) root.remove(child) }

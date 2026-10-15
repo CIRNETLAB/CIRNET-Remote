@@ -2,8 +2,10 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { InstancedMesh, Matrix4, Mesh, PerspectiveCamera, Vector3 } from 'three'
 import { createWireLayer } from '../src/three/WireLayer'
-import { defaultWireVisual } from '../src/wires/wireVisual'
+import { defaultWireVisual, readWireVisual } from '../src/wires/wireVisual'
 import type { CircuitConnection } from '../src/types/circuit'
+import { deriveWireParts } from '../src/three/WireTerminals'
+import { solveWireRoute } from '../src/wires/wireRouting'
 
 test('wire layer renders explicit low routes and changes color without replacing geometry', () => {
   const positions: Record<string, Vector3> = { 'A.OUT': new Vector3(0, .36, 0), 'B.IN': new Vector3(2, .36, 2), 'C.OUT': new Vector3(0, .36, 4), 'D.IN': new Vector3(2, .36, 4) }
@@ -42,7 +44,7 @@ test('hundreds of wires retain unchanged buffers and preview bursts build only t
     layer.sync(wires); assert.ok(meshes.every((m, i) => m.geometry === buffers[i]))
     for (let i = 0; i < 50; i++) layer.previewVisual(wires[0], { ...defaultWireVisual(), controlPoints: [{ space: 'world', position: { x: i / 10, y: .36, z: 1 } }] })
     assert.equal(meshes[0].geometry, buffers[0])
-    layer.flush(); assert.notEqual(meshes[0].geometry, buffers[0]); assert.equal(meshes[1].geometry, buffers[1])
+    layer.flush(); assert.notEqual(meshes[0].geometry, buffers[0]); assert.ok(meshes[20].geometry === buffers[20], 'wire at z=2 is outside the edited route crossing group')
     layer.previewDrawing({ source: wires[0].source, destination: '' }, defaultWireVisual(), { x: 2, y: .36, z: 1 })
     layer.flush()
     const preview = layer.tools.getObjectByName('wire-drawing-preview') as Mesh, previewGeometry = preview.geometry
@@ -112,7 +114,7 @@ test('completed and preview jumpers have real narrower copper pins and insulatio
       assert.ok(tip.y < endpoint.y - .04, 'metal is inserted below the unchanged electrical anchor')
     }
     const vertices = body.geometry.getAttribute('position')
-    assert.ok(Array.from({ length: vertices.count }, (_, i) => vertices.getY(i)).every(y => y > .335), 'red insulation ends above the plastic deck, copper alone enters the hole')
+    assert.ok(Array.from({ length: vertices.count }, (_, i) => vertices.getY(i)).every(y => y > .3339), 'insulation clears the plastic deck, copper alone enters the hole')
     layer.previewDrawing({ source: wire.source, destination: '' }, visual, { x: .5, y: .37, z: -.5 }); layer.flush()
     const preview = layer.tools.getObjectByName('wire-drawing-preview') as Mesh
     const free = preview.getObjectByName('wire-terminal-free') as Mesh
@@ -191,7 +193,33 @@ test('opaque preview has silver deep-inserted contacts, longer free pin and only
   } finally { layer.dispose() }
 })
 
-test('same-path contact wire layers separate the whole insulation, not just its middle', () => {
+test('contact collar, exposed silver and insertion depth stay fixed at priorities zero and ten', () => {
+  const context = { modulePose: () => ({ id: 'BB', type: 'BREADBOARD' }), endpoint: (endpoint: string) => ({ endpoint, position: { x: endpoint === 'A' ? 0 : 2, y: .309, z: 0 }, contactModuleId: 'BB' }) }
+  const visual = { ...defaultWireVisual(), routeMode: 'FREE' as const, thickness: .052, height: .4 }
+  const parts = [0, 10].map(layer => deriveWireParts(solveWireRoute({ source: 'A', destination: 'B' }, { ...visual, layer }, context)!, .052))
+  for (const index of [0, 1]) {
+    assert.deepEqual(parts[1].terminals[index], parts[0].terminals[index], 'priority cannot lengthen the metal or move the collar')
+    const pin = parts[0].terminals[index]
+    assert.ok(pin.junction.y > .33 && pin.junction.y <= .352, 'short exposed pin above the .33 deck')
+    assert.ok(pin.tip.y < .26, 'deep insertion under .309 logical contact')
+  }
+  assert.ok(parts[0].bodyPoints.some(point => point.y <= .352), 'insulation reaches the fixed collar')
+})
+
+test('silver-plated conductor is capped, opaque and metallic without emissive brightness', () => {
+  const layer = createWireLayer(endpoint => new Vector3(endpoint === 'A' ? 0 : 2, .37, 0))
+  try {
+    layer.sync([{ source: 'A', destination: 'B' }])
+    const pin = layer.group.children[0].getObjectByName('wire-terminal-source') as Mesh
+    const material = pin.material as import('three').MeshStandardMaterial
+    assert.ok(material.metalness >= .9 && material.metalness <= 1)
+    assert.ok(material.roughness >= .15 && material.roughness <= .25)
+    assert.equal(material.transparent, false); assert.equal(material.emissive.getHex(), 0)
+    assert.equal((pin.geometry as import('three').CylinderGeometry).parameters.openEnded, false)
+  } finally { layer.dispose() }
+})
+
+test('same-path contact priorities produce lateral lanes rather than vertically separated bodies', () => {
   const context = { modulePose: () => ({ id: 'BB', type: 'BREADBOARD' }), endpoint: (endpoint: string) => ({ endpoint, position: { x: endpoint.endsWith('A') ? 0 : 2, y: .309, z: endpoint.endsWith('A') ? 0 : 1 }, contactModuleId: 'BB' }) }
   const layer = createWireLayer(() => null, context)
   const wires = Array.from({ length: 3 }, (_, i) => ({ source: `S${i}A`, destination: `D${i}B`, metadata: { wireVisual: { ...defaultWireVisual(), routeMode: 'FREE', thickness: .052, height: .04, layer: i } } }))
@@ -199,11 +227,11 @@ test('same-path contact wire layers separate the whole insulation, not just its 
     layer.sync(wires)
     const bodies = layer.group.children as Mesh[]
     bodies.forEach(body => body.geometry.computeBoundingBox())
-    for (let i = 1; i < bodies.length; i++) assert.ok(bodies[i].geometry.boundingBox!.min.y >= bodies[i - 1].geometry.boundingBox!.max.y + .0119, 'layer lift includes insulation transitions; only metal leads descend to the fixed contact')
+    for (let i = 1; i < bodies.length; i++) assert.ok(Math.abs(bodies[i].geometry.boundingBox!.max.y - bodies[0].geometry.boundingBox!.max.y) < 1e-6, 'priority cannot create a Y tower')
   } finally { layer.dispose() }
 })
 
-test('shared layer spacing clears a thicker legacy jumper and stacked logical-port insulation stays entirely raised', () => {
+test('mixed-diameter bundle priorities keep terminal insulation at a fixed low base', () => {
   for (const contact of [true, false]) {
     const context = { modulePose: () => ({ id: 'BB', type: 'BREADBOARD' }), endpoint: (endpoint: string) => ({ endpoint, position: { x: endpoint.endsWith('A') ? 0 : 2, y: contact ? .309 : .37, z: 0 }, ...(contact ? { contactModuleId: 'BB' } : {}) }) }
     const layer = createWireLayer(() => null, context)
@@ -212,7 +240,26 @@ test('shared layer spacing clears a thicker legacy jumper and stacked logical-po
       layer.sync(wires)
       const bodies = layer.group.children as Mesh[]
       bodies.forEach(body => body.geometry.computeBoundingBox())
-      for (let i = 1; i < bodies.length; i++) assert.ok(bodies[i].geometry.boundingBox!.min.y >= bodies[i - 1].geometry.boundingBox!.max.y + .0119)
+      for (let i = 1; i < bodies.length; i++) assert.ok(bodies[i].geometry.boundingBox!.max.y < .5, 'a thicker neighboring wire cannot globally lift this body')
     } finally { layer.dispose() }
   }
+})
+
+test('scene wire layer displays compact derived lanes and previews only rebuild their conflict group', () => {
+  const positions = (endpoint: string) => new Vector3(endpoint.endsWith('A') ? -2 : 2, .36, endpoint.startsWith('OTHER') ? 3 : 0)
+  const layer = createWireLayer(positions)
+  const wires = Array.from({ length: 10 }, (_, index) => ({ source: `S${index}A`, destination: `D${index}B`, metadata: { wireVisual: { ...defaultWireVisual(), thickness: .052, routeMode: 'FREE' as const, layer: index } } }))
+  const other = { source: 'OTHERA', destination: 'OTHERB' }
+  try {
+    layer.sync([...wires, other])
+    const unchanged = (layer.group.children[10] as Mesh).geometry
+    const route = layer.route(wires[0])!
+    assert.ok(route.renderPoints, 'WireLayer must consume derived layout rather than rendering the raw semantic route')
+    assert.ok(route.renderPoints.some(point => point.z < -.24))
+    layer.previewVisual(wires[0], { ...readWireVisual(wires[0]), controlPoints: [{ space: 'world', position: { x: 0, y: .36, z: .15 } }] })
+    layer.flush()
+    assert.equal((layer.group.children[10] as Mesh).geometry, unchanged)
+    layer.previewVisual(wires[0], null); layer.flush()
+    assert.deepEqual(layer.route(wires[0])!.renderPoints, route.renderPoints)
+  } finally { layer.dispose() }
 })
