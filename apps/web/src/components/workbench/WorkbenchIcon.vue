@@ -35,6 +35,11 @@ const paths: Record<string, string> = {
   'pan-right': 'M4 12h16 M14 6l6 6-6 6',
   'pan-forward': 'M12 20V4 M6 10l6-6 6 6',
   'pan-back': 'M12 4v16 M6 14l6 6 6-6',
+  'bend-add': 'M5 19v-6a5 5 0 0 1 5-5h3 M15 7h6 M18 4v6',
+  'bend-remove': 'M5 19v-6a5 5 0 0 1 5-5h3 M15 7h6',
+  down: 'M12 4v16 M6 14l6 6 6-6',
+  up: 'M12 20V4 M6 10l6-6 6 6',
+  top: 'M5 5h14 M12 20V9 M7 14l5-5 5 5',
 }
 </script>
 <template><svg class="workbench-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path :d="paths[name] || paths.chip" /></svg></template>

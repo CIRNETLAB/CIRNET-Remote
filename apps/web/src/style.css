@@ -69,7 +69,7 @@ code { font-family: Consolas, monospace; }
 .port-anchor.pending { box-shadow: 0 0 0 3px #a5e8bc8a; }
 .contextual-panel, .component-information, .wire-options { position: absolute; top: calc(var(--drawer-top) + 20px); right: 20px; width: min(300px, calc(100% - var(--drawer-left) - 40px)); }
 .component-information { max-height: calc(100% - var(--drawer-top) - 142px); display: flex; flex-direction: column; background: #1b2733; border: 1px solid #425468; border-radius: 3px; box-shadow: 0 4px 14px #0005; pointer-events: auto; overflow: hidden; }
-.wire-options { padding: 12px; border: 1px solid #526170; border-radius: 3px; background: #17212d; box-shadow: 0 3px 12px #0005; color: #d7dce2; z-index: 4; font-size: 11px; pointer-events: auto; }
+.wire-options { padding: 14px 16px; border: 1px solid #36495a; border-radius: 6px; background: #101923; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); color: #d7dce2; z-index: 4; font-size: 11px; pointer-events: auto; max-height: calc(100% - var(--drawer-top) - 142px); overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: #3b5066 #101923; }
 .component-information-header { display: flex; align-items: center; gap: 8px; min-height: 32px; flex-shrink: 0; padding: 0 10px; border-bottom: 1px solid #3b4d5f; background: #263544; }
 .component-information-header > .workbench-icon { width: 15px; height: 15px; color: #95afbf; }
 .component-information-header strong { font-size: 11px; font-weight: 600; letter-spacing: .15px; }
