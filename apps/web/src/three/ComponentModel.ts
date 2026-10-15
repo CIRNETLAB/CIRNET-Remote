@@ -3,11 +3,13 @@ import { getDefinition, type LogicalPort } from '../data/editorCatalog'
 import type { CircuitModule } from '../types/circuit'
 import { addBreadboardHousing } from './BreadboardHousing'
 import { getBreadboardGeometrySpec } from '../geometry/BreadboardGeometrySpec'
-import { addPowerSupplyModel, applyPowerSupplyControls } from './PowerSupplyModel'
+import { addPowerSupplyModel, applyPowerSupplyControls, POWER_SUPPLY_VISUAL_SIZE, supplyTerminalAnchor } from './PowerSupplyModel'
 import { addOscilloscopeModel } from './OscilloscopeModel'
 import { addFunctionGeneratorModel } from './FunctionGeneratorModel'
 import { getPartForType } from '../data/partCatalog'
 import { addPackageModel, packagePinAnchor } from './PackageModel'
+import { subduedBodyColor } from './package/PackageMaterials'
+import { preserveStructureLighting } from './StudioEnvironment'
 
 export function disposeObject(root: Object3D) {
   const geometries = new Set<BufferGeometry>(), materials = new Set<Material>(), textures = new Set<Texture>()
@@ -299,6 +301,10 @@ function createBreadboard100Texture(type: string): CanvasTexture | null {
 }
 
 export function portAnchor(type: string, port: LogicalPort): Vector3 {
+  // DC is not mountable: this visual projection aligns wires/picking with the
+  // detailed Structure posts while its canonical pin IDs/footprint stay intact.
+  const supply = type === 'DC_SUPPLY' ? supplyTerminalAnchor(port.id) : null
+  if (supply) return supply
   const physical = packagePinAnchor(type, port.id)
   if (physical) return physical
   const definition = getDefinition(type)!
@@ -310,7 +316,7 @@ export function portAnchor(type: string, port: LogicalPort): Vector3 {
 export function buildComponent(module: CircuitModule): Group {
   const definition = getDefinition(module.type)
   const part = getPartForType(module.type)
-  const [w, h, d] = definition?.size ?? [1.5, 0.5, 1]
+  const [w, h, d] = definition?.visual === 'supply' ? POWER_SUPPLY_VISUAL_SIZE : definition?.size ?? [1.5, 0.5, 1]
   const group = new Group()
   group.userData = { kind: 'module', id: module.id, type: module.type, size: [w, h, d], signature: JSON.stringify([module.type, module.properties]) }
   const material = (color: string) => new MeshStandardMaterial({ color, roughness: 0.65, metalness: 0.12 })
@@ -320,7 +326,12 @@ export function buildComponent(module: CircuitModule): Group {
   const cylinder = (radius: number, height: number, color: string) => { const mesh = new Mesh(new CylinderGeometry(radius, radius, height, 20), material(color)); mesh.userData.selectionSurface = true; return mesh }
   const color = definition?.color ?? '#72829a'
 
-  if (part) {
+  // Structure dispatch takes precedence over a physical electrical descriptor.
+  // The electrical DC_SUPPLY remains a two-terminal source, not a legacy type.
+  if (definition?.visual === 'supply') {
+    addPowerSupplyModel(group, [w, h, d])
+    if (part) { group.userData.packageId = part.package.id; group.userData.definitionId = part.id }
+  } else if (part) {
     addPackageModel(group, module, part)
   } else if (definition?.visual === 'resistor') {
     const body = cylinder(0.23, w * 0.7, color); body.rotation.z = Math.PI / 2; body.position.y = h / 2 + 0.08; group.add(body)
@@ -339,14 +350,13 @@ export function buildComponent(module: CircuitModule): Group {
     addBreadboardHousing(group, module.type, color, createBreadboard630Texture(module.type))
   } else if (definition?.visual === 'breadboard_100') {
     addBreadboardHousing(group, module.type, color, createBreadboard100Texture(module.type))
-  } else if (definition?.visual === 'supply') {
-    addPowerSupplyModel(group, [w, h, d])
   } else if (definition?.visual === 'oscilloscope') {
     addOscilloscopeModel(group)
   } else if (definition?.visual === 'generator') {
     addFunctionGeneratorModel(group)
   } else {
-    box(0, h / 2 + 0.02, 0, w, h, d, color)
+    const body = box(0, h / 2 + 0.02, 0, w, h, d, color)
+    if (module.type === 'ADDER' || module.type === 'MULTIPLIER') body.material.color.copy(subduedBodyColor(color))
     if (definition?.visual === 'button') box(0, h + 0.12, 0, w * 0.65, 0.25, d * 0.65, module.properties?.state ? '#d7b58e' : '#835f87')
     if (definition?.visual === 'toggle') { const lever = box(0, h + 0.25, 0, 0.15, 0.55, 0.2, '#c0d1db'); lever.rotation.z = module.properties?.state ? -0.4 : 0.4 }
     if (definition?.visual === 'dip') for (let i = 0; i < 4; i++) box((i - 1.5) * 0.38, h + 0.08, ((Number(module.properties?.value ?? 0) >> i) & 1) ? -0.2 : 0.2, 0.22, 0.18, 0.3, '#e6dac4')
@@ -379,6 +389,7 @@ export function buildComponent(module: CircuitModule): Group {
   const visualBounds = new Box3().setFromObject(group)
   group.userData.visualBounds = [visualBounds.min.toArray(), visualBounds.max.toArray()]
   applyPose(group, module)
+  preserveStructureLighting(group)
   return group
 }
 export function applyPose(group: Group, module: CircuitModule) {

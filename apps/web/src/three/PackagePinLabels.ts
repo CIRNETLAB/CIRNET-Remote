@@ -1,6 +1,7 @@
 import { Group, Mesh, MeshBasicMaterial, PlaneGeometry } from 'three'
 import { MM_TO_WORLD, type PartDefinition } from '../data/partCatalog'
 import { createPackageMarking } from './package/PackageMarking'
+import { supplyTerminalAnchor } from './PowerSupplyModel'
 
 /** Labels are model-owned scene resources, created only on hover or Show pins. */
 export function setPackagePinLabels(group: Group, part: PartDefinition, pinId: string | null, showAll = false) {
@@ -15,7 +16,8 @@ export function setPackagePinLabels(group: Group, part: PartDefinition, pinId: s
       background.rotation.x = -Math.PI / 2; background.position.y = -.001
       background.userData.ignorePick = true; background.userData.selectionSurface = false
       label.add(background, text)
-      label.position.set(pin.positionMm.x * MM_TO_WORLD, pin.positionMm.y * MM_TO_WORLD + .045, pin.positionMm.z * MM_TO_WORLD)
+      const structureAnchor = part.editorType === 'DC_SUPPLY' ? supplyTerminalAnchor(pin.id) : null
+      label.position.set(structureAnchor?.x ?? pin.positionMm.x * MM_TO_WORLD, (structureAnchor?.y ?? pin.positionMm.y * MM_TO_WORLD) + .045, structureAnchor?.z ?? pin.positionMm.z * MM_TO_WORLD)
       if (part.package.family === 'dip' || part.package.family === 'seven-segment') label.position.z += Math.sign(pin.positionMm.z || 1) * .09
       else label.position.x += Math.sign(pin.positionMm.x || 1) * .08
       group.add(label); holder = label

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import { ribbonGroups, libraryComponents, iconUrl, type LibraryComponent } from '../../data/ribbon'
+import { ribbonGroups, iconUrl, type LibraryComponent } from '../../data/ribbon'
 import { searchComponents } from '../../data/componentSearch'
 import { getPartForType } from '../../data/partCatalog'
 import ComponentThumbnail from './ComponentThumbnail.vue'
@@ -22,7 +22,8 @@ const active = computed(() => !ui.componentToolbarCollapsed ? ribbonGroups.find(
 const paletteStyle = ref({ left: '10px', width: '250px' })
 const query = ref('')
 const searchInput = ref<HTMLInputElement>()
-const results = computed(() => searchComponents(query.value, query.value.trim() ? libraryComponents : active.value?.items ?? []))
+const searchEnabled = computed(() => active.value?.id === 'logic' || active.value?.id === 'arithmetic')
+const results = computed(() => searchComponents(searchEnabled.value ? query.value : '', active.value?.items ?? []))
 let resizeObserver: ResizeObserver | undefined
 function anchorPalette() {
   if (!active.value) return
@@ -97,7 +98,7 @@ onUnmounted(() => { document.removeEventListener('pointerdown', outside); docume
     </section>
   <div v-if="active" id="ribbon-palette" class="ribbon-palette" :style="paletteStyle" :aria-label="active.label + ' components'">
    <div class="palette-heading"><strong>{{ query.trim() ? 'Search results' : active.label }}</strong><small>{{ results.length }} components</small></div>
-   <div class="palette-search"><input ref="searchInput" aria-label="Search components" placeholder="Search code, alias or function…" type="search" :value="query" @input="query = ($event.target as HTMLInputElement).value" @keydown.stop="searchKey" /><button aria-label="Clear component search" :disabled="!query" @click="clearSearch">Clear</button></div>
+   <div v-if="searchEnabled" class="palette-search"><input ref="searchInput" aria-label="Search components" placeholder="Search code, alias or function…" type="search" :value="query" @input="query = ($event.target as HTMLInputElement).value" @keydown.stop="searchKey" /><button aria-label="Clear component search" :disabled="!query" @click="clearSearch">Clear</button></div>
    <p v-if="!results.length" class="palette-empty" role="status">No components match “{{ query }}”.</p>
    <div class="palette-items" @keydown="gridKey"><button v-for="item in results" :key="item.type" :title="item.description" :data-component-type="item.type" :draggable="!!getDefinition(item.type)" @dragstart="drag($event, item)" @click="choose(item)"><span class="palette-art"><ComponentThumbnail v-if="getPartForType(item.type)" :type="item.type" :alt="item.name + ' preview'" /><img v-else-if="item.icon" :src="iconUrl(item.icon)" alt="" width="58" height="58" /><WorkbenchIcon v-else :name="item.glyph || 'chip'" /></span><strong>{{ item.name }}</strong><small>{{ item.support || (item.window ? 'Open window' : getDefinition(item.type) ? 'Place component' : item.type === 'JUMPER' ? 'Connect ports' : 'Model unavailable') }}</small></button></div>
     </div>

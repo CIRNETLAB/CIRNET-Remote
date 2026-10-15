@@ -13,7 +13,7 @@ import { useWorkspaceStore } from '../stores/workspace'
 import { useUiStore } from '../stores/ui'
 import type { CircuitModule, CircuitGraph } from '../types/circuit'
 import type { TransformHandle } from '../three/ComponentTransformGizmo'
-import { supplyControlMaximum, supplyControlValue, type SupplyControl } from '../three/PowerSupplyModel'
+import { supplyControlMaximum, supplyControlPatch, supplyControlValue, type SupplyControl } from '../three/PowerSupplyModel'
 import { useWireRouting } from './useWireRouting'
 type Manager = ReturnType<typeof createSceneManager>
 export type Position = { x: number; y: number; z: number }
@@ -210,7 +210,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     workspace.selectModule(hit.id)
     if (!(workspace.tool === 'select' && hit.kind === 'control')) ui.openWindow('component-info', { activate: false })
     if (workspace.tool === 'select' && hit.kind === 'control') {
-      const initial = supplyControlValue(selected.value?.properties, hit.control)
+      const initial = supplyControlValue(selected.value?.properties, hit.control, selected.value?.type)
       gesture = { kind: 'control', pointer: event.pointerId, start: { x, y }, dragged: false, id: hit.id, draft: circuit.activeId, control: hit.control, initial, value: initial, axis: null, last: { x, y }, raw: typeof initial === 'number' ? initial : 0 }
       manager()!.lockPointer(true); canvas.value.setPointerCapture(event.pointerId); event.preventDefault?.()
     }
@@ -354,7 +354,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     }
     if (completed.kind === 'transform' && completed.target === 'placement') return
     if (completed.kind === 'control' && completed.draft === circuit.activeId) {
-      if (completed.control !== 'power_on' && completed.dragged) attempt(() => circuit.updateModuleProperties(completed.id, { [completed.control]: completed.value }))
+      if (completed.control !== 'power_on' && completed.dragged) attempt(() => circuit.updateModuleProperties(completed.id, supplyControlPatch(circuit.graph!.modules.find(module => module.id === completed.id)!.type, completed.control, completed.value)))
       else if (completed.control === 'power_on' && !completed.dragged && canvas.value) {
         const { x, y } = coordinates(event), hit = manager()?.pick(x, y)
         if (hit?.kind === 'control' && hit.id === completed.id && hit.control === 'power_on') attempt(() => circuit.updateModuleProperties(completed.id, { power_on: !completed.initial }))

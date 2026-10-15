@@ -19,7 +19,7 @@ import { createSelectionOutline, updateSelectionOutline } from './SelectionOutli
 import { createTechnicalGrid, updateTechnicalGrid } from './TechnicalGrid'
 import { Box3, Line3, Sphere } from 'three'
 import { createComponentTransformGizmo, type GizmoObstacle, type TransformHandle } from './ComponentTransformGizmo'
-import { applyPowerSupplyControls, type SupplyControl } from './PowerSupplyModel'
+import { applyPowerSupplyControls, supplyControlPatch, type SupplyControl } from './PowerSupplyModel'
 import { createWireLayer } from './WireLayer'
 import { CAMERA_NEAR, CAMERA_FAR, ZOOM_MIN, ZOOM_MAX, ZOOM_DEFAULT, MIN_ZOOM_REFERENCE_DISTANCE, cameraNearForDistance, clampZoom } from '../config/workbenchViewport'
 
@@ -381,7 +381,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     previewSupplyControl(id: string, control: SupplyControl, value: number | boolean) {
       const model = models.get(id), module = modules.get(id)
       if (model && module && getDefinition(module.type)?.visual === 'supply' && !disposed) {
-        applyPowerSupplyControls(model, { ...module.properties, [control]: value }); model.updateMatrixWorld(true); schedule()
+        applyPowerSupplyControls(model, { ...module.properties, ...supplyControlPatch(module.type, control, value) }); model.updateMatrixWorld(true); schedule()
       }
     },
     setGhost(type: string | null, position?: Required<NonNullable<CircuitModule['position']>>, rotation = 0, properties?: Record<string, unknown>) {

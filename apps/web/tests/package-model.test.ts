@@ -245,10 +245,10 @@ test('source banana terminals place the actual pick point on their visible posts
   const model = buildComponent({ id: 'PS1', type: 'DC_SUPPLY' })
   try {
     for (const id of ['PLUS', 'MINUS']) {
-      const terminal = model.getObjectByName(`package-terminal-${id}`)!
+      const terminal = model.getObjectByName(`supply-socket-opening-${id}`)!
       const target = model.getObjectByName(`package-pin-target-${id}`)!
-      assert.ok(terminal.position.distanceTo(target.position) < .16, 'canonical endpoint coincides with the exposed metal terminal')
-      const body = new Box3().setFromObject(model.getObjectByName('package-body')!)
+      assert.ok(terminal.getWorldPosition(new Vector3()).distanceTo(target.position) < 1e-10, 'rendered endpoint coincides with the exposed binding post opening')
+      const body = new Box3().setFromObject(model.getObjectByName('supply-enclosure')!)
       assert.ok(!body.containsPoint(target.position), 'body cannot hide the only source wiring target')
     }
   } finally { disposeObject(model) }
@@ -279,8 +279,8 @@ test('every declared lab package builds its exact pin set and a package-specific
   for (const part of partCatalog) {
     const model = buildComponent({ id: 'P1', type: part.editorType, properties: { ...part.editor.defaults } })
     try {
-      assert.ok(model.getObjectByName('package-body'), part.editorType)
-      assert.deepEqual(model.children.filter(child => child.userData.physicalLead).map(child => child.userData.pinId), part.package.pins.map(pin => pin.id), part.editorType)
+      assert.ok(model.getObjectByName(part.editor.visual === 'supply' ? 'supply-enclosure' : 'package-body'), part.editorType)
+      if (part.editor.visual !== 'supply') assert.deepEqual(model.children.filter(child => child.userData.physicalLead).map(child => child.userData.pinId), part.package.pins.map(pin => pin.id), part.editorType)
       assert.equal(model.children.filter(child => child.userData.pinTarget).length, part.package.pins.length)
       assert.equal(model.userData.definitionId, part.id)
       if (part.package.family === 'buzzer') assert.ok(model.getObjectByName('package-buzzer-opening'))

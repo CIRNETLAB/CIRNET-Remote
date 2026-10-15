@@ -55,3 +55,58 @@ test('palette Search, clear and Escape preserve selection/placement and expose e
     for (const [key, descriptor] of saved) if (descriptor) Object.defineProperty(globalThis, key, descriptor); else Reflect.deleteProperty(globalThis, key)
   }
 })
+
+test('palette Search belongs only to Logic and Arithmetic and never searches outside its active menu', async () => {
+  const globals = ['document','window','ResizeObserver','requestAnimationFrame','cancelAnimationFrame'] as const
+  const saved = globals.map(key => [key, Object.getOwnPropertyDescriptor(globalThis, key)] as const)
+  Object.defineProperty(globalThis, 'document', { configurable: true, value: Object.assign(new EventTarget(), { activeElement: null, querySelector() { return null } }) })
+  Object.defineProperty(globalThis, 'window', { configurable: true, value: { matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }) } })
+  Object.defineProperty(globalThis, 'ResizeObserver', { configurable: true, value: class { observe() {} disconnect() {} } })
+  Object.defineProperty(globalThis, 'requestAnimationFrame', { configurable: true, value: (cb: FrameRequestCallback) => setTimeout(cb, 0) as unknown as number })
+  Object.defineProperty(globalThis, 'cancelAnimationFrame', { configurable: true, value: (id: number) => clearTimeout(id) })
+  const pinia = createPinia(); setActivePinia(pinia)
+  const workspace = useWorkspaceStore(), ui = useUiStore()
+  let view: ReturnType<typeof mountSfc> | undefined
+  try {
+    view = mountSfc(await loadSfc('components/workbench/ComponentRibbon.vue'), pinia)
+    for (const [groupId, hasSearch] of [
+      ['structure', false], ['passive', false], ['active', false], ['output', false], ['input', false],
+      ['logic', true], ['arithmetic', true], ['display', false], ['instruments', false], ['notation', false],
+    ] as const) {
+      ui.activeRibbonGroup = groupId; await nextTick()
+      assert.equal(!!view.find('input', 'aria-label', 'Search components'), hasSearch, `${groupId} Search visibility`)
+      assert.equal(view.all().some(n => n.props.class === 'palette-search'), hasSearch, `${groupId} leaves no search wrapper gap`)
+    }
+    workspace.armPlacement('CAPACITOR_CERAMIC')
+    ui.activeRibbonGroup = 'logic'; await nextTick()
+    dispatch(view.find('input', 'aria-label', 'Search components'), 'onInput', 'resistor'); await nextTick()
+    assert.equal(view.all().filter(n => n.props['data-component-type']).length, 0, 'Logic cannot find Passive components')
+    assert.equal(workspace.placementType, 'CAPACITOR_CERAMIC')
+
+    ui.activeRibbonGroup = 'arithmetic'; await nextTick()
+    assert.equal(view.find('input', 'aria-label', 'Search components').props.value, '', 'switching menu resets query')
+    assert.deepEqual(view.all().filter(n => n.props['data-component-type']).map(n => n.props['data-component-type']), ['ADDER', 'MULTIPLIER'])
+    dispatch(view.find('input', 'aria-label', 'Search components'), 'onInput', 'nand'); await nextTick()
+    assert.equal(view.all().filter(n => n.props['data-component-type']).length, 0, 'Arithmetic cannot find Logic components')
+    dispatch(view.find('input', 'aria-label', 'Search components'), 'onInput', 'MuLtIpLiEr'); await nextTick()
+    assert.deepEqual(view.all().filter(n => n.props['data-component-type']).map(n => n.props['data-component-type']), ['MULTIPLIER'])
+
+    ui.activeRibbonGroup = 'logic'; await nextTick()
+    assert.equal(view.find('input', 'aria-label', 'Search components').props.value, '')
+    dispatch(view.find('input', 'aria-label', 'Search components'), 'onInput', 'cd4013be'); await nextTick()
+    const result = view.all().filter(n => n.props['data-component-type'])
+    assert.equal(result.length, 1, 'case-insensitive explicit IC alias gives one Logic result')
+    const type = result[0]!.props['data-component-type'] as string
+    const transfer = new Map<string, string>()
+    ;(result[0]!.props.onDragstart as (e: unknown) => void)({ dataTransfer: { setData: (key: string, value: string) => transfer.set(key, value), effectAllowed: '' }, preventDefault() {} })
+    assert.equal(transfer.get('application/x-netcircuit-component'), type)
+    assert.equal(workspace.placementType, type)
+    ;(view.find('input', 'aria-label', 'Search components').props.onKeydown as (e: unknown) => void)({ key: 'Enter', preventDefault() {}, stopPropagation() {} })
+    await nextTick()
+    assert.equal(workspace.placementType, type, 'Enter places the selected in-menu result')
+    assert.equal(ui.activeRibbonGroup, null)
+  } finally {
+    view?.app.unmount()
+    for (const [key, descriptor] of saved) if (descriptor) Object.defineProperty(globalThis, key, descriptor); else Reflect.deleteProperty(globalThis, key)
+  }
+})

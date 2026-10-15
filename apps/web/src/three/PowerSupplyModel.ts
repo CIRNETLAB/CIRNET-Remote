@@ -1,26 +1,38 @@
-import { BoxGeometry, CanvasTexture, CylinderGeometry, DoubleSide, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, SRGBColorSpace, TorusGeometry } from 'three'
+import { BoxGeometry, CanvasTexture, CylinderGeometry, DoubleSide, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, SphereGeometry, SRGBColorSpace, TorusGeometry, Vector3 } from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { loadInstrumentLogo } from './InstrumentArtwork'
 import { SUPPLY_THEME } from '../data/instrumentVisuals'
 
 export type SupplyControl = 'voltage_v' | 'current_limit_a' | 'power_on'
+/** Detailed Structure renderer dimensions, independent of an electrical package footprint. */
+export const POWER_SUPPLY_VISUAL_SIZE = [2.4, 2.8, 3.2] as const
+/** Front opening of the original binding posts; never changes a graph pin or net. */
+export function supplyTerminalAnchor(pinId: string, [w, h, d]: readonly number[] = POWER_SUPPLY_VISUAL_SIZE): Vector3 | null {
+  return pinId === 'PLUS' || pinId === 'MINUS' ? new Vector3(w * (pinId === 'PLUS' ? -.02 : .31), h * .14, d / 2 + .267) : null
+}
+/** Old knob identifiers remain visual controls; DC_SUPPLY stores its canonical voltage key. */
+export function supplyControlPatch(type: string, control: SupplyControl, value: number | boolean): Record<string, unknown> {
+  if (type === 'DC_SUPPLY' && control === 'current_limit_a') return {}
+  return { [type === 'DC_SUPPLY' && control === 'voltage_v' ? 'voltage' : control]: value }
+}
 export const supplyControlMaximum = (control: SupplyControl) => control === 'voltage_v' ? 15 : 5
-export function supplyControlValue(properties: Record<string, unknown> | undefined, control: SupplyControl): number | boolean {
+export function supplyControlValue(properties: Record<string, unknown> | undefined, control: SupplyControl, type = 'POWER_SUPPLY'): number | boolean {
   if (control === 'power_on') return properties?.power_on === true
-  const value = properties?.[control]
+  const value = type === 'DC_SUPPLY' && control === 'voltage_v' ? properties?.voltage ?? properties?.voltage_v : properties?.[control]
   return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, Math.min(supplyControlMaximum(control), value)) : 0
 }
 
 // Local setpoints do not imply measured outputs or an attached physical source.
 export function applyPowerSupplyControls(group: Group, properties?: Record<string, unknown>) {
+  const type = group.userData.type as string, electrical = type === 'DC_SUPPLY'
   for (const [i, key] of (['voltage_v', 'current_limit_a'] as const).entries()) {
     const knob = group.getObjectByName(`supply-knob-${i}`)
-    if (knob) knob.rotation.z = -((supplyControlValue(properties, key) as number) / supplyControlMaximum(key) - 0.5) * Math.PI * 1.5
+    if (knob) knob.rotation.z = -((electrical && key === 'current_limit_a' ? 0 : supplyControlValue(properties, key, type) as number) / supplyControlMaximum(key) - 0.5) * Math.PI * 1.5
   }
-  const on = supplyControlValue(properties, 'power_on') as boolean, rocker = group.getObjectByName('power-switch')
+  const on = supplyControlValue(properties, 'power_on', type) as boolean, rocker = group.getObjectByName('power-switch')
   if (rocker) rocker.rotation.x = on ? -0.18 : 0.18
   const screen = group.getObjectByName('supply-display') as Mesh<PlaneGeometry, MeshBasicMaterial> | undefined
-  const voltage = supplyControlValue(properties, 'voltage_v') as number, current = supplyControlValue(properties, 'current_limit_a') as number
+  const voltage = supplyControlValue(properties, 'voltage_v', type) as number, current = electrical ? null : supplyControlValue(properties, 'current_limit_a', type) as number
   const settings = [on, voltage, current]
   if (screen && JSON.stringify(screen.userData.settings) !== JSON.stringify(settings)) {
     // Repaint the existing canvas/texture during dragging, without allocating a texture per pointer event.
@@ -39,7 +51,7 @@ function canvasTexture(width: number, height: number, draw: (ctx: CanvasRenderin
   const texture = new CanvasTexture(canvas); texture.colorSpace = SRGBColorSpace; texture.anisotropy = 8; return texture
 }
 
-function drawDisplay(ctx: CanvasRenderingContext2D, on: boolean, voltage: number, current: number) {
+function drawDisplay(ctx: CanvasRenderingContext2D, on: boolean, voltage: number, current: number | null) {
   // OFF has no digits, units or dim LEDs. Settings remain in the graph and are
   // repainted on ON; this screen displays local settings, not physical telemetry.
   ctx.globalAlpha = 1; ctx.fillStyle = on ? '#060b10' : '#000000'; ctx.fillRect(0, 0, 700, 960)
@@ -107,8 +119,10 @@ function legendsTexture(w: number, h: number) {
   })
 }
 
-// Knobs and switch have local visual state. The supply creates no electrical ports.
+// The detailed case is shared by the legacy visual instrument and electrical DC
+// source. Only the latter binds the existing PLUS/MINUS endpoints to its posts.
 export function addPowerSupplyModel(group: Group, [w, h, d]: readonly number[]) {
+  const electrical = group.userData.type === 'DC_SUPPLY'
   const mat = (color: string, metalness = 0, roughness = 0.55) => new MeshStandardMaterial({ color, metalness, roughness })
   const add = (name: string, mesh: Mesh, x: number, y: number, z: number, contour = false, parent = group) => {
     mesh.name = name; mesh.position.set(x, y, z); mesh.userData.selectionSurface = contour; parent.add(mesh); return mesh
@@ -116,7 +130,8 @@ export function addPowerSupplyModel(group: Group, [w, h, d]: readonly number[]) 
   const box = (name: string, sx: number, sy: number, sz: number, x: number, y: number, z: number, color: string, parent = group) => add(name, new Mesh(new BoxGeometry(sx, sy, sz), mat(color)), x, y, z, false, parent)
   const control = (name: string, key: SupplyControl, x: number, y: number, z: number) => {
     const pivot = new Group(); pivot.name = name; pivot.position.set(x, y, z)
-    pivot.userData = { kind: 'control', id: group.userData.id, control: key }; group.add(pivot); return pivot
+    if (!(electrical && key === 'current_limit_a')) pivot.userData = { kind: 'control', id: group.userData.id, control: key }
+    group.add(pivot); return pivot
   }
   const front = d / 2, panelY = (h + 0.14) / 2
   add('supply-enclosure', new Mesh(new RoundedBoxGeometry(w, h - 0.14, d - 0.16, 4, 0.065), mat('#a1aab4', 0.48, 0.38)), 0, panelY, -0.08, true)
@@ -150,16 +165,26 @@ export function addPowerSupplyModel(group: Group, [w, h, d]: readonly number[]) 
   }
   for (const [i, color] of ['#dc3b32', '#20272c'].entries()) {
     const x = w * (i === 0 ? -0.02 : 0.31), y = h * 0.14
-    const base = add(`supply-terminal-${i}`, new Mesh(new CylinderGeometry(0.18, 0.18, 0.11, 32, 1, true), mat(color)), x, y, front + 0.072); base.rotation.x = Math.PI / 2
-    add('terminal-flange', new Mesh(new TorusGeometry(0.154, 0.027, 12, 32), mat(color)), x, y, front + 0.112)
-    const collar = add('binding-post-grip', new Mesh(new CylinderGeometry(0.137, 0.145, 0.17, 32, 1, true), mat('#1c252b', 0.1, 0.45)), x, y, front + 0.177); collar.rotation.x = Math.PI / 2
+    const pinId = i === 0 ? 'PLUS' : 'MINUS', parent = electrical ? new Group() : group
+    const endpoint = { kind: 'port', id: group.userData.id, endpoint: `${group.userData.id}.${pinId}`, pinId, pinName: i === 0 ? '+' : '−', pinNumber: pinId, electricalRole: i === 0 ? 'power' : 'ground' }
+    if (electrical) { parent.name = `supply-binding-post-${pinId}`; parent.userData = endpoint; group.add(parent) }
+    const base = add(`supply-terminal-${i}`, new Mesh(new CylinderGeometry(0.18, 0.18, 0.11, 32, 1, true), mat(color)), x, y, front + 0.072, false, parent); base.rotation.x = Math.PI / 2
+    add('terminal-flange', new Mesh(new TorusGeometry(0.154, 0.027, 12, 32), mat(color)), x, y, front + 0.112, false, parent)
+    const collar = add('binding-post-grip', new Mesh(new CylinderGeometry(0.137, 0.145, 0.17, 32, 1, true), mat('#1c252b', 0.1, 0.45)), x, y, front + 0.177, false, parent); collar.rotation.x = Math.PI / 2
     for (let r = 0; r < 20; r++) {
       const angle = r * Math.PI / 10
-      const ridge = box('post-flute', 0.016, 0.017, 0.15, x + Math.sin(angle) * 0.141, y + Math.cos(angle) * 0.141, front + 0.177, '#4a5358'); ridge.rotation.z = -angle
+      const ridge = box('post-flute', 0.016, 0.017, 0.15, x + Math.sin(angle) * 0.141, y + Math.cos(angle) * 0.141, front + 0.177, '#4a5358', parent); ridge.rotation.z = -angle
     }
-    add('post-rim', new Mesh(new TorusGeometry(0.105, 0.033, 12, 32), mat(i === 0 ? '#f04c3d' : '#657079', 0.25, 0.35)), x, y, front + 0.267)
-    const bore = add('socket-bore', new Mesh(new CylinderGeometry(0.073, 0.073, 0.16, 32, 1, true), new MeshStandardMaterial({ color: '#0b1117', side: DoubleSide, roughness: 0.8 })), x, y, front + 0.174); bore.rotation.x = Math.PI / 2
-    const shadow = add('socket-floor', new Mesh(new CylinderGeometry(0.073, 0.073, 0.002, 32), mat('#030609')), x, y, front + 0.095); shadow.rotation.x = Math.PI / 2
+    add('post-rim', new Mesh(new TorusGeometry(0.105, 0.033, 12, 32), mat(i === 0 ? '#f04c3d' : '#657079', 0.25, 0.35)), x, y, front + 0.267, false, parent)
+    const bore = add('socket-bore', new Mesh(new CylinderGeometry(0.073, 0.073, 0.16, 32, 1, true), new MeshStandardMaterial({ color: '#0b1117', side: DoubleSide, roughness: 0.8 })), x, y, front + 0.174, false, parent); bore.rotation.x = Math.PI / 2
+    const shadow = add('socket-floor', new Mesh(new CylinderGeometry(0.073, 0.073, 0.002, 32), mat('#030609')), x, y, front + 0.095, false, parent); shadow.rotation.x = Math.PI / 2
+    if (electrical) {
+      const opening = new Group(); opening.name = `supply-socket-opening-${pinId}`; opening.position.copy(supplyTerminalAnchor(pinId, [w, h, d])!); parent.add(opening)
+      const target = add(`package-pin-target-${pinId}`, new Mesh(new SphereGeometry(.073, 16, 10), new MeshBasicMaterial({ visible: false, depthWrite: false })), opening.position.x, opening.position.y, opening.position.z)
+      target.userData = { ...endpoint, pinTarget: true }
+      const highlight = add(`package-pin-highlight-${pinId}`, new Mesh(new TorusGeometry(.105, .008, 8, 32), new MeshBasicMaterial({ color: '#eac76d' })), opening.position.x, opening.position.y, opening.position.z + .002)
+      highlight.visible = false; highlight.userData = { pinHighlight: true, pinId, ignorePick: true }
+    }
   }
   const switchX = -w * 0.35, switchY = h * 0.14
   add('switch-surround', new Mesh(new RoundedBoxGeometry(0.38, 0.48, 0.075, 3, 0.025), mat('#0c1218')), switchX, switchY, front + 0.045)

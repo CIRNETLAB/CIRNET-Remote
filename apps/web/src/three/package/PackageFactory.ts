@@ -2,7 +2,7 @@ import { BoxGeometry, CircleGeometry, CylinderGeometry, ExtrudeGeometry, Group, 
 import { MM_TO_WORLD, type PartDefinition } from '../../data/partCatalog'
 import type { CircuitModule } from '../../types/circuit'
 import { createFormedLeadGeometry } from './LeadGeometry'
-import { createPackageMaterials } from './PackageMaterials'
+import { createPackageBodyMaterial, createPackageMaterials } from './PackageMaterials'
 import { createPackageMarking, shortPackageCode } from './PackageMarking'
 import { updatePackageAppearance } from './PackageAppearance'
 import { axialCoatingGeometry, ledShellGeometry, roundedPackageBox, segmentGlyphGeometry } from './PackageShapes'
@@ -11,7 +11,10 @@ export function addPackageModel(group: Group, module: CircuitModule, part: PartD
   const pkg = part.package, mm = MM_TO_WORLD
   const [w, h, d] = [pkg.bodyMm.x * mm, pkg.bodyMm.y * mm, pkg.bodyMm.z * mm]
   const bottom = pkg.standoffMm * mm, top = bottom + h
-  const { metal, plastic, ink, dark } = createPackageMaterials()
+  // Structure terminals and Display share the factory but retain their existing
+  // appearance. Tone only the requested component body/coating families.
+  const subduedBody = ['dip', 'axial', 'radial-led', 'radial-capacitor', 'to92', 'switch', 'buzzer'].includes(pkg.family)
+  const { metal, plastic, ink, dark } = createPackageMaterials(subduedBody)
   const usedMaterials = new Set<MeshStandardMaterial>()
   const mesh = (name: string, geometry: BufferGeometry, material = plastic, parent: Group = group, surface = true) => {
     usedMaterials.add(material)
@@ -41,7 +44,7 @@ export function addPackageModel(group: Group, module: CircuitModule, part: PartD
     cylinder('package-pin1-marker', Math.min(.018, d * .08), .0015, -w / 2 + .07, top + .001, d * .29, ink).userData.selectionSurface = false
     marking(shortPackageCode(part.shortName ?? pkg.marking ?? part.name), w * .56, d * .38)
   } else if (pkg.family === 'radial-led') {
-    const red = new MeshStandardMaterial({ color: '#ba3434', roughness: .47, metalness: 0, transparent: false, opacity: 1, emissiveIntensity: 0 })
+    const red = createPackageBodyMaterial({ color: '#ba3434', roughness: .47, metalness: 0, transparent: false, opacity: 1, emissiveIntensity: 0 })
     const radius = Math.min(w, d) / 2
     const shell = mesh('package-body', ledShellGeometry(radius, h, .4 * mm), red); shell.position.y = bottom; shell.userData.ledLens = true
     const cathode = pkg.pins.find(pin => pin.name === 'K' || pin.id === 'K')
@@ -49,7 +52,7 @@ export function addPackageModel(group: Group, module: CircuitModule, part: PartD
     box('package-cathode-marker', .32 * mm, .3 * mm, radius * .8, sign * radius, bottom + .25 * mm, 0, ink, group, false)
   } else if (pkg.family === 'axial') {
     const resistor = pkg.visualVariant === 'resistor' || part.function === 'resistor'
-    const coating = new MeshStandardMaterial({ color: resistor ? '#cbb181' : '#ae613a', roughness: resistor ? .73 : .28, metalness: .02 })
+    const coating = createPackageBodyMaterial({ color: resistor ? '#cbb181' : '#ae613a', roughness: resistor ? .73 : .28, metalness: .02 })
     const radius = Math.min(h, d) / 2, body = mesh('package-body', axialCoatingGeometry(w, radius, resistor), coating)
     body.rotation.z = Math.PI / 2; body.position.y = bottom + h / 2
     if (resistor) {
@@ -67,7 +70,7 @@ export function addPackageModel(group: Group, module: CircuitModule, part: PartD
       stripe.rotation.z = Math.PI / 2; stripe.position.set(side * .29 * w, bottom + h / 2, 0); stripe.userData.selectionSurface = false
     }
   } else if (pkg.family === 'radial-capacitor') {
-    const coating = new MeshStandardMaterial({ color: pkg.polarized ? '#253d57' : '#cba05e', roughness: .5, metalness: .03 })
+    const coating = createPackageBodyMaterial({ color: pkg.polarized ? '#253d57' : '#cba05e', roughness: .5, metalness: .03 })
     if (pkg.polarized) {
       const radius = Math.min(w, d) / 2
       const sleeve = mesh('package-body', new LatheGeometry([[0, 0], [.91, 0], [.99, .02], [1, .06], [1, .91], [.96, .96], [.91, 1]].map(([r, y]) => new Vector2(r! * radius, y! * h)), 32), coating); sleeve.position.y = bottom
@@ -93,7 +96,7 @@ export function addPackageModel(group: Group, module: CircuitModule, part: PartD
     const dip = pkg.visualVariant === 'dip-switch' || part.function === 'dip-switch'
     const controls = (part.internalConnections ?? []).flatMap(connection => connection.when ? [connection.when] : [])
     const controlOn = (i: number) => { const control = controls[i]; return !!control && (module.properties?.[control.property] ?? part.editor.defaults[control.property]) === control.equals }
-    const coating = new MeshStandardMaterial({ color: dip ? '#a52e28' : '#272c30', roughness: .62 })
+    const coating = createPackageBodyMaterial({ color: dip ? '#a52e28' : '#272c30', roughness: .62 })
     roundedBox('package-body', w, h, d, 0, bottom + h / 2, 0, coating)
     if (dip) {
       for (let i = 0; i < 4; i++) {
