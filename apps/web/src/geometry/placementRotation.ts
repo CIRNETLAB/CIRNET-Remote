@@ -1,18 +1,17 @@
-import { getDefinition } from '../data/editorCatalog'
 import { getBreadboardGeometrySpec } from './BreadboardGeometrySpec'
 import { getPartForType } from '../data/partCatalog'
 
-export type PlacementRotationPolicy = 'WORLD_ALIGNED' | 'CAMERA_FACING' | 'MECHANICAL'
+export type PlacementRotationPolicy = 'WORLD_ALIGNED' | 'MECHANICAL'
 
-// Mechanical profiles own their world frame. Known nonmechanical models retain
-// the existing camera-facing UX; no duplicated breadboard type list is needed.
+// Every model starts in its canonical world frame. Mechanical profiles only
+// change rotation snapping; camera navigation never supplies a placement pose.
 export function placementRotationPolicy(type?: string): PlacementRotationPolicy {
   if (type && (getBreadboardGeometrySpec(type)?.sides.length || getPartForType(type))) return 'MECHANICAL'
-  return type && getDefinition(type) ? 'CAMERA_FACING' : 'WORLD_ALIGNED'
+  return 'WORLD_ALIGNED'
 }
 
-export function placementInitialRotation(type: string, cameraFacingYaw: () => number): number {
-  return placementRotationPolicy(type) === 'CAMERA_FACING' ? cameraFacingYaw() : 0
+export function placementInitialRotation(_type: string, _legacyCameraFacingYaw?: () => number): number {
+  return 0
 }
 
 export function rotationSnapStep(type?: string): number {

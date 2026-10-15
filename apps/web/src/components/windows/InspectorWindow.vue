@@ -29,6 +29,7 @@ function select(event: Event) { const value = (event.target as HTMLSelectElement
 </script>
 <template>
   <section class="inspector-section"><h2>Component editor</h2>
+    <p v-if="workspace.selectionCount > 1" role="status">{{ workspace.selection.moduleIds.length }} components and {{ workspace.selection.wires.length }} wires selected. Use Delete, Duplicate or Paste for the complete selection.</p>
     <label>Add component at origin<select v-model="addType"><option v-for="item in addableComponents" :key="item.type" :value="item.type">{{ item.name }}</option></select></label><button @click="edit(() => workspace.selectModule(circuit.placeModule(addType, { x: 0, y: 0, z: 0 })))">Add component</button>
     <label>Select component<select :value="workspace.selectedModuleId || ''" @change="workspace.selectModule(($event.target as HTMLSelectElement).value || null)"><option value="">None</option><option v-for="module in circuit.graph?.modules" :key="module.id" :value="module.id">{{ module.id }} · {{ module.type }}</option></select></label>
     <template v-if="selected"><strong>{{ selected.id }}</strong><p class="window-note">{{ part ? part.name + ' · ' + part.package.id + ' · ' + part.package.pins.length + ' physical pins' : definition?.breadboardTopologyRef ? 'Breadboard contacts use declared virtual nodes; physical station mapping is separate.' : definition?.visualOnly ? 'Visual structure only; no electrical source or node map.' : 'Legacy logical component.' }}</p>

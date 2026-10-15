@@ -174,7 +174,7 @@ test('Wire mode with selected component arbitrates upper-right panels without ov
   } finally { view3.app.unmount() }
 })
 
-test('Gizmo obstacle avoidance clears upper-right Wire panel', () => {
+test('opening the Wire panel preserves the selected component pivot and gizmo grip', () => {
   const manager = createSceneManager({ renderer: { setSize() {}, render() {}, dispose() {} }, requestFrame: () => 1, cancelFrame() {} }) as ReturnType<typeof createSceneManager> & { setGizmoObstacles?: (rects: { left: number; top: number; right: number; bottom: number }[]) => void }
   try {
     manager.resize(1000, 700)
@@ -182,13 +182,16 @@ test('Gizmo obstacle avoidance clears upper-right Wire panel', () => {
     manager.highlight('A')
 
     const p = manager.project(manager.gizmoHandlePosition('xz')!)
+    const grip = manager.gizmoHandlePosition('rotate-y')!.clone()
     assert.equal(typeof manager.setGizmoObstacles, 'function')
 
-    // Place an obstacle at the upper-right wire panel position (canvas 1000x700: left 680 to 980, top 20 to 260)
+    // Panel bounds remain available to the scene without moving an anchored tool.
     const wirePanelObstacle = { left: p.x - 65, top: p.y - 60, right: p.x + 65, bottom: p.y + 60 }
     manager.setGizmoObstacles!([wirePanelObstacle])
 
     const moved = manager.project(manager.gizmoHandlePosition('xz')!)
-    assert.ok(Math.abs(moved.x - p.x) > 120 || Math.abs(moved.y - p.y) > 115, 'gizmo handle must clear screen location occupied by Wire panel')
+    assert.ok(Math.hypot(moved.x - p.x, moved.y - p.y) < .001, 'opening a panel cannot offset the gizmo pivot')
+    assert.ok(manager.gizmoHandlePosition('rotate-y')!.distanceTo(grip) < .001, 'panel changes cannot move the rotation knob')
+    assert.ok(manager.gizmoOrigin()!.distanceTo(manager.models.get('A')!.position) < .001)
   } finally { manager.dispose() }
 })

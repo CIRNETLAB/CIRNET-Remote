@@ -50,6 +50,19 @@ function supplyFront(h: ReturnType<typeof setup>, x: number, y: number, z = 1.85
   return h.manager.project(new Vector3(x, y, z))
 }
 
+// A positive world-Y gesture is counterclockwise in the screen-oriented tool.
+function rotationTarget(h: ReturnType<typeof setup>, degrees: number) {
+  const center = h.manager.project(h.manager.gizmoOrigin()!), start = h.manager.project(h.manager.gizmoHandlePosition('rotate-y')!)
+  const angle = -degrees * Math.PI / 180, x = start.x - center.x, y = start.y - center.y
+  return { x: center.x + x * Math.cos(angle) - y * Math.sin(angle), y: center.y + x * Math.sin(angle) + y * Math.cos(angle) }
+}
+
+function acquirePlacementGizmo(h: ReturnType<typeof setup>) {
+  const axis = h.manager.project(h.manager.gizmoHandlePosition('x')!)
+  h.editor.pointerMove(h.pointer(axis.x, axis.y))
+  assert.equal(h.manager.placementFollowBlocked(), true, 'approaching a separated handle pauses cursor-follow before free movement')
+}
+
 test('mounted physical component dragging keeps the same board-plane grab offset in an oblique view', async () => {
   const h = setup('move')
   try {
@@ -323,7 +336,7 @@ test('Y rotation gizmo previews continuously, snaps to 15 degrees and records on
     await nextTick(); h.circuit.past = []
     const origin = h.manager.gizmoOrigin()!, handle = h.manager.gizmoHandlePosition('rotate-y')!
     const start = h.manager.project(handle), radius = handle.distanceTo(origin)
-    const target = h.manager.project(origin.clone().add(new Vector3(-radius * Math.cos(Math.PI / 3), 0, radius * Math.sin(Math.PI / 3))))
+    const target = rotationTarget(h, 60)
     const endpoint = h.manager.endpointPosition(`${id}.OUT`)!.clone()
     h.editor.pointerDown(h.pointer(start.x, start.y)); h.editor.pointerMove(h.pointer(target.x, target.y))
     assert.ok(h.manager.endpointPosition(`${id}.OUT`)!.distanceTo(endpoint) > 0.2)
@@ -371,7 +384,7 @@ test('extreme finite imported yaw docks and rotates like its equivalent heading,
     await nextTick(); h.circuit.past = []
     const origin = h.manager.gizmoOrigin()!, handle = h.manager.gizmoHandlePosition('rotate-y')!
     const start = h.manager.project(handle)
-    const target = h.manager.project(handle.clone().sub(origin).applyAxisAngle(new Vector3(0, 1, 0), Math.PI / 3).add(origin))
+    const target = rotationTarget(h, 60)
     h.editor.pointerDown(h.pointer(start.x, start.y)); h.editor.pointerUp(h.pointer(target.x, target.y))
     assert.ok(Math.abs(h.circuit.graph!.modules[0].rotation! - (heading + 60) % 360) < 0.01)
     assert.equal(h.circuit.past.length, 1)
@@ -719,8 +732,8 @@ async function previewPlacement(h: ReturnType<typeof setup>, type = 'CLOCK', pos
 }
 
 for (const path of ['follow', 'immediate', 'drop'] as const) {
-  test(`${path} Power Supply placement uses camera-relative initial yaw and one Undo step`, async () => {
-    for (const [view, yaw] of [['TOP-FRONT', 0], ['TOP-RIGHT', 90], ['TOP-BACK', 180], ['TOP-LEFT', 270], ['TOP-BACK-RIGHT', 135], ['TOP', 0]] as const) {
+  test(`${path} Power Supply placement uses the same world yaw across camera views and one Undo step`, async () => {
+    for (const view of ['TOP-FRONT', 'TOP-RIGHT', 'TOP-BACK', 'TOP-LEFT', 'TOP-BACK-RIGHT', 'TOP'] as const) {
       const h = setup()
       try {
         h.manager.setViewOrientation(view, false)
@@ -730,7 +743,7 @@ for (const path of ['follow', 'immediate', 'drop'] as const) {
           h.workspace.armPlacement('POWER_SUPPLY'); await nextTick()
           if (path === 'follow') {
             h.editor.pointerMove(h.pointer(p.x, p.y))
-            assert.ok(Math.abs(placementGhost(h).rotation.y * 180 / Math.PI - yaw) < 1e-8, `${path}/${view} preview`)
+            assert.ok(Math.abs(placementGhost(h).rotation.y) < 1e-8, `${path}/${view} preview`)
             assert.equal(h.circuit.past.length, 0)
           }
           const click = path === 'follow' ? h.pointer(80, 620) : h.pointer(p.x, p.y)
@@ -740,7 +753,7 @@ for (const path of ['follow', 'immediate', 'drop'] as const) {
         await nextTick()
         const module = h.circuit.graph!.modules[0]
         assert.ok(module, `${path}/${view} commits`)
-        assert.ok(Math.abs(module.rotation! - yaw) < 1e-8, `${path}/${view} world rotation`)
+        assert.ok(Math.abs(module.rotation!) < 1e-8, `${path}/${view} world rotation`)
         assert.equal(h.circuit.past.length, 1)
         h.circuit.undo(); await nextTick(); assert.equal(h.circuit.graph!.modules.length, 0)
         h.circuit.redo(); await nextTick(); assert.deepEqual(h.circuit.graph!.modules[0], module)
@@ -816,7 +829,7 @@ test('mechanical and generic gizmos use their own snap policy; Snap OFF retains 
         h.circuit.past = []
         const center = h.manager.gizmoOrigin()!, grip = h.manager.gizmoHandlePosition('rotate-y')!, start = h.manager.project(grip)
         const degrees = snap ? 60 : 37
-        const end = h.manager.project(grip.clone().sub(center).applyAxisAngle(new Vector3(0, 1, 0), degrees * Math.PI / 180).add(center))
+        const end = rotationTarget(h, degrees)
         h.editor.pointerDown(h.pointer(start.x, start.y)); h.editor.pointerMove(h.pointer(end.x, end.y))
         assert.equal(h.circuit.past.length, 0)
         h.editor.pointerUp(h.pointer(end.x, end.y)); await nextTick()
@@ -836,7 +849,7 @@ test('a mechanical draft retains its explicit world rotation and pose through na
     h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 }, 90); await nextTick(); h.circuit.past = []
     await previewPlacement(h, 'BREADBOARD', new Vector3(12, 0, 0))
     const ghost = placementGhost(h), center = h.manager.gizmoOrigin()!, grip = h.manager.gizmoHandlePosition('rotate-y')!, start = h.manager.project(grip)
-    const end = h.manager.project(grip.clone().sub(center).applyAxisAngle(new Vector3(0, 1, 0), Math.PI / 3).add(center))
+    const end = rotationTarget(h, 60)
     h.editor.pointerDown(h.pointer(start.x, start.y)); h.editor.pointerMove(h.pointer(end.x, end.y)); h.editor.pointerUp(h.pointer(end.x, end.y))
     const pose = ghost.position.clone(), matrix = ghost.matrixWorld.clone()
     assert.ok(Math.abs(ghost.rotation.y * 180 / Math.PI - 90) < 1e-8)
@@ -858,26 +871,26 @@ test('a mechanical draft retains its explicit world rotation and pose through na
   } finally { h.dispose() }
 })
 
-test('180-degree camera orbit is sampled once per new placement draft', async () => {
+test('180-degree camera orbit preserves world yaw in both current and new placement drafts', async () => {
   const h = setup()
   try {
     h.manager.orbit(180)
     await previewPlacement(h, 'POWER_SUPPLY')
     const ghost = placementGhost(h)
-    assert.ok(Math.abs(ghost.rotation.y * 180 / Math.PI - 180) < 1e-8)
+    assert.ok(Math.abs(ghost.rotation.y) < 1e-8)
     h.manager.orbit(180); h.editor.cancel()
     const target = new Vector3(3, 0, -3), p = h.manager.project(target)
     h.editor.pointerMove(h.pointer(p.x, p.y))
     assert.ok(ghost.position.distanceTo(target) < 1e-8)
-    assert.ok(Math.abs(ghost.rotation.y * 180 / Math.PI - 180) < 1e-8, 'camera navigation cannot overwrite an existing draft')
+    assert.ok(Math.abs(ghost.rotation.y) < 1e-8, 'camera navigation cannot overwrite an existing draft')
     assert.equal(h.circuit.past.length, 0); assert.equal(h.circuit.graph!.modules.length, 0)
     h.editor.keydown({ key: 'Escape' } as KeyboardEvent)
     await previewPlacement(h, 'POWER_SUPPLY')
-    assert.ok(Math.abs(placementGhost(h).rotation.y) < 1e-8, 'a new draft samples the new camera heading')
+    assert.ok(Math.abs(placementGhost(h).rotation.y) < 1e-8, 'a new draft starts in the same world frame')
   } finally { h.dispose() }
 })
 
-test('manual Rotate Y adds to the camera-facing draft and survives follow, commit and Undo/Redo', async () => {
+test('manual Rotate Y adds to the world-aligned draft and survives follow, commit and Undo/Redo', async () => {
   const h = setup()
   try {
     h.manager.setViewOrientation('TOP-BACK', false)
@@ -885,25 +898,26 @@ test('manual Rotate Y adds to the camera-facing draft and survives follow, commi
     const ghost = placementGhost(h), center = h.manager.gizmoOrigin()!, grip = h.manager.gizmoHandlePosition('rotate-y')!
     const start = h.manager.project(grip)
     assert.equal(h.manager.pickGizmo(start.x, start.y)?.handle, 'rotate-y')
-    const endPoint = grip.clone().sub(center).applyAxisAngle(new Vector3(0, 1, 0), Math.PI / 3).add(center)
-    const end = h.manager.project(endPoint)
+    const end = rotationTarget(h, 60)
     h.editor.pointerDown(h.pointer(start.x, start.y)); h.editor.pointerMove(h.pointer(end.x, end.y)); h.editor.pointerUp(h.pointer(end.x, end.y))
-    assert.ok(Math.abs(ghost.rotation.y * 180 / Math.PI - 240) < 1e-8)
+    assert.ok(Math.abs(ghost.rotation.y * 180 / Math.PI - 60) < 1e-8)
     h.manager.orbit(45); h.editor.cancel()
     const target = new Vector3(-5, 0, -3), p = h.manager.project(target)
     assert.equal(h.manager.pickGizmo(p.x, p.y), null, 'resumed follow must avoid the transformed gizmo')
     h.editor.pointerMove(h.pointer(p.x, p.y))
     assert.ok(ghost.position.distanceTo(target) < 1e-8)
-    assert.ok(Math.abs(ghost.rotation.y * 180 / Math.PI - 240) < 1e-8)
+    assert.ok(Math.abs(ghost.rotation.y * 180 / Math.PI - 60) < 1e-8)
     assert.equal(h.circuit.past.length, 0)
-    h.editor.pointerDown(h.pointer(p.x, p.y)); await nextTick()
+    const commit = h.pointer(80, 620)
+    assert.equal(h.manager.pickGizmo(commit.clientX, commit.clientY), null, 'commit click avoids the gizmo at the followed pose')
+    h.editor.pointerDown(commit); await nextTick()
     const module = h.circuit.graph!.modules[0], model = h.manager.models.get(module.id)!, matrix = model.matrixWorld.clone()
-    assert.equal(module.rotation, 240); assert.deepEqual(module.position, { x: -5, y: 0, z: -3 }); assert.equal(h.circuit.past.length, 1)
+    assert.equal(module.rotation, 60); assert.deepEqual(module.position, { x: -5, y: 0, z: -3 }); assert.equal(h.circuit.past.length, 1)
     h.manager.orbit(180)
-    assert.equal(module.rotation, 240); assert.ok(model.matrixWorld.equals(matrix), 'committed world pose is independent of navigation')
+    assert.equal(module.rotation, 60); assert.ok(model.matrixWorld.equals(matrix), 'committed world pose is independent of navigation')
     h.circuit.undo(); await nextTick(); assert.equal(h.circuit.graph!.modules.length, 0)
     h.circuit.redo(); await nextTick(); assert.deepEqual(h.circuit.graph!.modules[0], module)
-    assert.ok(Math.abs(h.manager.models.get(module.id)!.rotation.y * 180 / Math.PI - 240) < 1e-8)
+    assert.ok(Math.abs(h.manager.models.get(module.id)!.rotation.y * 180 / Math.PI - 60) < 1e-8)
   } finally { h.dispose() }
 })
 
@@ -916,6 +930,7 @@ test('placement ghost exposes X/Z/XZ/Rotate Y, pauses follow on handles and resu
       const snapshot = h.circuit.snapshot(), history = [...h.circuit.past], future = [...h.circuit.future]
       assert.equal(future.length, 1, 'editing a placement draft must preserve the existing redo branch')
       const ghost = placementGhost(h), original = ghost.position.clone(), camera = h.manager.camera.position.clone()
+      if (handle === 'xz') acquirePlacementGizmo(h)
       assert.equal(h.manager.scene.children.filter((child) => child.name === 'component-transform-gizmo').length, 1)
       for (const part of ['x', 'z', 'xz', 'rotate-y'] as const) assert.ok(h.manager.gizmoHandlePosition(part), part)
       assert.equal(h.manager.gizmoHandlePosition('delete'), null)
@@ -953,7 +968,7 @@ test('placement Rotate Y and movement commit the entire pose atomically and Undo
     await previewPlacement(h)
     const ghost = placementGhost(h), center = h.manager.gizmoOrigin()!, grip = h.manager.gizmoHandlePosition('rotate-y')!
     const start = h.manager.project(grip), radius = grip.distanceTo(center)
-    const end = h.manager.project(center.clone().add(new Vector3(-radius * Math.cos(Math.PI / 3), 0, radius * Math.sin(Math.PI / 3))))
+    const end = rotationTarget(h, 60)
     h.editor.pointerDown(h.pointer(start.x, start.y)); h.editor.pointerMove(h.pointer(end.x, end.y)); h.editor.pointerUp(h.pointer(end.x, end.y)); await nextTick()
     assert.equal(Math.round(ghost.rotation.y * 180 / Math.PI), 60)
     const x = h.manager.gizmoHandlePosition('x')!, a = h.manager.project(x), b = h.manager.project(x.clone().add(new Vector3(1.5, 0, 0)))
@@ -981,6 +996,7 @@ test('Escape/right-click completely discard placement without module deletion', 
       await previewPlacement(h)
       let removals = 0; h.circuit.removeModule = () => { removals++ }
       if (action === 'escape') {
+        acquirePlacementGizmo(h)
         const point = h.manager.project(h.manager.gizmoHandlePosition('xz')!)
         h.editor.pointerDown(h.pointer(point.x, point.y)); h.editor.pointerMove(h.pointer(point.x + 50, point.y + 20))
         h.editor.keydown({ key: 'Escape' } as KeyboardEvent)
@@ -1000,6 +1016,7 @@ test('ghost gestures ignore foreign pointers and discard draft on tool/type/grap
     const h = setup()
     try {
       await previewPlacement(h)
+      acquirePlacementGizmo(h)
       const ghost = placementGhost(h), start = h.manager.project(h.manager.gizmoHandlePosition('xz')!)
       h.editor.pointerDown(h.pointer(start.x, start.y, 7))
       h.editor.pointerMove(h.pointer(start.x + 60, start.y + 30, 8)); h.editor.pointerUp(h.pointer(start.x + 60, start.y + 30, 8))
@@ -1038,16 +1055,13 @@ test('rotating a breadboard draft re-snaps from its gesture origin without accum
     const ghost = placementGhost(h), initial = ghost.position.clone(), center = h.manager.gizmoOrigin()!
     const grip = h.manager.gizmoHandlePosition('rotate-y')!, radius = grip.distanceTo(center), start = h.manager.project(grip)
     h.editor.pointerDown(h.pointer(start.x, start.y))
-    const quarter = h.manager.project(center.clone().add(new Vector3(0, 0, radius)))
+    const quarter = rotationTarget(h, 90), half = rotationTarget(h, 180), threeQuarters = rotationTarget(h, 270), full = rotationTarget(h, 360)
     h.editor.pointerMove(h.pointer(quarter.x, quarter.y))
     assert.equal(Math.round(ghost.rotation.y * 180 / Math.PI), 90)
     assert.equal(breadboardBodiesOverlap(h.circuit.graph!.modules[0], { id: 'PLACE', type: 'BREADBOARD', rotation: 90, position: { x: ghost.position.x, y: ghost.position.y, z: ghost.position.z } }), false, 'mismatched quarter-turn tabs must not enter the placed housing')
-    const half = h.manager.project(center.clone().add(new Vector3(radius, 0, 0)))
     h.editor.pointerMove(h.pointer(half.x, half.y))
     assert.equal(Math.round(ghost.rotation.y * 180 / Math.PI), 180)
-    const threeQuarters = h.manager.project(center.clone().add(new Vector3(0, 0, -radius)))
     h.editor.pointerMove(h.pointer(threeQuarters.x, threeQuarters.y))
-    const full = h.manager.project(center.clone().add(new Vector3(-radius, 0, 0)))
     h.editor.pointerMove(h.pointer(full.x, full.y)); h.editor.pointerUp(h.pointer(full.x, full.y))
     assert.equal(Math.round(ghost.rotation.y * 180 / Math.PI), 0)
     assert.deepEqual(ghost.position.toArray(), initial.toArray(), 'a full turn restores the original compatible dock without drift')
@@ -1062,7 +1076,7 @@ test('rotated placement Breadboard X/Z drags prevent overlap while keeping the o
       h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 }); await nextTick(); h.circuit.past = []
       await previewPlacement(h, 'BREADBOARD', new Vector3(axis === 'x' ? 9 : 0, 0, axis === 'z' ? 9 : 0))
       const ghost = placementGhost(h), center = h.manager.gizmoOrigin()!, grip = h.manager.gizmoHandlePosition('rotate-y')!
-      const start = h.manager.project(grip), radius = grip.distanceTo(center), quarter = h.manager.project(center.clone().add(new Vector3(0, 0, radius)))
+      const start = h.manager.project(grip), quarter = rotationTarget(h, 90)
       h.editor.pointerDown(h.pointer(start.x, start.y)); h.editor.pointerMove(h.pointer(quarter.x, quarter.y)); h.editor.pointerUp(h.pointer(quarter.x, quarter.y))
       assert.equal(Math.round(ghost.rotation.y * 180 / Math.PI), 90)
       const handle = h.manager.gizmoHandlePosition(axis)!, a = h.manager.project(handle)
@@ -1083,6 +1097,7 @@ test('only the owning pointercancel can discard a ghost transform gesture', asyn
   const h = setup()
   try {
     await previewPlacement(h)
+    acquirePlacementGizmo(h)
     const ghost = placementGhost(h), start = h.manager.project(h.manager.gizmoHandlePosition('xz')!)
     h.editor.pointerDown(h.pointer(start.x, start.y, 7)); h.editor.pointerMove(h.pointer(start.x + 60, start.y + 30, 7))
     const pose = ghost.position.toArray()
@@ -1130,7 +1145,7 @@ test('rotation survives resumed cursor follow and normal clicks commit a full po
       await previewPlacement(h, type)
       const ghost = placementGhost(h), center = h.manager.gizmoOrigin()!, grip = h.manager.gizmoHandlePosition('rotate-y')!
       const start = h.manager.project(grip), radius = grip.distanceTo(center)
-      const end = h.manager.project(center.clone().add(new Vector3(-radius * Math.cos(Math.PI / 3), 0, radius * Math.sin(Math.PI / 3))))
+      const end = rotationTarget(h, 60)
       h.editor.pointerMove(h.pointer(start.x, start.y)); h.editor.pointerDown(h.pointer(start.x, start.y))
       h.editor.pointerMove(h.pointer(end.x, end.y)); h.editor.pointerUp(h.pointer(end.x, end.y))
       const expectedRotation = type === 'BREADBOARD' ? 90 : 60
@@ -1164,6 +1179,7 @@ test('only Delete is hidden from placement rendering/picking and handle hover ta
     const hidden = h.manager.project(root.localToWorld(new Vector3(1.42, 0, 1.42)))
     assert.notEqual(h.manager.pickGizmo(hidden.x, hidden.y)?.handle, 'delete')
     const ghost = placementGhost(h), pose = ghost.position.toArray()
+    acquirePlacementGizmo(h)
     const calls: string[] = [], originalHover = h.manager.hoverGizmo, originalGround = h.manager.groundPoint
     h.manager.hoverGizmo = (x, y) => { calls.push('gizmo'); return originalHover(x, y) }
     h.manager.groundPoint = (x, y, height) => { calls.push('ground'); return originalGround(x, y, height) }
@@ -1185,7 +1201,7 @@ test('rotated Breadboard cursor follow keeps current rotation in docking and ant
     h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 }); await nextTick(); h.circuit.past = []
     await previewPlacement(h, 'BREADBOARD', new Vector3(0, 0, 9))
     const ghost = placementGhost(h), center = h.manager.gizmoOrigin()!, grip = h.manager.gizmoHandlePosition('rotate-y')!
-    const radius = grip.distanceTo(center), start = h.manager.project(grip), quarter = h.manager.project(center.clone().add(new Vector3(0, 0, radius)))
+    const start = h.manager.project(grip), quarter = rotationTarget(h, 90)
     h.editor.pointerDown(h.pointer(start.x, start.y)); h.editor.pointerMove(h.pointer(quarter.x, quarter.y)); h.editor.pointerUp(h.pointer(quarter.x, quarter.y))
     const end = h.manager.project(new Vector3(0.1, 0, 1))
     assert.equal(h.manager.pickGizmo(end.x, end.y), null)
@@ -1202,6 +1218,7 @@ test('placement handle proximity freezes follow before picking and hysteresis pr
       const h = setup()
       try {
         await previewPlacement(h, type)
+        if (handle === 'xz') acquirePlacementGizmo(h)
         const ghost = placementGhost(h), initial = ghost.position.clone()
         const target = h.manager.project(h.manager.gizmoHandlePosition(handle)!)
         // Approach the outer edge from outside the instrument, avoiding other handles.
@@ -1254,7 +1271,7 @@ test('placement capture follows the visible Y arc and does not freeze over its m
       const ghost = placementGhost(h), initial = ghost.position.clone()
       const root = h.manager.scene.getObjectByName('component-transform-gizmo')!
       const ring = root.children.find((group) => group.userData.transformHandle === 'rotate-y')!
-      const angle = visible ? 1.1 : 2.2
+      const angle = visible ? 1.1 : 5.5
       const point = h.manager.project(ring.localToWorld(new Vector3(Math.cos(angle) * 1.35, 0, Math.sin(angle) * 1.35)))
       const origin = h.manager.project(h.manager.gizmoOrigin()!), dx = point.x - origin.x, dy = point.y - origin.y, length = Math.hypot(dx, dy)
       const near = { x: point.x + dx / length * 22, y: point.y + dy / length * 22 }
@@ -1265,12 +1282,13 @@ test('placement capture follows the visible Y arc and does not freeze over its m
   }
 })
 
-test('small-step approach can acquire every placement handle without the unified pose chasing the cursor', async () => {
+test('an acquired placement overlay keeps every handle reachable through a small-step approach', async () => {
   for (const type of ['CLOCK', 'BREADBOARD', 'OSCILLOSCOPE', 'GENERATOR', 'POWER_SUPPLY']) {
     for (const handle of ['x', 'z', 'xz', 'rotate-y'] as const) {
       const h = setup()
       try {
         h.workspace.snap = false; await previewPlacement(h, type)
+        acquirePlacementGizmo(h)
         const ghost = placementGhost(h), start = h.manager.project(ghost.position)
         const target = h.manager.project(h.manager.gizmoHandlePosition(handle)!)
         for (let step = 1; step <= 100; step++) h.editor.pointerMove(h.pointer(start.x + (target.x - start.x) * step / 100, start.y + (target.y - start.y) * step / 100))
@@ -1288,6 +1306,7 @@ test('placement translation clears the approach corridor at its previous screen 
     const h = setup()
     try {
       h.workspace.snap = false; await previewPlacement(h)
+      acquirePlacementGizmo(h)
       const ghost = placementGhost(h), start = h.manager.project(ghost.position)
       const target = h.manager.project(h.manager.gizmoHandlePosition(handle)!)
       for (let step = 1; step <= 100; step++) h.editor.pointerMove(h.pointer(start.x + (target.x - start.x) * step / 100, start.y + (target.y - start.y) * step / 100))

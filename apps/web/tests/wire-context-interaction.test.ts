@@ -15,19 +15,23 @@ async function setupWire() {
   return { h, board, wire, p }
 }
 
-test('right-click on an existing wire opens its menu before Orbit without a graph or history mutation', async () => {
+test('stationary right release on an existing wire opens its menu while its press remains available for Orbit', async () => {
   const { h, wire, p } = await setupWire()
   try {
     const before = h.circuit.exportGraph(), camera = h.manager.camera.position.clone()
     let consumed = false
     const event = h.pointer(p.x, p.y, 1, 2); event.stopImmediatePropagation = () => { consumed = true }
     h.editor.pointerDown(event); await nextTick()
+    assert.equal(Boolean(h.editor.wireRouting.contextMenuState.value), false, 'right press waits for release')
+    assert.equal(consumed, false, 'OrbitControls receives the right press')
+    h.editor.contextMenu({ ...event, type: 'contextmenu' } as unknown as MouseEvent)
+    assert.equal(Boolean(h.editor.wireRouting.contextMenuState.value), false, 'native contextmenu cannot bypass release')
+    h.editor.pointerUp(event)
     assert.ok(h.editor.wireRouting.contextMenuState.value, 'wire hit opens a context menu')
     assert.deepEqual(h.editor.wireRouting.contextMenuState.value!.wire, wire)
-    assert.equal(consumed, true, 'OrbitControls must not see this press')
+    assert.equal(consumed, false)
     assert.equal(h.circuit.exportGraph(), before); assert.equal(h.circuit.past.length, 0)
     h.editor.contextMenu({ ...event, type: 'contextmenu' } as unknown as MouseEvent)
-    h.editor.pointerUp(event)
     assert.ok(h.manager.camera.position.equals(camera))
     h.editor.keydown({ key: 'Escape', preventDefault() {}, stopPropagation() {} } as KeyboardEvent)
     assert.equal(h.editor.wireRouting.contextMenuState.value, null)
@@ -59,7 +63,8 @@ test('drawing, placement and zoom cancellation win over wire menus while empty r
 test('editor pointer priority commits and repeats duplicate previews; invalid click and right cancel never open another menu', async () => {
   const { h, board, wire, p } = await setupWire()
   try {
-    h.editor.pointerDown(h.pointer(p.x, p.y, 1, 2))
+    const open = h.pointer(p.x, p.y, 1, 2)
+    h.editor.pointerDown(open); h.editor.pointerUp(open)
     assert.equal(h.editor.wireRouting.menuDuplicate(), true)
     assert.equal(h.editor.wireRouting.duplicatePreviewState.value.active, true)
     assert.equal(h.circuit.graph!.connections.length, 1); assert.equal(h.circuit.past.length, 0)
@@ -80,12 +85,11 @@ test('editor pointer priority commits and repeats duplicate previews; invalid cl
     assert.equal(h.editor.wireRouting.duplicatePreviewState.value.active, false)
     assert.equal(h.editor.wireRouting.contextMenuState.value, null)
     assert.equal(h.editor.wireRouting.canPaste.value, true)
-    h.editor.pointerDown(right); assert.ok(h.editor.wireRouting.contextMenuState.value)
+    h.editor.pointerDown(right); h.editor.pointerUp(right); assert.ok(h.editor.wireRouting.contextMenuState.value)
     h.editor.wireRouting.menuPaste()
-    assert.equal(h.circuit.graph!.connections.length, 2, 'Paste opens a ghost without connecting')
-    assert.equal(h.editor.wireRouting.duplicatePreviewState.value.candidate!.wire.source, `${board}.contact:terminal:A:03`)
-    h.editor.pointerDown(h.pointer(p.x, p.y)); await nextTick()
     assert.equal(h.circuit.graph!.connections.length, 3); assert.equal(h.circuit.past.length, 2)
+    assert.equal(h.circuit.graph!.connections[2].source, `${board}.contact:terminal:A:03`)
+    assert.equal(h.editor.wireRouting.duplicatePreviewState.value.active, false, 'menu Paste commits without a confirmation ghost')
     h.editor.keydown({ key: 'Escape', preventDefault() {}, stopPropagation() {}, stopImmediatePropagation() {} } as KeyboardEvent)
     assert.equal(h.editor.wireRouting.duplicatePreviewState.value.active, false); assert.equal(h.editor.wireRouting.canPaste.value, true)
   } finally { h.dispose() }

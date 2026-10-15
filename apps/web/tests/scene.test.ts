@@ -115,7 +115,7 @@ test('fit entire circuit frames remote rotated components without changing graph
   } finally { manager.dispose() }
 })
 
-test('selected models expose pickable adjacent gizmo handles, stable screen scale and live rotation', () => {
+test('selected models expose pickable pivot gizmo handles, stable screen scale and live rotation', () => {
   const manager: TransformScene = createSceneManager({ renderer: { setSize() {}, render() {}, dispose() {} }, requestFrame: () => 1, cancelFrame() {} })
   try {
     manager.resize(1000, 700)
@@ -177,7 +177,7 @@ test('upright bench supply has two adjustment knobs, two output sockets and no l
   } finally { disposeObject(supply) }
 })
 
-test('Y arc follows preview yaw while the inward grip clears fixed world handles and the gesture center stays stable', () => {
+test('Y arc and left grip stay fixed while preview yaw changes around the object pivot', () => {
   const manager = createSceneManager({ renderer: { setSize() {}, render() {}, dispose() {} }, requestFrame: () => 1, cancelFrame() {} })
   try {
     manager.resize(1000, 700)
@@ -190,8 +190,9 @@ test('Y arc follows preview yaw while the inward grip clears fixed world handles
     for (const angle of [45, 90, 180, 270]) {
       manager.previewRotation('B', angle)
       const grip = manager.gizmoHandlePosition('rotate-y')!
-      assert.ok(Math.abs(ring.rotation.y - angle * Math.PI / 180) < .001, 'the rotation arc still follows object yaw')
-      assert.ok(Math.abs(grip.distanceTo(center) - radial.length()) < .001, 'the inward grip keeps its orbit radius when avoiding the fixed buttons')
+      assert.ok(grip.distanceTo(center.clone().add(radial)) < .001, 'the grip cannot orbit around the overlay during model rotation')
+      const pivot = manager.project(center), point = manager.project(grip)
+      assert.ok(Math.abs(point.y - pivot.y) < .001 && point.x < pivot.x, 'the knob remains at nine o\'clock')
       const knob = ring.getObjectByName('rotation-knob')!
       const radius = Math.hypot(knob.position.x, knob.position.z) / 1.35
       assert.ok(radius >= .75 && radius <= .85, 'the grip stays safely inside the arc')
@@ -207,7 +208,7 @@ test('Y arc follows preview yaw while the inward grip clears fixed world handles
     }
     assert.equal(graph.modules[0].rotation, undefined, 'preview must leave circuit truth unchanged')
     manager.syncGraph(graph)
-    assert.ok(manager.gizmoHandlePosition('rotate-y')!.distanceTo(center.clone().add(radial)) < 0.001, 'cancel restores the original grip angle')
+    assert.ok(manager.gizmoHandlePosition('rotate-y')!.distanceTo(center.clone().add(radial)) < 0.001, 'rollback also retains the fixed grip angle')
   } finally { manager.dispose() }
 })
 
@@ -233,12 +234,18 @@ test('gizmo hover highlights only its handle and disposal releases tool geometry
   manager.dispose(); assert.equal(released, geometry); assert.equal(releasedMaterials, materials.size, 'all face, bevel and border materials are released once')
 })
 
-test('gizmo checks neighbors for every candidate even with a single-use model iterator', () => {
+test('gizmo remains on its pivot when neighboring models occupy every former candidate', () => {
   const models = new Map<string, Group>()
   for (const [id, x, z] of [['A', 0, 0], ['B', 0, 3], ['C', 3, 0]] as const) { const model = new Group(); model.userData = { id, size: [2, 1, 2] }; model.position.set(x, 0, z); models.set(id, model) }
   const camera = new PerspectiveCamera(42, 1000 / 700, 0.1, 150); camera.position.set(0, 11, 10); camera.lookAt(0, 0, 0)
   const gizmo = createComponentTransformGizmo()
-  try { gizmo.update(models.get('A'), models.values(), camera, 1000, 700); assert.ok(gizmo.root.position.x < 0, 'both front and right are occupied; the clear left candidate should win') }
+  try {
+    gizmo.update(models.get('A'), models.values(), camera, 1000, 700)
+    assert.ok(gizmo.origin()!.equals(new Vector3()), 'neighbor locations cannot displace the pivot')
+    models.get('B')!.position.set(0, 0, 0)
+    gizmo.update(models.get('A'), models.values(), camera, 1000, 700)
+    assert.ok(gizmo.origin()!.equals(new Vector3()), 'even an overlapping neighbor cannot move the overlay')
+  }
   finally { disposeObject(gizmo.root) }
 })
 
@@ -252,7 +259,7 @@ test('active translation maintains gizmo pixel size as the model approaches the 
   } finally { manager.dispose() }
 })
 
-test('gizmo avoids a visible information window in canvas coordinates', () => {
+test('information-window obstacles cannot displace a pivot-anchored gizmo', () => {
   const manager = createSceneManager({ renderer: { setSize() {}, render() {}, dispose() {} }, requestFrame: () => 1, cancelFrame() {} }) as ReturnType<typeof createSceneManager> & { setGizmoObstacles?: (rects: { left: number; top: number; right: number; bottom: number }[]) => void }
   try {
     manager.resize(1000, 700); manager.syncGraph({ schema_version: '1.0', circuit_id: 'panel', modules: [{ id: 'A', type: 'CLOCK' }], connections: [] }); manager.highlight('A')
@@ -260,34 +267,35 @@ test('gizmo avoids a visible information window in canvas coordinates', () => {
     assert.equal(typeof manager.setGizmoObstacles, 'function')
     manager.setGizmoObstacles!([{ left: p.x - 65, top: p.y - 60, right: p.x + 65, bottom: p.y + 60 }])
     const moved = manager.project(manager.gizmoHandlePosition('xz')!)
-    assert.ok(Math.abs(moved.x - p.x) > 120 || Math.abs(moved.y - p.y) > 115, 'choose a clear screen location outside the window')
+    assert.ok(Math.hypot(moved.x - p.x, moved.y - p.y) < .001, 'panel layout must not change the object pivot or button layout')
   } finally { manager.dispose() }
 })
 
-test('adjacent gizmo clears the projected silhouette of a tall supply', () => {
+test('tall supply keeps every overlay handle pickable at its pivot', () => {
   const manager = createSceneManager({ renderer: { setSize() {}, render() {}, dispose() {} }, requestFrame: () => 1, cancelFrame() {} })
   try {
     manager.resize(1280, 650)
     manager.syncGraph({ schema_version: '1.0', circuit_id: 'tall', modules: [{ id: 'P', type: 'POWER_SUPPLY' }], connections: [] })
     manager.fitCircuit(); manager.highlight('P')
-    const bounds = new Box3().setFromObject(manager.models.get('P')!), points = []
-    for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) points.push(manager.project(new Vector3(x, y, z)))
-    const left = Math.min(...points.map((p) => p.x)), right = Math.max(...points.map((p) => p.x))
-    const top = Math.min(...points.map((p) => p.y)), bottom = Math.max(...points.map((p) => p.y))
-    const center = manager.project(manager.gizmoOrigin()!)
-    assert.ok(center.x + 60 < left || center.x - 60 > right || center.y + 55 < top || center.y - 55 > bottom, 'ring must not overlap the selected supply screen or controls')
+    assert.ok(manager.gizmoOrigin()!.distanceTo(manager.models.get('P')!.position) < .001)
+    for (const handle of ['x', 'z', 'xz', 'rotate-y', 'delete'] as const) {
+      const point = manager.project(manager.gizmoHandlePosition(handle)!)
+      assert.equal(manager.pickGizmo(point.x, point.y)?.handle, handle, 'the selected housing cannot obscure overlay picking')
+    }
   } finally { manager.dispose() }
 })
 
-test('rotated supply keeps the full gizmo within a small canvas', () => {
+test('rotated supply keeps its gizmo at the projected pivot in a small canvas', () => {
   const manager = createSceneManager({ renderer: { setSize() {}, render() {}, dispose() {} }, requestFrame: () => 1, cancelFrame() {} })
   try {
     manager.resize(595, 390)
     const graph: CircuitGraph = { schema_version: '1.0', circuit_id: 'small', modules: [{ id: 'P', type: 'POWER_SUPPLY' }], connections: [] }
     manager.syncGraph(graph); manager.orbit(-45); manager.fitCircuit(); manager.highlight('P')
     manager.syncGraph({ ...graph, modules: [{ ...graph.modules[0], rotation: 120 }] })
-    const center = manager.project(manager.gizmoOrigin()!)
-    assert.ok(center.x >= 60 && center.x <= 535 && center.y >= 55 && center.y <= 335, 'handles and ring need screen clearance after yaw changes')
+    const center = manager.project(manager.gizmoOrigin()!), pivot = manager.project(manager.models.get('P')!.position)
+    assert.ok(Math.hypot(center.x - pivot.x, center.y - pivot.y) < .001, 'viewport changes cannot offset the overlay from the model')
+    const left = manager.project(manager.gizmoHandlePosition('rotate-y')!)
+    assert.ok(Math.abs(left.y - center.y) < .001 && left.x < center.x, 'the left grip remains screen-oriented after yaw')
   } finally { manager.dispose() }
 })
 
@@ -316,7 +324,7 @@ test('placement reuses the ghost while moving; cancel removes it and releases it
   manager.dispose()
 })
 
-test('placement model and gizmo follow in the same frame with a stable offset and cached layout', () => {
+test('placement model and gizmo follow in the same frame at the pivot without layout reads', () => {
   let nextFrame: FrameRequestCallback | undefined, requests = 0
   const manager = createSceneManager({ renderer: { setSize() {}, render() {}, dispose() {} }, requestFrame(callback) { nextFrame = callback; return ++requests }, cancelFrame() { nextFrame = undefined } })
   const draw = () => { const callback = nextFrame; nextFrame = undefined; callback?.(0) }
@@ -324,12 +332,12 @@ test('placement model and gizmo follow in the same frame with a stable offset an
     manager.resize(1000, 700); manager.setGhost('CLOCK', new Vector3(), 0); draw()
     const ghost = manager.scene.children.find((item) => item.userData.id === 'PLACE')!
     const root = manager.scene.getObjectByName('component-transform-gizmo')!
-    const offset = root.position.clone().sub(ghost.position), bounds = ghost.userData.visualBounds
+    const bounds = ghost.userData.visualBounds
     let layoutReads = 0
     Object.defineProperty(ghost.userData, 'visualBounds', { configurable: true, get() { layoutReads++; return bounds } })
     for (let i = 1; i <= 100; i++) {
       manager.setGhost('CLOCK', new Vector3(i / 100, 0, -i / 500), 0); draw()
-      assert.ok(root.position.clone().sub(ghost.position).distanceTo(offset) < 0.00001, 'the rendered gizmo must move with the latest ghost')
+      assert.ok(root.position.distanceTo(ghost.position) < 0.00001, 'the rendered gizmo must use the latest ghost pivot')
       manager.gizmoOrigin(); manager.gizmoHandlePosition('x')
     }
     assert.equal(layoutReads, 0, 'ordinary follow and repeated picking queries must not solve candidates again')
@@ -337,41 +345,43 @@ test('placement model and gizmo follow in the same frame with a stable offset an
   } finally { manager.dispose() }
 })
 
-test('placement layout stays sticky under small score changes and relayouts for camera, viewport, yaw and obstacles', () => {
+test('placement overlay follows camera and viewport changes without adaptive layout or bounds reads', () => {
   const manager = createSceneManager({ renderer: { setSize() {}, render() {}, dispose() {} }, requestFrame: () => 1, cancelFrame() {} })
   try {
     manager.resize(1000, 700); manager.setGhost('BREADBOARD', new Vector3())
     const ghost = manager.scene.children.find((item) => item.userData.id === 'PLACE')!
     const bounds = ghost.userData.visualBounds; let layoutReads = 0
     Object.defineProperty(ghost.userData, 'visualBounds', { configurable: true, get() { layoutReads++; return bounds } })
-    const initial = manager.gizmoOrigin()!.clone().sub(ghost.position), solved = layoutReads
+    const assertPivot = () => {
+      assert.ok(manager.gizmoOrigin()!.distanceTo(ghost.position) < .001)
+      const pivot = manager.project(ghost.position), grip = manager.project(manager.gizmoHandlePosition('rotate-y')!)
+      assert.ok(Math.abs(grip.x - pivot.x + 45.36) < .001 && Math.abs(grip.y - pivot.y) < .001, 'camera changes retain the same nine-o\'clock grip')
+    }
     for (let i = 0; i < 80; i++) {
       manager.setGhost('BREADBOARD', new Vector3(i % 2 ? 0.02 : -0.02, 0, i % 2 ? 0.01 : -0.01), 0)
-      assert.ok(manager.gizmoOrigin()!.sub(ghost.position).distanceTo(initial) < 0.00001, 'tiny score changes must not flip the chosen side')
+      assertPivot()
     }
-    assert.equal(layoutReads, solved)
-    const changed = (action: () => void) => { const count = layoutReads; action(); manager.gizmoOrigin(); assert.ok(layoutReads > count); const current = layoutReads; manager.gizmoOrigin(); assert.equal(layoutReads, current) }
-    changed(() => { manager.camera.position.set(9, 11, 1); manager.camera.lookAt(0, 0, 0) })
-    changed(() => manager.resize(800, 600))
-    changed(() => manager.setGhost('BREADBOARD', ghost.position.clone(), 90))
+    manager.camera.position.set(9, 11, 1); manager.camera.lookAt(0, 0, 0); assertPivot()
+    manager.resize(800, 600); assertPivot()
+    manager.setGhost('BREADBOARD', ghost.position.clone(), 90); assertPivot()
     const p = manager.project(manager.gizmoOrigin()!)
-    changed(() => manager.setGizmoObstacles([{ left: p.x - 70, top: p.y - 65, right: p.x + 70, bottom: p.y + 65 }]))
-    const relocated = manager.project(manager.gizmoOrigin()!)
-    assert.ok(Math.abs(relocated.x - p.x) > 130 || Math.abs(relocated.y - p.y) > 120, 'an obstructed candidate must actually move out of the way')
+    manager.setGizmoObstacles([{ left: p.x - 70, top: p.y - 65, right: p.x + 70, bottom: p.y + 65 }]); assertPivot()
+    assert.equal(layoutReads, 0, 'pivot overlay never solves model-clearance candidates')
   } finally { manager.dispose() }
 })
 
-test('placement yields an invalid candidate to a clear neighbor alternative regardless of hysteresis', () => {
+test('adding a neighbor cannot relocate the placement pivot or its grip', () => {
   const manager = createSceneManager({ renderer: { setSize() {}, render() {}, dispose() {} }, requestFrame: () => 1, cancelFrame() {} })
   try {
     manager.resize(1000, 700); manager.setGhost('CLOCK', new Vector3())
-    const origin = manager.gizmoOrigin()!
+    const origin = manager.gizmoOrigin()!, grip = manager.gizmoHandlePosition('rotate-y')!
     manager.syncGraph({ schema_version: '1.0', circuit_id: 'blocked', modules: [{ id: 'L', type: 'LED', position: { x: origin.x, y: 0, z: origin.z } }], connections: [] })
-    assert.ok(manager.gizmoOrigin()!.distanceTo(origin) > 0.5, 'a new graph neighbor must not remain under the placement gizmo')
+    assert.ok(manager.gizmoOrigin()!.distanceTo(origin) < .001, 'the pivot remains attached to the draft')
+    assert.ok(manager.gizmoHandlePosition('rotate-y')!.distanceTo(grip) < .001, 'neighbor changes cannot relocate the knob')
   } finally { manager.dispose() }
 })
 
-test('placement cached follow relayouts before its handles enter the model projected bounds', () => {
+test('placement movement updates the pivot and picking without reading the model silhouette', () => {
   const manager = createSceneManager({ renderer: { setSize() {}, render() {}, dispose() {} }, requestFrame: () => 1, cancelFrame() {} })
   try {
     manager.resize(1000, 700); manager.setGhost('CLOCK', new Vector3())
@@ -379,11 +389,14 @@ test('placement cached follow relayouts before its handles enter the model proje
     const bounds = ghost.userData.visualBounds; let solves = 0
     Object.defineProperty(ghost.userData, 'visualBounds', { configurable: true, get() { solves++; return bounds } })
     manager.setGhost('CLOCK', new Vector3(-2.3, 0, 0))
-    const origin = manager.project(manager.gizmoOrigin()!), box = new Box3().setFromObject(ghost), projected = []
-    for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) projected.push(manager.project(new Vector3(x, y, z)))
-    const left = Math.min(...projected.map((p) => p.x)), right = Math.max(...projected.map((p) => p.x)), top = Math.min(...projected.map((p) => p.y)), bottom = Math.max(...projected.map((p) => p.y))
-    assert.ok(origin.x + 60 <= left || origin.x - 60 >= right || origin.y + 55 <= top || origin.y - 55 >= bottom, 'pose follow must invalidate a cache that no longer clears the model')
-    assert.ok(solves > 0)
+    assert.ok(manager.gizmoOrigin()!.distanceTo(new Vector3(-2.3, 0, 0)) < .001)
+    const axis = manager.project(manager.gizmoHandlePosition('x')!)
+    manager.hoverGizmo(axis.x, axis.y)
+    for (const handle of ['x', 'z', 'xz', 'rotate-y'] as const) {
+      const point = manager.project(manager.gizmoHandlePosition(handle)!)
+      assert.equal(manager.pickGizmo(point.x, point.y)?.handle, handle)
+    }
+    assert.equal(solves, 0, 'follow does not depend on changing model bounds')
   } finally { manager.dispose() }
 })
 

@@ -21,6 +21,9 @@ import { Box3, Line3, Sphere } from 'three'
 import { createComponentTransformGizmo, type GizmoObstacle, type TransformHandle } from './ComponentTransformGizmo'
 import { applyPowerSupplyControls, supplyControlPatch, type SupplyControl } from './PowerSupplyModel'
 import { createWireLayer } from './WireLayer'
+import { createSelectionPreview } from './SelectionPreview'
+import type { EditorSelection } from '../editor/selection'
+import { projectedTranslationDelta } from '../geometry/transformDrag'
 import { projectedObjectIntersectsRect, type ScreenRect } from './ProjectedSelection'
 import { CAMERA_NEAR, CAMERA_FAR, ZOOM_MIN, ZOOM_MAX, ZOOM_DEFAULT, MIN_ZOOM_REFERENCE_DISTANCE, cameraNearForDistance, clampZoom } from '../config/workbenchViewport'
 
@@ -83,6 +86,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
   contactHover.name = 'contact-hover'; contactHover.visible = false; contactHover.userData.ignorePick = true
   scene.add(grid, ambient, light, fillLight, content, wires, wireLayer.tools, contactHover)
   const gizmo = createComponentTransformGizmo(); scene.add(gizmo.root)
+  const selectionPreview = createSelectionPreview(); scene.add(selectionPreview.root)
   let gizmoObstacles: GizmoObstacle[] = []
   let gizmoLayoutRevision = 0
   const gizmoModel = () => ghost ?? (highlightedId ? models.get(highlightedId) : undefined)
@@ -331,8 +335,8 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     setGizmoObstacles(areas: GizmoObstacle[]) { if (!disposed && JSON.stringify(areas) !== JSON.stringify(gizmoObstacles)) { gizmoObstacles = areas.map((area) => ({ ...area })); schedule() } },
     gizmoHandlePosition(handle: TransformHandle) { if (disposed) return null; updateGizmo(); return gizmo.position(handle) },
     gizmoOrigin() { if (disposed) return null; updateGizmo(); return gizmo.origin() },
-    pickGizmo(x: number, y: number) { if (!validPointer(x, y)) return null; updateGizmo(); ray(x, y); return gizmo.pick(raycaster) },
-    hoverGizmo(x: number, y: number) { if (!validPointer(x, y)) return null; updateGizmo(); ray(x, y); const handle = gizmo.pick(raycaster)?.handle ?? null; gizmo.capturePlacement(x, y, camera, width, height); gizmo.hover(handle); schedule(); return handle },
+    pickGizmo(x: number, y: number) { if (!validPointer(x, y)) return null; updateGizmo(); ray(x, y); const hit = gizmo.pick(raycaster); return ghost && hit?.handle === 'xz' && !gizmo.placementFollowBlocked() ? null : hit },
+    hoverGizmo(x: number, y: number) { if (!validPointer(x, y)) return null; updateGizmo(); ray(x, y); let handle = gizmo.pick(raycaster)?.handle ?? null; gizmo.capturePlacement(x, y, camera, width, height); if (ghost && handle === 'xz' && !gizmo.placementFollowBlocked()) handle = null; gizmo.hover(handle); schedule(); return handle },
     placementFollowBlocked() { return !!ghost && gizmo.placementFollowBlocked() },
     clearGizmoHover() { if (disposed) return; gizmo.clearPlacementCapture(); gizmo.hover(null); schedule() },
     activateGizmo(handle: TransformHandle | null) { if (disposed) return; updateGizmo(); gizmo.activate(handle, gizmoModel()); schedule() },
@@ -440,7 +444,9 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       if (disposed) return { moduleIds: [], wires: [] }
       camera.updateMatrixWorld(); wireLayer.flush(); scene.updateMatrixWorld(true)
       return {
-        moduleIds: [...models].filter(([, model]) => projectedObjectIntersectsRect(model, camera, width, height, rect)).map(([id]) => id),
+        // Boards are support surfaces under the selected content. They remain
+        // directly pickable, but a rectangle must never pull in that background.
+        moduleIds: [...models].filter(([id, model]) => !getBreadboardTopology(modules.get(id)!.type) && projectedObjectIntersectsRect(model, camera, width, height, rect)).map(([id]) => id),
         wires: wireLayer.selectionMeshes().filter(({ mesh }) => projectedObjectIntersectsRect(mesh, camera, width, height, rect)).map(({ wire }) => wire),
       }
     },
@@ -511,6 +517,8 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     clearWireDrawing() { wireLayer.clearDrawing(); schedule() },
     previewWireDuplicate(wire: WireIdentity, visual: WireVisual, valid: boolean, fallback?: SolvedWireRoute | null) { wireLayer.previewDuplicate(wire, visual, valid, fallback); schedule() },
     clearWireDuplicate() { wireLayer.clearDuplicate(); schedule() },
+    setSelectionPreview(graph: CircuitGraph, selection: EditorSelection, valid: boolean, fallbackRoutes?: Parameters<ReturnType<typeof createSelectionPreview>['show']>[3]) { if (!disposed) { selectionPreview.show(graph, selection, valid, fallbackRoutes); schedule() } },
+    clearSelectionPreview() { if (!disposed) { selectionPreview.clear(); schedule() } },
     hoverWireEdit(hit: WireEditPick | null) { wireLayer.hover(hit?.wire ?? null); wireLayer.selectHandle(hit?.kind === 'bend' ? hit.index : null); wireLayer.selectSegment(hit?.kind === 'segment' ? hit.index : null); schedule() },
     pickWireEdit(x: number, y: number, wire: WireIdentity): WireEditPick | null {
       if (!validPointer(x, y)) return null
@@ -568,6 +576,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       return { x: point.x, y: point.y, z: point.z }
     },
     groundPoint(x: number, y: number, elevation = 0) { if (!validPointer(x, y) || !Number.isFinite(elevation)) return null; ray(x, y); return planeHit(elevation) },
+    transformTranslation(pivot: Vector3, start: { x: number; y: number }, end: { x: number; y: number }, axis: 'x' | 'z' | 'xz') { return projectedTranslationDelta(camera, width, height, pivot, start, end, axis) },
     panGrab(anchor: Vector3, x: number, y: number) {
       if (!validPointer(x, y) || suspended || !anchor.toArray().every(Number.isFinite)) return
       ray(x, y)
@@ -739,6 +748,6 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     finishTransition,
     setViewOrientation,
     suspend(value: boolean) { suspended = value; if (value && frame !== null) { cancelFrame(frame); frame = null }; updateControlsEnabled(); if (!value) schedule() },
-    dispose() { if (disposed) return; disposed = true; cancelTransition(); gizmo.update(undefined, [], camera, width, height); if (frame !== null) cancelFrame(frame); frame = null; controls?.removeEventListener('change', viewChanged); controls?.removeEventListener('start', cancelTransition); controls?.dispose(); removeActiveOutline(); clearMultiOutlines(); wireLayer.dispose(); clearMountPreview(); mountMarkerGeometry.dispose(); mountMarkerValid.dispose(); mountMarkerInvalid.dispose(); disposeObject(scene); models.clear(); modules.clear(); ghost = null; highlightedId = null; gizmoObstacles = []; scene.environment = null; studio?.dispose(); scene.clear(); renderer.dispose() },
+    dispose() { if (disposed) return; disposed = true; cancelTransition(); gizmo.update(undefined, [], camera, width, height); if (frame !== null) cancelFrame(frame); frame = null; controls?.removeEventListener('change', viewChanged); controls?.removeEventListener('start', cancelTransition); controls?.dispose(); removeActiveOutline(); clearMultiOutlines(); selectionPreview.dispose(); wireLayer.dispose(); clearMountPreview(); mountMarkerGeometry.dispose(); mountMarkerValid.dispose(); mountMarkerInvalid.dispose(); disposeObject(scene); models.clear(); modules.clear(); ghost = null; highlightedId = null; gizmoObstacles = []; scene.environment = null; studio?.dispose(); scene.clear(); renderer.dispose() },
   }
 }

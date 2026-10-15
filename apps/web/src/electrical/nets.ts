@@ -7,6 +7,16 @@ import { validateMountBindings } from './mounting'
 export interface ResolvedNet { id: string; endpoints: string[]; drivers: string[]; inputs: string[]; width: number }
 export interface ElectricalNetResolution { nets: ResolvedNet[]; endpointNetIds: Record<string, string>; unresolved: string[] }
 
+export function assertResolvedNetAllowed(graph: CircuitGraph, net: ResolvedNet): void {
+  if (net.drivers.length > 1 && net.drivers.some(endpoint => resolveEndpoint(graph.modules, endpoint)?.direction === 'output')) throw new Error('This electrical net already has a driver. Disconnect it first.')
+  // A scalar contact anywhere on a net cannot carry a multi-bit logical bus.
+  if (net.width > 1 && net.endpoints.some(endpoint => resolveEndpoint(graph.modules, endpoint)?.endpoint.kind === 'contact')) throw new Error('Breadboard contacts require scalar wiring; use an explicit adapter.')
+}
+
+export function assertElectricalNetsAllowed(graph: CircuitGraph): void {
+  for (const net of resolveElectricalNets(graph).nets) assertResolvedNetAllowed(graph, net)
+}
+
 export function resolveElectricalNets(graph: CircuitGraph): ElectricalNetResolution {
   validateMountBindings(graph)
   const parent = new Map<string, string>(), endpoints = new Map<string, ResolvedEndpoint>(), unresolved = new Set<string>()
@@ -67,8 +77,6 @@ export function assertConnectionAllowed(graph: CircuitGraph, first: string, seco
   const candidate = { ...graph, connections: [...graph.connections, { source, destination }] }
   const resolution = resolveElectricalNets(candidate)
   const net = resolution.nets.find(n => n.id === resolution.endpointNetIds[source])!
-  if (net.drivers.length > 1 && net.drivers.some(e => resolveEndpoint(graph.modules, e)?.direction === 'output')) throw new Error('This electrical net already has a driver. Disconnect it first.')
-  // A scalar contact anywhere on a net cannot carry a multi-bit logical bus.
-  if (net.width > 1 && net.endpoints.some(e => resolveEndpoint(graph.modules, e)?.endpoint.kind === 'contact')) throw new Error('Breadboard contacts require scalar wiring; use an explicit adapter.')
+  assertResolvedNetAllowed(candidate, net)
   return { source, destination, reversed }
 }

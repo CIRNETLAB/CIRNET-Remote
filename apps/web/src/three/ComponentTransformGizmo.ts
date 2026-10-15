@@ -1,31 +1,7 @@
-import { Box3, BoxGeometry, CylinderGeometry, DoubleSide, ExtrudeGeometry, Group, Mesh, MeshBasicMaterial, PerspectiveCamera, Raycaster, Shape, SphereGeometry, TorusGeometry, Vector3 } from 'three'
+import { BoxGeometry, CylinderGeometry, DoubleSide, ExtrudeGeometry, Group, Mesh, MeshBasicMaterial, PerspectiveCamera, Quaternion, Raycaster, Shape, SphereGeometry, TorusGeometry, Vector3 } from 'three'
 
 export type TransformHandle = 'x' | 'z' | 'xz' | 'rotate-y' | 'delete'
 export interface GizmoObstacle { left: number; top: number; right: number; bottom: number }
-
-interface PlacementLayout {
-  model: Group; offset: Vector3; index: number; directions: Vector3[]; scale: number; rotation: number
-  width: number; height: number; cameraWorld: number[]; projection: number[]; obstacles: readonly GizmoObstacle[]; revision: number
-  screenCell: GizmoObstacle; worldCell: GizmoObstacle; corners: Vector3[]
-}
-
-const contains = (area: GizmoObstacle, x: number, y: number) => x >= area.left && x <= area.right && y >= area.top && y <= area.bottom
-// Compile obstacles into one conservative free cell. Follow validates that cell
-// in constant time; only a layout solve walks obstacles or neighboring models.
-function freeCell(x: number, y: number, bounds: GizmoObstacle, excluded: GizmoObstacle[]) {
-  const cell = { ...bounds }
-  for (const area of excluded) {
-    const options = [
-      { gap: area.left - x, clip: () => { cell.right = Math.min(cell.right, area.left) } },
-      { gap: x - area.right, clip: () => { cell.left = Math.max(cell.left, area.right) } },
-      { gap: area.top - y, clip: () => { cell.bottom = Math.min(cell.bottom, area.top) } },
-      { gap: y - area.bottom, clip: () => { cell.top = Math.max(cell.top, area.bottom) } },
-    ].filter((option) => option.gap >= 0).sort((a, b) => b.gap - a.gap)
-    if (!options.length) return { left: x - 12, right: x + 12, top: y - 12, bottom: y + 12 }
-    options[0].clip()
-  }
-  return contains(cell, x, y) ? cell : { left: x - 12, right: x + 12, top: y - 12, bottom: y + 12 }
-}
 
 const segmentDistance = (x: number, y: number, a: { x: number; y: number }, b: { x: number; y: number }) => {
   const dx = b.x - a.x, dy = b.y - a.y, length = dx * dx + dy * dy
@@ -33,10 +9,11 @@ const segmentDistance = (x: number, y: number, a: { x: number; y: number }, b: {
   return Math.hypot(x - a.x - t * dx, y - a.y - t * dy)
 }
 
-const ARC_RADIUS = 1.35, ARC_START = Math.PI + .14, ARC_END = Math.PI * 2.5, ARC_KNOB_RADIUS = .16
+const ARC_RADIUS = 1.35, ARC_START = 0, ARC_END = Math.PI * 1.5, ARC_KNOB_RADIUS = .16
 const AXIS_OFFSET = .95, FREE_HALF_SIZE = .29, GRIP_RADIUS = ARC_RADIUS * .8
-// Keep the rounded silhouette in the XZ plane. The Y knob has an invisible
-// spherical target so its hollow rim remains usable in a nearly edge-on view.
+// The meshes retain their XZ footprints. Facing that plane toward the camera
+// maps +X to screen right and +Z to screen down, independent of object yaw.
+const SCREEN_PLANE = new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2)
 function roundedFootprint(points: readonly [number, number][], rounding: number) {
   const shape = new Shape()
   points.forEach(([x, z], i) => {
@@ -55,8 +32,9 @@ function roundedFootprint(points: readonly [number, number][], rounding: number)
 export function createComponentTransformGizmo() {
   const root = new Group(); root.name = 'component-transform-gizmo'; root.visible = false
   const handles = new Map<TransformHandle, Group>(), markers = new Map<TransformHandle, Vector3>()
-  let selectedId: string | null = null, hovered: TransformHandle | null = null, active: TransformHandle | null = null, lockedOffset: Vector3 | null = null
-  let placementLayout: PlacementLayout | null = null, placementCaptured = false
+  let selectedId: string | null = null, hovered: TransformHandle | null = null, active: TransformHandle | null = null
+  let placementModel: Group | null = null, placementCaptured = false
+  let captureView: { world: number[]; projection: number[]; width: number; height: number } | null = null
   let previousPointer: { x: number; y: number } | null = null
   let approach: { handle: TransformHandle; start: { x: number; y: number }; travel: number } | null = null
   let captureCorridor: { start: { x: number; y: number }; end: { x: number; y: number } } | null = null
@@ -122,124 +100,32 @@ export function createComponentTransformGizmo() {
     }
   }
   const pixelScale = (point: Vector3, camera: PerspectiveCamera, height: number) => Math.max(0.1, -point.clone().applyMatrix4(camera.matrixWorldInverse).z) * 2 * Math.tan(camera.fov * Math.PI / 360) / (height * camera.zoom) * 42
-  // The ring follows yaw; the grip prefers the same yaw but must clear the fixed
-  // world-axis buttons. Evaluate their projected bounds so a side view cannot
-  // collapse the inward grip onto a triangle or the free-movement square.
-  const buttonBounds = [...handles].filter(([id]) => id !== 'rotate-y').map(([, group]) => ({ group, box: new Box3().setFromObject(group) }))
-  const updateGrip = (camera: PerspectiveCamera, width: number, height: number) => {
-    const screen = (point: Vector3) => { point.project(camera); return { x: (point.x + 1) * width / 2, y: (1 - point.y) * height / 2 } }
-    const areas = buttonBounds.filter(({ group }) => group.visible).map(({ box }) => {
-      const points: { x: number; y: number }[] = []
-      for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) points.push(screen(root.localToWorld(new Vector3(x, y, z))))
-      return { left: Math.min(...points.map(p => p.x)), right: Math.max(...points.map(p => p.x)), top: Math.min(...points.map(p => p.y)), bottom: Math.max(...points.map(p => p.y)) }
-    })
-    let best = Math.PI, clearance = -Infinity
-    for (let step = 0; step <= 24; step++) {
-      const angle = Math.PI + Math.ceil(step / 2) * (step % 2 ? 1 : -1) * Math.PI / 12
-      const point = screen(rotate.localToWorld(new Vector3(Math.cos(angle) * GRIP_RADIUS, 0, Math.sin(angle) * GRIP_RADIUS)))
-      const gap = Math.min(...areas.map(area => Math.max(area.left - point.x, point.x - area.right, area.top - point.y, point.y - area.bottom)))
-      if (gap > clearance) { best = angle; clearance = gap }
-      if (gap >= 14) break
+  function update(model: Group | undefined, _others: Iterable<Group>, camera: PerspectiveCamera, width: number, height: number, _obstacles: readonly GizmoObstacle[] = [], _revision = 0) {
+    if (!model || width <= 1 || height <= 1) {
+      root.visible = false; selectedId = null; hovered = null; active = null; placementModel = null; captureView = null; clearCapture(); return
     }
-    rotationGrip.set(Math.cos(best) * GRIP_RADIUS, 0, Math.sin(best) * GRIP_RADIUS)
-    grip.position.copy(rotationGrip); gripTarget.position.copy(rotationGrip); rotate.updateMatrixWorld(true)
-  }
-  const projectedBounds = (corners: Vector3[], model: Group, camera: PerspectiveCamera, width: number, height: number) => {
-    let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity
-    for (const corner of corners) {
-      const p = corner.clone().applyMatrix4(model.matrixWorld).project(camera), x = (p.x + 1) * width / 2, y = (1 - p.y) * height / 2
-      left = Math.min(left, x); right = Math.max(right, x); top = Math.min(top, y); bottom = Math.max(bottom, y)
-    }
-    return { left, right, top, bottom }
-  }
-  const overlapsModel = (px: number, py: number, area: GizmoObstacle) => px + 60 > area.left && px - 60 < area.right && py + 55 > area.top && py - 55 < area.bottom
-  function update(model: Group | undefined, others: Iterable<Group>, camera: PerspectiveCamera, width: number, height: number, obstacles: readonly GizmoObstacle[] = [], revision = 0) {
-    if (!model || height <= 1) { root.visible = false; selectedId = null; hovered = null; active = null; lockedOffset = null; placementLayout = null; clearCapture(); return }
+    camera.updateWorldMatrix(true, false)
     const placement = model.userData.kind === 'placement'
-    if (!placement || (placementLayout && placementLayout.model !== model)) { placementLayout = null; clearCapture() }
-    for (const [id, group] of handles) group.visible = model.userData.kind !== 'placement' || id !== 'delete'
-    if (selectedId !== model.userData.id) { hovered = null; active = null; lockedOffset = null; paint() }
-    selectedId = model.userData.id; root.visible = true; camera.updateMatrixWorld()
-    // World X/Z movement stays fixed. The Y ring tracks object yaw, including
-    // live previews with a locked center; updateGrip keeps its knob clear.
-    rotate.rotation.y = model.rotation.y
-    if (active && lockedOffset) { root.position.copy(model.position).add(lockedOffset); root.scale.setScalar(pixelScale(root.position, camera, height)); root.updateMatrixWorld(true); updateGrip(camera, width, height); return }
-    const cached = placementLayout
-    const sameCamera = cached && cached.cameraWorld.every((n, i) => n === camera.matrixWorld.elements[i]) && cached.projection.every((n, i) => n === camera.projectionMatrix.elements[i])
-    const sameLayout = cached && sameCamera && cached.width === width && cached.height === height && cached.rotation === model.rotation.y && cached.obstacles === obstacles && cached.revision === revision
-    if (placement && sameLayout) {
-      root.position.copy(model.position).add(cached.offset)
-      const screen = root.position.clone().project(camera), px = (screen.x + 1) * width / 2, py = (1 - screen.y) * height / 2
-      const scale = pixelScale(root.position, camera, height)
-      if (contains(cached.screenCell, px, py) && contains(cached.worldCell, root.position.x, root.position.z) && scale >= cached.scale * 0.8 && scale <= cached.scale * 1.2 && !overlapsModel(px, py, projectedBounds(cached.corners, model, camera, width, height))) {
-        root.scale.setScalar(scale); root.updateMatrixWorld(true); updateGrip(camera, width, height); return
-      }
+    if (!placement || placementModel !== model) clearCapture()
+    placementModel = placement ? model : null
+    if (!placement) captureView = null
+    else if (!captureView || captureView.width !== width || captureView.height !== height || captureView.world.some((n, i) => n !== camera.matrixWorld.elements[i]) || captureView.projection.some((n, i) => n !== camera.projectionMatrix.elements[i])) {
+      clearCapture()
+      captureView = { world: [...camera.matrixWorld.elements], projection: [...camera.projectionMatrix.elements], width, height }
     }
-    const position = model.position
-    // Ground-footprint clearance alone can still cover the face of a tall model.
-    model.updateMatrixWorld(true)
-    const localBounds = model.userData.visualBounds as [number[], number[]] | undefined
-    const [mw, mh, md] = model.userData.size as number[]
-    const bounds = localBounds ? new Box3(new Vector3().fromArray(localBounds[0]), new Vector3().fromArray(localBounds[1])) : new Box3(new Vector3(-mw / 2, 0, -md / 2), new Vector3(mw / 2, mh, md / 2))
-    const corners: Vector3[] = []
-    for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) {
-      corners.push(new Vector3(x, y, z))
-    }
-    const selectedArea = projectedBounds(corners, model, camera, width, height)
-    const neighbors = [...others] // Map.values() is single-use; all candidates need the same obstacles.
-    const near = camera.position.clone().sub(position).setY(0).normalize(), right = new Vector3(near.z, 0, -near.x)
-    const directions = placement && cached && sameCamera ? cached.directions : [near, right, right.clone().negate(), near.clone().negate()]
-    const candidates = [1.55, 2.7, 3.9, 5].flatMap((spacing) => directions.map((direction) => ({ direction, spacing })))
-    const [w, , d] = model.userData.size as number[], angle = model.rotation.y
-    const extent = (direction: Vector3) => { const local = direction.clone().applyAxisAngle(new Vector3(0, 1, 0), -angle); return Math.abs(local.x) * w / 2 + Math.abs(local.z) * d / 2 }
-    const evaluate = (point: Vector3, scale: number, index: number) => {
-      const screen = point.clone().project(camera), px = (screen.x + 1) * width / 2, py = (1 - screen.y) * height / 2
-      let score = index * 10
-      let valid = true
-      if (screen.z < -1 || screen.z > 1) { score += 10000; valid = false }
-      if (px < 65 || px > width - 65 || py < 55 || py > height - 55) { score += 100000; valid = false }
-      score += Math.max(0, 70 - px, px - width + 70) * 10 + Math.max(0, 70 - py, py - height + 70) * 10
-      if (overlapsModel(px, py, selectedArea)) { score += 10000; valid = false }
-      for (const area of obstacles) if (overlapsModel(px, py, area)) { score += 10000; valid = false }
-      for (const other of neighbors) {
-        if (other === model) continue
-        const [ow, , od] = other.userData.size as number[], a = other.rotation.y
-        const ex = (Math.abs(Math.cos(a)) * ow + Math.abs(Math.sin(a)) * od) / 2, ez = (Math.abs(Math.sin(a)) * ow + Math.abs(Math.cos(a)) * od) / 2
-        if (Math.abs(point.x - other.position.x) < ex + scale * 1.4 && Math.abs(point.z - other.position.z) < ez + scale * 1.4) { score += 1000; valid = false }
-      }
-      return { point, scale, score, index, valid }
-    }
-    let best: ReturnType<typeof evaluate> | undefined
-    candidates.forEach(({ direction, spacing }, index) => {
-      let scale = pixelScale(position, camera, height), point = position.clone()
-      for (let i = 0; i < 3; i++) { point = position.clone().addScaledVector(direction, extent(direction) + scale * spacing).add(new Vector3(0, 0.04, 0)); scale = pixelScale(point, camera, height) }
-      const candidate = evaluate(point, scale, index)
-      if (!best || candidate.score < best.score) best = candidate
-    })
-    if (placement && cached && best) {
-      const point = position.clone().add(cached.offset), current = evaluate(point, pixelScale(point, camera, height), cached.index)
-      // A new side must clear a meaningful penalty, not win a tiny score tie.
-      if ((current.valid || !best.valid) && current.score - best.score < 1500) best = current
-    }
-    if (best) { root.position.copy(best.point); root.scale.setScalar(best.scale) }
-    if (placement && best) {
-      const screen = best.point.clone().project(camera), px = (screen.x + 1) * width / 2, py = (1 - screen.y) * height / 2
-      const worldObstacles = neighbors.filter((other) => other !== model).map((other) => {
-        const [ow, , od] = other.userData.size as number[], a = other.rotation.y
-        const ex = (Math.abs(Math.cos(a)) * ow + Math.abs(Math.sin(a)) * od) / 2 + best!.scale * 1.7
-        const ez = (Math.abs(Math.sin(a)) * ow + Math.abs(Math.cos(a)) * od) / 2 + best!.scale * 1.7
-        return { left: other.position.x - ex, right: other.position.x + ex, top: other.position.z - ez, bottom: other.position.z + ez }
-      })
-      placementLayout = {
-        model, offset: best.point.clone().sub(position), scale: best.scale, index: best.index, directions, corners,
-        width, height, rotation: model.rotation.y, cameraWorld: [...camera.matrixWorld.elements], projection: [...camera.projectionMatrix.elements], obstacles, revision,
-        screenCell: freeCell(px, py, { left: 65, right: width - 65, top: 55, bottom: height - 55 }, obstacles.map((area) => ({ left: area.left - 60, right: area.right + 60, top: area.top - 55, bottom: area.bottom + 55 }))),
-        worldCell: freeCell(best.point.x, best.point.z, { left: -Infinity, right: Infinity, top: -Infinity, bottom: Infinity }, worldObstacles),
-      }
-      if (cached && !sameLayout) clearCapture()
-    }
+    for (const [id, group] of handles) group.visible = !placement || id !== 'delete'
+    if (selectedId !== model.userData.id) { hovered = null; active = null; paint() }
+    selectedId = model.userData.id
+    model.updateWorldMatrix(true, false)
+    // This is a screen-oriented tool at the live object pivot. The fixed local
+    // layout keeps the left grip clear of every button without relocating it.
+    // Handle names still represent world X/Z movement and world Y rotation;
+    // pointer-to-transform mapping belongs to the editor, not this overlay.
+    model.getWorldPosition(root.position)
+    camera.getWorldQuaternion(root.quaternion).multiply(SCREEN_PLANE)
+    root.scale.setScalar(pixelScale(root.position, camera, height))
+    root.visible = true
     root.updateMatrixWorld(true)
-    updateGrip(camera, width, height)
   }
   return {
     root, update,
@@ -247,11 +133,17 @@ export function createComponentTransformGizmo() {
     clearPlacementCapture: clearCapture,
     capturePlacement(x: number, y: number, camera: PerspectiveCamera, width: number, height: number) {
       const last = previousPointer; previousPointer = { x, y }
-      if (!placementLayout || !root.visible) { placementCaptured = false; approach = null; captureCorridor = null; return }
+      if (!placementModel || !root.visible) { placementCaptured = false; approach = null; captureCorridor = null; return }
       const screen = (point: Vector3) => { point.project(camera); return { x: (point.x + 1) * width / 2, y: (1 - point.y) * height / 2 } }
       const local = (x: number, z: number) => screen(root.localToWorld(new Vector3(x, 0, z)))
       const freeCenter = local(0, 0), xCenter = local(AXIS_OFFSET, 0), zCenter = local(0, AXIS_OFFSET)
-      let distance = Math.min(Math.hypot(x - freeCenter.x, y - freeCenter.y), Math.hypot(x - xCenter.x, y - xCenter.y), Math.hypot(x - zCenter.x, y - zCenter.y))
+      const fromPivot = Math.hypot(x - freeCenter.x, y - freeCenter.y)
+      const previousFromPivot = last ? Math.hypot(last.x - freeCenter.x, last.y - freeCenter.y) : 0
+      // A following draft puts its pivot under the cursor. Capturing the free
+      // square there would freeze every fine pointer movement. Acquire it only
+      // after entering the fixed tool from outside, or via another handle.
+      const captureCenter = placementCaptured || previousFromPivot > 26
+      let distance = Math.min(captureCenter ? fromPivot : Infinity, Math.hypot(x - xCenter.x, y - xCenter.y), Math.hypot(x - zCenter.x, y - zCenter.y))
       // The complete visible rotation arc is a capture target, not just its grip.
       let previous = screen(rotate.localToWorld(rotationPoint(ARC_START)))
       for (let i = 1; i <= 24; i++) {
@@ -263,6 +155,7 @@ export function createComponentTransformGizmo() {
       if (captureCorridor && segmentDistance(x, y, captureCorridor.start, captureCorridor.end) <= 42) { placementCaptured = true; return }
       if (distance <= (placementCaptured ? 42 : 26)) { placementCaptured = true; approach = null; captureCorridor = null; return }
       if (placementCaptured) { placementCaptured = false; approach = null; captureCorridor = null; return }
+      if (fromPivot <= 26 && previousFromPivot <= 26) { approach = null; return }
       // A moving hit zone alone can never catch a slow approach: both targets
       // would move away at pointer speed. Detect a narrow, sustained approach
       // and capture its spatial corridor before the unified pose can chase it.
@@ -299,11 +192,10 @@ export function createComponentTransformGizmo() {
     hover(id: TransformHandle | null) { hovered = id && handles.get(id)!.visible ? id : null; paint() },
     activate(id: TransformHandle | null, model?: Group) {
       // A captured transform moves the handles away from the approach corridor.
-      // Start and release discard that old screen-space input, without affecting
-      // the cached pose offset or selected-model gestures.
+      // Start and release discard that old screen-space input without affecting
+      // the selected-model gesture or the live pivot.
       if (model?.userData.kind === 'placement' && (id || active)) clearCapture()
       active = id && handles.get(id)!.visible ? id : null
-      lockedOffset = active && model ? root.position.clone().sub(model.position) : null
       hovered = null; paint()
     },
   }

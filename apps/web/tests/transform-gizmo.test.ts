@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { Box3, Group, Mesh, MeshBasicMaterial, PerspectiveCamera, Raycaster, Vector2, Vector3 } from 'three'
+import { Group, Mesh, MeshBasicMaterial, PerspectiveCamera, Raycaster, Vector2, Vector3 } from 'three'
 import { createComponentTransformGizmo, type TransformHandle } from '../src/three/ComponentTransformGizmo'
 import { createTechnicalGrid } from '../src/three/TechnicalGrid'
 import { disposeObject } from '../src/three/ComponentModel'
@@ -36,7 +36,7 @@ test('separate white triangle handles and a cyan rounded square replace the shaf
   const square = h.group('xz').getObjectByName('xz-face') as Mesh | undefined
   assert.ok(square, 'free movement must have its own cyan square face')
   assert.equal((square.material as MeshBasicMaterial[])[0].color.getHexString(), '00bce7')
-  assert.equal(square.rotation.y, 0, 'square edges must stay parallel to world X/Z')
+  assert.equal(square.rotation.y, 0, 'square edges remain aligned with the overlay')
   assert.equal(h.pick(new Vector3(.22, 0, .22)), 'xz', 'square corners are interactive, not a circular/diamond proxy')
   assert.equal(h.pick(new Vector3(.47, 0, 0)), null, 'empty space between square and triangle is not an old shaft hitbox')
 })
@@ -51,22 +51,22 @@ test('the yellow arc keeps its rounded ends and hollow visual knob with an enlar
   const marker = h.gizmo.position('rotate-y')!
   const markerLocal = h.gizmo.root.worldToLocal(marker.clone())
   assert.equal(h.pick(markerLocal), 'rotate-y', 'the advertised grip center must be easy to acquire')
-  for (const angle of [0.3, 1.1, 4.2, 5.4]) {
+  for (const angle of [0.3, 1.1, 3.8, 4.4]) {
     assert.equal(h.pick(new Vector3(Math.cos(angle) * 1.35, 0, Math.sin(angle) * 1.35), group), 'rotate-y')
   }
-  assert.equal(h.pick(new Vector3(Math.cos(2.2) * 1.35, 0, Math.sin(2.2) * 1.35), group), null)
+  assert.equal(h.pick(new Vector3(Math.SQRT1_2 * 1.35, 0, -Math.SQRT1_2 * 1.35), group), null, 'the upper-right quadrant is the open gap')
 })
 
 test('placement capture follows separated handles and the visible arc while empty gaps remain free', () => {
   const h = setup(true)
-  for (const local of [new Vector3(.88, 0, 0), new Vector3(0, 0, .88), new Vector3(.22, 0, .22)]) {
+  for (const local of [new Vector3(.88, 0, 0), new Vector3(0, 0, .88)]) {
     h.gizmo.clearPlacementCapture()
     const p = h.point(local)
     h.gizmo.capturePlacement(p.x, p.y, h.camera, 1000, 700)
     assert.equal(h.gizmo.placementFollowBlocked(), true)
   }
   const rotate = h.group('rotate-y')
-  for (const [angle, blocked] of [[5.1, true], [2.2, false]] as const) {
+  for (const [angle, blocked] of [[4.2, true], [5.5, false]] as const) {
     h.gizmo.clearPlacementCapture()
     const p = h.point(new Vector3(Math.cos(angle) * 1.35, 0, Math.sin(angle) * 1.35), rotate)
     h.gizmo.capturePlacement(p.x, p.y, h.camera, 1000, 700)
@@ -75,7 +75,41 @@ test('placement capture follows separated handles and the visible arc while empt
   assert.equal(h.gizmo.position('delete'), null)
 })
 
-test('raycasting follows the rotated visible knob and independent world-axis handles in an oblique view', () => {
+test('cursor-follow at the pivot does not acquire the free handle until the overlay is deliberately approached', () => {
+  const h = setup(true)
+  try {
+    for (let i = 0; i < 20; i++) {
+      const next = h.point(new Vector3(.02, 0, 0))
+      h.gizmo.capturePlacement(next.x, next.y, h.camera, 1000, 700)
+      assert.equal(h.gizmo.placementFollowBlocked(), false, 'small cursor-follow samples must not self-capture the centered XZ handle')
+      h.model.position.x += .01
+      h.gizmo.update(h.model, [h.model], h.camera, 1000, 700)
+    }
+    const axis = h.point(new Vector3(.95, 0, 0))
+    h.gizmo.capturePlacement(axis.x, axis.y, h.camera, 1000, 700)
+    assert.equal(h.gizmo.placementFollowBlocked(), true, 'a deliberate approach to a separated handle acquires the overlay')
+    const center = h.point(new Vector3())
+    h.gizmo.capturePlacement(center.x, center.y, h.camera, 1000, 700)
+    assert.equal(h.gizmo.placementFollowBlocked(), true, 'the free handle remains usable after acquiring the overlay')
+    assert.equal(h.pick(new Vector3()), 'xz', 'the free handle remains a real pointer-down target')
+  } finally { disposeObject(h.gizmo.root) }
+})
+
+test('camera navigation releases placement capture at the old screen location', () => {
+  const h = setup(true)
+  try {
+    const axis = h.point(new Vector3(.95, 0, 0))
+    h.gizmo.capturePlacement(axis.x, axis.y, h.camera, 1000, 700)
+    assert.equal(h.gizmo.placementFollowBlocked(), true)
+    h.camera.position.x += 10
+    h.gizmo.update(h.model, [h.model], h.camera, 1000, 700)
+    assert.equal(h.gizmo.placementFollowBlocked(), false, 'the capture belongs to the current view, not the old screen coordinates')
+    h.gizmo.capturePlacement(axis.x, axis.y, h.camera, 1000, 700)
+    assert.equal(h.gizmo.placementFollowBlocked(), false)
+  } finally { disposeObject(h.gizmo.root) }
+})
+
+test('raycasting follows the visible fixed overlay in an oblique view', () => {
   const h = setup()
   h.model.rotation.y = Math.PI / 2
   h.camera.position.set(5, 11, 8); h.camera.lookAt(0, 0, 0); h.camera.updateMatrixWorld()
@@ -87,8 +121,27 @@ test('raycasting follows the rotated visible knob and independent world-axis han
   const ring = h.group('rotate-y')
   const knob = ring.getObjectByName('rotation-knob') as Mesh
   assert.equal(h.pick(knob.position, ring), 'rotate-y', 'the invisible target fills the hollow visual grip')
-  assert.equal(h.pick(new Vector3(Math.cos(5.1) * 1.35, 0, Math.sin(5.1) * 1.35), ring), 'rotate-y')
-  assert.equal(h.pick(new Vector3(Math.cos(2.2) * 1.35, 0, Math.sin(2.2) * 1.35), ring), null)
+  assert.equal(h.pick(new Vector3(Math.cos(4.2) * 1.35, 0, Math.sin(4.2) * 1.35), ring), 'rotate-y')
+  assert.equal(h.pick(new Vector3(Math.SQRT1_2 * 1.35, 0, -Math.SQRT1_2 * 1.35), ring), null)
+})
+
+test('the overlay stays anchored to the object pivot instead of seeking a free adjacent location', () => {
+  for (const placement of [false, true]) {
+    const h = setup(placement), neighbor = new Group()
+    neighbor.userData = { size: [10, 10, 10] }
+    h.model.position.set(1.25, .7, -2)
+    const update = () => h.gizmo.update(h.model, [h.model, neighbor], h.camera, 1000, 700, [{ left: 0, right: 1000, top: 0, bottom: 700 }], 1)
+    try {
+      update()
+      assert.ok(h.gizmo.origin()!.distanceTo(h.model.position) < 1e-9, 'pivot anchoring cannot change to avoid models or panels')
+      h.gizmo.activate('rotate-y', h.model)
+      h.model.position.add(new Vector3(.5, .2, .7)); h.model.rotation.y = 2.3
+      update()
+      assert.ok(h.gizmo.origin()!.distanceTo(h.model.position) < 1e-9, 'preview transforms retain the live pivot')
+      h.gizmo.activate(null); update()
+      assert.ok(h.gizmo.origin()!.distanceTo(h.model.position) < 1e-9, 'release does not relocate the overlay')
+    } finally { disposeObject(h.gizmo.root) }
+  }
 })
 
 test('the transparent grid sorts before every visible gizmo surface in the actual renderer render list', async () => {
@@ -117,12 +170,14 @@ test('the transparent grid sorts before every visible gizmo surface in the actua
   } finally { disposeObject(h.gizmo.root); disposeObject(grid) }
 })
 
-test('inward rotation grip stays distinct and pickable across object yaw, camera headings and zoom', () => {
+test('the fixed left grip stays circular, distinct and pickable across object yaw, camera headings and zoom', () => {
   const h = setup(true)
   try {
-    for (const position of [new Vector3(0, 12, .001), new Vector3(5, 11, 8), new Vector3(-8, 4, 6), new Vector3(0, 1, 12)]) {
+    for (const position of [new Vector3(0, 12, .001), new Vector3(5, 11, 8), new Vector3(-8, 4, 6), new Vector3(0, 1, 12), new Vector3(0, 0, 12), new Vector3(0, -8, 6)]) {
       for (const zoom of [.5, 1, 3]) for (const yaw of [0, 45, 90, 135, 180, 225, 270, 315]) {
-        h.camera.position.copy(position); h.camera.lookAt(0, 0, 0); h.camera.zoom = zoom; h.camera.updateProjectionMatrix(); h.camera.updateMatrixWorld()
+        h.camera.position.copy(position); h.camera.lookAt(0, 0, 0)
+        if (position.y === 0) h.camera.rotateZ(.4)
+        h.camera.zoom = zoom; h.camera.updateProjectionMatrix(); h.camera.updateMatrixWorld()
         h.model.rotation.y = yaw * Math.PI / 180
         h.gizmo.update(h.model, [h.model], h.camera, 1000, 700)
         const knob = h.group('rotate-y').getObjectByName('rotation-knob') as Mesh
@@ -130,13 +185,24 @@ test('inward rotation grip stays distinct and pickable across object yaw, camera
         assert.ok(ratio >= .75 && ratio <= .85, `grip must be inward at yaw ${yaw}`)
         const marker = h.gizmo.position('rotate-y')!, local = h.gizmo.root.worldToLocal(marker.clone())
         const center = h.point(local)
+        const pivot = h.point(new Vector3())
+        assert.ok(Math.abs(center.x - pivot.x + 45.36) < .001, `knob is fixed 45.36 pixels left of the pivot at yaw ${yaw}, zoom ${zoom}`)
+        assert.ok(Math.abs(center.y - pivot.y) < .001, `knob stays at nine o'clock at yaw ${yaw}, zoom ${zoom}`)
+        const top = h.point(new Vector3(0, 0, -1.35)), right = h.point(new Vector3(1.35, 0, 0))
+        assert.ok(Math.abs(top.x - pivot.x) < .001 && Math.abs(top.y - pivot.y + 56.7) < .001, 'ring top stays directly above its pivot')
+        assert.ok(Math.abs(right.x - pivot.x - 56.7) < .001 && Math.abs(right.y - pivot.y) < .001, 'ring retains its circular screen footprint')
         assert.equal(h.pick(local), 'rotate-y', `grip center at yaw ${yaw}, zoom ${zoom}`)
         for (const id of ['x', 'z', 'xz'] as const) {
-          const area = new Box3().setFromObject(h.group(id)), projected: { x: number; y: number }[] = []
-          for (const x of [area.min.x, area.max.x]) for (const y of [area.min.y, area.max.y]) for (const z of [area.min.z, area.max.z]) {
-            const p = new Vector3(x, y, z).project(h.camera)
-            projected.push({ x: (p.x + 1) * 500, y: (1 - p.y) * 350 })
-          }
+          const projected: { x: number; y: number }[] = []
+          h.group(id).traverse(object => {
+            if (!(object instanceof Mesh)) return
+            object.geometry.computeBoundingBox()
+            const area = object.geometry.boundingBox!
+            for (const x of [area.min.x, area.max.x]) for (const y of [area.min.y, area.max.y]) for (const z of [area.min.z, area.max.z]) {
+              const p = object.localToWorld(new Vector3(x, y, z)).project(h.camera)
+              projected.push({ x: (p.x + 1) * 500, y: (1 - p.y) * 350 })
+            }
+          })
           const left = Math.min(...projected.map(p => p.x)), right = Math.max(...projected.map(p => p.x))
           const top = Math.min(...projected.map(p => p.y)), bottom = Math.max(...projected.map(p => p.y))
           assert.ok(center.x < left - 10 || center.x > right + 10 || center.y < top - 10 || center.y > bottom + 10, `grip must clear ${id} at yaw ${yaw}, zoom ${zoom}`)

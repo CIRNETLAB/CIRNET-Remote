@@ -4,7 +4,7 @@ import type { MemoryImage } from '../types/memory'
 import { getDefinition, validateProperties } from '../data/editorCatalog'
 import { assertConnectionAllowed } from '../electrical/nets'
 import { copyWireVisual, readWireVisual, validateWireVisual } from '../wires/wireVisual'
-import { moduleLocalToWorld, moduleWorldPose } from '../electrical/modulePose'
+import { moduleWorldPose } from '../electrical/modulePose'
 import { solveMounting, validateMountBindings } from '../electrical/mounting'
 import { getPartForType } from '../data/partCatalog'
 import { createMemoryImage, parseMemoryImage } from '../services/files/memoryImage'
@@ -15,6 +15,9 @@ import { MAX_CIRCUIT_FILE_BYTES, parseCircuitFile } from '../services/files/circ
 import { normalizeComponentProperties } from '../data/componentProperties'
 import { isLeadEditableType } from '../data/leadProperties'
 import type { ExecutionPresentationAdapter } from '../services/execution/presentation'
+import { buildDeleteCandidate, buildPasteCandidate, type PasteOptions } from '../editor/batchCommands'
+import { captureSelectionClipboard, type SelectionClipboard } from '../editor/selectionClipboard'
+import { emptyEditorSelection, type EditorSelection } from '../editor/selection'
 
 export interface CircuitDraft { id: string; name: string; graph: CircuitGraph }
 // Conservative UTF-16 string storage budget, shared by both history directions.
@@ -53,6 +56,19 @@ export const useCircuitStore = defineStore('circuit', {
       if (!this.current || JSON.stringify(graph) === JSON.stringify(this.graph)) return
       validateMountBindings(graph)
       this.recordChange(); this.current.graph = graph; this.clearValidation()
+    },
+    captureSelection(selection: EditorSelection): SelectionClipboard | null {
+      return this.graph ? captureSelectionClipboard(this.graph, selection) : null
+    },
+    deleteSelection(selection: EditorSelection): EditorSelection {
+      if (this.graph) this.commitGraph(buildDeleteCandidate(this.graph, selection))
+      return emptyEditorSelection()
+    },
+    pasteSelection(snapshot: SelectionClipboard, options?: PasteOptions) {
+      if (!this.graph) throw new Error('Create a circuit first.')
+      const candidate = buildPasteCandidate(this.graph, snapshot, options)
+      this.commitGraph(candidate.graph)
+      return candidate
     },
     placeModule(type: string, position: Required<NonNullable<CircuitModule['position']>>, rotation = 0, initialProperties?: Record<string, unknown>): string {
       if (!this.graph) throw new Error('Create a circuit first.')
@@ -102,18 +118,7 @@ export const useCircuitStore = defineStore('circuit', {
     },
     removeModule(id: string) {
       if (!this.graph?.modules.some((module) => module.id === id)) return
-      const removed = moduleWorldPose(this.graph.modules.find(module => module.id === id)!, this.graph.modules)
-      const connections = this.graph.connections.filter(wire => wire.source.split('.')[0] !== id && wire.destination.split('.')[0] !== id).map(wire => {
-        const visual = readWireVisual(wire)
-        if (visual.frameModuleId !== id && !visual.controlPoints.some(p => p.space === 'module' && p.moduleId === id)) return wire
-        return { ...wire, metadata: { ...wire.metadata, wireVisual: { ...visual, ...(visual.frameModuleId === id ? { frameModuleId: null } : {}), controlPoints: visual.controlPoints.map(p => p.space === 'module' && p.moduleId === id ? { space: 'world' as const, position: moduleLocalToWorld(p.position, removed) } : p) } } }
-      })
-      const modules = this.graph.modules.filter(module => module.id !== id).map(module => {
-        if (module.mount?.boardId !== id) return module
-        const { mount: _mount, ...free } = moduleWorldPose(module, this.graph!.modules)
-        return free
-      })
-      this.commitGraph({ ...this.graph, modules, connections })
+      this.deleteSelection({ moduleIds: [id], wires: [] })
     },
     connectPorts(first: string, second: string) {
       this.connectEndpoints(first, second)
@@ -134,8 +139,8 @@ export const useCircuitStore = defineStore('circuit', {
       this.commitGraph({ ...this.graph, connections: this.graph.connections.map(c => c.source === wire.source && c.destination === wire.destination ? { ...c, metadata: { ...c.metadata, wireVisual: copy } } : c) })
     },
     disconnectPorts(source: string, destination: string) {
-      if (!this.graph) return
-      this.commitGraph({ ...this.graph, connections: this.graph.connections.filter((wire) => wire.source !== source || wire.destination !== destination) })
+      if (!this.graph?.connections.some(wire => wire.source === source && wire.destination === destination)) return
+      this.deleteSelection({ moduleIds: [], wires: [{ source, destination }] })
     },
     updateModuleProperties(id: string, patch: Record<string, unknown>) {
       const module = this.graph?.modules.find((module) => module.id === id)

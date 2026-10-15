@@ -2,11 +2,17 @@ import { defineStore } from 'pinia'
 import type { WireIdentity, WireRouteMode } from '../types/circuit'
 import { ZOOM_DEFAULT, clampZoom } from '../config/workbenchViewport'
 import { normalizeComponentProperties } from '../data/componentProperties'
+import { normalizeEditorSelection, toggleModuleSelection, toggleWireSelection, type EditorSelection } from '../editor/selection'
 export type WorkspaceTool = 'select' | 'wire' | 'move' | 'rotate'
 
 export const useWorkspaceStore = defineStore('workspace', {
   state: () => ({ selectedModuleId: null as string | null, selectedWire: null as WireIdentity | null, selectedModuleIds: [] as string[], selectedWires: [] as WireIdentity[], marqueeActive: false, pendingPort: null as string | null, wireColor: '#d8493f', wireRouteMode: 'FREE' as WireRouteMode, selectedWireBend: null as number | null, previewType: null as string | null, placementType: null as string | null, placementProperties: null as Record<string, unknown> | null, showPins: false, snap: true, zoom: ZOOM_DEFAULT, fitRequest: 0, zoomAreaActive: false, tool: 'select' as WorkspaceTool, editError: '' }),
   getters: {
+    selection: (state): EditorSelection => normalizeEditorSelection({
+      moduleIds: [...state.selectedModuleIds, ...(state.selectedModuleId ? [state.selectedModuleId] : [])],
+      wires: [...state.selectedWires, ...(state.selectedWire ? [state.selectedWire] : [])],
+    }),
+    selectionCount(): number { return this.selection.moduleIds.length + this.selection.wires.length },
     wireOptionsActive: (state) => (state.tool === 'wire' || Boolean(state.selectedWire)) && !state.placementType && !state.zoomAreaActive && !state.marqueeActive,
   },
   actions: {
@@ -31,13 +37,23 @@ export const useWorkspaceStore = defineStore('workspace', {
     },
     cancelMarquee(clearSelection = false) { this.marqueeActive = false; if (clearSelection) this.clearMarqueeSelection() },
     setMarqueeSelection(selection: { moduleIds: string[]; wires: WireIdentity[] }) {
+      this.setSelection(selection)
+    },
+    setSelection(selection: { moduleIds: string[]; wires: WireIdentity[] }) {
       this.clearSelection()
-      this.selectedModuleIds = [...new Set(selection.moduleIds)]
-      this.selectedWires = [...new Map(selection.wires.map(wire => [JSON.stringify([wire.source, wire.destination]), { source: wire.source, destination: wire.destination }])).values()]
+      const normalized = normalizeEditorSelection(selection)
+      this.selectedModuleIds = normalized.moduleIds
+      this.selectedWires = normalized.wires
       const count = this.selectedModuleIds.length + this.selectedWires.length
       // Only one object may drive Inspector and the existing edit controls.
       this.selectedModuleId = count === 1 && this.selectedModuleIds.length ? this.selectedModuleIds[0] : null
       this.selectedWire = count === 1 && this.selectedWires.length ? this.selectedWires[0] : null
+    },
+    toggleModule(id: string) {
+      this.setSelection(toggleModuleSelection(this.selection, id))
+    },
+    toggleWire(source: string, destination: string) {
+      this.setSelection(toggleWireSelection(this.selection, { source, destination }))
     },
   },
 })

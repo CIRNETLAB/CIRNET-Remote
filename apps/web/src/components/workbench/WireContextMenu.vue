@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
-const props = defineProps<{ x: number; y: number; viewportWidth: number; viewportHeight: number; canPaste: boolean }>()
+const props = withDefaults(defineProps<{ x: number; y: number; viewportWidth: number; viewportHeight: number; canPaste: boolean; canEditSelection?: boolean }>(), { canEditSelection: true })
 const emit = defineEmits<{ action: [action: 'delete' | 'duplicate' | 'paste']; close: [restoreFocus: boolean] }>()
 const menu = ref<HTMLElement>(), active = ref(0)
 const actions = ['delete', 'duplicate', 'paste'] as const
@@ -13,20 +13,21 @@ function keydown(event: KeyboardEvent) {
   event.stopPropagation()
   if (event.key === 'Escape') { event.preventDefault(); emit('close', true); return }
   if (event.key === 'Tab') { emit('close', false); return }
-  const enabled = props.canPaste ? [0, 1, 2] : [0, 1]
+  const enabled = actions.flatMap((action, index) => (action === 'paste' ? props.canPaste : props.canEditSelection) ? [index] : [])
+  if (!enabled.length) return
   const index = Math.max(0, enabled.indexOf(active.value))
   if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
     event.preventDefault()
-    focus(event.key === 'Home' ? 0 : event.key === 'End' ? enabled.at(-1)! : enabled[(index + (event.key === 'ArrowUp' ? -1 : 1) + enabled.length) % enabled.length]!)
+    focus(event.key === 'Home' ? enabled[0]! : event.key === 'End' ? enabled.at(-1)! : enabled[(index + (event.key === 'ArrowUp' ? -1 : 1) + enabled.length) % enabled.length]!)
   }
 }
 function outside(event: Event) { if (!menu.value?.contains?.(event.target as Node)) emit('close', false) }
-onMounted(() => { document.addEventListener('pointerdown', outside, true); focus(0) })
+onMounted(() => { document.addEventListener('pointerdown', outside, true); focus(props.canEditSelection ? 0 : 2) })
 onUnmounted(() => document.removeEventListener('pointerdown', outside, true))
 </script>
 <template>
-  <div ref="menu" class="wire-context-menu" role="menu" aria-label="Wire actions" :style="style" data-workspace-text-input @keydown="keydown" @pointerdown.stop @contextmenu.stop.prevent @wheel.stop>
-    <button v-for="(action, index) in actions" :key="action" role="menuitem" :data-action="action" :aria-label="action[0].toUpperCase() + action.slice(1) + ' wire'" :disabled="action === 'paste' && !canPaste" :tabindex="active === index ? 0 : -1" @focus="active = index" @click="emit('action', action)">{{ action[0].toUpperCase() + action.slice(1) }}</button>
+  <div ref="menu" class="wire-context-menu" role="menu" aria-label="Selection actions" :style="style" data-workspace-text-input @keydown="keydown" @pointerdown.stop @contextmenu.stop.prevent @wheel.stop>
+    <button v-for="(action, index) in actions" :key="action" role="menuitem" :data-action="action" :aria-label="action[0].toUpperCase() + action.slice(1) + ' selection'" :disabled="action === 'paste' ? !canPaste : !canEditSelection" :tabindex="active === index ? 0 : -1" @focus="active = index" @click="emit('action', action)">{{ action[0].toUpperCase() + action.slice(1) }}</button>
   </div>
 </template>
 <style scoped>

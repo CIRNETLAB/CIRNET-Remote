@@ -4,10 +4,11 @@ import { formatEndpoint, resolveEndpoint } from '../electrical/endpoints'
 import { moduleLocalToWorld, moduleWorldPose, worldToModuleLocal } from '../electrical/modulePose'
 import { copyWireVisual, validateWireVisual } from './wireVisual'
 
-interface ShiftedContact { endpoint: string; delta: Point3 }
+export interface ShiftedContact { endpoint: string; delta: Point3 }
 const close = (a: number, b: number) => Math.abs(a - b) < 1e-8
 const point = (position: readonly number[]): Point3 => ({ x: position[0], y: position[1], z: position[2] })
-function shiftContact(graph: CircuitGraph, value: string, steps: number): ShiftedContact {
+export function shiftBreadboardContact(graph: CircuitGraph, value: string, steps: number): ShiftedContact {
+  if (!Number.isSafeInteger(steps) || steps < 1) throw new Error('Paste requires a positive contact step.')
   const resolved = resolveEndpoint(graph.modules, value)
   if (!resolved || resolved.endpoint.kind !== 'contact') throw new Error('Paste requires two breadboard contacts with a declared next contact; component ports cannot be shifted.')
   const topology = getBreadboardTopology(resolved.module.type)!
@@ -29,7 +30,7 @@ function shiftContact(graph: CircuitGraph, value: string, steps: number): Shifte
 /** Derive a real electrical candidate without changing the graph or temporary clipboard. */
 export function shiftedWireCopy(graph: CircuitGraph, wire: WireIdentity, original: WireVisual, steps: number): { wire: WireIdentity; visual: WireVisual } {
   if (!Number.isSafeInteger(steps) || steps < 1) throw new Error('Paste requires a positive contact step.')
-  const source = shiftContact(graph, wire.source, steps), destination = shiftContact(graph, wire.destination, steps)
+  const source = shiftBreadboardContact(graph, wire.source, steps), destination = shiftBreadboardContact(graph, wire.destination, steps)
   if (!['x', 'y', 'z'].every(key => close(source.delta[key as keyof Point3], destination.delta[key as keyof Point3]))) {
     throw new Error('Paste requires both breadboards to have the same local X pitch direction to preserve the wire shape. Different directions cannot share one translation.')
   }
@@ -50,8 +51,8 @@ export function shiftedWireCopy(graph: CircuitGraph, wire: WireIdentity, origina
 }
 
 /** Rebase a rigid copy onto an explicitly chosen, declared contact. No port is inferred. */
-export function wireCopyAtContact(graph: CircuitGraph, wire: WireIdentity, original: WireVisual, targetSource: string): { wire: WireIdentity; visual: WireVisual } {
-  const source = resolveEndpoint(graph.modules, wire.source), destination = resolveEndpoint(graph.modules, wire.destination), target = resolveEndpoint(graph.modules, targetSource)
+export function wireCopyAtContact(graph: CircuitGraph, wire: WireIdentity, original: WireVisual, targetSource: string, sourceModules: CircuitModule[] = graph.modules, knownOwners: ReadonlyMap<string, string> = new Map()): { wire: WireIdentity; visual: WireVisual } {
+  const source = resolveEndpoint(sourceModules, wire.source), destination = resolveEndpoint(sourceModules, wire.destination), target = resolveEndpoint(graph.modules, targetSource)
   if (!source || !destination || !target || source.endpoint.kind !== 'contact' || destination.endpoint.kind !== 'contact' || target.endpoint.kind !== 'contact') {
     throw new Error('Duplicate requires declared breadboard contacts. Component ports must be selected explicitly; they cannot be guessed.')
   }
@@ -60,12 +61,12 @@ export function wireCopyAtContact(graph: CircuitGraph, wire: WireIdentity, origi
   const sourceId = source.endpoint.contactId, targetId = target.endpoint.contactId, destinationId = destination.endpoint.contactId
   const sourceContact = sourceTopology.contacts.find(contact => contact.contactId === sourceId)!
   const targetContact = targetTopology.contacts.find(contact => contact.contactId === targetId)!
-  const from = moduleWorldPose(source.module, graph.modules), to = moduleWorldPose(target.module, graph.modules)
+  const from = moduleWorldPose(source.module, sourceModules), to = moduleWorldPose(target.module, graph.modules)
   const transform = (world: Point3): Point3 => {
     const local = worldToModuleLocal(world, from)
     return moduleLocalToWorld({ x: local.x - sourceContact.localPosition[0] + targetContact.localPosition[0], y: local.y - sourceContact.localPosition[1] + targetContact.localPosition[1], z: local.z - sourceContact.localPosition[2] + targetContact.localPosition[2] }, to)
   }
-  const destinationPose = moduleWorldPose(destination.module, graph.modules)
+  const destinationPose = moduleWorldPose(destination.module, sourceModules)
   const destinationContact = getBreadboardTopology(destination.module.type)!.contacts.find(contact => contact.contactId === destinationId)!
   const expected = transform(moduleLocalToWorld(point(destinationContact.localPosition), destinationPose))
   const boards = source.module.id === destination.module.id ? [target.module] : graph.modules.filter(module => getBreadboardTopology(module.type))
@@ -75,13 +76,14 @@ export function wireCopyAtContact(graph: CircuitGraph, wire: WireIdentity, origi
   })
   if (matches.length !== 1) throw new Error(matches.length ? 'The destination contact is ambiguous. Choose endpoints explicitly.' : 'No matching destination contact at this position. Move the preview to valid contacts.')
   const mappedDestination = matches[0]
-  const ownerMap = new Map([[source.module.id, target.module.id], [destination.module.id, mappedDestination.module.id]])
+  const ownerMap = new Map(knownOwners)
+  ownerMap.set(source.module.id, target.module.id); ownerMap.set(destination.module.id, mappedDestination.module.id)
   const visual = copyWireVisual(original)
   if (visual.frameModuleId) visual.frameModuleId = ownerMap.get(visual.frameModuleId) ?? visual.frameModuleId
   visual.controlPoints = visual.controlPoints.map(control => {
-    const owner = control.space === 'module' ? graph.modules.find(module => module.id === control.moduleId) : null
+    const owner = control.space === 'module' ? sourceModules.find(module => module.id === control.moduleId) : null
     if (control.space === 'module' && !owner) throw new Error('A copied wire control point refers to a missing module.')
-    const world = owner ? moduleLocalToWorld(control.position, moduleWorldPose(owner, graph.modules)) : control.position
+    const world = owner ? moduleLocalToWorld(control.position, moduleWorldPose(owner, sourceModules)) : control.position
     const transformed = transform(world)
     if (control.space === 'world') return { space: 'world' as const, position: transformed }
     const moduleId = ownerMap.get(control.moduleId) ?? control.moduleId, module = graph.modules.find(item => item.id === moduleId)!
