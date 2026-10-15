@@ -1,4 +1,5 @@
 import sys
+import json
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from fastapi.testclient import TestClient
@@ -89,4 +90,45 @@ def test_non_object_graph_returns_structured_schema_error(payload):
     response = client.post('/api/circuits/validate', json=payload)
     assert response.status_code == 422
     assert response.json()['valid'] is False
+    assert response.json()['code'] == 'SCHEMA_VALIDATION_ERROR'
+
+
+@pytest.mark.parametrize('module_type, properties', [
+    ('RESISTOR_AXIAL', {'resistanceOhms': 0}),
+    ('RESISTOR_AXIAL', {'resistanceOhms': '1 kΩ'}),
+    ('RESISTOR_AXIAL', {'powerWatts': -1}),
+    ('CAPACITOR_CERAMIC', {'capacitanceFarads': ''}),
+    ('CAPACITOR_ELECTROLYTIC', {'voltageRatingVolts': 0}),
+])
+def test_api_rejects_invalid_design_properties(module_type, properties):
+    value = {'schema_version': '1.1', 'circuit_id': 'properties', 'modules': [{'id': 'R', 'type': module_type, 'properties': properties}], 'connections': []}
+    assert client.post('/api/circuits/validate', json=value).status_code == 422
+
+
+def test_api_model_explicitly_normalizes_legacy_resistance_and_preserves_new_properties():
+    from app.models.circuit import CircuitGraph
+    value = {'schema_version': '1.1', 'circuit_id': 'properties', 'modules': [{'id': 'R', 'type': 'RESISTOR_AXIAL', 'properties': {'resistance_ohm': 1000, 'powerWatts': .5, 'tolerancePercent': 2}}], 'connections': []}
+    serialized = CircuitGraph.model_validate(value).model_dump(exclude_unset=True)
+    assert serialized['modules'][0]['properties'] == {'resistanceOhms': 1000, 'powerWatts': .5, 'tolerancePercent': 2}
+    assert value['modules'][0]['properties']['resistance_ohm'] == 1000
+
+
+@pytest.mark.parametrize('module_type, properties', [
+    ('RESISTOR_AXIAL', {'resistanceOhms': 1234, 'powerWatts': .5, 'tolerancePercent': 2}),
+    ('CAPACITOR_CERAMIC', {'capacitanceFarads': 100e-9, 'voltageRatingVolts': 50}),
+    ('CAPACITOR_ELECTROLYTIC', {'capacitanceFarads': 47e-6, 'voltageRatingVolts': 25}),
+])
+def test_api_roundtrip_keeps_all_design_properties_as_numbers(module_type, properties):
+    from app.models.circuit import CircuitGraph
+    value = {'schema_version': '1.1', 'circuit_id': 'properties', 'modules': [{'id': 'P', 'type': module_type, 'properties': properties}], 'connections': []}
+    assert CircuitGraph.model_validate_json(json.dumps(value)).model_dump(exclude_unset=True) == value
+    assert client.post('/api/circuits/validate', json=value).status_code == 200
+
+
+@pytest.mark.parametrize('module_type', [{}, [], True, None])
+def test_property_normalization_keeps_malformed_module_types_as_structured_schema_errors(module_type):
+    value = valid_graph()
+    value['modules'][0].update(type=module_type, properties={})
+    response = client.post('/api/circuits/validate', json=value)
+    assert response.status_code == 422
     assert response.json()['code'] == 'SCHEMA_VALIDATION_ERROR'

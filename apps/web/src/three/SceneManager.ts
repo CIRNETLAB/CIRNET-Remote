@@ -7,6 +7,10 @@ import { moduleWorldPose } from '../electrical/modulePose'
 import type { MountCandidate } from '../electrical/mounting'
 import { applyPackageSimulation, setPackagePinHighlight } from './PackageModel'
 import { getPartForType } from '../data/partCatalog'
+import { canUpdatePackageAppearance, updatePackageAppearance } from './PackageModel'
+import { createStudioEnvironment } from './StudioEnvironment'
+import type { WebGLRenderer } from 'three'
+import { setPackagePinLabels } from './PackagePinLabels'
 import type { CircuitGraph, CircuitModule, Point3, WireIdentity, WireVisual } from '../types/circuit'
 import { contactFromInstance, getBreadboardContact, getBreadboardTopology } from '../electrical/BreadboardTopology'
 import { parseEndpoint } from '../electrical/endpoints'
@@ -19,7 +23,7 @@ import { applyPowerSupplyControls, type SupplyControl } from './PowerSupplyModel
 import { createWireLayer } from './WireLayer'
 import { CAMERA_NEAR, CAMERA_FAR, ZOOM_MIN, ZOOM_MAX, ZOOM_DEFAULT, MIN_ZOOM_REFERENCE_DISTANCE, cameraNearForDistance, clampZoom } from '../config/workbenchViewport'
 
-export interface SceneRenderer { setSize(width: number, height: number, updateStyle?: boolean): void; render(scene: Scene, camera: PerspectiveCamera): void; dispose(): void }
+export interface SceneRenderer { readonly isWebGLRenderer?: boolean; setSize(width: number, height: number, updateStyle?: boolean): void; render(scene: Scene, camera: PerspectiveCamera): void; dispose(): void }
 interface SceneOptions { renderer: SceneRenderer; canvas?: HTMLCanvasElement; onBeforeRender?: () => void; onRender?: () => void; onZoomChange?: (percent: number) => void; requestFrame?: (callback: FrameRequestCallback) => number; cancelFrame?: (id: number) => void }
 export type PickResult = ({ kind: 'module'; id: string } | { kind: 'control'; id: string; control: SupplyControl } | { kind: 'port'; id: string; endpoint: string } | { kind: 'wire'; source: string; destination: string }) & { point: Vector3 }
 export interface EndpointPick { kind: 'port' | 'contact'; id: string; endpoint: string; point: Vector3; contactId?: string }
@@ -29,6 +33,8 @@ export interface OrientationAxis { label: 'X' | 'Y' | 'Z'; x: number; y: number;
 // Geometry is a projection of graph IDs and named logical ports, never a source of nets.
 export function createSceneManager({ renderer, canvas, onBeforeRender, onRender, onZoomChange, requestFrame = requestAnimationFrame, cancelFrame = cancelAnimationFrame }: SceneOptions) {
   const scene = new Scene(); scene.background = new Color('#101925')
+  const studio = renderer.isWebGLRenderer ? createStudioEnvironment(renderer as WebGLRenderer) : null
+  if (studio) { scene.environment = studio.texture; scene.environmentIntensity = .55 }
   const camera = new PerspectiveCamera(42, 1, CAMERA_NEAR, CAMERA_FAR); camera.position.set(0, 11, 10); camera.lookAt(0, 0, 0); camera.updateMatrixWorld()
   const grid = createTechnicalGrid()
   const ambient = new AmbientLight('#c9def4', 1.1)
@@ -85,6 +91,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
   let bufferWidth = 0, bufferHeight = 0
   let ghost: Group | null = null
   let highlightedPinModel: Group | null = null
+  let showPins = false
   let transition: {
     startTime: number
     duration: number
@@ -326,12 +333,17 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
         let model = models.get(module.id)
         const signature = JSON.stringify([module.type, module.properties])
         if (model && model.userData.signature !== signature) {
+          const part = getPartForType(module.type)
+          if (model.userData.type === module.type && part && canUpdatePackageAppearance(part)) {
+            updatePackageAppearance(model, module, part); model.userData.signature = signature
+          }
           // Supply settings already have an in-place display/knob update in applyPose.
-          if (model.userData.type === module.type && getDefinition(module.type)?.visual === 'supply') model.userData.signature = signature
+          else if (model.userData.type === module.type && getDefinition(module.type)?.visual === 'supply') model.userData.signature = signature
           else { if (activeOutline?.id === module.id) removeActiveOutline(); disposeObject(model); content.remove(model); models.delete(module.id); model = undefined }
         }
         if (!model) { model = buildComponent(module); model.userData.onVisualChange = schedule; models.set(module.id, model); content.add(model) }
         applyPose(model, moduleWorldPose(module, next!.modules))
+        if (showPins) { const part = getPartForType(module.type); if (part) setPackagePinLabels(model, part, null, true) }
       }
       attachOutline()
       wireLayer.sync(next?.connections ?? []); schedule()
@@ -372,13 +384,13 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
         applyPowerSupplyControls(model, { ...module.properties, [control]: value }); model.updateMatrixWorld(true); schedule()
       }
     },
-    setGhost(type: string | null, position?: Required<NonNullable<CircuitModule['position']>>, rotation = 0) {
+    setGhost(type: string | null, position?: Required<NonNullable<CircuitModule['position']>>, rotation = 0, properties?: Record<string, unknown>) {
       if (disposed || !Number.isFinite(rotation) || (position && ![position.x, position.y, position.z].every(Number.isFinite))) return
-      if (ghost && type && position && ghost.userData.type === type) { applyPose(ghost, { id: 'PLACE', type, position, rotation }); updateGizmo(); schedule(); return }
+      if (ghost && type && position && ghost.userData.signature === JSON.stringify([type, properties])) { applyPose(ghost, { id: 'PLACE', type, position, rotation, properties }); updateGizmo(); schedule(); return }
       if (ghost) { disposeObject(ghost); scene.remove(ghost); ghost = null }
       if (type && position && getDefinition(type)) {
         // PLACE is a render-only pick target, absent from models, ports and Circuit Graph.
-        ghost = buildComponent({ id: 'PLACE', type, position, rotation }); ghost.userData.kind = 'placement'
+        ghost = buildComponent({ id: 'PLACE', type, position, rotation, properties }); ghost.userData.kind = 'placement'
         ghost.traverse((object) => {
           if (object instanceof Mesh) {
             const mats = Array.isArray(object.material) ? object.material : [object.material]
@@ -434,18 +446,27 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     hoverEndpoint(endpoint: string | null) {
       if (disposed) return
       contactHover.visible = false
-      if (highlightedPinModel) setPackagePinHighlight(highlightedPinModel, null)
+      if (highlightedPinModel) {
+        setPackagePinHighlight(highlightedPinModel, null)
+        const part = getPartForType(highlightedPinModel.userData.type)
+        if (part) setPackagePinLabels(highlightedPinModel, part, null, showPins)
+      }
       highlightedPinModel = null
       const parsed = endpoint && parseEndpoint(endpoint), module = parsed && modules.get(parsed.moduleId), model = parsed && models.get(parsed.moduleId)
       if (parsed && module && model) {
         const anchor = endpointPosition(endpoint!)
         if (anchor) {
-          if (parsed.kind === 'port' && getPartForType(module.type)) { setPackagePinHighlight(model, parsed.portId); highlightedPinModel = model; schedule(); return }
+          if (parsed.kind === 'port' && getPartForType(module.type)) { setPackagePinHighlight(model, parsed.portId); setPackagePinLabels(model, getPartForType(module.type)!, parsed.portId, showPins); highlightedPinModel = model; schedule(); return }
           contactHover.position.copy(anchor)
           if (parsed.kind === 'contact') contactHover.position.y = model.position.y + (getBreadboardTopology(module.type)?.deckHeight ?? .33) + .004
           contactHover.rotation.y = model.rotation.y; contactHover.visible = true
         }
       }
+      schedule()
+    },
+    setShowPins(value: boolean) {
+      showPins = value
+      for (const [id, model] of models) { const part = getPartForType(modules.get(id)!.type); if (part) setPackagePinLabels(model, part, null, value) }
       schedule()
     },
     wireContext: routeContext,
@@ -682,6 +703,6 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     finishTransition,
     setViewOrientation,
     suspend(value: boolean) { suspended = value; if (value && frame !== null) { cancelFrame(frame); frame = null }; updateControlsEnabled(); if (!value) schedule() },
-    dispose() { if (disposed) return; disposed = true; cancelTransition(); gizmo.update(undefined, [], camera, width, height); if (frame !== null) cancelFrame(frame); frame = null; controls?.removeEventListener('change', viewChanged); controls?.removeEventListener('start', cancelTransition); controls?.dispose(); removeActiveOutline(); wireLayer.dispose(); clearMountPreview(); mountMarkerGeometry.dispose(); mountMarkerValid.dispose(); mountMarkerInvalid.dispose(); disposeObject(scene); models.clear(); modules.clear(); ghost = null; highlightedId = null; gizmoObstacles = []; scene.clear(); renderer.dispose() },
+    dispose() { if (disposed) return; disposed = true; cancelTransition(); gizmo.update(undefined, [], camera, width, height); if (frame !== null) cancelFrame(frame); frame = null; controls?.removeEventListener('change', viewChanged); controls?.removeEventListener('start', cancelTransition); controls?.dispose(); removeActiveOutline(); wireLayer.dispose(); clearMountPreview(); mountMarkerGeometry.dispose(); mountMarkerValid.dispose(); mountMarkerInvalid.dispose(); disposeObject(scene); models.clear(); modules.clear(); ghost = null; highlightedId = null; gizmoObstacles = []; scene.environment = null; studio?.dispose(); scene.clear(); renderer.dispose() },
   }
 }

@@ -5,6 +5,7 @@ import { parseEndpoint, resolveEndpoint } from '../../electrical/endpoints'
 import { getBreadboardTopology } from '../../electrical/BreadboardTopology'
 import { validateMountBindings } from '../../electrical/mounting'
 import { getPartForType } from '../../data/partCatalog'
+import { normalizeComponentProperties } from '../../data/componentProperties'
 
 export const MAX_CIRCUIT_FILE_BYTES = 2_000_000
 const object = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value)
@@ -22,6 +23,7 @@ export function parseCircuitFile(contents: string): CircuitGraph {
   if (!object(value) || !keys(value, ['schema_version', 'circuit_id', 'modules', 'connections', 'metadata']) || !['1.0', '1.1'].includes(String(value.schema_version)) || !text(value.circuit_id) || !Array.isArray(value.modules) || !Array.isArray(value.connections) || !optionalObject(value.metadata)) return invalid()
   for (const module of value.modules) {
     if (!object(module) || !text(module.id) || !text(module.type) || !optionalObject(module.properties)) return invalid()
+    if (module.properties !== undefined) module.properties = normalizeComponentProperties(module.type, module.properties as Record<string, unknown>)
     if (module.rotation !== undefined && (typeof module.rotation !== 'number' || !Number.isFinite(module.rotation))) return invalid()
     if (module.type === 'MEMORY' && object(module.properties) && module.properties.memory !== undefined) parseMemoryImage(JSON.stringify(module.properties.memory))
     if (module.position !== undefined) {

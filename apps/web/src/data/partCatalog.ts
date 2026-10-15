@@ -1,4 +1,4 @@
-import registry from './physicalParts.json'
+import registry from './editorParts.json'
 
 /** The existing board pitch is .13 world units for 2.54 mm. */
 export const MM_TO_WORLD = .13 / 2.54
@@ -10,6 +10,10 @@ export interface PhysicalPin {
   name: string
   role: PinRole
   outputType?: 'push-pull' | 'open-collector' | 'open-drain'
+  polarity?: 'active-high' | 'active-low'
+  signal?: 'data' | 'clock' | 'set' | 'reset' | 'enable'
+  edge?: 'rising' | 'falling'
+  inputCharacteristics?: 'standard' | 'schmitt-trigger'
   /** Pin tip at the mounting plane, in the package frame. */
   positionMm: PartPoint
   /** Optional body exit for explicitly formed discrete leads. */
@@ -47,12 +51,17 @@ export interface PartDefinition {
   revision: number
   editorType: string
   name: string
-  manufacturer: string
-  partNumber: string
-  datasheet: { url: string; title: string; revision?: string; pages?: string }
+  shortName?: string
+  aliases?: string[]
+  identityKind?: 'exact-part' | 'configurable-generic' | 'instrument'
+  logic?: { code: string; family: string; gate: string; inputCharacteristics?: 'standard' | 'schmitt-trigger' }
+  /** Legacy fixture compatibility only; production authoring descriptors omit these fields. */
+  manufacturer?: string
+  partNumber?: string
+  datasheet?: { url: string; title: string; revision?: string; pages?: string }
   function: string
   package: PartPackage
-  simulation: SimulationModel
+  simulation?: SimulationModel
   internalConnections?: { pins: [string, string]; when?: { property: string; equals: boolean | number } }[]
   editor: { family: string; visual: string; color: string; defaults: Record<string, unknown>; parameters: { key: string; label: string; kind: 'number' | 'integer' | 'boolean'; min?: number; max?: number }[] }
   notes?: string

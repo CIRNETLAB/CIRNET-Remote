@@ -64,3 +64,29 @@ def test_openable_lab_example_powers_real_mounted_ic_and_led_and_loses_light_whe
     assert body['device_states']['U1']['state'] == 'UNPOWERED'
     assert body['pin_values']['U1.3'] == 'X'
     assert body['device_states']['D1']['state'] in ('OFF', 'UNKNOWN')
+
+
+def test_missing_execution_profile_keeps_authoring_valid_and_reports_unavailable_without_simulating(monkeypatch):
+    from contracts import physical_mounting
+    parts = copy.deepcopy(physical_mounting.physical_parts())
+    capacitor = next(part for part in parts if part['editorType'] == 'CAPACITOR_CERAMIC')
+    capacitor.pop('simulation', None)
+    monkeypatch.setattr(physical_mounting, 'physical_parts', lambda: parts)
+    value = {'schema_version': '1.1', 'circuit_id': 'no-profile', 'modules': [
+        {'id': 'C', 'type': 'CAPACITOR_CERAMIC', 'properties': {'capacitanceFarads': 100e-9, 'voltageRatingVolts': 50}},
+    ], 'connections': []}
+    client = TestClient(app)
+    assert client.post('/api/circuits/validate', json=value).status_code == 200
+    response = client.post('/api/circuits/physical-preview', json=value)
+    assert response.status_code == 200, response.json()
+    body = response.json()
+    assert body['device_states']['C']['state'] == 'UNSUPPORTED'
+    assert 'profile' in body['device_states']['C']['reason'].lower()
+    assert body['pin_values']['C.A'] == 'X'
+    assert body['pin_values']['C.B'] == 'X'
+
+
+def test_result_contract_accepts_observed_device_state_without_an_engine_model():
+    from app.api.circuits import PhysicalPreview
+    value = {'device_states': {'D1': {'state': 'ON'}}, 'pin_values': {'D1.A': 1}, 'diagnostics': []}
+    assert PhysicalPreview.model_validate(value).model_dump(exclude_none=True) == value

@@ -1,5 +1,6 @@
 from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from contracts.component_properties import normalize_component_properties
 
 
 class CircuitSchemaModel(BaseModel):
@@ -75,6 +76,13 @@ class CircuitModule(CircuitSchemaModel):
     rotation: int | float | None = None
     properties: dict[str, Any] | None = None
     mount: MountBinding | None = None
+
+    @model_validator(mode='before')
+    @classmethod
+    def normalize_design_properties(cls, value):
+        if isinstance(value, dict) and isinstance(value.get('type'), str) and isinstance(value.get('properties'), dict):
+            return {**value, 'properties': normalize_component_properties(value.get('type'), value['properties'])}
+        return value
 
     @model_validator(mode='after')
     def mounted_pose_is_relative(self):

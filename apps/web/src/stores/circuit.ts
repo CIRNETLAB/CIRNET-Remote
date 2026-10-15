@@ -12,11 +12,15 @@ import type { CircuitValidation } from '../types/api'
 import { circuitsApi, type PhysicalPreview } from '../services/api/circuits'
 import { errorMessage } from '../services/api/client'
 import { MAX_CIRCUIT_FILE_BYTES, parseCircuitFile } from '../services/files/circuitFile'
+import { normalizeComponentProperties } from '../data/componentProperties'
+import type { ExecutionPresentationAdapter } from '../services/execution/presentation'
 
 export interface CircuitDraft { id: string; name: string; graph: CircuitGraph }
 // Conservative UTF-16 string storage budget, shared by both history directions.
 export const MAX_HISTORY_STORAGE_BYTES = 20_000_000
 const validationControllers = new WeakMap<object, AbortController>()
+let presentationAdapter: ExecutionPresentationAdapter = (graph, signal) => circuitsApi.physicalPreview(graph, signal)
+export function configureExecutionPresentationAdapter(adapter?: ExecutionPresentationAdapter) { presentationAdapter = adapter ?? ((graph, signal) => circuitsApi.physicalPreview(graph, signal)) }
 export const useCircuitStore = defineStore('circuit', {
   state: () => ({
     drafts: [] as CircuitDraft[], activeId: null as string | null,
@@ -40,7 +44,7 @@ export const useCircuitStore = defineStore('circuit', {
       const snapshot = JSON.stringify(this.graph)
       this.physicalPreviewBusy = true
       try {
-        const preview = await circuitsApi.physicalPreview(JSON.parse(snapshot) as CircuitGraph)
+        const preview = await presentationAdapter(JSON.parse(snapshot) as CircuitGraph)
         if (snapshot === JSON.stringify(this.graph)) { this.physicalPreview = preview; this.physicalSnapshot = snapshot }
       } finally { this.physicalPreviewBusy = false }
     },
@@ -49,7 +53,7 @@ export const useCircuitStore = defineStore('circuit', {
       validateMountBindings(graph)
       this.recordChange(); this.current.graph = graph; this.clearValidation()
     },
-    placeModule(type: string, position: Required<NonNullable<CircuitModule['position']>>, rotation = 0): string {
+    placeModule(type: string, position: Required<NonNullable<CircuitModule['position']>>, rotation = 0, initialProperties?: Record<string, unknown>): string {
       if (!this.graph) throw new Error('Create a circuit first.')
       const definition = getDefinition(type)
       if (!definition) throw new Error('Placement metadata is unavailable for this type.')
@@ -59,7 +63,8 @@ export const useCircuitStore = defineStore('circuit', {
       let serial = 1
       while (ids.has(`${type}_${serial}`)) serial++
       const id = `${type}_${serial}`
-      const properties = structuredClone(definition.defaults)
+      const properties = { ...structuredClone(definition.defaults), ...normalizeComponentProperties(type, initialProperties) }
+      validateProperties(type, properties)
       if (definition.memoryContract) properties.memory = createMemoryImage()
       const physical = getPartForType(type), candidate = physical ? solveMounting(type, position, rotation, this.graph.modules, id) : null
       if (candidate && !candidate.valid) throw new Error(candidate.reason)
@@ -135,8 +140,9 @@ export const useCircuitStore = defineStore('circuit', {
       const module = this.graph?.modules.find((module) => module.id === id)
       if (!module || !this.graph) return
       const definition = getDefinition(module.type)
-      if (Object.keys(patch).some((key) => !definition?.parameters.some((parameter) => parameter.key === key))) throw new Error('Unsupported component parameter.')
-      const properties = { ...definition?.defaults, ...module.properties, ...patch }
+      const normalizedPatch = normalizeComponentProperties(module.type, patch)
+      if (Object.keys(normalizedPatch).some((key) => !definition?.parameters.some((parameter) => parameter.key === key))) throw new Error('Unsupported component parameter.')
+      const properties = { ...definition?.defaults, ...normalizeComponentProperties(module.type, module.properties), ...normalizedPatch }
       validateProperties(module.type, properties)
       this.commitGraph({ ...this.graph, modules: this.graph.modules.map((item) => item.id === id ? { ...item, properties } : item) })
     },

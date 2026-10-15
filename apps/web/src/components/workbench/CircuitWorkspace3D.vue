@@ -67,6 +67,7 @@ onMounted(() => {
     manager = createSceneManager({ renderer, canvas: canvas.value, onBeforeRender: updateGizmoObstacles, onRender: rendered, onZoomChange: (percent) => workspace.setZoom(percent) })
     manager.setZoom(workspace.zoom)
     editor.sync(); visibility()
+    manager.setShowPins(workspace.showPins); manager.setSimulationStates(circuit.physicalStates)
   } catch { if (manager) manager.dispose(); else renderer?.dispose(); manager = undefined; graphicsError.value = '3D graphics unavailable. Edit graph coordinates and ports using Inspector.' }
   if (host.value) observer = observeElementSize(host.value, size)
   drawerObserver = new MutationObserver(invalidateObstacles)
@@ -78,6 +79,7 @@ onMounted(() => {
 watch(() => workspace.zoom, (zoom) => { if (manager && Math.abs(manager.zoomPercent() - zoom) > 0.02) { editor.cancel(); manager.setZoom(zoom) } })
 watch(() => workspace.fitRequest, () => { editor.cancel(); manager?.fitCircuit() })
 watch(() => circuit.physicalStates, states => manager?.setSimulationStates(states), { deep: true })
+watch(() => workspace.showPins, value => manager?.setShowPins(value))
 // Component Info can change height on selection without changing window state.
 watch([() => ui.windows, () => circuit.graph?.modules.find((module) => module.id === workspace.selectedModuleId)?.type], invalidateObstacles, { deep: true, flush: 'post' })
 watch([() => ui.drawerInsets.left, () => ui.drawerInsets.top, () => ui.componentOverlayHeight, () => ui.toolsOverlayWidth], invalidateObstacles, { flush: 'post' })

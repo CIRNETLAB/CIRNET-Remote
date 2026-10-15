@@ -19,7 +19,7 @@ def validate_circuit(payload: Any = Body(default=None)):
 class PhysicalDeviceState(BaseModel):
     model_config = ConfigDict(extra='forbid')
     state: Literal['POWERED', 'UNPOWERED', 'FAULT', 'UNSUPPORTED', 'ON', 'OFF', 'UNKNOWN', 'PASSIVE']
-    model: str
+    model: str | None = None
     reason: str | None = None
     voltage: float | None = None
     resistanceOhms: float | None = None
@@ -39,7 +39,8 @@ def physical_preview(payload: Any = Body(default=None)):
     if not valid:
         return JSONResponse(status_code=422, content={'valid': False, 'code': code, 'message': message})
     from netcircuit_sim.engine import preview_physical_graph, SimulationError
+    from app.models.circuit import CircuitGraph
     try:
-        return preview_physical_graph(payload)
+        return preview_physical_graph(CircuitGraph.model_validate(payload).model_dump(exclude_unset=True))
     except SimulationError as exc:
         return JSONResponse(status_code=422, content={'valid': False, 'code': str(exc), 'message': 'The physical preview could not compile or settle this design.'})

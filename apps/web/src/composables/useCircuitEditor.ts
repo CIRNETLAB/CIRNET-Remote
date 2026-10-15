@@ -99,7 +99,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     const candidate = solveMounting(placementDraft.type, placementDraft.position, placementDraft.rotation, circuit.graph?.modules ?? [])
     if (candidate) placementDraft.position = candidate.position
     mountHint.value = candidate ? candidate.valid ? 'All pins fit. Click to mount.' : candidate.reason : ''
-    manager()?.setGhost(placementDraft.type, placementDraft.position, placementDraft.rotation)
+    manager()?.setGhost(placementDraft.type, placementDraft.position, placementDraft.rotation, workspace.placementProperties ?? undefined)
     manager()?.setMountPreview?.(candidate)
   }
   function clearPlacement() { placementDraft = null; mountHint.value = ''; manager()?.setGhost(null); manager()?.setMountPreview?.(null) }
@@ -141,7 +141,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
   function connect(endpoint: string) {
     wireRouting.connect(endpoint)
   }
-  function place(type: string, position: Position, rotation: number) { attempt(() => { const id = circuit.placeModule(type, position, rotation); workspace.selectModule(id); clearPlacement(); sync() }) }
+  function place(type: string, position: Position, rotation: number) { attempt(() => { const id = circuit.placeModule(type, position, rotation, workspace.placementProperties ?? undefined); workspace.selectModule(id); clearPlacement(); sync() }) }
   function pointerDown(event: PointerEvent) {
     if (workspace.zoomAreaActive) {
       event.preventDefault?.(); event.stopImmediatePropagation?.()
@@ -405,7 +405,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       attempt(() => circuit.moveModule(id, snap(rawTarget, module.type, id, module.position?.y ?? 0)))
     }
   }
-  const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') keydown(event) }
+  const escape = (event: KeyboardEvent) => { if (event.key === 'Escape' && !(event.target as HTMLElement | null)?.closest?.('[data-workspace-text-input]')) keydown(event) }
   onMounted(() => document.addEventListener('keydown', escape, true))
   onUnmounted(() => document.removeEventListener('keydown', escape, true))
   function selectModule(id: string) { cancel(); workspace.selectModule(id); sync() }

@@ -5,9 +5,10 @@ import heapq
 import math
 from jsonschema import ValidationError
 from contracts.design_validation import validate_design_graph
+from contracts.component_properties import normalize_design_properties
 from contracts.validation import validate
 from .nets import resolve_design_nets
-from contracts.physical_mounting import get_physical_part
+from contracts.execution_profiles import get_execution_part as get_physical_part
 from .analog import compile_physical_circuit, evaluate_physical_circuit, physical_input_levels
 
 class SimulationError(RuntimeError): pass
@@ -72,7 +73,9 @@ class DeviceRegistry:
 class VirtualCompiler:
     VISUAL={'BREADBOARD','BREADBOARD_830','BREADBOARD_630','BREADBOARD_100','BOARD','POWER_SUPPLY','GENERATOR','OSCILLOSCOPE','SIGNAL_MONITOR','ANNOTATION'}
     def compile(self,graph):
-        try: validate_design_graph(graph)
+        try:
+            validate_design_graph(graph)
+            graph = normalize_design_properties(graph)
         except (ValidationError,ValueError,TypeError): raise SimulationError('UNEXECUTABLE') from None
         if len(graph['modules'])>2000 or len(graph['connections'])>10000: raise SimulationError('GRAPH_LIMIT')
         ids=set(); devices=[]; directions={}; sources={}; clocks=[]; probes=[]

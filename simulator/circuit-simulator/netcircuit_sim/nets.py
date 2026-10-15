@@ -5,7 +5,8 @@ Coordinates and mesh proximity never participate in this electrical resolver.
 """
 from collections import defaultdict
 from contracts.breadboard_topology import get_breadboard_contact
-from contracts.physical_mounting import get_physical_part, validate_physical_design
+from contracts.physical_mounting import validate_physical_design
+from contracts.execution_profiles import get_execution_part as get_physical_part
 
 
 LEGACY_PORTS = {

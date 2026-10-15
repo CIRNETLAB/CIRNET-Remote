@@ -3,7 +3,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 import math
 
-from contracts.physical_mounting import get_physical_part
+from contracts.execution_profiles import get_execution_part as get_physical_part
 from .nets import resolve_connectivity
 
 class AnalogSimulationEngine(ABC):

@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.1",
+  "circuit_id": "legacy-resistor-properties",
+  "modules": [
+    {
+      "id": "BB",
+      "type": "BREADBOARD",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": 0
+    },
+    {
+      "id": "R1",
+      "type": "RESISTOR_AXIAL",
+      "mount": {
+        "kind": "breadboard",
+        "version": 1,
+        "boardId": "BB",
+        "partId": "VISHAY-MRS25-330R",
+        "partRevision": 1,
+        "packageId": "MRS25-1016",
+        "packageRevision": 1,
+        "pose": {
+          "position": {
+            "x": 0.52,
+            "y": 0.309,
+            "z": 0.585
+          },
+          "rotation": 0
+        },
+        "contacts": [
+          {
+            "kind": "pin-contact",
+            "version": 1,
+            "pinId": "A",
+            "contactId": "terminal:I:34"
+          },
+          {
+            "kind": "pin-contact",
+            "version": 1,
+            "pinId": "B",
+            "contactId": "terminal:I:38"
+          }
+        ]
+      },
+      "properties": {
+        "resistance_ohm": 4700,
+        "powerWatts": 0.5,
+        "tolerancePercent": 2
+      }
+    }
+  ],
+  "connections": [
+    {
+      "source": "R1.A",
+      "destination": "R1.B",
+      "metadata": {
+        "wireVisual": {
+          "version": 1,
+          "color": "#397ec6",
+          "routeMode": "FREE",
+          "controlPoints": [],
+          "thickness": 0.036
+        }
+      }
+    }
+  ]
+}

@@ -9,6 +9,7 @@ import math
 from pathlib import Path
 
 from .breadboard_topology import get_breadboard_contact, get_breadboard_topology
+from .component_properties import normalize_component_properties
 
 MM_TO_WORLD = .13 / 2.54
 MOUNT_TOLERANCE = .00001
@@ -59,6 +60,8 @@ def validate_physical_design(graph):
     """Reject fabricated part revisions, pin bonds, orphan boards and occupancy."""
     # This branch also keeps historical 1.0 structural acceptance intact.
     modules = graph['modules']
+    for module in modules:
+        normalize_component_properties(module['type'], module.get('properties', {}))
     physical = [(m, get_physical_part(m['type'])) for m in modules]
     if not any(p or 'mount' in m for m, p in physical):
         return

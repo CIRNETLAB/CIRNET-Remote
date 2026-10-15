@@ -7,7 +7,9 @@ import { createRenderer, type Component } from 'vue'
 import type { Pinia } from 'pinia'
 
 export async function loadSfc(path: string): Promise<Component> {
-  const outfile = resolve('.test-build', path.replace(/[/\\.]/g, '-') + '.runtime.mjs')
+  // Node runs test files in separate workers. Keep runtime bundles local to the
+  // worker so another test cannot truncate a shared file while it is imported.
+  const outfile = resolve('.test-build', `${process.pid}-` + path.replace(/[/\\.]/g, '-') + '.runtime.mjs')
   await build({ entryPoints: [resolve('src', path)], outfile, bundle: true, platform: 'node', format: 'esm', packages: 'external', loader: { '.svg': 'dataurl' }, plugins: [{
     name: 'runtime-sfc', setup(builder) {
       builder.onLoad({ filter: /\.vue$/ }, async ({ path }) => {

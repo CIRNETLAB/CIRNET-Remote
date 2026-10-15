@@ -3,6 +3,10 @@ import assert from 'node:assert/strict'
 import { getDefinition } from '../src/data/editorCatalog'
 import { getPartForType, MM_TO_WORLD } from '../src/data/partCatalog'
 import { ribbonGroups } from '../src/data/ribbon'
+import executionRegistry from '../src/data/physicalParts.json'
+
+// Execution profiles are inspected at their own boundary; editor parts omit them.
+const executionPart = (type: string) => executionRegistry.parts.find(part => part.editorType === type)!
 
 test('physical HC08 exposes every numbered package pin without changing the legacy logical definition', () => {
   const physical = getDefinition('SN74HC08N')
@@ -26,7 +30,7 @@ test('HC08 pin names, legacy mappings, footprint and gate power share the canoni
   assert.equal(part.package.pins[8]!.logicalPort, 'A3')
   assert.equal(part.package.pins[6]!.role, 'ground')
   assert.equal(part.package.pins[13]!.role, 'power')
-  assert.deepEqual(part.simulation.power, { positivePinId: '14', negativePinId: '7', minVoltage: 2, maxVoltage: 6 })
+  assert.deepEqual(executionPart('SN74HC08N').simulation?.power, { positivePinId: '14', negativePinId: '7', minVoltage: 2, maxVoltage: 6 })
   assert.deepEqual(part.package.pins[0]!.positionMm, { x: -7.62, y: 0, z: 3.81 })
   assert.deepEqual(part.package.pins[13]!.positionMm, { x: -7.62, y: 0, z: -3.81 })
   assert.equal(part.package.footprint.rowSpanMm! * MM_TO_WORLD, .39)
@@ -70,8 +74,8 @@ test('physical missing families are placeable but unsupported simulation is expl
     const part = getPartForType(type)
     assert.ok(part, type)
     assert.ok(getDefinition(type), `${type} must be placeable`)
-    assert.equal(part.simulation.status, 'unsupported', type)
-    assert.ok(part.simulation.reason, type)
+    assert.equal(executionPart(type).simulation?.status, 'unsupported', type)
+    assert.ok(executionPart(type).simulation?.reason, type)
   }
   assert.deepEqual(getPartForType('TRANSISTOR_2N3904')!.package.pins.map(pin => pin.name), ['E', 'B', 'C'])
 })
@@ -82,19 +86,19 @@ test('NOR/inverter pinouts are separately declared and LS266 has open collector 
   assert.deepEqual(nor.package.pins.slice(0, 3).map(pin => pin.name), ['1Y', '1A', '1B'])
   assert.equal(getPartForType('SN74HC04N')!.package.pins[2]!.name, '2A')
   const xnor = getPartForType('SN74LS266N')!
-  assert.equal(xnor.simulation.status, 'unsupported')
+  assert.equal(executionPart('SN74LS266N').simulation?.status, 'unsupported')
   assert.deepEqual(xnor.package.pins.filter(pin => pin.role === 'output').map(pin => pin.outputType), ['open-collector', 'open-collector', 'open-collector', 'open-collector'])
   for (const type of ['ADDER', 'MULTIPLIER', 'MEMORY']) assert.equal(getPartForType(type), undefined)
 })
 
-test('palette exposes physical parts and labels ideal legacy logic tools separately', () => {
+test('palette exposes physical parts and hides legacy-only families without deleting definitions', () => {
   const items = ribbonGroups.flatMap(group => group.items)
   for (const type of ['SN74HC08N', 'LED_LTL307EE', 'RESISTOR_AXIAL', 'DC_SUPPLY', 'TRANSISTOR_2N3904', 'DIODE_1N4148', 'ZENER_1N4733A', 'BUZZER_PS1240', 'SEGMENT_SC5611EWA', 'SEGMENT_DC5611EWA', 'SEGMENT_CC5612EWA', 'PUSH_BUTTON_B3F1000', 'DIP_SWITCH_A6D4100', 'CAPACITOR_CERAMIC', 'CAPACITOR_ELECTROLYTIC', 'SN74HC02N', 'SN74HC04N', 'SN74LS266N']) {
     assert.ok(items.some(item => item.type === type), `${type} must be accessible in the palette`)
   }
   const legacy = ribbonGroups.find(group => group.id === 'logical-tools')
-  assert.ok(legacy)
-  assert.ok(legacy.items.some(item => item.type === 'LED' && /logical/i.test(item.name)))
-  assert.ok(legacy.items.some(item => item.type === 'DIP_SWITCH'))
-  assert.ok(items.find(item => item.type === 'TRANSISTOR_2N3904')!.description.includes('not implemented'))
+  assert.equal(legacy, undefined)
+  assert.ok(getDefinition('LED')); assert.ok(getDefinition('DIP_SWITCH')); assert.ok(getDefinition('MEMORY'))
+  assert.ok(!ribbonGroups.some(group => ['memory', 'embedded'].includes(group.id)))
+  assert.equal(items.find(item => item.type === 'TRANSISTOR_2N3904')!.support, 'Place / wire')
 })

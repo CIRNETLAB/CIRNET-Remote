@@ -76,6 +76,20 @@ def test_bounded_dc_led_requires_closed_forward_source_resistor_loop(reverse, op
     if state == 'ON': assert result['device_states']['L']['currentAmps'] == pytest.approx((5-2)/330)
 
 
+def test_compiler_boundary_normalizes_raw_legacy_resistance_without_mutating_the_saved_design():
+    canonical = led_loop()
+    canonical['modules'][1]['properties'] = {'resistanceOhms': 1000, 'powerWatts': .25, 'tolerancePercent': 1}
+    legacy = copy.deepcopy(canonical)
+    legacy['modules'][1]['properties'] = {'resistance_ohm': 1000, 'powerWatts': .25, 'tolerancePercent': 1}
+    saved = copy.deepcopy(legacy)
+    current = run_plan(VirtualCompiler().compile(legacy), {'signals': [], 'duration_ns': 20})
+    expected = run_plan(VirtualCompiler().compile(canonical), {'signals': [], 'duration_ns': 20})
+    assert current['device_states']['R']['resistanceOhms'] == 1000
+    assert current['device_states']['L']['currentAmps'] == pytest.approx(.003)
+    assert current['device_states'] == expected['device_states']
+    assert legacy == saved
+
+
 def test_powered_gate_output_can_drive_resistor_led_and_resistor_is_never_a_short():
     result = capture(led_loop(from_gate=True))
     assert result['device_states']['L']['state'] == 'ON'

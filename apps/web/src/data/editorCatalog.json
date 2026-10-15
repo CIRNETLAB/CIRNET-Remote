@@ -637,7 +637,6 @@
         0.32755905511811023
       ],
       "color": "#30333a",
-      "partNumber": "SN74HC08N",
       "partDefinitionId": "TI-SN74HC08N",
       "partRevision": 1,
       "ports": [
@@ -713,7 +712,6 @@
         0.2559055118110236
       ],
       "color": "#ce3935",
-      "partNumber": "LTL-307EE",
       "partDefinitionId": "LITEON-LTL-307EE",
       "partRevision": 1,
       "ports": [
@@ -731,7 +729,7 @@
     },
     {
       "type": "RESISTOR_AXIAL",
-      "name": "MRS25 · 330 Ω axial",
+      "name": "Generic axial resistor",
       "mode": "physical",
       "family": "passive",
       "visual": "resistor",
@@ -741,7 +739,6 @@
         0.1279527559055118
       ],
       "color": "#b4c7c0",
-      "partNumber": "MRS25000C3300FCT00",
       "partDefinitionId": "VISHAY-MRS25-330R",
       "partRevision": 1,
       "ports": [
@@ -755,15 +752,31 @@
         }
       ],
       "defaults": {
-        "resistanceOhms": 330
+        "resistanceOhms": 330,
+        "powerWatts": 0.25,
+        "tolerancePercent": 1
       },
       "parameters": [
         {
           "key": "resistanceOhms",
-          "label": "Resistance (Ω)",
+          "label": "Resistance (ohms)",
           "kind": "number",
-          "min": 1,
-          "max": 1000000000
+          "min": 0.1,
+          "max": 1000000000.0
+        },
+        {
+          "key": "powerWatts",
+          "label": "Power rating (W)",
+          "kind": "number",
+          "min": 0.001,
+          "max": 100
+        },
+        {
+          "key": "tolerancePercent",
+          "label": "Tolerance (%)",
+          "kind": "number",
+          "min": 0.001,
+          "max": 20
         }
       ]
     },
@@ -779,7 +792,6 @@
         2.354330708661417
       ],
       "color": "#9eaab5",
-      "partNumber": "DC-SUPPLY-V1",
       "partDefinitionId": "NETCIRCUIT-DC-SUPPLY",
       "partRevision": 1,
       "ports": [
@@ -823,7 +835,6 @@
         0.2016535433070866
       ],
       "color": "#292b2b",
-      "partNumber": "2N3904TA",
       "partDefinitionId": "ONSEMI-2N3904TA",
       "partRevision": 1,
       "ports": [
@@ -855,7 +866,6 @@
         0.09724409448818896
       ],
       "color": "#4b3831",
-      "partNumber": "1N4148-TAP",
       "partDefinitionId": "VISHAY-1N4148",
       "partRevision": 1,
       "ports": [
@@ -883,7 +893,6 @@
         0.13818897637795277
       ],
       "color": "#4b3831",
-      "partNumber": "1N4733A-TAP",
       "partDefinitionId": "VISHAY-1N4733A",
       "partRevision": 1,
       "ports": [
@@ -901,7 +910,7 @@
     },
     {
       "type": "CAPACITOR_CERAMIC",
-      "name": "K104K15 ·100nF ceramic",
+      "name": "Generic ceramic capacitor",
       "mode": "physical",
       "family": "passive",
       "visual": "capacitor",
@@ -911,7 +920,6 @@
         0.13307086614173227
       ],
       "color": "#293136",
-      "partNumber": "K104K15X7RF53H5",
       "partDefinitionId": "VISHAY-K104K15X7RF53H5",
       "partRevision": 1,
       "ports": [
@@ -924,12 +932,30 @@
           "direction": "inout"
         }
       ],
-      "defaults": {},
-      "parameters": []
+      "defaults": {
+        "capacitanceFarads": 1e-07,
+        "voltageRatingVolts": 50
+      },
+      "parameters": [
+        {
+          "key": "capacitanceFarads",
+          "label": "Capacitance (F)",
+          "kind": "number",
+          "min": 1e-12,
+          "max": 1
+        },
+        {
+          "key": "voltageRatingVolts",
+          "label": "Voltage rating (V)",
+          "kind": "number",
+          "min": 0.1,
+          "max": 10000
+        }
+      ]
     },
     {
       "type": "CAPACITOR_ELECTROLYTIC",
-      "name": "UVR1E331 ·330µF25V polarized",
+      "name": "Generic electrolytic capacitor",
       "mode": "physical",
       "family": "passive",
       "visual": "capacitor",
@@ -939,7 +965,6 @@
         0.5118110236220472
       ],
       "color": "#3e4249",
-      "partNumber": "UVR1E331MPD",
       "partDefinitionId": "NICHICON-UVR1E331MPD",
       "partRevision": 1,
       "ports": [
@@ -952,8 +977,26 @@
           "direction": "inout"
         }
       ],
-      "defaults": {},
-      "parameters": []
+      "defaults": {
+        "capacitanceFarads": 4.7e-05,
+        "voltageRatingVolts": 25
+      },
+      "parameters": [
+        {
+          "key": "capacitanceFarads",
+          "label": "Capacitance (F)",
+          "kind": "number",
+          "min": 1e-12,
+          "max": 1
+        },
+        {
+          "key": "voltageRatingVolts",
+          "label": "Voltage rating (V)",
+          "kind": "number",
+          "min": 0.1,
+          "max": 10000
+        }
+      ]
     },
     {
       "type": "BUZZER_PS1240",
@@ -967,7 +1010,6 @@
         0.6244094488188976
       ],
       "color": "#24292b",
-      "partNumber": "PS1240P02BT",
       "partDefinitionId": "TDK-PS1240P02BT",
       "partRevision": 1,
       "ports": [
@@ -995,7 +1037,6 @@
         0.33779527559055117
       ],
       "color": "#9b3434",
-      "partNumber": "A6D-4100",
       "partDefinitionId": "OMRON-A6D-4100",
       "partRevision": 1,
       "ports": [
@@ -1073,7 +1114,6 @@
         0.30708661417322836
       ],
       "color": "#717475",
-      "partNumber": "B3F-1000",
       "partDefinitionId": "OMRON-B3F-1000",
       "partRevision": 1,
       "ports": [
@@ -1117,7 +1157,6 @@
         0.975
       ],
       "color": "#2c333a",
-      "partNumber": "SC56-11EWA",
       "partDefinitionId": "KINGBRIGHT-SC56-11EWA",
       "partRevision": 1,
       "ports": [
@@ -1177,7 +1216,6 @@
         0.975
       ],
       "color": "#2c333a",
-      "partNumber": "DC56-11EWA",
       "partDefinitionId": "KINGBRIGHT-DC56-11EWA",
       "partRevision": 1,
       "ports": [
@@ -1269,7 +1307,6 @@
         0.9724409448818897
       ],
       "color": "#2c333a",
-      "partNumber": "CC56-12EWA",
       "partDefinitionId": "KINGBRIGHT-CC56-12EWA",
       "partRevision": 1,
       "ports": [
@@ -1337,7 +1374,6 @@
         0.32755905511811023
       ],
       "color": "#30333a",
-      "partNumber": "SN74HC02N",
       "partDefinitionId": "TI-SN74HC02N",
       "partRevision": 1,
       "ports": [
@@ -1413,7 +1449,6 @@
         0.32755905511811023
       ],
       "color": "#30333a",
-      "partNumber": "SN74HC04N",
       "partDefinitionId": "TI-SN74HC04N",
       "partRevision": 1,
       "ports": [
@@ -1489,7 +1524,6 @@
         0.32755905511811023
       ],
       "color": "#30333a",
-      "partNumber": "SN74LS266N",
       "partDefinitionId": "TI-SN74LS266N",
       "partRevision": 1,
       "ports": [
@@ -1565,7 +1599,6 @@
         0.26
       ],
       "color": "#989fa3",
-      "partNumber": "200MSP1T1B1M2QE",
       "partDefinitionId": "E-SWITCH-200MSP1T1B1M2QE",
       "partRevision": 1,
       "ports": [
@@ -1592,6 +1625,2706 @@
           "kind": "boolean"
         }
       ]
+    },
+    {
+      "type": "SN7400N",
+      "name": "7400 · quad 2 input nand",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN7400N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "output"
+        },
+        {
+          "id": "4",
+          "direction": "input"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "output"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "output"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "input"
+        },
+        {
+          "id": "11",
+          "direction": "output"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "SN7401N",
+      "name": "7401 · quad 2 input nand",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN7401N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "output"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "input"
+        },
+        {
+          "id": "4",
+          "direction": "output"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "input"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "input"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "output"
+        },
+        {
+          "id": "11",
+          "direction": "input"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "output"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "SN7402N",
+      "name": "7402 · quad 2 input nor",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN7402N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "output"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "input"
+        },
+        {
+          "id": "4",
+          "direction": "output"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "input"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "input"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "output"
+        },
+        {
+          "id": "11",
+          "direction": "input"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "output"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "SN7403N",
+      "name": "7403 · quad 2 input nand",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN7403N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "output"
+        },
+        {
+          "id": "4",
+          "direction": "input"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "output"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "output"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "input"
+        },
+        {
+          "id": "11",
+          "direction": "output"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "SN7404N",
+      "name": "7404 · hex inverter",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN7404N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "output"
+        },
+        {
+          "id": "3",
+          "direction": "input"
+        },
+        {
+          "id": "4",
+          "direction": "output"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "output"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "output"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "output"
+        },
+        {
+          "id": "11",
+          "direction": "input"
+        },
+        {
+          "id": "12",
+          "direction": "output"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "SN7405N",
+      "name": "7405 · hex inverter",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN7405N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "output"
+        },
+        {
+          "id": "3",
+          "direction": "input"
+        },
+        {
+          "id": "4",
+          "direction": "output"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "output"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "output"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "output"
+        },
+        {
+          "id": "11",
+          "direction": "input"
+        },
+        {
+          "id": "12",
+          "direction": "output"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "SN7408N",
+      "name": "7408 · quad 2 input and",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN7408N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "output"
+        },
+        {
+          "id": "4",
+          "direction": "input"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "output"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "output"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "input"
+        },
+        {
+          "id": "11",
+          "direction": "output"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "SN7409N",
+      "name": "7409 · quad 2 input and",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN7409N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "output"
+        },
+        {
+          "id": "4",
+          "direction": "input"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "output"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "output"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "input"
+        },
+        {
+          "id": "11",
+          "direction": "output"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "SN7410N",
+      "name": "7410 · triple 3 input nand",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN7410N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "input"
+        },
+        {
+          "id": "4",
+          "direction": "input"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "output"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "output"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "input"
+        },
+        {
+          "id": "11",
+          "direction": "input"
+        },
+        {
+          "id": "12",
+          "direction": "output"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "SN74LS11N",
+      "name": "74LS11 · triple 3 input and",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN74LS11N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "input"
+        },
+        {
+          "id": "4",
+          "direction": "input"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "output"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "output"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "input"
+        },
+        {
+          "id": "11",
+          "direction": "input"
+        },
+        {
+          "id": "12",
+          "direction": "output"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "SN7412N",
+      "name": "7412 · triple 3 input nand",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN7412N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "input"
+        },
+        {
+          "id": "4",
+          "direction": "input"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "output"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "output"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "input"
+        },
+        {
+          "id": "11",
+          "direction": "input"
+        },
+        {
+          "id": "12",
+          "direction": "output"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "SN7413N",
+      "name": "7413 · dual 4 input nand schmitt trigger",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN7413N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "inout"
+        },
+        {
+          "id": "4",
+          "direction": "input"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "output"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "output"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "input"
+        },
+        {
+          "id": "11",
+          "direction": "inout"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "SN7414N",
+      "name": "7414 · hex schmitt trigger inverter",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN7414N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "output"
+        },
+        {
+          "id": "3",
+          "direction": "input"
+        },
+        {
+          "id": "4",
+          "direction": "output"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "output"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "output"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "output"
+        },
+        {
+          "id": "11",
+          "direction": "input"
+        },
+        {
+          "id": "12",
+          "direction": "output"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "SN74LS15N",
+      "name": "74LS15 · triple 3 input and",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN74LS15N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "input"
+        },
+        {
+          "id": "4",
+          "direction": "input"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "output"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "output"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "input"
+        },
+        {
+          "id": "11",
+          "direction": "input"
+        },
+        {
+          "id": "12",
+          "direction": "output"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "SN7420N",
+      "name": "7420 · dual 4 input nand",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN7420N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "inout"
+        },
+        {
+          "id": "4",
+          "direction": "input"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "output"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "output"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "input"
+        },
+        {
+          "id": "11",
+          "direction": "inout"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "SN74LS21N",
+      "name": "74LS21 · dual 4 input and",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN74LS21N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "inout"
+        },
+        {
+          "id": "4",
+          "direction": "input"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "output"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "output"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "input"
+        },
+        {
+          "id": "11",
+          "direction": "inout"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "SN7427N",
+      "name": "7427 · triple 3 input nor",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN7427N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "input"
+        },
+        {
+          "id": "4",
+          "direction": "input"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "output"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "output"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "input"
+        },
+        {
+          "id": "11",
+          "direction": "input"
+        },
+        {
+          "id": "12",
+          "direction": "output"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "SN7430N",
+      "name": "7430 · single 8 input nand",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN7430N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "input"
+        },
+        {
+          "id": "4",
+          "direction": "input"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "input"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "output"
+        },
+        {
+          "id": "9",
+          "direction": "inout"
+        },
+        {
+          "id": "10",
+          "direction": "inout"
+        },
+        {
+          "id": "11",
+          "direction": "input"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "inout"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "SN7432N",
+      "name": "7432 · quad 2 input or",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN7432N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "output"
+        },
+        {
+          "id": "4",
+          "direction": "input"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "output"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "output"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "input"
+        },
+        {
+          "id": "11",
+          "direction": "output"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "SN7437N",
+      "name": "7437 · quad 2 input nand buffer",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN7437N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "output"
+        },
+        {
+          "id": "4",
+          "direction": "input"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "output"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "output"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "input"
+        },
+        {
+          "id": "11",
+          "direction": "output"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "SN7438N",
+      "name": "7438 · quad 2 input nand buffer",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN7438N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "output"
+        },
+        {
+          "id": "4",
+          "direction": "input"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "output"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "output"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "input"
+        },
+        {
+          "id": "11",
+          "direction": "output"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "SN7440N",
+      "name": "7440 · dual 4 input nand buffer",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN7440N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "inout"
+        },
+        {
+          "id": "4",
+          "direction": "input"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "output"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "output"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "input"
+        },
+        {
+          "id": "11",
+          "direction": "inout"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "SN7486N",
+      "name": "7486 · quad 2 input xor",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN7486N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "output"
+        },
+        {
+          "id": "4",
+          "direction": "input"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "output"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "output"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "input"
+        },
+        {
+          "id": "11",
+          "direction": "output"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "SN74LS136N",
+      "name": "74LS136 · quad 2 input xor",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-SN74LS136N",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "output"
+        },
+        {
+          "id": "4",
+          "direction": "input"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "output"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "output"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "input"
+        },
+        {
+          "id": "11",
+          "direction": "output"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "CD4001BE",
+      "name": "CD4001B · quad 2 input nor",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-CD4001BE",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "output"
+        },
+        {
+          "id": "4",
+          "direction": "output"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "input"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "input"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "output"
+        },
+        {
+          "id": "11",
+          "direction": "output"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "CD4011BE",
+      "name": "CD4011B · quad 2 input nand",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-CD4011BE",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "output"
+        },
+        {
+          "id": "4",
+          "direction": "output"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "input"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "input"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "output"
+        },
+        {
+          "id": "11",
+          "direction": "output"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "CD4012BE",
+      "name": "CD4012B · dual 4 input nand",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-CD4012BE",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "output"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "input"
+        },
+        {
+          "id": "4",
+          "direction": "input"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "inout"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "inout"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "input"
+        },
+        {
+          "id": "11",
+          "direction": "input"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "output"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "CD4013BE",
+      "name": "CD4013B · dual d type flip flop",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-CD4013BE",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "output"
+        },
+        {
+          "id": "2",
+          "direction": "output"
+        },
+        {
+          "id": "3",
+          "direction": "input"
+        },
+        {
+          "id": "4",
+          "direction": "input"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "input"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "input"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "input"
+        },
+        {
+          "id": "11",
+          "direction": "input"
+        },
+        {
+          "id": "12",
+          "direction": "output"
+        },
+        {
+          "id": "13",
+          "direction": "output"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "CD4030BE",
+      "name": "CD4030B · quad 2 input xor",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-CD4030BE",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "output"
+        },
+        {
+          "id": "4",
+          "direction": "output"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "input"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "input"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "output"
+        },
+        {
+          "id": "11",
+          "direction": "output"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "CD4069UBE",
+      "name": "CD4069UB · hex unbuffered inverter",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-CD4069UBE",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "output"
+        },
+        {
+          "id": "3",
+          "direction": "input"
+        },
+        {
+          "id": "4",
+          "direction": "output"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "output"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "output"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "output"
+        },
+        {
+          "id": "11",
+          "direction": "input"
+        },
+        {
+          "id": "12",
+          "direction": "output"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "CD4070BE",
+      "name": "CD4070B · quad 2 input xor",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-CD4070BE",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "output"
+        },
+        {
+          "id": "4",
+          "direction": "output"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "input"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "input"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "output"
+        },
+        {
+          "id": "11",
+          "direction": "output"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "CD4071BE",
+      "name": "CD4071B · quad 2 input or",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-CD4071BE",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "output"
+        },
+        {
+          "id": "4",
+          "direction": "output"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "input"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "input"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "output"
+        },
+        {
+          "id": "11",
+          "direction": "output"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "CD4072BE",
+      "name": "CD4072B · dual 4 input or",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-CD4072BE",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "output"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "input"
+        },
+        {
+          "id": "4",
+          "direction": "input"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "inout"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "inout"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "input"
+        },
+        {
+          "id": "11",
+          "direction": "input"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "output"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "CD4077BE",
+      "name": "CD4077B · quad 2 input xnor",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-CD4077BE",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "output"
+        },
+        {
+          "id": "4",
+          "direction": "output"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "input"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "input"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "output"
+        },
+        {
+          "id": "11",
+          "direction": "output"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "CD4081BE",
+      "name": "CD4081B · quad 2 input and",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-CD4081BE",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "output"
+        },
+        {
+          "id": "4",
+          "direction": "output"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "input"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "input"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "output"
+        },
+        {
+          "id": "11",
+          "direction": "output"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
+    },
+    {
+      "type": "CD4093BE",
+      "name": "CD4093B · quad 2 input nand schmitt trigger",
+      "mode": "physical",
+      "family": "logic",
+      "visual": "ic",
+      "size": [
+        0.9877952755905512,
+        0.26,
+        0.32499999999999996
+      ],
+      "color": "#30333a",
+      "partDefinitionId": "TI-CD4093BE",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input"
+        },
+        {
+          "id": "2",
+          "direction": "input"
+        },
+        {
+          "id": "3",
+          "direction": "output"
+        },
+        {
+          "id": "4",
+          "direction": "output"
+        },
+        {
+          "id": "5",
+          "direction": "input"
+        },
+        {
+          "id": "6",
+          "direction": "input"
+        },
+        {
+          "id": "7",
+          "direction": "inout"
+        },
+        {
+          "id": "8",
+          "direction": "input"
+        },
+        {
+          "id": "9",
+          "direction": "input"
+        },
+        {
+          "id": "10",
+          "direction": "output"
+        },
+        {
+          "id": "11",
+          "direction": "output"
+        },
+        {
+          "id": "12",
+          "direction": "input"
+        },
+        {
+          "id": "13",
+          "direction": "input"
+        },
+        {
+          "id": "14",
+          "direction": "inout"
+        }
+      ],
+      "defaults": {},
+      "parameters": []
     }
   ]
 }

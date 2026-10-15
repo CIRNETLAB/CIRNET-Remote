@@ -5,6 +5,7 @@ import { useWorkspaceStore } from '../../stores/workspace'
 import { componentCatalog, getDefinition } from '../../data/editorCatalog'
 import { getPartForType } from '../../data/partCatalog'
 import { moduleWorldPose } from '../../electrical/modulePose'
+import { isNormallyAddable } from '../../data/ribbon'
 import { useStationStore } from '../../stores/station'
 import { useInstrumentStore } from '../../stores/instrument'
 import { useUiStore } from '../../stores/ui'
@@ -19,7 +20,8 @@ const selected = computed(() => { const module = circuit.graph?.modules.find(ite
 const definition = computed(() => selected.value && getDefinition(selected.value.type))
 const part = computed(() => selected.value && getPartForType(selected.value.type))
 const physicalState = computed(() => selected.value && circuit.physicalStates?.[selected.value.id])
-const source = ref(''), destination = ref(''), addType = ref('DIGITAL_SWITCH')
+const addableComponents = componentCatalog.filter(item => isNormallyAddable(item.type))
+const source = ref(''), destination = ref(''), addType = ref('RESISTOR_AXIAL')
 const endpoints = computed(() => circuit.graph?.modules.flatMap((module) => (getDefinition(module.type)?.ports ?? []).map((port) => ({ ...port, id: `${module.id}.${port.id}` }))) ?? [])
 function edit(action: () => void) { try { action(); workspace.editError = '' } catch (error) { workspace.editError = error instanceof Error ? error.message : 'Circuit edit failed.' } }
 function position(axis: 'x' | 'y' | 'z', event: Event) { if (selected.value) { const module = selected.value; edit(() => circuit.moveModule(module.id, { x: module.position?.x ?? 0, y: module.position?.y ?? 0, z: module.position?.z ?? 0, [axis]: Number((event.target as HTMLInputElement).value) })) } }
@@ -27,10 +29,10 @@ function select(event: Event) { const value = (event.target as HTMLSelectElement
 </script>
 <template>
   <section class="inspector-section"><h2>Component editor</h2>
-    <label>Add component at origin<select v-model="addType"><option v-for="item in componentCatalog" :key="item.type" :value="item.type">{{ item.name }}</option></select></label><button @click="edit(() => workspace.selectModule(circuit.placeModule(addType, { x: 0, y: 0, z: 0 })))">Add component</button>
+    <label>Add component at origin<select v-model="addType"><option v-for="item in addableComponents" :key="item.type" :value="item.type">{{ item.name }}</option></select></label><button @click="edit(() => workspace.selectModule(circuit.placeModule(addType, { x: 0, y: 0, z: 0 })))">Add component</button>
     <label>Select component<select :value="workspace.selectedModuleId || ''" @change="workspace.selectModule(($event.target as HTMLSelectElement).value || null)"><option value="">None</option><option v-for="module in circuit.graph?.modules" :key="module.id" :value="module.id">{{ module.id }} · {{ module.type }}</option></select></label>
-    <template v-if="selected"><strong>{{ selected.id }}</strong><p class="window-note">{{ part ? part.partNumber + ' · ' + part.package.id + ' · ' + part.package.pins.length + ' physical pins' : definition?.breadboardTopologyRef ? 'Breadboard contacts use declared virtual nodes; physical station mapping is separate.' : definition?.visualOnly ? 'Visual structure only; no electrical source or node map.' : 'Legacy logical component.' }}</p>
-      <template v-if="part"><p>{{ physicalState?.state || (part.simulation.status === 'supported' ? 'Ready for virtual evaluation' : 'Place / wire only · simulation unsupported') }}{{ physicalState?.reason ? ': ' + physicalState.reason : '' }}</p><p v-if="selected.mount">Mounted on {{ selected.mount.boardId }} · {{ selected.mount.contacts.length }} contacts</p><a :href="part.datasheet.url" target="_blank" rel="noopener noreferrer">Pinout / datasheet</a><details><summary>Physical pins</summary><p v-for="pin in part.package.pins" :key="pin.id">{{ pin.number }} · {{ pin.name }} · {{ pin.role }}{{ pin.outputType ? ' · ' + pin.outputType : '' }}</p></details></template>
+    <template v-if="selected"><strong>{{ selected.id }}</strong><p class="window-note">{{ part ? part.name + ' · ' + part.package.id + ' · ' + part.package.pins.length + ' physical pins' : definition?.breadboardTopologyRef ? 'Breadboard contacts use declared virtual nodes; physical station mapping is separate.' : definition?.visualOnly ? 'Visual structure only; no electrical source or node map.' : 'Legacy logical component.' }}</p>
+      <template v-if="part"><p v-if="physicalState">{{ physicalState.state }}{{ physicalState.reason ? ': ' + physicalState.reason : '' }}</p><p v-if="selected.mount">Mounted on {{ selected.mount.boardId }} · {{ selected.mount.contacts.length }} contacts</p><details><summary>Physical pins</summary><p v-for="pin in part.package.pins" :key="pin.id">{{ pin.number }} · {{ pin.name }} · {{ pin.role }}{{ pin.outputType ? ' · ' + pin.outputType : '' }}</p></details></template>
       <div class="property-coordinates"><label v-for="axis in (['x', 'y', 'z'] as const)" :key="axis">{{ axis.toUpperCase() }}<input :aria-label="'Component ' + axis.toUpperCase()" type="number" step="0.5" :value="selected.position?.[axis] ?? 0" @change="position(axis, $event)" /></label></div>
       <label>Rotation (degrees)<input type="number" :value="selected.rotation ?? 0" step="90" @change="edit(() => circuit.rotateModule(selected!.id, Number(($event.target as HTMLInputElement).value) - (selected!.rotation ?? 0)))" /></label>
       <label v-for="parameter in definition?.parameters" :key="parameter.key">{{ parameter.label }}<input v-if="parameter.kind === 'boolean'" type="checkbox" :checked="Boolean(selected.properties?.[parameter.key] ?? definition?.defaults[parameter.key])" @change="edit(() => circuit.updateModuleProperties(selected!.id, { [parameter.key]: ($event.target as HTMLInputElement).checked }))" /><input v-else type="number" :min="parameter.min" :max="parameter.max" :step="parameter.kind === 'integer' ? 1 : 'any'" :value="Number(selected.properties?.[parameter.key] ?? definition?.defaults[parameter.key])" @change="edit(() => circuit.updateModuleProperties(selected!.id, { [parameter.key]: Number(($event.target as HTMLInputElement).value) }))" /></label>

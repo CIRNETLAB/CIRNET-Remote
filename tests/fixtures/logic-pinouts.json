@@ -1,0 +1,1011 @@
+{
+  "7400": {
+    "editorType": "SN7400N",
+    "family": "74",
+    "pins": [
+      "1A",
+      "1B",
+      "1Y",
+      "2A",
+      "2B",
+      "2Y",
+      "GND",
+      "3Y",
+      "3B",
+      "3A",
+      "4Y",
+      "4B",
+      "4A",
+      "VCC"
+    ],
+    "outputs": {
+      "3": "push-pull",
+      "6": "push-pull",
+      "8": "push-pull",
+      "11": "push-pull"
+    },
+    "nc": []
+  },
+  "7401": {
+    "editorType": "SN7401N",
+    "family": "74",
+    "pins": [
+      "1Y",
+      "1A",
+      "1B",
+      "2Y",
+      "2A",
+      "2B",
+      "GND",
+      "3A",
+      "3B",
+      "3Y",
+      "4A",
+      "4B",
+      "4Y",
+      "VCC"
+    ],
+    "outputs": {
+      "1": "open-collector",
+      "4": "open-collector",
+      "10": "open-collector",
+      "13": "open-collector"
+    },
+    "nc": []
+  },
+  "7402": {
+    "editorType": "SN7402N",
+    "family": "74",
+    "pins": [
+      "1Y",
+      "1A",
+      "1B",
+      "2Y",
+      "2A",
+      "2B",
+      "GND",
+      "3A",
+      "3B",
+      "3Y",
+      "4A",
+      "4B",
+      "4Y",
+      "VCC"
+    ],
+    "outputs": {
+      "1": "push-pull",
+      "4": "push-pull",
+      "10": "push-pull",
+      "13": "push-pull"
+    },
+    "nc": []
+  },
+  "7403": {
+    "editorType": "SN7403N",
+    "family": "74",
+    "pins": [
+      "1A",
+      "1B",
+      "1Y",
+      "2A",
+      "2B",
+      "2Y",
+      "GND",
+      "3Y",
+      "3A",
+      "3B",
+      "4Y",
+      "4A",
+      "4B",
+      "VCC"
+    ],
+    "outputs": {
+      "3": "open-collector",
+      "6": "open-collector",
+      "8": "open-collector",
+      "11": "open-collector"
+    },
+    "nc": []
+  },
+  "7404": {
+    "editorType": "SN7404N",
+    "family": "74",
+    "pins": [
+      "1A",
+      "1Y",
+      "2A",
+      "2Y",
+      "3A",
+      "3Y",
+      "GND",
+      "4Y",
+      "4A",
+      "5Y",
+      "5A",
+      "6Y",
+      "6A",
+      "VCC"
+    ],
+    "outputs": {
+      "2": "push-pull",
+      "4": "push-pull",
+      "6": "push-pull",
+      "8": "push-pull",
+      "10": "push-pull",
+      "12": "push-pull"
+    },
+    "nc": []
+  },
+  "7405": {
+    "editorType": "SN7405N",
+    "family": "74",
+    "pins": [
+      "1A",
+      "1Y",
+      "2A",
+      "2Y",
+      "3A",
+      "3Y",
+      "GND",
+      "4Y",
+      "4A",
+      "5Y",
+      "5A",
+      "6Y",
+      "6A",
+      "VCC"
+    ],
+    "outputs": {
+      "2": "open-collector",
+      "4": "open-collector",
+      "6": "open-collector",
+      "8": "open-collector",
+      "10": "open-collector",
+      "12": "open-collector"
+    },
+    "nc": []
+  },
+  "7408": {
+    "editorType": "SN7408N",
+    "family": "74",
+    "pins": [
+      "1A",
+      "1B",
+      "1Y",
+      "2A",
+      "2B",
+      "2Y",
+      "GND",
+      "3Y",
+      "3A",
+      "3B",
+      "4Y",
+      "4A",
+      "4B",
+      "VCC"
+    ],
+    "outputs": {
+      "3": "push-pull",
+      "6": "push-pull",
+      "8": "push-pull",
+      "11": "push-pull"
+    },
+    "nc": []
+  },
+  "7409": {
+    "editorType": "SN7409N",
+    "family": "74",
+    "pins": [
+      "1A",
+      "1B",
+      "1Y",
+      "2A",
+      "2B",
+      "2Y",
+      "GND",
+      "3Y",
+      "3A",
+      "3B",
+      "4Y",
+      "4A",
+      "4B",
+      "VCC"
+    ],
+    "outputs": {
+      "3": "open-collector",
+      "6": "open-collector",
+      "8": "open-collector",
+      "11": "open-collector"
+    },
+    "nc": []
+  },
+  "7410": {
+    "editorType": "SN7410N",
+    "family": "74",
+    "pins": [
+      "1A",
+      "1B",
+      "2A",
+      "2B",
+      "2C",
+      "2Y",
+      "GND",
+      "3Y",
+      "3A",
+      "3B",
+      "3C",
+      "1Y",
+      "1C",
+      "VCC"
+    ],
+    "outputs": {
+      "6": "push-pull",
+      "8": "push-pull",
+      "12": "push-pull"
+    },
+    "nc": []
+  },
+  "7411": {
+    "editorType": "SN74LS11N",
+    "family": "74LS",
+    "pins": [
+      "1A",
+      "1B",
+      "2A",
+      "2B",
+      "2C",
+      "2Y",
+      "GND",
+      "3Y",
+      "3A",
+      "3B",
+      "3C",
+      "1Y",
+      "1C",
+      "VCC"
+    ],
+    "outputs": {
+      "6": "push-pull",
+      "8": "push-pull",
+      "12": "push-pull"
+    },
+    "nc": []
+  },
+  "7412": {
+    "editorType": "SN7412N",
+    "family": "74",
+    "pins": [
+      "1A",
+      "1B",
+      "2A",
+      "2B",
+      "2C",
+      "2Y",
+      "GND",
+      "3Y",
+      "3A",
+      "3B",
+      "3C",
+      "1Y",
+      "1C",
+      "VCC"
+    ],
+    "outputs": {
+      "6": "open-collector",
+      "8": "open-collector",
+      "12": "open-collector"
+    },
+    "nc": []
+  },
+  "7413": {
+    "editorType": "SN7413N",
+    "family": "74",
+    "pins": [
+      "1A",
+      "1B",
+      "NC",
+      "1C",
+      "1D",
+      "1Y",
+      "GND",
+      "2Y",
+      "2A",
+      "2B",
+      "NC",
+      "2C",
+      "2D",
+      "VCC"
+    ],
+    "outputs": {
+      "6": "push-pull",
+      "8": "push-pull"
+    },
+    "nc": [
+      "3",
+      "11"
+    ]
+  },
+  "7414": {
+    "editorType": "SN7414N",
+    "family": "74",
+    "pins": [
+      "1A",
+      "1Y",
+      "2A",
+      "2Y",
+      "3A",
+      "3Y",
+      "GND",
+      "4Y",
+      "4A",
+      "5Y",
+      "5A",
+      "6Y",
+      "6A",
+      "VCC"
+    ],
+    "outputs": {
+      "2": "push-pull",
+      "4": "push-pull",
+      "6": "push-pull",
+      "8": "push-pull",
+      "10": "push-pull",
+      "12": "push-pull"
+    },
+    "nc": []
+  },
+  "7415": {
+    "editorType": "SN74LS15N",
+    "family": "74LS",
+    "pins": [
+      "1A",
+      "1B",
+      "2A",
+      "2B",
+      "2C",
+      "2Y",
+      "GND",
+      "3Y",
+      "3A",
+      "3B",
+      "3C",
+      "1Y",
+      "1C",
+      "VCC"
+    ],
+    "outputs": {
+      "6": "open-collector",
+      "8": "open-collector",
+      "12": "open-collector"
+    },
+    "nc": []
+  },
+  "7420": {
+    "editorType": "SN7420N",
+    "family": "74",
+    "pins": [
+      "1A",
+      "1B",
+      "NC",
+      "1C",
+      "1D",
+      "1Y",
+      "GND",
+      "2Y",
+      "2A",
+      "2B",
+      "NC",
+      "2C",
+      "2D",
+      "VCC"
+    ],
+    "outputs": {
+      "6": "push-pull",
+      "8": "push-pull"
+    },
+    "nc": [
+      "3",
+      "11"
+    ]
+  },
+  "7421": {
+    "editorType": "SN74LS21N",
+    "family": "74LS",
+    "pins": [
+      "1A",
+      "1B",
+      "NC",
+      "1C",
+      "1D",
+      "1Y",
+      "GND",
+      "2Y",
+      "2A",
+      "2B",
+      "NC",
+      "2C",
+      "2D",
+      "VCC"
+    ],
+    "outputs": {
+      "6": "push-pull",
+      "8": "push-pull"
+    },
+    "nc": [
+      "3",
+      "11"
+    ]
+  },
+  "7427": {
+    "editorType": "SN7427N",
+    "family": "74",
+    "pins": [
+      "1A",
+      "1B",
+      "2A",
+      "2B",
+      "2C",
+      "2Y",
+      "GND",
+      "3Y",
+      "3A",
+      "3B",
+      "3C",
+      "1Y",
+      "1C",
+      "VCC"
+    ],
+    "outputs": {
+      "6": "push-pull",
+      "8": "push-pull",
+      "12": "push-pull"
+    },
+    "nc": []
+  },
+  "7430": {
+    "editorType": "SN7430N",
+    "family": "74",
+    "pins": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F",
+      "GND",
+      "Y",
+      "NC",
+      "NC",
+      "G",
+      "H",
+      "NC",
+      "VCC"
+    ],
+    "outputs": {
+      "8": "push-pull"
+    },
+    "nc": [
+      "9",
+      "10",
+      "13"
+    ]
+  },
+  "7432": {
+    "editorType": "SN7432N",
+    "family": "74",
+    "pins": [
+      "1A",
+      "1B",
+      "1Y",
+      "2A",
+      "2B",
+      "2Y",
+      "GND",
+      "3Y",
+      "3A",
+      "3B",
+      "4Y",
+      "4A",
+      "4B",
+      "VCC"
+    ],
+    "outputs": {
+      "3": "push-pull",
+      "6": "push-pull",
+      "8": "push-pull",
+      "11": "push-pull"
+    },
+    "nc": []
+  },
+  "7437": {
+    "editorType": "SN7437N",
+    "family": "74",
+    "pins": [
+      "1A",
+      "1B",
+      "1Y",
+      "2A",
+      "2B",
+      "2Y",
+      "GND",
+      "3Y",
+      "3A",
+      "3B",
+      "4Y",
+      "4A",
+      "4B",
+      "VCC"
+    ],
+    "outputs": {
+      "3": "push-pull",
+      "6": "push-pull",
+      "8": "push-pull",
+      "11": "push-pull"
+    },
+    "nc": []
+  },
+  "7438": {
+    "editorType": "SN7438N",
+    "family": "74",
+    "pins": [
+      "1A",
+      "1B",
+      "1Y",
+      "2A",
+      "2B",
+      "2Y",
+      "GND",
+      "3Y",
+      "3A",
+      "3B",
+      "4Y",
+      "4A",
+      "4B",
+      "VCC"
+    ],
+    "outputs": {
+      "3": "open-collector",
+      "6": "open-collector",
+      "8": "open-collector",
+      "11": "open-collector"
+    },
+    "nc": []
+  },
+  "7440": {
+    "editorType": "SN7440N",
+    "family": "74",
+    "pins": [
+      "1A",
+      "1B",
+      "NC",
+      "1C",
+      "1D",
+      "1Y",
+      "GND",
+      "2Y",
+      "2A",
+      "2B",
+      "NC",
+      "2C",
+      "2D",
+      "VCC"
+    ],
+    "outputs": {
+      "6": "push-pull",
+      "8": "push-pull"
+    },
+    "nc": [
+      "3",
+      "11"
+    ]
+  },
+  "7486": {
+    "editorType": "SN7486N",
+    "family": "74",
+    "pins": [
+      "1A",
+      "1B",
+      "1Y",
+      "2A",
+      "2B",
+      "2Y",
+      "GND",
+      "3Y",
+      "3A",
+      "3B",
+      "4Y",
+      "4A",
+      "4B",
+      "VCC"
+    ],
+    "outputs": {
+      "3": "push-pull",
+      "6": "push-pull",
+      "8": "push-pull",
+      "11": "push-pull"
+    },
+    "nc": []
+  },
+  "74136": {
+    "editorType": "SN74LS136N",
+    "family": "74LS",
+    "pins": [
+      "1A",
+      "1B",
+      "1Y",
+      "2A",
+      "2B",
+      "2Y",
+      "GND",
+      "3Y",
+      "3A",
+      "3B",
+      "4Y",
+      "4A",
+      "4B",
+      "VCC"
+    ],
+    "outputs": {
+      "3": "open-collector",
+      "6": "open-collector",
+      "8": "open-collector",
+      "11": "open-collector"
+    },
+    "nc": []
+  },
+  "74266": {
+    "editorType": "SN74LS266N",
+    "family": "74LS",
+    "pins": [
+      "1A",
+      "1B",
+      "1Y",
+      "2Y",
+      "2A",
+      "2B",
+      "GND",
+      "3A",
+      "3B",
+      "3Y",
+      "4Y",
+      "4A",
+      "4B",
+      "VCC"
+    ],
+    "outputs": {
+      "3": "open-collector",
+      "4": "open-collector",
+      "10": "open-collector",
+      "11": "open-collector"
+    },
+    "nc": []
+  },
+  "CD4001": {
+    "editorType": "CD4001BE",
+    "family": "CD4000B",
+    "pins": [
+      "A",
+      "B",
+      "J",
+      "K",
+      "C",
+      "D",
+      "VSS",
+      "E",
+      "F",
+      "L",
+      "M",
+      "G",
+      "H",
+      "VDD"
+    ],
+    "outputs": {
+      "3": "push-pull",
+      "4": "push-pull",
+      "10": "push-pull",
+      "11": "push-pull"
+    },
+    "nc": []
+  },
+  "CD4011": {
+    "editorType": "CD4011BE",
+    "family": "CD4000B",
+    "pins": [
+      "A",
+      "B",
+      "J",
+      "K",
+      "C",
+      "D",
+      "VSS",
+      "E",
+      "F",
+      "L",
+      "M",
+      "G",
+      "H",
+      "VDD"
+    ],
+    "outputs": {
+      "3": "push-pull",
+      "4": "push-pull",
+      "10": "push-pull",
+      "11": "push-pull"
+    },
+    "nc": []
+  },
+  "CD4012": {
+    "editorType": "CD4012BE",
+    "family": "CD4000B",
+    "pins": [
+      "J",
+      "A",
+      "B",
+      "C",
+      "D",
+      "NC",
+      "VSS",
+      "NC",
+      "E",
+      "F",
+      "G",
+      "H",
+      "K",
+      "VDD"
+    ],
+    "outputs": {
+      "1": "push-pull",
+      "13": "push-pull"
+    },
+    "nc": [
+      "6",
+      "8"
+    ]
+  },
+  "CD4013": {
+    "editorType": "CD4013BE",
+    "family": "CD4000B",
+    "pins": [
+      "Q1",
+      "/Q1",
+      "CLOCK1",
+      "RESET1",
+      "D1",
+      "SET1",
+      "VSS",
+      "SET2",
+      "D2",
+      "RESET2",
+      "CLOCK2",
+      "/Q2",
+      "Q2",
+      "VDD"
+    ],
+    "outputs": {
+      "1": "push-pull",
+      "2": "push-pull",
+      "12": "push-pull",
+      "13": "push-pull"
+    },
+    "nc": []
+  },
+  "CD4030": {
+    "editorType": "CD4030BE",
+    "family": "CD4000B",
+    "pins": [
+      "A",
+      "B",
+      "J",
+      "K",
+      "C",
+      "D",
+      "VSS",
+      "E",
+      "F",
+      "L",
+      "M",
+      "G",
+      "H",
+      "VDD"
+    ],
+    "outputs": {
+      "3": "push-pull",
+      "4": "push-pull",
+      "10": "push-pull",
+      "11": "push-pull"
+    },
+    "nc": []
+  },
+  "CD4069": {
+    "editorType": "CD4069UBE",
+    "family": "CD4000UB",
+    "pins": [
+      "A",
+      "G",
+      "B",
+      "H",
+      "C",
+      "I",
+      "VSS",
+      "J",
+      "D",
+      "K",
+      "E",
+      "L",
+      "F",
+      "VDD"
+    ],
+    "outputs": {
+      "2": "push-pull",
+      "4": "push-pull",
+      "6": "push-pull",
+      "8": "push-pull",
+      "10": "push-pull",
+      "12": "push-pull"
+    },
+    "nc": []
+  },
+  "CD4070": {
+    "editorType": "CD4070BE",
+    "family": "CD4000B",
+    "pins": [
+      "A",
+      "B",
+      "J",
+      "K",
+      "C",
+      "D",
+      "VSS",
+      "E",
+      "F",
+      "L",
+      "M",
+      "G",
+      "H",
+      "VDD"
+    ],
+    "outputs": {
+      "3": "push-pull",
+      "4": "push-pull",
+      "10": "push-pull",
+      "11": "push-pull"
+    },
+    "nc": []
+  },
+  "CD4071": {
+    "editorType": "CD4071BE",
+    "family": "CD4000B",
+    "pins": [
+      "A",
+      "B",
+      "J",
+      "K",
+      "C",
+      "D",
+      "VSS",
+      "E",
+      "F",
+      "L",
+      "M",
+      "G",
+      "H",
+      "VDD"
+    ],
+    "outputs": {
+      "3": "push-pull",
+      "4": "push-pull",
+      "10": "push-pull",
+      "11": "push-pull"
+    },
+    "nc": []
+  },
+  "CD4072": {
+    "editorType": "CD4072BE",
+    "family": "CD4000B",
+    "pins": [
+      "J",
+      "A",
+      "B",
+      "C",
+      "D",
+      "NC",
+      "VSS",
+      "NC",
+      "E",
+      "F",
+      "G",
+      "H",
+      "K",
+      "VDD"
+    ],
+    "outputs": {
+      "1": "push-pull",
+      "13": "push-pull"
+    },
+    "nc": [
+      "6",
+      "8"
+    ]
+  },
+  "CD4077": {
+    "editorType": "CD4077BE",
+    "family": "CD4000B",
+    "pins": [
+      "A",
+      "B",
+      "J",
+      "K",
+      "C",
+      "D",
+      "VSS",
+      "E",
+      "F",
+      "L",
+      "M",
+      "G",
+      "H",
+      "VDD"
+    ],
+    "outputs": {
+      "3": "push-pull",
+      "4": "push-pull",
+      "10": "push-pull",
+      "11": "push-pull"
+    },
+    "nc": []
+  },
+  "CD4081": {
+    "editorType": "CD4081BE",
+    "family": "CD4000B",
+    "pins": [
+      "A",
+      "B",
+      "J",
+      "K",
+      "C",
+      "D",
+      "VSS",
+      "E",
+      "F",
+      "L",
+      "M",
+      "G",
+      "H",
+      "VDD"
+    ],
+    "outputs": {
+      "3": "push-pull",
+      "4": "push-pull",
+      "10": "push-pull",
+      "11": "push-pull"
+    },
+    "nc": []
+  },
+  "CD4093": {
+    "editorType": "CD4093BE",
+    "family": "CD4000B",
+    "pins": [
+      "A",
+      "B",
+      "J",
+      "K",
+      "C",
+      "D",
+      "VSS",
+      "E",
+      "F",
+      "L",
+      "M",
+      "G",
+      "H",
+      "VDD"
+    ],
+    "outputs": {
+      "3": "push-pull",
+      "4": "push-pull",
+      "10": "push-pull",
+      "11": "push-pull"
+    },
+    "nc": []
+  }
+}

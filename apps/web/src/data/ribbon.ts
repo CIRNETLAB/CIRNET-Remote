@@ -1,7 +1,7 @@
 import type { WindowKind } from '../types/windows'
 import deviceMetadata from './deviceMetadata.json'
 import { getDefinition } from './editorCatalog'
-import { getPartForType } from './partCatalog'
+import { getPartForType, partCatalog } from './partCatalog'
 
 export const iconUrl = (filename: string) => new URL(`../assets/icons/${filename}.svg`, import.meta.url).href
 export interface LibraryComponent {
@@ -14,7 +14,7 @@ const artwork = (type: string, name: string, icon: string): LibraryComponent => 
 const future = (type: string, name: string, glyph: string): LibraryComponent => ({ type, name, glyph, description: 'Reserved library entry. Device metadata and editor integration are not connected yet.' })
 const physical = (type: string, icon: string): LibraryComponent => {
   const part = getPartForType(type)!
-  return { type, name: part.name, icon, description: `${part.manufacturer} ${part.partNumber}. ${part.package.pins.length} physical pins. ${part.simulation.reason ?? 'Power-aware virtual model with declared terminals.'}`, support: part.simulation.status === 'unsupported' ? 'Place / wire · no simulation' : 'Place / wire · virtual model', metadata: { part_definition: part } }
+  return { type, name: part.name, icon, description: `${part.function.replaceAll('-', ' ')} · ${part.package.pins.length} pins · ${part.package.id}`, support: 'Place / wire', metadata: { definitionId: part.id, revision: part.revision } }
 }
 export const ribbonGroups: RibbonGroup[] = [
   { id: 'structure', label: 'Structure', icon: 'breadboard_830', items: [
@@ -29,17 +29,10 @@ export const ribbonGroups: RibbonGroup[] = [
   { id: 'output', label: 'Output', icon: 'led', items: [physical('LED_LTL307EE', 'led'), physical('BUZZER_PS1240', 'buzzer_chip')] },
   { id: 'input', label: 'Contacts', icon: 'Input', items: [physical('TOGGLE_SWITCH_200MSP1', 'Input'), physical('PUSH_BUTTON_B3F1000', 'Input'), physical('DIP_SWITCH_A6D4100', 'Input')] },
   { id: 'logic', label: 'Logic ICs', icon: 'ic_logic', items: [
-    physical('SN74HC08N', 'ic_logic'), physical('SN74HC02N', 'ic_logic'), physical('SN74HC04N', 'ic_logic'), physical('SN74LS266N', 'ic_logic'),
+    ...partCatalog.filter(part => part.package.family === 'dip').map(part => physical(part.editorType, 'ic_logic')),
   ] },
   { id: 'arithmetic', label: 'Arithmetic ICs', icon: 'ic_arithmetic', items: [artwork('ADDER', 'Adder abstraction', 'ic_arithmetic'), artwork('MULTIPLIER', 'Multiplier abstraction', 'ic_arithmetic')] },
-  { id: 'memory', label: 'Memory', glyph: 'memory', items: [future('MEMORY', 'Generic byte memory', 'memory')] },
   { id: 'display', label: 'Display', icon: '7doan1', items: [physical('SEGMENT_SC5611EWA', '7doan1'), physical('SEGMENT_DC5611EWA', '7doan2'), physical('SEGMENT_CC5612EWA', '7doan4')] },
-  { id: 'logical-tools', label: 'Logic tools', glyph: 'chip', items: [
-    artwork('DIGITAL_SWITCH', 'Ideal logic source', 'Input'), artwork('CLOCK', 'Ideal clock source', 'Input'), artwork('DIP_SWITCH', 'Ideal four-bit source', 'Input'),
-    artwork('PUSH_BUTTON', 'Ideal momentary source', 'Input'), artwork('LED', 'Logical indicator · IN', 'led'), artwork('74HC08', 'Legacy logical AND · 12 ports', 'ic_logic'),
-    artwork('SEGMENT_1', 'Logical seven-segment', '7doan1'), future('PROBE', 'Logical probe', 'probe'), future('DISPLAY', 'Logical digital display', 'memory'),
-  ] },
-  { id: 'embedded', label: 'Embedded/Controller', glyph: 'chip', items: [future('CONTROLLER', 'Controller', 'chip')] },
   { id: 'instruments', label: 'Instruments', icon: 'oscilloscope_2ch', items: [
     { type: 'OSCILLOSCOPE', name: 'Oscilloscope · 2 channels', icon: 'oscilloscope_2ch', description: 'Two-channel bench oscilloscope visual with independent control pivots and waveform preview.' },
     { type: 'GENERATOR', name: 'Function Generator · 2 channels', icon: 'function_generator_2ch', description: 'L1571979 bench generator visual with two channel displays, encoder pivot and three BNC connectors.' },
@@ -48,6 +41,8 @@ export const ribbonGroups: RibbonGroup[] = [
   { id: 'notation', label: 'Notation', glyph: 'tag', items: [future('LABEL', 'Label', 'tag'), future('PROBE', 'Probe annotation', 'probe')] },
 ]
 export const libraryComponents = ribbonGroups.flatMap((group) => group.items)
+const normalTypes = new Set(libraryComponents.map(item => item.type))
+export const isNormallyAddable = (type: string) => normalTypes.has(type) && !!getDefinition(type)
 for (const item of libraryComponents) {
   const definition = getDefinition(item.type)
   if (definition) {
