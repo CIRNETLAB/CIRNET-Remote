@@ -4,6 +4,7 @@ import type { createSceneManager } from '../three/SceneManager'
 import { getDefinition } from '../data/editorCatalog'
 import { getBreadboardGeometrySpec } from '../geometry/BreadboardGeometrySpec'
 import { snapBreadboardPosition } from '../geometry/breadboardDocking'
+import { placementInitialRotation, rotationSnapStep } from '../geometry/placementRotation'
 import { useCircuitStore } from '../stores/circuit'
 import { useWorkspaceStore } from '../stores/workspace'
 import { useUiStore } from '../stores/ui'
@@ -76,7 +77,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
   const snap = (point: { x: number; y?: number; z: number } | Vector3, activeType?: string | null, activeId?: string | null, elevation = 0, rotation?: number, axis?: 'x' | 'z'): Position =>
     snapPosition(point, workspace.snap, circuit.graph?.modules ?? [], activeType, activeId, elevation, rotation, axis)
   function createPlacementDraft(type: string, point: Position): PlacementDraft {
-    const rotation = manager()!.placementFacingYaw()
+    const rotation = placementInitialRotation(type, () => manager()!.placementFacingYaw())
     return { type, position: snap(point, type, null, 0, rotation), rotation }
   }
   function showPlacement() { if (placementDraft) manager()?.setGhost(placementDraft.type, placementDraft.position, placementDraft.rotation) }
@@ -245,6 +246,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       if (gesture.kind === 'transform') {
         const transform = gesture, point = manager()!.groundPoint(x, y, transform.center.y)
         if (!point) return
+        const type = transform.target === 'placement' ? placementDraft?.type : circuit.graph?.modules.find((m) => m.id === transform.id)?.type
         if (transform.handle === 'rotate-y') {
           const dx = point.x - transform.center.x, dz = point.z - transform.center.z
           if (Math.hypot(dx, dz) < 0.001) return
@@ -252,7 +254,8 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
           transform.angle += Math.atan2(Math.sin(currentAngle - transform.lastAngle), Math.cos(currentAngle - transform.lastAngle))
           transform.lastAngle = currentAngle
           const raw = transform.initialRotation + transform.angle * 180 / Math.PI
-          transform.rotation = workspace.snap ? Math.round(raw / 15) * 15 : Math.round(raw * 100) / 100
+          const step = rotationSnapStep(type)
+          transform.rotation = workspace.snap ? Math.round(raw / step) * step : Math.round(raw * 100) / 100
           if (transform.target === 'placement' && placementDraft) {
             placementDraft.rotation = transform.rotation
             placementDraft.position = snap(transform.initial, placementDraft.type, null, transform.initial.y, placementDraft.rotation)
@@ -260,7 +263,6 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
           } else manager()!.previewRotation(transform.id, transform.rotation)
         } else {
           point.sub(transform.anchor); point.x += transform.initial.x; point.z += transform.initial.z
-          const type = transform.target === 'placement' ? placementDraft?.type : circuit.graph?.modules.find((m) => m.id === transform.id)?.type
           const axis = transform.target === 'placement' && (transform.handle === 'x' || transform.handle === 'z') ? transform.handle : undefined
           if (axis === 'x') point.z = transform.initial.z
           if (axis === 'z') point.x = transform.initial.x

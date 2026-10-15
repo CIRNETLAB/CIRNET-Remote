@@ -816,6 +816,7 @@ test('ViewCube navigation never mutates CircuitGraph, models or history snapshot
       modules: [
         { id: 'CLK', type: 'CLOCK', position: { x: 1, y: 0, z: -2 } },
         { id: 'LED', type: 'LED', position: { x: 5, y: 0, z: 2 } },
+        { id: 'BB', type: 'BREADBOARD', position: { x: -2, y: 0, z: 3 }, rotation: 90 },
       ],
       connections: [{ source: 'CLK.OUT', destination: 'LED.IN' }],
     }
@@ -830,6 +831,7 @@ test('ViewCube navigation never mutates CircuitGraph, models or history snapshot
 
     // Perform diverse ViewCube navigation actions
     for (const view of Object.keys(ORIENTATION_DIRECTIONS)) manager.setViewOrientation(view, false)
+    for (let turn = 0; turn < 8; turn++) manager.orbit(45)
     manager.orbit(45, -15)
     manager.resetView()
 

@@ -702,7 +702,7 @@ async function previewPlacement(h: ReturnType<typeof setup>, type = 'CLOCK', pos
 }
 
 for (const path of ['follow', 'immediate', 'drop'] as const) {
-  test(`${path} placement uses camera-relative initial yaw and one Undo step`, async () => {
+  test(`${path} Power Supply placement uses camera-relative initial yaw and one Undo step`, async () => {
     for (const [view, yaw] of [['TOP-FRONT', 0], ['TOP-RIGHT', 90], ['TOP-BACK', 180], ['TOP-LEFT', 270], ['TOP-BACK-RIGHT', 135], ['TOP', 0]] as const) {
       const h = setup()
       try {
@@ -731,6 +731,115 @@ for (const path of ['follow', 'immediate', 'drop'] as const) {
     }
   })
 }
+
+const placementViews = ['default', 'FRONT', 'RIGHT', 'BACK', 'LEFT', 'TOP', 'TOP-FRONT-RIGHT', 'orbit37', 'orbit123'] as const
+function placementView(h: ReturnType<typeof setup>, view: typeof placementViews[number]) {
+  // Fit targets the actual positive-height housing center. Even an exact side
+  // view can then recover a y=0 world pointer below its horizontal horizon.
+  h.manager.fitCircuit()
+  assert.ok(h.manager.target().y > 0)
+  if (view === 'orbit37' || view === 'orbit123') h.manager.orbit(view === 'orbit37' ? 37 : 123)
+  else if (view !== 'default') h.manager.setViewOrientation(view, false)
+}
+
+for (const [type, dockZ] of [['BREADBOARD', 2.66], ['BREADBOARD_630', 2.26], ['BREADBOARD_100', 1.59]] as const) {
+  for (const path of ['follow', 'immediate', 'drop'] as const) {
+    test(`${type} ${path} docks the same world pose across camera views`, async () => {
+      let referencePose: { position: unknown; rotation: number | undefined } | null = null
+      for (const view of placementViews) {
+        const h = setup()
+        try {
+          const fixed = h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 })
+          await nextTick(); h.circuit.past = []; placementView(h, view)
+          const world = new Vector3(.1, 0, dockZ + .2), p = h.manager.project(world)
+          assert.ok(p.visible, `${view}: pointer is in the actual viewport`)
+          assert.ok(h.manager.groundPoint(p.x, p.y)!.distanceTo(world) < 1e-7, `${view}: real camera unprojects the same world pointer`)
+          if (path === 'drop') h.editor.drop({ clientX: p.x, clientY: p.y, preventDefault() {}, dataTransfer: { getData: () => type } } as unknown as DragEvent)
+          else {
+            h.workspace.armPlacement(type); await nextTick()
+            if (path === 'follow') {
+              h.editor.pointerMove(h.pointer(p.x, p.y))
+              const ghost = placementGhost(h)
+              assert.ok(ghost, `${type}/${view}: draft exists`)
+              assert.ok(Math.abs(ghost.rotation.y) < 1e-9, `${type}/${view}: mechanical draft is world-aligned`)
+              assert.ok(ghost.position.distanceTo(new Vector3(0, 0, dockZ)) < 1e-8)
+              assert.equal(h.circuit.past.length, 0)
+            }
+            const click = path === 'follow' ? h.pointer(80, 620) : h.pointer(p.x, p.y)
+            assert.equal(h.manager.pickGizmo(click.clientX, click.clientY), null)
+            h.editor.pointerDown(click)
+          }
+          await nextTick()
+          const module = h.circuit.graph!.modules[1]
+          assert.ok(module, `${type}/${view}/${path}: placement commits`)
+          assert.equal(module.rotation, 0)
+          assert.ok(Math.hypot(module.position!.x!, module.position!.y!, module.position!.z! - dockZ) < 1e-8)
+          const pose = { position: { ...module.position }, rotation: module.rotation }
+          if (!referencePose) referencePose = pose
+          else assert.deepEqual(pose, referencePose, 'committed world pose must be exactly camera-invariant')
+          assert.equal(isMechanicalBreadboardDock(h.circuit.graph!.modules.find(module => module.id === fixed)!, module), true)
+          assert.equal(breadboardBodiesOverlap(h.circuit.graph!.modules[0], module), false)
+          assert.equal(h.circuit.past.length, 1)
+          h.circuit.undo(); await nextTick(); assert.equal(h.circuit.graph!.modules.length, 1)
+          h.circuit.redo(); await nextTick(); assert.deepEqual(h.circuit.graph!.modules[1], module)
+        } finally { h.dispose() }
+      }
+    })
+  }
+}
+
+test('mechanical and generic gizmos use their own snap policy; Snap OFF retains explicit fine rotation', async () => {
+  for (const type of ['BREADBOARD', 'BREADBOARD_630', 'BREADBOARD_100', 'POWER_SUPPLY']) {
+    for (const target of ['placement', 'module'] as const) for (const snap of [true, false]) {
+      const h = setup()
+      try {
+        h.workspace.snap = snap
+        if (target === 'placement') await previewPlacement(h, type)
+        else { const id = h.circuit.placeModule(type, { x: 0, y: 0, z: 0 }); h.workspace.selectModule(id); await nextTick() }
+        h.circuit.past = []
+        const center = h.manager.gizmoOrigin()!, grip = h.manager.gizmoHandlePosition('rotate-y')!, start = h.manager.project(grip)
+        const degrees = snap ? 60 : 37
+        const end = h.manager.project(grip.clone().sub(center).applyAxisAngle(new Vector3(0, 1, 0), degrees * Math.PI / 180).add(center))
+        h.editor.pointerDown(h.pointer(start.x, start.y)); h.editor.pointerMove(h.pointer(end.x, end.y))
+        assert.equal(h.circuit.past.length, 0)
+        h.editor.pointerUp(h.pointer(end.x, end.y)); await nextTick()
+        const expected = snap ? type === 'POWER_SUPPLY' ? 60 : 90 : 37
+        const model = target === 'placement' ? placementGhost(h) : [...h.manager.models.values()][0]
+        assert.ok(Math.abs(model.rotation.y * 180 / Math.PI - expected) < 1e-7, `${type}/${target}/snap=${snap}`)
+        assert.equal(h.circuit.past.length, target === 'module' ? 1 : 0)
+        if (target === 'module') { h.circuit.undo(); await nextTick(); assert.equal(h.circuit.graph!.modules[0].rotation ?? 0, 0); h.circuit.redo(); await nextTick(); assert.equal(h.circuit.graph!.modules[0].rotation, expected) }
+      } finally { h.dispose() }
+    }
+  }
+})
+
+test('a mechanical draft retains its explicit world rotation and pose through navigation, follow and one pose commit', async () => {
+  const h = setup()
+  try {
+    h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 }, 90); await nextTick(); h.circuit.past = []
+    await previewPlacement(h, 'BREADBOARD', new Vector3(12, 0, 0))
+    const ghost = placementGhost(h), center = h.manager.gizmoOrigin()!, grip = h.manager.gizmoHandlePosition('rotate-y')!, start = h.manager.project(grip)
+    const end = h.manager.project(grip.clone().sub(center).applyAxisAngle(new Vector3(0, 1, 0), Math.PI / 3).add(center))
+    h.editor.pointerDown(h.pointer(start.x, start.y)); h.editor.pointerMove(h.pointer(end.x, end.y)); h.editor.pointerUp(h.pointer(end.x, end.y))
+    const pose = ghost.position.clone(), matrix = ghost.matrixWorld.clone()
+    assert.ok(Math.abs(ghost.rotation.y * 180 / Math.PI - 90) < 1e-8)
+    for (const navigate of [() => h.manager.orbit(37), () => h.manager.pan(1, -2), () => h.manager.setZoom(175), () => h.manager.setViewOrientation('TOP-BACK-RIGHT', false), () => h.manager.resetView()]) {
+      navigate(); await nextTick()
+      assert.ok(ghost.position.equals(pose)); assert.ok(ghost.matrixWorld.equals(matrix), 'camera-only changes cannot move/reinitialize the active draft')
+      assert.equal(h.circuit.past.length, 0)
+    }
+    const world = new Vector3(2.86, 0, .1), pointer = h.manager.project(world)
+    h.editor.pointerMove(h.pointer(pointer.x, pointer.y))
+    assert.ok(Math.abs(ghost.rotation.y * 180 / Math.PI - 90) < 1e-8)
+    assert.ok(ghost.position.distanceTo(new Vector3(2.66, 0, 0)) < 1e-8, 'explicitly rotated board follows into its matching world dock')
+    h.editor.pointerDown(h.pointer(80, 620)); await nextTick()
+    const module = h.circuit.graph!.modules[1]
+    assert.equal(module.rotation, 90); assert.equal(isMechanicalBreadboardDock(h.circuit.graph!.modules[0], module), true)
+    assert.equal(h.circuit.past.length, 1)
+    h.circuit.undo(); await nextTick(); assert.equal(h.circuit.graph!.modules.length, 1)
+    h.circuit.redo(); await nextTick(); assert.deepEqual(h.circuit.graph!.modules[1], module)
+  } finally { h.dispose() }
+})
 
 test('180-degree camera orbit is sampled once per new placement draft', async () => {
   const h = setup()
@@ -1007,16 +1116,17 @@ test('rotation survives resumed cursor follow and normal clicks commit a full po
       const end = h.manager.project(center.clone().add(new Vector3(-radius * Math.cos(Math.PI / 3), 0, radius * Math.sin(Math.PI / 3))))
       h.editor.pointerMove(h.pointer(start.x, start.y)); h.editor.pointerDown(h.pointer(start.x, start.y))
       h.editor.pointerMove(h.pointer(end.x, end.y)); h.editor.pointerUp(h.pointer(end.x, end.y))
-      assert.equal(Math.round(ghost.rotation.y * 180 / Math.PI), 60)
+      const expectedRotation = type === 'BREADBOARD' ? 90 : 60
+      assert.equal(Math.round(ghost.rotation.y * 180 / Math.PI), expectedRotation)
       const target = new Vector3(-3, 0, -3), screen = h.manager.project(target)
       assert.equal(h.manager.pickGizmo(screen.x, screen.y), null)
       h.editor.pointerMove({ ...h.pointer(screen.x, screen.y), buttons: 0 } as PointerEvent)
-      assert.ok(ghost.position.distanceTo(target) < 0.001); assert.equal(Math.round(ghost.rotation.y * 180 / Math.PI), 60)
+      assert.ok(ghost.position.distanceTo(target) < 0.001); assert.equal(Math.round(ghost.rotation.y * 180 / Math.PI), expectedRotation)
       assert.equal(h.circuit.past.length, 0); assert.equal(h.circuit.graph!.modules.length, 0)
       const pose = { x: ghost.position.x, y: ghost.position.y, z: ghost.position.z }
       h.editor.pointerDown(h.pointer(screen.x, screen.y)); h.editor.pointerUp(h.pointer(screen.x, screen.y)); await nextTick()
       const module = h.circuit.graph!.modules[0]
-      assert.deepEqual(module.position, pose); assert.equal(module.rotation, 60); assert.equal(h.circuit.past.length, 1)
+      assert.deepEqual(module.position, pose); assert.equal(module.rotation, expectedRotation); assert.equal(h.circuit.past.length, 1)
       assert.equal(h.workspace.selectedModuleId, module.id)
       for (const part of ['x', 'z', 'xz', 'rotate-y', 'delete'] as const) assert.ok(h.manager.gizmoHandlePosition(part))
       h.circuit.undo(); await nextTick(); assert.equal(h.circuit.graph!.modules.length, 0)
