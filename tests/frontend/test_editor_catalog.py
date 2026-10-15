@@ -26,3 +26,11 @@ def test_logic_editor_reference_uses_confirmed_device_library_identity():
     assert device['id'] == logic['type']
     assert len(logic['ports']) == 12
     assert not any('pin' in port for port in logic['ports'])
+
+
+def test_standardized_component_display_names():
+    catalog = json.loads((ROOT / 'device-library/editor/components.json').read_text(encoding='utf-8'))
+    by_type = {item['type']: item for item in catalog['components']}
+    assert by_type['BREADBOARD_100']['name'] == 'Power Breadboard'
+    assert by_type['POWER_SUPPLY']['name'] == 'Power Supply'
+

@@ -70,7 +70,7 @@
     },
     {
       "type": "BREADBOARD_100",
-      "name": "Solderless Breadboard",
+      "name": "Power Breadboard",
       "family": "structure",
       "visual": "breadboard_100",
       "size": [
@@ -103,7 +103,7 @@
     },
     {
       "type": "POWER_SUPPLY",
-      "name": "Power supply visual",
+      "name": "Power Supply",
       "family": "structure",
       "visual": "supply",
       "size": [

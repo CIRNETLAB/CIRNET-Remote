@@ -54,7 +54,7 @@ Scope uses a large empty screen beside Horizontal/Trigger/Vertical control group
 
 ## Models and contracts
 
-The canonical editor catalog covers 21 types: Breadboard 830/630/100, Board/Power supply visuals; Resistor/Capacitor; Push button/Toggle/DIP/Clock; LED/7-segment/Display/Probe; 74HC08; generic Adder/Multiplier; generic Memory; two-channel Oscilloscope and Function Generator visuals.
+The canonical editor catalog covers 21 types: Breadboard 830/630, Power Breadboard, Board, Power Supply; Resistor/Capacitor; Push button/Toggle/DIP/Clock; LED/7-segment/Display/Probe; 74HC08; generic Adder/Multiplier; generic Memory; two-channel Oscilloscope and Function Generator visuals.
 
 **Function Generator 2 CH:** Instruments places the reference-based L1571979 silver model with a charcoal front. Its left screen contains yellow CH1 sine/cyan CH2 square previews and five parameters per channel. Six illuminated screen keys, a 3×3 function keypad, centered encoder/LED arc, arrow keys, three colored BNCs, round power key and inclined bail complete the front. The screen, controls, connectors and stand are separate named objects. Move/Rotate/gizmo/Undo-Redo use the existing lifecycle. Display artwork is illustrative; DDS output/control is not connected. See the [GLB](public/models/function-generator-2ch/function-generator-2ch.glb) and [model/export contract](public/models/function-generator-2ch/README.md). `npm run export:generator` regenerates GLB/glTF/bin/PNG/SVG; `/function-generator-preview.html` verifies the actual GLB and CanvasTexture replacement.
 

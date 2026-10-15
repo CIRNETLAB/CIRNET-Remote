@@ -14,8 +14,8 @@ export const ribbonGroups: RibbonGroup[] = [
   { id: 'structure', label: 'Structure', icon: 'breadboard_830', items: [
     { ...artwork('BREADBOARD', 'Breadboard 830', 'breadboard_830'), metadata: deviceMetadata['generic-full-size'] },
     { ...artwork('BREADBOARD_630', 'Breadboard 630', 'breadboard_630'), description: '630 tie-point half-size solderless breadboard terminal strip without power distribution rails.' },
-    { ...artwork('BREADBOARD_100', 'Solderless Breadboard', 'breadboard_100'), description: '100 tie-point dual bus power distribution strip (+ / - rails) for modular breadboard assembly.' },
-    artwork('POWER_SUPPLY', 'Power supply visual', 'power_supply_upright'),
+    { ...artwork('BREADBOARD_100', 'Power Breadboard', 'breadboard_100'), description: '100 tie-point dual bus power distribution strip (+ / - rails) for modular breadboard assembly.' },
+    artwork('POWER_SUPPLY', 'Power Supply', 'power_supply_upright'),
     { ...artwork('JUMPER', 'Wire tool', 'Wire'), description: 'Connect holes or ports and route colored jumper wires.' },
   ] },
   { id: 'passive', label: 'Passive', icon: 'resistor', items: [artwork('RESISTOR', 'Resistor', 'resistor'), artwork('CAPACITOR', 'Capacitor', 'capacitor')] },
