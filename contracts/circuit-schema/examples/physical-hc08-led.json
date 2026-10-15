@@ -1,0 +1,413 @@
+{
+  "schema_version": "1.1",
+  "circuit_id": "physical-hc08-led",
+  "modules": [
+    {
+      "id": "BB",
+      "type": "BREADBOARD",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": 0
+    },
+    {
+      "id": "PSU",
+      "type": "DC_SUPPLY",
+      "position": {
+        "x": -6,
+        "y": 0,
+        "z": -1
+      },
+      "rotation": 0,
+      "properties": {
+        "voltage": 5,
+        "power_on": true
+      }
+    },
+    {
+      "id": "U1",
+      "type": "SN74HC08N",
+      "mount": {
+        "kind": "breadboard",
+        "version": 1,
+        "boardId": "BB",
+        "partId": "TI-SN74HC08N",
+        "partRevision": 1,
+        "packageId": "PDIP-14-300",
+        "packageRevision": 1,
+        "pose": {
+          "position": {
+            "x": -0.52,
+            "y": 0.309,
+            "z": 0
+          },
+          "rotation": 0
+        },
+        "contacts": [
+          {
+            "kind": "pin-contact",
+            "version": 1,
+            "pinId": "1",
+            "contactId": "terminal:F:25"
+          },
+          {
+            "kind": "pin-contact",
+            "version": 1,
+            "pinId": "2",
+            "contactId": "terminal:F:26"
+          },
+          {
+            "kind": "pin-contact",
+            "version": 1,
+            "pinId": "3",
+            "contactId": "terminal:F:27"
+          },
+          {
+            "kind": "pin-contact",
+            "version": 1,
+            "pinId": "4",
+            "contactId": "terminal:F:28"
+          },
+          {
+            "kind": "pin-contact",
+            "version": 1,
+            "pinId": "5",
+            "contactId": "terminal:F:29"
+          },
+          {
+            "kind": "pin-contact",
+            "version": 1,
+            "pinId": "6",
+            "contactId": "terminal:F:30"
+          },
+          {
+            "kind": "pin-contact",
+            "version": 1,
+            "pinId": "7",
+            "contactId": "terminal:F:31"
+          },
+          {
+            "kind": "pin-contact",
+            "version": 1,
+            "pinId": "8",
+            "contactId": "terminal:E:31"
+          },
+          {
+            "kind": "pin-contact",
+            "version": 1,
+            "pinId": "9",
+            "contactId": "terminal:E:30"
+          },
+          {
+            "kind": "pin-contact",
+            "version": 1,
+            "pinId": "10",
+            "contactId": "terminal:E:29"
+          },
+          {
+            "kind": "pin-contact",
+            "version": 1,
+            "pinId": "11",
+            "contactId": "terminal:E:28"
+          },
+          {
+            "kind": "pin-contact",
+            "version": 1,
+            "pinId": "12",
+            "contactId": "terminal:E:27"
+          },
+          {
+            "kind": "pin-contact",
+            "version": 1,
+            "pinId": "13",
+            "contactId": "terminal:E:26"
+          },
+          {
+            "kind": "pin-contact",
+            "version": 1,
+            "pinId": "14",
+            "contactId": "terminal:E:25"
+          }
+        ]
+      },
+      "properties": {}
+    },
+    {
+      "id": "R1",
+      "type": "RESISTOR_AXIAL",
+      "mount": {
+        "kind": "breadboard",
+        "version": 1,
+        "boardId": "BB",
+        "partId": "VISHAY-MRS25-330R",
+        "partRevision": 1,
+        "packageId": "MRS25-1016",
+        "packageRevision": 1,
+        "pose": {
+          "position": {
+            "x": 0.52,
+            "y": 0.309,
+            "z": 0.585
+          },
+          "rotation": 0
+        },
+        "contacts": [
+          {
+            "kind": "pin-contact",
+            "version": 1,
+            "pinId": "A",
+            "contactId": "terminal:I:34"
+          },
+          {
+            "kind": "pin-contact",
+            "version": 1,
+            "pinId": "B",
+            "contactId": "terminal:I:38"
+          }
+        ]
+      },
+      "properties": {
+        "resistanceOhms": 330
+      }
+    },
+    {
+      "id": "D1",
+      "type": "LED_LTL307EE",
+      "mount": {
+        "kind": "breadboard",
+        "version": 1,
+        "boardId": "BB",
+        "partId": "LITEON-LTL-307EE",
+        "partRevision": 1,
+        "packageId": "T1-5MM-254",
+        "packageRevision": 1,
+        "pose": {
+          "position": {
+            "x": 1.105,
+            "y": 0.309,
+            "z": 0.455
+          },
+          "rotation": 0
+        },
+        "contacts": [
+          {
+            "kind": "pin-contact",
+            "version": 1,
+            "pinId": "A",
+            "contactId": "terminal:H:40"
+          },
+          {
+            "kind": "pin-contact",
+            "version": 1,
+            "pinId": "K",
+            "contactId": "terminal:H:41"
+          }
+        ]
+      },
+      "properties": {}
+    }
+  ],
+  "connections": [
+    {
+      "source": "PSU.PLUS",
+      "destination": "BB.contact:rail:top-positive:01",
+      "metadata": {
+        "wireVisual": {
+          "version": 1,
+          "color": "#de4d4d",
+          "routeMode": "AUTO",
+          "controlPoints": [],
+          "thickness": 0.02
+        }
+      }
+    },
+    {
+      "source": "PSU.MINUS",
+      "destination": "BB.contact:rail:top-negative:01",
+      "metadata": {
+        "wireVisual": {
+          "version": 1,
+          "color": "#293c54",
+          "routeMode": "AUTO",
+          "controlPoints": [],
+          "thickness": 0.02
+        }
+      }
+    },
+    {
+      "source": "BB.contact:rail:top-positive:01",
+      "destination": "BB.contact:terminal:A:25",
+      "metadata": {
+        "wireVisual": {
+          "version": 1,
+          "color": "#de4d4d",
+          "routeMode": "AUTO",
+          "controlPoints": [],
+          "thickness": 0.02
+        }
+      }
+    },
+    {
+      "source": "BB.contact:rail:top-negative:01",
+      "destination": "BB.contact:terminal:J:31",
+      "metadata": {
+        "wireVisual": {
+          "version": 1,
+          "color": "#293c54",
+          "routeMode": "AUTO",
+          "controlPoints": [],
+          "thickness": 0.02
+        }
+      }
+    },
+    {
+      "source": "BB.contact:rail:top-positive:01",
+      "destination": "BB.contact:terminal:J:25",
+      "metadata": {
+        "wireVisual": {
+          "version": 1,
+          "color": "#de4d4d",
+          "routeMode": "AUTO",
+          "controlPoints": [],
+          "thickness": 0.02
+        }
+      }
+    },
+    {
+      "source": "BB.contact:rail:top-positive:01",
+      "destination": "BB.contact:terminal:J:26",
+      "metadata": {
+        "wireVisual": {
+          "version": 1,
+          "color": "#de4d4d",
+          "routeMode": "AUTO",
+          "controlPoints": [],
+          "thickness": 0.02
+        }
+      }
+    },
+    {
+      "source": "BB.contact:terminal:J:27",
+      "destination": "BB.contact:terminal:J:34",
+      "metadata": {
+        "wireVisual": {
+          "version": 1,
+          "color": "#e6b84c",
+          "routeMode": "AUTO",
+          "controlPoints": [],
+          "thickness": 0.02
+        }
+      }
+    },
+    {
+      "source": "BB.contact:terminal:J:38",
+      "destination": "BB.contact:terminal:J:40",
+      "metadata": {
+        "wireVisual": {
+          "version": 1,
+          "color": "#e6b84c",
+          "routeMode": "AUTO",
+          "controlPoints": [],
+          "thickness": 0.02
+        }
+      }
+    },
+    {
+      "source": "BB.contact:terminal:J:41",
+      "destination": "BB.contact:rail:top-negative:01",
+      "metadata": {
+        "wireVisual": {
+          "version": 1,
+          "color": "#293c54",
+          "routeMode": "AUTO",
+          "controlPoints": [],
+          "thickness": 0.02
+        }
+      }
+    },
+    {
+      "source": "BB.contact:rail:top-negative:01",
+      "destination": "BB.contact:terminal:J:28",
+      "metadata": {
+        "wireVisual": {
+          "version": 1,
+          "color": "#293c54",
+          "routeMode": "AUTO",
+          "controlPoints": [],
+          "thickness": 0.02
+        }
+      }
+    },
+    {
+      "source": "BB.contact:rail:top-negative:01",
+      "destination": "BB.contact:terminal:J:29",
+      "metadata": {
+        "wireVisual": {
+          "version": 1,
+          "color": "#293c54",
+          "routeMode": "AUTO",
+          "controlPoints": [],
+          "thickness": 0.02
+        }
+      }
+    },
+    {
+      "source": "BB.contact:rail:top-negative:01",
+      "destination": "BB.contact:terminal:A:30",
+      "metadata": {
+        "wireVisual": {
+          "version": 1,
+          "color": "#293c54",
+          "routeMode": "AUTO",
+          "controlPoints": [],
+          "thickness": 0.02
+        }
+      }
+    },
+    {
+      "source": "BB.contact:rail:top-negative:01",
+      "destination": "BB.contact:terminal:A:29",
+      "metadata": {
+        "wireVisual": {
+          "version": 1,
+          "color": "#293c54",
+          "routeMode": "AUTO",
+          "controlPoints": [],
+          "thickness": 0.02
+        }
+      }
+    },
+    {
+      "source": "BB.contact:rail:top-negative:01",
+      "destination": "BB.contact:terminal:A:27",
+      "metadata": {
+        "wireVisual": {
+          "version": 1,
+          "color": "#293c54",
+          "routeMode": "AUTO",
+          "controlPoints": [],
+          "thickness": 0.02
+        }
+      }
+    },
+    {
+      "source": "BB.contact:rail:top-negative:01",
+      "destination": "BB.contact:terminal:A:26",
+      "metadata": {
+        "wireVisual": {
+          "version": 1,
+          "color": "#293c54",
+          "routeMode": "AUTO",
+          "controlPoints": [],
+          "thickness": 0.02
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "name": "Powered SN74HC08N · 330Ω · LED",
+    "description": "5 V isolated source, explicit rails and mounted terminals. Gate 1 inputs high; unused gate inputs tied low. Ideal bounded series DC model."
+  }
+}

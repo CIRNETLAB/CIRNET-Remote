@@ -5,6 +5,7 @@ import { useCircuitStore } from '../../stores/circuit'
 import { useUiStore } from '../../stores/ui'
 import { libraryComponents, iconUrl } from '../../data/ribbon'
 import { getDefinition } from '../../data/editorCatalog'
+import { getPartForType } from '../../data/partCatalog'
 import WorkbenchIcon from '../workbench/WorkbenchIcon.vue'
 const workspace = useWorkspaceStore(), circuit = useCircuitStore(), ui = useUiStore()
 const header = ref<HTMLElement>()
@@ -12,6 +13,8 @@ const window = computed(() => ui.windows.find((entry) => entry.kind === 'compone
 const selected = computed(() => circuit.graph?.modules.find((module) => module.id === workspace.selectedModuleId))
 const type = computed(() => selected.value?.type)
 const definition = computed(() => type.value ? getDefinition(type.value) : undefined)
+const part = computed(() => type.value ? getPartForType(type.value) : undefined)
+const simulationState = computed(() => selected.value && circuit.physicalStates?.[selected.value.id])
 const item = computed(() => libraryComponents.find((entry) => entry.type === type.value))
 const name = computed(() => definition.value?.name || item.value?.name || type.value || 'Component')
 const introductions: Record<string, string> = {
@@ -23,7 +26,7 @@ const introductions: Record<string, string> = {
   POWER_SUPPLY: 'An upright metal bench supply with a vertical V/A/W display, Vcc and Gnd posts and a power switch. In Select, drag Voltage (0–15 V) or Ampe (0–5 A) to adjust local setpoints; click I/O to toggle visual power. The W readout awaits measured output.',
 }
 const description = computed(() => type.value && introductions[type.value] || item.value?.description || (definition.value ? definition.value.visualOnly ? 'A visual work surface for arranging circuit components. Add another board and choose its position on the surface.' : 'An editor component with named logical ports. Arrange it on the surface before connecting its ports.' : 'An imported component. Its original properties are retained; no model contract is available for adding another instance.'))
-const note = computed(() => type.value === 'GENERATOR' ? 'Visual instrument. Screen values and waveforms are illustrative; DDS output and device control are not connected yet.' : type.value === 'OSCILLOSCOPE' ? 'Visual instrument. Knob pivots and screen texture are ready for integration; signal acquisition and control behavior are not connected yet.' : definition.value?.visualOnly ? 'Visual structure. Placement creates no electrical source or connection.' : definition.value ? 'Editor model with named logical ports. Physical pin mapping and execution support are separate.' : 'This entry has no placeable editor model yet.')
+const note = computed(() => part.value ? (part.value.simulation.status === 'supported' ? 'Physical package with declared pinout and a bounded virtual model.' : 'Physical package: place and wire. Simulation is not implemented for this part.') : type.value === 'GENERATOR' ? 'Visual instrument. Screen values and waveforms are illustrative; DDS output and device control are not connected yet.' : type.value === 'OSCILLOSCOPE' ? 'Visual instrument. Knob pivots and screen texture are ready for integration; signal acquisition and control behavior are not connected yet.' : definition.value?.visualOnly ? 'Visual structure. Placement creates no electrical source or connection.' : definition.value ? 'Editor model with named logical ports. Physical pin mapping and execution support are separate.' : 'This entry has no placeable editor model yet.')
 function add() { if (definition.value && type.value) { workspace.armPlacement(type.value); ui.activeRibbonGroup = null } }
 function remove() { if (selected.value) { circuit.removeModule(selected.value.id); ui.closeWindow('component-info') } }
 function close() { ui.closeWindow('component-info'); void nextTick(() => document.querySelector<HTMLCanvasElement>('canvas[aria-label="Three-dimensional circuit workspace"]')?.focus()) }
@@ -41,6 +44,7 @@ watch(() => window.value?.activation, (activation) => { if (activation) void nex
       <div class="component-information-heading"><small>INFORMATION</small><h2>{{ name }}</h2></div>
       <p class="component-information-introduction">{{ description }}</p>
       <p class="component-information-note">{{ note }}</p>
+      <template v-if="part"><p>{{ part.partNumber }} · {{ part.package.id }} · {{ part.package.pins.length }} pins</p><p>{{ simulationState?.state || (part.simulation.status === 'supported' ? 'Ready for virtual evaluation' : 'Place / wire only · simulation unsupported') }}{{ simulationState?.reason ? ': ' + simulationState.reason : '' }}</p><p v-if="selected.mount">Mounted on {{ selected.mount.boardId }}</p><a :href="part.datasheet.url" target="_blank" rel="noopener noreferrer">Pinout / datasheet</a></template>
     </div>
     <footer class="component-information-footer"><button class="delete-btn" :aria-label="'Delete ' + name" @click="remove"><WorkbenchIcon name="delete" /> Delete</button><button :disabled="!definition" :aria-label="'Add ' + name" @click="add">Add <span aria-hidden="true">+</span></button></footer>
   </aside>

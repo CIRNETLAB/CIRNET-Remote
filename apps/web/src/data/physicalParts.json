@@ -1,0 +1,2617 @@
+{
+  "schemaVersion": 1,
+  "units": "mm",
+  "coordinateFrame": "Right-handed X/Y/Z; Y up. Mountable lead tips at y=0, body bottom at standoffMm. DIP pin1 at-X,+Z, top-view numbering counterclockwise. Nonmountable instrument pins are actual panel anchors.",
+  "parts": [
+    {
+      "id": "TI-SN74HC08N",
+      "revision": 1,
+      "editorType": "SN74HC08N",
+      "name": "SN74HC08N · powered quad AND",
+      "manufacturer": "Texas Instruments",
+      "partNumber": "SN74HC08N",
+      "datasheet": {
+        "url": "https://www.ti.com/lit/ds/symlink/sn74hc08.pdf",
+        "title": "SNx4HC08 SCLS081J, February 2025; pin table p.3; N package drawing",
+        "revision": "J"
+      },
+      "function": "quad-2-input-and",
+      "package": {
+        "id": "PDIP-14-300",
+        "revision": 1,
+        "family": "dip",
+        "bodyMm": {
+          "x": 19.3,
+          "y": 5.08,
+          "z": 6.4
+        },
+        "leadDiameterMm": 0.5,
+        "standoffMm": 1.5,
+        "pins": [
+          {
+            "id": "1",
+            "number": "1",
+            "name": "1A",
+            "role": "input",
+            "positionMm": {
+              "x": -7.62,
+              "y": 0,
+              "z": 3.81
+            },
+            "logicalPort": "A1"
+          },
+          {
+            "id": "2",
+            "number": "2",
+            "name": "1B",
+            "role": "input",
+            "positionMm": {
+              "x": -5.08,
+              "y": 0,
+              "z": 3.81
+            },
+            "logicalPort": "B1"
+          },
+          {
+            "id": "3",
+            "number": "3",
+            "name": "1Y",
+            "role": "output",
+            "positionMm": {
+              "x": -2.54,
+              "y": 0,
+              "z": 3.81
+            },
+            "logicalPort": "Y1",
+            "outputType": "push-pull"
+          },
+          {
+            "id": "4",
+            "number": "4",
+            "name": "2A",
+            "role": "input",
+            "positionMm": {
+              "x": 0.0,
+              "y": 0,
+              "z": 3.81
+            },
+            "logicalPort": "A2"
+          },
+          {
+            "id": "5",
+            "number": "5",
+            "name": "2B",
+            "role": "input",
+            "positionMm": {
+              "x": 2.54,
+              "y": 0,
+              "z": 3.81
+            },
+            "logicalPort": "B2"
+          },
+          {
+            "id": "6",
+            "number": "6",
+            "name": "2Y",
+            "role": "output",
+            "positionMm": {
+              "x": 5.08,
+              "y": 0,
+              "z": 3.81
+            },
+            "logicalPort": "Y2",
+            "outputType": "push-pull"
+          },
+          {
+            "id": "7",
+            "number": "7",
+            "name": "GND",
+            "role": "ground",
+            "positionMm": {
+              "x": 7.62,
+              "y": 0,
+              "z": 3.81
+            }
+          },
+          {
+            "id": "8",
+            "number": "8",
+            "name": "3Y",
+            "role": "output",
+            "positionMm": {
+              "x": 7.62,
+              "y": 0,
+              "z": -3.81
+            },
+            "logicalPort": "Y3",
+            "outputType": "push-pull"
+          },
+          {
+            "id": "9",
+            "number": "9",
+            "name": "3A",
+            "role": "input",
+            "positionMm": {
+              "x": 5.08,
+              "y": 0,
+              "z": -3.81
+            },
+            "logicalPort": "A3"
+          },
+          {
+            "id": "10",
+            "number": "10",
+            "name": "3B",
+            "role": "input",
+            "positionMm": {
+              "x": 2.54,
+              "y": 0,
+              "z": -3.81
+            },
+            "logicalPort": "B3"
+          },
+          {
+            "id": "11",
+            "number": "11",
+            "name": "4Y",
+            "role": "output",
+            "positionMm": {
+              "x": 0.0,
+              "y": 0,
+              "z": -3.81
+            },
+            "logicalPort": "Y4",
+            "outputType": "push-pull"
+          },
+          {
+            "id": "12",
+            "number": "12",
+            "name": "4A",
+            "role": "input",
+            "positionMm": {
+              "x": -2.54,
+              "y": 0,
+              "z": -3.81
+            },
+            "logicalPort": "A4"
+          },
+          {
+            "id": "13",
+            "number": "13",
+            "name": "4B",
+            "role": "input",
+            "positionMm": {
+              "x": -5.08,
+              "y": 0,
+              "z": -3.81
+            },
+            "logicalPort": "B4"
+          },
+          {
+            "id": "14",
+            "number": "14",
+            "name": "VCC",
+            "role": "power",
+            "positionMm": {
+              "x": -7.62,
+              "y": 0,
+              "z": -3.81
+            }
+          }
+        ],
+        "footprint": {
+          "id": "PDIP-14-300-footprint",
+          "revision": 1,
+          "pitchMm": 2.54,
+          "mountable": true,
+          "rowSpanMm": 7.62,
+          "bridgeCenterGap": true
+        }
+      },
+      "simulation": {
+        "model": "hc08-powered",
+        "status": "supported",
+        "power": {
+          "positivePinId": "14",
+          "negativePinId": "7",
+          "minVoltage": 2,
+          "maxVoltage": 6
+        },
+        "gates": [
+          {
+            "inputs": [
+              "1",
+              "2"
+            ],
+            "output": "3"
+          },
+          {
+            "inputs": [
+              "4",
+              "5"
+            ],
+            "output": "6"
+          },
+          {
+            "inputs": [
+              "9",
+              "10"
+            ],
+            "output": "8"
+          },
+          {
+            "inputs": [
+              "12",
+              "13"
+            ],
+            "output": "11"
+          }
+        ]
+      },
+      "editor": {
+        "family": "logic",
+        "visual": "ic",
+        "color": "#30333a",
+        "defaults": {},
+        "parameters": []
+      }
+    },
+    {
+      "id": "LITEON-LTL-307EE",
+      "revision": 1,
+      "editorType": "LED_LTL307EE",
+      "name": "LTL-307EE · red LED A/K",
+      "manufacturer": "Lite-On",
+      "partNumber": "LTL-307EE",
+      "datasheet": {
+        "url": "https://mm.digikey.com/Volume0/opasdata/d220001/medias/docus/1153/LTL-307EE.pdf",
+        "title": "Lite-On LTL-307EE manufacturer datasheet BNS-OD-C131/A4",
+        "pages": "1 (package / cathode), 3 (electrical)"
+      },
+      "function": "red-indicator-led",
+      "package": {
+        "id": "T1-5MM-254",
+        "revision": 1,
+        "family": "radial-led",
+        "bodyMm": {
+          "x": 5,
+          "y": 8.6,
+          "z": 5
+        },
+        "leadDiameterMm": 0.5,
+        "standoffMm": 3,
+        "pins": [
+          {
+            "id": "A",
+            "number": "2",
+            "name": "A",
+            "role": "passive",
+            "positionMm": {
+              "x": -1.27,
+              "y": 0,
+              "z": 0
+            }
+          },
+          {
+            "id": "K",
+            "number": "1",
+            "name": "K",
+            "role": "passive",
+            "positionMm": {
+              "x": 1.27,
+              "y": 0,
+              "z": 0
+            }
+          }
+        ],
+        "footprint": {
+          "id": "T1-5MM-254-footprint",
+          "revision": 1,
+          "pitchMm": 2.54,
+          "mountable": true
+        },
+        "polarized": true
+      },
+      "simulation": {
+        "model": "led-dc",
+        "status": "supported",
+        "forwardVoltage": 2,
+        "maxCurrentAmps": 0.02,
+        "reason": "Bounded DC series source/resistor/LED subset; fixed forward voltage is a model approximation."
+      },
+      "editor": {
+        "family": "output",
+        "visual": "led",
+        "color": "#ce3935",
+        "defaults": {},
+        "parameters": []
+      }
+    },
+    {
+      "id": "VISHAY-MRS25-330R",
+      "revision": 1,
+      "editorType": "RESISTOR_AXIAL",
+      "name": "MRS25 · 330 Ω axial",
+      "manufacturer": "Vishay",
+      "partNumber": "MRS25000C3300FCT00",
+      "datasheet": {
+        "url": "https://www.vishay.com/docs/28724/mrs16m25.pdf",
+        "title": "MRS16/MRS25, document 28724; dimensions p.3"
+      },
+      "function": "resistor",
+      "package": {
+        "id": "MRS25-1016",
+        "revision": 1,
+        "family": "axial",
+        "bodyMm": {
+          "x": 6.5,
+          "y": 2.5,
+          "z": 2.5
+        },
+        "leadDiameterMm": 0.5,
+        "standoffMm": 1.5,
+        "pins": [
+          {
+            "id": "A",
+            "number": "A",
+            "name": "A",
+            "role": "passive",
+            "positionMm": {
+              "x": -5.08,
+              "y": 0,
+              "z": 0
+            }
+          },
+          {
+            "id": "B",
+            "number": "B",
+            "name": "B",
+            "role": "passive",
+            "positionMm": {
+              "x": 5.08,
+              "y": 0,
+              "z": 0
+            }
+          }
+        ],
+        "footprint": {
+          "id": "MRS25-1016-footprint",
+          "revision": 1,
+          "pitchMm": 10.16,
+          "mountable": true,
+          "leadForming": "Axial leads formed downward at 10.16 mm pitch; body dimensions unchanged; Vishay MRS25 minimum bend spacing 10 mm."
+        },
+        "visualVariant": "resistor"
+      },
+      "simulation": {
+        "model": "resistor-dc",
+        "status": "supported",
+        "defaultOhms": 330,
+        "reason": "Bounded DC subset; no thermal/transient model."
+      },
+      "editor": {
+        "family": "passive",
+        "visual": "resistor",
+        "color": "#b4c7c0",
+        "defaults": {
+          "resistanceOhms": 330
+        },
+        "parameters": [
+          {
+            "key": "resistanceOhms",
+            "label": "Resistance (Ω)",
+            "kind": "number",
+            "min": 1,
+            "max": 1000000000
+          }
+        ]
+      }
+    },
+    {
+      "id": "NETCIRCUIT-DC-SUPPLY",
+      "revision": 1,
+      "editorType": "DC_SUPPLY",
+      "name": "Power Supply · isolated DC",
+      "manufacturer": "netCIRCUIT",
+      "partNumber": "DC-SUPPLY-V1",
+      "datasheet": {
+        "url": "model:dc-source-v1",
+        "title": "Virtual DC source model v1; isolated PLUS/MINUS terminals, no earth reference"
+      },
+      "function": "isolated-dc-source",
+      "package": {
+        "id": "VIRTUAL-BENCH-DC",
+        "revision": 1,
+        "family": "terminal",
+        "bodyMm": {
+          "x": 46,
+          "y": 48,
+          "z": 46
+        },
+        "leadDiameterMm": 0.5,
+        "standoffMm": 0,
+        "pins": [
+          {
+            "id": "PLUS",
+            "number": "PLUS",
+            "name": "+",
+            "role": "power",
+            "positionMm": {
+              "x": -10,
+              "y": 20,
+              "z": 25
+            }
+          },
+          {
+            "id": "MINUS",
+            "number": "MINUS",
+            "name": "−",
+            "role": "ground",
+            "positionMm": {
+              "x": 10,
+              "y": 20,
+              "z": 25
+            }
+          }
+        ],
+        "footprint": {
+          "id": "VIRTUAL-BENCH-DC-footprint",
+          "revision": 1,
+          "pitchMm": 20,
+          "mountable": false
+        }
+      },
+      "simulation": {
+        "model": "dc-source",
+        "status": "supported",
+        "defaultVoltage": 5,
+        "reason": "Bounded ideal DC source subset; output is isolated from every other source."
+      },
+      "editor": {
+        "family": "structure",
+        "visual": "supply",
+        "color": "#9eaab5",
+        "defaults": {
+          "voltage": 5,
+          "power_on": true
+        },
+        "parameters": [
+          {
+            "key": "voltage",
+            "label": "DC output voltage (V)",
+            "kind": "number",
+            "min": 0,
+            "max": 15
+          },
+          {
+            "key": "power_on",
+            "label": "Output enabled",
+            "kind": "boolean"
+          }
+        ]
+      },
+      "notes": "A virtual lab instrument with explicit terminals, not an asserted physical manufacturer part."
+    },
+    {
+      "id": "ONSEMI-2N3904TA",
+      "revision": 1,
+      "editorType": "TRANSISTOR_2N3904",
+      "name": "2N3904TA · NPN E/B/C",
+      "manufacturer": "onsemi",
+      "partNumber": "2N3904TA",
+      "datasheet": {
+        "url": "https://www.onsemi.com/download/data-sheet/pdf/2n3904-d.pdf",
+        "title": "2N3904/D Rev.3 October2024, pin identification p.1, leadformed case135AR"
+      },
+      "function": "npn-transistor",
+      "package": {
+        "id": "TO92-135AR-254",
+        "revision": 1,
+        "family": "to92",
+        "bodyMm": {
+          "x": 4.83,
+          "y": 4.76,
+          "z": 3.94
+        },
+        "leadDiameterMm": 0.5,
+        "standoffMm": 1.5,
+        "pins": [
+          {
+            "id": "1",
+            "number": "1",
+            "name": "E",
+            "role": "passive",
+            "positionMm": {
+              "x": -2.54,
+              "y": 0,
+              "z": 0
+            }
+          },
+          {
+            "id": "2",
+            "number": "2",
+            "name": "B",
+            "role": "passive",
+            "positionMm": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            }
+          },
+          {
+            "id": "3",
+            "number": "3",
+            "name": "C",
+            "role": "passive",
+            "positionMm": {
+              "x": 2.54,
+              "y": 0,
+              "z": 0
+            }
+          }
+        ],
+        "footprint": {
+          "id": "TO92-135AR-254-footprint",
+          "revision": 1,
+          "pitchMm": 2.54,
+          "mountable": true,
+          "leadForming": "Case135AR leadformed 2.54mm terminal pitch; emitter/base/collector retain manufacturer pin numbers."
+        }
+      },
+      "simulation": {
+        "model": "transistor",
+        "status": "unsupported",
+        "reason": "Placement and wiring only; transistor current/gain model is not implemented."
+      },
+      "editor": {
+        "family": "active",
+        "visual": "transistor",
+        "color": "#292b2b",
+        "defaults": {},
+        "parameters": []
+      }
+    },
+    {
+      "id": "VISHAY-1N4148",
+      "revision": 1,
+      "editorType": "DIODE_1N4148",
+      "name": "1N4148-TAP · A/K",
+      "manufacturer": "Vishay",
+      "partNumber": "1N4148-TAP",
+      "datasheet": {
+        "url": "https://www.vishay.com/docs/81857/1n4148.pdf",
+        "title": "1N4148 document81857 Rev1.6,07-Nov-2024; DO-35 / black cathode band"
+      },
+      "function": "signal-diode",
+      "package": {
+        "id": "DO35-1016",
+        "revision": 1,
+        "family": "axial",
+        "bodyMm": {
+          "x": 3.9,
+          "y": 1.9,
+          "z": 1.9
+        },
+        "leadDiameterMm": 0.5,
+        "standoffMm": 1.5,
+        "pins": [
+          {
+            "id": "A",
+            "number": "A",
+            "name": "A",
+            "role": "passive",
+            "positionMm": {
+              "x": -5.08,
+              "y": 0,
+              "z": 0
+            }
+          },
+          {
+            "id": "K",
+            "number": "K",
+            "name": "K",
+            "role": "passive",
+            "positionMm": {
+              "x": 5.08,
+              "y": 0,
+              "z": 0
+            }
+          }
+        ],
+        "footprint": {
+          "id": "DO35-1016-footprint",
+          "revision": 1,
+          "pitchMm": 10.16,
+          "mountable": true,
+          "leadForming": "Axial leads bent downward at10.16mm spacing; cathode band faces K, body retains datasheet dimensions."
+        },
+        "visualVariant": "diode",
+        "polarized": true
+      },
+      "simulation": {
+        "model": "diode",
+        "status": "unsupported",
+        "reason": "Placement and wiring only; nonlinear diode behavior is not implemented."
+      },
+      "editor": {
+        "family": "active",
+        "visual": "diode",
+        "color": "#4b3831",
+        "defaults": {},
+        "parameters": []
+      }
+    },
+    {
+      "id": "VISHAY-1N4733A",
+      "revision": 1,
+      "editorType": "ZENER_1N4733A",
+      "name": "1N4733A-TAP · A/K",
+      "manufacturer": "Vishay",
+      "partNumber": "1N4733A-TAP",
+      "datasheet": {
+        "url": "https://www.vishay.com/docs/85816/1n4728a.pdf",
+        "title": "1N4728A..1N4761A document85816 Rev2.7,07-Nov-2024; DO-41"
+      },
+      "function": "zener-diode",
+      "package": {
+        "id": "DO41-1016",
+        "revision": 1,
+        "family": "axial",
+        "bodyMm": {
+          "x": 5.2,
+          "y": 2.7,
+          "z": 2.7
+        },
+        "leadDiameterMm": 0.5,
+        "standoffMm": 1.5,
+        "pins": [
+          {
+            "id": "A",
+            "number": "A",
+            "name": "A",
+            "role": "passive",
+            "positionMm": {
+              "x": -5.08,
+              "y": 0,
+              "z": 0
+            }
+          },
+          {
+            "id": "K",
+            "number": "K",
+            "name": "K",
+            "role": "passive",
+            "positionMm": {
+              "x": 5.08,
+              "y": 0,
+              "z": 0
+            }
+          }
+        ],
+        "footprint": {
+          "id": "DO41-1016-footprint",
+          "revision": 1,
+          "pitchMm": 10.16,
+          "mountable": true,
+          "leadForming": "Axial leads bent downward at10.16mm spacing; cathode band faces K, body retains datasheet dimensions."
+        },
+        "visualVariant": "zener",
+        "polarized": true
+      },
+      "simulation": {
+        "model": "zener",
+        "status": "unsupported",
+        "reason": "Placement and wiring only; nonlinear diode behavior is not implemented."
+      },
+      "editor": {
+        "family": "active",
+        "visual": "zener",
+        "color": "#4b3831",
+        "defaults": {},
+        "parameters": []
+      }
+    },
+    {
+      "id": "VISHAY-K104K15X7RF53H5",
+      "revision": 1,
+      "editorType": "CAPACITOR_CERAMIC",
+      "name": "K104K15 ·100nF ceramic",
+      "manufacturer": "Vishay",
+      "partNumber": "K104K15X7RF53H5",
+      "datasheet": {
+        "url": "https://www.vishay.com/docs/45171/kseries.pdf",
+        "title": "K Series doc45171 revision05-Sep-2025 pp.2,4; size15,H5"
+      },
+      "function": "nonpolarized-capacitor",
+      "package": {
+        "id": "K15-H5-508",
+        "revision": 1,
+        "family": "radial-capacitor",
+        "bodyMm": {
+          "x": 4,
+          "y": 4,
+          "z": 2.6
+        },
+        "leadDiameterMm": 0.5,
+        "standoffMm": 1.5,
+        "pins": [
+          {
+            "id": "A",
+            "number": "A",
+            "name": "A",
+            "role": "passive",
+            "positionMm": {
+              "x": -2.54,
+              "y": 0,
+              "z": 0
+            }
+          },
+          {
+            "id": "B",
+            "number": "B",
+            "name": "B",
+            "role": "passive",
+            "positionMm": {
+              "x": 2.54,
+              "y": 0,
+              "z": 0
+            }
+          }
+        ],
+        "footprint": {
+          "id": "K15-H5-508-footprint",
+          "revision": 1,
+          "pitchMm": 5.08,
+          "mountable": true,
+          "leadForming": "H5 native5.0mm lead spacing (±0.8mm) formed to5.08mm; body unchanged."
+        },
+        "visualVariant": "ceramic",
+        "polarized": false
+      },
+      "simulation": {
+        "model": "capacitor",
+        "status": "unsupported",
+        "reason": "Placement and wiring only; capacitor transients are not implemented."
+      },
+      "editor": {
+        "family": "passive",
+        "visual": "capacitor",
+        "color": "#293136",
+        "defaults": {},
+        "parameters": []
+      }
+    },
+    {
+      "id": "NICHICON-UVR1E331MPD",
+      "revision": 1,
+      "editorType": "CAPACITOR_ELECTROLYTIC",
+      "name": "UVR1E331 ·330µF25V polarized",
+      "manufacturer": "Nichicon",
+      "partNumber": "UVR1E331MPD",
+      "datasheet": {
+        "url": "https://www.nichicon.com/getmedia/fbce3bfe-2a92-4d81-8c8d-1bee760e082f/e-uvr.pdf",
+        "title": "UVR CAT.8100M pp.1-2; Ø10x12.5mm,P5.0mm,negative sleeve stripe"
+      },
+      "function": "polarized-capacitor",
+      "package": {
+        "id": "UVR-D10-508",
+        "revision": 1,
+        "family": "radial-capacitor",
+        "bodyMm": {
+          "x": 10,
+          "y": 12.5,
+          "z": 10
+        },
+        "leadDiameterMm": 0.5,
+        "standoffMm": 1.5,
+        "pins": [
+          {
+            "id": "PLUS",
+            "number": "PLUS",
+            "name": "+",
+            "role": "passive",
+            "positionMm": {
+              "x": -2.54,
+              "y": 0,
+              "z": 0
+            }
+          },
+          {
+            "id": "MINUS",
+            "number": "MINUS",
+            "name": "−",
+            "role": "passive",
+            "positionMm": {
+              "x": 2.54,
+              "y": 0,
+              "z": 0
+            }
+          }
+        ],
+        "footprint": {
+          "id": "UVR-D10-508-footprint",
+          "revision": 1,
+          "pitchMm": 5.08,
+          "mountable": true,
+          "leadForming": "Native5.0mm lead pitch (±0.5mm) formed to5.08mm; negative stripe faces MINUS."
+        },
+        "visualVariant": "polarized",
+        "polarized": true
+      },
+      "simulation": {
+        "model": "capacitor",
+        "status": "unsupported",
+        "reason": "Placement and wiring only; capacitor transients and reverse-bias damage are not implemented."
+      },
+      "editor": {
+        "family": "passive",
+        "visual": "capacitor",
+        "color": "#3e4249",
+        "defaults": {},
+        "parameters": []
+      }
+    },
+    {
+      "id": "TDK-PS1240P02BT",
+      "revision": 1,
+      "editorType": "BUZZER_PS1240",
+      "name": "PS1240P02BT · piezo sounder",
+      "manufacturer": "TDK",
+      "partNumber": "PS1240P02BT",
+      "datasheet": {
+        "url": "https://product.tdk.com/info/en/catalog/datasheets/piezoelectronic_buzzer_ps_en.pdf",
+        "title": "PS pin-terminal piezo buzzer catalogue p.4,PS1240P02BT"
+      },
+      "function": "passive-piezo-sounder",
+      "package": {
+        "id": "PS12-508",
+        "revision": 1,
+        "family": "buzzer",
+        "bodyMm": {
+          "x": 12.2,
+          "y": 6.5,
+          "z": 12.2
+        },
+        "leadDiameterMm": 0.5,
+        "standoffMm": 1.5,
+        "pins": [
+          {
+            "id": "1",
+            "number": "1",
+            "name": "1",
+            "role": "passive",
+            "positionMm": {
+              "x": -2.54,
+              "y": 0,
+              "z": 0
+            }
+          },
+          {
+            "id": "2",
+            "number": "2",
+            "name": "2",
+            "role": "passive",
+            "positionMm": {
+              "x": 2.54,
+              "y": 0,
+              "z": 0
+            }
+          }
+        ],
+        "footprint": {
+          "id": "PS12-508-footprint",
+          "revision": 1,
+          "pitchMm": 5.08,
+          "mountable": true,
+          "leadForming": "Native5.0±0.5mm terminal spacing formed to5.08mm; passive piezo has no asserted DC polarity."
+        }
+      },
+      "simulation": {
+        "model": "piezo",
+        "status": "unsupported",
+        "reason": "Placement and wiring only; AC electroacoustic behavior is not implemented."
+      },
+      "editor": {
+        "family": "output",
+        "visual": "buzzer",
+        "color": "#24292b",
+        "defaults": {},
+        "parameters": []
+      }
+    },
+    {
+      "id": "OMRON-A6D-4100",
+      "revision": 1,
+      "editorType": "DIP_SWITCH_A6D4100",
+      "name": "A6D-4100 · four isolated contacts",
+      "manufacturer": "Omron",
+      "partNumber": "A6D-4100",
+      "datasheet": {
+        "url": "https://omronfs.omron.com/en_US/ecb/products/pdf/en-a6d_a6dr.pdf",
+        "title": "A6D/A6DR p.2; A6D4100 dimensions / top-view contact form"
+      },
+      "function": "four-pole-spst",
+      "package": {
+        "id": "A6D4-300",
+        "revision": 1,
+        "family": "switch",
+        "bodyMm": {
+          "x": 12.2,
+          "y": 4.4,
+          "z": 6.6
+        },
+        "leadDiameterMm": 0.5,
+        "standoffMm": 1.5,
+        "pins": [
+          {
+            "id": "1",
+            "number": "1",
+            "name": "1",
+            "role": "passive",
+            "positionMm": {
+              "x": -3.81,
+              "y": 0,
+              "z": 3.81
+            }
+          },
+          {
+            "id": "2",
+            "number": "2",
+            "name": "2",
+            "role": "passive",
+            "positionMm": {
+              "x": -1.27,
+              "y": 0,
+              "z": 3.81
+            }
+          },
+          {
+            "id": "3",
+            "number": "3",
+            "name": "3",
+            "role": "passive",
+            "positionMm": {
+              "x": 1.27,
+              "y": 0,
+              "z": 3.81
+            }
+          },
+          {
+            "id": "4",
+            "number": "4",
+            "name": "4",
+            "role": "passive",
+            "positionMm": {
+              "x": 3.81,
+              "y": 0,
+              "z": 3.81
+            }
+          },
+          {
+            "id": "5",
+            "number": "5",
+            "name": "5",
+            "role": "passive",
+            "positionMm": {
+              "x": 3.81,
+              "y": 0,
+              "z": -3.81
+            }
+          },
+          {
+            "id": "6",
+            "number": "6",
+            "name": "6",
+            "role": "passive",
+            "positionMm": {
+              "x": 1.27,
+              "y": 0,
+              "z": -3.81
+            }
+          },
+          {
+            "id": "7",
+            "number": "7",
+            "name": "7",
+            "role": "passive",
+            "positionMm": {
+              "x": -1.27,
+              "y": 0,
+              "z": -3.81
+            }
+          },
+          {
+            "id": "8",
+            "number": "8",
+            "name": "8",
+            "role": "passive",
+            "positionMm": {
+              "x": -3.81,
+              "y": 0,
+              "z": -3.81
+            }
+          }
+        ],
+        "footprint": {
+          "id": "A6D4-300-footprint",
+          "revision": 1,
+          "pitchMm": 2.54,
+          "mountable": true,
+          "rowSpanMm": 7.62,
+          "bridgeCenterGap": true
+        },
+        "visualVariant": "dip-switch"
+      },
+      "simulation": {
+        "model": "contact-switch",
+        "status": "supported",
+        "reason": "Ideal contact connectivity only; no bounce/contact-resistance model."
+      },
+      "editor": {
+        "family": "input",
+        "visual": "dip",
+        "color": "#9b3434",
+        "defaults": {
+          "position0": false,
+          "position1": false,
+          "position2": false,
+          "position3": false
+        },
+        "parameters": [
+          {
+            "key": "position0",
+            "label": "Contact1 closed",
+            "kind": "boolean"
+          },
+          {
+            "key": "position1",
+            "label": "Contact2 closed",
+            "kind": "boolean"
+          },
+          {
+            "key": "position2",
+            "label": "Contact3 closed",
+            "kind": "boolean"
+          },
+          {
+            "key": "position3",
+            "label": "Contact4 closed",
+            "kind": "boolean"
+          }
+        ]
+      },
+      "internalConnections": [
+        {
+          "pins": [
+            "1",
+            "8"
+          ],
+          "when": {
+            "property": "position0",
+            "equals": true
+          }
+        },
+        {
+          "pins": [
+            "2",
+            "7"
+          ],
+          "when": {
+            "property": "position1",
+            "equals": true
+          }
+        },
+        {
+          "pins": [
+            "3",
+            "6"
+          ],
+          "when": {
+            "property": "position2",
+            "equals": true
+          }
+        },
+        {
+          "pins": [
+            "4",
+            "5"
+          ],
+          "when": {
+            "property": "position3",
+            "equals": true
+          }
+        }
+      ],
+      "notes": "Pad IDs1..8 are the canonical perimeter IDs; moulded manufacturer actuator numbers1..4 identify independent poles. They are contacts, never logic sources."
+    },
+    {
+      "id": "OMRON-B3F-1000",
+      "revision": 1,
+      "editorType": "PUSH_BUTTON_B3F1000",
+      "name": "B3F-1000 · momentary contact",
+      "manufacturer": "Omron",
+      "partNumber": "B3F-1000",
+      "datasheet": {
+        "url": "https://omronfs.omron.com/en_US/ecb/products/pdf/en-b3f.pdf",
+        "title": "B3F p.4, B3F1000 top-view internal connections, bottom-view numbering"
+      },
+      "function": "momentary-spst-duplicated-terminals",
+      "package": {
+        "id": "B3F6-FORMED",
+        "revision": 1,
+        "family": "switch",
+        "bodyMm": {
+          "x": 6,
+          "y": 4.3,
+          "z": 6
+        },
+        "leadDiameterMm": 0.5,
+        "standoffMm": 1.5,
+        "pins": [
+          {
+            "id": "1",
+            "number": "1",
+            "name": "1",
+            "role": "passive",
+            "positionMm": {
+              "x": 3.81,
+              "y": 0,
+              "z": 2.54
+            },
+            "bodyPositionMm": {
+              "x": 3.25,
+              "y": 1.5,
+              "z": 2.25
+            }
+          },
+          {
+            "id": "2",
+            "number": "2",
+            "name": "2",
+            "role": "passive",
+            "positionMm": {
+              "x": -3.81,
+              "y": 0,
+              "z": 2.54
+            },
+            "bodyPositionMm": {
+              "x": -3.25,
+              "y": 1.5,
+              "z": 2.25
+            }
+          },
+          {
+            "id": "3",
+            "number": "3",
+            "name": "3",
+            "role": "passive",
+            "positionMm": {
+              "x": 3.81,
+              "y": 0,
+              "z": -2.54
+            },
+            "bodyPositionMm": {
+              "x": 3.25,
+              "y": 1.5,
+              "z": -2.25
+            }
+          },
+          {
+            "id": "4",
+            "number": "4",
+            "name": "4",
+            "role": "passive",
+            "positionMm": {
+              "x": -3.81,
+              "y": 0,
+              "z": -2.54
+            },
+            "bodyPositionMm": {
+              "x": -3.25,
+              "y": 1.5,
+              "z": -2.25
+            }
+          }
+        ],
+        "footprint": {
+          "id": "B3F6-FORMED-footprint",
+          "revision": 1,
+          "pitchMm": 2.54,
+          "mountable": true,
+          "rowSpanMm": 5.08,
+          "leadForming": "Native6.5x4.5mm through-hole pattern formed outward to7.62x5.08mm; four flexible terminals, body6x6mm unchanged."
+        },
+        "visualVariant": "push-button"
+      },
+      "simulation": {
+        "model": "contact-switch",
+        "status": "supported",
+        "reason": "Ideal contact connectivity only; no bounce/contact-resistance model."
+      },
+      "editor": {
+        "family": "input",
+        "visual": "button",
+        "color": "#717475",
+        "defaults": {
+          "pressed": false
+        },
+        "parameters": [
+          {
+            "key": "pressed",
+            "label": "Pressed",
+            "kind": "boolean"
+          }
+        ]
+      },
+      "internalConnections": [
+        {
+          "pins": [
+            "1",
+            "2"
+          ]
+        },
+        {
+          "pins": [
+            "3",
+            "4"
+          ]
+        },
+        {
+          "pins": [
+            "1",
+            "3"
+          ],
+          "when": {
+            "property": "pressed",
+            "equals": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "KINGBRIGHT-SC56-11EWA",
+      "revision": 1,
+      "editorType": "SEGMENT_SC5611EWA",
+      "name": "SC56-11EWA · common cathode",
+      "manufacturer": "Kingbright",
+      "partNumber": "SC56-11EWA",
+      "datasheet": {
+        "url": "https://www.kingbrightusa.com/images/catalog/SPEC/SC56-11EWA.pdf",
+        "title": "SC56-11EWA V.1A03/04/2019 p.1 package and circuit diagram"
+      },
+      "function": "common-cathode-display",
+      "package": {
+        "id": "SC56-11EWA-TH",
+        "revision": 1,
+        "family": "seven-segment",
+        "bodyMm": {
+          "x": 12.7,
+          "y": 8,
+          "z": 19.05
+        },
+        "leadDiameterMm": 0.5,
+        "standoffMm": 1,
+        "pins": [
+          {
+            "id": "1",
+            "number": "1",
+            "name": "e",
+            "role": "passive",
+            "positionMm": {
+              "x": -5.08,
+              "y": 0,
+              "z": 7.62
+            }
+          },
+          {
+            "id": "2",
+            "number": "2",
+            "name": "d",
+            "role": "passive",
+            "positionMm": {
+              "x": -2.54,
+              "y": 0,
+              "z": 7.62
+            }
+          },
+          {
+            "id": "3",
+            "number": "3",
+            "name": "CC",
+            "role": "passive",
+            "positionMm": {
+              "x": 0.0,
+              "y": 0,
+              "z": 7.62
+            }
+          },
+          {
+            "id": "4",
+            "number": "4",
+            "name": "c",
+            "role": "passive",
+            "positionMm": {
+              "x": 2.54,
+              "y": 0,
+              "z": 7.62
+            }
+          },
+          {
+            "id": "5",
+            "number": "5",
+            "name": "DP",
+            "role": "passive",
+            "positionMm": {
+              "x": 5.08,
+              "y": 0,
+              "z": 7.62
+            }
+          },
+          {
+            "id": "6",
+            "number": "6",
+            "name": "b",
+            "role": "passive",
+            "positionMm": {
+              "x": 5.08,
+              "y": 0,
+              "z": -7.62
+            }
+          },
+          {
+            "id": "7",
+            "number": "7",
+            "name": "a",
+            "role": "passive",
+            "positionMm": {
+              "x": 2.54,
+              "y": 0,
+              "z": -7.62
+            }
+          },
+          {
+            "id": "8",
+            "number": "8",
+            "name": "CC",
+            "role": "passive",
+            "positionMm": {
+              "x": 0.0,
+              "y": 0,
+              "z": -7.62
+            }
+          },
+          {
+            "id": "9",
+            "number": "9",
+            "name": "f",
+            "role": "passive",
+            "positionMm": {
+              "x": -2.54,
+              "y": 0,
+              "z": -7.62
+            }
+          },
+          {
+            "id": "10",
+            "number": "10",
+            "name": "g",
+            "role": "passive",
+            "positionMm": {
+              "x": -5.08,
+              "y": 0,
+              "z": -7.62
+            }
+          }
+        ],
+        "footprint": {
+          "id": "SC56-11EWA-TH-footprint",
+          "revision": 1,
+          "pitchMm": 2.54,
+          "mountable": true,
+          "rowSpanMm": 15.24
+        },
+        "digits": 1,
+        "polarized": true
+      },
+      "simulation": {
+        "model": "seven-segment",
+        "status": "unsupported",
+        "reason": "Placement and wiring only; per-diode drive and multiplex simulation are not implemented."
+      },
+      "editor": {
+        "family": "display",
+        "visual": "segment",
+        "color": "#2c333a",
+        "defaults": {},
+        "parameters": []
+      },
+      "internalConnections": [
+        {
+          "pins": [
+            "3",
+            "8"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KINGBRIGHT-DC56-11EWA",
+      "revision": 1,
+      "editorType": "SEGMENT_DC5611EWA",
+      "name": "DC56-11EWA · common cathode",
+      "manufacturer": "Kingbright",
+      "partNumber": "DC56-11EWA",
+      "datasheet": {
+        "url": "https://www.kingbrightusa.com/images/catalog/SPEC/DC56-11EWA.pdf",
+        "title": "DC56-11EWA V.3A02/29/2020 p.1 package and circuit diagram"
+      },
+      "function": "common-cathode-display",
+      "package": {
+        "id": "DC56-11EWA-TH",
+        "revision": 1,
+        "family": "seven-segment",
+        "bodyMm": {
+          "x": 25,
+          "y": 8,
+          "z": 19.05
+        },
+        "leadDiameterMm": 0.5,
+        "standoffMm": 1,
+        "pins": [
+          {
+            "id": "1",
+            "number": "1",
+            "name": "e1",
+            "role": "passive",
+            "positionMm": {
+              "x": -10.16,
+              "y": 0,
+              "z": 7.62
+            }
+          },
+          {
+            "id": "2",
+            "number": "2",
+            "name": "d1",
+            "role": "passive",
+            "positionMm": {
+              "x": -7.62,
+              "y": 0,
+              "z": 7.62
+            }
+          },
+          {
+            "id": "3",
+            "number": "3",
+            "name": "c1",
+            "role": "passive",
+            "positionMm": {
+              "x": -5.08,
+              "y": 0,
+              "z": 7.62
+            }
+          },
+          {
+            "id": "4",
+            "number": "4",
+            "name": "DP1",
+            "role": "passive",
+            "positionMm": {
+              "x": -2.54,
+              "y": 0,
+              "z": 7.62
+            }
+          },
+          {
+            "id": "5",
+            "number": "5",
+            "name": "e2",
+            "role": "passive",
+            "positionMm": {
+              "x": 0.0,
+              "y": 0,
+              "z": 7.62
+            }
+          },
+          {
+            "id": "6",
+            "number": "6",
+            "name": "d2",
+            "role": "passive",
+            "positionMm": {
+              "x": 2.54,
+              "y": 0,
+              "z": 7.62
+            }
+          },
+          {
+            "id": "7",
+            "number": "7",
+            "name": "g2",
+            "role": "passive",
+            "positionMm": {
+              "x": 5.08,
+              "y": 0,
+              "z": 7.62
+            }
+          },
+          {
+            "id": "8",
+            "number": "8",
+            "name": "c2",
+            "role": "passive",
+            "positionMm": {
+              "x": 7.62,
+              "y": 0,
+              "z": 7.62
+            }
+          },
+          {
+            "id": "9",
+            "number": "9",
+            "name": "DP2",
+            "role": "passive",
+            "positionMm": {
+              "x": 10.16,
+              "y": 0,
+              "z": 7.62
+            }
+          },
+          {
+            "id": "10",
+            "number": "10",
+            "name": "b2",
+            "role": "passive",
+            "positionMm": {
+              "x": 10.16,
+              "y": 0,
+              "z": -7.62
+            }
+          },
+          {
+            "id": "11",
+            "number": "11",
+            "name": "a2",
+            "role": "passive",
+            "positionMm": {
+              "x": 7.62,
+              "y": 0,
+              "z": -7.62
+            }
+          },
+          {
+            "id": "12",
+            "number": "12",
+            "name": "f2",
+            "role": "passive",
+            "positionMm": {
+              "x": 5.08,
+              "y": 0,
+              "z": -7.62
+            }
+          },
+          {
+            "id": "13",
+            "number": "13",
+            "name": "CC2",
+            "role": "passive",
+            "positionMm": {
+              "x": 2.54,
+              "y": 0,
+              "z": -7.62
+            }
+          },
+          {
+            "id": "14",
+            "number": "14",
+            "name": "CC1",
+            "role": "passive",
+            "positionMm": {
+              "x": 0.0,
+              "y": 0,
+              "z": -7.62
+            }
+          },
+          {
+            "id": "15",
+            "number": "15",
+            "name": "b1",
+            "role": "passive",
+            "positionMm": {
+              "x": -2.54,
+              "y": 0,
+              "z": -7.62
+            }
+          },
+          {
+            "id": "16",
+            "number": "16",
+            "name": "a1",
+            "role": "passive",
+            "positionMm": {
+              "x": -5.08,
+              "y": 0,
+              "z": -7.62
+            }
+          },
+          {
+            "id": "17",
+            "number": "17",
+            "name": "g1",
+            "role": "passive",
+            "positionMm": {
+              "x": -7.62,
+              "y": 0,
+              "z": -7.62
+            }
+          },
+          {
+            "id": "18",
+            "number": "18",
+            "name": "f1",
+            "role": "passive",
+            "positionMm": {
+              "x": -10.16,
+              "y": 0,
+              "z": -7.62
+            }
+          }
+        ],
+        "footprint": {
+          "id": "DC56-11EWA-TH-footprint",
+          "revision": 1,
+          "pitchMm": 2.54,
+          "mountable": true,
+          "rowSpanMm": 15.24
+        },
+        "digits": 2,
+        "polarized": true
+      },
+      "simulation": {
+        "model": "seven-segment",
+        "status": "unsupported",
+        "reason": "Placement and wiring only; per-diode drive and multiplex simulation are not implemented."
+      },
+      "editor": {
+        "family": "display",
+        "visual": "segment",
+        "color": "#2c333a",
+        "defaults": {},
+        "parameters": []
+      }
+    },
+    {
+      "id": "KINGBRIGHT-CC56-12EWA",
+      "revision": 1,
+      "editorType": "SEGMENT_CC5612EWA",
+      "name": "CC56-12EWA · common cathode",
+      "manufacturer": "Kingbright",
+      "partNumber": "CC56-12EWA",
+      "datasheet": {
+        "url": "https://www.kingbrightusa.com/images/catalog/SPEC/CC56-12EWA.pdf",
+        "title": "CC56-12EWA V.1A02/26/2020 p.1 package and circuit diagram"
+      },
+      "function": "common-cathode-display",
+      "package": {
+        "id": "CC56-12EWA-TH",
+        "revision": 1,
+        "family": "seven-segment",
+        "bodyMm": {
+          "x": 50.3,
+          "y": 8.1,
+          "z": 19
+        },
+        "leadDiameterMm": 0.5,
+        "standoffMm": 1,
+        "pins": [
+          {
+            "id": "1",
+            "number": "1",
+            "name": "e",
+            "role": "passive",
+            "positionMm": {
+              "x": -6.35,
+              "y": 0,
+              "z": 7.62
+            }
+          },
+          {
+            "id": "2",
+            "number": "2",
+            "name": "d",
+            "role": "passive",
+            "positionMm": {
+              "x": -3.81,
+              "y": 0,
+              "z": 7.62
+            }
+          },
+          {
+            "id": "3",
+            "number": "3",
+            "name": "DP",
+            "role": "passive",
+            "positionMm": {
+              "x": -1.27,
+              "y": 0,
+              "z": 7.62
+            }
+          },
+          {
+            "id": "4",
+            "number": "4",
+            "name": "c",
+            "role": "passive",
+            "positionMm": {
+              "x": 1.27,
+              "y": 0,
+              "z": 7.62
+            }
+          },
+          {
+            "id": "5",
+            "number": "5",
+            "name": "g",
+            "role": "passive",
+            "positionMm": {
+              "x": 3.81,
+              "y": 0,
+              "z": 7.62
+            }
+          },
+          {
+            "id": "6",
+            "number": "6",
+            "name": "CC4",
+            "role": "passive",
+            "positionMm": {
+              "x": 6.35,
+              "y": 0,
+              "z": 7.62
+            }
+          },
+          {
+            "id": "7",
+            "number": "7",
+            "name": "b",
+            "role": "passive",
+            "positionMm": {
+              "x": 6.35,
+              "y": 0,
+              "z": -7.62
+            }
+          },
+          {
+            "id": "8",
+            "number": "8",
+            "name": "CC3",
+            "role": "passive",
+            "positionMm": {
+              "x": 3.81,
+              "y": 0,
+              "z": -7.62
+            }
+          },
+          {
+            "id": "9",
+            "number": "9",
+            "name": "CC2",
+            "role": "passive",
+            "positionMm": {
+              "x": 1.27,
+              "y": 0,
+              "z": -7.62
+            }
+          },
+          {
+            "id": "10",
+            "number": "10",
+            "name": "f",
+            "role": "passive",
+            "positionMm": {
+              "x": -1.27,
+              "y": 0,
+              "z": -7.62
+            }
+          },
+          {
+            "id": "11",
+            "number": "11",
+            "name": "a",
+            "role": "passive",
+            "positionMm": {
+              "x": -3.81,
+              "y": 0,
+              "z": -7.62
+            }
+          },
+          {
+            "id": "12",
+            "number": "12",
+            "name": "CC1",
+            "role": "passive",
+            "positionMm": {
+              "x": -6.35,
+              "y": 0,
+              "z": -7.62
+            }
+          }
+        ],
+        "footprint": {
+          "id": "CC56-12EWA-TH-footprint",
+          "revision": 1,
+          "pitchMm": 2.54,
+          "mountable": true,
+          "rowSpanMm": 15.24
+        },
+        "digits": 4,
+        "polarized": true
+      },
+      "simulation": {
+        "model": "seven-segment",
+        "status": "unsupported",
+        "reason": "Placement and wiring only; per-diode drive and multiplex simulation are not implemented."
+      },
+      "editor": {
+        "family": "display",
+        "visual": "segment",
+        "color": "#2c333a",
+        "defaults": {},
+        "parameters": []
+      }
+    },
+    {
+      "id": "TI-SN74HC02N",
+      "revision": 1,
+      "editorType": "SN74HC02N",
+      "name": "SN74HC02N · quad-2-input-nor",
+      "manufacturer": "Texas Instruments",
+      "partNumber": "SN74HC02N",
+      "datasheet": {
+        "url": "https://www.ti.com/lit/ds/symlink/sn74hc02.pdf",
+        "title": "SCLS076GDecember2020 pp.1,3 and N package drawing"
+      },
+      "function": "quad-2-input-nor",
+      "package": {
+        "id": "PDIP-14-300",
+        "revision": 1,
+        "family": "dip",
+        "bodyMm": {
+          "x": 19.3,
+          "y": 5.08,
+          "z": 6.4
+        },
+        "leadDiameterMm": 0.5,
+        "standoffMm": 1.5,
+        "pins": [
+          {
+            "id": "1",
+            "number": "1",
+            "name": "1Y",
+            "role": "output",
+            "positionMm": {
+              "x": -7.62,
+              "y": 0,
+              "z": 3.81
+            },
+            "outputType": "push-pull"
+          },
+          {
+            "id": "2",
+            "number": "2",
+            "name": "1A",
+            "role": "input",
+            "positionMm": {
+              "x": -5.08,
+              "y": 0,
+              "z": 3.81
+            }
+          },
+          {
+            "id": "3",
+            "number": "3",
+            "name": "1B",
+            "role": "input",
+            "positionMm": {
+              "x": -2.54,
+              "y": 0,
+              "z": 3.81
+            }
+          },
+          {
+            "id": "4",
+            "number": "4",
+            "name": "2Y",
+            "role": "output",
+            "positionMm": {
+              "x": 0.0,
+              "y": 0,
+              "z": 3.81
+            },
+            "outputType": "push-pull"
+          },
+          {
+            "id": "5",
+            "number": "5",
+            "name": "2A",
+            "role": "input",
+            "positionMm": {
+              "x": 2.54,
+              "y": 0,
+              "z": 3.81
+            }
+          },
+          {
+            "id": "6",
+            "number": "6",
+            "name": "2B",
+            "role": "input",
+            "positionMm": {
+              "x": 5.08,
+              "y": 0,
+              "z": 3.81
+            }
+          },
+          {
+            "id": "7",
+            "number": "7",
+            "name": "GND",
+            "role": "ground",
+            "positionMm": {
+              "x": 7.62,
+              "y": 0,
+              "z": 3.81
+            }
+          },
+          {
+            "id": "8",
+            "number": "8",
+            "name": "3A",
+            "role": "input",
+            "positionMm": {
+              "x": 7.62,
+              "y": 0,
+              "z": -3.81
+            }
+          },
+          {
+            "id": "9",
+            "number": "9",
+            "name": "3B",
+            "role": "input",
+            "positionMm": {
+              "x": 5.08,
+              "y": 0,
+              "z": -3.81
+            }
+          },
+          {
+            "id": "10",
+            "number": "10",
+            "name": "3Y",
+            "role": "output",
+            "positionMm": {
+              "x": 2.54,
+              "y": 0,
+              "z": -3.81
+            },
+            "outputType": "push-pull"
+          },
+          {
+            "id": "11",
+            "number": "11",
+            "name": "4A",
+            "role": "input",
+            "positionMm": {
+              "x": 0.0,
+              "y": 0,
+              "z": -3.81
+            }
+          },
+          {
+            "id": "12",
+            "number": "12",
+            "name": "4B",
+            "role": "input",
+            "positionMm": {
+              "x": -2.54,
+              "y": 0,
+              "z": -3.81
+            }
+          },
+          {
+            "id": "13",
+            "number": "13",
+            "name": "4Y",
+            "role": "output",
+            "positionMm": {
+              "x": -5.08,
+              "y": 0,
+              "z": -3.81
+            },
+            "outputType": "push-pull"
+          },
+          {
+            "id": "14",
+            "number": "14",
+            "name": "VCC",
+            "role": "power",
+            "positionMm": {
+              "x": -7.62,
+              "y": 0,
+              "z": -3.81
+            }
+          }
+        ],
+        "footprint": {
+          "id": "PDIP-14-300-footprint",
+          "revision": 1,
+          "pitchMm": 2.54,
+          "mountable": true,
+          "rowSpanMm": 7.62,
+          "bridgeCenterGap": true
+        }
+      },
+      "simulation": {
+        "model": "nor-powered",
+        "status": "unsupported",
+        "reason": "Placement and wiring only; powered gate simulation for this part is not implemented.",
+        "power": {
+          "positivePinId": "14",
+          "negativePinId": "7",
+          "minVoltage": 2,
+          "maxVoltage": 6
+        }
+      },
+      "editor": {
+        "family": "logic",
+        "visual": "ic",
+        "color": "#30333a",
+        "defaults": {},
+        "parameters": []
+      }
+    },
+    {
+      "id": "TI-SN74HC04N",
+      "revision": 1,
+      "editorType": "SN74HC04N",
+      "name": "SN74HC04N · hex-inverter",
+      "manufacturer": "Texas Instruments",
+      "partNumber": "SN74HC04N",
+      "datasheet": {
+        "url": "https://www.ti.com/lit/ds/symlink/sn74hc04.pdf",
+        "title": "SCLS078HApril2021 pp.1,3 and N package drawing"
+      },
+      "function": "hex-inverter",
+      "package": {
+        "id": "PDIP-14-300",
+        "revision": 1,
+        "family": "dip",
+        "bodyMm": {
+          "x": 19.3,
+          "y": 5.08,
+          "z": 6.4
+        },
+        "leadDiameterMm": 0.5,
+        "standoffMm": 1.5,
+        "pins": [
+          {
+            "id": "1",
+            "number": "1",
+            "name": "1A",
+            "role": "input",
+            "positionMm": {
+              "x": -7.62,
+              "y": 0,
+              "z": 3.81
+            }
+          },
+          {
+            "id": "2",
+            "number": "2",
+            "name": "1Y",
+            "role": "output",
+            "positionMm": {
+              "x": -5.08,
+              "y": 0,
+              "z": 3.81
+            },
+            "outputType": "push-pull"
+          },
+          {
+            "id": "3",
+            "number": "3",
+            "name": "2A",
+            "role": "input",
+            "positionMm": {
+              "x": -2.54,
+              "y": 0,
+              "z": 3.81
+            }
+          },
+          {
+            "id": "4",
+            "number": "4",
+            "name": "2Y",
+            "role": "output",
+            "positionMm": {
+              "x": 0.0,
+              "y": 0,
+              "z": 3.81
+            },
+            "outputType": "push-pull"
+          },
+          {
+            "id": "5",
+            "number": "5",
+            "name": "3A",
+            "role": "input",
+            "positionMm": {
+              "x": 2.54,
+              "y": 0,
+              "z": 3.81
+            }
+          },
+          {
+            "id": "6",
+            "number": "6",
+            "name": "3Y",
+            "role": "output",
+            "positionMm": {
+              "x": 5.08,
+              "y": 0,
+              "z": 3.81
+            },
+            "outputType": "push-pull"
+          },
+          {
+            "id": "7",
+            "number": "7",
+            "name": "GND",
+            "role": "ground",
+            "positionMm": {
+              "x": 7.62,
+              "y": 0,
+              "z": 3.81
+            }
+          },
+          {
+            "id": "8",
+            "number": "8",
+            "name": "4Y",
+            "role": "output",
+            "positionMm": {
+              "x": 7.62,
+              "y": 0,
+              "z": -3.81
+            },
+            "outputType": "push-pull"
+          },
+          {
+            "id": "9",
+            "number": "9",
+            "name": "4A",
+            "role": "input",
+            "positionMm": {
+              "x": 5.08,
+              "y": 0,
+              "z": -3.81
+            }
+          },
+          {
+            "id": "10",
+            "number": "10",
+            "name": "5Y",
+            "role": "output",
+            "positionMm": {
+              "x": 2.54,
+              "y": 0,
+              "z": -3.81
+            },
+            "outputType": "push-pull"
+          },
+          {
+            "id": "11",
+            "number": "11",
+            "name": "5A",
+            "role": "input",
+            "positionMm": {
+              "x": 0.0,
+              "y": 0,
+              "z": -3.81
+            }
+          },
+          {
+            "id": "12",
+            "number": "12",
+            "name": "6Y",
+            "role": "output",
+            "positionMm": {
+              "x": -2.54,
+              "y": 0,
+              "z": -3.81
+            },
+            "outputType": "push-pull"
+          },
+          {
+            "id": "13",
+            "number": "13",
+            "name": "6A",
+            "role": "input",
+            "positionMm": {
+              "x": -5.08,
+              "y": 0,
+              "z": -3.81
+            }
+          },
+          {
+            "id": "14",
+            "number": "14",
+            "name": "VCC",
+            "role": "power",
+            "positionMm": {
+              "x": -7.62,
+              "y": 0,
+              "z": -3.81
+            }
+          }
+        ],
+        "footprint": {
+          "id": "PDIP-14-300-footprint",
+          "revision": 1,
+          "pitchMm": 2.54,
+          "mountable": true,
+          "rowSpanMm": 7.62,
+          "bridgeCenterGap": true
+        }
+      },
+      "simulation": {
+        "model": "inverter-powered",
+        "status": "unsupported",
+        "reason": "Placement and wiring only; powered gate simulation for this part is not implemented.",
+        "power": {
+          "positivePinId": "14",
+          "negativePinId": "7",
+          "minVoltage": 2,
+          "maxVoltage": 6
+        }
+      },
+      "editor": {
+        "family": "logic",
+        "visual": "ic",
+        "color": "#30333a",
+        "defaults": {},
+        "parameters": []
+      }
+    },
+    {
+      "id": "TI-SN74LS266N",
+      "revision": 1,
+      "editorType": "SN74LS266N",
+      "name": "SN74LS266N · quad-2-input-xnor-open-collector",
+      "manufacturer": "Texas Instruments",
+      "partNumber": "SN74LS266N",
+      "datasheet": {
+        "url": "https://www.ti.com/lit/ds/symlink/sn74ls266.pdf",
+        "title": "SDLS151March1988 pp.1,3 and N package drawing"
+      },
+      "function": "quad-2-input-xnor-open-collector",
+      "package": {
+        "id": "PDIP-14-300",
+        "revision": 1,
+        "family": "dip",
+        "bodyMm": {
+          "x": 19.3,
+          "y": 5.08,
+          "z": 6.4
+        },
+        "leadDiameterMm": 0.5,
+        "standoffMm": 1.5,
+        "pins": [
+          {
+            "id": "1",
+            "number": "1",
+            "name": "1A",
+            "role": "input",
+            "positionMm": {
+              "x": -7.62,
+              "y": 0,
+              "z": 3.81
+            }
+          },
+          {
+            "id": "2",
+            "number": "2",
+            "name": "1B",
+            "role": "input",
+            "positionMm": {
+              "x": -5.08,
+              "y": 0,
+              "z": 3.81
+            }
+          },
+          {
+            "id": "3",
+            "number": "3",
+            "name": "1Y",
+            "role": "output",
+            "positionMm": {
+              "x": -2.54,
+              "y": 0,
+              "z": 3.81
+            },
+            "outputType": "open-collector"
+          },
+          {
+            "id": "4",
+            "number": "4",
+            "name": "2Y",
+            "role": "output",
+            "positionMm": {
+              "x": 0.0,
+              "y": 0,
+              "z": 3.81
+            },
+            "outputType": "open-collector"
+          },
+          {
+            "id": "5",
+            "number": "5",
+            "name": "2A",
+            "role": "input",
+            "positionMm": {
+              "x": 2.54,
+              "y": 0,
+              "z": 3.81
+            }
+          },
+          {
+            "id": "6",
+            "number": "6",
+            "name": "2B",
+            "role": "input",
+            "positionMm": {
+              "x": 5.08,
+              "y": 0,
+              "z": 3.81
+            }
+          },
+          {
+            "id": "7",
+            "number": "7",
+            "name": "GND",
+            "role": "ground",
+            "positionMm": {
+              "x": 7.62,
+              "y": 0,
+              "z": 3.81
+            }
+          },
+          {
+            "id": "8",
+            "number": "8",
+            "name": "3A",
+            "role": "input",
+            "positionMm": {
+              "x": 7.62,
+              "y": 0,
+              "z": -3.81
+            }
+          },
+          {
+            "id": "9",
+            "number": "9",
+            "name": "3B",
+            "role": "input",
+            "positionMm": {
+              "x": 5.08,
+              "y": 0,
+              "z": -3.81
+            }
+          },
+          {
+            "id": "10",
+            "number": "10",
+            "name": "3Y",
+            "role": "output",
+            "positionMm": {
+              "x": 2.54,
+              "y": 0,
+              "z": -3.81
+            },
+            "outputType": "open-collector"
+          },
+          {
+            "id": "11",
+            "number": "11",
+            "name": "4Y",
+            "role": "output",
+            "positionMm": {
+              "x": 0.0,
+              "y": 0,
+              "z": -3.81
+            },
+            "outputType": "open-collector"
+          },
+          {
+            "id": "12",
+            "number": "12",
+            "name": "4A",
+            "role": "input",
+            "positionMm": {
+              "x": -2.54,
+              "y": 0,
+              "z": -3.81
+            }
+          },
+          {
+            "id": "13",
+            "number": "13",
+            "name": "4B",
+            "role": "input",
+            "positionMm": {
+              "x": -5.08,
+              "y": 0,
+              "z": -3.81
+            }
+          },
+          {
+            "id": "14",
+            "number": "14",
+            "name": "VCC",
+            "role": "power",
+            "positionMm": {
+              "x": -7.62,
+              "y": 0,
+              "z": -3.81
+            }
+          }
+        ],
+        "footprint": {
+          "id": "PDIP-14-300-footprint",
+          "revision": 1,
+          "pitchMm": 2.54,
+          "mountable": true,
+          "rowSpanMm": 7.62,
+          "bridgeCenterGap": true
+        }
+      },
+      "simulation": {
+        "model": "xnor-open-collector",
+        "status": "unsupported",
+        "reason": "Placement and wiring only; open-collector outputs require external pull-ups; this behavior is not implemented.",
+        "power": {
+          "positivePinId": "14",
+          "negativePinId": "7",
+          "minVoltage": 4.75,
+          "maxVoltage": 5.25
+        }
+      },
+      "editor": {
+        "family": "logic",
+        "visual": "ic",
+        "color": "#30333a",
+        "defaults": {},
+        "parameters": []
+      }
+    },
+    {
+      "id": "E-SWITCH-200MSP1T1B1M2QE",
+      "revision": 1,
+      "editorType": "TOGGLE_SWITCH_200MSP1",
+      "name": "200MSP1 · SPDT toggle contacts",
+      "manufacturer": "E-Switch",
+      "partNumber": "200MSP1T1B1M2QE",
+      "datasheet": {
+        "url": "https://mm.digikey.com/Volume0/opasdata/d220001/medias/docus/6463/Series%20200%20Switches.pdf",
+        "title": "E-Switch Series200 manufacturer catalogue; MSP1 function / M2 PCB termination",
+        "pages": "127,129 (PDF1,3)"
+      },
+      "function": "spdt-toggle",
+      "package": {
+        "id": "200MSP1-M2-254",
+        "revision": 1,
+        "family": "switch",
+        "visualVariant": "toggle",
+        "bodyMm": {
+          "x": 8.13,
+          "y": 8.64,
+          "z": 5.08
+        },
+        "leadDiameterMm": 0.63,
+        "standoffMm": 1,
+        "pins": [
+          {
+            "id": "1",
+            "number": "1",
+            "name": "1",
+            "role": "passive",
+            "positionMm": {
+              "x": -2.54,
+              "y": 0,
+              "z": 0
+            }
+          },
+          {
+            "id": "2",
+            "number": "2",
+            "name": "COM",
+            "role": "passive",
+            "positionMm": {
+              "x": 0.0,
+              "y": 0,
+              "z": 0
+            }
+          },
+          {
+            "id": "3",
+            "number": "3",
+            "name": "3",
+            "role": "passive",
+            "positionMm": {
+              "x": 2.54,
+              "y": 0,
+              "z": 0
+            }
+          }
+        ],
+        "footprint": {
+          "id": "200MSP1-M2-254-footprint",
+          "revision": 1,
+          "pitchMm": 2.54,
+          "mountable": true
+        },
+        "actuator": {
+          "heightMm": 9.4,
+          "diameterMm": 2.54,
+          "bushingHeightMm": 5.59,
+          "bushingDiameterMm": 6,
+          "throwDegrees": 25
+        }
+      },
+      "simulation": {
+        "model": "contact-switch",
+        "status": "supported",
+        "reason": "Ideal SPDT contact connectivity only; no generated level, bounce or contact resistance."
+      },
+      "internalConnections": [
+        {
+          "pins": [
+            "2",
+            "3"
+          ],
+          "when": {
+            "property": "state",
+            "equals": false
+          }
+        },
+        {
+          "pins": [
+            "2",
+            "1"
+          ],
+          "when": {
+            "property": "state",
+            "equals": true
+          }
+        }
+      ],
+      "editor": {
+        "family": "input",
+        "visual": "toggle",
+        "color": "#989fa3",
+        "defaults": {
+          "state": false
+        },
+        "parameters": [
+          {
+            "key": "state",
+            "label": "Toggle position (false:2–3; true:2–1)",
+            "kind": "boolean"
+          }
+        ]
+      },
+      "notes": "Native2.54mm M2 PCB terminal pitch;0.51x0.76mm rectangular terminals represented by0.63mm equivalent round lead. Terminal2 is common."
+    }
+  ]
+}

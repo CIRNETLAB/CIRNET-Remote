@@ -4,10 +4,12 @@ import type { MemoryImage } from '../types/memory'
 import { getDefinition, validateProperties } from '../data/editorCatalog'
 import { assertConnectionAllowed } from '../electrical/nets'
 import { copyWireVisual, readWireVisual, validateWireVisual } from '../wires/wireVisual'
-import { moduleLocalToWorld } from '../electrical/modulePose'
+import { moduleLocalToWorld, moduleWorldPose } from '../electrical/modulePose'
+import { solveMounting, validateMountBindings } from '../electrical/mounting'
+import { getPartForType } from '../data/partCatalog'
 import { createMemoryImage, parseMemoryImage } from '../services/files/memoryImage'
 import type { CircuitValidation } from '../types/api'
-import { circuitsApi } from '../services/api/circuits'
+import { circuitsApi, type PhysicalPreview } from '../services/api/circuits'
 import { errorMessage } from '../services/api/client'
 import { MAX_CIRCUIT_FILE_BYTES, parseCircuitFile } from '../services/files/circuitFile'
 
@@ -21,6 +23,7 @@ export const useCircuitStore = defineStore('circuit', {
     validationResult: null as CircuitValidation | null, validatedSnapshot: '',
     validating: false, validationError: null as string | null, validationVersion: 0,
     past: [] as string[], future: [] as string[], saved: {} as Record<string, string>,
+    physicalPreview: null as PhysicalPreview | null, physicalSnapshot: '', physicalPreviewBusy: false,
   }),
   getters: {
     current: (state): CircuitDraft | null => state.drafts.find((draft) => draft.id === state.activeId) ?? null,
@@ -29,10 +32,21 @@ export const useCircuitStore = defineStore('circuit', {
     canUndo: (state) => state.past.length > 0,
     canRedo: (state) => state.future.length > 0,
     dirty(): boolean { return !!this.current && this.saved[this.current.id] !== JSON.stringify(this.current) },
+    physicalStates(): PhysicalPreview['device_states'] | null { return this.physicalSnapshot === JSON.stringify(this.graph) ? this.physicalPreview?.device_states ?? null : null },
   },
   actions: {
+    async evaluatePhysical() {
+      if (!this.graph || this.physicalPreviewBusy) return
+      const snapshot = JSON.stringify(this.graph)
+      this.physicalPreviewBusy = true
+      try {
+        const preview = await circuitsApi.physicalPreview(JSON.parse(snapshot) as CircuitGraph)
+        if (snapshot === JSON.stringify(this.graph)) { this.physicalPreview = preview; this.physicalSnapshot = snapshot }
+      } finally { this.physicalPreviewBusy = false }
+    },
     commitGraph(graph: CircuitGraph) {
       if (!this.current || JSON.stringify(graph) === JSON.stringify(this.graph)) return
+      validateMountBindings(graph)
       this.recordChange(); this.current.graph = graph; this.clearValidation()
     },
     placeModule(type: string, position: Required<NonNullable<CircuitModule['position']>>, rotation = 0): string {
@@ -47,28 +61,53 @@ export const useCircuitStore = defineStore('circuit', {
       const id = `${type}_${serial}`
       const properties = structuredClone(definition.defaults)
       if (definition.memoryContract) properties.memory = createMemoryImage()
-      this.commitGraph({ ...this.graph, modules: [...this.graph.modules, { id, type, position: { ...position }, rotation: ((rotation % 360) + 360) % 360, properties }] })
+      const physical = getPartForType(type), candidate = physical ? solveMounting(type, position, rotation, this.graph.modules, id) : null
+      if (candidate && !candidate.valid) throw new Error(candidate.reason)
+      const module: CircuitModule = { id, type, ...(candidate ? { mount: candidate.mount } : { position: { ...position }, rotation: ((rotation % 360) + 360) % 360 }), properties }
+      this.commitGraph({ ...this.graph, schema_version: physical ? '1.1' : this.graph.schema_version, modules: [...this.graph.modules, module] })
       return id
     },
     moveModule(id: string, position: Required<NonNullable<CircuitModule['position']>>) {
       if (!Object.values(position).every(Number.isFinite)) throw new Error('Position must be finite.')
       if (!this.graph?.modules.some((module) => module.id === id)) return
-      this.commitGraph({ ...this.graph, modules: this.graph.modules.map((module) => module.id === id ? { ...module, position: { ...position } } : module) })
+      const module = this.graph.modules.find(m => m.id === id)!, world = moduleWorldPose(module, this.graph.modules)
+      const candidate = getPartForType(module.type) ? solveMounting(module.type, position, world.rotation ?? 0, this.graph.modules, id) : null
+      if (candidate && !candidate.valid) throw new Error(candidate.reason)
+      const { mount: _mount, ...free } = module
+      const next = candidate ? { ...free, position: undefined, rotation: undefined, mount: candidate.mount } : { ...free, position: { ...position }, rotation: world.rotation }
+      this.commitGraph({ ...this.graph, modules: this.graph.modules.map(item => item.id === id ? next : item) })
     },
     rotateModule(id: string, degrees = 90) {
       if (!Number.isFinite(degrees)) throw new Error('Rotation must be finite.')
       if (!this.graph?.modules.some((module) => module.id === id)) return
-      this.commitGraph({ ...this.graph, modules: this.graph.modules.map((module) => module.id === id ? { ...module, rotation: (((module.rotation ?? 0) % 360 + degrees % 360) % 360 + 360) % 360 } : module) })
+      const module = this.graph.modules.find(m => m.id === id)!, world = moduleWorldPose(module, this.graph.modules)
+      const rotation = (((world.rotation ?? 0) % 360 + degrees % 360) % 360 + 360) % 360
+      if (module.mount) {
+        const candidate = solveMounting(module.type, world.position as Required<NonNullable<CircuitModule['position']>>, rotation, this.graph.modules, id)
+        if (!candidate?.valid) throw new Error(candidate?.reason ?? 'This rotation does not fit the footprint.')
+        this.commitGraph({ ...this.graph, modules: this.graph.modules.map(item => item.id === id ? { ...module, mount: candidate.mount } : item) })
+      } else this.commitGraph({ ...this.graph, modules: this.graph.modules.map(item => item.id === id ? { ...item, rotation } : item) })
+    },
+    detachModule(id: string) {
+      const module = this.graph?.modules.find(m => m.id === id)
+      if (!this.graph || !module?.mount) return
+      const { mount: _mount, ...free } = moduleWorldPose(module, this.graph.modules)
+      this.commitGraph({ ...this.graph, modules: this.graph.modules.map(item => item.id === id ? free : item) })
     },
     removeModule(id: string) {
       if (!this.graph?.modules.some((module) => module.id === id)) return
-      const removed = this.graph.modules.find(module => module.id === id)!
+      const removed = moduleWorldPose(this.graph.modules.find(module => module.id === id)!, this.graph.modules)
       const connections = this.graph.connections.filter(wire => wire.source.split('.')[0] !== id && wire.destination.split('.')[0] !== id).map(wire => {
         const visual = readWireVisual(wire)
         if (visual.frameModuleId !== id && !visual.controlPoints.some(p => p.space === 'module' && p.moduleId === id)) return wire
         return { ...wire, metadata: { ...wire.metadata, wireVisual: { ...visual, ...(visual.frameModuleId === id ? { frameModuleId: null } : {}), controlPoints: visual.controlPoints.map(p => p.space === 'module' && p.moduleId === id ? { space: 'world' as const, position: moduleLocalToWorld(p.position, removed) } : p) } } }
       })
-      this.commitGraph({ ...this.graph, modules: this.graph.modules.filter((module) => module.id !== id), connections })
+      const modules = this.graph.modules.filter(module => module.id !== id).map(module => {
+        if (module.mount?.boardId !== id) return module
+        const { mount: _mount, ...free } = moduleWorldPose(module, this.graph!.modules)
+        return free
+      })
+      this.commitGraph({ ...this.graph, modules, connections })
     },
     connectPorts(first: string, second: string) {
       this.connectEndpoints(first, second)

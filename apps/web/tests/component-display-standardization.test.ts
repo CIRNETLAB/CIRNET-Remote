@@ -26,9 +26,9 @@ test('canonical editorCatalog and ribbon expose standardized display names', () 
   assert.ok(ribbonBb100, 'BREADBOARD_100 must exist in Structure ribbon group')
   assert.equal(ribbonBb100.name, 'Power Breadboard')
 
-  const ribbonSupply = structureGroup.items.find((item) => item.type === 'POWER_SUPPLY')
-  assert.ok(ribbonSupply, 'POWER_SUPPLY must exist in Structure ribbon group')
-  assert.equal(ribbonSupply.name, 'Power Supply')
+  const ribbonSupply = structureGroup.items.find((item) => item.type === 'DC_SUPPLY')
+  assert.ok(ribbonSupply, 'the Structure ribbon places an electrically usable isolated supply')
+  assert.equal(ribbonSupply.name, 'Power Supply · isolated DC')
 
   // Verify legacy names are nowhere in the catalog or ribbon
   const allCatalogNames = componentCatalog.map((c) => c.name)

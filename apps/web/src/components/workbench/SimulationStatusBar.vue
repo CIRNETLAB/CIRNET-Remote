@@ -13,7 +13,12 @@ const circuit = useCircuitStore(), station = useStationStore(), experiment = use
 const workspace = useWorkspaceStore()
 const instrument=useInstrumentStore()
 const canRun=computed(()=>station.canExecute&&!experiment.busy&&(station.mode==='simulation'?!!circuit.graph:!!experiment.assignmentId))
-function run() {return experiment.run(circuit.graph,station.executionTarget,{signals:instrument.captureSignals,duration_ns:instrument.captureDurationNs})}
+async function run() {
+  if (station.mode === 'simulation' && circuit.graph?.schema_version === '1.1') {
+    try { await circuit.evaluatePhysical() } catch (error) { workspace.editError = error instanceof Error ? error.message : 'Physical simulation failed.'; return }
+  }
+  return experiment.run(circuit.graph,station.executionTarget,{signals:instrument.captureSignals,duration_ns:instrument.captureDurationNs})
+}
 function zoomToArea() {
   workspace.toggleZoomArea()
   if (workspace.zoomAreaActive) void nextTick(() => document.querySelector<HTMLCanvasElement>('canvas[aria-label="Three-dimensional circuit workspace"]')?.focus())

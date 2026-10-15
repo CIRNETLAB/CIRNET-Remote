@@ -41,7 +41,7 @@ First-time setup, from the repository root (Python 3.11 or newer):
 
 ```powershell
 py -3 -m venv services/api/.venv
-.\services\api\.venv\Scripts\python.exe -m pip install -e . -e './services/api[test]'
+.\services\api\.venv\Scripts\python.exe -m pip install -e . -e './simulator/circuit-simulator' -e './services/api[test]'
 ```
 
 Root contracts packaging automatically creates

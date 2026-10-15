@@ -1,0 +1,244 @@
+{
+  "version": 1,
+  "graph": {
+    "schema_version": "1.1",
+    "circuit_id": "physical-parity-v1",
+    "modules": [
+      {
+        "id": "BB",
+        "type": "BREADBOARD",
+        "position": {
+          "x": 3,
+          "y": 0.2,
+          "z": -2
+        },
+        "rotation": 37
+      },
+      {
+        "id": "U",
+        "type": "SN74HC08N",
+        "mount": {
+          "kind": "breadboard",
+          "version": 1,
+          "boardId": "BB",
+          "partId": "TI-SN74HC08N",
+          "partRevision": 1,
+          "packageId": "PDIP-14-300",
+          "packageRevision": 1,
+          "pose": {
+            "position": {
+              "x": -0.52,
+              "y": 0.309,
+              "z": 0
+            },
+            "rotation": 0
+          },
+          "contacts": [
+            {
+              "kind": "pin-contact",
+              "version": 1,
+              "pinId": "1",
+              "contactId": "terminal:F:25"
+            },
+            {
+              "kind": "pin-contact",
+              "version": 1,
+              "pinId": "2",
+              "contactId": "terminal:F:26"
+            },
+            {
+              "kind": "pin-contact",
+              "version": 1,
+              "pinId": "3",
+              "contactId": "terminal:F:27"
+            },
+            {
+              "kind": "pin-contact",
+              "version": 1,
+              "pinId": "4",
+              "contactId": "terminal:F:28"
+            },
+            {
+              "kind": "pin-contact",
+              "version": 1,
+              "pinId": "5",
+              "contactId": "terminal:F:29"
+            },
+            {
+              "kind": "pin-contact",
+              "version": 1,
+              "pinId": "6",
+              "contactId": "terminal:F:30"
+            },
+            {
+              "kind": "pin-contact",
+              "version": 1,
+              "pinId": "7",
+              "contactId": "terminal:F:31"
+            },
+            {
+              "kind": "pin-contact",
+              "version": 1,
+              "pinId": "8",
+              "contactId": "terminal:E:31"
+            },
+            {
+              "kind": "pin-contact",
+              "version": 1,
+              "pinId": "9",
+              "contactId": "terminal:E:30"
+            },
+            {
+              "kind": "pin-contact",
+              "version": 1,
+              "pinId": "10",
+              "contactId": "terminal:E:29"
+            },
+            {
+              "kind": "pin-contact",
+              "version": 1,
+              "pinId": "11",
+              "contactId": "terminal:E:28"
+            },
+            {
+              "kind": "pin-contact",
+              "version": 1,
+              "pinId": "12",
+              "contactId": "terminal:E:27"
+            },
+            {
+              "kind": "pin-contact",
+              "version": 1,
+              "pinId": "13",
+              "contactId": "terminal:E:26"
+            },
+            {
+              "kind": "pin-contact",
+              "version": 1,
+              "pinId": "14",
+              "contactId": "terminal:E:25"
+            }
+          ]
+        }
+      },
+      {
+        "id": "R",
+        "type": "RESISTOR_AXIAL"
+      },
+      {
+        "id": "L",
+        "type": "LED_LTL307EE"
+      },
+      {
+        "id": "DIP",
+        "type": "DIP_SWITCH_A6D4100",
+        "properties": {
+          "position0": true,
+          "position1": false,
+          "position2": true,
+          "position3": false
+        }
+      }
+    ],
+    "connections": [
+      {
+        "source": "BB.contact:terminal:J:25",
+        "destination": "R.A"
+      },
+      {
+        "source": "R.B",
+        "destination": "L.A"
+      },
+      {
+        "source": "L.K",
+        "destination": "BB.contact:terminal:A:25"
+      }
+    ]
+  },
+  "expectedGroups": [
+    [
+      "BB.contact:terminal:A:25",
+      "BB.contact:terminal:E:25",
+      "L.K",
+      "U.14"
+    ],
+    [
+      "BB.contact:terminal:E:26",
+      "U.13"
+    ],
+    [
+      "BB.contact:terminal:E:27",
+      "U.12"
+    ],
+    [
+      "BB.contact:terminal:E:28",
+      "U.11"
+    ],
+    [
+      "BB.contact:terminal:E:29",
+      "U.10"
+    ],
+    [
+      "BB.contact:terminal:E:30",
+      "U.9"
+    ],
+    [
+      "BB.contact:terminal:E:31",
+      "U.8"
+    ],
+    [
+      "BB.contact:terminal:F:25",
+      "BB.contact:terminal:J:25",
+      "R.A",
+      "U.1"
+    ],
+    [
+      "BB.contact:terminal:F:26",
+      "U.2"
+    ],
+    [
+      "BB.contact:terminal:F:27",
+      "U.3"
+    ],
+    [
+      "BB.contact:terminal:F:28",
+      "U.4"
+    ],
+    [
+      "BB.contact:terminal:F:29",
+      "U.5"
+    ],
+    [
+      "BB.contact:terminal:F:30",
+      "U.6"
+    ],
+    [
+      "BB.contact:terminal:F:31",
+      "U.7"
+    ],
+    [
+      "DIP.1",
+      "DIP.8"
+    ],
+    [
+      "DIP.2"
+    ],
+    [
+      "DIP.3",
+      "DIP.6"
+    ],
+    [
+      "DIP.4"
+    ],
+    [
+      "DIP.5"
+    ],
+    [
+      "DIP.7"
+    ],
+    [
+      "L.A",
+      "R.B"
+    ]
+  ]
+}

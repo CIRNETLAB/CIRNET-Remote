@@ -1,12 +1,13 @@
 import { getDefinition } from '../data/editorCatalog'
 import { getBreadboardGeometrySpec } from './BreadboardGeometrySpec'
+import { getPartForType } from '../data/partCatalog'
 
 export type PlacementRotationPolicy = 'WORLD_ALIGNED' | 'CAMERA_FACING' | 'MECHANICAL'
 
 // Mechanical profiles own their world frame. Known nonmechanical models retain
 // the existing camera-facing UX; no duplicated breadboard type list is needed.
 export function placementRotationPolicy(type?: string): PlacementRotationPolicy {
-  if (type && getBreadboardGeometrySpec(type)?.sides.length) return 'MECHANICAL'
+  if (type && (getBreadboardGeometrySpec(type)?.sides.length || getPartForType(type))) return 'MECHANICAL'
   return type && getDefinition(type) ? 'CAMERA_FACING' : 'WORLD_ALIGNED'
 }
 

@@ -8,5 +8,6 @@
   "electrical_rules": {
     "status": "datasheet-values-not-yet-entered"
   },
-  "notes": "Logical starter metadata only; voltage/timing limits must come from the exact selected device datasheet."
+  "notes": "Legacy logical starter metadata only. Existing 74HC08 instances retain twelve signal ports and no implicit power. Select the separate SN74HC08N package definition for physical pins and powered simulation.",
+  "physical_variants": [{ "definition_id": "TI-SN74HC08N", "revision": 1, "source": "parts/physical-parts.json" }]
 }

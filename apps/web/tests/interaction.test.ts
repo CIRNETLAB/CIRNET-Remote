@@ -50,6 +50,23 @@ function supplyFront(h: ReturnType<typeof setup>, x: number, y: number, z = 1.85
   return h.manager.project(new Vector3(x, y, z))
 }
 
+test('mounted physical component dragging keeps the same board-plane grab offset in an oblique view', async () => {
+  const h = setup('move')
+  try {
+    h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 })
+    const id = h.circuit.placeModule('SN74HC08N', { x: 0, y: .309, z: 0 })
+    h.workspace.selectModule(id); h.workspace.snap = false; await nextTick(); h.circuit.past = []
+    h.manager.camera.position.set(0, 3, 3); h.manager.camera.lookAt(0, .309, 0)
+    const screen = h.manager.project(new Vector3(0, .559, 0))
+    h.editor.pointerDown(h.pointer(screen.x, screen.y))
+    h.editor.pointerMove(h.pointer(screen.x + 5, screen.y))
+    h.editor.pointerUp(h.pointer(screen.x + 5, screen.y))
+    await nextTick()
+    assert.equal(h.workspace.editError, '')
+    assert.equal(h.circuit.graph!.modules.find(m => m.id === id)!.mount!.pose.position.z, 0)
+  } finally { h.dispose() }
+})
+
 test('Delete and Backspace remove selections with Undo/Redo independent of the sidebar button', async () => {
   for (const key of ['Delete', 'Backspace']) {
     const h = setup()

@@ -4,9 +4,17 @@ export interface CircuitModule {
   position?: { x?: number; y?: number; z?: number }
   rotation?: number
   properties?: Record<string, unknown>
+  mount?: MountBinding
 }
 
 export interface Point3 { x: number; y: number; z: number }
+export interface PinContactBinding { kind: 'pin-contact'; version: 1; pinId: string; contactId: string }
+export interface MountBinding {
+  kind: 'breadboard'; version: 1; boardId: string
+  partId: string; partRevision: number; packageId: string; packageRevision: number
+  pose: { position: Point3; rotation: number }
+  contacts: PinContactBinding[]
+}
 export type ElectricalEndpoint =
   | { kind: 'port'; moduleId: string; portId: string }
   | { kind: 'contact'; moduleId: string; contactId: string }
@@ -33,7 +41,7 @@ export interface WireVisual {
 }
 
 export interface CircuitGraph {
-  schema_version: '1.0'
+  schema_version: '1.0' | '1.1'
   circuit_id: string
   modules: CircuitModule[]
   connections: CircuitConnection[]

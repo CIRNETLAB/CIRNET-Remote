@@ -5,6 +5,7 @@ description = "Application backend for net*CIRCUIT Remote"
 requires-python = ">=3.11"
 dependencies = [
   "netcircuit-contracts==1.0.0",
+  "netcircuit-simulator==0.1.0",
   "grpcio>=1.60",
   "protobuf>=5",
   "psycopg[binary]>=3.1",

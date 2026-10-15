@@ -1,11 +1,14 @@
 import type { CircuitGraph, WireIdentity } from '../types/circuit'
 import { getDefinition } from '../data/editorCatalog'
 import { resolveEndpoint, type ResolvedEndpoint } from './endpoints'
+import { getPartForType } from '../data/partCatalog'
+import { validateMountBindings } from './mounting'
 
 export interface ResolvedNet { id: string; endpoints: string[]; drivers: string[]; inputs: string[]; width: number }
 export interface ElectricalNetResolution { nets: ResolvedNet[]; endpointNetIds: Record<string, string>; unresolved: string[] }
 
 export function resolveElectricalNets(graph: CircuitGraph): ElectricalNetResolution {
+  validateMountBindings(graph)
   const parent = new Map<string, string>(), endpoints = new Map<string, ResolvedEndpoint>(), unresolved = new Set<string>()
   const find = (key: string): string => {
     let root = key
@@ -22,7 +25,15 @@ export function resolveElectricalNets(graph: CircuitGraph): ElectricalNetResolut
     return resolved
   }
   for (const module of graph.modules) for (const port of getDefinition(module.type)?.ports ?? []) register(`${module.id}.${port.id}`)
-  for (const wire of graph.connections) {
+  const bonds: WireIdentity[] = []
+  for (const module of graph.modules) {
+    for (const contact of module.mount?.contacts ?? []) bonds.push({ source: `${module.id}.${contact.pinId}`, destination: `${module.mount!.boardId}.contact:${contact.contactId}` })
+    const part = getPartForType(module.type)
+    for (const internal of part?.internalConnections ?? []) {
+      if (!internal.when || (module.properties?.[internal.when.property] ?? part?.editor.defaults[internal.when.property]) === internal.when.equals) bonds.push({ source: `${module.id}.${internal.pins[0]}`, destination: `${module.id}.${internal.pins[1]}` })
+    }
+  }
+  for (const wire of [...graph.connections, ...bonds]) {
     const a = register(wire.source), b = register(wire.destination)
     if (!a || !b) continue
     const ra = find(a.nodeKey), rb = find(b.nodeKey)
@@ -36,7 +47,7 @@ export function resolveElectricalNets(graph: CircuitGraph): ElectricalNetResolut
   const endpointNetIds: Record<string, string> = {}
   const nets = [...groups].sort(([a], [b]) => a.localeCompare(b)).map(([id, group]): ResolvedNet => {
     for (const item of group) endpointNetIds[item.serialized] = id
-    return { id, endpoints: group.map(e => e.serialized).sort(), drivers: group.filter(e => e.direction === 'output').map(e => e.serialized).sort(), inputs: group.filter(e => e.direction === 'input').map(e => e.serialized).sort(), width: Math.max(...group.map(e => e.width)) }
+    return { id, endpoints: group.map(e => e.serialized).sort(), drivers: group.filter(e => e.direction === 'output' || e.pinRole === 'output').map(e => e.serialized).sort(), inputs: group.filter(e => e.direction === 'input' || e.pinRole === 'input').map(e => e.serialized).sort(), width: Math.max(...group.map(e => e.width)) }
   })
   return { nets, endpointNetIds: Object.fromEntries(Object.entries(endpointNetIds).sort(([a], [b]) => a.localeCompare(b))), unresolved: [...unresolved].sort() }
 }
@@ -56,7 +67,7 @@ export function assertConnectionAllowed(graph: CircuitGraph, first: string, seco
   const candidate = { ...graph, connections: [...graph.connections, { source, destination }] }
   const resolution = resolveElectricalNets(candidate)
   const net = resolution.nets.find(n => n.id === resolution.endpointNetIds[source])!
-  if (net.drivers.length > 1) throw new Error('This electrical net already has a driver. Disconnect it first.')
+  if (net.drivers.length > 1 && net.drivers.some(e => resolveEndpoint(graph.modules, e)?.direction === 'output')) throw new Error('This electrical net already has a driver. Disconnect it first.')
   // A scalar contact anywhere on a net cannot carry a multi-bit logical bus.
   if (net.width > 1 && net.endpoints.some(e => resolveEndpoint(graph.modules, e)?.endpoint.kind === 'contact')) throw new Error('Breadboard contacts require scalar wiring; use an explicit adapter.')
   return { source, destination, reversed }

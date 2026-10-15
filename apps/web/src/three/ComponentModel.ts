@@ -6,6 +6,8 @@ import { getBreadboardGeometrySpec } from '../geometry/BreadboardGeometrySpec'
 import { addPowerSupplyModel, applyPowerSupplyControls } from './PowerSupplyModel'
 import { addOscilloscopeModel } from './OscilloscopeModel'
 import { addFunctionGeneratorModel } from './FunctionGeneratorModel'
+import { getPartForType } from '../data/partCatalog'
+import { addPackageModel, packagePinAnchor } from './PackageModel'
 
 export function disposeObject(root: Object3D) {
   const geometries = new Set<BufferGeometry>(), materials = new Set<Material>(), textures = new Set<Texture>()
@@ -297,6 +299,8 @@ function createBreadboard100Texture(type: string): CanvasTexture | null {
 }
 
 export function portAnchor(type: string, port: LogicalPort): Vector3 {
+  const physical = packagePinAnchor(type, port.id)
+  if (physical) return physical
   const definition = getDefinition(type)!
   const side = port.direction === 'output' || (port.direction === 'inout' && definition.ports.indexOf(port) % 2 === 1) ? 1 : -1
   const peers = definition.ports.filter((item) => (item.direction === 'output' || (item.direction === 'inout' && definition.ports.indexOf(item) % 2 === 1) ? 1 : -1) === side)
@@ -305,6 +309,7 @@ export function portAnchor(type: string, port: LogicalPort): Vector3 {
 
 export function buildComponent(module: CircuitModule): Group {
   const definition = getDefinition(module.type)
+  const part = getPartForType(module.type)
   const [w, h, d] = definition?.size ?? [1.5, 0.5, 1]
   const group = new Group()
   group.userData = { kind: 'module', id: module.id, type: module.type, size: [w, h, d], signature: JSON.stringify([module.type, module.properties]) }
@@ -315,7 +320,9 @@ export function buildComponent(module: CircuitModule): Group {
   const cylinder = (radius: number, height: number, color: string) => { const mesh = new Mesh(new CylinderGeometry(radius, radius, height, 20), material(color)); mesh.userData.selectionSurface = true; return mesh }
   const color = definition?.color ?? '#72829a'
 
-  if (definition?.visual === 'resistor') {
+  if (part) {
+    addPackageModel(group, module, part)
+  } else if (definition?.visual === 'resistor') {
     const body = cylinder(0.23, w * 0.7, color); body.rotation.z = Math.PI / 2; body.position.y = h / 2 + 0.08; group.add(body)
     for (const [x, band] of [[-0.4, '#6c4434'], [-0.15, '#272528'], [0.15, '#b64137'], [0.4, '#c8a150']] as const) {
       const ring = cylinder(0.23, 0.07, band)
@@ -348,13 +355,13 @@ export function buildComponent(module: CircuitModule): Group {
       for (const [x, z, sx, sz] of [[0, -0.6, 0.6, 0.1], [0, 0, 0.6, 0.1], [0, 0.6, 0.6, 0.1], [-0.35, -0.3, 0.1, 0.45], [0.35, -0.3, 0.1, 0.45], [-0.35, 0.3, 0.1, 0.45], [0.35, 0.3, 0.1, 0.45]]) box(x, h + 0.04, z, sx, 0.025, sz, '#683839')
     }
   }
-  for (const port of definition?.ports ?? []) {
+  for (const port of part ? [] : definition?.ports ?? []) {
     const anchor = new Mesh(new SphereGeometry(0.115, 12, 8), material(port.direction === 'output' ? '#ddb56d' : port.direction === 'input' ? '#69cbbb' : '#96bde6'))
     anchor.position.copy(portAnchor(module.type, port))
     anchor.userData = { kind: 'port', id: module.id, endpoint: `${module.id}.${port.id}` }
     group.add(anchor)
   }
-  if (typeof document !== 'undefined' && !definition?.visual?.startsWith('breadboard') && definition?.visual !== 'supply' && definition?.visual !== 'oscilloscope' && definition?.visual !== 'generator') {
+  if (!part && typeof document !== 'undefined' && !definition?.visual?.startsWith('breadboard') && definition?.visual !== 'supply' && definition?.visual !== 'oscilloscope' && definition?.visual !== 'generator') {
     const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 80
     const context = canvas.getContext('2d')
     if (context) {

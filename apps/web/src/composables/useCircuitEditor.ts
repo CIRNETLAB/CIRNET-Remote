@@ -2,6 +2,9 @@ import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue'
 import type { Vector3 } from 'three'
 import type { createSceneManager } from '../three/SceneManager'
 import { getDefinition } from '../data/editorCatalog'
+import { getPartForType } from '../data/partCatalog'
+import { moduleWorldPose } from '../electrical/modulePose'
+import { solveMounting } from '../electrical/mounting'
 import { getBreadboardGeometrySpec } from '../geometry/BreadboardGeometrySpec'
 import { snapBreadboardPosition } from '../geometry/breadboardDocking'
 import { placementInitialRotation, rotationSnapStep } from '../geometry/placementRotation'
@@ -39,6 +42,13 @@ export function snapPosition(
   rotation?: number,
   axis?: 'x' | 'z'
 ): Position {
+  if (activeType && getPartForType(activeType)) {
+    const module = activeId ? modules.find(m => m.id === activeId) : undefined
+    const pose = module ? moduleWorldPose(module, modules) : undefined
+    const candidate = solveMounting(activeType, { x: point.x, y: point.y ?? elevation, z: point.z }, rotation ?? pose?.rotation ?? 0, modules, activeId ?? 'PLACE')
+    if (candidate) return candidate.position
+    if (module?.mount) elevation = 0
+  }
   const clean = (n: number) => Math.round(n * 10000) / 10000 || 0
   const baseX = axis === 'z' ? point.x : snapEnabled ? Math.round(point.x * 2) / 2 : Math.round(point.x * 100) / 100
   const baseZ = axis === 'x' ? point.z : snapEnabled ? Math.round(point.z * 2) / 2 : Math.round(point.z * 100) / 100
@@ -63,7 +73,11 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
   const zoomAreaRect = ref<{ left: number; top: number; width: number; height: number } | null>(null)
   const hoveredHandle = ref<TransformHandle | null>(null)
   const hoveredControl = ref<SupplyControl | null>(null)
+  const mountHint = ref('')
+  const pinHint = ref('')
   const controlHint = computed(() => {
+    if (mountHint.value) return mountHint.value
+    if (pinHint.value) return pinHint.value
     if (workspace.tool === 'wire' || workspace.selectedWire) return wireRouting.hint.value
     if (hoveredHandle.value === 'delete') return workspace.placementType ? 'Click to cancel placement (or press Escape)' : 'Click to delete component (or press Delete)'
     if (hoveredControl.value === 'power_on') return 'Click to toggle power On/Off'
@@ -71,7 +85,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     return ''
   })
   const ports = ref<{ endpoint: string; x: number; y: number; direction: string }[]>([])
-  const selected = computed(() => circuit.graph?.modules.find((module) => module.id === workspace.selectedModuleId))
+  const selected = computed(() => { const module = circuit.graph?.modules.find(item => item.id === workspace.selectedModuleId); return module ? moduleWorldPose(module, circuit.graph!.modules) : undefined })
   const attempt = (action: () => void) => { try { action(); workspace.editError = '' } catch (error) { workspace.editError = error instanceof Error ? error.message : 'Circuit edit failed.' } }
   const coordinates = (event: { clientX: number; clientY: number }) => { const rect = canvas.value!.getBoundingClientRect(); return { x: event.clientX - rect.left, y: event.clientY - rect.top } }
   const snap = (point: { x: number; y?: number; z: number } | Vector3, activeType?: string | null, activeId?: string | null, elevation = 0, rotation?: number, axis?: 'x' | 'z'): Position =>
@@ -80,12 +94,21 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     const rotation = placementInitialRotation(type, () => manager()!.placementFacingYaw())
     return { type, position: snap(point, type, null, 0, rotation), rotation }
   }
-  function showPlacement() { if (placementDraft) manager()?.setGhost(placementDraft.type, placementDraft.position, placementDraft.rotation) }
-  function clearPlacement() { placementDraft = null; manager()?.setGhost(null) }
+  function showPlacement() {
+    if (!placementDraft) return
+    const candidate = solveMounting(placementDraft.type, placementDraft.position, placementDraft.rotation, circuit.graph?.modules ?? [])
+    if (candidate) placementDraft.position = candidate.position
+    mountHint.value = candidate ? candidate.valid ? 'All pins fit. Click to mount.' : candidate.reason : ''
+    manager()?.setGhost(placementDraft.type, placementDraft.position, placementDraft.rotation)
+    manager()?.setMountPreview?.(candidate)
+  }
+  function clearPlacement() { placementDraft = null; mountHint.value = ''; manager()?.setGhost(null); manager()?.setMountPreview?.(null) }
+  const placementPoint = (x: number, y: number, type?: string) => getPartForType(type ?? '') ? manager()?.placementPoint?.(x, y) ?? manager()?.groundPoint(x, y) : manager()?.groundPoint(x, y)
   function updatePorts() {
     if (workspace.zoomAreaActive) { ports.value = []; return }
     const next: typeof ports.value = []
     for (const module of circuit.graph?.modules ?? []) {
+      if (getPartForType(module.type)) continue // Physical picking/highlighting stays in Three.js; no DOM per pin.
       if (workspace.tool !== 'wire' && module.id !== workspace.selectedModuleId) continue
       for (const port of getDefinition(module.type)?.ports ?? []) {
         const anchor = manager()?.endpointPosition(`${module.id}.${port.id}`)
@@ -160,7 +183,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     if (workspace.placementType) {
       if (placementDraft) place(placementDraft.type, placementDraft.position, placementDraft.rotation)
       else {
-        const point = manager()!.groundPoint(x, y)
+        const point = placementPoint(x, y, workspace.placementType)
         if (point) { const draft = createPlacementDraft(workspace.placementType, point); place(draft.type, draft.position, draft.rotation) }
       }
       return
@@ -197,7 +220,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     else if (workspace.tool === 'move') {
       const module = selected.value!, position = { x: module.position?.x ?? 0, y: module.position?.y ?? 0, z: module.position?.z ?? 0 }
       // Drag through the picked surface, including bodies above a low camera's ground horizon.
-      const dragPoint = manager()!.groundPoint(x, y, hit.point.y)
+      const dragPoint = getPartForType(module.type) ? placementPoint(x, y, module.type) : manager()!.groundPoint(x, y, hit.point.y)
       if (!dragPoint) { sync(); return }
       gesture = { kind: 'move', pointer: event.pointerId, start: { x, y }, dragged: false, id: hit.id, draft: circuit.activeId, planeHeight: hit.point.y, offset: { x: position.x - dragPoint.x, y: position.y, z: position.z - dragPoint.z }, position }
       manager()!.lockPointer(true)
@@ -255,7 +278,9 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
           transform.lastAngle = currentAngle
           const raw = transform.initialRotation + transform.angle * 180 / Math.PI
           const step = rotationSnapStep(type)
-          transform.rotation = workspace.snap ? Math.round(raw / step) * step : Math.round(raw * 100) / 100
+          const support = type && getPartForType(type) ? solveMounting(type, transform.initial, raw, circuit.graph?.modules ?? [], transform.id) : null
+          const boardRotation = support ? circuit.graph?.modules.find(m => m.id === support.boardId)?.rotation ?? 0 : 0
+          transform.rotation = workspace.snap ? boardRotation + Math.round((raw - boardRotation) / step) * step : Math.round(raw * 100) / 100
           if (transform.target === 'placement' && placementDraft) {
             placementDraft.rotation = transform.rotation
             placementDraft.position = snap(transform.initial, placementDraft.type, null, transform.initial.y, placementDraft.rotation)
@@ -272,10 +297,23 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
           if (transform.target === 'placement' && placementDraft) { placementDraft.position = transform.position; showPlacement() }
           else manager()!.previewMove(transform.id, transform.position)
         }
-        if (transform.target === 'module') updatePorts(); return
+        if (transform.target === 'module') {
+          if (type && getPartForType(type)) {
+            const candidate = solveMounting(type, transform.position, transform.rotation, circuit.graph?.modules ?? [], transform.id)
+            manager()?.setMountPreview?.(candidate)
+            mountHint.value = candidate ? candidate.valid ? 'All pins fit. Release to mount.' : candidate.reason : ''
+          }
+          updatePorts()
+        }
+        return
       }
     }
     if (!gesture) {
+      const endpoint = !workspace.placementType ? manager()!.pickEndpoint(x, y) : null
+      const parsed = endpoint?.endpoint.split('.'), pinModule = parsed && circuit.graph?.modules.find(m => m.id === parsed[0])
+      const pin = pinModule && getPartForType(pinModule.type)?.package.pins.find(p => p.id === parsed![1])
+      pinHint.value = pin ? `${pinModule!.id} · pin ${pin.number} ${pin.name} · ${pin.role}${pin.outputType ? ' · ' + pin.outputType : ''}` : ''
+      if (workspace.tool !== 'wire') manager()!.hoverEndpoint(pin ? endpoint!.endpoint : null)
       hoveredHandle.value = manager()!.hoverGizmo(x, y)
       const hit = !workspace.placementType && !hoveredHandle.value && workspace.tool === 'select' ? manager()!.pick(x, y) : null
       hoveredControl.value = hit?.kind === 'control' ? hit.control : null
@@ -283,13 +321,17 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       // Test the existing gizmo before following: a hovered handle must stay put.
       if (workspace.placementType && (hoveredHandle.value || manager()!.placementFollowBlocked())) return
     }
-    const point = manager()!.groundPoint(x, y, gesture?.kind === 'move' ? gesture.planeHeight : 0)
+    const activeType = gesture?.kind === 'move' ? selected.value?.type : workspace.placementType ?? undefined
+    const point = getPartForType(activeType ?? '') ? placementPoint(x, y, activeType) : manager()!.groundPoint(x, y, gesture?.kind === 'move' ? gesture.planeHeight : 0)
     if (!point) return
     if (gesture?.kind === 'move') {
       const move = gesture
       point.x += move.offset.x; point.z += move.offset.z
       const module = circuit.graph?.modules.find((m) => m.id === move.id)
       move.position = snap(point, module?.type, move.id, move.offset.y)
+      const candidate = module && solveMounting(module.type, move.position, selected.value?.rotation ?? 0, circuit.graph?.modules ?? [], move.id)
+      manager()?.setMountPreview?.(candidate || null)
+      mountHint.value = candidate ? candidate.valid ? 'All pins fit. Release to mount.' : candidate.reason : ''
       manager()!.previewMove(move.id, move.position); updatePorts()
     } else if (workspace.placementType) {
       if (!placementDraft) placementDraft = createPlacementDraft(workspace.placementType, point)
@@ -329,13 +371,13 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
         workspace.selectModule(completed.selection.moduleId); ui.openWindow('component-info', { activate: false })
       }
     }
-    sync()
+    manager()?.setMountPreview?.(null); mountHint.value = ''; sync()
   }
   function drop(event: DragEvent) {
     event.preventDefault(); cancelPlacement()
     const type = event.dataTransfer?.getData('application/x-netcircuit-component')
     if (!type || !getDefinition(type) || !manager() || !canvas.value) return
-    const { x, y } = coordinates(event), point = manager()!.groundPoint(x, y)
+    const { x, y } = coordinates(event), point = placementPoint(x, y, type)
     if (point) {
       const draft = createPlacementDraft(type, point)
       ui.activeRibbonGroup = null; place(draft.type, draft.position, draft.rotation); canvas.value.focus()
@@ -385,6 +427,6 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     else ui.closeWindow('component-info')
   }, { immediate: true })
   onUnmounted(() => { cancel(); clearPlacement() })
-  function pointerLeave() { wireRouting.pointerLeave(); if (!gesture) { hoveredHandle.value = null; hoveredControl.value = null; manager()?.clearGizmoHover(); manager()?.hoverWire(null) } }
+  function pointerLeave() { wireRouting.pointerLeave(); pinHint.value = ''; if (!gesture) { hoveredHandle.value = null; hoveredControl.value = null; manager()?.clearGizmoHover(); manager()?.hoverWire(null) } }
   return { ports, selected, dragging, hoveredHandle, hoveredControl, controlHint, zoomAreaRect, updatePorts, sync, cancel, connect, pointerDown, pointerMove, pointerUp, pointerLeave, pointerCancel: lostPointerCapture, lostPointerCapture, contextMenu, drop, keydown, selectModule, wireRouting }
 }

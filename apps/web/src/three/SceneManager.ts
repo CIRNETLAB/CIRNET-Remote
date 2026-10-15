@@ -3,6 +3,10 @@ import { ORIENTATION_DIRECTIONS } from '../components/workbench/viewCubeMath'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { applyPose, buildComponent, disposeObject, portAnchor } from './ComponentModel'
 import { getDefinition } from '../data/editorCatalog'
+import { moduleWorldPose } from '../electrical/modulePose'
+import type { MountCandidate } from '../electrical/mounting'
+import { applyPackageSimulation, setPackagePinHighlight } from './PackageModel'
+import { getPartForType } from '../data/partCatalog'
 import type { CircuitGraph, CircuitModule, Point3, WireIdentity, WireVisual } from '../types/circuit'
 import { contactFromInstance, getBreadboardContact, getBreadboardTopology } from '../electrical/BreadboardTopology'
 import { parseEndpoint } from '../electrical/endpoints'
@@ -31,6 +35,11 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
   const light = new DirectionalLight('#fff5dc', 1.9); light.position.set(-5, 10, 5)
   const fillLight = new DirectionalLight('#a8c7e8', 0.75); fillLight.position.set(6, 8, -6)
   const content = new Group(), models = new Map<string, Group>(), modules = new Map<string, CircuitModule>()
+  const mountPreview = new Group(); mountPreview.userData.ignorePick = true; scene.add(mountPreview)
+  const r = .045
+  const mountMarkerGeometry = new BufferGeometry().setFromPoints([new Vector3(-r, 0, -r), new Vector3(r, 0, -r), new Vector3(r, 0, r), new Vector3(-r, 0, r)])
+  const mountMarkerValid = new LineBasicMaterial({ color: '#58e69c', depthTest: false }), mountMarkerInvalid = new LineBasicMaterial({ color: '#ff706b', depthTest: false })
+  const clearMountPreview = () => mountPreview.clear()
   const endpointPosition = (endpoint: string): Vector3 | null => {
     if (disposed) return null
     const parsed = parseEndpoint(endpoint)
@@ -48,9 +57,19 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     const module = modules.get(id), model = models.get(id)
     return module && model ? { ...module, position: { x: model.position.x, y: model.position.y, z: model.position.z }, rotation: model.rotation.y * 180 / Math.PI } : null
   }
+  const previewMountedChildren = (boardId: string) => {
+    const board = modulePose(boardId)
+    if (!board) return
+    const poses = [...modules.values()].map(m => m.id === boardId ? board : m)
+    for (const child of poses.filter(m => m.mount?.boardId === boardId)) {
+      const model = models.get(child.id)
+      if (model) { applyPose(model, moduleWorldPose(child, poses)); wireLayer.updateModule(child.id) }
+    }
+  }
   const routeContext: WireRouteContext = { modulePose, endpoint: value => {
     const position = endpointPosition(value), parsed = parseEndpoint(value)
-    return position && parsed ? { endpoint: value, position, ...(parsed.kind === 'contact' ? { contactModuleId: parsed.moduleId } : {}) } : null
+    const boardId = parsed && (parsed.kind === 'contact' ? parsed.moduleId : modules.get(parsed.moduleId)?.mount?.boardId)
+    return position && parsed ? { endpoint: value, position, ...(boardId ? { contactModuleId: boardId } : {}) } : null
   } }
   const wireLayer = createWireLayer(endpointPosition, routeContext), wires = wireLayer.group
   const contactHover = new LineLoop(new BufferGeometry().setFromPoints([new Vector3(-.043, 0, -.043), new Vector3(.043, 0, -.043), new Vector3(.043, 0, .043), new Vector3(-.043, 0, .043)]), new LineBasicMaterial({ color: '#f1cd77' }))
@@ -65,6 +84,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
   let width = 1, height = 1, sized = false, frame: number | null = null, disposed = false, visible = false, suspended = false, pointerLocked = false
   let bufferWidth = 0, bufferHeight = 0
   let ghost: Group | null = null
+  let highlightedPinModel: Group | null = null
   let transition: {
     startTime: number
     duration: number
@@ -311,13 +331,41 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
           else { if (activeOutline?.id === module.id) removeActiveOutline(); disposeObject(model); content.remove(model); models.delete(module.id); model = undefined }
         }
         if (!model) { model = buildComponent(module); model.userData.onVisualChange = schedule; models.set(module.id, model); content.add(model) }
-        applyPose(model, module)
+        applyPose(model, moduleWorldPose(module, next!.modules))
       }
       attachOutline()
       wireLayer.sync(next?.connections ?? []); schedule()
     },
-    previewMove(id: string, position: Required<NonNullable<CircuitModule['position']>>) { const model = models.get(id); if (model && !disposed && [position.x, position.y, position.z].every(Number.isFinite)) { model.position.set(position.x, position.y, position.z); model.updateMatrixWorld(true); wireLayer.updateModule(id); schedule() } },
-    previewRotation(id: string, degrees: number) { const model = models.get(id); if (model && !disposed && Number.isFinite(degrees)) { model.rotation.y = (degrees % 360) * Math.PI / 180; model.updateMatrixWorld(true); wireLayer.updateModule(id); schedule() } },
+    previewMove(id: string, position: Required<NonNullable<CircuitModule['position']>>) { const model = models.get(id); if (model && !disposed && [position.x, position.y, position.z].every(Number.isFinite)) { model.position.set(position.x, position.y, position.z); model.updateMatrixWorld(true); previewMountedChildren(id); wireLayer.updateModule(id); schedule() } },
+    previewRotation(id: string, degrees: number) { const model = models.get(id); if (model && !disposed && Number.isFinite(degrees)) { model.rotation.y = (degrees % 360) * Math.PI / 180; model.updateMatrixWorld(true); previewMountedChildren(id); wireLayer.updateModule(id); schedule() } },
+    setMountPreview(candidate: MountCandidate | null) {
+      clearMountPreview()
+      for (const pin of candidate?.pins ?? []) {
+        const marker = new LineLoop(mountMarkerGeometry, pin.valid ? mountMarkerValid : mountMarkerInvalid)
+        marker.position.set(pin.position.x, pin.position.y + .03, pin.position.z); marker.renderOrder = 20; mountPreview.add(marker)
+      }
+      schedule()
+    },
+    setSimulationStates(states: Record<string, { state?: string; reason?: string }> | null) {
+      for (const [id, model] of models) {
+        const state = states?.[id]
+        applyPackageSimulation(model, state ? { status: state.state, ledOn: state.state === 'ON' } : null)
+      }
+      schedule()
+    },
+    placementPoint(x: number, y: number): Vector3 | null {
+      if (!validPointer(x, y)) return null
+      ray(x, y); scene.updateMatrixWorld(true)
+      const boards = [...models].filter(([id]) => getBreadboardTopology(modules.get(id)!.type)).map(([, model]) => model)
+      const hit = raycaster.intersectObjects(boards, true)[0]
+      if (hit) {
+        let owner: Object3D | null = hit.object
+        while (owner && !models.has(owner.userData.id)) owner = owner.parent
+        const module = owner && modules.get(owner.userData.id)
+        if (module) return raycaster.ray.intersectPlane(new Plane(new Vector3(0, 1, 0), -(owner!.position.y + getBreadboardTopology(module.type)!.contacts[0].localPosition[1])), new Vector3())
+      }
+      return raycaster.ray.intersectPlane(new Plane(new Vector3(0, 1, 0), 0), new Vector3())
+    },
     previewSupplyControl(id: string, control: SupplyControl, value: number | boolean) {
       const model = models.get(id), module = modules.get(id)
       if (model && module && getDefinition(module.type)?.visual === 'supply' && !disposed) {
@@ -386,10 +434,13 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     hoverEndpoint(endpoint: string | null) {
       if (disposed) return
       contactHover.visible = false
+      if (highlightedPinModel) setPackagePinHighlight(highlightedPinModel, null)
+      highlightedPinModel = null
       const parsed = endpoint && parseEndpoint(endpoint), module = parsed && modules.get(parsed.moduleId), model = parsed && models.get(parsed.moduleId)
       if (parsed && module && model) {
         const anchor = endpointPosition(endpoint!)
         if (anchor) {
+          if (parsed.kind === 'port' && getPartForType(module.type)) { setPackagePinHighlight(model, parsed.portId); highlightedPinModel = model; schedule(); return }
           contactHover.position.copy(anchor)
           if (parsed.kind === 'contact') contactHover.position.y = model.position.y + (getBreadboardTopology(module.type)?.deckHeight ?? .33) + .004
           contactHover.rotation.y = model.rotation.y; contactHover.visible = true
@@ -631,6 +682,6 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     finishTransition,
     setViewOrientation,
     suspend(value: boolean) { suspended = value; if (value && frame !== null) { cancelFrame(frame); frame = null }; updateControlsEnabled(); if (!value) schedule() },
-    dispose() { if (disposed) return; disposed = true; cancelTransition(); gizmo.update(undefined, [], camera, width, height); if (frame !== null) cancelFrame(frame); frame = null; controls?.removeEventListener('change', viewChanged); controls?.removeEventListener('start', cancelTransition); controls?.dispose(); removeActiveOutline(); wireLayer.dispose(); disposeObject(scene); models.clear(); modules.clear(); ghost = null; highlightedId = null; gizmoObstacles = []; scene.clear(); renderer.dispose() },
+    dispose() { if (disposed) return; disposed = true; cancelTransition(); gizmo.update(undefined, [], camera, width, height); if (frame !== null) cancelFrame(frame); frame = null; controls?.removeEventListener('change', viewChanged); controls?.removeEventListener('start', cancelTransition); controls?.dispose(); removeActiveOutline(); wireLayer.dispose(); clearMountPreview(); mountMarkerGeometry.dispose(); mountMarkerValid.dispose(); mountMarkerInvalid.dispose(); disposeObject(scene); models.clear(); modules.clear(); ghost = null; highlightedId = null; gizmoObstacles = []; scene.clear(); renderer.dispose() },
   }
 }

@@ -1,4 +1,4 @@
-"""Offline validation of the unchanged CircuitGraph 1.0 schemas."""
+"""Offline structural and physical-binding validation of CircuitGraph 1.x."""
 import json
 from pathlib import Path
 from jsonschema import Draft202012Validator
@@ -14,3 +14,5 @@ def validate_design_graph(value):
         schema['$id']=path.as_uri()
         registry=registry.with_resource(path.as_uri(),Resource.from_contents(schema))
     Draft202012Validator({'$ref':(ROOT/'circuit-schema/circuit.schema.json').as_uri()},registry=registry).validate(value)
+    from .physical_mounting import validate_physical_design
+    validate_physical_design(value)

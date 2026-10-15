@@ -77,6 +77,7 @@ onMounted(() => {
 })
 watch(() => workspace.zoom, (zoom) => { if (manager && Math.abs(manager.zoomPercent() - zoom) > 0.02) { editor.cancel(); manager.setZoom(zoom) } })
 watch(() => workspace.fitRequest, () => { editor.cancel(); manager?.fitCircuit() })
+watch(() => circuit.physicalStates, states => manager?.setSimulationStates(states), { deep: true })
 // Component Info can change height on selection without changing window state.
 watch([() => ui.windows, () => circuit.graph?.modules.find((module) => module.id === workspace.selectedModuleId)?.type], invalidateObstacles, { deep: true, flush: 'post' })
 watch([() => ui.drawerInsets.left, () => ui.drawerInsets.top, () => ui.componentOverlayHeight, () => ui.toolsOverlayWidth], invalidateObstacles, { flush: 'post' })

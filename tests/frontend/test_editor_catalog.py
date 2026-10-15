@@ -1,5 +1,7 @@
 import json
 from pathlib import Path
+import subprocess
+import sys
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -7,8 +9,11 @@ ROOT = Path(__file__).resolve().parents[2]
 def test_editor_snapshot_matches_canonical_metadata_and_has_unambiguous_ports():
     canonical = json.loads((ROOT / 'device-library/editor/components.json').read_text(encoding='utf-8'))
     snapshot = json.loads((ROOT / 'apps/web/src/data/editorCatalog.json').read_text(encoding='utf-8'))
-    assert canonical == snapshot
-    components = canonical['components']
+    # Legacy definitions remain byte-for-byte semantic inputs; physical entries
+    # are generated from the separate, versioned part registry.
+    assert canonical['components'] == snapshot['components'][:len(canonical['components'])]
+    subprocess.run([sys.executable, str(ROOT / 'scripts/sync_editor_catalog.py'), '--check'], cwd=ROOT, check=True)
+    components = snapshot['components']
     assert len({item['type'] for item in components}) == len(components)
     for item in components:
         assert len({port['id'] for port in item['ports']}) == len(item['ports'])
