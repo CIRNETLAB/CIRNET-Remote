@@ -4,6 +4,7 @@ import type { PartDefinition } from '../../data/partCatalog'
 import type { CircuitModule } from '../../types/circuit'
 import { RESISTOR_BAND_COLORS } from './PackageMaterials'
 import { updatePackageMarking } from './PackageMarking'
+import { updatePackageLeads } from './PackageLeads'
 
 export function canUpdatePackageAppearance(part: PartDefinition) {
   return part.package.family === 'radial-capacitor' || part.package.family === 'axial' && (part.package.visualVariant === 'resistor' || part.function === 'resistor')
@@ -19,10 +20,11 @@ function capacitanceLabel(value: number) {
   return `${displayNumber(value / Number(scale))} ${unit}`
 }
 
-/** Mutate paint and the existing marking texture only. Placement, leads, target
- * identities, materials and geometry remain owned by the same component. */
+/** Paint edits retain all geometry. Explicit lead edits replace only the owned
+ * sweeps and move body artwork; placement and electrical target identities stay. */
 export function updatePackageAppearance(group: Group, module: CircuitModule, part: PartDefinition): void {
   if (!canUpdatePackageAppearance(part)) return
+  updatePackageLeads(group, module, part)
   const properties = { ...part.editor.defaults, ...module.properties }
   const marking = group.getObjectByName('package-property-marking') as Mesh | undefined
   if (part.package.family === 'axial') {

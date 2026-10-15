@@ -13,6 +13,7 @@ import { circuitsApi, type PhysicalPreview } from '../services/api/circuits'
 import { errorMessage } from '../services/api/client'
 import { MAX_CIRCUIT_FILE_BYTES, parseCircuitFile } from '../services/files/circuitFile'
 import { normalizeComponentProperties } from '../data/componentProperties'
+import { isLeadEditableType } from '../data/leadProperties'
 import type { ExecutionPresentationAdapter } from '../services/execution/presentation'
 
 export interface CircuitDraft { id: string; name: string; graph: CircuitGraph }
@@ -141,8 +142,8 @@ export const useCircuitStore = defineStore('circuit', {
       if (!module || !this.graph) return
       const definition = getDefinition(module.type)
       const normalizedPatch = normalizeComponentProperties(module.type, patch)
-      if (Object.keys(normalizedPatch).some((key) => !definition?.parameters.some((parameter) => parameter.key === key))) throw new Error('Unsupported component parameter.')
-      const properties = { ...definition?.defaults, ...normalizeComponentProperties(module.type, module.properties), ...normalizedPatch }
+      if (Object.keys(normalizedPatch).some((key) => !definition?.parameters.some((parameter) => parameter.key === key) && !(isLeadEditableType(module.type) && ['leadForm', 'leadLengthMm', 'bodyLiftMm'].includes(key)))) throw new Error('Unsupported component parameter.')
+      const properties = normalizeComponentProperties(module.type, { ...definition?.defaults, ...normalizeComponentProperties(module.type, module.properties), ...normalizedPatch })
       validateProperties(module.type, properties)
       this.commitGraph({ ...this.graph, modules: this.graph.modules.map((item) => item.id === id ? { ...item, properties } : item) })
     },

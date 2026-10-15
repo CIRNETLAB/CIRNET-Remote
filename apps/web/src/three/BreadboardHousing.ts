@@ -3,6 +3,9 @@ import { addBreadboardSockets, SOCKET_HALF_OPENING } from './BreadboardSockets'
 import { getBreadboardTopology } from '../electrical/BreadboardTopology'
 import { BREADBOARD_GEOMETRY as g, getBreadboardGeometrySpec } from '../geometry/BreadboardGeometrySpec'
 
+// Shared by untextured ABS and its artwork; leave headroom under direct light.
+export const BREADBOARD_PLASTIC_COLOR = '#d5d6d3'
+
 // Visual housing only. These contours and recesses never define electrical nets.
 export function addBreadboardHousing(group: Group, type: string, color: string, texture: CanvasTexture | null) {
   const spec = getBreadboardGeometrySpec(type)!, [w, h, d] = spec.size

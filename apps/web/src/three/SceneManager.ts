@@ -335,7 +335,9 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
         if (model && model.userData.signature !== signature) {
           const part = getPartForType(module.type)
           if (model.userData.type === module.type && part && canUpdatePackageAppearance(part)) {
+            const geometryRevision = model.userData.visualGeometryRevision
             updatePackageAppearance(model, module, part); model.userData.signature = signature
+            if (activeOutline?.id === module.id && model.userData.visualGeometryRevision !== geometryRevision) removeActiveOutline()
           }
           // Supply settings already have an in-place display/knob update in applyPose.
           else if (model.userData.type === module.type && getDefinition(module.type)?.visual === 'supply') model.userData.signature = signature

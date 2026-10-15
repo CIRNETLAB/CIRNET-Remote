@@ -1,4 +1,5 @@
 import { BoxGeometry, CanvasTexture, CylinderGeometry, DoubleSide, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, SphereGeometry, SRGBColorSpace, TorusGeometry, Vector3 } from 'three'
+import { createCoatingMaterial, stabilizeThinSurface } from './StudioEnvironment'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { loadInstrumentLogo } from './InstrumentArtwork'
 import { SUPPLY_THEME } from '../data/instrumentVisuals'
@@ -123,7 +124,11 @@ function legendsTexture(w: number, h: number) {
 // source. Only the latter binds the existing PLUS/MINUS endpoints to its posts.
 export function addPowerSupplyModel(group: Group, [w, h, d]: readonly number[]) {
   const electrical = group.userData.type === 'DC_SUPPLY'
-  const mat = (color: string, metalness = 0, roughness = 0.55) => new MeshStandardMaterial({ color, metalness, roughness })
+  // Only collars and fasteners expose metal. Enclosure paint and plastic grips
+  // must not inherit the conductive reflectance of their substrate.
+  const mat = (color: string, metalness = 0, roughness = 0.55) => metalness >= .65
+    ? new MeshStandardMaterial({ color, metalness, roughness })
+    : createCoatingMaterial({ color, roughness })
   const add = (name: string, mesh: Mesh, x: number, y: number, z: number, contour = false, parent = group) => {
     mesh.name = name; mesh.position.set(x, y, z); mesh.userData.selectionSurface = contour; parent.add(mesh); return mesh
   }
@@ -142,9 +147,9 @@ export function addPowerSupplyModel(group: Group, [w, h, d]: readonly number[]) 
   // the output labels. Printed branding occupies the right-hand header space.
   add('display-recess', new Mesh(new RoundedBoxGeometry(w * 0.63, h * 0.66, 0.035, 3, 0.035), mat('#080d12')), -w * 0.135, h * 0.585, front + 0.022)
   const screen = displayTexture()
-  add('supply-display', new Mesh(new PlaneGeometry(w * 0.60, h * 0.63), new MeshBasicMaterial({ color: screen ? '#ffffff' : '#000000', map: screen, toneMapped: false })), -w * 0.135, h * 0.585, front + 0.041).userData.settings = [false, 0, 0]
+  add('supply-display', new Mesh(new PlaneGeometry(w * 0.60, h * 0.63), stabilizeThinSurface(new MeshBasicMaterial({ color: screen ? '#ffffff' : '#000000', map: screen, toneMapped: false }))), -w * 0.135, h * 0.585, front + 0.041).userData.settings = [false, 0, 0]
   const legends = legendsTexture(w, h)
-  if (legends) add('front-legends', new Mesh(new PlaneGeometry(w - 0.16, h - 0.26), new MeshBasicMaterial({ map: legends, transparent: true, depthWrite: false, toneMapped: false })), 0, panelY, front + 0.055)
+  if (legends) add('front-legends', new Mesh(new PlaneGeometry(w - 0.16, h - 0.26), stabilizeThinSurface(new MeshBasicMaterial({ map: legends, transparent: true, depthWrite: false, toneMapped: false }))), 0, panelY, front + 0.055)
   const logoUrl = new URL('../assets/icons/favicon.svg', import.meta.url).href
   const logoTexture = typeof document !== 'undefined' && typeof document.createElementNS === 'function'
   ? loadInstrumentLogo(group, logoUrl) : null

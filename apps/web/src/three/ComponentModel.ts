@@ -1,7 +1,7 @@
-import { Box3, BoxGeometry, CanvasTexture, CylinderGeometry, Group, InstancedMesh, Mesh, MeshStandardMaterial, Object3D, SphereGeometry, Sprite, SpriteMaterial, Texture, Vector3, type BufferGeometry, type Material } from 'three'
+import { Box3, BoxGeometry, CanvasTexture, CylinderGeometry, Group, InstancedMesh, Mesh, MeshStandardMaterial, Object3D, SphereGeometry, Sprite, SpriteMaterial, SRGBColorSpace, Texture, Vector3, type BufferGeometry, type Material } from 'three'
 import { getDefinition, type LogicalPort } from '../data/editorCatalog'
 import type { CircuitModule } from '../types/circuit'
-import { addBreadboardHousing } from './BreadboardHousing'
+import { addBreadboardHousing, BREADBOARD_PLASTIC_COLOR } from './BreadboardHousing'
 import { getBreadboardGeometrySpec } from '../geometry/BreadboardGeometrySpec'
 import { addPowerSupplyModel, applyPowerSupplyControls, POWER_SUPPLY_VISUAL_SIZE, supplyTerminalAnchor } from './PowerSupplyModel'
 import { addOscilloscopeModel } from './OscilloscopeModel'
@@ -49,7 +49,7 @@ function createBreadboardTexture(type: string): CanvasTexture | null {
   ]
 
   // Clean off-white ABS plastic surface
-  ctx.fillStyle = '#fafbfc'
+  ctx.fillStyle = BREADBOARD_PLASTIC_COLOR
   ctx.fillRect(0, 0, width, height)
 
   // Outer plastic beveled border
@@ -147,6 +147,7 @@ function createBreadboardTexture(type: string): CanvasTexture | null {
   // Socket openings, bevels and cavity floors are rendered as real geometry.
 
   const texture = new CanvasTexture(canvas)
+  texture.colorSpace = SRGBColorSpace
   texture.anisotropy = 16
   texture.needsUpdate = true
   return texture
@@ -172,7 +173,7 @@ function createBreadboard630Texture(type: string): CanvasTexture | null {
   ]
 
   // Clean off-white ABS plastic surface
-  ctx.fillStyle = '#fafbfc'
+  ctx.fillStyle = BREADBOARD_PLASTIC_COLOR
   ctx.fillRect(0, 0, width, height)
 
   // Outer plastic beveled border
@@ -233,6 +234,7 @@ function createBreadboard630Texture(type: string): CanvasTexture | null {
   // Socket openings, bevels and cavity floors are rendered as real geometry.
 
   const texture = new CanvasTexture(canvas)
+  texture.colorSpace = SRGBColorSpace
   texture.anisotropy = 16
   texture.needsUpdate = true
   return texture
@@ -258,7 +260,7 @@ function createBreadboard100Texture(type: string): CanvasTexture | null {
   ]
 
   // Clean off-white ABS plastic surface
-  ctx.fillStyle = '#fafbfc'
+  ctx.fillStyle = BREADBOARD_PLASTIC_COLOR
   ctx.fillRect(0, 0, width, height)
 
   // Outer plastic beveled border
@@ -295,6 +297,7 @@ function createBreadboard100Texture(type: string): CanvasTexture | null {
   // Socket openings, bevels and cavity floors are rendered as real geometry.
 
   const texture = new CanvasTexture(canvas)
+  texture.colorSpace = SRGBColorSpace
   texture.anisotropy = 16
   texture.needsUpdate = true
   return texture
@@ -345,11 +348,11 @@ export function buildComponent(module: CircuitModule): Group {
     const body = cylinder(w * 0.35, h, color); body.position.y = h / 2 + 0.05; group.add(body)
     if (definition.visual === 'led') { const dome = new Mesh(new SphereGeometry(w * 0.35, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), material(color)); dome.userData.selectionSurface = true; dome.position.y = h; group.add(dome) }
   } else if (definition?.visual === 'breadboard') {
-    addBreadboardHousing(group, module.type, color, createBreadboardTexture(module.type))
+    addBreadboardHousing(group, module.type, BREADBOARD_PLASTIC_COLOR, createBreadboardTexture(module.type))
   } else if (definition?.visual === 'breadboard_630') {
-    addBreadboardHousing(group, module.type, color, createBreadboard630Texture(module.type))
+    addBreadboardHousing(group, module.type, BREADBOARD_PLASTIC_COLOR, createBreadboard630Texture(module.type))
   } else if (definition?.visual === 'breadboard_100') {
-    addBreadboardHousing(group, module.type, color, createBreadboard100Texture(module.type))
+    addBreadboardHousing(group, module.type, BREADBOARD_PLASTIC_COLOR, createBreadboard100Texture(module.type))
   } else if (definition?.visual === 'oscilloscope') {
     addOscilloscopeModel(group)
   } else if (definition?.visual === 'generator') {

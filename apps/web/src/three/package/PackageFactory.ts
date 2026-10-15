@@ -6,6 +6,7 @@ import { createPackageBodyMaterial, createPackageMaterials } from './PackageMate
 import { createPackageMarking, shortPackageCode } from './PackageMarking'
 import { updatePackageAppearance } from './PackageAppearance'
 import { axialCoatingGeometry, ledShellGeometry, roundedPackageBox, segmentGlyphGeometry } from './PackageShapes'
+import { registerEditablePackageLeads } from './PackageLeads'
 
 export function addPackageModel(group: Group, module: CircuitModule, part: PartDefinition) {
   const pkg = part.package, mm = MM_TO_WORLD
@@ -52,7 +53,7 @@ export function addPackageModel(group: Group, module: CircuitModule, part: PartD
     box('package-cathode-marker', .32 * mm, .3 * mm, radius * .8, sign * radius, bottom + .25 * mm, 0, ink, group, false)
   } else if (pkg.family === 'axial') {
     const resistor = pkg.visualVariant === 'resistor' || part.function === 'resistor'
-    const coating = createPackageBodyMaterial({ color: resistor ? '#cbb181' : '#ae613a', roughness: resistor ? .73 : .28, metalness: .02 })
+    const coating = createPackageBodyMaterial({ color: resistor ? '#467697' : '#ae613a', roughness: resistor ? .73 : .28, metalness: .02 })
     const radius = Math.min(h, d) / 2, body = mesh('package-body', axialCoatingGeometry(w, radius, resistor), coating)
     body.rotation.z = Math.PI / 2; body.position.y = bottom + h / 2
     if (resistor) {
@@ -156,6 +157,7 @@ export function addPackageModel(group: Group, module: CircuitModule, part: PartD
     marking(part.shortName ?? pkg.marking ?? part.name)
   }
 
+  const bodyObjects = group.children.slice()
   const tipRadius = Math.min(.04, Math.max(pkg.leadDiameterMm * mm * 1.7, .025))
   const pickMaterial = new MeshStandardMaterial({ visible: false, transparent: true, opacity: 0, depthWrite: false })
   const pickGeometry = new SphereGeometry(tipRadius, 10, 8)
@@ -190,11 +192,13 @@ export function addPackageModel(group: Group, module: CircuitModule, part: PartD
       if (pkg.family === 'dip') knee.y = shoulder.y
       const surface = mesh('lead-metal', createFormedLeadGeometry([anchor, knee, shoulder], width, pkg.family === 'dip'), metal, lead)
       surface.userData.continuousLead = true
+      surface.userData.leadBaseline = [anchor, knee, shoulder].map(point => point.toArray())
     }
     const target = mesh(`package-pin-target-${pin.id}`, pickGeometry, pickMaterial, group, false); target.position.copy(anchor).y += tipRadius * .5
     target.userData = { ...endpoint, pinTarget: true }
     const highlight = mesh(`package-pin-highlight-${pin.id}`, highlightGeometry, highlightMaterial, group, false); highlight.position.copy(anchor).y += .028; highlight.visible = false; highlight.userData = { pinHighlight: true, pinId: pin.id, ignorePick: true }
   }
+  registerEditablePackageLeads(group, part, bodyObjects)
   updatePackageAppearance(group, module, part)
   group.userData.packageId = pkg.id
   group.userData.definitionId = part.id

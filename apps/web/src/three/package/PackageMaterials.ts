@@ -1,4 +1,5 @@
 import { Color, MeshStandardMaterial, type MeshStandardMaterialParameters } from 'three'
+import { createCoatingMaterial } from '../StudioEnvironment'
 
 /** Body paint only: reduce display-space brightness by 10% while retaining hue.
  * Keep metal, coded bands and printed polarity/IC markings on their exact colors. */
@@ -7,14 +8,14 @@ export function subduedBodyColor(color: string): Color {
 }
 
 export function createPackageBodyMaterial(parameters: MeshStandardMaterialParameters & { color: string }) {
-  return new MeshStandardMaterial({ ...parameters, color: subduedBodyColor(parameters.color) })
+  return createCoatingMaterial({ ...parameters, color: subduedBodyColor(parameters.color) })
 }
 
 /** Materials belong to a single model; removing a model cannot invalidate a peer. */
 export function createPackageMaterials(subduedBody = false) {
   return {
     metal: new MeshStandardMaterial({ color: '#d8dce0', roughness: .29, metalness: .86, envMapIntensity: .85 }),
-    plastic: new MeshStandardMaterial({ color: subduedBody ? subduedBodyColor('#24272b') : '#24272b', roughness: .65, metalness: .02 }),
+    plastic: subduedBody ? createCoatingMaterial({ color: subduedBodyColor('#24272b'), roughness: .8 }) : new MeshStandardMaterial({ color: '#24272b', roughness: .65, metalness: .02 }),
     ink: new MeshStandardMaterial({ color: '#c9ccc1', roughness: .88 }),
     dark: new MeshStandardMaterial({ color: '#080b0e', roughness: .8 }),
   }

@@ -5,6 +5,7 @@ import { CH1_COLOR, CH2_COLOR, SCOPE_LAYOUT, drawScopeArtwork, scopeLegendsArtwo
 import { createInstrumentChassis, mountInstrumentChassis } from './InstrumentChassis'
 import { loadInstrumentLogo } from './InstrumentArtwork'
 import { SCOPE_THEME } from '../data/instrumentVisuals'
+import { createCoatingMaterial, stabilizeThinSurface } from './StudioEnvironment'
 
 export const OSCILLOSCOPE_SIZE = [6, 3.8, 2.8] as const
 export const OSCILLOSCOPE_KNOBS = ['time_div_knob', 'horizontal_position', 'trigger_level', 'ch1_volts_div', 'ch1_position', 'ch2_volts_div', 'ch2_position'] as const
@@ -27,7 +28,8 @@ export function addOscilloscopeModel(group: Group) {
   group.name = 'net_circuit_oscilloscope_2ch'
   const chassis = createInstrumentChassis()
   const standard = (name: string, color: string, metalness = 0, roughness = 0.5) => {
-    const material = new MeshStandardMaterial({ color, metalness, roughness }); material.name = name; return material
+    const material = metalness >= .65 ? new MeshStandardMaterial({ color, metalness, roughness }) : createCoatingMaterial({ color, roughness })
+    material.name = name; return material
   }
   const shell = standard('scope_silver_powdercoat', '#a1aab4', 0.32, 0.54)
   const bezel = standard('scope_bezel', SCOPE_THEME.bezel, 0.18, 0.52)
@@ -69,10 +71,10 @@ export function addOscilloscopeModel(group: Group) {
   // Replace screen.material.map with a CanvasTexture to draw live samples later.
   // Reuse/update that texture rather than allocating one on every acquisition.
   const screenTexture = canvasTexture(scopeScreenArtwork())
-  const screenMaterial = new MeshBasicMaterial({ map: screenTexture, color: screenTexture ? '#ffffff' : SCOPE_THEME.screen, toneMapped: false }); screenMaterial.name = 'scope_screen'
+  const screenMaterial = stabilizeThinSurface(new MeshBasicMaterial({ map: screenTexture, color: screenTexture ? '#ffffff' : SCOPE_THEME.screen, toneMapped: false })); screenMaterial.name = 'scope_screen'
   const screen = add('screen', new PlaneGeometry(layout.screen.w, layout.screen.h), screenMaterial, layout.screen.x, layout.screen.y, 1.122)
   screen.userData = { role: 'waveform-screen', channels: 2, waveform: 'illustrative-preview', textureSize: [1024, 704] }
-  const legendsMaterial = new MeshBasicMaterial({ map: canvasTexture(scopeLegendsArtwork()), transparent: true, depthWrite: false, toneMapped: false }); legendsMaterial.name = 'scope_legends'
+  const legendsMaterial = stabilizeThinSurface(new MeshBasicMaterial({ map: canvasTexture(scopeLegendsArtwork()), transparent: true, depthWrite: false, toneMapped: false })); legendsMaterial.name = 'scope_legends'
   const legends = add('front_legends', new PlaneGeometry(6, 3.8), legendsMaterial, 0, 1.9, 1.166)
   legends.userData.ignorePick = true
   // No-texture server/export geometry retains the material slot but not a white

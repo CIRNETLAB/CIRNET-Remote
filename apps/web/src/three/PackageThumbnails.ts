@@ -1,4 +1,4 @@
-import { ACESFilmicToneMapping, Box3, DirectionalLight, Group, HemisphereLight, OrthographicCamera, Scene, SRGBColorSpace, Vector3, WebGLRenderer } from 'three'
+import { AmbientLight, Box3, DirectionalLight, Group, InstancedMesh, Matrix4, Mesh, NoToneMapping, OrthographicCamera, Scene, SRGBColorSpace, Vector3, WebGLRenderer, type Object3D } from 'three'
 import { getDefinition } from '../data/editorCatalog'
 import { getPartForType } from '../data/partCatalog'
 import { normalizeComponentProperties } from '../data/componentProperties'
@@ -27,6 +27,66 @@ function stableValue(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(stableValue)
   if (value !== null && typeof value === 'object') return Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => [key, stableValue(item)]))
   return value
+}
+
+/** Only geometry that contributes to the image participates in framing. In
+ * particular, Three's setFromObject also includes invisible picking meshes. */
+function renderedModelCorners(model: Object3D): Vector3[] {
+  const points: Vector3[] = [], instance = new Matrix4(), world = new Matrix4()
+  model.updateWorldMatrix(true, true)
+  const visit = (object: Object3D) => {
+    if (!object.visible || object.userData.pinLabel || object.userData.pinHighlight || object.userData.thumbnailOverlay) return
+    if (object instanceof Mesh) {
+      const materials = Array.isArray(object.material) ? object.material : [object.material]
+      if (materials.some(material => material.visible && (!material.transparent || material.opacity > 0))) {
+        if (!object.geometry.boundingBox) object.geometry.computeBoundingBox()
+        const bounds = object.geometry.boundingBox
+        if (bounds && !bounds.isEmpty()) {
+          const count = object instanceof InstancedMesh ? object.count : 1
+          for (let index = 0; index < count; index++) {
+            if (object instanceof InstancedMesh) { object.getMatrixAt(index, instance); world.multiplyMatrices(object.matrixWorld, instance) }
+            else world.copy(object.matrixWorld)
+            for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) points.push(new Vector3(x, y, z).applyMatrix4(world))
+          }
+        }
+      }
+    }
+    object.children.forEach(visit)
+  }
+  visit(model)
+  return points
+}
+
+export function getRenderedModelBounds(model: Object3D): Box3 {
+  return new Box3().setFromPoints(renderedModelCorners(model))
+}
+
+/** Fit projected geometry rather than an inflated world AABB; the projected
+ * silhouette can be asymmetric even when a world-space box is centered. */
+export function fitPackageThumbnailCamera(model: Object3D, camera: OrthographicCamera, aspect: number): void {
+  const points = renderedModelCorners(model), bounds = new Box3().setFromPoints(points)
+  if (bounds.isEmpty()) bounds.setFromCenterAndSize(new Vector3(), new Vector3(.1, .1, .1))
+  const center = bounds.getCenter(new Vector3()), radius = Math.max(bounds.getSize(new Vector3()).length() / 2, .05)
+  camera.position.copy(center).addScaledVector(new Vector3(.95, 1.35, 1.45).normalize(), radius * 4)
+  camera.lookAt(center); camera.updateMatrixWorld(true)
+  const projected = new Box3().setFromPoints(points.map(point => point.clone().applyMatrix4(camera.matrixWorldInverse)))
+  if (projected.isEmpty()) projected.setFromCenterAndSize(new Vector3(0, 0, -radius * 4), new Vector3(.1, .1, .1))
+  const size = projected.getSize(new Vector3()), middle = projected.getCenter(new Vector3())
+  const halfHeight = Math.max(size.y / 2, size.x / (2 * aspect), .05) * 1.15
+  camera.position.add(new Vector3(middle.x, middle.y, 0).applyQuaternion(camera.quaternion))
+  camera.left = -halfHeight * aspect; camera.right = halfHeight * aspect; camera.top = halfHeight; camera.bottom = -halfHeight
+  camera.near = Math.max(.0001, -projected.max.z * .5); camera.far = Math.max(camera.near + 1, -projected.min.z * 1.5)
+  camera.updateMatrixWorld(true); camera.updateProjectionMatrix()
+}
+
+/** Match the workspace's direct lights and studio intensity; the transparent
+ * preview canvas does not introduce its own brighter photographic lighting. */
+export function createPackageThumbnailScene(): Scene {
+  const scene = new Scene(); scene.environmentIntensity = .55
+  scene.add(new AmbientLight('#c9def4', 1.1))
+  const key = new DirectionalLight('#fff5dc', 1.9); key.position.set(-5, 10, 5); scene.add(key)
+  const fill = new DirectionalLight('#a8c7e8', .75); fill.position.set(6, 8, -6); scene.add(fill)
+  return scene
 }
 
 /** Cached CPU images outlive cards. One lazily created GPU renderer serves all
@@ -130,29 +190,18 @@ function createWebGLThumbnailRenderer(): PackageThumbnailRenderer | null {
     const width = 256, height = 192, aspect = width / height
     renderer = new WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true })
     renderer.setPixelRatio(1); renderer.setSize(width, height, false)
-    renderer.outputColorSpace = SRGBColorSpace; renderer.toneMapping = ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1
+    renderer.outputColorSpace = SRGBColorSpace; renderer.toneMapping = NoToneMapping; renderer.toneMappingExposure = 1
     renderer.setClearColor(0x000000, 0)
-    const scene = new Scene(), camera = new OrthographicCamera(-aspect, aspect, 1, -1, .01, 100)
+    const scene = createPackageThumbnailScene(), camera = new OrthographicCamera(-aspect, aspect, 1, -1, .01, 100)
     environment = createStudioEnvironment(renderer)
     scene.environment = environment.texture
-    scene.add(new HemisphereLight(0xffffff, 0x596879, 1.7))
-    const key = new DirectionalLight(0xffffff, 3.2); key.position.set(3, 6, 4); scene.add(key)
-    const fill = new DirectionalLight(0xc5dbff, 1.4); fill.position.set(-4, 2, -2); scene.add(fill)
     const ownedRenderer = renderer, ownedEnvironment = environment
     let disposed = false
     return {
       render(model) {
         scene.add(model)
         try {
-          const bounds = new Box3().setFromObject(model), center = bounds.getCenter(new Vector3())
-          const radius = Math.max(bounds.getSize(new Vector3()).length() / 2, .05)
-          camera.position.copy(center).addScaledVector(new Vector3(.95, 1.35, 1.45).normalize(), radius * 4)
-          camera.lookAt(center); camera.updateMatrixWorld(true)
-          const projected = new Box3()
-          for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) projected.expandByPoint(new Vector3(x, y, z).applyMatrix4(camera.matrixWorldInverse))
-          const halfHeight = Math.max((projected.max.y - projected.min.y) / 2, (projected.max.x - projected.min.x) / (2 * aspect), .05) * 1.15
-          camera.left = -halfHeight * aspect; camera.right = halfHeight * aspect; camera.top = halfHeight; camera.bottom = -halfHeight
-          camera.far = radius * 10 + 1; camera.updateProjectionMatrix()
+          fitPackageThumbnailCamera(model, camera, aspect)
           ownedRenderer.render(scene, camera)
           return ownedRenderer.domElement.toDataURL('image/png')
         } finally { scene.remove(model) }

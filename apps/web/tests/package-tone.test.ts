@@ -19,7 +19,7 @@ function assertSubdued(actual: Color, original: string) {
 
 test('only requested physical package body coatings receive the modest tone decrease', () => {
   const cases = [
-    ['RESISTOR_AXIAL', '#cbb181'], ['CAPACITOR_CERAMIC', '#cba05e'], ['CAPACITOR_ELECTROLYTIC', '#253d57'],
+    ['RESISTOR_AXIAL', '#467697'], ['CAPACITOR_CERAMIC', '#cba05e'], ['CAPACITOR_ELECTROLYTIC', '#253d57'],
     ['DIODE_1N4148', '#ae613a'], ['ZENER_1N4733A', '#ae613a'], ['TRANSISTOR_2N3904', '#24272b'],
     ['LED_LTL307EE', '#ba3434'], ['BUZZER_PS1240', '#24272b'], ['TOGGLE_SWITCH_200MSP1', '#272c30'],
     ['PUSH_BUTTON_B3F1000', '#272c30'], ['DIP_SWITCH_A6D4100', '#a52e28'], ['SN74HC08N', '#24272b'], ['SN74LS266N', '#24272b'],
@@ -96,6 +96,6 @@ test('thumbnail and workspace use the same subdued package body materials', asyn
   try {
     await lease.ready
     assert.equal(thumbnailColor, materialOf(workspace, 'package-body').color.getHexString())
-    assertSubdued(materialOf(workspace, 'package-body').color, '#cbb181')
+    assertSubdued(materialOf(workspace, 'package-body').color, '#467697')
   } finally { lease.release(); disposeObject(workspace) }
 })

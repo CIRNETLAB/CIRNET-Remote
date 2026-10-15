@@ -1,3 +1,4 @@
+import { validateLeadProperties } from './leadProperties'
 /** Design properties are SI numbers. This module has no execution/profile dependency. */
 export type EngineeringUnit = 'ohm' | 'F' | 'W' | 'V' | '%'
 export interface QuantityBounds { min?: number; max?: number }
@@ -56,7 +57,7 @@ export function normalizeComponentProperties(type: string, properties: Record<st
     if (!('resistanceOhms' in result)) result.resistanceOhms = result.resistance_ohm
     delete result.resistance_ohm
   }
-  const errors = validateComponentProperties(type, result)
+  const errors = [...validateComponentProperties(type, result), ...validateLeadProperties(type, result)]
   if (errors.length) throw new Error(errors.join(' '))
   return result
 }
