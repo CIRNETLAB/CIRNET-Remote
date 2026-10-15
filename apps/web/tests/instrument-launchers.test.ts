@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { nextTick } from 'vue'
+import { defineComponent, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
 import { useUiStore } from '../src/stores/ui'
 import { useWorkspaceStore } from '../src/stores/workspace'
@@ -9,8 +9,9 @@ import { useInstrumentStore } from '../src/stores/instrument'
 import { windowDefinitions } from '../src/types/windows'
 import { GENERATOR_LAYOUT, GENERATOR_CH1, GENERATOR_CH2, GENERATOR_SYNC } from '../src/three/FunctionGeneratorArtwork'
 import { loadSfc, mountSfc, dispatch } from './helpers/vueSfc'
+import { useWireRouting } from '../src/composables/useWireRouting'
 
-test('sidebar replaces only Delete button with two unique instrument launchers, preserving editing state', async () => {
+test('sidebar separates four persistent editing tools from four ordered instrument launchers', async () => {
   const oldWindow = Object.getOwnPropertyDescriptor(globalThis, 'window')
   const listeners = new Set<unknown>()
   Object.defineProperty(globalThis, 'window', { configurable: true, value: { matchMedia: () => ({ matches: false, addEventListener: (_: string, f: unknown) => listeners.add(f), removeEventListener: (_: string, f: unknown) => listeners.delete(f) }) } })
@@ -19,21 +20,60 @@ test('sidebar replaces only Delete button with two unique instrument launchers, 
   const view = mountSfc(await loadSfc('components/workbench/ToolRail.vue'), pinia)
   try {
     assert.ok(!view.find('button', 'aria-label', 'Delete'), 'Delete button must be absent from the sidebar')
-    const supply = view.find('button', 'aria-label', 'Power Supply'), generator = view.find('button', 'aria-label', 'Function Generator')
-    assert.ok(supply); assert.ok(generator)
-    assert.equal(supply.props['aria-pressed'], undefined); assert.equal(generator.props['aria-pressed'], undefined)
+    const names = ['Select', 'Wire', 'Move', 'Rotate', 'Power Supply', 'Probe', 'Scope', 'Function Generator']
+    assert.deepEqual(view.all().filter(node => node.tag === 'button' && names.includes(String(node.props['aria-label']))).map(node => node.props['aria-label']), names)
+    const launchers = names.slice(4).map(name => view.find('button', 'aria-label', name))
+    for (const launcher of launchers) { assert.ok(launcher); assert.equal(launcher.props['aria-pressed'], undefined) }
+    assert.equal(view.all().filter(node => node.tag === 'button' && node.props['aria-pressed'] !== undefined).length, 4)
+    const [supply, , , generator] = launchers
     const iconPath = (button: typeof supply) => button.children.find(node => node.tag === 'svg')!.children.find(node => node.tag === 'path')!.props.d
     assert.notEqual(iconPath(supply), iconPath(generator))
     for (const tool of ['select', 'wire', 'move', 'rotate'] as const) {
       workspace.tool = tool; workspace.selectedModuleId = 'selected'; workspace.pendingPort = 'selected.OUT'; workspace.zoomAreaActive = true
-      const before = JSON.stringify(workspace.$state), graph = circuit.snapshot()
-      dispatch(supply, 'onClick'); dispatch(generator, 'onClick'); await nextTick()
-      assert.equal(JSON.stringify(workspace.$state), before); assert.equal(circuit.snapshot(), graph)
+      await nextTick()
+      assert.equal(view.find('button', 'aria-label', tool[0].toUpperCase() + tool.slice(1)).props['aria-pressed'], true)
+      const before = JSON.stringify(workspace.$state), graph = JSON.stringify(circuit.$state)
+      for (const launcher of launchers) {
+        dispatch(launcher, 'onClick'); await nextTick()
+        assert.equal(JSON.stringify(workspace.$state), before); assert.equal(JSON.stringify(circuit.$state), graph)
+      }
     }
-    assert.equal(ui.windows.length, 2); assert.equal(ui.windows.find(w => w.kind === 'generator')!.activation, 4)
-    assert.ok(ui.windows.some(w => String(w.kind) === 'power-supply' && w.open))
+    assert.deepEqual(ui.windows.map(window => window.kind), ['power-supply', 'monitor', 'oscilloscope', 'generator'])
+    for (const window of ui.windows) { assert.equal(window.activation, 4); assert.equal(window.open, true) }
   } finally {
     view.app.unmount(); assert.equal(listeners.size, 0)
+    if (oldWindow) Object.defineProperty(globalThis, 'window', oldWindow); else Reflect.deleteProperty(globalThis, 'window')
+  }
+})
+
+test('every launcher preserves a live wire draft and reuses its floating window', async () => {
+  const oldWindow = Object.getOwnPropertyDescriptor(globalThis, 'window')
+  Object.defineProperty(globalThis, 'window', { configurable: true, value: { matchMedia: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }) } })
+  const pinia = createPinia(), workspace = useWorkspaceStore(pinia), ui = useUiStore(pinia), circuit = useCircuitStore(pinia)
+  circuit.createDraft()
+  const source = circuit.placeModule('DIGITAL_SWITCH', { x: 0, y: 0, z: 0 })
+  let routing!: ReturnType<typeof useWireRouting>
+  const draftView = mountSfc(defineComponent({ setup() { routing = useWireRouting(ref<HTMLCanvasElement>(), () => undefined); return () => null } }), pinia)
+  const view = mountSfc(await loadSfc('components/workbench/ToolRail.vue'), pinia)
+  try {
+    routing.connect(`${source}.OUT`)
+    assert.equal(routing.drawing.value, true)
+    const workspaceState = JSON.stringify(workspace.$state), circuitState = JSON.stringify(circuit.$state)
+    for (const [label, kind] of [['Power Supply', 'power-supply'], ['Probe', 'monitor'], ['Scope', 'oscilloscope'], ['Function Generator', 'generator']] as const) {
+      const button = view.find('button', 'aria-label', label)
+      dispatch(button, 'onClick'); await nextTick()
+      assert.equal(routing.drawing.value, true, `${label} must keep the in-progress wire`)
+      assert.equal(JSON.stringify(workspace.$state), workspaceState)
+      assert.equal(JSON.stringify(circuit.$state), circuitState)
+      const instrument = ui.windows.find(window => window.kind === kind)!
+      assert.equal(instrument.open, true)
+      ui.closeWindow(kind)
+      dispatch(button, 'onClick'); await nextTick()
+      assert.equal(ui.windows.filter(window => window.kind === kind).length, 1)
+      assert.equal(instrument.open, true); assert.equal(instrument.activation, 2)
+    }
+  } finally {
+    view.app.unmount(); draftView.app.unmount()
     if (oldWindow) Object.defineProperty(globalThis, 'window', oldWindow); else Reflect.deleteProperty(globalThis, 'window')
   }
 })

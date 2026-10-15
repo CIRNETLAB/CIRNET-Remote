@@ -1,4 +1,4 @@
-import { Box3, BoxGeometry, ConeGeometry, CylinderGeometry, Group, Mesh, MeshBasicMaterial, PerspectiveCamera, Raycaster, TorusGeometry, Vector3 } from 'three'
+import { Box3, BoxGeometry, CylinderGeometry, DoubleSide, ExtrudeGeometry, Group, Mesh, MeshBasicMaterial, PerspectiveCamera, Raycaster, Shape, SphereGeometry, TorusGeometry, Vector3 } from 'three'
 
 export type TransformHandle = 'x' | 'z' | 'xz' | 'rotate-y' | 'delete'
 export interface GizmoObstacle { left: number; top: number; right: number; bottom: number }
@@ -33,6 +33,24 @@ const segmentDistance = (x: number, y: number, a: { x: number; y: number }, b: {
   return Math.hypot(x - a.x - t * dx, y - a.y - t * dy)
 }
 
+const ARC_RADIUS = 1.35, ARC_START = Math.PI + .14, ARC_END = Math.PI * 2.5, ARC_KNOB_RADIUS = .16
+const AXIS_OFFSET = .95, FREE_HALF_SIZE = .29, ROTATION_GRIP = new Vector3(-ARC_RADIUS - ARC_KNOB_RADIUS, 0, 0)
+// Keep the rounded silhouette in the XZ plane. Geometry, marker positions and
+// placement capture use these same footprints instead of independent hit proxies.
+function roundedFootprint(points: readonly [number, number][], rounding: number) {
+  const shape = new Shape()
+  points.forEach(([x, z], i) => {
+    const before = points[(i + points.length - 1) % points.length], after = points[(i + 1) % points.length]
+    const a = Math.hypot(before[0] - x, before[1] - z), b = Math.hypot(after[0] - x, after[1] - z)
+    const step = Math.min(rounding, a / 3, b / 3)
+    const start = [x + (before[0] - x) * step / a, -(z + (before[1] - z) * step / a)]
+    const end = [x + (after[0] - x) * step / b, -(z + (after[1] - z) * step / b)]
+    if (i === 0) shape.moveTo(start[0], start[1]); else shape.lineTo(start[0], start[1])
+    shape.quadraticCurveTo(x, -z, end[0], end[1])
+  })
+  shape.closePath(); return shape
+}
+
 // A scene tool, never a circuit module, port or electrical node.
 export function createComponentTransformGizmo() {
   const root = new Group(); root.name = 'component-transform-gizmo'; root.visible = false
@@ -49,27 +67,37 @@ export function createComponentTransformGizmo() {
     handles.set(id, group); markers.set(id, point); root.add(group); return group
   }
   const add = (group: Group, mesh: Mesh, pickOnly = false) => { mesh.renderOrder = 20; mesh.userData.pickOnly = pickOnly; group.add(mesh); return mesh }
-  for (const id of ['x', 'z'] as const) {
-    const color = id === 'x' ? '#ff8668' : '#54baff', group = handle(id, color, new Vector3(id === 'x' ? 0.95 : 0, 0, id === 'z' ? 0.95 : 0))
-    const stem = add(group, new Mesh(new CylinderGeometry(0.047, 0.047, 0.66, 12), material(color)))
-    const tip = add(group, new Mesh(new ConeGeometry(0.19, 0.34, 4), material(color)))
-    const target = add(group, new Mesh(new CylinderGeometry(0.15, 0.15, 0.95, 8), material(color, true)), true)
-    if (id === 'x') { stem.rotation.z = tip.rotation.z = target.rotation.z = -Math.PI / 2; stem.position.x = 0.47; tip.position.x = 0.96; target.position.x = 0.61 }
-    else { stem.rotation.x = tip.rotation.x = target.rotation.x = Math.PI / 2; stem.position.z = 0.47; tip.position.z = 0.96; target.position.z = 0.61 }
+  const button = (group: Group, name: string, points: readonly [number, number][], face: string, side: string, x = 0, z = 0) => {
+    const border = add(group, new Mesh(new ExtrudeGeometry(roundedFootprint(points.map(([px, pz]) => [px * 1.11, pz * 1.11]), .06), { depth: .035, bevelEnabled: true, bevelSize: .025, bevelThickness: .02, bevelSegments: 3, curveSegments: 10 }), material('#8b939c')))
+    border.name = `${name}-border`; border.rotation.x = -Math.PI / 2; border.position.set(x, .015, z); border.userData.fixedColor = true
+    const top = add(group, new Mesh(new ExtrudeGeometry(roundedFootprint(points, .065), { depth: .04, bevelEnabled: true, bevelSize: .025, bevelThickness: .025, bevelSegments: 4, curveSegments: 10 }), [material(face), material(side)]))
+    top.name = `${name}-face`; top.rotation.x = -Math.PI / 2; top.position.set(x, .055, z); top.renderOrder = 21
+    // Two material tones expose the shallow bevel without depending on scene lights.
+    top.userData.faceColors = [face, side]
+    return top
   }
-  const free = handle('xz', '#edf6f3', new Vector3())
-  const diamondBase = add(free, new Mesh(new BoxGeometry(0.42, 0.04, 0.42), material('#111e28')))
-  diamondBase.rotation.y = Math.PI / 4; diamondBase.renderOrder = 19; diamondBase.userData.fixedColor = true
-  const diamond = add(free, new Mesh(new BoxGeometry(0.32, 0.045, 0.32), material('#edf6f3'))); diamond.rotation.y = Math.PI / 4; diamond.position.y = 0.025
-  add(free, new Mesh(new CylinderGeometry(0.27, 0.27, 0.08, 12), material('#edf6f3', true)), true)
-  const rotate = handle('rotate-y', '#efbd48', new Vector3(-1.35, 0, 0))
-  const arcBase = add(rotate, new Mesh(new TorusGeometry(1.35, 0.082, 10, 96, Math.PI * 1.5), material('#101c25')))
-  arcBase.rotation.x = Math.PI / 2; arcBase.renderOrder = 18; arcBase.userData.fixedColor = true
-  const arc = add(rotate, new Mesh(new TorusGeometry(1.35, 0.042, 10, 96, Math.PI * 1.5), material('#efbd48'))); arc.rotation.x = Math.PI / 2
-  const arcTarget = add(rotate, new Mesh(new TorusGeometry(1.35, 0.12, 8, 96, Math.PI * 1.5), material('#efbd48', true)), true); arcTarget.rotation.x = Math.PI / 2
-  const grip = add(rotate, new Mesh(new TorusGeometry(0.16, 0.062, 12, 32), material('#efbd48'))); grip.rotation.x = Math.PI / 2; grip.position.x = -1.35; grip.renderOrder = 22
-  const gripCore = add(rotate, new Mesh(new CylinderGeometry(0.095, 0.095, 0.03, 24), material('#18252c')))
-  gripCore.position.x = -1.35; gripCore.renderOrder = 23; gripCore.userData.fixedColor = true
+  for (const id of ['x', 'z'] as const) {
+    const x = id === 'x' ? AXIS_OFFSET : 0, z = id === 'z' ? AXIS_OFFSET : 0
+    const group = handle(id, '#f8fafc', new Vector3(x, 0, z))
+    const triangle: [number, number][] = [[.26, 0], [-.20, -.23], [-.20, .23]]
+    button(group, id, id === 'x' ? triangle : triangle.map(([px, pz]) => [pz, px]), '#f8fafc', '#d1d7dc', x, z)
+  }
+  const free = handle('xz', '#00bce7', new Vector3())
+  button(free, 'xz', [[-FREE_HALF_SIZE, -FREE_HALF_SIZE], [FREE_HALF_SIZE, -FREE_HALF_SIZE], [FREE_HALF_SIZE, FREE_HALF_SIZE], [-FREE_HALF_SIZE, FREE_HALF_SIZE]], '#00bce7', '#008ead')
+  const rotate = handle('rotate-y', '#ffd10b', ROTATION_GRIP)
+  const rotationPoint = (angle: number) => new Vector3(Math.cos(angle) * ARC_RADIUS, 0, Math.sin(angle) * ARC_RADIUS)
+  // Start at the hollow knob's rim: no line crosses its hole or the open quadrant.
+  const arc = add(rotate, new Mesh(new TorusGeometry(ARC_RADIUS, .044, 12, 96, ARC_END - ARC_START), material('#ffd10b')))
+  arc.name = 'rotation-arc'; arc.rotation.x = Math.PI / 2; arc.rotation.z = ARC_START
+  for (const [name, angle] of [['rotation-start-cap', ARC_START], ['rotation-end-cap', ARC_END]] as const) {
+    const cap = add(rotate, new Mesh(new SphereGeometry(.044, 16, 10), material('#ffd10b')))
+    cap.name = name; cap.position.copy(rotationPoint(angle))
+  }
+  // Keep the real rim pickable when a camera ray aligns with a tessellation
+  // meridian: either torus surface is valid for this overlay, never its hole.
+  const gripMaterial = material('#ffd10b'); gripMaterial.side = DoubleSide
+  const grip = add(rotate, new Mesh(new TorusGeometry(ARC_KNOB_RADIUS, .045, 12, 48), gripMaterial))
+  grip.name = 'rotation-knob'; grip.rotation.x = Math.PI / 2; grip.position.x = -ARC_RADIUS; grip.renderOrder = 22
   const deleteBtn = handle('delete', '#ff473d', new Vector3(1.42, 0, 1.42))
   const deleteBase = add(deleteBtn, new Mesh(new CylinderGeometry(0.30, 0.30, 0.05, 32), material('#19222b')))
   deleteBase.renderOrder = 19; deleteBase.userData.fixedColor = true; deleteBase.position.set(1.42, 0.025, 1.42)
@@ -83,7 +111,10 @@ export function createComponentTransformGizmo() {
   deleteTarget.position.set(1.42, 0.05, 1.42)
   const paint = () => {
     for (const [id, group] of handles) for (const mesh of group.children as Mesh[]) {
-      if (!mesh.userData.pickOnly && !mesh.userData.fixedColor) (mesh.material as MeshBasicMaterial).color.set(id === active || id === hovered ? '#65d8cd' : group.userData.color)
+      if (!mesh.userData.pickOnly && !mesh.userData.fixedColor) {
+        const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+        materials.forEach((entry, index) => (entry as MeshBasicMaterial).color.set(id === active || id === hovered ? active === id ? '#46d7c7' : '#a6eee4' : mesh.userData.faceColors?.[index] ?? group.userData.color))
+      }
     }
   }
   const pixelScale = (point: Vector3, camera: PerspectiveCamera, height: number) => Math.max(0.1, -point.clone().applyMatrix4(camera.matrixWorldInverse).z) * 2 * Math.tan(camera.fov * Math.PI / 360) / (height * camera.zoom) * 42
@@ -192,13 +223,16 @@ export function createComponentTransformGizmo() {
       if (!placementLayout || !root.visible) { placementCaptured = false; approach = null; captureCorridor = null; return }
       const screen = (point: Vector3) => { point.project(camera); return { x: (point.x + 1) * width / 2, y: (1 - point.y) * height / 2 } }
       const local = (x: number, z: number) => screen(root.localToWorld(new Vector3(x, 0, z)))
-      let distance = Math.min(segmentDistance(x, y, local(0, 0), local(1.12, 0)), segmentDistance(x, y, local(0, 0), local(0, 1.12)))
+      const freeCenter = local(0, 0), xCenter = local(AXIS_OFFSET, 0), zCenter = local(0, AXIS_OFFSET)
+      let distance = Math.min(Math.hypot(x - freeCenter.x, y - freeCenter.y), Math.hypot(x - xCenter.x, y - xCenter.y), Math.hypot(x - zCenter.x, y - zCenter.y))
       // The complete visible rotation arc is a capture target, not just its grip.
-      let previous = screen(rotate.localToWorld(new Vector3(1.35, 0, 0)))
-      for (let i = 1; i <= 12; i++) {
-        const angle = i / 12 * Math.PI * 1.5, point = screen(rotate.localToWorld(new Vector3(Math.cos(angle) * 1.35, 0, Math.sin(angle) * 1.35)))
+      let previous = screen(rotate.localToWorld(rotationPoint(ARC_START)))
+      for (let i = 1; i <= 24; i++) {
+        const angle = ARC_START + i / 24 * (ARC_END - ARC_START), point = screen(rotate.localToWorld(rotationPoint(angle)))
         distance = Math.min(distance, segmentDistance(x, y, previous, point)); previous = point
       }
+      const knob = screen(rotate.localToWorld(ROTATION_GRIP.clone()))
+      distance = Math.min(distance, Math.hypot(x - knob.x, y - knob.y))
       if (captureCorridor && segmentDistance(x, y, captureCorridor.start, captureCorridor.end) <= 42) { placementCaptured = true; return }
       if (distance <= (placementCaptured ? 42 : 26)) { placementCaptured = true; approach = null; captureCorridor = null; return }
       if (placementCaptured) { placementCaptured = false; approach = null; captureCorridor = null; return }
@@ -209,7 +243,7 @@ export function createComponentTransformGizmo() {
         const dx = x - last.x, dy = y - last.y, travel = Math.hypot(dx, dy)
         let match: { handle: TransformHandle; point: { x: number; y: number }; alignment: number } | undefined
         if (travel > 0 && travel <= 12) for (const id of ['x', 'z', 'xz', 'rotate-y'] as const) {
-          const point = screen(id === 'rotate-y' ? grip.getWorldPosition(new Vector3()) : root.localToWorld(markers.get(id)!.clone()))
+          const point = screen(id === 'rotate-y' ? rotate.localToWorld(ROTATION_GRIP.clone()) : root.localToWorld(markers.get(id)!.clone()))
           const gx = point.x - last.x, gy = point.y - last.y, length = Math.hypot(gx, gy)
           const alignment = length ? (dx * gx + dy * gy) / (travel * length) : 0
           if (alignment >= 0.995 && (!match || alignment > match.alignment)) match = { handle: id, point, alignment }
@@ -217,11 +251,13 @@ export function createComponentTransformGizmo() {
         if (match) {
           if (approach?.handle !== match.handle) approach = { handle: match.handle, start: last, travel: 0 }
           approach.travel += travel
-          if (approach.travel >= 4) { placementCaptured = true; captureCorridor = { start: approach.start, end: match.point }; approach = null }
+          // A hollow knob has a narrow visible rim. Acquire on the first deliberate
+          // aligned step so its rim cannot move into the hole during acquisition.
+          if (approach.travel >= 1) { placementCaptured = true; captureCorridor = { start: approach.start, end: match.point }; approach = null }
         } else if (travel > 0) approach = null
       }
     },
-    position(id: TransformHandle) { return root.visible && handles.get(id)!.visible ? id === 'rotate-y' ? grip.getWorldPosition(new Vector3()) : root.localToWorld(markers.get(id)!.clone()) : null },
+    position(id: TransformHandle) { return root.visible && handles.get(id)!.visible ? id === 'rotate-y' ? rotate.localToWorld(ROTATION_GRIP.clone()) : root.localToWorld(markers.get(id)!.clone()) : null },
     origin() { return root.visible ? root.position.clone() : null },
     pick(ray: Raycaster) {
       if (!root.visible || !selectedId) return null

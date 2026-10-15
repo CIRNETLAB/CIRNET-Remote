@@ -69,6 +69,9 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
   let gesture: MoveGesture | PanGesture | TransformGesture | ControlGesture | ZoomAreaGesture | null = null
   // A pose only: never a graph module, electrical identity or history entry.
   let placementDraft: PlacementDraft | null = null
+  // A right drag that starts on empty space belongs to Orbit, even if it ends
+  // over a wire. The native contextmenu may arrive after that drag completes.
+  let suppressWireContext = false
   const dragging = ref<'move' | 'pan' | 'transform' | 'control' | 'zoom-area' | null>(null)
   const zoomAreaRect = ref<{ left: number; top: number; width: number; height: number } | null>(null)
   const hoveredHandle = ref<TransformHandle | null>(null)
@@ -132,7 +135,17 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
   function cancel() { workspace.cancelZoomArea(); wireRouting.cancel(); cancelGesture() }
   function cancelPlacement() { cancel(); workspace.cancelPlacement(); clearPlacement(); workspace.editError = '' }
   function lostPointerCapture(event: PointerEvent) { if (wireRouting.lostPointerCapture(event)) return; if (gesture?.pointer === event.pointerId) { cancel(); clearPlacement() } }
-  function contextMenu(event: MouseEvent) { if (wireRouting.contextMenu(event)) return; event.preventDefault(); if (workspace.placementType) cancelPlacement(); else if (workspace.zoomAreaActive) cancel() }
+  function contextMenu(event: MouseEvent) {
+    if (wireRouting.contextMenu(event)) { suppressWireContext = false; return }
+    event.preventDefault()
+    if (workspace.placementType) cancelPlacement()
+    else if (workspace.zoomAreaActive) cancel()
+    else if (!suppressWireContext && !gesture && canvas.value && manager() && Number.isFinite(event.clientX) && Number.isFinite(event.clientY)) {
+      const { x, y } = coordinates(event), hit = manager()!.pick(x, y)
+      if (hit?.kind === 'wire') wireRouting.openContextMenu(x, y, hit)
+    }
+    suppressWireContext = false
+  }
   function areaCoordinates(event: PointerEvent) {
     const rect = canvas.value!.getBoundingClientRect()
     if (rect.width <= 0 || rect.height <= 0 || ![event.clientX, event.clientY].every(Number.isFinite)) return null
@@ -143,6 +156,8 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
   }
   function place(type: string, position: Position, rotation: number) { attempt(() => { const id = circuit.placeModule(type, position, rotation, workspace.placementProperties ?? undefined); workspace.selectModule(id); clearPlacement(); sync() }) }
   function pointerDown(event: PointerEvent) {
+    if (event.button === 2) suppressWireContext = true
+    wireRouting.closeContextMenu()
     if (workspace.zoomAreaActive) {
       event.preventDefault?.(); event.stopImmediatePropagation?.()
       if (event.button === 2) { cancel(); return }
@@ -162,6 +177,13 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       return
     }
     if (!gesture && !workspace.placementType && wireRouting.pointerDown(event)) return
+    if (event.button === 2 && !gesture && manager() && canvas.value) {
+      const { x, y } = coordinates(event), hit = manager()!.pick(x, y)
+      if (hit?.kind === 'wire') {
+        event.preventDefault?.(); event.stopPropagation?.(); event.stopImmediatePropagation?.()
+        canvas.value.focus(); wireRouting.openContextMenu(x, y, hit); return
+      }
+    }
     if (event.button !== 0 || gesture || !manager() || !canvas.value) return
     canvas.value.focus(); const { x, y } = coordinates(event)
     const transform = manager()!.pickGizmo(x, y), module = selected.value
@@ -193,7 +215,6 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     if (workspace.tool === 'wire' && hit?.kind === 'port') { connect(hit.endpoint); return }
     if (hit?.kind === 'wire') {
       workspace.selectWire(hit.source, hit.destination)
-      if (workspace.tool === 'delete') attempt(() => circuit.disconnectPorts(hit.source, hit.destination))
       sync(); return
     }
     if (!hit) {
@@ -215,8 +236,6 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       manager()!.lockPointer(true); canvas.value.setPointerCapture(event.pointerId); event.preventDefault?.()
     }
     else if (workspace.tool === 'rotate') attempt(() => circuit.rotateModule(hit.id))
-    else if (workspace.tool === 'delete') attempt(() => circuit.removeModule(hit.id))
-    else if (workspace.tool === 'scope' || workspace.tool === 'probe') ui.openWindow(workspace.tool === 'scope' ? 'oscilloscope' : 'monitor')
     else if (workspace.tool === 'move') {
       const module = selected.value!, position = { x: module.position?.x ?? 0, y: module.position?.y ?? 0, z: module.position?.z ?? 0 }
       // Drag through the picked surface, including bodies above a low camera's ground horizon.

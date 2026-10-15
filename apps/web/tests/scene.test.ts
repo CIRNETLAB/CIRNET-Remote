@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createSceneManager, type SceneRenderer } from '../src/three/SceneManager'
-import { Box3, Group, InstancedMesh, Matrix4, Mesh, MeshStandardMaterial, PerspectiveCamera, Raycaster, ShaderMaterial, Vector3 } from 'three'
+import { Box3, Group, InstancedMesh, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, PerspectiveCamera, Raycaster, ShaderMaterial, Vector3, type Material } from 'three'
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js'
 import { buildComponent, disposeObject } from '../src/three/ComponentModel'
 import type { CircuitGraph } from '../src/types/circuit'
@@ -207,10 +207,20 @@ test('gizmo hover highlights only its handle and disposal releases tool geometry
   const p = manager.project(manager.gizmoHandlePosition('x')!)
   manager.hoverGizmo(p.x, p.y)
   const tool = manager.scene.children.find((child) => child.name === 'component-transform-gizmo')!
-  let highlighted = 0, geometry = 0, released = 0
-  tool.traverse((child) => { if (child instanceof Mesh) { geometry++; child.geometry.addEventListener('dispose', () => released++); if ((child.material as MeshStandardMaterial).color.getHexString() === '65d8cd') highlighted++ } })
-  assert.equal(highlighted, 2, 'only the X stem and arrow should highlight')
-  manager.dispose(); assert.equal(released, geometry)
+  const highlighted: string[] = [], materials = new Set<Material>()
+  let geometry = 0, released = 0, releasedMaterials = 0
+  tool.traverse((child) => {
+    if (!(child instanceof Mesh)) return
+    geometry++; child.geometry.addEventListener('dispose', () => released++)
+    const owned: Material[] = Array.isArray(child.material) ? child.material : [child.material]
+    for (const entry of owned) {
+      materials.add(entry)
+      if ((entry as MeshBasicMaterial).color.getHexString() === 'a6eee4') highlighted.push(child.name)
+    }
+  })
+  assert.deepEqual(highlighted, ['x-face', 'x-face'], 'only the X triangle face and its bevel should highlight')
+  for (const entry of materials) entry.addEventListener('dispose', () => releasedMaterials++)
+  manager.dispose(); assert.equal(released, geometry); assert.equal(releasedMaterials, materials.size, 'all face, bevel and border materials are released once')
 })
 
 test('gizmo checks neighbors for every candidate even with a single-use model iterator', () => {

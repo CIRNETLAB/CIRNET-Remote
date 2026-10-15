@@ -9,6 +9,7 @@ import { controlPointWorld, endpointLeadPosition, pointDistance, snapWirePoint, 
 import { dragWireSegment, insertWireBend, materializeWireRoute, moveWireBend, normalizeWireVisual, removeWireBend } from '../wires/wireRouteEditing'
 import { automaticWireLayer } from '../wires/wireStacking'
 import { MIN_WIRE_DIAMETER } from '../wires/wireAppearance'
+import { shiftedWireCopy } from '../wires/wireClipboard'
 
 type Manager = ReturnType<typeof createSceneManager>
 type CornerState = { kind: 'none' } | { kind: 'provisional'; controlIndex: number; anchor: WireControlPoint; screenOrigin: { x: number; y: number }; travel: 'within-threshold' | 'away' }
@@ -18,10 +19,14 @@ interface WireEditGesture {
   hit: WireEditPick; route: SolvedWireRoute; initial: WireVisual; visual: WireVisual
   start: { x: number; y: number }; anchor: Point3; dragged: boolean
 }
+export interface WireContextMenuState { x: number; y: number; wire: WireIdentity; circuitId: string }
+interface WireClipboard { circuitId: string; wire: WireIdentity; visual: WireVisual; successfulPastes: number }
 
 export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manager: () => Manager | undefined) {
   const circuit = useCircuitStore(), workspace = useWorkspaceStore(), draft = shallowRef<DrawingDraft | null>(null)
   const edit = shallowRef<WireEditGesture | null>(null), lastSegment = shallowRef<WireEditPick | null>(null)
+  const contextMenuState = shallowRef<WireContextMenuState | null>(null), clipboard = shallowRef<WireClipboard | null>(null)
+  const canPaste = computed(() => !!clipboard.value && clipboard.value.circuitId === circuit.activeId)
   const selectedConnection = computed(() => circuit.graph?.connections.find(c => workspace.selectedWire && wireKey(c) === wireKey(workspace.selectedWire)) ?? null)
   const coordinates = (event: { clientX: number; clientY: number }) => {
     const rect = canvas.value?.getBoundingClientRect()
@@ -42,9 +47,50 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     manager()?.hoverWireEdit(null)
   }
   function cancel() {
+    closeContextMenu()
     cancelEdit(); lastSegment.value = null; workspace.selectedWireBend = null
     draft.value = null; workspace.pendingPort = null
     manager()?.clearWireDrawing(); manager()?.setWireDrawingActive(false); manager()?.hoverEndpoint(null)
+  }
+  function closeContextMenu() { contextMenuState.value = null }
+  function openContextMenu(x: number, y: number, wire: WireIdentity): boolean {
+    closeContextMenu()
+    if (draft.value || edit.value || workspace.placementType || workspace.zoomAreaActive || !circuit.activeId || !Number.isFinite(x) || !Number.isFinite(y)) return false
+    const connection = circuit.graph?.connections.find(candidate => wireKey(candidate) === wireKey(wire))
+    if (!connection) return false
+    workspace.selectWire(connection.source, connection.destination); workspace.editError = ''
+    contextMenuState.value = { x, y, circuitId: circuit.activeId, wire: { source: connection.source, destination: connection.destination } }
+    return true
+  }
+  function menuConnection() {
+    const state = contextMenuState.value
+    return state?.circuitId === circuit.activeId ? circuit.graph?.connections.find(connection => wireKey(connection) === wireKey(state.wire)) : undefined
+  }
+  function menuDuplicate(): boolean {
+    const connection = menuConnection()
+    if (!connection || !circuit.activeId) { closeContextMenu(); return false }
+    clipboard.value = { circuitId: circuit.activeId, wire: { source: connection.source, destination: connection.destination }, visual: readWireVisual(connection), successfulPastes: 0 }
+    workspace.editError = ''; closeContextMenu(); return true
+  }
+  function menuDelete(): boolean {
+    const connection = menuConnection()
+    if (!connection) { closeContextMenu(); return false }
+    circuit.disconnectPorts(connection.source, connection.destination)
+    workspace.selectModule(null); workspace.editError = ''; closeContextMenu(); return true
+  }
+  function menuPaste(): boolean {
+    const copy = clipboard.value
+    if (!menuConnection() || !copy || !canPaste.value || !circuit.graph) { closeContextMenu(); return false }
+    try {
+      const candidate = shiftedWireCopy(circuit.graph, copy.wire, copy.visual, copy.successfulPastes + 1)
+      // connectEndpoints owns electrical validation, visual cloning and the single graph command.
+      circuit.connectEndpoints(candidate.wire.source, candidate.wire.destination, candidate.visual)
+      clipboard.value = { ...copy, successfulPastes: copy.successfulPastes + 1 }
+      workspace.selectWire(candidate.wire.source, candidate.wire.destination); workspace.editError = ''; closeContextMenu(); return true
+    } catch (error) {
+      workspace.editError = error instanceof Error ? error.message : 'Wire paste failed.'
+      closeContextMenu(); return false
+    }
   }
   function connect(endpoint: string) {
     const resolved = circuit.graph && resolveEndpoint(circuit.graph.modules, endpoint)
@@ -189,6 +235,7 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     return true
   }
   function keydown(event: KeyboardEvent): boolean {
+    if (event.key === 'Escape' && contextMenuState.value) { consume(event); closeContextMenu(); return true }
     if (event.key === 'Escape' && (draft.value || edit.value)) { consume(event); cancel(); return true }
     if (!draft.value) {
       if (!event.ctrlKey && !event.metaKey && ['Backspace', 'Delete'].includes(event.key) && workspace.selectedWireBend !== null && selectedConnection.value) { consume(event); removeSelectedBend(); return true }
@@ -287,15 +334,17 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
   }
   watch(() => [workspace.tool, workspace.placementType, workspace.zoomAreaActive], () => cancel(), { flush: 'sync' })
   watch(() => circuit.graph, () => cancel(), { deep: true, flush: 'sync' })
+  watch(() => circuit.activeId, () => { clipboard.value = null; closeContextMenu() }, { flush: 'sync' })
   watch(() => workspace.selectedWire, wire => { if (edit.value && (!wire || wireKey(wire) !== wireKey(edit.value.wire))) cancelEdit() }, { flush: 'sync' })
   watch(() => [workspace.wireColor, workspace.wireRouteMode], () => {
     if (draft.value) { draft.value = { ...draft.value, visual: { ...draft.value.visual, color: workspace.wireColor, routeMode: workspace.wireRouteMode } }; preview() }
   })
   onUnmounted(cancel)
   return {
+    contextMenuState, canPaste, openContextMenu, closeContextMenu, menuDelete, menuDuplicate, menuPaste,
     connect, cancel, pointerDown, pointerMove, pointerUp, keydown, setColor, setRouteMode, setStackLayer, selectNextStackWire, addBend, removeSelectedBend, doubleClick,
     lostPointerCapture(event: PointerEvent) { if (edit.value?.pointer !== event.pointerId) return false; cancelEdit(); return true },
-    contextMenu(event: MouseEvent) { if (!draft.value && !edit.value) return false; consume(event); if (!draft.value) cancelEdit(); return true },
+    contextMenu(event: MouseEvent) { if (!draft.value && !edit.value && !contextMenuState.value) return false; consume(event); if (!draft.value && edit.value) cancelEdit(); return true },
     pointerLeave() { manager()?.hoverEndpoint(null); if (!edit.value) manager()?.hoverWireEdit(null) },
     drawing: computed(() => !!draft.value), editing: computed(() => !!edit.value),
     controlPoints: computed(() => draft.value?.visual.controlPoints ?? []),

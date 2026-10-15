@@ -7,6 +7,7 @@ import { useCircuitStore } from '../../stores/circuit'
 import { useUiStore } from '../../stores/ui'
 import WorkspaceNavigator from './WorkspaceNavigator.vue'
 import WireOptions from './WireOptions.vue'
+import WireContextMenu from './WireContextMenu.vue'
 import { useCircuitEditor } from '../../composables/useCircuitEditor'
 import { observeElementSize } from '../../composables/frameTasks'
 const workspace = useWorkspaceStore()
@@ -45,6 +46,13 @@ function updateGizmoObstacles() {
   }
 }
 function invalidateObstacles() { obstaclesDirty = true; manager?.requestRender() }
+function closeWireMenu(restoreFocus = false) { editor.wireRouting.closeContextMenu(); if (restoreFocus) canvas.value?.focus() }
+function wireMenuAction(action: 'delete' | 'duplicate' | 'paste') {
+  if (action === 'delete') editor.wireRouting.menuDelete()
+  else if (action === 'duplicate') editor.wireRouting.menuDuplicate()
+  else editor.wireRouting.menuPaste()
+  canvas.value?.focus()
+}
 function rendered() {
   editor.updatePorts()
   if (manager) {
@@ -89,6 +97,7 @@ onUnmounted(() => { observer?.disconnect(); drawerObserver?.disconnect(); manage
 <template>
   <div ref="host" :class="['circuit-workspace', { 'is-dragging': editor.dragging.value || editor.wireRouting.editing.value, 'is-zoom-area': workspace.zoomAreaActive, 'is-wiring': workspace.tool === 'wire' && !workspace.placementType, 'can-grab': editor.hoveredHandle.value || editor.hoveredControl.value || editor.wireRouting.editing.value || (['select', 'move'].includes(workspace.tool) && !workspace.placementType) }]" @dragover.prevent @drop="editor.drop">
     <canvas ref="canvas" tabindex="0" :title="editor.controlHint.value" aria-label="Three-dimensional circuit workspace" aria-describedby="editor-help" @pointerdown.capture="editor.pointerDown" @pointermove="editor.pointerMove" @pointerup="editor.pointerUp" @pointercancel="editor.pointerCancel" @lostpointercapture="editor.lostPointerCapture" @keydown="editor.keydown" @dblclick="editor.wireRouting.doubleClick" @contextmenu.capture="editor.contextMenu" @pointerleave="editor.pointerLeave" />
+    <WireContextMenu v-if="editor.wireRouting.contextMenuState.value" :x="editor.wireRouting.contextMenuState.value.x" :y="editor.wireRouting.contextMenuState.value.y" :viewport-width="ui.viewport.width" :viewport-height="ui.viewport.height" :can-paste="editor.wireRouting.canPaste.value" @action="wireMenuAction" @close="closeWireMenu" />
     <WireOptions v-if="workspace.wireOptionsActive" :color="editor.wireRouting.color.value" :route-mode="editor.wireRouting.routeMode.value" :can-add="editor.wireRouting.canAdd.value" :can-remove="editor.wireRouting.canRemove.value" :hint="editor.wireRouting.hint.value" :layer="editor.wireRouting.layer.value" :can-stack="editor.wireRouting.canStack.value" :can-cycle-stack="editor.wireRouting.canCycleStack.value" :can-lower-stack="editor.wireRouting.canLowerStack.value" :can-raise-stack="editor.wireRouting.canRaiseStack.value" @color="editor.wireRouting.setColor" @mode="editor.wireRouting.setRouteMode" @add="editor.wireRouting.addBend" @remove="editor.wireRouting.removeSelectedBend" @route-key="editor.wireRouting.keydown" @stack="editor.wireRouting.setStackLayer" @cycle-stack="editor.wireRouting.selectNextStackWire" />
     <div v-if="editor.zoomAreaRect.value" class="zoom-area-rectangle" :style="{ left: editor.zoomAreaRect.value.left + 'px', top: editor.zoomAreaRect.value.top + 'px', width: editor.zoomAreaRect.value.width + 'px', height: editor.zoomAreaRect.value.height + 'px' }" aria-hidden="true" />
     <p v-if="workspace.zoomAreaActive" class="zoom-area-notice" role="status">Drag an area to zoom · Right click or Esc to cancel</p>

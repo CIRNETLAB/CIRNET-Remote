@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import type { WireRouteMode } from '../types/circuit'
 import { ZOOM_DEFAULT, clampZoom } from '../config/workbenchViewport'
 import { normalizeComponentProperties } from '../data/componentProperties'
-export type WorkspaceTool = 'select' | 'wire' | 'move' | 'rotate' | 'delete' | 'scope' | 'probe'
+export type WorkspaceTool = 'select' | 'wire' | 'move' | 'rotate'
 
 export const useWorkspaceStore = defineStore('workspace', {
   state: () => ({ selectedModuleId: null as string | null, selectedWire: null as { source: string; destination: string } | null, pendingPort: null as string | null, wireColor: '#d8493f', wireRouteMode: 'FREE' as WireRouteMode, selectedWireBend: null as number | null, previewType: null as string | null, placementType: null as string | null, placementProperties: null as Record<string, unknown> | null, showPins: false, snap: true, zoom: ZOOM_DEFAULT, fitRequest: 0, zoomAreaActive: false, tool: 'select' as WorkspaceTool, editError: '' }),

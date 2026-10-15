@@ -3,6 +3,7 @@ import { computed, nextTick, ref, watch } from 'vue'
 import { useDrawerMotion } from '../../composables/useDrawerMotion'
 import { useWorkspaceStore, type WorkspaceTool } from '../../stores/workspace'
 import { useUiStore } from '../../stores/ui'
+import type { WindowKind } from '../../types/windows'
 import WorkbenchIcon from './WorkbenchIcon.vue'
 const workspace = useWorkspaceStore()
 const ui = useUiStore()
@@ -15,12 +16,16 @@ const motion = useDrawerMotion({ collapsed: () => ui.toolsSidebarCollapsed, draw
 watch(() => ui.toolsSidebarCollapsed, (collapsed) => {
   if (collapsed && root.value?.contains(document.activeElement) && document.activeElement !== collapseToggle.value) void nextTick(() => collapseToggle.value?.focus())
 })
-const tools: { id: WorkspaceTool; name: string }[] = ['select', 'wire', 'move', 'rotate', 'scope', 'probe'].map((id) => ({ id: id as WorkspaceTool, name: id[0].toUpperCase() + id.slice(1) }))
-function select(tool: WorkspaceTool) {
-  workspace.setTool(tool)
-  if (tool === 'scope') ui.openWindow('oscilloscope')
-  if (tool === 'probe') ui.openWindow('monitor')
-}
+const tools: { id: WorkspaceTool; name: string }[] = [
+  { id: 'select', name: 'Select' }, { id: 'wire', name: 'Wire' },
+  { id: 'move', name: 'Move' }, { id: 'rotate', name: 'Rotate' },
+]
+const launchers: { name: string; icon: string; window: WindowKind }[] = [
+  { name: 'Power Supply', icon: 'power-supply', window: 'power-supply' },
+  { name: 'Probe', icon: 'probe', window: 'monitor' },
+  { name: 'Scope', icon: 'scope', window: 'oscilloscope' },
+  { name: 'Function Generator', icon: 'generator', window: 'generator' },
+]
 </script>
 <template>
   <div ref="root" class="tools-panel" :class="{ 'is-collapsed': ui.toolsSidebarCollapsed, 'is-reduced-motion': motion.reducedMotion.value }" :data-drawer-occupied="motion.occupied.value" :style="{ width: expandedWidth + 'px', '--tools-offset': ui.toolsSidebarCollapsed ? '-' + expandedWidth + 'px' : '0px' }">
@@ -28,9 +33,8 @@ function select(tool: WorkspaceTool) {
   <aside id="tools-sidebar" class="tool-rail" aria-label="Workspace tools">
     <div class="rail-label">TOOLS</div>
     <div id="editing-tools" role="toolbar" aria-label="Editing tools" aria-orientation="vertical">
-      <button v-for="tool in tools" :key="tool.id" :aria-label="tool.name" :aria-pressed="workspace.tool === tool.id" :title="tool.name + (tool.id === 'wire' ? ' · connect holes and ports' : ['scope', 'probe'].includes(tool.id) ? ' · open instrument' : ' · edit graph')" @click="select(tool.id)"><WorkbenchIcon :name="tool.id" /><span>{{ tool.name }}</span></button>
-      <button class="instrument-launcher" aria-label="Power Supply" title="Open Power Supply" @click="ui.openWindow('power-supply')"><WorkbenchIcon name="power-supply" /><span>Power<br />Supply</span></button>
-      <button class="instrument-launcher" aria-label="Function Generator" title="Open Function Generator" @click="ui.openWindow('generator')"><WorkbenchIcon name="generator" /><span>Function<br />Generator</span></button>
+      <button v-for="tool in tools" :key="tool.id" :aria-label="tool.name" :aria-pressed="workspace.tool === tool.id" :title="tool.name + (tool.id === 'wire' ? ' · connect holes and ports' : ' · edit graph')" @click="workspace.setTool(tool.id)"><WorkbenchIcon :name="tool.id" /><span>{{ tool.name }}</span></button>
+      <button v-for="launcher in launchers" :key="launcher.window" class="instrument-launcher" :aria-label="launcher.name" :title="'Open ' + launcher.name" @click="ui.openWindow(launcher.window)"><WorkbenchIcon :name="launcher.icon" /><span>{{ launcher.name }}</span></button>
     </div>
     <span class="rail-bottom">XZ</span>
   </aside>

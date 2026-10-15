@@ -79,7 +79,7 @@ test('root, legacy and unknown URLs all enter the same workspace', async () => {
 
 test('tools have one shared active state and preview is independent of circuit identity', () => {
   const workspace = useWorkspaceStore()
-  for (const tool of ['select', 'wire', 'move', 'rotate', 'delete', 'scope', 'probe'] as const) {
+  for (const tool of ['select', 'wire', 'move', 'rotate'] as const) {
     workspace.setTool(tool)
     assert.equal(workspace.tool, tool)
   }

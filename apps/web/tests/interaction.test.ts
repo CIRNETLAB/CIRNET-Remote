@@ -82,7 +82,7 @@ test('Delete and Backspace remove selections with Undo/Redo independent of the s
 })
 
 test('area selection takes priority over model editing and commits only a new camera frame', async () => {
-  for (const tool of ['move', 'rotate', 'delete', 'wire'] as const) {
+  for (const tool of ['move', 'rotate', 'wire'] as const) {
     const h = setup(tool)
     const area = h.workspace, editor = h.editor
     try {
@@ -1254,7 +1254,7 @@ test('placement capture follows the visible Y arc and does not freeze over its m
       const ghost = placementGhost(h), initial = ghost.position.clone()
       const root = h.manager.scene.getObjectByName('component-transform-gizmo')!
       const ring = root.children.find((group) => group.userData.transformHandle === 'rotate-y')!
-      const angle = visible ? 1.1 : -1.1
+      const angle = visible ? 1.1 : 2.2
       const point = h.manager.project(ring.localToWorld(new Vector3(Math.cos(angle) * 1.35, 0, Math.sin(angle) * 1.35)))
       const origin = h.manager.project(h.manager.gizmoOrigin()!), dx = point.x - origin.x, dy = point.y - origin.y, length = Math.hypot(dx, dy)
       const near = { x: point.x + dx / length * 22, y: point.y + dy / length * 22 }
