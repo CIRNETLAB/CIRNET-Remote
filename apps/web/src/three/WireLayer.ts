@@ -14,12 +14,15 @@ export function createWireLayer(endpointPosition: (endpoint: string) => Vector3 
   const group = new Group(), tools = new Group(), records = new Map<string, WireRecord>()
   const terminals = createWireTerminals()
   const layoutCache = createWireLayoutCache()
+  const duplicateLayout = createWireLayoutCache()
   const connections = new Map<string, CircuitConnection>(), incident = new Map<string, Set<string>>(), overrides = new Map<string, WireVisual>(), dirty = new Set<string>()
   const context: WireRouteContext = routeContext ?? { endpoint: (value: string) => { const position = endpointPosition(value); return position ? { endpoint: value, position } : null }, modulePose: () => null }
   let selected: WireIdentity | null = null, hovered: WireIdentity | null = null, selectedHandle: number | null = null
+  let multiSelected: WireIdentity[] = []
   let handleMesh: InstancedMesh | null = null, drawingMesh: Mesh<BufferGeometry, MeshStandardMaterial> | null = null
   let segmentLine: Line | null = null, selectedSegment: number | null = null, segmentSignature = ''
   let drawingSignature = ''
+  let duplicateMesh: Mesh<BufferGeometry, MeshStandardMaterial> | null = null, duplicateSignature = ''
   let viewCamera: PerspectiveCamera | null = null, viewHeight = 1, cameraSignature = ''
   const outlines = new Map<string, { mesh: Mesh<BufferGeometry, MeshBasicMaterial>; signature: string }>()
   let drawing: { wire: WireIdentity; visual: WireVisual; cursor: Point3 | null } | null = null, drawingDirty = false, disposed = false
@@ -31,10 +34,13 @@ export function createWireLayer(endpointPosition: (endpoint: string) => Vector3 
     record.mesh.material.emissive.set('#000000')
   }
   const updateOutlines = () => {
-    for (const [name, wire] of [['wire-selection-outline', selected], ['wire-hover-outline', hovered && !same(selected, hovered) ? hovered : null]] as const) {
+    const requested: [string, WireIdentity | null][] = [['wire-selection-outline', selected], ['wire-hover-outline', hovered && !same(selected, hovered) ? hovered : null], ...multiSelected.map(wire => [`wire-multi-outline:${wireKey(wire)}`, wire] as [string, WireIdentity])]
+    const names = new Set(requested.map(([name]) => name))
+    for (const [name, outline] of outlines) if (!names.has(name)) { tools.remove(outline.mesh); disposeObject(outline.mesh); outlines.delete(name) }
+    for (const [name, wire] of requested) {
       const record = wire && records.get(wireKey(wire)), existing = outlines.get(name)
       if (!record) { if (existing) existing.mesh.visible = false; continue }
-      const diameter = renderWireDiameter(overrides.get(wireKey(record.connection)) ?? readWireVisual(record.connection)) + (name === 'wire-selection-outline' ? .02 : .013)
+      const diameter = renderWireDiameter(overrides.get(wireKey(record.connection)) ?? readWireVisual(record.connection)) + (name === 'wire-hover-outline' ? .013 : .02)
       const signature = JSON.stringify([record.parts.bodyPoints, diameter])
       if (!existing || existing.signature !== signature) {
         const geometry = buildWireGeometry({ points: record.parts.bodyPoints }, diameter, { caps: false })
@@ -109,6 +115,36 @@ export function createWireLayer(endpointPosition: (endpoint: string) => Vector3 
     segmentLine.visible = true
   }
   const clearDrawing = () => { const active = !!drawing; drawing = null; drawingDirty = false; drawingSignature = ''; if (drawingMesh) { tools.remove(drawingMesh); terminals.detach(drawingMesh); disposeObject(drawingMesh); drawingMesh = null }; if (active && !disposed) refresh() }
+  const clearDuplicate = () => {
+    if (duplicateMesh) { tools.remove(duplicateMesh); terminals.detach(duplicateMesh); disposeObject(duplicateMesh); duplicateMesh = null }
+    duplicateSignature = ''; duplicateLayout.clear()
+  }
+  const previewDuplicate = (wire: WireIdentity, visual: WireVisual, valid: boolean, fallback?: SolvedWireRoute | null) => {
+    if (disposed) return
+    let route = fallback ?? solveWireRoute(wire, visual, context)
+    if (route && !fallback) {
+      const key = { source: '@duplicate', destination: '@preview' }
+      const inputs: WireLayoutInput[] = [...connections.values()].flatMap(connection => {
+        const appearance = readWireVisual(connection), solved = solveWireRoute(connection, appearance, context)
+        return solved ? [{ wire: connection, visual: appearance, route: solved }] : []
+      })
+      inputs.push({ wire: key, visual, route })
+      route = duplicateLayout.sync(inputs).get(wireKey(key)) ?? route
+    }
+    if (!route) { if (duplicateMesh) duplicateMesh.visible = false; return }
+    const diameter = renderWireDiameter(visual), parts = deriveWireParts(route, diameter), signature = JSON.stringify([parts, diameter])
+    if (!duplicateMesh || duplicateSignature !== signature) {
+      const geometry = buildWireGeometry({ points: parts.bodyPoints }, diameter, { capHoleRadius: parts.capHoleRadius })
+      if (duplicateMesh) { duplicateMesh.geometry.dispose(); duplicateMesh.geometry = geometry }
+      else {
+        duplicateMesh = new Mesh(geometry, new MeshStandardMaterial({ roughness: .62, metalness: 0, transparent: true, opacity: .56, depthWrite: false }))
+        duplicateMesh.name = 'wire-duplicate-preview'; duplicateMesh.renderOrder = 12; duplicateMesh.userData.ignorePick = true; tools.add(duplicateMesh)
+      }
+      duplicateSignature = signature; terminals.update(duplicateMesh, parts)
+    }
+    duplicateMesh.material.color.set(valid ? visual.color : '#f16365'); duplicateMesh.visible = true
+    duplicateMesh.userData.valid = valid; duplicateMesh.userData.route = route
+  }
   const updateDrawing = (route: SolvedWireRoute | null) => {
     if (!drawing) return
     const state = drawing, destination = state.wire.destination || '@cursor'
@@ -178,19 +214,22 @@ export function createWireLayer(endpointPosition: (endpoint: string) => Vector3 
     },
     previewDrawing(wire: WireIdentity, visual: WireVisual, cursor: Point3 | null) { if (!disposed) { drawing = { wire: { ...wire }, visual: copyWireVisual(visual), cursor: cursor ? { ...cursor } : null }; drawingDirty = true } },
     clearDrawing,
+    previewDuplicate, clearDuplicate,
     flush() {
       if (disposed) return
       if (dirty.size || drawingDirty) { dirty.clear(); drawingDirty = false; refresh() }
     },
     route(wire: WireIdentity) { return records.get(wireKey(wire))?.route ?? null },
+    selectionMeshes() { return [...records.values()].map(record => ({ wire: { source: record.connection.source, destination: record.connection.destination }, mesh: record.mesh })) },
     orderPeers(wire: WireIdentity, connected = false) { return layoutCache.peers(wireKey(wire), connected).flatMap(key => { const connection = connections.get(key); return connection ? [{ source: connection.source, destination: connection.destination }] : [] }) },
     highlight(wire?: WireIdentity | null) { if (disposed) return; selected = wire ? { ...wire } : null; selectedHandle = null; selectedSegment = null; updateHandles(); updateSegment(); updateOutlines() },
+    highlightMany(wires: WireIdentity[]) { if (disposed) return; multiSelected = wires.map(wire => ({ ...wire })); updateOutlines() },
     hover(wire: WireIdentity | null) { if (disposed) return; hovered = wire; updateOutlines() },
     selectHandle(index: number | null) { if (disposed) return; selectedHandle = index; updateHandles() },
     selectSegment(index: number | null) { if (disposed) return; selectedSegment = index; updateSegment() },
     dispose() {
       if (disposed) return; disposed = true
-      clearDrawing(); if (handleMesh) { tools.remove(handleMesh); disposeObject(handleMesh); handleMesh = null }
+      clearDrawing(); clearDuplicate(); if (handleMesh) { tools.remove(handleMesh); disposeObject(handleMesh); handleMesh = null }
       if (segmentLine) { tools.remove(segmentLine); disposeObject(segmentLine); segmentLine = null }
       for (const outline of outlines.values()) { tools.remove(outline.mesh); disposeObject(outline.mesh) }
       outlines.clear()

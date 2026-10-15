@@ -4,12 +4,15 @@ import type { CircuitConnection, CircuitGraph, Point3, WireControlPoint, WireIde
 import { useCircuitStore } from '../stores/circuit'
 import { useWorkspaceStore } from '../stores/workspace'
 import { resolveEndpoint } from '../electrical/endpoints'
+import { assertConnectionAllowed } from '../electrical/nets'
+import { getBreadboardTopology } from '../electrical/BreadboardTopology'
+import { moduleLocalToWorld, moduleWorldPose, worldToModuleLocal } from '../electrical/modulePose'
 import { copyWireVisual, defaultWireVisual, readWireVisual, wireKey } from '../wires/wireVisual'
 import { controlPointWorld, endpointLeadPosition, pointDistance, snapWirePoint, solveWireRoute, type SolvedWireRoute } from '../wires/wireRouting'
 import { dragWireSegment, insertWireBend, materializeWireRoute, moveWireBend, normalizeWireVisual, removeWireBend } from '../wires/wireRouteEditing'
 import { automaticWireLayer } from '../wires/wireStacking'
 import { MIN_WIRE_DIAMETER } from '../wires/wireAppearance'
-import { shiftedWireCopy } from '../wires/wireClipboard'
+import { shiftedWireCopy, wireCopyAtContact } from '../wires/wireClipboard'
 
 type Manager = ReturnType<typeof createSceneManager>
 type CornerState = { kind: 'none' } | { kind: 'provisional'; controlIndex: number; anchor: WireControlPoint; screenOrigin: { x: number; y: number }; travel: 'within-threshold' | 'away' }
@@ -20,12 +23,18 @@ interface WireEditGesture {
   start: { x: number; y: number }; anchor: Point3; dragged: boolean
 }
 export interface WireContextMenuState { x: number; y: number; wire: WireIdentity; circuitId: string }
-interface WireClipboard { circuitId: string; wire: WireIdentity; visual: WireVisual; successfulPastes: number }
+interface WireCopy { wire: WireIdentity; visual: WireVisual }
+interface WireClipboard { circuitId: string; wire: WireIdentity; visual: WireVisual; nextBase?: WireCopy }
+export interface WireDuplicatePreviewState { active: boolean; candidate: WireCopy | null; valid: boolean; message: string }
 
 export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manager: () => Manager | undefined) {
   const circuit = useCircuitStore(), workspace = useWorkspaceStore(), draft = shallowRef<DrawingDraft | null>(null)
   const edit = shallowRef<WireEditGesture | null>(null), lastSegment = shallowRef<WireEditPick | null>(null)
   const contextMenuState = shallowRef<WireContextMenuState | null>(null), clipboard = shallowRef<WireClipboard | null>(null)
+  const duplicatePreview = shallowRef<WireDuplicatePreviewState | null>(null)
+  const duplicatePreviewState = computed<WireDuplicatePreviewState>(() => duplicatePreview.value ?? { active: false, candidate: null, valid: false, message: '' })
+  let duplicateCommitting = false
+  let duplicateCommittedGraph: CircuitGraph | null = null
   const canPaste = computed(() => !!clipboard.value && clipboard.value.circuitId === circuit.activeId)
   const selectedConnection = computed(() => circuit.graph?.connections.find(c => workspace.selectedWire && wireKey(c) === wireKey(workspace.selectedWire)) ?? null)
   const coordinates = (event: { clientX: number; clientY: number }) => {
@@ -47,7 +56,11 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     manager()?.hoverWireEdit(null)
   }
   function cancel() {
+    // Graph watchers also run synchronously inside connectEndpoints. That one
+    // atomic command must not terminate the ongoing duplicate session.
+    if (duplicateCommitting) return
     closeContextMenu()
+    cancelDuplicatePreview()
     cancelEdit(); lastSegment.value = null; workspace.selectedWireBend = null
     draft.value = null; workspace.pendingPort = null
     manager()?.clearWireDrawing(); manager()?.setWireDrawingActive(false); manager()?.hoverEndpoint(null)
@@ -55,7 +68,7 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
   function closeContextMenu() { contextMenuState.value = null }
   function openContextMenu(x: number, y: number, wire: WireIdentity): boolean {
     closeContextMenu()
-    if (draft.value || edit.value || workspace.placementType || workspace.zoomAreaActive || !circuit.activeId || !Number.isFinite(x) || !Number.isFinite(y)) return false
+    if (draft.value || edit.value || duplicatePreview.value || workspace.placementType || workspace.zoomAreaActive || workspace.marqueeActive || !circuit.activeId || !Number.isFinite(x) || !Number.isFinite(y)) return false
     const connection = circuit.graph?.connections.find(candidate => wireKey(candidate) === wireKey(wire))
     if (!connection) return false
     workspace.selectWire(connection.source, connection.destination); workspace.editError = ''
@@ -69,8 +82,8 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
   function menuDuplicate(): boolean {
     const connection = menuConnection()
     if (!connection || !circuit.activeId) { closeContextMenu(); return false }
-    clipboard.value = { circuitId: circuit.activeId, wire: { source: connection.source, destination: connection.destination }, visual: readWireVisual(connection), successfulPastes: 0 }
-    workspace.editError = ''; closeContextMenu(); return true
+    clipboard.value = { circuitId: circuit.activeId, wire: { source: connection.source, destination: connection.destination }, visual: readWireVisual(connection) }
+    closeContextMenu(); startDuplicatePreview(); return true
   }
   function menuDelete(): boolean {
     const connection = menuConnection()
@@ -79,18 +92,108 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     workspace.selectModule(null); workspace.editError = ''; closeContextMenu(); return true
   }
   function menuPaste(): boolean {
-    const copy = clipboard.value
-    if (!menuConnection() || !copy || !canPaste.value || !circuit.graph) { closeContextMenu(); return false }
+    if (!clipboard.value || !canPaste.value || !circuit.graph) { closeContextMenu(); return false }
+    closeContextMenu()
+    if (!duplicatePreview.value) startDuplicatePreview()
+    return true
+  }
+  function cancelDuplicatePreview() {
+    if (duplicatePreview.value) workspace.editError = ''
+    duplicatePreview.value = null
+    duplicateCommittedGraph = null
+    manager()?.clearWireDuplicate(); manager()?.hoverEndpoint(null)
+  }
+  function invalidDuplicate(message: string, fallback?: { wire: WireIdentity; visual: WireVisual; route: SolvedWireRoute | null }) {
+    duplicatePreview.value = { active: true, candidate: null, valid: false, message }; workspace.editError = message
+    if (fallback) manager()?.previewWireDuplicate(fallback.wire, fallback.visual, false, fallback.route)
+  }
+  function showDuplicateCandidate(candidate: WireCopy) {
+    const scene = manager(), graph = circuit.graph
+    if (!scene || !graph) return
+    const visual = copyWireVisual(candidate.visual)
+    visual.layer = Math.max(visual.layer ?? 0, automaticWireLayer(candidate.wire, visual, graph.connections, scene.wireContext))
+    candidate = { wire: { ...candidate.wire }, visual }
+    let message = ''
     try {
-      const candidate = shiftedWireCopy(circuit.graph, copy.wire, copy.visual, copy.successfulPastes + 1)
-      // connectEndpoints owns electrical validation, visual cloning and the single graph command.
-      circuit.connectEndpoints(candidate.wire.source, candidate.wire.destination, candidate.visual)
-      clipboard.value = { ...copy, successfulPastes: copy.successfulPastes + 1 }
-      workspace.selectWire(candidate.wire.source, candidate.wire.destination); workspace.editError = ''; closeContextMenu(); return true
-    } catch (error) {
-      workspace.editError = error instanceof Error ? error.message : 'Wire paste failed.'
-      closeContextMenu(); return false
+      if (!solveWireRoute(candidate.wire, visual, scene.wireContext)) throw new Error('Preview endpoints could not be resolved.')
+      assertConnectionAllowed(graph, candidate.wire.source, candidate.wire.destination)
+    } catch (error) { message = error instanceof Error ? error.message : 'This wire cannot be connected.' }
+    duplicatePreview.value = { active: true, candidate, valid: !message, message }
+    workspace.editError = message
+    scene.previewWireDuplicate(candidate.wire, visual, !message)
+  }
+  function translatedFallback(copy: WireCopy, target?: Point3) {
+    const scene = manager(), graph = circuit.graph
+    if (!scene || !graph) return undefined
+    const source = scene.wireContext.endpoint(copy.wire.source), destination = scene.wireContext.endpoint(copy.wire.destination)
+    if (!source || !destination) return undefined
+    const resolved = resolveEndpoint(graph.modules, copy.wire.source), owner = resolved ? moduleWorldPose(resolved.module, graph.modules) : null
+    const pitch = owner ? getBreadboardTopology(owner.type)?.pitch ?? .13 : .13
+    const localStep = owner ? moduleLocalToWorld({ x: pitch, y: 0, z: 0 }, { rotation: owner.rotation }) : { x: pitch, y: 0, z: 0 }
+    const delta = target ? { x: target.x - source.position.x, y: 0, z: target.z - source.position.z } : localStep
+    const translate = (p: Point3) => ({ x: p.x + delta.x, y: p.y + delta.y, z: p.z + delta.z })
+    const visual = copyWireVisual(copy.visual)
+    visual.controlPoints = visual.controlPoints.flatMap(control => { const world = controlPointWorld(control, scene.wireContext); return world ? [{ space: 'world' as const, position: translate(world) }] : [] })
+    const wire = { source: '@duplicate-source', destination: '@duplicate-destination' }
+    const context = { ...scene.wireContext, endpoint: (value: string) => value === wire.source ? { ...source, position: translate(source.position) } : value === wire.destination ? { ...destination, position: translate(destination.position) } : scene.wireContext.endpoint(value) }
+    return { wire, visual, route: solveWireRoute(wire, visual, context) }
+  }
+  function startDuplicatePreview() {
+    const copy = clipboard.value, graph = circuit.graph
+    if (!copy || !graph || !canPaste.value) return
+    const base = copy.nextBase ?? copy
+    try { showDuplicateCandidate(shiftedWireCopy(graph, base.wire, base.visual, 1)) }
+    catch (error) { invalidDuplicate(error instanceof Error ? error.message : 'Choose valid contacts.', translatedFallback(base)) }
+  }
+  function previewPointerMove(event: PointerEvent): boolean {
+    if (!duplicatePreview.value) return false
+    const copy = clipboard.value, graph = circuit.graph, scene = manager(), p = coordinates(event)
+    if (!copy || !graph || !scene || !p) return true
+    let endpoint = scene.pickEndpoint(p.x, p.y)?.endpoint ?? null
+    const support = scene.wireSupportModule(p.x, p.y)
+    const cursor = scene.wireRoutingPoint(p.x, p.y, support?.id ?? copy.visual.frameModuleId ?? null, copy.visual)
+    if (!endpoint && support && cursor) {
+      const topology = getBreadboardTopology(support.type)!, local = worldToModuleLocal(cursor, support)
+      const nearest = [...topology.contacts].sort((a, b) => Math.hypot(a.localPosition[0] - local.x, a.localPosition[2] - local.z) - Math.hypot(b.localPosition[0] - local.x, b.localPosition[2] - local.z))[0]
+      if (nearest && Math.hypot(nearest.localPosition[0] - local.x, nearest.localPosition[2] - local.z) <= topology.pitch * .72) endpoint = `${support.id}.contact:${nearest.contactId}`
     }
+    scene.hoverEndpoint(endpoint)
+    try {
+      if (!endpoint) throw new Error('Move the preview source onto a declared contact; both endpoints must map to valid contacts.')
+      showDuplicateCandidate(wireCopyAtContact(graph, copy.wire, copy.visual, endpoint))
+    } catch (error) { invalidDuplicate(error instanceof Error ? error.message : 'Choose valid contacts.', translatedFallback(copy, cursor ?? undefined)) }
+    return true
+  }
+  function commitDuplicatePreview(): boolean {
+    const state = duplicatePreview.value, copy = clipboard.value
+    if (!state || !copy || !state.valid || !state.candidate || !canPaste.value) return false
+    const candidate = state.candidate
+    try {
+      duplicateCommitting = true
+      circuit.connectEndpoints(candidate.wire.source, candidate.wire.destination, candidate.visual)
+      duplicateCommittedGraph = circuit.graph
+      clipboard.value = { ...copy, nextBase: { wire: { ...candidate.wire }, visual: copyWireVisual(candidate.visual) } }
+      workspace.selectWire(candidate.wire.source, candidate.wire.destination)
+    } catch (error) {
+      showDuplicateCandidate(candidate)
+      workspace.editError = error instanceof Error ? error.message : 'Wire paste failed.'
+      return false
+    } finally { duplicateCommitting = false }
+    startDuplicatePreview()
+    return true
+  }
+  function consumeDuplicateGraphChange(graph: CircuitGraph | null): boolean {
+    const own = !!duplicatePreview.value && !!graph && graph === duplicateCommittedGraph
+    duplicateCommittedGraph = null
+    return own
+  }
+  function duplicatePointerDown(event: PointerEvent): boolean {
+    if (!duplicatePreview.value) return false
+    if (event.button === 0 || event.button === 2) {
+      consume(event); canvas.value?.focus()
+      if (event.button === 2) cancelDuplicatePreview(); else commitDuplicatePreview()
+    }
+    return true
   }
   function connect(endpoint: string) {
     const resolved = circuit.graph && resolveEndpoint(circuit.graph.modules, endpoint)
@@ -130,6 +233,7 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     return point ? snapWirePoint(point, owner, workspace.snap, bypass) : null
   }
   function pointerDown(event: PointerEvent): boolean {
+    if (duplicatePointerDown(event)) return true
     if (event.button === 2 && draft.value) {
       consume(event); canvas.value?.focus()
       const p = coordinates(event), scene = manager()
@@ -182,6 +286,7 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     return true
   }
   function pointerMove(event: PointerEvent): boolean {
+    if (previewPointerMove(event)) return true
     if (edit.value) {
       const state = edit.value, p = coordinates(event), scene = manager()
       if (event.pointerId !== state.pointer || !p || !scene) return true
@@ -235,6 +340,8 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     return true
   }
   function keydown(event: KeyboardEvent): boolean {
+    if (event.key === 'Escape' && duplicatePreview.value) { consume(event); cancelDuplicatePreview(); closeContextMenu(); return true }
+    if (duplicatePreview.value && ['Delete', 'Backspace', 'r', 'R', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) { consume(event); return true }
     if (event.key === 'Escape' && contextMenuState.value) { consume(event); closeContextMenu(); return true }
     if (event.key === 'Escape' && (draft.value || edit.value)) { consume(event); cancel(); return true }
     if (!draft.value) {
@@ -302,13 +409,6 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     const target = action === 'down' ? candidates.filter(at => at >= 0 && at < index).at(-1) ?? index : action === 'up' ? candidates.find(at => at > index) ?? index : candidates.filter(at => at > index).at(-1) ?? index
     return { stack, index, target }
   }
-  function selectNextStackWire() {
-    const wire = selectedConnection.value, scene = manager()
-    if (!wire || draft.value || !scene || !circuit.graph) return
-    const stack = orderedPeers().reverse()
-    const next = stack[(stack.findIndex(candidate => wireKey(candidate) === wireKey(wire)) + 1) % stack.length]
-    if (next && next !== wire) { cancelEdit(); workspace.selectWire(next.source, next.destination) }
-  }
   function removeSelectedBend() {
     cancelEdit()
     const wire = selectedConnection.value, index = workspace.selectedWireBend, route = wire && manager()?.wireRoute(wire)
@@ -325,14 +425,15 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     circuit.updateWireVisual(wire, insertWireBend(visual, route, hit.index, point))
   }
   function doubleClick(event: MouseEvent): boolean {
-    if (draft.value || workspace.placementType || workspace.zoomAreaActive || !['select', 'wire'].includes(workspace.tool)) return false
+    if (duplicatePreview.value) { consume(event); return true }
+    if (draft.value || workspace.placementType || workspace.zoomAreaActive || workspace.marqueeActive || !['select', 'wire'].includes(workspace.tool)) return false
     const p = coordinates(event), scene = manager()
     if (!p || !scene || !selectedConnection.value) return false
     const hit = scene.pickWireEdit(p.x, p.y, selectedConnection.value)
     if (hit?.kind !== 'segment') return false
     consume(event); lastSegment.value = hit; addBend(); return true
   }
-  watch(() => [workspace.tool, workspace.placementType, workspace.zoomAreaActive], () => cancel(), { flush: 'sync' })
+  watch(() => [workspace.tool, workspace.placementType, workspace.zoomAreaActive, workspace.marqueeActive], () => cancel(), { flush: 'sync' })
   watch(() => circuit.graph, () => cancel(), { deep: true, flush: 'sync' })
   watch(() => circuit.activeId, () => { clipboard.value = null; closeContextMenu() }, { flush: 'sync' })
   watch(() => workspace.selectedWire, wire => { if (edit.value && (!wire || wireKey(wire) !== wireKey(edit.value.wire))) cancelEdit() }, { flush: 'sync' })
@@ -342,9 +443,10 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
   onUnmounted(cancel)
   return {
     contextMenuState, canPaste, openContextMenu, closeContextMenu, menuDelete, menuDuplicate, menuPaste,
-    connect, cancel, pointerDown, pointerMove, pointerUp, keydown, setColor, setRouteMode, setStackLayer, selectNextStackWire, addBend, removeSelectedBend, doubleClick,
+    duplicatePreviewState, previewPointerMove, commitDuplicatePreview, cancelDuplicatePreview, consumeDuplicateGraphChange,
+    connect, cancel, pointerDown, pointerMove, pointerUp, keydown, setColor, setRouteMode, setStackLayer, addBend, removeSelectedBend, doubleClick,
     lostPointerCapture(event: PointerEvent) { if (edit.value?.pointer !== event.pointerId) return false; cancelEdit(); return true },
-    contextMenu(event: MouseEvent) { if (!draft.value && !edit.value && !contextMenuState.value) return false; consume(event); if (!draft.value && edit.value) cancelEdit(); return true },
+    contextMenu(event: MouseEvent) { if (!draft.value && !edit.value && !contextMenuState.value && !duplicatePreview.value) return false; consume(event); if (duplicatePreview.value) cancelDuplicatePreview(); if (!draft.value && edit.value) cancelEdit(); return true },
     pointerLeave() { manager()?.hoverEndpoint(null); if (!edit.value) manager()?.hoverWireEdit(null) },
     drawing: computed(() => !!draft.value), editing: computed(() => !!edit.value),
     controlPoints: computed(() => draft.value?.visual.controlPoints ?? []),
@@ -354,9 +456,8 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     canStack: computed(() => !draft.value && !!selectedConnection.value),
     canLowerStack: computed(() => { const state = stackMove('down'); return state.target !== state.index }),
     canRaiseStack: computed(() => { const state = stackMove('up'); return state.target !== state.index }),
-    canCycleStack: computed(() => !draft.value && orderedPeers().length > 1),
     canAdd: computed(() => !draft.value && !!selectedConnection.value && lastSegment.value?.kind === 'segment'),
     canRemove: computed(() => !draft.value && !!selectedConnection.value && workspace.selectedWireBend !== null),
-    hint: computed(() => draft.value ? 'Right: add corner; repeat here to undo · Left: finish at hole/port · Backspace: undo corner · Alt: no snap · Esc: cancel' : selectedConnection.value ? 'Drag a user bend or segment · Double-click: add an anchor · Alt: no snap' : 'Left-click a hole or port · Free: draw your own path'),
+    hint: computed(() => duplicatePreview.value ? duplicatePreview.value.message || 'Wire preview · Move source to a contact · Click to paste · Right click or Esc to cancel' : draft.value ? 'Right: add corner; repeat here to undo · Left: finish at hole/port · Backspace: undo corner · Alt: no snap · Esc: cancel' : selectedConnection.value ? 'Drag a user bend or segment · Double-click: add an anchor · Alt: no snap' : 'Left-click a hole or port · Free: draw your own path'),
   }
 }

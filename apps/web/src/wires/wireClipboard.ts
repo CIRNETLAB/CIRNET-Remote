@@ -48,3 +48,45 @@ export function shiftedWireCopy(graph: CircuitGraph, wire: WireIdentity, origina
   validateWireVisual(visual, graph.modules)
   return { wire: { source: source.endpoint, destination: destination.endpoint }, visual }
 }
+
+/** Rebase a rigid copy onto an explicitly chosen, declared contact. No port is inferred. */
+export function wireCopyAtContact(graph: CircuitGraph, wire: WireIdentity, original: WireVisual, targetSource: string): { wire: WireIdentity; visual: WireVisual } {
+  const source = resolveEndpoint(graph.modules, wire.source), destination = resolveEndpoint(graph.modules, wire.destination), target = resolveEndpoint(graph.modules, targetSource)
+  if (!source || !destination || !target || source.endpoint.kind !== 'contact' || destination.endpoint.kind !== 'contact' || target.endpoint.kind !== 'contact') {
+    throw new Error('Duplicate requires declared breadboard contacts. Component ports must be selected explicitly; they cannot be guessed.')
+  }
+  const sourceTopology = getBreadboardTopology(source.module.type)!, targetTopology = getBreadboardTopology(target.module.type)!
+  if (!close(sourceTopology.pitch, targetTopology.pitch)) throw new Error('The target breadboard has a different contact pitch.')
+  const sourceId = source.endpoint.contactId, targetId = target.endpoint.contactId, destinationId = destination.endpoint.contactId
+  const sourceContact = sourceTopology.contacts.find(contact => contact.contactId === sourceId)!
+  const targetContact = targetTopology.contacts.find(contact => contact.contactId === targetId)!
+  const from = moduleWorldPose(source.module, graph.modules), to = moduleWorldPose(target.module, graph.modules)
+  const transform = (world: Point3): Point3 => {
+    const local = worldToModuleLocal(world, from)
+    return moduleLocalToWorld({ x: local.x - sourceContact.localPosition[0] + targetContact.localPosition[0], y: local.y - sourceContact.localPosition[1] + targetContact.localPosition[1], z: local.z - sourceContact.localPosition[2] + targetContact.localPosition[2] }, to)
+  }
+  const destinationPose = moduleWorldPose(destination.module, graph.modules)
+  const destinationContact = getBreadboardTopology(destination.module.type)!.contacts.find(contact => contact.contactId === destinationId)!
+  const expected = transform(moduleLocalToWorld(point(destinationContact.localPosition), destinationPose))
+  const boards = source.module.id === destination.module.id ? [target.module] : graph.modules.filter(module => getBreadboardTopology(module.type))
+  const matches = boards.flatMap(module => {
+    const pose = moduleWorldPose(module, graph.modules), local = worldToModuleLocal(expected, pose)
+    return getBreadboardTopology(module.type)!.contacts.filter(contact => contact.localPosition.every((value, index) => close(value, [local.x, local.y, local.z][index]))).map(contact => ({ module, contact }))
+  })
+  if (matches.length !== 1) throw new Error(matches.length ? 'The destination contact is ambiguous. Choose endpoints explicitly.' : 'No matching destination contact at this position. Move the preview to valid contacts.')
+  const mappedDestination = matches[0]
+  const ownerMap = new Map([[source.module.id, target.module.id], [destination.module.id, mappedDestination.module.id]])
+  const visual = copyWireVisual(original)
+  if (visual.frameModuleId) visual.frameModuleId = ownerMap.get(visual.frameModuleId) ?? visual.frameModuleId
+  visual.controlPoints = visual.controlPoints.map(control => {
+    const owner = control.space === 'module' ? graph.modules.find(module => module.id === control.moduleId) : null
+    if (control.space === 'module' && !owner) throw new Error('A copied wire control point refers to a missing module.')
+    const world = owner ? moduleLocalToWorld(control.position, moduleWorldPose(owner, graph.modules)) : control.position
+    const transformed = transform(world)
+    if (control.space === 'world') return { space: 'world' as const, position: transformed }
+    const moduleId = ownerMap.get(control.moduleId) ?? control.moduleId, module = graph.modules.find(item => item.id === moduleId)!
+    return { space: 'module' as const, moduleId, position: worldToModuleLocal(transformed, moduleWorldPose(module, graph.modules)) }
+  })
+  validateWireVisual(visual, graph.modules)
+  return { wire: { source: targetSource, destination: formatEndpoint({ kind: 'contact', moduleId: mappedDestination.module.id, contactId: mappedDestination.contact.contactId }) }, visual }
+}

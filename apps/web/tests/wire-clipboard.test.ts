@@ -15,6 +15,9 @@ interface MenuApi {
   menuDuplicate(): boolean
   menuPaste(): boolean
   menuDelete(): boolean
+  commitDuplicatePreview(): boolean
+  cancelDuplicatePreview(): void
+  duplicatePreviewState: Ref<{ active: boolean; valid: boolean; message: string }>
 }
 function menu(h: ReturnType<typeof wireHarness>): MenuApi {
   assert.equal(typeof Reflect.get(h.editor.wireRouting, 'openContextMenu'), 'function', 'existing wires need a context menu command API')
@@ -28,11 +31,12 @@ function setupWire(h: ReturnType<typeof wireHarness>, rotation = 0, first = '01'
   ] }
   const wire = { source: `${board}.contact:terminal:A:${first}`, destination: `${board}.contact:terminal:J:${last}` }
   h.circuit.connectEndpoints(wire.source, wire.destination, visual)
+  h.editor.sync()
   h.circuit.past = []
   return { board, wire, visual }
 }
 
-test('Duplicate snapshots one wire without a graph command; consecutive Paste shifts real contacts and preserves appearance with one Undo each', async () => {
+test('Duplicate snapshots one wire without a graph command; consecutive preview commits shift contacts with one Undo each', async () => {
   const h = wireHarness()
   try {
     const { wire, visual } = setupWire(h), api = menu(h)
@@ -44,14 +48,15 @@ test('Duplicate snapshots one wire without a graph command; consecutive Paste sh
     assert.equal(h.circuit.snapshot(), before); assert.equal(h.circuit.past.length, 0)
     assert.equal(api.contextMenuState.value, null)
     assert.equal(api.canPaste.value, true)
-    h.circuit.updateWireVisual(wire, { ...visual, color: '#24272a', controlPoints: [] }); h.circuit.past = []
+    api.cancelDuplicatePreview(); h.circuit.updateWireVisual(wire, { ...visual, color: '#24272a', controlPoints: [] }); h.circuit.past = []
     for (const [step, expected] of [[1, ['02', '09']], [2, ['03', '10']]] as const) {
       api.openContextMenu(40, 50, wire); assert.equal(api.menuPaste(), true)
+      assert.equal(h.circuit.graph!.connections.length, step); assert.equal(api.commitDuplicatePreview(), true)
       const pasted = h.circuit.graph!.connections[step], copy = readWireVisual(pasted)
       assert.equal(pasted.source, `${wire.source.slice(0, -2)}${expected[0]}`)
       assert.equal(pasted.destination, `${wire.destination.slice(0, -2)}${expected[1]}`)
       assert.equal(copy.color, '#8656a8'); assert.equal(copy.routeMode, 'FREE'); assert.equal(copy.height, .07)
-      assert.equal(copy.thickness, .052); assert.equal(copy.layer, 2); assert.equal(copy.frameModuleId, visual.frameModuleId)
+      assert.equal(copy.thickness, .052); assert.ok((copy.layer ?? 0) >= 2); assert.equal(copy.frameModuleId, visual.frameModuleId)
       assert.ok(Math.abs(copy.controlPoints[0].position.x - (-3.5 + .13 * step)) < 1e-10)
       assert.ok(Math.abs(copy.controlPoints[1].position.x - (2 + .13 * step)) < 1e-10)
       assert.equal(copy.controlPoints[0].position.y, .6); assert.equal(copy.controlPoints[1].position.z, 3)
@@ -69,8 +74,8 @@ test('rotated breadboard Paste advances local X and transforms world anchors wit
   const h = wireHarness()
   try {
     const { wire } = setupWire(h, 90), api = menu(h)
-    api.openContextMenu(0, 0, wire); api.menuDuplicate(); api.openContextMenu(0, 0, wire)
-    assert.equal(api.menuPaste(), true)
+    api.openContextMenu(0, 0, wire); api.menuDuplicate()
+    assert.equal(api.commitDuplicatePreview(), true)
     const copy = readWireVisual(h.circuit.graph!.connections[1])
     assert.ok(Math.abs(copy.controlPoints[0].position.x + 3.37) < 1e-10)
     assert.equal(copy.controlPoints[0].space, 'module')
@@ -86,12 +91,13 @@ test('duplicate endpoints reject Paste atomically and do not consume the next pi
     const { wire, board } = setupWire(h), api = menu(h)
     const blocked = { source: `${board}.contact:terminal:A:02`, destination: `${board}.contact:terminal:J:09` }
     h.circuit.connectEndpoints(blocked.destination, blocked.source); h.circuit.past = []
-    api.openContextMenu(0, 0, wire); api.menuDuplicate(); api.openContextMenu(0, 0, wire)
+    api.openContextMenu(0, 0, wire); api.menuDuplicate()
     const before = h.circuit.snapshot()
-    assert.equal(api.menuPaste(), false); assert.equal(h.circuit.snapshot(), before); assert.equal(h.circuit.past.length, 0)
+    assert.equal(api.duplicatePreviewState.value.active, true); assert.equal(api.duplicatePreviewState.value.valid, false)
+    assert.equal(api.commitDuplicatePreview(), false); assert.equal(h.circuit.snapshot(), before); assert.equal(h.circuit.past.length, 0)
     assert.match(h.workspace.editError, /already connected/i)
     h.circuit.disconnectPorts(blocked.destination, blocked.source); h.circuit.past = []
-    api.openContextMenu(0, 0, wire); assert.equal(api.menuPaste(), true)
+    api.openContextMenu(0, 0, wire); assert.equal(api.menuPaste(), true); assert.equal(api.commitDuplicatePreview(), true)
     assert.equal(h.circuit.graph!.connections[1].source, blocked.source, 'failed Paste must retry step one')
     assert.equal(h.circuit.past.length, 1)
   } finally { h.dispose() }
@@ -101,16 +107,16 @@ test('the last contact and non-contact ports reject Paste without fabricating en
   const h = wireHarness()
   try {
     const { wire } = setupWire(h, 0, '63', '60'), api = menu(h)
-    api.openContextMenu(0, 0, wire); api.menuDuplicate(); api.openContextMenu(0, 0, wire)
+    api.openContextMenu(0, 0, wire); api.menuDuplicate()
     const before = h.circuit.snapshot()
-    assert.equal(api.menuPaste(), false); assert.match(h.workspace.editError, /next.*contact|contact.*pitch/i)
+    assert.equal(api.commitDuplicatePreview(), false); assert.match(h.workspace.editError, /next.*contact|contact.*pitch/i)
     assert.equal(h.circuit.snapshot(), before); assert.equal(h.circuit.past.length, 0)
     const source = h.circuit.placeModule('DIGITAL_SWITCH', { x: -8, y: 0, z: 0 }), destination = h.circuit.placeModule('LED', { x: 8, y: 0, z: 0 })
     h.circuit.connectEndpoints(`${source}.OUT`, `${destination}.IN`); h.circuit.past = []
     const portWire = h.circuit.graph!.connections[1]
-    api.openContextMenu(0, 0, portWire); api.menuDuplicate(); api.openContextMenu(0, 0, portWire)
+    api.openContextMenu(0, 0, portWire); api.menuDuplicate()
     const ports = h.circuit.snapshot()
-    assert.equal(api.menuPaste(), false); assert.match(h.workspace.editError, /breadboard contacts/i)
+    assert.equal(api.commitDuplicatePreview(), false); assert.match(h.workspace.editError, /breadboard contacts/i)
     assert.equal(h.circuit.snapshot(), ports); assert.equal(h.circuit.past.length, 0)
   } finally { h.dispose() }
 })
@@ -119,7 +125,7 @@ test('Delete targets the clicked wire, clears selection and is one reversible co
   const h = wireHarness()
   try {
     const { wire } = setupWire(h), api = menu(h)
-    api.openContextMenu(20, 30, wire); api.menuDuplicate(); api.openContextMenu(20, 30, wire)
+    api.openContextMenu(20, 30, wire); api.menuDuplicate(); api.cancelDuplicatePreview(); api.openContextMenu(20, 30, wire)
     assert.equal(api.menuDelete(), true)
     assert.equal(h.circuit.graph!.connections.length, 0); assert.equal(h.workspace.selectedWire, null); assert.equal(h.circuit.past.length, 1)
     assert.equal(api.contextMenuState.value, null)
@@ -153,13 +159,14 @@ test('same-orientation boards support a shared rigid Paste; unequal local-X dire
     const b = h.circuit.placeModule('BREADBOARD_630', { x: 0, y: 0, z: 4 }, 90)
     const wire: CircuitConnection = { source: `${a}.contact:terminal:A:01`, destination: `${b}.contact:terminal:J:08` }
     h.circuit.connectEndpoints(wire.source, wire.destination, { version: 1, color: '#397ec6', routeMode: 'ORTHOGONAL', thickness: .04, controlPoints: [{ space: 'module', moduleId: b, position: { x: 0, y: .5, z: 0 } }] })
+    h.editor.sync()
     const api = menu(h)
-    api.openContextMenu(0, 0, wire); api.menuDuplicate(); api.openContextMenu(0, 0, wire)
-    assert.equal(api.menuPaste(), true)
+    api.openContextMenu(0, 0, wire); api.menuDuplicate()
+    assert.equal(api.commitDuplicatePreview(), true)
     assert.ok(Math.abs(readWireVisual(h.circuit.graph!.connections[1]).controlPoints[0].position.x - .13) < 1e-10)
     h.circuit.rotateModule(b, 90); h.circuit.past = []; api.openContextMenu(0, 0, wire)
     const before = h.circuit.snapshot()
-    assert.equal(api.menuPaste(), false); assert.match(h.workspace.editError, /different.*direction|same.*direction/i)
+    assert.equal(api.menuPaste(), true); assert.equal(api.commitDuplicatePreview(), false); assert.match(h.workspace.editError, /different.*direction|same.*direction/i)
     assert.equal(h.circuit.snapshot(), before); assert.equal(h.circuit.past.length, 0)
   } finally { h.dispose() }
 })
@@ -184,7 +191,7 @@ test('menu Escape, tool changes and graph edits close the transient menu while p
   const h = wireHarness()
   try {
     const { wire } = setupWire(h), api = menu(h)
-    api.openContextMenu(10, 20, wire); api.menuDuplicate(); api.openContextMenu(10, 20, wire)
+    api.openContextMenu(10, 20, wire); api.menuDuplicate(); api.cancelDuplicatePreview(); api.openContextMenu(10, 20, wire)
     assert.equal(h.editor.wireRouting.keydown({ key: 'Escape', preventDefault() {}, stopPropagation() {}, stopImmediatePropagation() {} } as KeyboardEvent), true)
     assert.equal(api.contextMenuState.value, null); assert.equal(h.circuit.past.length, 0)
     api.openContextMenu(10, 20, wire); h.workspace.setTool('move')

@@ -23,6 +23,10 @@ function zoomToArea() {
   workspace.toggleZoomArea()
   if (workspace.zoomAreaActive) void nextTick(() => document.querySelector<HTMLCanvasElement>('canvas[aria-label="Three-dimensional circuit workspace"]')?.focus())
 }
+function marqueeSelect() {
+  workspace.toggleMarquee()
+  if (workspace.marqueeActive) void nextTick(() => document.querySelector<HTMLCanvasElement>('canvas[aria-label="Three-dimensional circuit workspace"]')?.focus())
+}
 </script>
 <template>
   <footer class="simulation-statusbar" aria-label="Simulation status">
@@ -37,6 +41,7 @@ function zoomToArea() {
       <button aria-label="Zoom Out" title="Zoom Out" :disabled="workspace.zoom <= ZOOM_MIN" @click="workspace.setZoom(workspace.zoom - ZOOM_STEP)"><WorkbenchIcon name="minus" /></button>
       <output aria-label="Workspace magnification">{{ workspace.zoom }}%</output>
       <button aria-label="Zoom In" title="Zoom In" :disabled="workspace.zoom >= ZOOM_MAX" @click="workspace.setZoom(workspace.zoom + ZOOM_STEP)"><WorkbenchIcon name="plus" /></button>
+      <button aria-label="Marquee Select" title="Marquee Select" :aria-pressed="workspace.marqueeActive" @click="marqueeSelect"><WorkbenchIcon name="marquee-select" /></button>
       <button aria-label="Zoom To View Entire Circuit" title="Zoom To View Entire Circuit" :disabled="!circuit.graph?.modules.length" @click="workspace.fitEntireCircuit()"><WorkbenchIcon name="reset" /></button>
       <button aria-label="Zoom To Area" title="Zoom To Area" :aria-pressed="workspace.zoomAreaActive" @click="zoomToArea"><WorkbenchIcon name="zoom-area" /></button>
     </div>

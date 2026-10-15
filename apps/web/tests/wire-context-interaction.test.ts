@@ -55,3 +55,58 @@ test('drawing, placement and zoom cancellation win over wire menus while empty r
     assert.equal(h.editor.wireRouting.contextMenuState.value, null, 'ending Orbit over a wire does not open a menu')
   } finally { h.dispose() }
 })
+
+test('editor pointer priority commits and repeats duplicate previews; invalid click and right cancel never open another menu', async () => {
+  const { h, board, wire, p } = await setupWire()
+  try {
+    h.editor.pointerDown(h.pointer(p.x, p.y, 1, 2))
+    assert.equal(h.editor.wireRouting.menuDuplicate(), true)
+    assert.equal(h.editor.wireRouting.duplicatePreviewState.value.active, true)
+    assert.equal(h.circuit.graph!.connections.length, 1); assert.equal(h.circuit.past.length, 0)
+    h.editor.pointerDown(h.pointer(p.x, p.y)); h.editor.pointerUp(h.pointer(p.x, p.y))
+    await nextTick(); h.flush()
+    assert.equal(h.circuit.graph!.connections.length, 2); assert.equal(h.circuit.past.length, 1)
+    assert.equal(h.editor.wireRouting.duplicatePreviewState.value.active, true, 'root graph watcher preserves its own committed preview session')
+    assert.equal(h.editor.wireRouting.duplicatePreviewState.value.candidate!.wire.source, `${board}.contact:terminal:A:03`)
+    // Moving back to the source would recreate the original edge. A left click
+    // cannot select that edge, add history, or advance the next paste offset.
+    h.editor.pointerMove(h.endpointEvent(wire.source))
+    assert.equal(h.editor.wireRouting.duplicatePreviewState.value.valid, false)
+    h.editor.pointerDown(h.endpointEvent(wire.source)); await nextTick()
+    assert.equal(h.circuit.graph!.connections.length, 2); assert.equal(h.circuit.past.length, 1)
+    const right = h.pointer(p.x, p.y, 1, 2)
+    h.editor.pointerDown(right)
+    h.editor.contextMenu(right as unknown as MouseEvent)
+    assert.equal(h.editor.wireRouting.duplicatePreviewState.value.active, false)
+    assert.equal(h.editor.wireRouting.contextMenuState.value, null)
+    assert.equal(h.editor.wireRouting.canPaste.value, true)
+    h.editor.pointerDown(right); assert.ok(h.editor.wireRouting.contextMenuState.value)
+    h.editor.wireRouting.menuPaste()
+    assert.equal(h.circuit.graph!.connections.length, 2, 'Paste opens a ghost without connecting')
+    assert.equal(h.editor.wireRouting.duplicatePreviewState.value.candidate!.wire.source, `${board}.contact:terminal:A:03`)
+    h.editor.pointerDown(h.pointer(p.x, p.y)); await nextTick()
+    assert.equal(h.circuit.graph!.connections.length, 3); assert.equal(h.circuit.past.length, 2)
+    h.editor.keydown({ key: 'Escape', preventDefault() {}, stopPropagation() {}, stopImmediatePropagation() {} } as KeyboardEvent)
+    assert.equal(h.editor.wireRouting.duplicatePreviewState.value.active, false); assert.equal(h.editor.wireRouting.canPaste.value, true)
+  } finally { h.dispose() }
+})
+
+test('native double-click after repeated pastes cannot enter bend editing or delete the selected committed wire', async () => {
+  const { h, wire } = await setupWire()
+  try {
+    h.manager.setZoom(50)
+    h.editor.wireRouting.openContextMenu(0, 0, wire); h.editor.wireRouting.menuDuplicate(); h.flush()
+    const route = h.manager.scene.getObjectByName('wire-duplicate-preview')!.userData.route as { segments: { editable: boolean; start: Vector3; end: Vector3 }[] }
+    const segment = route.segments.filter(item => item.editable).sort((a, b) => Math.hypot(b.end.x - b.start.x, b.end.z - b.start.z) - Math.hypot(a.end.x - a.start.x, a.end.z - a.start.z))[0]
+    const p = h.manager.project(new Vector3(segment.start.x, segment.start.y, segment.start.z).lerp(new Vector3(segment.end.x, segment.end.y, segment.end.z), .5))
+    const click = h.pointer(p.x, p.y)
+    for (let i = 0; i < 2; i++) { h.editor.pointerDown(click); h.editor.pointerUp(click); await nextTick(); h.flush() }
+    assert.ok(h.manager.pickWireEdit(p.x, p.y, h.workspace.selectedWire!), 'fixture reaches an editable segment under the next ghost')
+    const graph = h.circuit.exportGraph(), history = h.circuit.past.length
+    h.editor.wireRouting.doubleClick(click as unknown as MouseEvent); await nextTick()
+    assert.equal(h.circuit.exportGraph(), graph); assert.equal(h.circuit.past.length, history)
+    assert.equal(h.editor.wireRouting.duplicatePreviewState.value.active, true)
+    h.editor.keydown({ key: 'Delete', preventDefault() {}, stopPropagation() {}, stopImmediatePropagation() {} } as KeyboardEvent)
+    assert.equal(h.circuit.exportGraph(), graph); assert.equal(h.circuit.past.length, history)
+  } finally { h.dispose() }
+})

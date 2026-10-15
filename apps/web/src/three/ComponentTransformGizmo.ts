@@ -34,9 +34,9 @@ const segmentDistance = (x: number, y: number, a: { x: number; y: number }, b: {
 }
 
 const ARC_RADIUS = 1.35, ARC_START = Math.PI + .14, ARC_END = Math.PI * 2.5, ARC_KNOB_RADIUS = .16
-const AXIS_OFFSET = .95, FREE_HALF_SIZE = .29, ROTATION_GRIP = new Vector3(-ARC_RADIUS - ARC_KNOB_RADIUS, 0, 0)
-// Keep the rounded silhouette in the XZ plane. Geometry, marker positions and
-// placement capture use these same footprints instead of independent hit proxies.
+const AXIS_OFFSET = .95, FREE_HALF_SIZE = .29, GRIP_RADIUS = ARC_RADIUS * .8
+// Keep the rounded silhouette in the XZ plane. The Y knob has an invisible
+// spherical target so its hollow rim remains usable in a nearly edge-on view.
 function roundedFootprint(points: readonly [number, number][], rounding: number) {
   const shape = new Shape()
   points.forEach(([x, z], i) => {
@@ -61,7 +61,9 @@ export function createComponentTransformGizmo() {
   let approach: { handle: TransformHandle; start: { x: number; y: number }; travel: number } | null = null
   let captureCorridor: { start: { x: number; y: number }; end: { x: number; y: number } } | null = null
   const clearCapture = () => { placementCaptured = false; approach = null; captureCorridor = null; previousPointer = null }
-  const material = (color: string, pickOnly = false) => new MeshBasicMaterial({ color, depthTest: false, depthWrite: false, toneMapped: false, transparent: pickOnly, opacity: pickOnly ? 0 : 1 })
+  // The grid is transparent. Opaque tools are drawn before its separate pass,
+  // even with a larger renderOrder. Share that pass, then order the overlay last.
+  const material = (color: string, pickOnly = false) => new MeshBasicMaterial({ color, depthTest: false, depthWrite: false, toneMapped: false, transparent: true, opacity: pickOnly ? 0 : 1 })
   const handle = (id: TransformHandle, color: string, point: Vector3) => {
     const group = new Group(); group.userData.transformHandle = id; group.userData.color = color
     handles.set(id, group); markers.set(id, point); root.add(group); return group
@@ -84,20 +86,22 @@ export function createComponentTransformGizmo() {
   }
   const free = handle('xz', '#00bce7', new Vector3())
   button(free, 'xz', [[-FREE_HALF_SIZE, -FREE_HALF_SIZE], [FREE_HALF_SIZE, -FREE_HALF_SIZE], [FREE_HALF_SIZE, FREE_HALF_SIZE], [-FREE_HALF_SIZE, FREE_HALF_SIZE]], '#00bce7', '#008ead')
-  const rotate = handle('rotate-y', '#ffd10b', ROTATION_GRIP)
+  const rotationGrip = new Vector3(-GRIP_RADIUS, 0, 0)
+  const rotate = handle('rotate-y', '#ffd10b', rotationGrip)
   const rotationPoint = (angle: number) => new Vector3(Math.cos(angle) * ARC_RADIUS, 0, Math.sin(angle) * ARC_RADIUS)
-  // Start at the hollow knob's rim: no line crosses its hole or the open quadrant.
+  // Keep the open arc independent of the inward grip: no line crosses its hole.
   const arc = add(rotate, new Mesh(new TorusGeometry(ARC_RADIUS, .044, 12, 96, ARC_END - ARC_START), material('#ffd10b')))
   arc.name = 'rotation-arc'; arc.rotation.x = Math.PI / 2; arc.rotation.z = ARC_START
   for (const [name, angle] of [['rotation-start-cap', ARC_START], ['rotation-end-cap', ARC_END]] as const) {
     const cap = add(rotate, new Mesh(new SphereGeometry(.044, 16, 10), material('#ffd10b')))
     cap.name = name; cap.position.copy(rotationPoint(angle))
   }
-  // Keep the real rim pickable when a camera ray aligns with a tessellation
-  // meridian: either torus surface is valid for this overlay, never its hole.
+  // Either torus surface is visible for this overlay, including side views.
   const gripMaterial = material('#ffd10b'); gripMaterial.side = DoubleSide
   const grip = add(rotate, new Mesh(new TorusGeometry(ARC_KNOB_RADIUS, .045, 12, 48), gripMaterial))
-  grip.name = 'rotation-knob'; grip.rotation.x = Math.PI / 2; grip.position.x = -ARC_RADIUS; grip.renderOrder = 22
+  grip.name = 'rotation-knob'; grip.rotation.x = Math.PI / 2; grip.position.copy(rotationGrip); grip.renderOrder = 22
+  const gripTarget = add(rotate, new Mesh(new SphereGeometry(.28, 16, 12), material('#ffd10b', true)), true)
+  gripTarget.name = 'rotation-knob-target'; gripTarget.position.copy(rotationGrip)
   const deleteBtn = handle('delete', '#ff473d', new Vector3(1.42, 0, 1.42))
   const deleteBase = add(deleteBtn, new Mesh(new CylinderGeometry(0.30, 0.30, 0.05, 32), material('#19222b')))
   deleteBase.renderOrder = 19; deleteBase.userData.fixedColor = true; deleteBase.position.set(1.42, 0.025, 1.42)
@@ -118,6 +122,28 @@ export function createComponentTransformGizmo() {
     }
   }
   const pixelScale = (point: Vector3, camera: PerspectiveCamera, height: number) => Math.max(0.1, -point.clone().applyMatrix4(camera.matrixWorldInverse).z) * 2 * Math.tan(camera.fov * Math.PI / 360) / (height * camera.zoom) * 42
+  // The ring follows yaw; the grip prefers the same yaw but must clear the fixed
+  // world-axis buttons. Evaluate their projected bounds so a side view cannot
+  // collapse the inward grip onto a triangle or the free-movement square.
+  const buttonBounds = [...handles].filter(([id]) => id !== 'rotate-y').map(([, group]) => ({ group, box: new Box3().setFromObject(group) }))
+  const updateGrip = (camera: PerspectiveCamera, width: number, height: number) => {
+    const screen = (point: Vector3) => { point.project(camera); return { x: (point.x + 1) * width / 2, y: (1 - point.y) * height / 2 } }
+    const areas = buttonBounds.filter(({ group }) => group.visible).map(({ box }) => {
+      const points: { x: number; y: number }[] = []
+      for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) points.push(screen(root.localToWorld(new Vector3(x, y, z))))
+      return { left: Math.min(...points.map(p => p.x)), right: Math.max(...points.map(p => p.x)), top: Math.min(...points.map(p => p.y)), bottom: Math.max(...points.map(p => p.y)) }
+    })
+    let best = Math.PI, clearance = -Infinity
+    for (let step = 0; step <= 24; step++) {
+      const angle = Math.PI + Math.ceil(step / 2) * (step % 2 ? 1 : -1) * Math.PI / 12
+      const point = screen(rotate.localToWorld(new Vector3(Math.cos(angle) * GRIP_RADIUS, 0, Math.sin(angle) * GRIP_RADIUS)))
+      const gap = Math.min(...areas.map(area => Math.max(area.left - point.x, point.x - area.right, area.top - point.y, point.y - area.bottom)))
+      if (gap > clearance) { best = angle; clearance = gap }
+      if (gap >= 14) break
+    }
+    rotationGrip.set(Math.cos(best) * GRIP_RADIUS, 0, Math.sin(best) * GRIP_RADIUS)
+    grip.position.copy(rotationGrip); gripTarget.position.copy(rotationGrip); rotate.updateMatrixWorld(true)
+  }
   const projectedBounds = (corners: Vector3[], model: Group, camera: PerspectiveCamera, width: number, height: number) => {
     let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity
     for (const corner of corners) {
@@ -134,10 +160,10 @@ export function createComponentTransformGizmo() {
     for (const [id, group] of handles) group.visible = model.userData.kind !== 'placement' || id !== 'delete'
     if (selectedId !== model.userData.id) { hovered = null; active = null; lockedOffset = null; paint() }
     selectedId = model.userData.id; root.visible = true; camera.updateMatrixWorld()
-    // World X/Z movement stays fixed. Only the Y ring and grip track object yaw,
-    // including live previews while the gesture center is locked.
+    // World X/Z movement stays fixed. The Y ring tracks object yaw, including
+    // live previews with a locked center; updateGrip keeps its knob clear.
     rotate.rotation.y = model.rotation.y
-    if (active && lockedOffset) { root.position.copy(model.position).add(lockedOffset); root.scale.setScalar(pixelScale(root.position, camera, height)); root.updateMatrixWorld(true); return }
+    if (active && lockedOffset) { root.position.copy(model.position).add(lockedOffset); root.scale.setScalar(pixelScale(root.position, camera, height)); root.updateMatrixWorld(true); updateGrip(camera, width, height); return }
     const cached = placementLayout
     const sameCamera = cached && cached.cameraWorld.every((n, i) => n === camera.matrixWorld.elements[i]) && cached.projection.every((n, i) => n === camera.projectionMatrix.elements[i])
     const sameLayout = cached && sameCamera && cached.width === width && cached.height === height && cached.rotation === model.rotation.y && cached.obstacles === obstacles && cached.revision === revision
@@ -146,7 +172,7 @@ export function createComponentTransformGizmo() {
       const screen = root.position.clone().project(camera), px = (screen.x + 1) * width / 2, py = (1 - screen.y) * height / 2
       const scale = pixelScale(root.position, camera, height)
       if (contains(cached.screenCell, px, py) && contains(cached.worldCell, root.position.x, root.position.z) && scale >= cached.scale * 0.8 && scale <= cached.scale * 1.2 && !overlapsModel(px, py, projectedBounds(cached.corners, model, camera, width, height))) {
-        root.scale.setScalar(scale); root.updateMatrixWorld(true); return
+        root.scale.setScalar(scale); root.updateMatrixWorld(true); updateGrip(camera, width, height); return
       }
     }
     const position = model.position
@@ -213,6 +239,7 @@ export function createComponentTransformGizmo() {
       if (cached && !sameLayout) clearCapture()
     }
     root.updateMatrixWorld(true)
+    updateGrip(camera, width, height)
   }
   return {
     root, update,
@@ -231,7 +258,7 @@ export function createComponentTransformGizmo() {
         const angle = ARC_START + i / 24 * (ARC_END - ARC_START), point = screen(rotate.localToWorld(rotationPoint(angle)))
         distance = Math.min(distance, segmentDistance(x, y, previous, point)); previous = point
       }
-      const knob = screen(rotate.localToWorld(ROTATION_GRIP.clone()))
+      const knob = screen(rotate.localToWorld(rotationGrip.clone()))
       distance = Math.min(distance, Math.hypot(x - knob.x, y - knob.y))
       if (captureCorridor && segmentDistance(x, y, captureCorridor.start, captureCorridor.end) <= 42) { placementCaptured = true; return }
       if (distance <= (placementCaptured ? 42 : 26)) { placementCaptured = true; approach = null; captureCorridor = null; return }
@@ -243,7 +270,7 @@ export function createComponentTransformGizmo() {
         const dx = x - last.x, dy = y - last.y, travel = Math.hypot(dx, dy)
         let match: { handle: TransformHandle; point: { x: number; y: number }; alignment: number } | undefined
         if (travel > 0 && travel <= 12) for (const id of ['x', 'z', 'xz', 'rotate-y'] as const) {
-          const point = screen(id === 'rotate-y' ? rotate.localToWorld(ROTATION_GRIP.clone()) : root.localToWorld(markers.get(id)!.clone()))
+          const point = screen(id === 'rotate-y' ? rotate.localToWorld(rotationGrip.clone()) : root.localToWorld(markers.get(id)!.clone()))
           const gx = point.x - last.x, gy = point.y - last.y, length = Math.hypot(gx, gy)
           const alignment = length ? (dx * gx + dy * gy) / (travel * length) : 0
           if (alignment >= 0.995 && (!match || alignment > match.alignment)) match = { handle: id, point, alignment }
@@ -251,13 +278,13 @@ export function createComponentTransformGizmo() {
         if (match) {
           if (approach?.handle !== match.handle) approach = { handle: match.handle, start: last, travel: 0 }
           approach.travel += travel
-          // A hollow knob has a narrow visible rim. Acquire on the first deliberate
-          // aligned step so its rim cannot move into the hole during acquisition.
+          // Acquire on the first deliberate aligned step so placement follow
+          // cannot carry the enlarged grip target away during acquisition.
           if (approach.travel >= 1) { placementCaptured = true; captureCorridor = { start: approach.start, end: match.point }; approach = null }
         } else if (travel > 0) approach = null
       }
     },
-    position(id: TransformHandle) { return root.visible && handles.get(id)!.visible ? id === 'rotate-y' ? rotate.localToWorld(ROTATION_GRIP.clone()) : root.localToWorld(markers.get(id)!.clone()) : null },
+    position(id: TransformHandle) { return root.visible && handles.get(id)!.visible ? id === 'rotate-y' ? rotate.localToWorld(rotationGrip.clone()) : root.localToWorld(markers.get(id)!.clone()) : null },
     origin() { return root.visible ? root.position.clone() : null },
     pick(ray: Raycaster) {
       if (!root.visible || !selectedId) return null

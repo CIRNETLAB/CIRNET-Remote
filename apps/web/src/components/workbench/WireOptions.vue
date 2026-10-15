@@ -11,7 +11,6 @@ withDefaults(defineProps<{
   hint?: string
   layer?: number
   canStack?: boolean
-  canCycleStack?: boolean
   canLowerStack?: boolean
   canRaiseStack?: boolean
 }>(), {
@@ -22,7 +21,6 @@ withDefaults(defineProps<{
   hint: '',
   layer: 0,
   canStack: false,
-  canCycleStack: false,
   canLowerStack: false,
   canRaiseStack: true,
 })
@@ -40,7 +38,6 @@ const emit = defineEmits<{
   remove: []
   routeKey: [event: KeyboardEvent]
   stack: [action: 'up' | 'down' | 'top']
-  cycleStack: []
 }>()
 
 function routeKey(event: KeyboardEvent) {
@@ -158,16 +155,6 @@ function routeKey(event: KeyboardEvent) {
         </button>
       </div>
 
-      <button
-        v-if="canCycleStack"
-        type="button"
-        class="wire-stack-cycle"
-        aria-label="Select next overlapping wire"
-        title="Select next overlapping wire"
-        @click="emit('cycleStack')"
-      >
-        Select next overlapping wire
-      </button>
     </div>
   </section>
 </template>
@@ -365,23 +352,4 @@ function routeKey(event: KeyboardEvent) {
   outline-offset: 2px;
 }
 
-.wire-stack-cycle {
-  margin-top: 8px;
-  width: 100%;
-  padding: 6px 8px;
-  font-size: 10.5px;
-  background: #14202c;
-  border: 1px solid #2d3e4f;
-  border-radius: 4px;
-  color: #8ea1b4;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  text-align: center;
-}
-
-.wire-stack-cycle:hover {
-  background: #1c2c3c;
-  color: #d7dce2;
-  border-color: #4a6278;
-}
 </style>

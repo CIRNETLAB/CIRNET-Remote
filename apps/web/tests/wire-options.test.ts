@@ -97,6 +97,9 @@ test('palette keyboard forwards Escape and draft bend deletion while preserving 
 
 test('new wire options default to manual Free and explain each routing mode', async () => {
   const component = await loadSfc('components/workbench/WireOptions.vue')
+  const options = component as { props?: Record<string, unknown>; emits?: string[] }
+  assert.equal(Object.hasOwn(options.props ?? {}, 'canCycleStack'), false)
+  assert.equal((options.emits ?? []).includes('cycleStack'), false)
   const free = mountSfc(component, createPinia())
   try {
     const manualBtn = free.find('button', 'aria-label', 'Manual route mode')
@@ -149,13 +152,11 @@ test('five icon buttons and layer controls reflect disabled states and prioritie
     canAdd: true,
     canRemove: true,
     canStack: true,
-    canCycleStack: true,
     canLowerStack: true,
     canRaiseStack: true,
     onAdd: () => actions.push('add'),
     onRemove: () => actions.push('remove'),
     onStack: (action: string) => actions.push(action),
-    onCycleStack: () => actions.push('cycle'),
   })
   try {
     assert.ok(activeView.text().includes('Priority 3'))
@@ -164,9 +165,9 @@ test('five icon buttons and layer controls reflect disabled states and prioritie
     dispatch(activeView.find('button', 'aria-label', 'Lower wire priority'), 'onClick')
     dispatch(activeView.find('button', 'aria-label', 'Raise wire priority'), 'onClick')
     dispatch(activeView.find('button', 'aria-label', 'Move wire above overlapping wires'), 'onClick')
-    dispatch(activeView.find('button', 'aria-label', 'Select next overlapping wire'), 'onClick')
-
-    assert.deepEqual(actions, ['add', 'remove', 'down', 'up', 'top', 'cycle'])
+    assert.equal(activeView.all().some(node => node.tag === 'button' && node.props['aria-label'] === 'Select next overlapping wire'), false)
+    assert.equal(activeView.text().includes('Select next overlapping wire'), false)
+    assert.deepEqual(actions, ['add', 'remove', 'down', 'up', 'top'])
   } finally {
     activeView.app.unmount()
   }

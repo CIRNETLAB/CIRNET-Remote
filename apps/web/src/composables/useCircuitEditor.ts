@@ -22,6 +22,7 @@ interface DragGesture { pointer: number; start: { x: number; y: number }; dragge
 interface MoveGesture extends DragGesture { kind: 'move'; id: string; draft: string | null; planeHeight: number; offset: Position; position: Position }
 interface PanGesture extends DragGesture { kind: 'pan'; anchor: Vector3; selection?: { moduleId: string; graph: CircuitGraph; draft: string | null } }
 interface ZoomAreaGesture extends DragGesture { kind: 'zoom-area'; end: { x: number; y: number } }
+interface MarqueeGesture extends DragGesture { kind: 'marquee'; end: { x: number; y: number } }
 interface ControlGesture extends DragGesture {
   kind: 'control'; id: string; draft: string | null; control: SupplyControl; initial: number | boolean; value: number | boolean
   axis: 'x' | 'y' | null; last: { x: number; y: number }; raw: number
@@ -66,14 +67,15 @@ export function snapPosition(
 export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, manager: () => Manager | undefined) {
   const circuit = useCircuitStore(), workspace = useWorkspaceStore(), ui = useUiStore()
   const wireRouting = useWireRouting(canvas, manager)
-  let gesture: MoveGesture | PanGesture | TransformGesture | ControlGesture | ZoomAreaGesture | null = null
+  let gesture: MoveGesture | PanGesture | TransformGesture | ControlGesture | ZoomAreaGesture | MarqueeGesture | null = null
   // A pose only: never a graph module, electrical identity or history entry.
   let placementDraft: PlacementDraft | null = null
   // A right drag that starts on empty space belongs to Orbit, even if it ends
   // over a wire. The native contextmenu may arrive after that drag completes.
   let suppressWireContext = false
-  const dragging = ref<'move' | 'pan' | 'transform' | 'control' | 'zoom-area' | null>(null)
+  const dragging = ref<'move' | 'pan' | 'transform' | 'control' | 'zoom-area' | 'marquee' | null>(null)
   const zoomAreaRect = ref<{ left: number; top: number; width: number; height: number } | null>(null)
+  const marqueeRect = ref<{ left: number; top: number; width: number; height: number } | null>(null)
   const hoveredHandle = ref<TransformHandle | null>(null)
   const hoveredControl = ref<SupplyControl | null>(null)
   const mountHint = ref('')
@@ -108,7 +110,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
   function clearPlacement() { placementDraft = null; mountHint.value = ''; manager()?.setGhost(null); manager()?.setMountPreview?.(null) }
   const placementPoint = (x: number, y: number, type?: string) => getPartForType(type ?? '') ? manager()?.placementPoint?.(x, y) ?? manager()?.groundPoint(x, y) : manager()?.groundPoint(x, y)
   function updatePorts() {
-    if (workspace.zoomAreaActive) { ports.value = []; return }
+    if (workspace.zoomAreaActive || workspace.marqueeActive || wireRouting.duplicatePreviewState.value.active) { ports.value = []; return }
     const next: typeof ports.value = []
     for (const module of circuit.graph?.modules ?? []) {
       if (getPartForType(module.type)) continue // Physical picking/highlighting stays in Three.js; no DOM per pin.
@@ -122,26 +124,30 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     }
     ports.value = next
   }
-  function sync() { manager()?.syncGraph(circuit.graph); manager()?.highlight(workspace.selectedModuleId, workspace.selectedWire); updatePorts() }
+  function highlightSelection() {
+    manager()?.highlight(workspace.selectedModuleId, workspace.selectedWire)
+    if (workspace.selectedModuleIds.length || workspace.selectedWires.length) manager()?.highlightSelection(workspace.selectedModuleIds, workspace.selectedWires)
+  }
+  function sync() { manager()?.syncGraph(circuit.graph); highlightSelection(); updatePorts() }
   function cancelGesture() {
     if (gesture?.kind === 'transform' && gesture.target === 'placement' && placementDraft) {
       placementDraft.position = gesture.initial; placementDraft.rotation = gesture.initialRotation
     }
     if (gesture) { const pointer = gesture.pointer; gesture = null; dragging.value = null; manager()?.activateGizmo(null); manager()?.lockPointer(false); if (canvas.value?.hasPointerCapture(pointer)) canvas.value.releasePointerCapture(pointer); sync() }
-    zoomAreaRect.value = null; manager()?.lockPointer(false)
+    zoomAreaRect.value = null; marqueeRect.value = null; manager()?.lockPointer(false)
     hoveredHandle.value = null; hoveredControl.value = null; manager()?.clearGizmoHover()
     showPlacement()
   }
-  function cancel() { workspace.cancelZoomArea(); wireRouting.cancel(); cancelGesture() }
+  function cancel() { workspace.cancelZoomArea(); workspace.cancelMarquee(true); wireRouting.cancel(); cancelGesture() }
   function cancelPlacement() { cancel(); workspace.cancelPlacement(); clearPlacement(); workspace.editError = '' }
   function lostPointerCapture(event: PointerEvent) { if (wireRouting.lostPointerCapture(event)) return; if (gesture?.pointer === event.pointerId) { cancel(); clearPlacement() } }
   function contextMenu(event: MouseEvent) {
     if (wireRouting.contextMenu(event)) { suppressWireContext = false; return }
     event.preventDefault()
     if (workspace.placementType) cancelPlacement()
-    else if (workspace.zoomAreaActive) cancel()
+    else if (workspace.zoomAreaActive || workspace.marqueeActive) cancel()
     else if (!suppressWireContext && !gesture && canvas.value && manager() && Number.isFinite(event.clientX) && Number.isFinite(event.clientY)) {
-      const { x, y } = coordinates(event), hit = manager()!.pick(x, y)
+      const { x, y } = coordinates(event), hit = manager()!.pickGizmo(x, y) ? null : manager()!.pick(x, y)
       if (hit?.kind === 'wire') wireRouting.openContextMenu(x, y, hit)
     }
     suppressWireContext = false
@@ -152,20 +158,24 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     return { x: Math.max(0, Math.min(rect.width, event.clientX - rect.left)), y: Math.max(0, Math.min(rect.height, event.clientY - rect.top)) }
   }
   function connect(endpoint: string) {
+    if (wireRouting.duplicatePreviewState.value.active) return
     wireRouting.connect(endpoint)
   }
   function place(type: string, position: Position, rotation: number) { attempt(() => { const id = circuit.placeModule(type, position, rotation, workspace.placementProperties ?? undefined); workspace.selectModule(id); clearPlacement(); sync() }) }
   function pointerDown(event: PointerEvent) {
     if (event.button === 2) suppressWireContext = true
     wireRouting.closeContextMenu()
-    if (workspace.zoomAreaActive) {
+    if (workspace.zoomAreaActive || workspace.marqueeActive) {
       event.preventDefault?.(); event.stopImmediatePropagation?.()
       if (event.button === 2) { cancel(); return }
       if (event.button !== 0 || gesture || !manager() || !canvas.value) return
       const start = areaCoordinates(event)
       if (!start) return
-      canvas.value.focus(); gesture = { kind: 'zoom-area', pointer: event.pointerId, start, end: start, dragged: false }
-      zoomAreaRect.value = { left: start.x, top: start.y, width: 0, height: 0 }
+      const kind = workspace.marqueeActive ? 'marquee' : 'zoom-area'
+      canvas.value.focus(); gesture = { kind, pointer: event.pointerId, start, end: start, dragged: false }
+      const rectangle = { left: start.x, top: start.y, width: 0, height: 0 }
+      if (kind === 'marquee') marqueeRect.value = rectangle
+      else zoomAreaRect.value = rectangle
       manager()!.lockPointer(true); canvas.value.setPointerCapture(event.pointerId)
       return
     }
@@ -178,7 +188,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     }
     if (!gesture && !workspace.placementType && wireRouting.pointerDown(event)) return
     if (event.button === 2 && !gesture && manager() && canvas.value) {
-      const { x, y } = coordinates(event), hit = manager()!.pick(x, y)
+      const { x, y } = coordinates(event), hit = manager()!.pickGizmo(x, y) ? null : manager()!.pick(x, y)
       if (hit?.kind === 'wire') {
         event.preventDefault?.(); event.stopPropagation?.(); event.stopImmediatePropagation?.()
         canvas.value.focus(); wireRouting.openContextMenu(x, y, hit); return
@@ -251,14 +261,16 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     if (!manager() || !canvas.value) return
     if (!gesture && wireRouting.pointerMove(event)) return
     const { x, y } = coordinates(event)
-    if (workspace.zoomAreaActive && !gesture) return
+    if ((workspace.zoomAreaActive || workspace.marqueeActive) && !gesture) return
     if (gesture) {
       if (event.pointerId !== gesture.pointer) return
-      if (gesture.kind === 'zoom-area') {
+      if (gesture.kind === 'zoom-area' || gesture.kind === 'marquee') {
         const end = areaCoordinates(event)
         if (!end) { cancel(); return }
-        gesture.end = end; gesture.dragged = true; dragging.value = 'zoom-area'
-        zoomAreaRect.value = { left: Math.min(gesture.start.x, end.x), top: Math.min(gesture.start.y, end.y), width: Math.abs(end.x - gesture.start.x), height: Math.abs(end.y - gesture.start.y) }
+        gesture.end = end; gesture.dragged = true; dragging.value = gesture.kind
+        const rectangle = { left: Math.min(gesture.start.x, end.x), top: Math.min(gesture.start.y, end.y), width: Math.abs(end.x - gesture.start.x), height: Math.abs(end.y - gesture.start.y) }
+        if (gesture.kind === 'marquee') marqueeRect.value = rectangle
+        else zoomAreaRect.value = rectangle
         return
       }
       const threshold = gesture.kind === 'control' && gesture.control !== 'power_on' ? 1 : 4
@@ -371,6 +383,13 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       manager()?.lockPointer(workspace.zoomAreaActive); updatePorts()
       return
     }
+    if (completed.kind === 'marquee') {
+      marqueeRect.value = null
+      const rectangle = { left: Math.min(completed.start.x, completed.end.x), top: Math.min(completed.start.y, completed.end.y), right: Math.max(completed.start.x, completed.end.x), bottom: Math.max(completed.start.y, completed.end.y) }
+      workspace.setMarqueeSelection(completed.dragged && rectangle.right - rectangle.left >= 3 && rectangle.bottom - rectangle.top >= 3 ? manager()!.selectInRect(rectangle) : { moduleIds: [], wires: [] })
+      workspace.cancelMarquee(); highlightSelection(); updatePorts()
+      return
+    }
     if (completed.kind === 'transform' && completed.target === 'placement') return
     if (completed.kind === 'control' && completed.draft === circuit.activeId) {
       if (completed.control !== 'power_on' && completed.dragged) attempt(() => circuit.updateModuleProperties(completed.id, supplyControlPatch(circuit.graph!.modules.find(module => module.id === completed.id)!.type, completed.control, completed.value)))
@@ -403,9 +422,10 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     }
   }
   function keydown(event: KeyboardEvent) {
+    if (workspace.marqueeActive && event.key === 'Escape') { event.preventDefault(); cancel(); return }
     if (wireRouting.keydown(event)) return
     if (event.key === 'Escape') { cancelPlacement(); return }
-    if (workspace.zoomAreaActive) {
+    if (workspace.zoomAreaActive || workspace.marqueeActive) {
       if (['Delete', 'Backspace', 'r', 'R', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) event.preventDefault()
       return
     }
@@ -429,17 +449,19 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
   onUnmounted(() => document.removeEventListener('keydown', escape, true))
   function selectModule(id: string) { cancel(); workspace.selectModule(id); sync() }
   watch(() => circuit.graph, () => {
-    cancel(); clearPlacement()
+    if (!wireRouting.consumeDuplicateGraphChange(circuit.graph)) cancel()
+    clearPlacement()
     if (workspace.selectedModuleId && !circuit.graph?.modules.some((module) => module.id === workspace.selectedModuleId)) workspace.selectedModuleId = null
     if (workspace.pendingPort && !circuit.graph?.modules.some((module) => module.id === workspace.pendingPort!.split('.')[0])) workspace.pendingPort = null
     if (workspace.selectedWire && !circuit.graph?.connections.some((wire) => wire.source === workspace.selectedWire!.source && wire.destination === workspace.selectedWire!.destination)) workspace.selectedWire = null
     sync()
   }, { deep: true })
-  watch(() => [workspace.tool, workspace.placementType], () => { cancelGesture(); clearPlacement(); manager()?.lockPointer(workspace.zoomAreaActive); updatePorts() }, { flush: 'sync' })
+  watch(() => [workspace.tool, workspace.placementType], () => { cancelGesture(); clearPlacement(); manager()?.lockPointer(workspace.zoomAreaActive || workspace.marqueeActive); updatePorts() }, { flush: 'sync' })
   watch(() => workspace.zoomAreaActive, (active) => { cancelGesture(); manager()?.lockPointer(active); updatePorts() })
-  watch(() => [workspace.selectedModuleId, workspace.selectedWire], () => {
-    if (gesture && gesture.kind !== 'pan' && gesture.kind !== 'zoom-area' && !(gesture.kind === 'transform' && gesture.target === 'placement') && gesture.id !== workspace.selectedModuleId) cancel()
-    manager()?.highlight(workspace.selectedModuleId, workspace.selectedWire); updatePorts()
+  watch(() => workspace.marqueeActive, (active) => { cancelGesture(); if (active) wireRouting.cancel(); manager()?.lockPointer(active); updatePorts() })
+  watch(() => [workspace.selectedModuleId, workspace.selectedWire, workspace.selectedModuleIds, workspace.selectedWires], () => {
+    if (gesture && gesture.kind !== 'pan' && gesture.kind !== 'zoom-area' && gesture.kind !== 'marquee' && !(gesture.kind === 'transform' && gesture.target === 'placement') && gesture.id !== workspace.selectedModuleId) cancel()
+    highlightSelection(); updatePorts()
   })
   watch(() => selected.value?.id, (id) => {
     if (id) ui.openWindow('component-info', { activate: false })
@@ -447,5 +469,5 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
   }, { immediate: true })
   onUnmounted(() => { cancel(); clearPlacement() })
   function pointerLeave() { wireRouting.pointerLeave(); pinHint.value = ''; if (!gesture) { hoveredHandle.value = null; hoveredControl.value = null; manager()?.clearGizmoHover(); manager()?.hoverWire(null) } }
-  return { ports, selected, dragging, hoveredHandle, hoveredControl, controlHint, zoomAreaRect, updatePorts, sync, cancel, connect, pointerDown, pointerMove, pointerUp, pointerLeave, pointerCancel: lostPointerCapture, lostPointerCapture, contextMenu, drop, keydown, selectModule, wireRouting }
+  return { ports, selected, dragging, hoveredHandle, hoveredControl, controlHint, zoomAreaRect, marqueeRect, updatePorts, sync, cancel, connect, pointerDown, pointerMove, pointerUp, pointerLeave, pointerCancel: lostPointerCapture, lostPointerCapture, contextMenu, drop, keydown, selectModule, wireRouting }
 }

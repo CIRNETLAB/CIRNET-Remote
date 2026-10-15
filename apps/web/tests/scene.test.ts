@@ -177,7 +177,7 @@ test('upright bench supply has two adjustment knobs, two output sockets and no l
   } finally { disposeObject(supply) }
 })
 
-test('Y rotation grip follows preview yaw while its gesture center and world X/Z handles stay stable', () => {
+test('Y arc follows preview yaw while the inward grip clears fixed world handles and the gesture center stays stable', () => {
   const manager = createSceneManager({ renderer: { setSize() {}, render() {}, dispose() {} }, requestFrame: () => 1, cancelFrame() {} })
   try {
     manager.resize(1000, 700)
@@ -185,15 +185,25 @@ test('Y rotation grip follows preview yaw while its gesture center and world X/Z
     manager.syncGraph(graph); manager.highlight('B'); manager.activateGizmo('rotate-y')
     const center = manager.gizmoOrigin()!, radial = manager.gizmoHandlePosition('rotate-y')!.clone().sub(center)
     const x = manager.gizmoHandlePosition('x')!.clone(), z = manager.gizmoHandlePosition('z')!.clone()
+    const tool = manager.scene.getObjectByName('component-transform-gizmo')!
+    const ring = tool.children.find(child => child.userData.transformHandle === 'rotate-y')!
     for (const angle of [45, 90, 180, 270]) {
       manager.previewRotation('B', angle)
       const grip = manager.gizmoHandlePosition('rotate-y')!
-      assert.ok(grip.distanceTo(center.clone().add(radial.clone().applyAxisAngle(new Vector3(0, 1, 0), angle * Math.PI / 180))) < 0.001, 'grip must travel around the Y ring with object yaw')
+      assert.ok(Math.abs(ring.rotation.y - angle * Math.PI / 180) < .001, 'the rotation arc still follows object yaw')
+      assert.ok(Math.abs(grip.distanceTo(center) - radial.length()) < .001, 'the inward grip keeps its orbit radius when avoiding the fixed buttons')
+      const knob = ring.getObjectByName('rotation-knob')!
+      const radius = Math.hypot(knob.position.x, knob.position.z) / 1.35
+      assert.ok(radius >= .75 && radius <= .85, 'the grip stays safely inside the arc')
       assert.ok(manager.gizmoOrigin()!.distanceTo(center) < 0.001)
       assert.ok(manager.gizmoHandlePosition('x')!.distanceTo(x) < 0.001)
       assert.ok(manager.gizmoHandlePosition('z')!.distanceTo(z) < 0.001)
       const p = manager.project(grip)
       assert.equal(manager.pickGizmo(p.x, p.y)?.handle, 'rotate-y')
+      for (const handle of ['x', 'z', 'xz', 'delete'] as const) {
+        const button = manager.project(manager.gizmoHandlePosition(handle)!)
+        assert.equal(manager.pickGizmo(button.x, button.y)?.handle, handle, 'the inward grip must not steal the other buttons')
+      }
     }
     assert.equal(graph.modules[0].rotation, undefined, 'preview must leave circuit truth unchanged')
     manager.syncGraph(graph)

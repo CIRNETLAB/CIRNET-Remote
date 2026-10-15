@@ -14,13 +14,14 @@ import { setPackagePinLabels } from './PackagePinLabels'
 import type { CircuitGraph, CircuitModule, Point3, WireIdentity, WireVisual } from '../types/circuit'
 import { contactFromInstance, getBreadboardContact, getBreadboardTopology } from '../electrical/BreadboardTopology'
 import { parseEndpoint } from '../electrical/endpoints'
-import { wireClearance, type WireRouteContext } from '../wires/wireRouting'
+import { wireClearance, type SolvedWireRoute, type WireRouteContext } from '../wires/wireRouting'
 import { createSelectionOutline, updateSelectionOutline } from './SelectionOutline'
 import { createTechnicalGrid, updateTechnicalGrid } from './TechnicalGrid'
 import { Box3, Line3, Sphere } from 'three'
 import { createComponentTransformGizmo, type GizmoObstacle, type TransformHandle } from './ComponentTransformGizmo'
 import { applyPowerSupplyControls, supplyControlPatch, type SupplyControl } from './PowerSupplyModel'
 import { createWireLayer } from './WireLayer'
+import { projectedObjectIntersectsRect, type ScreenRect } from './ProjectedSelection'
 import { CAMERA_NEAR, CAMERA_FAR, ZOOM_MIN, ZOOM_MAX, ZOOM_DEFAULT, MIN_ZOOM_REFERENCE_DISTANCE, cameraNearForDistance, clampZoom } from '../config/workbenchViewport'
 
 export interface SceneRenderer { readonly isWebGLRenderer?: boolean; setSize(width: number, height: number, updateStyle?: boolean): void; render(scene: Scene, camera: PerspectiveCamera): void; dispose(): void }
@@ -214,6 +215,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
         updateGizmo()
         wireLayer.updateCamera(camera, height); wireLayer.flush(); scene.updateMatrixWorld(true)
         if (activeOutline) updateSelectionOutline(activeOutline.group, camera.position, width, height)
+        for (const outline of multiOutlines.values()) updateSelectionOutline(outline, camera.position, width, height)
         renderer.render(scene, camera); onRender?.()
       }
     })
@@ -303,6 +305,18 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     }
   }
   let highlightedId: string | null = null
+  const multiOutlineIds = new Set<string>(), multiOutlines = new Map<string, Group>()
+  const removeMultiOutline = (id: string) => {
+    const outline = multiOutlines.get(id)
+    if (outline) { outline.removeFromParent(); disposeObject(outline); multiOutlines.delete(id) }
+  }
+  const clearMultiOutlines = () => { for (const id of multiOutlines.keys()) removeMultiOutline(id); multiOutlineIds.clear() }
+  const attachMultiOutlines = () => {
+    for (const id of multiOutlineIds) {
+      const model = models.get(id)
+      if (model && id !== highlightedId && !multiOutlines.has(id)) { const outline = createSelectionOutline(model); outline.name = 'marquee-selection-outline'; model.add(outline); multiOutlines.set(id, outline) }
+    }
+  }
   const attachOutline = () => {
     const model = highlightedId && models.get(highlightedId)
     if (model && !activeOutline) {
@@ -328,7 +342,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       gizmoLayoutRevision++
       modules.clear(); for (const module of next?.modules ?? []) modules.set(module.id, module)
       const ids = new Set(next?.modules.map((module) => module.id))
-      for (const [id, model] of models) if (!ids.has(id)) { if (activeOutline?.id === id) removeActiveOutline(); if (highlightedId === id) highlightedId = null; disposeObject(model); content.remove(model); models.delete(id) }
+      for (const [id, model] of models) if (!ids.has(id)) { if (activeOutline?.id === id) removeActiveOutline(); removeMultiOutline(id); multiOutlineIds.delete(id); if (highlightedId === id) highlightedId = null; disposeObject(model); content.remove(model); models.delete(id) }
       for (const module of next?.modules ?? []) {
         let model = models.get(module.id)
         const signature = JSON.stringify([module.type, module.properties])
@@ -338,16 +352,18 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
             const geometryRevision = model.userData.visualGeometryRevision
             updatePackageAppearance(model, module, part); model.userData.signature = signature
             if (activeOutline?.id === module.id && model.userData.visualGeometryRevision !== geometryRevision) removeActiveOutline()
+            if (model.userData.visualGeometryRevision !== geometryRevision) removeMultiOutline(module.id)
           }
           // Supply settings already have an in-place display/knob update in applyPose.
           else if (model.userData.type === module.type && getDefinition(module.type)?.visual === 'supply') model.userData.signature = signature
-          else { if (activeOutline?.id === module.id) removeActiveOutline(); disposeObject(model); content.remove(model); models.delete(module.id); model = undefined }
+          else { if (activeOutline?.id === module.id) removeActiveOutline(); removeMultiOutline(module.id); disposeObject(model); content.remove(model); models.delete(module.id); model = undefined }
         }
         if (!model) { model = buildComponent(module); model.userData.onVisualChange = schedule; models.set(module.id, model); content.add(model) }
         applyPose(model, moduleWorldPose(module, next!.modules))
         if (showPins) { const part = getPartForType(module.type); if (part) setPackagePinLabels(model, part, null, true) }
       }
       attachOutline()
+      attachMultiOutlines()
       wireLayer.sync(next?.connections ?? []); schedule()
     },
     previewMove(id: string, position: Required<NonNullable<CircuitModule['position']>>) { const model = models.get(id); if (model && !disposed && [position.x, position.y, position.z].every(Number.isFinite)) { model.position.set(position.x, position.y, position.z); model.updateMatrixWorld(true); previewMountedChildren(id); wireLayer.updateModule(id); schedule() } },
@@ -406,11 +422,27 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     },
     highlight(id: string | null, wire?: { source: string; destination: string } | null) {
       if (disposed) return
+      clearMultiOutlines(); wireLayer.highlightMany([])
       if (activeOutline && activeOutline.id !== id) removeActiveOutline()
       highlightedId = id
       attachOutline()
       wireLayer.highlight(wire)
       schedule()
+    },
+    highlightSelection(moduleIds: string[], selectedWires: WireIdentity[]) {
+      if (disposed) return
+      clearMultiOutlines()
+      if (moduleIds.length + selectedWires.length > 1) { removeActiveOutline(); highlightedId = null; wireLayer.highlight(null) }
+      for (const id of moduleIds) if (models.has(id)) multiOutlineIds.add(id)
+      attachMultiOutlines(); wireLayer.highlightMany(selectedWires); schedule()
+    },
+    selectInRect(rect: ScreenRect): { moduleIds: string[]; wires: WireIdentity[] } {
+      if (disposed) return { moduleIds: [], wires: [] }
+      camera.updateMatrixWorld(); wireLayer.flush(); scene.updateMatrixWorld(true)
+      return {
+        moduleIds: [...models].filter(([, model]) => projectedObjectIntersectsRect(model, camera, width, height, rect)).map(([id]) => id),
+        wires: wireLayer.selectionMeshes().filter(({ mesh }) => projectedObjectIntersectsRect(mesh, camera, width, height, rect)).map(({ wire }) => wire),
+      }
     },
     pick(x: number, y: number): PickResult | null {
       if (!validPointer(x, y)) return null
@@ -477,6 +509,8 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     previewWireVisual(wire: WireIdentity, visual: WireVisual | null) { wireLayer.previewVisual(wire, visual); schedule() },
     previewWireDrawing(wire: WireIdentity, visual: WireVisual, cursor: Point3 | null) { wireLayer.previewDrawing(wire, visual, cursor); schedule() },
     clearWireDrawing() { wireLayer.clearDrawing(); schedule() },
+    previewWireDuplicate(wire: WireIdentity, visual: WireVisual, valid: boolean, fallback?: SolvedWireRoute | null) { wireLayer.previewDuplicate(wire, visual, valid, fallback); schedule() },
+    clearWireDuplicate() { wireLayer.clearDuplicate(); schedule() },
     hoverWireEdit(hit: WireEditPick | null) { wireLayer.hover(hit?.wire ?? null); wireLayer.selectHandle(hit?.kind === 'bend' ? hit.index : null); wireLayer.selectSegment(hit?.kind === 'segment' ? hit.index : null); schedule() },
     pickWireEdit(x: number, y: number, wire: WireIdentity): WireEditPick | null {
       if (!validPointer(x, y)) return null
@@ -705,6 +739,6 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     finishTransition,
     setViewOrientation,
     suspend(value: boolean) { suspended = value; if (value && frame !== null) { cancelFrame(frame); frame = null }; updateControlsEnabled(); if (!value) schedule() },
-    dispose() { if (disposed) return; disposed = true; cancelTransition(); gizmo.update(undefined, [], camera, width, height); if (frame !== null) cancelFrame(frame); frame = null; controls?.removeEventListener('change', viewChanged); controls?.removeEventListener('start', cancelTransition); controls?.dispose(); removeActiveOutline(); wireLayer.dispose(); clearMountPreview(); mountMarkerGeometry.dispose(); mountMarkerValid.dispose(); mountMarkerInvalid.dispose(); disposeObject(scene); models.clear(); modules.clear(); ghost = null; highlightedId = null; gizmoObstacles = []; scene.environment = null; studio?.dispose(); scene.clear(); renderer.dispose() },
+    dispose() { if (disposed) return; disposed = true; cancelTransition(); gizmo.update(undefined, [], camera, width, height); if (frame !== null) cancelFrame(frame); frame = null; controls?.removeEventListener('change', viewChanged); controls?.removeEventListener('start', cancelTransition); controls?.dispose(); removeActiveOutline(); clearMultiOutlines(); wireLayer.dispose(); clearMountPreview(); mountMarkerGeometry.dispose(); mountMarkerValid.dispose(); mountMarkerInvalid.dispose(); disposeObject(scene); models.clear(); modules.clear(); ghost = null; highlightedId = null; gizmoObstacles = []; scene.environment = null; studio?.dispose(); scene.clear(); renderer.dispose() },
   }
 }

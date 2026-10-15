@@ -21,6 +21,7 @@ const paths: Record<string, string> = {
   home: 'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1v-9z',
   reset: 'M4 9V4h5 M4 4l5 5 M20 9V4h-5 M20 4l-5 5 M4 15v5h5 M4 20l5-5 M20 15v5h-5 M20 20l-5-5',
   'zoom-area': 'M8 3H3v5 M16 3h5v5 M3 16v5h5 M21 16v5h-5 M15 11a4 4 0 1 1-8 0 4 4 0 0 1 8 0 M14 14l4 4',
+  'marquee-select': 'M3 7V3h4 M11 3h2 M17 3h4v4 M21 11v2 M21 17v4h-4 M13 21h-2 M7 21H3v-4 M3 13v-2',
   play: 'M7 4l14 8-14 8z', stop: 'M5 5h14v14H5z', step: 'M5 4l12 8-12 8z M20 4v16',
   switch: 'M4 15h4 M16 15h4 M8 15l8-9 M3 13h2v4H3z M19 13h2v4h-2z',
   clock: 'M4 16V8h8v8h8 M3 3h18v18H3z',
