@@ -117,3 +117,37 @@ test('Marquee Select sits between Zoom In and Fit and remains distinct from Zoom
     assert.equal(workspace.zoomAreaActive, true); assert.equal(button.props['aria-pressed'], false)
   } finally { view.app.unmount(); if (beforeDocument) Object.defineProperty(globalThis, 'document', beforeDocument); else Reflect.deleteProperty(globalThis, 'document') }
 })
+
+test('projectedBreadboardEnclosedInRect checks containment of full 3D housing profile under camera and clipping', async () => {
+  const { projectedBreadboardEnclosedInRect } = await import('../src/three/ProjectedSelection')
+  const camera = new PerspectiveCamera(45, 1000 / 700, 0.1, 100)
+  camera.position.set(0, 10, 0); camera.lookAt(0, 0, 0); camera.updateMatrixWorld()
+
+  const boardGroup = new Group()
+  // Outline representing a breadboard footprint in XZ [-2, 2] x [-1, 1]
+  boardGroup.userData.selectionProfile = [
+    [-2, -1], [2, -1], [2, 1], [-2, 1]
+  ]
+  boardGroup.userData.selectionHeight = 0.35
+  boardGroup.position.set(0, 0, 0); boardGroup.updateMatrixWorld(true)
+
+  // Full screen marquee encloses the whole breadboard
+  assert.equal(projectedBreadboardEnclosedInRect(boardGroup, camera, 1000, 700, { left: 0, top: 0, right: 1000, bottom: 700 }), true)
+
+  // Partial marquee covering only the center inner region fails containment
+  assert.equal(projectedBreadboardEnclosedInRect(boardGroup, camera, 1000, 700, { left: 450, top: 300, right: 550, bottom: 400 }), false, 'inner partial rect must not contain full breadboard')
+
+  // Marquee covering only left half fails containment
+  assert.equal(projectedBreadboardEnclosedInRect(boardGroup, camera, 1000, 700, { left: 100, top: 100, right: 500, bottom: 600 }), false, 'partial rect missing right half must fail')
+
+  // Breadboard behind the camera must not be selected
+  boardGroup.position.set(0, 15, 0); boardGroup.updateMatrixWorld(true)
+  assert.equal(projectedBreadboardEnclosedInRect(boardGroup, camera, 1000, 700, { left: 0, top: 0, right: 1000, bottom: 700 }), false, 'geometry behind camera is not contained')
+
+  // Breadboard with oblique camera angle when fully enclosed
+  boardGroup.position.set(0, 0, 0); boardGroup.updateMatrixWorld(true)
+  camera.position.set(5, 8, 5); camera.lookAt(0, 0, 0); camera.updateMatrixWorld()
+  assert.equal(projectedBreadboardEnclosedInRect(boardGroup, camera, 1000, 700, { left: 0, top: 0, right: 1000, bottom: 700 }), true, 'oblique view fully enclosed')
+  assert.equal(projectedBreadboardEnclosedInRect(boardGroup, camera, 1000, 700, { left: 400, top: 300, right: 500, bottom: 400 }), false, 'oblique view partial rect fails')
+})
+

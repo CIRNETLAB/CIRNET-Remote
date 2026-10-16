@@ -321,10 +321,8 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
           transform.angle -= Math.atan2(Math.sin(currentAngle - transform.lastAngle), Math.cos(currentAngle - transform.lastAngle))
           transform.lastAngle = currentAngle
           const raw = transform.initialRotation + transform.angle * 180 / Math.PI
-          const step = rotationSnapStep(type)
-          const support = type && getPartForType(type) ? solveMounting(type, transform.initial, raw, circuit.graph?.modules ?? [], transform.id) : null
-          const boardRotation = support ? circuit.graph?.modules.find(m => m.id === support.boardId)?.rotation ?? 0 : 0
-          transform.rotation = workspace.snap ? boardRotation + Math.round((raw - boardRotation) / step) * step : Math.round(raw * 100) / 100
+          transform.rotation = Math.round(raw * 100) / 100
+          manager()!.setGizmoRotation(transform.angle)
           if (transform.target === 'placement' && placementDraft) {
             placementDraft.rotation = transform.rotation
             placementDraft.position = snap(transform.initial, placementDraft.type, null, transform.initial.y, placementDraft.rotation)
@@ -410,7 +408,19 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       workspace.cancelMarquee(); highlightSelection(); updatePorts()
       return
     }
-    if (completed.kind === 'transform' && completed.target === 'placement') return
+    if (completed.kind === 'transform' && completed.target === 'placement') {
+      if (completed.handle === 'rotate-y' && completed.dragged && placementDraft) {
+        const raw = completed.initialRotation + completed.angle * 180 / Math.PI
+        const type = placementDraft.type
+        const step = rotationSnapStep(type)
+        const support = type && getPartForType(type) ? solveMounting(type, completed.initial, raw, circuit.graph?.modules ?? [], 'PLACE') : null
+        const boardRotation = support ? circuit.graph?.modules.find(m => m.id === support.boardId)?.rotation ?? 0 : 0
+        placementDraft.rotation = workspace.snap ? boardRotation + Math.round((raw - boardRotation) / step) * step : Math.round(raw * 100) / 100
+        placementDraft.position = snap(completed.initial, placementDraft.type, null, completed.initial.y, placementDraft.rotation)
+        showPlacement()
+      }
+      return
+    }
     if (completed.kind === 'control' && completed.draft === circuit.activeId) {
       if (completed.control !== 'power_on' && completed.dragged) attempt(() => circuit.updateModuleProperties(completed.id, supplyControlPatch(circuit.graph!.modules.find(module => module.id === completed.id)!.type, completed.control, completed.value)))
       else if (completed.control === 'power_on' && !completed.dragged && canvas.value) {
@@ -420,7 +430,15 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     }
     else if (completed.kind === 'move' && completed.dragged && completed.draft === circuit.activeId) attempt(() => circuit.moveModule(completed.id, completed.position))
     else if (completed.kind === 'transform' && completed.dragged && completed.draft === circuit.activeId) attempt(() => {
-      if (completed.handle === 'rotate-y') circuit.rotateModule(completed.id, completed.rotation - completed.initialRotation)
+      if (completed.handle === 'rotate-y') {
+        const raw = completed.initialRotation + completed.angle * 180 / Math.PI
+        const type = circuit.graph?.modules.find((m) => m.id === completed.id)?.type
+        const step = rotationSnapStep(type)
+        const support = type && getPartForType(type) ? solveMounting(type, completed.initial, raw, circuit.graph?.modules ?? [], completed.id) : null
+        const boardRotation = support ? circuit.graph?.modules.find(m => m.id === support.boardId)?.rotation ?? 0 : 0
+        const finalRotation = workspace.snap ? boardRotation + Math.round((raw - boardRotation) / step) * step : Math.round(raw * 100) / 100
+        circuit.rotateModule(completed.id, finalRotation - completed.initialRotation)
+      }
       else circuit.moveModule(completed.id, completed.position)
     })
     else if (completed.kind === 'pan' && !completed.dragged) {

@@ -10,7 +10,8 @@ const segmentDistance = (x: number, y: number, a: { x: number; y: number }, b: {
 }
 
 const ARC_RADIUS = 1.35, ARC_START = 0, ARC_END = Math.PI * 1.5, ARC_KNOB_RADIUS = .16
-const AXIS_OFFSET = .95, FREE_HALF_SIZE = .29, GRIP_RADIUS = ARC_RADIUS * .8
+const AXIS_OFFSET = .95, FREE_HALF_SIZE = .29, GRIP_RADIUS = ARC_RADIUS
+const ARC_TUBE_RADIUS = 0.02, KNOB_TUBE_RADIUS = 0.028
 // The meshes retain their XZ footprints. Facing that plane toward the camera
 // maps +X to screen right and +Z to screen down, independent of object yaw.
 const SCREEN_PLANE = new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2)
@@ -41,7 +42,7 @@ export function createComponentTransformGizmo() {
   const clearCapture = () => { placementCaptured = false; approach = null; captureCorridor = null; previousPointer = null }
   // The grid is transparent. Opaque tools are drawn before its separate pass,
   // even with a larger renderOrder. Share that pass, then order the overlay last.
-  const material = (color: string, pickOnly = false) => new MeshBasicMaterial({ color, depthTest: false, depthWrite: false, toneMapped: false, transparent: true, opacity: pickOnly ? 0 : 1 })
+  const material = (color: string, pickOnly = false, opacity = pickOnly ? 0 : 1) => new MeshBasicMaterial({ color, depthTest: false, depthWrite: false, toneMapped: false, transparent: true, opacity })
   const handle = (id: TransformHandle, color: string, point: Vector3) => {
     const group = new Group(); group.userData.transformHandle = id; group.userData.color = color
     handles.set(id, group); markers.set(id, point); root.add(group); return group
@@ -65,20 +66,21 @@ export function createComponentTransformGizmo() {
   const free = handle('xz', '#00bce7', new Vector3())
   button(free, 'xz', [[-FREE_HALF_SIZE, -FREE_HALF_SIZE], [FREE_HALF_SIZE, -FREE_HALF_SIZE], [FREE_HALF_SIZE, FREE_HALF_SIZE], [-FREE_HALF_SIZE, FREE_HALF_SIZE]], '#00bce7', '#008ead')
   const rotationGrip = new Vector3(-GRIP_RADIUS, 0, 0)
-  const rotate = handle('rotate-y', '#ffd10b', rotationGrip)
+  const rotate = handle('rotate-y', '#ffffff', rotationGrip)
   const rotationPoint = (angle: number) => new Vector3(Math.cos(angle) * ARC_RADIUS, 0, Math.sin(angle) * ARC_RADIUS)
   // Keep the open arc independent of the inward grip: no line crosses its hole.
-  const arc = add(rotate, new Mesh(new TorusGeometry(ARC_RADIUS, .044, 12, 96, ARC_END - ARC_START), material('#ffd10b')))
+  const arc = add(rotate, new Mesh(new TorusGeometry(ARC_RADIUS, ARC_TUBE_RADIUS, 12, 96, ARC_END - ARC_START), material('#ffffff', false, .4)))
   arc.name = 'rotation-arc'; arc.rotation.x = Math.PI / 2; arc.rotation.z = ARC_START
   for (const [name, angle] of [['rotation-start-cap', ARC_START], ['rotation-end-cap', ARC_END]] as const) {
-    const cap = add(rotate, new Mesh(new SphereGeometry(.044, 16, 10), material('#ffd10b')))
+    const cap = add(rotate, new Mesh(new SphereGeometry(ARC_TUBE_RADIUS, 16, 10), material('#ffffff', false, .4)))
     cap.name = name; cap.position.copy(rotationPoint(angle))
   }
   // Either torus surface is visible for this overlay, including side views.
-  const gripMaterial = material('#ffd10b'); gripMaterial.side = DoubleSide
-  const grip = add(rotate, new Mesh(new TorusGeometry(ARC_KNOB_RADIUS, .045, 12, 48), gripMaterial))
+  const gripMaterial = material('#ffffff', false, 1)
+  gripMaterial.side = DoubleSide
+  const grip = add(rotate, new Mesh(new TorusGeometry(ARC_KNOB_RADIUS, KNOB_TUBE_RADIUS, 12, 48), gripMaterial))
   grip.name = 'rotation-knob'; grip.rotation.x = Math.PI / 2; grip.position.copy(rotationGrip); grip.renderOrder = 22
-  const gripTarget = add(rotate, new Mesh(new SphereGeometry(.28, 16, 12), material('#ffd10b', true)), true)
+  const gripTarget = add(rotate, new Mesh(new SphereGeometry(.28, 16, 12), material('#ffffff', true)), true)
   gripTarget.name = 'rotation-knob-target'; gripTarget.position.copy(rotationGrip)
   const deleteBtn = handle('delete', '#ff473d', new Vector3(1.42, 0, 1.42))
   const deleteBase = add(deleteBtn, new Mesh(new CylinderGeometry(0.30, 0.30, 0.05, 32), material('#19222b')))
@@ -92,17 +94,34 @@ export function createComponentTransformGizmo() {
   const deleteTarget = add(deleteBtn, new Mesh(new CylinderGeometry(0.35, 0.35, 0.16, 16), material('#ff473d', true)), true)
   deleteTarget.position.set(1.42, 0.05, 1.42)
   const paint = () => {
-    for (const [id, group] of handles) for (const mesh of group.children as Mesh[]) {
-      if (!mesh.userData.pickOnly && !mesh.userData.fixedColor) {
-        const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
-        materials.forEach((entry, index) => (entry as MeshBasicMaterial).color.set(id === active || id === hovered ? active === id ? '#46d7c7' : '#a6eee4' : mesh.userData.faceColors?.[index] ?? group.userData.color))
+    for (const [id, group] of handles) {
+      if (id === 'rotate-y') {
+        const isHovered = hovered === 'rotate-y'
+        const isActive = active === 'rotate-y'
+        const arcOpacity = isActive ? 1.0 : isHovered ? .75 : .4
+        for (const mesh of group.children as Mesh[]) {
+          if (!mesh.userData.pickOnly && !mesh.userData.fixedColor) {
+            const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+            for (const entry of materials as MeshBasicMaterial[]) {
+              entry.color.set('#ffffff')
+              entry.opacity = mesh.name === 'rotation-knob' ? 1 : arcOpacity
+            }
+          }
+        }
+        continue
+      }
+      for (const mesh of group.children as Mesh[]) {
+        if (!mesh.userData.pickOnly && !mesh.userData.fixedColor) {
+          const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+          materials.forEach((entry, index) => (entry as MeshBasicMaterial).color.set(id === active || id === hovered ? active === id ? '#46d7c7' : '#a6eee4' : mesh.userData.faceColors?.[index] ?? group.userData.color))
+        }
       }
     }
   }
   const pixelScale = (point: Vector3, camera: PerspectiveCamera, height: number) => Math.max(0.1, -point.clone().applyMatrix4(camera.matrixWorldInverse).z) * 2 * Math.tan(camera.fov * Math.PI / 360) / (height * camera.zoom) * 42
   function update(model: Group | undefined, _others: Iterable<Group>, camera: PerspectiveCamera, width: number, height: number, _obstacles: readonly GizmoObstacle[] = [], _revision = 0) {
     if (!model || width <= 1 || height <= 1) {
-      root.visible = false; selectedId = null; hovered = null; active = null; placementModel = null; captureView = null; clearCapture(); return
+      root.visible = false; selectedId = null; hovered = null; active = null; placementModel = null; captureView = null; rotate.rotation.y = 0; clearCapture(); return
     }
     camera.updateWorldMatrix(true, false)
     const placement = model.userData.kind === 'placement'
@@ -114,8 +133,9 @@ export function createComponentTransformGizmo() {
       captureView = { world: [...camera.matrixWorld.elements], projection: [...camera.projectionMatrix.elements], width, height }
     }
     for (const [id, group] of handles) group.visible = !placement || id !== 'delete'
-    if (selectedId !== model.userData.id) { hovered = null; active = null; paint() }
+    if (selectedId !== model.userData.id) { hovered = null; active = null; rotate.rotation.y = 0; paint() }
     selectedId = model.userData.id
+    if (active !== 'rotate-y') rotate.rotation.y = 0
     model.updateWorldMatrix(true, false)
     // This is a screen-oriented tool at the live object pivot. The fixed local
     // layout keeps the left grip clear of every button without relocating it.
@@ -196,7 +216,12 @@ export function createComponentTransformGizmo() {
       // the selected-model gesture or the live pivot.
       if (model?.userData.kind === 'placement' && (id || active)) clearCapture()
       active = id && handles.get(id)!.visible ? id : null
+      if (active !== 'rotate-y') { rotate.rotation.y = 0; rotate.updateMatrixWorld(true) }
       hovered = null; paint()
+    },
+    setRotation(angle: number) {
+      rotate.rotation.y = angle
+      rotate.updateMatrixWorld(true)
     },
   }
 }

@@ -24,7 +24,7 @@ import { createWireLayer } from './WireLayer'
 import { createSelectionPreview } from './SelectionPreview'
 import type { EditorSelection } from '../editor/selection'
 import { projectedTranslationDelta } from '../geometry/transformDrag'
-import { projectedObjectIntersectsRect, type ScreenRect } from './ProjectedSelection'
+import { projectedBreadboardEnclosedInRect, projectedObjectIntersectsRect, type ScreenRect } from './ProjectedSelection'
 import { CAMERA_NEAR, CAMERA_FAR, ZOOM_MIN, ZOOM_MAX, ZOOM_DEFAULT, MIN_ZOOM_REFERENCE_DISTANCE, cameraNearForDistance, clampZoom } from '../config/workbenchViewport'
 
 export interface SceneRenderer { readonly isWebGLRenderer?: boolean; setSize(width: number, height: number, updateStyle?: boolean): void; render(scene: Scene, camera: PerspectiveCamera): void; dispose(): void }
@@ -340,6 +340,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     placementFollowBlocked() { return !!ghost && gizmo.placementFollowBlocked() },
     clearGizmoHover() { if (disposed) return; gizmo.clearPlacementCapture(); gizmo.hover(null); schedule() },
     activateGizmo(handle: TransformHandle | null) { if (disposed) return; updateGizmo(); gizmo.activate(handle, gizmoModel()); schedule() },
+    setGizmoRotation(angle: number) { if (disposed) return; gizmo.setRotation(angle); schedule() },
     syncGraph(next: CircuitGraph | null) {
       if (disposed) return
       contactHover.visible = false
@@ -444,9 +445,15 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       if (disposed) return { moduleIds: [], wires: [] }
       camera.updateMatrixWorld(); wireLayer.flush(); scene.updateMatrixWorld(true)
       return {
-        // Boards are support surfaces under the selected content. They remain
-        // directly pickable, but a rectangle must never pull in that background.
-        moduleIds: [...models].filter(([id, model]) => !getBreadboardTopology(modules.get(id)!.type) && projectedObjectIntersectsRect(model, camera, width, height, rect)).map(([id]) => id),
+        moduleIds: [...models].filter(([id, model]) => {
+          const module = modules.get(id)
+          if (!module) return false
+          const isBreadboard = !!getBreadboardTopology(module.type)
+          if (isBreadboard) {
+            return projectedBreadboardEnclosedInRect(model, camera, width, height, rect)
+          }
+          return projectedObjectIntersectsRect(model, camera, width, height, rect)
+        }).map(([id]) => id),
         wires: wireLayer.selectionMeshes().filter(({ mesh }) => projectedObjectIntersectsRect(mesh, camera, width, height, rect)).map(({ wire }) => wire),
       }
     },

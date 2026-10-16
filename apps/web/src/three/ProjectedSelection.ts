@@ -97,3 +97,36 @@ export function projectedObjectIntersectsRect(root: Object3D, camera: Camera, wi
   }
   return visit(root)
 }
+
+export function projectedBreadboardEnclosedInRect(root: Object3D, camera: Camera, width: number, height: number, selection: ScreenRect, tolerance = 0.5): boolean {
+  if (!validRect(selection, width, height)) return false
+  const rect = normalized(selection)
+  let profile = root.userData.selectionProfile as readonly [number, number][] | undefined
+  let heightVal = root.userData.selectionHeight as number | undefined
+  if (!profile) {
+    root.traverse((child) => {
+      if (!profile && child.userData.selectionProfile) {
+        profile = child.userData.selectionProfile
+        heightVal = child.userData.selectionHeight
+      }
+    })
+  }
+  if (!profile || !profile.length || typeof heightVal !== 'number' || !Number.isFinite(heightVal)) {
+    return false
+  }
+  root.updateWorldMatrix(true, true)
+  const projection = new Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse)
+  const transform = new Matrix4().multiplyMatrices(projection, root.matrixWorld)
+
+  for (const [x, z] of profile) {
+    for (const y of [0, heightVal]) {
+      const p = new Vector4(x, y, z, 1).applyMatrix4(transform)
+      if (p.w <= 1e-4 || p.z < -p.w - 1e-4 || p.z > p.w + 1e-4) return false
+      const pt = screen(p, width, height)
+      if (pt.x < rect.left - tolerance || pt.x > rect.right + tolerance || pt.y < rect.top - tolerance || pt.y > rect.bottom + tolerance) {
+        return false
+      }
+    }
+  }
+  return true
+}

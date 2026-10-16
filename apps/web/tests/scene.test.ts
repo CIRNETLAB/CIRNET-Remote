@@ -195,7 +195,7 @@ test('Y arc and left grip stay fixed while preview yaw changes around the object
       assert.ok(Math.abs(point.y - pivot.y) < .001 && point.x < pivot.x, 'the knob remains at nine o\'clock')
       const knob = ring.getObjectByName('rotation-knob')!
       const radius = Math.hypot(knob.position.x, knob.position.z) / 1.35
-      assert.ok(radius >= .75 && radius <= .85, 'the grip stays safely inside the arc')
+      assert.ok(Math.abs(radius - 1.0) < 1e-6, 'the grip sits directly on the arc')
       assert.ok(manager.gizmoOrigin()!.distanceTo(center) < 0.001)
       assert.ok(manager.gizmoHandlePosition('x')!.distanceTo(x) < 0.001)
       assert.ok(manager.gizmoHandlePosition('z')!.distanceTo(z) < 0.001)
@@ -355,7 +355,7 @@ test('placement overlay follows camera and viewport changes without adaptive lay
     const assertPivot = () => {
       assert.ok(manager.gizmoOrigin()!.distanceTo(ghost.position) < .001)
       const pivot = manager.project(ghost.position), grip = manager.project(manager.gizmoHandlePosition('rotate-y')!)
-      assert.ok(Math.abs(grip.x - pivot.x + 45.36) < .001 && Math.abs(grip.y - pivot.y) < .001, 'camera changes retain the same nine-o\'clock grip')
+      assert.ok(Math.abs(grip.x - pivot.x + 56.7) < .001 && Math.abs(grip.y - pivot.y) < .001, 'camera changes retain the same nine-o\'clock grip')
     }
     for (let i = 0; i < 80; i++) {
       manager.setGhost('BREADBOARD', new Vector3(i % 2 ? 0.02 : -0.02, 0, i % 2 ? 0.01 : -0.01), 0)

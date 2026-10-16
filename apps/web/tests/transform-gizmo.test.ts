@@ -41,16 +41,21 @@ test('separate white triangle handles and a cyan rounded square replace the shaf
   assert.equal(h.pick(new Vector3(.47, 0, 0)), null, 'empty space between square and triangle is not an old shaft hitbox')
 })
 
-test('the yellow arc keeps its rounded ends and hollow visual knob with an enlarged invisible grip target', () => {
+test('the translucent white arc keeps its rounded ends and hollow visual knob on the arc with an enlarged invisible grip target', () => {
   const h = setup(), group = h.group('rotate-y')
-  assert.ok(group.getObjectByName('rotation-arc'))
+  const arc = group.getObjectByName('rotation-arc') as Mesh
+  assert.ok(arc)
+  assert.equal((arc.material as MeshBasicMaterial).color.getHexString(), 'ffffff')
+  assert.ok((arc.material as MeshBasicMaterial).opacity >= 0.35 && (arc.material as MeshBasicMaterial).opacity <= 0.45)
   assert.ok(group.getObjectByName('rotation-start-cap'))
   assert.ok(group.getObjectByName('rotation-end-cap'))
   const knob = group.getObjectByName('rotation-knob') as Mesh
   assert.equal(knob.geometry.type, 'TorusGeometry', 'the knob must remain visually hollow')
+  assert.equal((knob.material as MeshBasicMaterial).color.getHexString(), 'ffffff')
   const marker = h.gizmo.position('rotate-y')!
   const markerLocal = h.gizmo.root.worldToLocal(marker.clone())
   assert.equal(h.pick(markerLocal), 'rotate-y', 'the advertised grip center must be easy to acquire')
+  assert.ok(Math.abs(Math.hypot(knob.position.x, knob.position.z) - 1.35) < 1e-6, 'knob center must lie directly on the arc radius')
   for (const angle of [0.3, 1.1, 3.8, 4.4]) {
     assert.equal(h.pick(new Vector3(Math.cos(angle) * 1.35, 0, Math.sin(angle) * 1.35), group), 'rotate-y')
   }
@@ -182,11 +187,11 @@ test('the fixed left grip stays circular, distinct and pickable across object ya
         h.gizmo.update(h.model, [h.model], h.camera, 1000, 700)
         const knob = h.group('rotate-y').getObjectByName('rotation-knob') as Mesh
         const ratio = Math.hypot(knob.position.x, knob.position.z) / 1.35
-        assert.ok(ratio >= .75 && ratio <= .85, `grip must be inward at yaw ${yaw}`)
+        assert.ok(Math.abs(ratio - 1.0) < 1e-6, `grip must be on the arc at yaw ${yaw}`)
         const marker = h.gizmo.position('rotate-y')!, local = h.gizmo.root.worldToLocal(marker.clone())
         const center = h.point(local)
         const pivot = h.point(new Vector3())
-        assert.ok(Math.abs(center.x - pivot.x + 45.36) < .001, `knob is fixed 45.36 pixels left of the pivot at yaw ${yaw}, zoom ${zoom}`)
+        assert.ok(Math.abs(center.x - pivot.x + 56.7) < .001, `knob is fixed 56.7 pixels left of the pivot at yaw ${yaw}, zoom ${zoom}`)
         assert.ok(Math.abs(center.y - pivot.y) < .001, `knob stays at nine o'clock at yaw ${yaw}, zoom ${zoom}`)
         const top = h.point(new Vector3(0, 0, -1.35)), right = h.point(new Vector3(1.35, 0, 0))
         assert.ok(Math.abs(top.x - pivot.x) < .001 && Math.abs(top.y - pivot.y + 56.7) < .001, 'ring top stays directly above its pivot')
@@ -242,3 +247,97 @@ test('hover and active feedback retain the bevel border and restore the requeste
   assert.equal(materials[0].color.getHexString(), 'f8fafc')
   assert.equal(materials[1].color.getHexString(), 'd1d7dc')
 })
+
+test('Rotate Y hover and drag only increase white prominence without changing color to cyan or yellow', () => {
+  const h = setup(), group = h.group('rotate-y')
+  const arc = group.getObjectByName('rotation-arc') as Mesh
+  const knob = group.getObjectByName('rotation-knob') as Mesh
+  const arcMat = arc.material as MeshBasicMaterial
+  const knobMat = knob.material as MeshBasicMaterial
+
+  // Normal rest state
+  assert.equal(arcMat.color.getHexString(), 'ffffff')
+  assert.equal(arcMat.opacity, 0.4)
+  assert.equal(knobMat.color.getHexString(), 'ffffff')
+  assert.equal(knobMat.opacity, 1.0)
+
+  // Hover state
+  h.gizmo.hover('rotate-y')
+  assert.equal(arcMat.color.getHexString(), 'ffffff', 'hover must remain white, not cyan or yellow')
+  assert.equal(arcMat.opacity, 0.75, 'hover increases white prominence')
+  assert.equal(knobMat.color.getHexString(), 'ffffff')
+  assert.equal(knobMat.opacity, 1.0)
+
+  // Active / drag state
+  h.gizmo.activate('rotate-y', h.model)
+  assert.equal(arcMat.color.getHexString(), 'ffffff', 'active drag must remain white, not cyan or yellow')
+  assert.equal(arcMat.opacity, 1.0, 'drag increases white prominence to maximum')
+  assert.equal(knobMat.color.getHexString(), 'ffffff')
+  assert.equal(knobMat.opacity, 1.0)
+
+  // Release state
+  h.gizmo.activate(null)
+  assert.equal(arcMat.color.getHexString(), 'ffffff')
+  assert.equal(arcMat.opacity, 0.4)
+  assert.equal(knobMat.color.getHexString(), 'ffffff')
+  assert.equal(knobMat.opacity, 1.0)
+})
+
+test('dragging Rotate Y rotates arc and knob synchronously with the drag angle while other buttons stay fixed', () => {
+  const h = setup()
+  const initialMarker = h.gizmo.position('rotate-y')!.clone()
+  const initialX = h.gizmo.position('x')!.clone()
+  const initialZ = h.gizmo.position('z')!.clone()
+  const initialXZ = h.gizmo.position('xz')!.clone()
+  const initialDelete = h.gizmo.position('delete')!.clone()
+
+  h.gizmo.activate('rotate-y', h.model)
+  // Simulate drag angle of 45 degrees
+  const angle = Math.PI / 4
+  h.gizmo.setRotation(angle)
+  h.gizmo.update(h.model, [h.model], h.camera, 1000, 700)
+
+  // Rotated marker position
+  const rotatedMarker = h.gizmo.position('rotate-y')!
+  assert.ok(rotatedMarker.distanceTo(initialMarker) > 0.1, 'knob position must rotate with the drag angle')
+  // Raycast at the new rotated knob position picks rotate-y
+  const localRotated = h.gizmo.root.worldToLocal(rotatedMarker.clone())
+  assert.equal(h.pick(localRotated), 'rotate-y', 'rotated knob must be pickable at its new position')
+
+  // Other buttons are NOT rotated
+  assert.ok(h.gizmo.position('x')!.distanceTo(initialX) < 1e-6, 'handle x must stay fixed')
+  assert.ok(h.gizmo.position('z')!.distanceTo(initialZ) < 1e-6, 'handle z must stay fixed')
+  assert.ok(h.gizmo.position('xz')!.distanceTo(initialXZ) < 1e-6, 'handle xz must stay fixed')
+  assert.ok(h.gizmo.position('delete')!.distanceTo(initialDelete) < 1e-6, 'handle delete must stay fixed')
+
+  // On release, rotate-y resets to rest position
+  h.gizmo.activate(null)
+  const restoredMarker = h.gizmo.position('rotate-y')!
+  assert.ok(restoredMarker.distanceTo(initialMarker) < 1e-6, 'knob resets to rest position on release')
+})
+
+test('camera orbit, pan and zoom keep gizmo anchored at pivot without modifying model rotation', () => {
+  const h = setup()
+  const originalYaw = 1.25
+  h.model.rotation.y = originalYaw
+  h.model.position.set(2, 0.5, -3)
+
+  // Orbit camera
+  h.camera.position.set(10, 15, 10); h.camera.lookAt(2, 0.5, -3); h.camera.updateMatrixWorld()
+  h.gizmo.update(h.model, [h.model], h.camera, 1000, 700)
+  assert.equal(h.model.rotation.y, originalYaw, 'camera orbit must not change model rotation')
+  assert.ok(h.gizmo.origin()!.distanceTo(h.model.position) < 1e-6, 'gizmo remains anchored at pivot')
+
+  // Pan camera
+  h.camera.position.add(new Vector3(5, 0, 5)); h.camera.updateMatrixWorld()
+  h.gizmo.update(h.model, [h.model], h.camera, 1000, 700)
+  assert.equal(h.model.rotation.y, originalYaw, 'camera pan must not change model rotation')
+  assert.ok(h.gizmo.origin()!.distanceTo(h.model.position) < 1e-6, 'gizmo remains anchored at pivot')
+
+  // Zoom camera
+  h.camera.zoom = 2.5; h.camera.updateProjectionMatrix(); h.camera.updateMatrixWorld()
+  h.gizmo.update(h.model, [h.model], h.camera, 1000, 700)
+  assert.equal(h.model.rotation.y, originalYaw, 'camera zoom must not change model rotation')
+  assert.ok(h.gizmo.origin()!.distanceTo(h.model.position) < 1e-6, 'gizmo remains anchored at pivot')
+})
+
