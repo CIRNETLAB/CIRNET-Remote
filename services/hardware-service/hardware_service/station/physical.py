@@ -2,7 +2,7 @@ from dataclasses import fields
 import time
 from jsonschema import ValidationError
 from contracts.validation import validate
-from contracts.instrument_validation import validate_generator, validate_plan_instruments
+from contracts.instrument_validation import validate_generator, validate_instrument_paths, validate_plan_instruments
 from hardware_service.models import BreadboardCapability, StationCapabilities
 from hardware_service.station.base import HardwareStation, HardwareError, HardwareUnavailableError, StationState as S, serialized
 
@@ -180,11 +180,30 @@ class PhysicalHardwareStation(HardwareStation):
         self._state = S.ROUTE_PREPARE
         return self._reply()
 
+    def _revalidate_instrument_plan(self, caps=None, *, baseline=True):
+        if self._plan is None or self._experiment_id != self._plan['experiment_id']:
+            raise HardwareError("INVALID_STATE")
+        caps = caps if caps is not None else self.get_capabilities()
+        if not caps.available or not caps.physical_digital or not caps.safety_gate_supported or not caps.guarded_run_supported:
+            self._fault()
+            raise HardwareError("UNEXECUTABLE")
+        if (self._plan['power_policy']['profile_id'] != caps.hardware_profile_version
+                or self._plan['runtime_safety_policy']['profile_id'] != caps.hardware_profile_version):
+            self._fault()
+            raise HardwareError("PROTOCOL_MISMATCH")
+        try:
+            validator = validate_plan_instruments if baseline else validate_instrument_paths
+            validator(self._plan, caps.to_dict())
+        except (ValueError, ValidationError):
+            self._fault()
+            raise HardwareError("UNEXECUTABLE") from None
+
     @serialized
     def apply_routing(self):
         self._require_driver()
         self._require_state(S.ROUTE_PREPARE)
         self._fresh_safe()
+        self._revalidate_instrument_plan()
         self._invoke("apply_routing", self._plan)
         self._state = S.GUARDED_POWER_UP
         return self._reply()
@@ -194,6 +213,7 @@ class PhysicalHardwareStation(HardwareStation):
         self._require_driver()
         self._require_state(S.GUARDED_POWER_UP)
         self._fresh_safe()
+        self._revalidate_instrument_plan()
         self._invoke("guarded_power_up", self._plan["power_policy"])
         self._state = S.READY
         return self._reply()
@@ -215,6 +235,7 @@ class PhysicalHardwareStation(HardwareStation):
         self._require_driver()
         self._require_state(S.ARMED)
         self._fresh_safe()
+        self._revalidate_instrument_plan()
         self._invoke("start_execution")
         self._state = S.RUNNING
         return self._reply()
@@ -251,7 +272,7 @@ class PhysicalHardwareStation(HardwareStation):
         self._require_state(S.RUNNING)
         caps = self.get_capabilities()
         capability = caps.instrument_capabilities['generator']
-        if not caps.available or not caps.physical_analog_routing:
+        if not caps.available:
             raise HardwareError("UNEXECUTABLE")
         if not capability['channels'] or not capability['runtime_reconfiguration_supported']:
             raise HardwareError("NOT_IMPLEMENTED")
@@ -260,8 +281,7 @@ class PhysicalHardwareStation(HardwareStation):
             validate_generator(configuration, capability)
         except (ValueError, ValidationError):
             raise HardwareError("UNEXECUTABLE") from None
-        if self._plan is None or self._experiment_id != self._plan['experiment_id']:
-            raise HardwareError("INVALID_STATE")
+        self._revalidate_instrument_plan(caps, baseline=False)
         allocated = {allocation['channel'] for allocation in self._plan['instrument_allocations']
                      if allocation['instrument'] == 'GENERATOR'}
         if configuration['channel'] not in allocated:

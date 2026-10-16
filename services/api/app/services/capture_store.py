@@ -4,8 +4,13 @@ from pathlib import Path
 import re
 import tempfile
 from typing import Protocol
+from threading import RLock
+from weakref import WeakValueDictionary
 
 from contracts.capture_codec import decode_digital, HEADER, MAX_HEADER, MAX_EVENTS, EVENT
+
+_directory_locks=WeakValueDictionary()
+_directory_locks_guard=RLock()
 
 
 class CaptureStore(Protocol):
@@ -15,8 +20,14 @@ class CaptureStore(Protocol):
 
 
 class FilesystemCaptureStore:
-    def __init__(self, directory):
+    def __init__(self, directory,*,max_bytes=268435456,max_files=4096):
+        if type(max_bytes) is not int or max_bytes<1 or type(max_files) is not int or max_files<1:raise ValueError('INVALID_CAPTURE_LIMIT')
         self.directory=Path(directory).resolve()
+        self.max_bytes,self.max_files=max_bytes,max_files
+        with _directory_locks_guard:
+            self.lock=_directory_locks.get(str(self.directory))
+            if self.lock is None:
+                self.lock=RLock();_directory_locks[str(self.directory)]=self.lock
 
     def _path(self, metadata):
         key=metadata['capture_id']
@@ -26,15 +37,29 @@ class FilesystemCaptureStore:
         return path
 
     def put(self, metadata, payload):
+        if not isinstance(payload,bytes) or len(payload)>HEADER.size+MAX_HEADER+MAX_EVENTS*EVENT.size:raise ValueError('CAPTURE_PAYLOAD_LIMIT')
         path=self._path(metadata)
-        self.directory.mkdir(parents=True,exist_ok=True)
-        temporary=None
-        try:
-            with tempfile.NamedTemporaryFile(dir=self.directory,prefix='.capture-',delete=False) as handle:
-                temporary=Path(handle.name); handle.write(payload)
-            temporary.replace(path)
-        finally:
-            if temporary and temporary.exists(): temporary.unlink()
+        with self.lock:
+            self.directory.mkdir(parents=True,exist_ok=True)
+            if path.exists():
+                if path.is_file() and path.stat().st_size==len(payload):
+                    with path.open('rb') as handle:
+                        if handle.read(len(payload)+1)==payload:return
+                raise ValueError('CAPTURE_KEY_CONFLICT')
+            count,total=0,len(payload)
+            for existing in self.directory.glob('*.ncap'):
+                try:total+=existing.stat().st_size
+                except FileNotFoundError:continue
+                count+=1
+                if count>=self.max_files or total>self.max_bytes:raise ValueError('CAPTURE_QUOTA_EXCEEDED')
+            if total>self.max_bytes:raise ValueError('CAPTURE_QUOTA_EXCEEDED')
+            temporary=None
+            try:
+                with tempfile.NamedTemporaryFile(dir=self.directory,prefix='.capture-',delete=False) as handle:
+                    temporary=Path(handle.name); handle.write(payload)
+                temporary.replace(path)
+            finally:
+                if temporary and temporary.exists(): temporary.unlink()
 
     def get(self, metadata):
         path=self._path(metadata)

@@ -1,5 +1,14 @@
 # Editor descriptors and instance properties
 
+Signal domains and typed local dispatch are described in
+[`signal-domains-and-simulation.md`](../../docs/architecture/signal-domains-and-simulation.md).
+Run `scripts/sync_editor_catalog.py` to refresh their shared port-domain
+projection after changing canonical component metadata. Saved graph versions and
+unknown metadata remain preserved; declarations do not grant an execution model.
+The event scheduling budget may reach 1,000,000; digital capture remains bounded
+to 100,000 observations. Excess capture changes raise `CAPTURE_LIMIT`, with no
+partial/truncated capture returned (the Hardware Service reports `UNEXECUTABLE`).
+
 The canonical library is `device-library/parts/physical-parts.json`. Run
 `python scripts/sync_editor_catalog.py` after changing it. The generated
 `apps/web/src/data/editorParts.json` contains the editor descriptor: identity and

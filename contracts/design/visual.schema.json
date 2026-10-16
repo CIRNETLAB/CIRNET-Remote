@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://netcircuit.local/contracts/design/visual/1.0/schema.json",
+  "title": "Persisted editor presentation namespaces 1.0",
+  "$comment": "Opt-in namespace validators. Legacy graph metadata stays extensible; future namespaces are preserved without interpreting them.",
+  "$defs": {
+    "WirePoint3": {
+      "type": "object", "required": ["x", "y", "z"],
+      "properties": {"x": {"type": "number"}, "y": {"type": "number"}, "z": {"type": "number"}},
+      "additionalProperties": true,
+      "$comment": "Legacy visual coordinates preserve opaque point extensions; mounting coordinates remain strict."
+    },
+    "WireRouteMode": {"enum": ["FREE", "ORTHOGONAL", "AUTO"]},
+    "WireControlPoint": {
+      "oneOf": [
+        {"type": "object", "required": ["space", "position"], "properties": {"space": {"const": "world"}, "position": {"$ref": "#/$defs/WirePoint3"}}, "additionalProperties": true},
+        {"type": "object", "required": ["space", "moduleId", "position"], "properties": {"space": {"const": "module"}, "moduleId": {"type": "string", "minLength": 1}, "position": {"$ref": "#/$defs/WirePoint3"}}, "additionalProperties": true}
+      ]
+    },
+    "WireVisual": {
+      "type": "object", "required": ["version", "color", "routeMode", "controlPoints", "thickness"],
+      "properties": {
+        "version": {"const": 1}, "color": {"type": "string", "pattern": "^#[0-9a-fA-F]{6}$"},
+        "routeMode": {"$ref": "#/$defs/WireRouteMode"}, "controlPoints": {"type": "array", "items": {"$ref": "#/$defs/WireControlPoint"}},
+        "thickness": {"type": "number", "exclusiveMinimum": 0}, "height": {"type": "number", "minimum": 0},
+        "layer": {"type": "integer", "minimum": 0}, "frameModuleId": {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}]}
+      }, "additionalProperties": true
+    },
+    "LeadSettings": {
+      "type": "object", "properties": {
+        "leadForm": {"enum": ["straight", "formed90", "offset-s"]},
+        "leadLengthMm": {"type": "number", "minimum": 0, "maximum": 4},
+        "bodyLiftMm": {"type": "number", "minimum": 0, "maximum": 6}
+      }, "additionalProperties": true,
+      "allOf": [{"if": {"required": ["leadForm"], "properties": {"leadForm": {"const": "straight"}}}, "then": {"properties": {"leadLengthMm": {"const": 0}}}}]
+    }
+  }
+}

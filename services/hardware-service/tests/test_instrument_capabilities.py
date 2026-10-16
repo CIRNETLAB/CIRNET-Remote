@@ -28,11 +28,16 @@ class GeneratorTestDriver(ProtectedTestDriver):
         self.runtime = runtime
         self.configurations = []
         self.prepared_plan = None
+        self.generator_path = True
+        self.profile_version = 'test-protection'
+        self.capability_overrides = {}
 
     def get_capabilities(self):
         value = super().get_capabilities()
-        value['physical_analog_routing'] = True  # Synthetic routed-generator profile only.
-        value['routing_resources'][0]['roles'].append('GENERATOR')
+        value['physical_analog_routing'] = False
+        value['hardware_profile_version'] = self.profile_version
+        if self.generator_path:
+            value['routing_resources'][0]['roles'].append('GENERATOR')
         value['instrument_capabilities'] = {
             'logic_analyzer': {'channels': 1, 'runtime_reconfiguration_supported': False},
             'oscilloscope': {'channels': 0, 'runtime_reconfiguration_supported': False},
@@ -41,6 +46,7 @@ class GeneratorTestDriver(ProtectedTestDriver):
                           'frequency_max_hz': 10000, 'amplitude_max_vpp': 3,
                           'offset_min_v': -1, 'offset_max_v': 1},
         }
+        value.update(self.capability_overrides)
         return value
 
     def prepare_execution(self, value):
@@ -115,6 +121,90 @@ def test_baseline_generator_configuration_is_accepted_in_plan_before_power_up():
     assert 'power' not in driver.calls and 'generator' not in driver.calls
 
 
+def test_approved_generator_path_does_not_enable_arbitrary_analog_routing():
+    driver = GeneratorTestDriver()
+    station = scanned_station(driver)
+    assert station.get_capabilities().physical_analog_routing is False
+    assert prepare_generator(station)['accepted'] is True
+
+
+def test_approved_scope_path_can_prepare_without_arbitrary_analog_routing():
+    class ScopeDriver(GeneratorTestDriver):
+        def get_capabilities(self):
+            value = super().get_capabilities()
+            value['routing_resources'][0]['roles'].append('SCOPE')
+            value['instrument_capabilities']['oscilloscope']['channels'] = 2
+            return value
+    driver = ScopeDriver()
+    station = scanned_station(driver)
+    value = generator_plan()
+    value['endpoint_bindings'][0]['role'] = 'SCOPE'
+    value['instrument_allocations'][0]['instrument'] = 'SCOPE'
+    value['generator_config'] = []
+    assert station.get_capabilities().physical_analog_routing is False
+    assert prepare_generator(station, value)['accepted'] is True
+    assert driver.prepared_plan == value
+
+
+@pytest.mark.parametrize('change', ['missing_route', 'unknown_resource', 'unobserved_node', 'wrong_role', 'unallocated_channel'])
+def test_generator_plan_requires_profile_authorized_observed_path(change):
+    driver = GeneratorTestDriver()
+    station = scanned_station(driver)
+    value = generator_plan()
+    if change == 'missing_route': value['routing_allocations'] = []
+    if change == 'unknown_resource': value['routing_allocations'][0]['resource_id'] = 'unknown'
+    if change == 'unobserved_node': value['endpoint_bindings'][0]['node_id'] = 'UNKNOWN_NODE'
+    if change == 'wrong_role': driver.generator_path = False
+    if change == 'unallocated_channel': value['instrument_allocations'][0]['channel'] = 3
+    error_code(lambda: prepare_generator(station, value), 'UNEXECUTABLE')
+    assert 'prepare' not in driver.calls
+
+
+def test_live_generator_rechecks_current_profile_path_before_driver_control():
+    driver = GeneratorTestDriver(runtime=True)
+    station = scanned_station(driver)
+    start_generator(station)
+    driver.generator_path = False
+    error_code(lambda: station.configure_generator(generator_configuration()), 'UNEXECUTABLE')
+    assert not driver.configurations
+
+
+@pytest.mark.parametrize('stage', ['routing', 'power', 'start'])
+def test_instrument_path_revocation_cannot_enable_a_prepared_plan(stage):
+    driver = GeneratorTestDriver()
+    station = scanned_station(driver)
+    prepare_generator(station)
+    if stage in ('power', 'start'): station.apply_routing()
+    if stage == 'start':
+        station.guarded_power_up()
+        station.arm_capture(generator_plan()['capture_config'])
+    before = driver.calls.count(stage)
+    driver.generator_path = False
+    action = {'routing': station.apply_routing, 'power': station.guarded_power_up,
+              'start': station.start_execution}[stage]
+    error_code(action, 'UNEXECUTABLE')
+    assert driver.calls.count(stage) == before
+    assert station.state == 'FAULT'
+
+
+def test_live_generator_rejects_changed_profile_revision_before_control():
+    driver = GeneratorTestDriver(runtime=True)
+    station = scanned_station(driver)
+    start_generator(station)
+    driver.profile_version = 'replacement-profile'
+    error_code(lambda: station.configure_generator(generator_configuration()), 'PROTOCOL_MISMATCH')
+    assert not driver.configurations and station.state == 'FAULT'
+
+
+def test_instrument_plan_cannot_route_after_physical_execution_capability_is_revoked():
+    driver = GeneratorTestDriver()
+    station = scanned_station(driver)
+    prepare_generator(station)
+    driver.capability_overrides['physical_digital'] = False
+    error_code(station.apply_routing, 'UNEXECUTABLE')
+    assert 'routing' not in driver.calls and station.state == 'FAULT'
+
+
 @pytest.mark.parametrize('change', [
     {'channel': 0}, {'channel': 3}, {'frequency_hz': 99}, {'frequency_hz': 10001},
     {'amplitude_vpp': 4}, {'offset_v': -2}, {'offset_v': 2}, {'waveform': 'TRIANGLE'},
@@ -139,6 +229,24 @@ def test_raw_plan_rejects_duplicate_instrument_channel_allocation():
     value = generator_plan()
     value['instrument_allocations'].append(deepcopy(value['instrument_allocations'][0]))
     error_code(lambda: prepare_generator(station, value), 'UNEXECUTABLE')
+    assert 'prepare' not in driver.calls
+
+
+@pytest.mark.parametrize('change', ['route', 'node', 'role'])
+def test_raw_rpc_cannot_substitute_an_unapproved_instrument_path(change):
+    from contracts.generated import rpc_v2_pb2 as pb
+    driver = GeneratorTestDriver()
+    station = scanned_station(driver)
+    value = generator_plan()
+    if change == 'route': value['routing_allocations'][0]['resource_id'] = 'undeclared'
+    if change == 'node': value['endpoint_bindings'][0]['node_id'] = 'UNOBSERVED'
+    if change == 'role': driver.generator_path = False
+    request = pb.PrepareExecutionRequest(target=pb.Target(station_id='physical-1', experiment_id='e1'),
+        plan=ParseDict(value, pb.InstrumentationExecutionPlan()),
+        decision=pb.ExecutionDecision(schema_version='1.0', decision='RUN_NORMAL'))
+    decoded = pb.PrepareExecutionRequest.FromString(request.SerializeToString())
+    reply = LifecycleRpc({'physical-1': station}, pb).PrepareExecution(decoded, None)
+    assert reply.accepted is False and reply.code == pb.UNEXECUTABLE
     assert 'prepare' not in driver.calls
 
 

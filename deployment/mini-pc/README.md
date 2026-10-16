@@ -1,14 +1,14 @@
-# Linux Mini PC deployment checklist
+# Linux Mini PC deployment review
 
-Target: Intel Xeon W-1370, 16 GB RAM, 256 GB SSD. Canonical Lab-First authority: ../../docs/ARCHITECTURE.md. PostgreSQL production; SQLite optional for development/tests.
+Intended target: Intel Xeon W-1370, 16 GB RAM, 256 GB SSD. Actual target deployment, service-manager/TLS checks and hardware execution were not performed in this task. Follow the [production guide](../README.md) and [Lab-First authority](../../docs/ARCHITECTURE.md).
 
-1. Create dedicated netcircuit user and /opt/netcircuit/repo checkout.
-2. Build apps/web and deploy dist to /opt/netcircuit/web.
-3. Install separate API/hardware environments under /opt/netcircuit.
-4. Configure PostgreSQL and /etc/netcircuit/netcircuit.env; NETCIRCUIT_ENV=production requires a PostgreSQL URL.
-5. Review systemd/Nginx paths and permissions; nginx -t before reload.
-6. Verify loopback services before enabling startup.
-7. Keep simulation until validated driver/profile/protection exists.
-8. Validate TLS/auth/firewall/secrets/load/recovery before exposure.
+1. Provision the dedicated service account and PostgreSQL database; rehearse matched database/capture backup and restoration.
+2. Install verified wheels into separate API/Hardware Service environments, and the built Web bundle into `/opt/netcircuit/web`.
+3. Review the production environment example, exact HTTPS Origin, certificate and absolute data paths. Do not reuse the development guest/SQLite configuration.
+4. Run migrations and HEAD check, then the one-time interactive administrator bootstrap with the installed API environment.
+5. Review Nginx and systemd paths/permissions. Check the target Nginx configuration before installing/enabling services. API remains one worker on 127.0.0.1:8000; RPC remains 127.0.0.1:50051.
+6. Verify login/CSRF/revoke, WebSocket reconnection, document CAS, real virtual capture, process restart and safe quarantine behavior on the actual target.
+7. Inspect retention with a bounded dry-run before enabling its separate timer. Monitor directory quotas, pending cleanup, audit growth and matched backups.
+8. Re-run the documented 50-session workload on the target before making a capacity claim. Local HTTP sessions and four virtual workers are separate from physical slots.
 
-Host communicates through FpgaTransport adapters, without GPIO assumptions. No hardware safety/deployment success claim is implied.
+Keep current capabilities honest: no real Scope/Generator producer, full SPICE/mixed solver or physical driver is added by these templates. Existing transport abstractions remain; Web has no FPGA register/MUX/driver authority.

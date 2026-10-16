@@ -2,3 +2,10 @@
 apps/web/src/assets/icons/*.svg text eol=lf
 # Preserve the recovered historical Git blob for provenance verification.
 docs/archive/PROMPT_CODEX_net-Circuit-Remote_Lab-First_Refactor_R0-R7.md text eol=lf
+# Contract artifacts are byte-compared across Windows and Linux checkouts.
+contracts/compatibility/** text eol=lf
+contracts/boundary/models.py text eol=lf
+contracts/api/openapi.json text eol=lf
+apps/web/src/contracts/generated/** text eol=lf
+apps/web/src/data/labContracts.json text eol=lf
+apps/web/src/types/lab.ts text eol=lf

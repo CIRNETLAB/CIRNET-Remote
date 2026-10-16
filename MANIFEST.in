@@ -1,0 +1,3 @@
+include scripts/generate_hardware_rpc.py
+recursive-include contracts *.json *.proto
+include requirements-codegen.txt

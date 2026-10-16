@@ -1,0 +1,346 @@
+{
+  "version": "1.0",
+  "cases": [
+    {
+      "id": "valid-requested",
+      "contract": "InstrumentCommandRecord",
+      "valid": true,
+      "value": {
+        "schema_version": "1.0",
+        "experiment_id": "e1",
+        "operation_key": "key",
+        "status": "REQUESTED",
+        "revision": 0,
+        "accepted": false,
+        "hardware_applied": false,
+        "error_code": null,
+        "configuration": {
+          "channel": 1,
+          "waveform": "SINE",
+          "frequency_hz": 1,
+          "amplitude_vpp": 1,
+          "offset_v": 0,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "id": "valid-accepted",
+      "contract": "InstrumentCommandRecord",
+      "valid": true,
+      "value": {
+        "schema_version": "1.0",
+        "experiment_id": "e1",
+        "operation_key": "key",
+        "status": "ACCEPTED",
+        "revision": 1,
+        "accepted": true,
+        "hardware_applied": false,
+        "error_code": null,
+        "configuration": {
+          "channel": 1,
+          "waveform": "SINE",
+          "frequency_hz": 1,
+          "amplitude_vpp": 1,
+          "offset_v": 0,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "id": "valid-applied",
+      "contract": "InstrumentCommandRecord",
+      "valid": true,
+      "value": {
+        "schema_version": "1.0",
+        "experiment_id": "e1",
+        "operation_key": "key",
+        "status": "APPLIED",
+        "revision": 1,
+        "accepted": true,
+        "hardware_applied": true,
+        "error_code": null,
+        "configuration": {
+          "channel": 1,
+          "waveform": "SINE",
+          "frequency_hz": 1,
+          "amplitude_vpp": 1,
+          "offset_v": 0,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "id": "valid-failed",
+      "contract": "InstrumentCommandRecord",
+      "valid": true,
+      "value": {
+        "schema_version": "1.0",
+        "experiment_id": "e1",
+        "operation_key": "key",
+        "status": "FAILED",
+        "revision": 1,
+        "accepted": false,
+        "hardware_applied": false,
+        "error_code": "UNSAFE",
+        "configuration": {
+          "channel": 1,
+          "waveform": "SINE",
+          "frequency_hz": 1,
+          "amplitude_vpp": 1,
+          "offset_v": 0,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "id": "unknown-is-not-no-output",
+      "contract": "InstrumentCommandRecord",
+      "valid": true,
+      "value": {
+        "schema_version": "1.0",
+        "experiment_id": "e1",
+        "operation_key": "key",
+        "status": "REQUESTED",
+        "revision": 1,
+        "accepted": false,
+        "hardware_applied": false,
+        "error_code": "ACKNOWLEDGEMENT_UNKNOWN",
+        "configuration": {
+          "channel": 1,
+          "waveform": "SINE",
+          "frequency_hz": 1,
+          "amplitude_vpp": 1,
+          "offset_v": 0,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "id": "invalid-ack-0",
+      "contract": "InstrumentCommandRecord",
+      "valid": false,
+      "code": "ACKNOWLEDGEMENT_MISMATCH",
+      "path": "/status",
+      "value": {
+        "schema_version": "1.0",
+        "experiment_id": "e1",
+        "operation_key": "key",
+        "status": "APPLIED",
+        "revision": 1,
+        "accepted": true,
+        "hardware_applied": false,
+        "error_code": null,
+        "configuration": {
+          "channel": 1,
+          "waveform": "SINE",
+          "frequency_hz": 1,
+          "amplitude_vpp": 1,
+          "offset_v": 0,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "id": "invalid-ack-1",
+      "contract": "InstrumentCommandRecord",
+      "valid": false,
+      "code": "ACKNOWLEDGEMENT_MISMATCH",
+      "path": "/status",
+      "value": {
+        "schema_version": "1.0",
+        "experiment_id": "e1",
+        "operation_key": "key",
+        "status": "APPLIED",
+        "revision": 1,
+        "accepted": false,
+        "hardware_applied": true,
+        "error_code": null,
+        "configuration": {
+          "channel": 1,
+          "waveform": "SINE",
+          "frequency_hz": 1,
+          "amplitude_vpp": 1,
+          "offset_v": 0,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "id": "invalid-ack-2",
+      "contract": "InstrumentCommandRecord",
+      "valid": false,
+      "code": "ACKNOWLEDGEMENT_MISMATCH",
+      "path": "/status",
+      "value": {
+        "schema_version": "1.0",
+        "experiment_id": "e1",
+        "operation_key": "key",
+        "status": "APPLIED",
+        "revision": 1,
+        "accepted": true,
+        "hardware_applied": true,
+        "error_code": "FAILURE",
+        "configuration": {
+          "channel": 1,
+          "waveform": "SINE",
+          "frequency_hz": 1,
+          "amplitude_vpp": 1,
+          "offset_v": 0,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "id": "invalid-ack-3",
+      "contract": "InstrumentCommandRecord",
+      "valid": false,
+      "code": "ACKNOWLEDGEMENT_MISMATCH",
+      "path": "/status",
+      "value": {
+        "schema_version": "1.0",
+        "experiment_id": "e1",
+        "operation_key": "key",
+        "status": "ACCEPTED",
+        "revision": 1,
+        "accepted": true,
+        "hardware_applied": true,
+        "error_code": null,
+        "configuration": {
+          "channel": 1,
+          "waveform": "SINE",
+          "frequency_hz": 1,
+          "amplitude_vpp": 1,
+          "offset_v": 0,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "id": "invalid-ack-4",
+      "contract": "InstrumentCommandRecord",
+      "valid": false,
+      "code": "ACKNOWLEDGEMENT_MISMATCH",
+      "path": "/status",
+      "value": {
+        "schema_version": "1.0",
+        "experiment_id": "e1",
+        "operation_key": "key",
+        "status": "REQUESTED",
+        "revision": 1,
+        "accepted": true,
+        "hardware_applied": true,
+        "error_code": null,
+        "configuration": {
+          "channel": 1,
+          "waveform": "SINE",
+          "frequency_hz": 1,
+          "amplitude_vpp": 1,
+          "offset_v": 0,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "id": "invalid-ack-5",
+      "contract": "InstrumentCommandRecord",
+      "valid": false,
+      "code": "ACKNOWLEDGEMENT_MISMATCH",
+      "path": "/status",
+      "value": {
+        "schema_version": "1.0",
+        "experiment_id": "e1",
+        "operation_key": "key",
+        "status": "FAILED",
+        "revision": 1,
+        "accepted": true,
+        "hardware_applied": true,
+        "error_code": null,
+        "configuration": {
+          "channel": 1,
+          "waveform": "SINE",
+          "frequency_hz": 1,
+          "amplitude_vpp": 1,
+          "offset_v": 0,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "id": "ready",
+      "contract": "InstrumentControlAccess",
+      "valid": true,
+      "value": {
+        "schema_version": "1.0",
+        "experiment_id": "e1",
+        "revision": 1,
+        "can_configure_generator": true,
+        "generator_channels": [
+          1
+        ],
+        "reason": "READY"
+      }
+    },
+    {
+      "id": "invalid-access-0",
+      "contract": "InstrumentControlAccess",
+      "valid": false,
+      "code": "CONTROL_ACCESS_MISMATCH",
+      "path": "/can_configure_generator",
+      "value": {
+        "schema_version": "1.0",
+        "experiment_id": "e1",
+        "revision": 1,
+        "can_configure_generator": true,
+        "generator_channels": [],
+        "reason": "READY"
+      }
+    },
+    {
+      "id": "invalid-access-1",
+      "contract": "InstrumentControlAccess",
+      "valid": false,
+      "code": "CONTROL_ACCESS_MISMATCH",
+      "path": "/can_configure_generator",
+      "value": {
+        "schema_version": "1.0",
+        "experiment_id": "e1",
+        "revision": 1,
+        "can_configure_generator": true,
+        "generator_channels": [
+          1
+        ],
+        "reason": "NOT_RUNNING"
+      }
+    },
+    {
+      "id": "invalid-access-2",
+      "contract": "InstrumentControlAccess",
+      "valid": false,
+      "code": "CONTROL_ACCESS_MISMATCH",
+      "path": "/can_configure_generator",
+      "value": {
+        "schema_version": "1.0",
+        "experiment_id": "e1",
+        "revision": 1,
+        "can_configure_generator": false,
+        "generator_channels": [
+          1
+        ],
+        "reason": "READY"
+      }
+    },
+    {
+      "id": "invalid-operation-key-trailing-lf",
+      "contract": "InstrumentCommandRecord",
+      "valid": false,
+      "code": "SCHEMA_PATTERN",
+      "path": "/operation_key",
+      "value": {
+        "schema_version": "1.0", "experiment_id": "e1", "operation_key": "key\n",
+        "status": "APPLIED", "revision": 1, "accepted": true, "hardware_applied": true, "error_code": null,
+        "configuration": {"channel": 1, "waveform": "SINE", "frequency_hz": 1, "amplitude_vpp": 1, "offset_v": 0, "enabled": true}
+      }
+    }
+  ]
+}

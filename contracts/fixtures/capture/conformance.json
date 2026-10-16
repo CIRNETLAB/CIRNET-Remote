@@ -1,0 +1,3801 @@
+{
+  "schema_version": "1.0",
+  "synthetic": true,
+  "description": "Committed NCAP golden bytes, independently packed with struct; no hardware evidence.",
+  "cases": [
+    {
+      "id": "v1-unicode-channel-order-exact-uint53-X",
+      "version": 1,
+      "valid": true,
+      "payload_hex": "4e43415001620000007b22656e636f64696e67223a226469676974616c5f6576656e7473222c227369676e616c73223a5b2261222c22c3a9225d2c2273616d706c655f636f756e74223a342c226475726174696f6e5f6e73223a393030373139393235343734303939317d01000000000000000000020000ffffffffffff1f000100000300000000000000000100030000000000000001",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 9007199254740991,
+        "sample_count": 4,
+        "channel_count": 2,
+        "signals": [
+          "a",
+          "é"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 151,
+        "sha256": "e7253641a95b498e5512bd7e6ae758873bf6edad6d36f2847da5264b0581806b"
+      },
+      "expected": {
+        "duration_ns": 9007199254740991,
+        "samples": [
+          {
+            "signal": "é",
+            "time_ns": 0,
+            "value": "X"
+          },
+          {
+            "signal": "a",
+            "time_ns": 9007199254740991,
+            "value": 1
+          },
+          {
+            "signal": "a",
+            "time_ns": 3,
+            "value": 0
+          },
+          {
+            "signal": "é",
+            "time_ns": 3,
+            "value": 1
+          }
+        ]
+      },
+      "canonical_encoding": true
+    },
+    {
+      "id": "v1-empty",
+      "version": 1,
+      "valid": true,
+      "payload_hex": "4e434150014b0000007b22656e636f64696e67223a226469676974616c5f6576656e7473222c227369676e616c73223a5b5d2c2273616d706c655f636f756e74223a302c226475726174696f6e5f6e73223a307d",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 0,
+        "sample_count": 0,
+        "channel_count": 0,
+        "signals": [],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 84,
+        "sha256": "169e84ed44a19449844179165db2191808cfa707be30f904d7aeff2f68f7ccf1"
+      },
+      "expected": {
+        "duration_ns": 0,
+        "samples": []
+      },
+      "canonical_encoding": true
+    },
+    {
+      "id": "v1-one-event",
+      "version": 1,
+      "valid": true,
+      "payload_hex": "4e434150014f0000007b22656e636f64696e67223a226469676974616c5f6576656e7473222c227369676e616c73223a5b2278225d2c2273616d706c655f636f756e74223a312c226475726174696f6e5f6e73223a32307d0000080000000000000001",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 20,
+        "sample_count": 1,
+        "channel_count": 1,
+        "signals": [
+          "x"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 99,
+        "sha256": "900072f6ebecaaa4d1ffaea4912bee0ee7f1fb9071b081c40cb053ff4f386fec"
+      },
+      "expected": {
+        "duration_ns": 20,
+        "samples": [
+          {
+            "signal": "x",
+            "time_ns": 8,
+            "value": 1
+          }
+        ]
+      },
+      "canonical_encoding": true
+    },
+    {
+      "id": "v1-duplicate-channel",
+      "version": 1,
+      "valid": false,
+      "payload_hex": "4e43415001530000007b22656e636f64696e67223a226469676974616c5f6576656e7473222c227369676e616c73223a5b2278222c2278225d2c2273616d706c655f636f756e74223a312c226475726174696f6e5f6e73223a32307d0000080000000000000001",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 20,
+        "sample_count": 1,
+        "channel_count": 2,
+        "signals": [
+          "x",
+          "x"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 103,
+        "sha256": "fe640342f40d18cda0615a24ea122b128fc9b184f07e00bc4a909a079e605717"
+      }
+    },
+    {
+      "id": "v1-empty-channel",
+      "version": 1,
+      "valid": false,
+      "payload_hex": "4e434150014e0000007b22656e636f64696e67223a226469676974616c5f6576656e7473222c227369676e616c73223a5b22225d2c2273616d706c655f636f756e74223a312c226475726174696f6e5f6e73223a32307d0000080000000000000001",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 20,
+        "sample_count": 1,
+        "channel_count": 1,
+        "signals": [
+          ""
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 98,
+        "sha256": "53c27110dd1bac81fa4ad8244bca5e65cbcee1629a566ea7c2fa86fff8dcf1b9"
+      }
+    },
+    {
+      "id": "v1-extra-member",
+      "version": 1,
+      "valid": false,
+      "payload_hex": "4e43415001590000007b22656e636f64696e67223a226469676974616c5f6576656e7473222c227369676e616c73223a5b2278225d2c2273616d706c655f636f756e74223a312c226475726174696f6e5f6e73223a32302c226f74686572223a307d0000080000000000000001",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 20,
+        "sample_count": 1,
+        "channel_count": 1,
+        "signals": [
+          "x"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 109,
+        "sha256": "46d049e4ad5f490efb029a5790c944e35b0c7d5326489d28fc9e2dfe3c42c5d9"
+      }
+    },
+    {
+      "id": "v1-boolean-count",
+      "version": 1,
+      "valid": false,
+      "payload_hex": "4e43415001520000007b22656e636f64696e67223a226469676974616c5f6576656e7473222c227369676e616c73223a5b2278225d2c2273616d706c655f636f756e74223a747275652c226475726174696f6e5f6e73223a32307d0000080000000000000001",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 20,
+        "sample_count": 1,
+        "channel_count": 1,
+        "signals": [
+          "x"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 102,
+        "sha256": "529685ea58a7cc5c4e261fcc80754845fca75142f860232af28f9969eaa25e3a"
+      }
+    },
+    {
+      "id": "v1-count-mismatch",
+      "version": 1,
+      "valid": false,
+      "payload_hex": "4e434150014f0000007b22656e636f64696e67223a226469676974616c5f6576656e7473222c227369676e616c73223a5b2278225d2c2273616d706c655f636f756e74223a302c226475726174696f6e5f6e73223a32307d0000080000000000000001",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 20,
+        "sample_count": 1,
+        "channel_count": 1,
+        "signals": [
+          "x"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 99,
+        "sha256": "138dc602aff96bdcf97c76075a72d54b1f171af27211c9274a8fd8da55527c3c"
+      }
+    },
+    {
+      "id": "v1-unsafe-duration",
+      "version": 1,
+      "valid": false,
+      "payload_hex": "4e434150015d0000007b22656e636f64696e67223a226469676974616c5f6576656e7473222c227369676e616c73223a5b2278225d2c2273616d706c655f636f756e74223a312c226475726174696f6e5f6e73223a393030373139393235343734303939327d0000080000000000000001",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 9007199254740992,
+        "sample_count": 1,
+        "channel_count": 1,
+        "signals": [
+          "x"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 113,
+        "sha256": "2d0399a89d98d48b2a383d5602c92b67ffe6b0108dd0636ee1cd693546305298"
+      }
+    },
+    {
+      "id": "v1-lexical-sample_count-1e0",
+      "version": 1,
+      "valid": false,
+      "payload_hex": "4e43415001510000007b22656e636f64696e67223a226469676974616c5f6576656e7473222c227369676e616c73223a5b2278225d2c2273616d706c655f636f756e74223a3165302c226475726174696f6e5f6e73223a32307d0000080000000000000001",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 20,
+        "sample_count": 1,
+        "channel_count": 1,
+        "signals": [
+          "x"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 101,
+        "sha256": "fe52f46e0e40e9fa0691cb52258cc1a78db3281170c0fc2c4b2e9d8259621a00"
+      }
+    },
+    {
+      "id": "v1-lexical-sample_count-1.0",
+      "version": 1,
+      "valid": false,
+      "payload_hex": "4e43415001510000007b22656e636f64696e67223a226469676974616c5f6576656e7473222c227369676e616c73223a5b2278225d2c2273616d706c655f636f756e74223a312e302c226475726174696f6e5f6e73223a32307d0000080000000000000001",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 20,
+        "sample_count": 1,
+        "channel_count": 1,
+        "signals": [
+          "x"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 101,
+        "sha256": "ce9bf419c2ee697ff2c8424c8e7cfb34b16ce6275fddaca10911cb97eab890f2"
+      }
+    },
+    {
+      "id": "v1-lexical-sample_count-1.0000000000000000001",
+      "version": 1,
+      "valid": false,
+      "payload_hex": "4e43415001630000007b22656e636f64696e67223a226469676974616c5f6576656e7473222c227369676e616c73223a5b2278225d2c2273616d706c655f636f756e74223a312e303030303030303030303030303030303030312c226475726174696f6e5f6e73223a32307d0000080000000000000001",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 20,
+        "sample_count": 1,
+        "channel_count": 1,
+        "signals": [
+          "x"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 119,
+        "sha256": "8d51371e2b80bfda05f144f95b2c2005c1b4898f1dc2d2b9f7cfb174d455d685"
+      }
+    },
+    {
+      "id": "v1-lexical-duration_ns-20e0",
+      "version": 1,
+      "valid": false,
+      "payload_hex": "4e43415001510000007b22656e636f64696e67223a226469676974616c5f6576656e7473222c227369676e616c73223a5b2278225d2c2273616d706c655f636f756e74223a312c226475726174696f6e5f6e73223a323065307d0000080000000000000001",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 20,
+        "sample_count": 1,
+        "channel_count": 1,
+        "signals": [
+          "x"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 101,
+        "sha256": "20d51c6863cd4f65dfca2b0d104e5a56d337068c8e3e78db4982a2ce4dc5625a"
+      }
+    },
+    {
+      "id": "v1-lexical-duration_ns-20.0000000000000000001",
+      "version": 1,
+      "valid": false,
+      "payload_hex": "4e43415001630000007b22656e636f64696e67223a226469676974616c5f6576656e7473222c227369676e616c73223a5b2278225d2c2273616d706c655f636f756e74223a312c226475726174696f6e5f6e73223a32302e303030303030303030303030303030303030317d0000080000000000000001",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 20,
+        "sample_count": 1,
+        "channel_count": 1,
+        "signals": [
+          "x"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 119,
+        "sha256": "ad8bacf404da383319a4af5a56d86db06bf18a9adce7d6f8b8abea9e743b84d2"
+      }
+    },
+    {
+      "id": "v1-channel-outside-table",
+      "version": 1,
+      "valid": false,
+      "payload_hex": "4e434150014f0000007b22656e636f64696e67223a226469676974616c5f6576656e7473222c227369676e616c73223a5b2278225d2c2273616d706c655f636f756e74223a312c226475726174696f6e5f6e73223a32307d0100000000000000000001",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 20,
+        "sample_count": 1,
+        "channel_count": 1,
+        "signals": [
+          "x"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 99,
+        "sha256": "850fe9ccd375ba1bc298ea778bc2f2ade9c8c554a88424773ff8e4dbf3406199"
+      }
+    },
+    {
+      "id": "v1-time-outside-duration",
+      "version": 1,
+      "valid": false,
+      "payload_hex": "4e434150014f0000007b22656e636f64696e67223a226469676974616c5f6576656e7473222c227369676e616c73223a5b2278225d2c2273616d706c655f636f756e74223a312c226475726174696f6e5f6e73223a32307d0000150000000000000001",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 20,
+        "sample_count": 1,
+        "channel_count": 1,
+        "signals": [
+          "x"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 99,
+        "sha256": "e6eeb4c40fb3faf3ade5a695631021de0b3e6004459a88139b24fef6f9168460"
+      }
+    },
+    {
+      "id": "v1-value-outside-enum",
+      "version": 1,
+      "valid": false,
+      "payload_hex": "4e434150014f0000007b22656e636f64696e67223a226469676974616c5f6576656e7473222c227369676e616c73223a5b2278225d2c2273616d706c655f636f756e74223a312c226475726174696f6e5f6e73223a32307d0000000000000000000003",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 20,
+        "sample_count": 1,
+        "channel_count": 1,
+        "signals": [
+          "x"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 99,
+        "sha256": "e9bf87a83a89b546fcff6d219732ef5ea9291f267f516fb9c89897d697a9483e"
+      }
+    },
+    {
+      "id": "v1-bad-magic",
+      "version": 1,
+      "valid": false,
+      "payload_hex": "42414421014f0000007b22656e636f64696e67223a226469676974616c5f6576656e7473222c227369676e616c73223a5b2278225d2c2273616d706c655f636f756e74223a312c226475726174696f6e5f6e73223a32307d0000080000000000000001",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 20,
+        "sample_count": 1,
+        "channel_count": 1,
+        "signals": [
+          "x"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 99,
+        "sha256": "9fc85c8f890f3e0095257c6f469830c8f16a4ce6e24e5a0e5c63d436b615c3dd"
+      }
+    },
+    {
+      "id": "v1-unknown-version",
+      "version": 1,
+      "valid": false,
+      "payload_hex": "4e434150034f0000007b22656e636f64696e67223a226469676974616c5f6576656e7473222c227369676e616c73223a5b2278225d2c2273616d706c655f636f756e74223a312c226475726174696f6e5f6e73223a32307d0000080000000000000001",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 20,
+        "sample_count": 1,
+        "channel_count": 1,
+        "signals": [
+          "x"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 99,
+        "sha256": "b4f1290b7fc68347ca18a9a42d87b2c6d3b3f81a794a1296d3ef17d50c00c913"
+      }
+    },
+    {
+      "id": "v1-truncated",
+      "version": 1,
+      "valid": false,
+      "payload_hex": "4e434150014f0000007b22656e636f64696e67223a226469676974616c5f6576656e7473222c227369676e616c73223a5b2278225d2c2273616d706c655f636f756e74223a312c226475726174696f6e5f6e73223a32307d00000800000000000000",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 20,
+        "sample_count": 1,
+        "channel_count": 1,
+        "signals": [
+          "x"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 98,
+        "sha256": "dff47a3c10898b88cc0916948322297420d4d4b434a192298a27c2f3c399f8ad"
+      }
+    },
+    {
+      "id": "v1-trailing-byte",
+      "version": 1,
+      "valid": false,
+      "payload_hex": "4e434150014f0000007b22656e636f64696e67223a226469676974616c5f6576656e7473222c227369676e616c73223a5b2278225d2c2273616d706c655f636f756e74223a312c226475726174696f6e5f6e73223a32307d000008000000000000000100",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 20,
+        "sample_count": 1,
+        "channel_count": 1,
+        "signals": [
+          "x"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 100,
+        "sha256": "1d58387255c6abd9ed1c2e3079a3da487527c4ebc7631f7a148b21816d4832ee"
+      }
+    },
+    {
+      "id": "v1-header-over-bound",
+      "version": 1,
+      "valid": false,
+      "payload_hex": "4e4341500101000100",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 20,
+        "sample_count": 1,
+        "channel_count": 1,
+        "signals": [
+          "x"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 9,
+        "sha256": "19701b3dbcd31f671844ed8b320f4b79b414b414c7bf0539b412b391f3e7d3c3"
+      }
+    },
+    {
+      "id": "v1-invalid-utf8",
+      "version": 1,
+      "valid": false,
+      "payload_hex": "4e4341500101000000ff",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 20,
+        "sample_count": 1,
+        "channel_count": 1,
+        "signals": [
+          "x"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 10,
+        "sha256": "b758d6b423e4ecb688d259823aa1180d3cebec2c2c9558961ccb393c9f465e09"
+      }
+    },
+    {
+      "id": "v1-BOM",
+      "version": 1,
+      "valid": false,
+      "payload_hex": "4e4341500152000000efbbbf7b22656e636f64696e67223a226469676974616c5f6576656e7473222c227369676e616c73223a5b2278225d2c2273616d706c655f636f756e74223a312c226475726174696f6e5f6e73223a32307d",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 20,
+        "sample_count": 1,
+        "channel_count": 1,
+        "signals": [
+          "x"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 91,
+        "sha256": "dd04a75894587e9c9bff957458cda081c34a6e80ce5792b2b49e3cfcc26bb6e4"
+      }
+    },
+    {
+      "id": "v1-duplicate-key",
+      "version": 1,
+      "valid": false,
+      "payload_hex": "4e43415001600000007b22656e636f64696e67223a226469676974616c5f6576656e7473222c227369676e616c73223a5b2278225d2c2273616d706c655f636f756e74223a312c226475726174696f6e5f6e73223a32302c2273616d706c655f636f756e74223a317d0000080000000000000001",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 20,
+        "sample_count": 1,
+        "channel_count": 1,
+        "signals": [
+          "x"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 116,
+        "sha256": "428dd30c0302c7ed9425222169da8000fcfe02b3ea330e1f6020eb75dd465846"
+      }
+    },
+    {
+      "id": "v1-header-null",
+      "version": 1,
+      "valid": false,
+      "payload_hex": "4e43415001040000006e756c6c",
+      "metadata": {
+        "schema_version": "1.0",
+        "capture_id": "golden-v1",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 20,
+        "sample_count": 1,
+        "channel_count": 1,
+        "signals": [
+          "x"
+        ],
+        "payload_ref": "/api/captures/golden-v1/payload",
+        "payload_byte_count": 13,
+        "sha256": "65ce174184353c2ab425b0202cdb0df61e9bd7df17df5d86fdb103b127d59d97"
+      }
+    },
+    {
+      "id": "v2-int16-interleaved-negative-calibration",
+      "version": 2,
+      "valid": true,
+      "payload_hex": "4e43415002eb0200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d2c7b226964223a22434832222c22756e6974223a2256222c227363616c65223a2d302e352c226f6666736574223a322c2272616e67655f6d696e223a2d32303030302c2272616e67655f6d6178223a32303030302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d0080ff7f0000feffff7f0000",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            },
+            {
+              "id": "CH2",
+              "unit": "V",
+              "scale": -0.5,
+              "offset": 2,
+              "range_min": -20000,
+              "range_max": 20000,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 768,
+        "sha256": "d325d23a13a96aff6a7e9eb60a2fa4fbf0e02488c64d36cfea7e9fd96208e9d5"
+      },
+      "expected": {
+        "samples": [
+          -32768,
+          32767,
+          0,
+          -2,
+          32767,
+          0
+        ],
+        "physical_values": [
+          -327.68,
+          -16381.5,
+          0.0,
+          3.0,
+          327.67,
+          2.0
+        ],
+        "times_ns": [
+          {
+            "numerator": "27021597764222979369",
+            "denominator": "3"
+          },
+          {
+            "numerator": "27021597766222979369",
+            "denominator": "3"
+          },
+          {
+            "numerator": "27021597768222979369",
+            "denominator": "3"
+          }
+        ]
+      },
+      "canonical_encoding": true
+    },
+    {
+      "id": "v2-uint16-extrema",
+      "version": 2,
+      "valid": true,
+      "payload_hex": "4e43415002760200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a2255494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d0000ffff2a00",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "UINT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 645,
+        "sha256": "2f3804af5b71b75d40bcea6fd5ec8b2350a76c979f37ed886bfd5cde98bb70c1"
+      },
+      "expected": {
+        "samples": [
+          0,
+          65535,
+          42
+        ],
+        "physical_values": [
+          0.0,
+          655.35,
+          0.42
+        ],
+        "times_ns": [
+          {
+            "numerator": "27021597764222979369",
+            "denominator": "3"
+          },
+          {
+            "numerator": "27021597766222979369",
+            "denominator": "3"
+          },
+          {
+            "numerator": "27021597768222979369",
+            "denominator": "3"
+          }
+        ]
+      },
+      "canonical_encoding": true
+    },
+    {
+      "id": "v2-float32-extrema",
+      "version": 2,
+      "valid": true,
+      "payload_hex": "4e434150027e0200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22464c4f41543332222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a312c226f6666736574223a302c2272616e67655f6d696e223a2d332e35652b33382c2272616e67655f6d6178223a332e35652b33382c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7dffff7fff0000003effff7f7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "FLOAT32",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 1,
+              "offset": 0,
+              "range_min": -3.5e+38,
+              "range_max": 3.5e+38,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 659,
+        "sha256": "4e827ee0757f56cadec093f4414d5695e907822f5dac2ec180a2e4be3858c7ee"
+      },
+      "expected": {
+        "samples": [
+          -3.4028234663852886e+38,
+          0.125,
+          3.4028234663852886e+38
+        ],
+        "physical_values": [
+          -3.4028234663852886e+38,
+          0.125,
+          3.4028234663852886e+38
+        ],
+        "times_ns": [
+          {
+            "numerator": "27021597764222979369",
+            "denominator": "3"
+          },
+          {
+            "numerator": "27021597766222979369",
+            "denominator": "3"
+          },
+          {
+            "numerator": "27021597768222979369",
+            "denominator": "3"
+          }
+        ]
+      },
+      "canonical_encoding": true
+    },
+    {
+      "id": "v2-empty",
+      "version": 2,
+      "valid": true,
+      "payload_hex": "4e43415002750200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a302c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 0,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 638,
+        "sha256": "23efed9a4b7b2561e041b6c45b0f4d35f4e500f4eeaf7aed0165c06cc9640165"
+      },
+      "expected": {
+        "samples": [],
+        "physical_values": [],
+        "times_ns": []
+      },
+      "canonical_encoding": true
+    },
+    {
+      "id": "v2-loss-gaps-invalid-range-clipped",
+      "version": 2,
+      "valid": true,
+      "payload_hex": "4e43415002e30200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a224c4f5353222c227465726d696e6174696f6e5f726561736f6e223a225452414e53504f52545f4c4f5353222c226c6f73745f6672616d6573223a352c2267617073223a5b7b2261745f6672616d65223a302c226d697373696e675f6672616d6573223a327d2c7b2261745f6672616d65223a322c226d697373696e675f6672616d6573223a337d5d2c22696e76616c69645f72616e676573223a5b7b2266697273745f6672616d65223a312c226672616d655f636f756e74223a317d5d2c22636c69707065645f6368616e6e656c73223a5b22434831225d7d7d0a00ff7f1400",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "LOSS",
+            "termination_reason": "TRANSPORT_LOSS",
+            "lost_frames": 5,
+            "gaps": [
+              {
+                "at_frame": 0,
+                "missing_frames": 2
+              },
+              {
+                "at_frame": 2,
+                "missing_frames": 3
+              }
+            ],
+            "invalid_ranges": [
+              {
+                "first_frame": 1,
+                "frame_count": 1
+              }
+            ],
+            "clipped_channels": [
+              "CH1"
+            ]
+          }
+        },
+        "payload_byte_count": 754,
+        "sha256": "d79ca61007bc2709cec963e1836c8bd3b393eb556c8a6846df684fa0aced674c"
+      },
+      "expected": {
+        "samples": [
+          10,
+          32767,
+          20
+        ],
+        "physical_values": [
+          0.1,
+          327.67,
+          0.2
+        ],
+        "times_ns": [
+          {
+            "numerator": "27021597768222979369",
+            "denominator": "3"
+          },
+          {
+            "numerator": "27021597770222979369",
+            "denominator": "3"
+          },
+          {
+            "numerator": "27021597778222979369",
+            "denominator": "3"
+          }
+        ]
+      },
+      "canonical_encoding": true
+    },
+    {
+      "id": "v2-partial-stopped",
+      "version": 2,
+      "valid": true,
+      "payload_hex": "4e43415002760200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a225041525449414c222c227465726d696e6174696f6e5f726561736f6e223a2253544f50504544222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d010002000300",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "PARTIAL",
+            "termination_reason": "STOPPED",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 645,
+        "sha256": "5b3d3ebc822cd2411061e9d3c4090bfb6aa8efab790190ef9278db4958640bb5"
+      },
+      "expected": {
+        "samples": [
+          1,
+          2,
+          3
+        ],
+        "physical_values": [
+          0.01,
+          0.02,
+          0.03
+        ],
+        "times_ns": [
+          {
+            "numerator": "27021597764222979369",
+            "denominator": "3"
+          },
+          {
+            "numerator": "27021597766222979369",
+            "denominator": "3"
+          },
+          {
+            "numerator": "27021597768222979369",
+            "denominator": "3"
+          }
+        ]
+      },
+      "canonical_encoding": true
+    },
+    {
+      "id": "v2-partial-invalid-range",
+      "version": 2,
+      "valid": true,
+      "payload_hex": "4e43415002980200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a225041525449414c222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b7b2266697273745f6672616d65223a302c226672616d655f636f756e74223a337d5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d010002000300",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "PARTIAL",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [
+              {
+                "first_frame": 0,
+                "frame_count": 3
+              }
+            ],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 679,
+        "sha256": "3ef75a4260431fbe98d4685f01574d9e0ee6f2cfba563fe43b966494ec4f4fe4"
+      },
+      "expected": {
+        "samples": [
+          1,
+          2,
+          3
+        ],
+        "physical_values": [
+          0.01,
+          0.02,
+          0.03
+        ],
+        "times_ns": [
+          {
+            "numerator": "27021597764222979369",
+            "denominator": "3"
+          },
+          {
+            "numerator": "27021597766222979369",
+            "denominator": "3"
+          },
+          {
+            "numerator": "27021597768222979369",
+            "denominator": "3"
+          }
+        ]
+      },
+      "canonical_encoding": true
+    },
+    {
+      "id": "v2-invalid-evidence-retained",
+      "version": 2,
+      "valid": true,
+      "payload_hex": "4e434150027b0200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a22494e56414c4944222c227465726d696e6174696f6e5f726561736f6e223a224452495645525f4552524f52222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d010002000300",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "INVALID",
+            "termination_reason": "DRIVER_ERROR",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 650,
+        "sha256": "d5e1483d3a521c9e23c51f911394308435bd7dbac3d07f26bc5e359de2c00eb5"
+      },
+      "expected": {
+        "samples": [
+          1,
+          2,
+          3
+        ],
+        "physical_values": [
+          0.01,
+          0.02,
+          0.03
+        ],
+        "times_ns": [
+          {
+            "numerator": "27021597764222979369",
+            "denominator": "3"
+          },
+          {
+            "numerator": "27021597766222979369",
+            "denominator": "3"
+          },
+          {
+            "numerator": "27021597768222979369",
+            "denominator": "3"
+          }
+        ]
+      },
+      "canonical_encoding": true
+    },
+    {
+      "id": "v2-capture-relative-clock",
+      "version": 2,
+      "valid": true,
+      "payload_hex": "4e43415002690200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22636170747572655f72656c6174697665222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2230222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d010002000300",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "capture_relative",
+            "clock_id": null,
+            "anchor_ns": "0",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 632,
+        "sha256": "dcfbc9be2c7501dcd5d308160c6d676a9a221e4cca407114c9094ca3abb2f778"
+      },
+      "expected": {
+        "samples": [
+          1,
+          2,
+          3
+        ],
+        "physical_values": [
+          0.01,
+          0.02,
+          0.03
+        ],
+        "times_ns": [
+          {
+            "numerator": "0",
+            "denominator": "3"
+          },
+          {
+            "numerator": "2000000000",
+            "denominator": "3"
+          },
+          {
+            "numerator": "4000000000",
+            "denominator": "3"
+          }
+        ]
+      },
+      "canonical_encoding": true
+    },
+    {
+      "id": "v2-device-clock-is-not-UTC",
+      "version": 2,
+      "valid": true,
+      "payload_hex": "4e434150028b0200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a226465766963655f636c6f636b222c22636c6f636b5f6964223a2273796e7468657469632d6465766963652d636c6f636b222c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d010002000300",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "device_clock",
+            "clock_id": "synthetic-device-clock",
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 666,
+        "sha256": "1877e3fc567c66edf56e4bb0cbff7b3e411e95fb089d92117775186df7956590"
+      },
+      "expected": {
+        "samples": [
+          1,
+          2,
+          3
+        ],
+        "physical_values": [
+          0.01,
+          0.02,
+          0.03
+        ],
+        "times_ns": [
+          {
+            "numerator": "27021597764222979369",
+            "denominator": "3"
+          },
+          {
+            "numerator": "27021597766222979369",
+            "denominator": "3"
+          },
+          {
+            "numerator": "27021597768222979369",
+            "denominator": "3"
+          }
+        ]
+      },
+      "canonical_encoding": true
+    },
+    {
+      "id": "v2-range-order",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002760200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a2d31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": -10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 645,
+        "sha256": "fffd61a90ed0d9a7919972c33935935c1013197e210b80b5a5f9a502806c7ebe"
+      },
+      "expected_issue": {
+        "code": "CAPTURE_RANGE_ORDER",
+        "path": "/header/channels/0/range_max",
+        "severity": "error",
+        "profile": "transport"
+      }
+    },
+    {
+      "id": "v2-zero-scale",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002720200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 641,
+        "sha256": "3e7bf957dfd7261219d2b185885867af0bc18e1dc9b3929a1531f5d904d6872e"
+      }
+    },
+    {
+      "id": "v2-calibration-overflow",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002770200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a31652b3330382c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 1e+308,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 646,
+        "sha256": "437a412e76978febe6186a2e1fa37ddd8c3e2682252a553bdac714bc0ff1ff2b"
+      }
+    },
+    {
+      "id": "v2-duplicate-channel",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002e50200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d2c7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            },
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 756,
+        "sha256": "f09eeefc1ab11beafaa2426899ee162123d02387411d07ae4c217935fdb58c84"
+      },
+      "expected_issue": {
+        "code": "DUPLICATE_ID",
+        "path": "/header/channels/1/id",
+        "severity": "error",
+        "profile": "transport"
+      }
+    },
+    {
+      "id": "v2-wrong-byte-order",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002720200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a22626967222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "big",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 641,
+        "sha256": "c6e6506717f73b6773df7dd101377be7ffc1f2a0bd2440985595dcea3c401e40"
+      }
+    },
+    {
+      "id": "v2-unknown-encoding",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002770200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22464c4f41543634222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "FLOAT64",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 646,
+        "sha256": "9a0deff423458d8ad68ee13f2375f5579be8bd6f50ea1d0ce0b92a060f36aca8"
+      }
+    },
+    {
+      "id": "v2-interleave-mismatch",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002720200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226368616e6e656c5f706c616e6172222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "channel_planar",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 641,
+        "sha256": "86a0d9fe16b68374b609f8eb7596fd7aa2e2d62b52277c240d384b0e03b11917"
+      }
+    },
+    {
+      "id": "v2-lost-count-mismatch",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002740200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a224c4f5353222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a322c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "LOSS",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 2,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 643,
+        "sha256": "273f2b406aa491c58ff1d70248543502f94ca11486a70f6d45211d2f333c5129"
+      },
+      "expected_issue": {
+        "code": "CAPTURE_LOSS_MISMATCH",
+        "path": "/header/quality/gaps",
+        "severity": "error",
+        "profile": "transport"
+      }
+    },
+    {
+      "id": "v2-gap-beyond-data",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002950200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a224c4f5353222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a312c2267617073223a5b7b2261745f6672616d65223a342c226d697373696e675f6672616d6573223a317d5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "LOSS",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 1,
+            "gaps": [
+              {
+                "at_frame": 4,
+                "missing_frames": 1
+              }
+            ],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 676,
+        "sha256": "4e71cb9a79266ed4b14e99ced2f4eae4378ac2cecd7b6c61f14951e6b1c14349"
+      },
+      "expected_issue": {
+        "code": "CAPTURE_GAP_ORDER",
+        "path": "/header/quality/gaps/0",
+        "severity": "error",
+        "profile": "transport"
+      }
+    },
+    {
+      "id": "v2-invalid-range-overlap",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002ba0200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a225041525449414c222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b7b2266697273745f6672616d65223a302c226672616d655f636f756e74223a327d2c7b2266697273745f6672616d65223a312c226672616d655f636f756e74223a317d5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "PARTIAL",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [
+              {
+                "first_frame": 0,
+                "frame_count": 2
+              },
+              {
+                "first_frame": 1,
+                "frame_count": 1
+              }
+            ],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 713,
+        "sha256": "10981939ceac319d9b3ba682b29164a85b7e6ea79cd902aad8ec3aebcc2048c0"
+      },
+      "expected_issue": {
+        "code": "CAPTURE_INVALID_RANGE",
+        "path": "/header/quality/invalid_ranges/1",
+        "severity": "error",
+        "profile": "transport"
+      }
+    },
+    {
+      "id": "v2-invalid-range-outside",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002980200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a225041525449414c222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b7b2266697273745f6672616d65223a322c226672616d655f636f756e74223a327d5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "PARTIAL",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [
+              {
+                "first_frame": 2,
+                "frame_count": 2
+              }
+            ],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 679,
+        "sha256": "a3a497cc59ed29f271b42168ca5a136380f13a70b1a6e0e5f71e103f74881b06"
+      },
+      "expected_issue": {
+        "code": "CAPTURE_INVALID_RANGE",
+        "path": "/header/quality/invalid_ranges/0",
+        "severity": "error",
+        "profile": "transport"
+      }
+    },
+    {
+      "id": "v2-clipped-unknown-channel",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e434150027a0200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b22434839225d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": [
+              "CH9"
+            ]
+          }
+        },
+        "payload_byte_count": 649,
+        "sha256": "9a790fcb9e6c62b54d1a32565d73ea3ac79c022a3da8c49e8a01c6acfaaa1cf8"
+      },
+      "expected_issue": {
+        "code": "CAPTURE_CHANNEL_REFERENCE",
+        "path": "/header/quality/clipped_channels",
+        "severity": "error",
+        "profile": "transport"
+      }
+    },
+    {
+      "id": "v2-valid-but-stopped",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002740200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a2253544f50504544222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "STOPPED",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 643,
+        "sha256": "f9a06db1b810a4d411ae61b7415448ddfcdd2d90c3ee9147977be5508a1b3ac5"
+      },
+      "expected_issue": {
+        "code": "CAPTURE_QUALITY_MISMATCH",
+        "path": "/header/quality/status",
+        "severity": "error",
+        "profile": "transport"
+      }
+    },
+    {
+      "id": "v2-loss-without-frames",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002740200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a224c4f5353222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "LOSS",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 643,
+        "sha256": "1a57c1b018e16b35a4ff783a8dfe8d08a838994b8ef39e0e467d6368e575f4b3"
+      },
+      "expected_issue": {
+        "code": "CAPTURE_QUALITY_MISMATCH",
+        "path": "/header/quality/status",
+        "severity": "error",
+        "profile": "transport"
+      }
+    },
+    {
+      "id": "v2-partial-without-evidence",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002770200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a225041525449414c222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "PARTIAL",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 646,
+        "sha256": "2486e5db2ab6a984b6aaacb13139b15b451d645348991d0e38776999832a5726"
+      },
+      "expected_issue": {
+        "code": "CAPTURE_QUALITY_MISMATCH",
+        "path": "/header/quality/status",
+        "severity": "error",
+        "profile": "transport"
+      }
+    },
+    {
+      "id": "v2-wrong-provenance",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002730200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a226861726477617265222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "hardware",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 642,
+        "sha256": "6230f14a38ca6b19f9c8fc76b99d7d8801471eeeac386eec0eef3269c4fd17bb"
+      },
+      "expected_issue": {
+        "code": "CAPTURE_PROVENANCE_MISMATCH",
+        "path": "/header/provenance",
+        "severity": "error",
+        "profile": "transport"
+      }
+    },
+    {
+      "id": "v2-zero-rate",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002750200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a302c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 0,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 644,
+        "sha256": "4359dccb26d730907870ecdd5dbceebdf4a4c4419b0a5d317403f6b18f6df84d"
+      }
+    },
+    {
+      "id": "v2-anchor-leading-zero",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002640200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a223031222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "01",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 627,
+        "sha256": "5628ccea427d4a2d9c6ae5c6f5d8f9aa9a511d277301b743d047c3af1c9ba5ef"
+      }
+    },
+    {
+      "id": "v2-extra-header-field",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002810200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d2c22756e6b6e6f776e223a317d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          },
+          "unknown": 1
+        },
+        "payload_byte_count": 656,
+        "sha256": "12fa3520ba8c9dd638797171be1dc9f20c410ef14bc35790df5a06d10e874ece"
+      }
+    },
+    {
+      "id": "v2-boolean-generation",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002780200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a747275652c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": true,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 647,
+        "sha256": "e14d8f01be83d0f5f161ab859504116eef913dea748cf4c634053ec19f477850"
+      }
+    },
+    {
+      "id": "v2-unsafe-integer-calibration-token",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002840200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a393030373139393235343734303939322c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 9007199254740992,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 659,
+        "sha256": "fe91400b645c5d9537c5d1f9e9f74cfce95b8e2286fbd785cb89acb023897f4a"
+      }
+    },
+    {
+      "id": "v2-device-clock-without-id",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002770200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a226465766963655f636c6f636b222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "device_clock",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 646,
+        "sha256": "2504f4d1d82fee38b03972807cd11afb66234f2fadc8cdb2edccfebcd80bfe52"
+      },
+      "expected_issue": {
+        "code": "CAPTURE_CLOCK_REFERENCE",
+        "path": "/header/time_axis/clock_id",
+        "severity": "error",
+        "profile": "transport"
+      }
+    },
+    {
+      "id": "v2-epoch-with-device-id",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e434150027d0200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a22756e6578706563746564222c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": "unexpected",
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 652,
+        "sha256": "5a85308e4e0e65c5bf272f3fd2c4672880c11d8eb6f0bb7480219214bbdf5747"
+      },
+      "expected_issue": {
+        "code": "CAPTURE_CLOCK_REFERENCE",
+        "path": "/header/time_axis/clock_id",
+        "severity": "error",
+        "profile": "transport"
+      }
+    },
+    {
+      "id": "v2-relative-nonzero-anchor",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e434150027b0200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22636170747572655f72656c6174697665222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "capture_relative",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 650,
+        "sha256": "a8388c3daa8c50d9833a6a942c6b72e9586afbec6c13aa4ba72a5583d3086bfa"
+      },
+      "expected_issue": {
+        "code": "CAPTURE_TIME_ANCHOR",
+        "path": "/header/time_axis/anchor_ns",
+        "severity": "error",
+        "profile": "transport"
+      }
+    },
+    {
+      "id": "v2-unit-trailing-LF",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002770200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a22565c6e222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V\n",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 646,
+        "sha256": "b2acab9dfa9fce5513cf934f5e43a7b94639bd1a962ba83d5ca3528e9b77c780"
+      }
+    },
+    {
+      "id": "v2-unit-NUL",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e434150027b0200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a22565c7530303030222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V\u0000",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 650,
+        "sha256": "2097e1a4d2aed03929f9f50ca8cb86f664d3c581a0400a2ff1b3a8385d3b2251"
+      }
+    },
+    {
+      "id": "v2-unit-DEL",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002760200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a22567f222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 645,
+        "sha256": "bf52455b1647257217365802b29d75dcd7136f710aa5d4293af5fec58afa4e36"
+      }
+    },
+    {
+      "id": "v2-channel-id-trailing-LF",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002770200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a224348315c6e222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1\n",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 646,
+        "sha256": "b35e3f9ee2e4e25e77ff4d314588099ca7ed8c6898ee5a61561752721d8ddab3"
+      }
+    },
+    {
+      "id": "v2-calibration-id-trailing-LF",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002750200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a2263616c6962726174696f6e5c6e227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "calibration\n"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 644,
+        "sha256": "253035ca3097c2207c4fffd97ec67e4e9cb6fb609494b4f712fc3722ef240d9a"
+      }
+    },
+    {
+      "id": "v2-capture-id-trailing-LF",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002770200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d76325c6e222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2\n",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 646,
+        "sha256": "104a1fd38638fe7562a37d9f840ea00ebdc8e0e366ec88cbcadb43840f221040"
+      }
+    },
+    {
+      "id": "v2-anchor-trailing-LF",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002650200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a22305c6e222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200ff7f",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "0\n",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 628,
+        "sha256": "6dcc3c8ac18038076cbf1497dfa86583aa2fa2e191d1cdbee6f6a5aaf543c539"
+      }
+    },
+    {
+      "id": "v2-truncated",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002750200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d0100020003",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 643,
+        "sha256": "a7ccf2ba68884116d36900627b40c67722fbc6095faf8f84716cf9d138e5c735"
+      }
+    },
+    {
+      "id": "v2-trailing-byte",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002750200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d01000200030000",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 645,
+        "sha256": "67e8c025cac5c7e5486775fcee23094acd4d771bbc75fa5ea5ab45cefad0bff9"
+      }
+    },
+    {
+      "id": "v2-wrong-version",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415001750200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d010002000300",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 644,
+        "sha256": "bb1d8dcedc69ac8251a5e86516ade4af3dd297934636ab1b0927c04afb7e1d2d"
+      }
+    },
+    {
+      "id": "v2-duplicate-nested-key",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002820200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d010002000300",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 657,
+        "sha256": "ce914fe54cd7f33605399c1879d56b3cac275bfaf66fe62c39b0fbc9b006479e"
+      }
+    },
+    {
+      "id": "v2-integer-exponent",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002770200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a3365302c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d010002000300",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 646,
+        "sha256": "af097e90e0ae8e71e1686a42bfbd83df1c3e7d00e18bcdc2498a64f30da56970"
+      }
+    },
+    {
+      "id": "v2-integer-decimal",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002770200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372e302c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d010002000300",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 646,
+        "sha256": "c5ea200989af831c0bc9eb46378edef4d22e19a0b6be82d9d522ff02153f3aa1"
+      }
+    },
+    {
+      "id": "v2-lossy-calibration",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002870200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30313030303030303030303030303030303030312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d010002000300",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 662,
+        "sha256": "462660500b222e257c0b46dc71e3eaad2cfe706722679abb9014ed116920af99"
+      }
+    },
+    {
+      "id": "v2-UTF8-BOM",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e4341500278020000efbbbf7b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d010002000300",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 647,
+        "sha256": "25037b9c74d0c4455edb9b6b041c445cf6dc56f8d55ed9883e3db27ee4af39af"
+      }
+    },
+    {
+      "id": "v2-sha-mismatch",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002750200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d010002000300",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 644,
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "id": "v2-descriptor-generation-mismatch",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002750200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22494e543136222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d010002000300",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 8,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "INT16",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 644,
+        "sha256": "7909d223c14467f4bda24e133ecc992c39b759cec7ab1ece3db07bfdd80f3a4b"
+      }
+    },
+    {
+      "id": "v2-float-NaN",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002770200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22464c4f41543332222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d000000000000c07f00000000",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "FLOAT32",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 652,
+        "sha256": "5bab504b305f01159c0ae73016a5bc53b81b77bb8ed74bf5f36df3daf359c9f7"
+      }
+    },
+    {
+      "id": "v2-float-positive-infinity",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002770200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22464c4f41543332222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d000000000000807f00000000",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "FLOAT32",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 652,
+        "sha256": "eaa7f47e59129468a9e876787cc7797bb228dcad1c24c75e17fa7ce941f5d686"
+      }
+    },
+    {
+      "id": "v2-float-negative-infinity",
+      "version": 2,
+      "valid": false,
+      "payload_hex": "4e43415002770200007b22666f726d6174223a224e4341505f53414d504c45445f5632222c22636170747572655f6964223a22676f6c64656e2d7632222c2267656e65726174696f6e223a372c22736f75726365223a2273696d756c6174696f6e222c2270726f76656e616e6365223a2273796e7468657469635f66697874757265222c22696e737472756d656e74223a226f7363696c6c6f73636f7065222c22656e636f64696e67223a22464c4f41543332222c22627974655f6f72646572223a226c6974746c65222c226c61796f7574223a226672616d655f696e7465726c6561766564222c226672616d655f636f756e74223a332c226368616e6e656c73223a5b7b226964223a22434831222c22756e6974223a2256222c227363616c65223a302e30312c226f6666736574223a302c2272616e67655f6d696e223a2d31302c2272616e67655f6d6178223a31302c2263616c6962726174696f6e5f6964223a22666978747572652d63616c2d31227d5d2c2274696d655f61786973223a7b227265666572656e6365223a22756e69785f65706f6368222c22636c6f636b5f6964223a6e756c6c2c22616e63686f725f6e73223a2239303037313939323534373430393933313233222c2273616d706c655f726174655f687a223a7b226e756d657261746f72223a332c2264656e6f6d696e61746f72223a327d7d2c227175616c697479223a7b22737461747573223a2256414c4944222c227465726d696e6174696f6e5f726561736f6e223a22434f4d504c455445222c226c6f73745f6672616d6573223a302c2267617073223a5b5d2c22696e76616c69645f72616e676573223a5b5d2c22636c69707065645f6368616e6e656c73223a5b5d7d7d00000000000080ff00000000",
+      "descriptor": {
+        "schema_version": "2.0",
+        "header": {
+          "format": "NCAP_SAMPLED_V2",
+          "capture_id": "golden-v2",
+          "generation": 7,
+          "source": "simulation",
+          "provenance": "synthetic_fixture",
+          "instrument": "oscilloscope",
+          "encoding": "FLOAT32",
+          "byte_order": "little",
+          "layout": "frame_interleaved",
+          "frame_count": 3,
+          "channels": [
+            {
+              "id": "CH1",
+              "unit": "V",
+              "scale": 0.01,
+              "offset": 0,
+              "range_min": -10,
+              "range_max": 10,
+              "calibration_id": "fixture-cal-1"
+            }
+          ],
+          "time_axis": {
+            "reference": "unix_epoch",
+            "clock_id": null,
+            "anchor_ns": "9007199254740993123",
+            "sample_rate_hz": {
+              "numerator": 3,
+              "denominator": 2
+            }
+          },
+          "quality": {
+            "status": "VALID",
+            "termination_reason": "COMPLETE",
+            "lost_frames": 0,
+            "gaps": [],
+            "invalid_ranges": [],
+            "clipped_channels": []
+          }
+        },
+        "payload_byte_count": 652,
+        "sha256": "aa5f220868151150d6c04b203a5d9ba96d1e1fcfee35d17560de07b0049d20f8"
+      }
+    }
+  ]
+}

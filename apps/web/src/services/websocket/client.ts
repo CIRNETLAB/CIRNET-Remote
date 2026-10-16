@@ -1,4 +1,10 @@
-import { parseServerEvent, type ServerEvent } from './events'
+import { isVersionedServerEvent, parseServerEvent, type ServerEvent } from './events'
+import { isRecord } from '../../types/api'
+import { parseDocumentJson } from '../../domain/document/json'
+import { controlClientId } from '../session/controlClient'
+
+export type ResyncReason = 'STREAM_RESET' | 'SEQUENCE_GAP' | 'QUEUE_OVERFLOW' | 'PROTOCOL_MISMATCH' | 'INVALID_EVENT'
+export interface EventProtocolIssue { code: 'INVALID_EVENT' | 'PROTOCOL_MISMATCH'; message: string }
 
 export type ConnectionState = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'closed'
 export interface SocketLike {
@@ -7,16 +13,21 @@ export interface SocketLike {
   onerror: ((event: Event) => void) | null
   onmessage: ((event: MessageEvent) => void) | null
   close(): void
+  send?(value: string): void
 }
 export interface EventClient { connect(): void; disconnect(): void }
 export interface EventClientOptions {
   url: string
   onEvent: (event: ServerEvent) => void
   onState?: (state: ConnectionState) => void
+  onResync?: (reason: ResyncReason) => void
+  onProtocolError?: (issue: EventProtocolIssue) => void
   createSocket?: (url: string) => SocketLike
   schedule?: (callback: () => void, delay: number) => ReturnType<typeof setTimeout>
   cancel?: (timer: ReturnType<typeof setTimeout>) => void
   random?: () => number
+  controlClientId?:()=>string
+  onAuthenticationLost?:(code:4401|4403)=>void
 }
 
 export function eventSocketUrl(location: Pick<Location, 'protocol' | 'host'>): string {
@@ -28,9 +39,19 @@ export function createEventClient(options: EventClientOptions): EventClient {
   let socket: SocketLike | null = null
   let timer: ReturnType<typeof setTimeout> | null = null
   let attempts = 0
+  let streamId: string | null = null, sequence = -1
+  const revisions = new Map<string, number>()
   const schedule = options.schedule ?? setTimeout
   const cancel = options.cancel ?? clearTimeout
   const state = (value: ConnectionState) => options.onState?.(value)
+  const resync = (reason: ResyncReason) => options.onResync?.(reason)
+  function protocolFailure(code: EventProtocolIssue['code']) {
+    options.onProtocolError?.({ code, message: code === 'PROTOCOL_MISMATCH' ? 'Realtime protocol is incompatible.' : 'Invalid realtime event; refreshing remote snapshots.' })
+    resync(code)
+    if (code === 'PROTOCOL_MISMATCH') {
+      active = false; retire(); state('closed')
+    }
+  }
   function retire() {
     if (!socket) return
     const previous = socket
@@ -52,14 +73,46 @@ export function createEventClient(options: EventClientOptions): EventClient {
     try {
       const current = (options.createSocket ?? ((url) => new WebSocket(url)))(options.url)
       socket = current
-      current.onopen = () => { if (active && socket === current) { attempts = 0; state('connected') } }
-      current.onclose = current.onerror = () => { if (active && socket === current) reconnect() }
+      current.onopen = () => { if (active && socket === current) {
+        attempts = 0; state('connected')
+        current.send?.(JSON.stringify({ type: 'client.hello', protocol_version: '1.0',control_client_id:(options.controlClientId??controlClientId)() }))
+      } }
+      current.onerror = () => { if (active && socket === current) reconnect() }
+      current.onclose = (event) => { if (active && socket === current) {
+        if(event.code===4401||event.code===4403) {active=false;retire();state('closed');options.onAuthenticationLost?.(event.code)}
+        else reconnect()
+      } }
       current.onmessage = (message) => {
-        if (!active || socket !== current || typeof message.data !== 'string') return
+        if (!active || socket !== current) return
+        if (typeof message.data !== 'string') { protocolFailure('INVALID_EVENT'); return }
+        if (new TextEncoder().encode(message.data).byteLength>4_000_000) { protocolFailure('INVALID_EVENT'); return }
         let data: unknown
-        try { data = JSON.parse(message.data) } catch { return }
+        try { data = parseDocumentJson(message.data,'transport') } catch { protocolFailure('INVALID_EVENT'); return }
+        if (isRecord(data) && 'protocol_version' in data && data.protocol_version !== '1.0') { protocolFailure('PROTOCOL_MISMATCH'); return }
         const event = parseServerEvent(data)
-        if (event) options.onEvent(event)
+        if (!event) { protocolFailure('INVALID_EVENT'); return }
+        if (isVersionedServerEvent(event)) {
+          if (event.type === 'hello') {
+            if(streamId===event.stream_id&&event.sequence<=sequence) return
+            if (streamId !== event.stream_id || event.resync_required) resync('STREAM_RESET')
+            streamId = event.stream_id; sequence = event.sequence
+          } else {
+            if (streamId !== event.stream_id) { resync('STREAM_RESET'); streamId = event.stream_id; sequence = -1 }
+            if (event.sequence <= sequence) return
+            if (sequence >= 0 && event.sequence !== sequence + 1 && event.type !== 'resync.required') resync('SEQUENCE_GAP')
+            sequence = event.sequence
+            if (event.type === 'resync.required') resync(event.reason)
+            if (event.type === 'protocol.error') { protocolFailure(event.code === 'UNSUPPORTED_VERSION' ? 'PROTOCOL_MISMATCH' : 'INVALID_EVENT'); return }
+          }
+          if (event.type === 'experiment.updated') {
+            const key = event.aggregate_id
+            if ((revisions.get(key) ?? -1) >= event.aggregate_revision) return
+            revisions.set(key, event.aggregate_revision)
+            // Sequence ordering remains authoritative; the revision cache only needs recent aggregates.
+            if(revisions.size>256) revisions.delete(revisions.keys().next().value!)
+          }
+        }
+        options.onEvent(event)
       }
     } catch { reconnect() }
   }
@@ -67,6 +120,7 @@ export function createEventClient(options: EventClientOptions): EventClient {
     connect() { if (active) return; active = true; attempts = 0; open() },
     disconnect() {
       active = false
+      streamId = null; sequence = -1; revisions.clear()
       if (timer !== null) { cancel(timer); timer = null }
       retire()
       state('closed')

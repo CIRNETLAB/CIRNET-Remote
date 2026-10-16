@@ -44,7 +44,7 @@ export function shiftedWireCopy(graph: CircuitGraph, wire: WireIdentity, origina
     }
     const world = pose ? moduleLocalToWorld(control.position, pose) : control.position
     const translated = { x: world.x + delta.x, y: world.y + delta.y, z: world.z + delta.z }
-    return { ...control, position: pose ? worldToModuleLocal(translated, pose) : translated }
+    return { ...control, position: { ...(pose ? worldToModuleLocal(translated, pose) : translated) } }
   })
   validateWireVisual(visual, graph.modules)
   return { wire: { source: source.endpoint, destination: destination.endpoint }, visual }
@@ -85,9 +85,9 @@ export function wireCopyAtContact(graph: CircuitGraph, wire: WireIdentity, origi
     if (control.space === 'module' && !owner) throw new Error('A copied wire control point refers to a missing module.')
     const world = owner ? moduleLocalToWorld(control.position, moduleWorldPose(owner, sourceModules)) : control.position
     const transformed = transform(world)
-    if (control.space === 'world') return { space: 'world' as const, position: transformed }
+    if (control.space === 'world') return { space: 'world' as const, position: { ...transformed } }
     const moduleId = ownerMap.get(control.moduleId) ?? control.moduleId, module = graph.modules.find(item => item.id === moduleId)!
-    return { space: 'module' as const, moduleId, position: worldToModuleLocal(transformed, moduleWorldPose(module, graph.modules)) }
+    return { space: 'module' as const, moduleId, position: { ...worldToModuleLocal(transformed, moduleWorldPose(module, graph.modules)) } }
   })
   validateWireVisual(visual, graph.modules)
   return { wire: { source: targetSource, destination: formatEndpoint({ kind: 'contact', moduleId: mappedDestination.module.id, contactId: mappedDestination.contact.contactId }) }, visual }

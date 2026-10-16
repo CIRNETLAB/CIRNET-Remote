@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://netcircuit.local/contracts/fpga-protocol/control.schema.json",
+  "title": "Transport-independent logical FPGA control request; scaffold only",
+  "description": "Software test envelope, not a frozen binary packet or board ABI. Physical driver remains unavailable.",
+  "type": "object",
+  "properties": {
+    "protocol_version": {"const": "1.0-scaffold"},
+    "sequence": {"type": "integer", "minimum": 0, "maximum": 4294967295},
+    "operation": {"enum": ["SAFE_STATE", "SCAN_BEGIN", "PREPARE", "ROUTE_APPLY", "POWER_UP", "ARM", "START", "STOP", "RESET", "STATUS"]}
+  },
+  "required": ["protocol_version", "sequence", "operation"],
+  "additionalProperties": false
+}

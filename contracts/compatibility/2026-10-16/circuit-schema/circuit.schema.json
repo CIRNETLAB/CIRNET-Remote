@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "circuit.schema.json",
+  "title": "net*CIRCUIT Circuit Graph",
+  "type": "object",
+  "required": ["schema_version", "circuit_id", "modules", "connections"],
+  "properties": {
+    "schema_version": {"enum": ["1.0", "1.1"]},
+    "circuit_id": {"type": "string", "minLength": 1},
+    "modules": {"type": "array", "items": {"$ref": "module.schema.json"}},
+    "connections": {"type": "array", "items": {"$ref": "connection.schema.json"}},
+    "metadata": {"type": "object"}
+  },
+  "additionalProperties": false
+}

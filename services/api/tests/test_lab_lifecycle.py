@@ -4,7 +4,8 @@ from pathlib import Path
 import sys
 
 import pytest
-from fastapi.testclient import TestClient
+from csrf_client import CsrfTestClient as TestClient
+from csrf_client import login_admin, publish_fixture_assignment
 
 ROOT=Path(__file__).resolve().parents[3]
 sys.path.insert(0,str(ROOT/'services/api'))
@@ -194,8 +195,11 @@ def test_assignment_api_and_experiment_ownership_use_server_session(tmp_path):
     jobs=DeferredJobs()
     application=main.create_app(repository=persistence.Repository('sqlite://'),gateway=LabGateway(),submit=jobs)
     with TestClient(application) as first, TestClient(application) as second:
+        login_admin(first)
         assert first.post('/api/assignments',json=assignment()).status_code==201
-        assert first.get('/api/assignments/a1').json()==assignment()
+        document=first.get('/api/assignments/a1').json()
+        assert {key:document[key] for key in assignment()}==assignment()
+        assert document['document_kind']=='instructor' and document['published'] is False
         response=first.post('/api/experiments',json={'station_id':'physical-station-01','assignment_id':'a1'})
         assert response.status_code==201
         eid=response.json()['experiment_id']
@@ -209,8 +213,8 @@ def test_websocket_delivers_owner_lifecycle_and_disconnect_cleans_active_lease()
     import app.main as main
     _,persistence=modules(); jobs=DeferredJobs()
     application=main.create_app(repository=persistence.Repository('sqlite://'),gateway=LabGateway(),submit=jobs)
+    publish_fixture_assignment(application,assignment())
     with TestClient(application) as client:
-        client.post('/api/assignments',json=assignment())
         eid=client.post('/api/experiments',json={'station_id':'physical-station-01','assignment_id':'a1'}).json()['experiment_id']
         with client.websocket_connect('/ws/events') as websocket:
             assert websocket.receive_json()['type']=='hello'
@@ -331,11 +335,11 @@ def test_lifecycle_revisions_increase_and_safe_release_is_observable(tmp_path):
     assert final['state_history'][-3:]==['SAFE_STATE','RELEASE','COMPLETE']
 
 
-def test_public_capabilities_redact_node_mapping_without_mutating_driver_profile():
+def test_public_capabilities_exclude_routing_resources_without_mutating_driver_profile():
     import app.main as main
     _,persistence=modules(); gateway=LabGateway()
     application=main.create_app(repository=persistence.Repository('sqlite://'),gateway=gateway,submit=DeferredJobs())
     with TestClient(application) as client:
         caps=client.get('/api/stations/physical-station-01/capabilities').json()
-        assert all(r['node_ids']==[] for r in caps['routing_resources'])
+        assert 'routing_resources' not in caps
         assert gateway.capabilities('physical-station-01')['routing_resources'][0]['node_ids']==['N1']

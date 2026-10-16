@@ -1,15 +1,25 @@
 ---
 project: net-Circuit-Remote
-current_phase: breadboard-mechanical-docking
-status: implemented-reviewed
-last_updated: 2026-10-14
-next_task: user-review-refactor-no-merge
-blocking_issue: none
+current_phase: web-contracts-W8
+status: verified-local
+last_updated: 2026-10-16
+next_task: user-review-and-git-metadata-permissions-no-push
+blocking_issue: git-worktree-metadata-read-only
 hardware_mode: simulation
 fpga_development_started: true
 ---
 
 # Development Log
+
+## Web & Contracts W0–W8 — 2026-10-16
+
+W0–W8 software scope is implemented and verified sequentially. Canonical generation/runtime boundaries, durable identity/RBAC, Project/Circuit revisions/CAS/recovery, assignment publication, connection/history recovery, instrument ACKs, explicit domains and indexed retained captures are integrated into the existing workbench. Safety, observed student topology, CircuitGraph and unavailable hardware remain unchanged in authority. Independent review corrections have regression evidence, including session rotation/legacy proof and bounded transport diagnostics.
+
+Final W8 evidence:1015 full Python PASS/1 Icarus SKIP (including355 Contracts),1054 Web PASS,14 actual Chromium PASS with API0 on restart/shutdown,16 actual PostgreSQL migration/restore/race cases, four clean wheels exercised physically outside checkout, and50 authenticated principals/1195 requests/0 unexpected or transport errors/eight retained real virtual captures. Generation, typecheck, AST, production build and source inventory pass. See `verification/2026-10-16-web-contracts.md`, the individual acceptance matrix and final handoff. Phase Git checkpoints are recorded with the metadata permission limitation; no reset, push, merge or deployment occurred.
+
+## AI Handoff — current Web/Contracts task
+
+Use the final `verification/2026-10-16-web-contracts-handoff.md` for review. Do not reinterpret historical Phase1/2/R/H handoffs below as missing current functionality. `scripts/check_release.py --show-plan` lists reproducible gates; required PostgreSQL, browser and external wheel probes fail explicitly when unavailable. Keep hardware/analog truth, the single API scheduler and principal-bound cancellation. Git metadata permissions require external correction before any commit can succeed; never bypass that permission or fabricate historical phase commits.
 
 ## Breadboard mechanical docking — 2026-10-14
 
@@ -21,7 +31,7 @@ Implemented the approved Native plan: explicit shared 830/630/100 topology, Inst
 
 ## Current Goal
 
-Breadboard mechanical docking and its final review are complete in refactor; leave the source for user review without merge/push. Current evidence and browser/environment limitations are in verification/2026-10-14-breadboard-mechanical-docking.md. ARCHITECTURE.md remains authoritative for lab contracts; the entries and older handoffs below are historical evidence and never override canonical v3.1.
+The authorized Web/Contracts W0–W8 software task has passed local acceptance/build/tests and is left in refactor for review with the documented Git delivery blocker. No push/merge/deploy is authorized or performed. `verification/2026-10-16-web-contracts.md` is the execution ledger. ARCHITECTURE.md remains authoritative; older entries/handoffs below are historical evidence and do not override canonical v3.1 or implemented current source.
 
 ## Post-R7 H0–H6 — 2026-10-13
 
@@ -320,7 +330,9 @@ Phase 1 provides the shell/grid; it does not place, pick, render or wire logical
 
 Device-library coverage is small. gRPC generated bindings/handlers, exact SDRAM/timing, routing architecture/channel count, ADC/DAC/AFE and physical execution remain unimplemented/unselected.
 
-## AI Handoff
+## AI Handoff — historical editor Phase2
+
+The following handoff predates the current Lab-First/Web/Contracts implementation. Its missing-function statements describe that earlier snapshot; use the current handoff/ledger above.
 
 ### What changed
 

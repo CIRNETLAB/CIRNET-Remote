@@ -1,0 +1,38 @@
+name: Contracts
+on:
+  push:
+    paths: ['contracts/**', 'device-library/**', 'scripts/**', 'tests/contracts/**', 'tests/frontend/**', 'services/**', 'simulator/**', 'apps/web/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
+  pull_request:
+    paths: ['contracts/**', 'device-library/**', 'scripts/**', 'tests/contracts/**', 'tests/frontend/**', 'services/**', 'simulator/**', 'apps/web/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
+jobs:
+  canonical-boundaries:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: python -m pip install -r requirements-verification.txt -e . -e './simulator/circuit-simulator[test]' -e './services/api[test]' -e './services/hardware-service[dev]'
+      - run: npm ci --no-audit --no-fund
+        working-directory: apps/web
+      - run: python scripts/generate_hardware_rpc.py
+      - name: Offline schemas, deterministic generation, compatibility and Python conformance
+        run: python scripts/check_release.py --group contracts
+      - name: Browser numeric/semantic conformance and generated type checks
+        run: npm test
+        working-directory: apps/web
+  installed-packages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-verification.txt -e . -e './simulator/circuit-simulator[test]' -e './services/api[test]' -e './services/hardware-service[dev]'
+      - name: Minimum Python runtime; actual wheels installed outside checkout
+        run: python scripts/check_contract_package.py

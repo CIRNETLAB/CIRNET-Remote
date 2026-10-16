@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "connection.schema.json",
+  "title": "net*CIRCUIT Connection",
+  "type": "object",
+  "required": ["source", "destination"],
+  "properties": {
+    "source": {"type": "string", "minLength": 3, "pattern": "^[^.]+\\.[^.]+$"},
+    "destination": {"type": "string", "minLength": 3, "pattern": "^[^.]+\\.[^.]+$"},
+    "metadata": {"type": "object"}
+  },
+  "additionalProperties": false
+}

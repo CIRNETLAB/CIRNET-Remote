@@ -5,6 +5,7 @@ import { useStationStore } from '../src/stores/station'
 import { useCircuitStore } from '../src/stores/circuit'
 import { configureApiClient } from '../src/services/api/client'
 import { stationStatus, isStationDescriptor } from '../src/types/station'
+import { stationFixture } from './helpers/station'
 
 beforeEach(() => setActivePinia(createPinia()))
 
@@ -79,7 +80,7 @@ test('new drafts are independent schema v1 graphs and opening preserves their co
 })
 
 test('validation results are invalidated when the graph changes', async () => {
-  configureApiClient({ fetcher: async () => new Response(JSON.stringify({ valid: true, code: 'VALID', message: 'Valid graph' })) })
+  configureApiClient({ fetcher: async () => Response.json({ valid: true, code: 'VALID', message: 'Valid graph' }) })
   const store = useCircuitStore()
   store.createDraft('First')
   await store.validateCurrent()
@@ -95,7 +96,7 @@ test('late validation cannot approve a changed graph or a newly selected draft',
   store.createDraft('First')
   const pending = store.validateCurrent()
   store.createDraft('Second')
-  complete(new Response(JSON.stringify({ valid: true, code: 'VALID', message: 'Valid graph' })))
+  complete(Response.json({ valid: true, code: 'VALID', message: 'Valid graph' }))
   await pending
   assert.equal(store.validation, null)
   assert.equal(store.validating, false)
@@ -109,7 +110,7 @@ test('a graph edited while validation is pending cannot receive the old approval
   store.createDraft('First')
   const pending = store.validateCurrent()
   store.graph!.modules.push({ id: 'U1', type: '74HC08' })
-  complete(new Response(JSON.stringify({ valid: true, code: 'VALID', message: 'Valid graph' })))
+  complete(Response.json({ valid: true, code: 'VALID', message: 'Valid graph' }))
   await pending
   assert.equal(store.validation, null)
   assert.equal(store.validating, false)
@@ -121,9 +122,9 @@ test('an older discovery response cannot overwrite a newer refresh', async () =>
   const store = useStationStore()
   const first = store.refresh()
   const second = store.refresh()
-  responses[1](new Response(JSON.stringify([{ station_id: 'physical-1', mode: 'hardware', state: 'error' }])))
+  responses[1](Response.json([stationFixture('physical-1','hardware','error')]))
   await second
-  responses[0](new Response(JSON.stringify([{ station_id: 'physical-1', mode: 'hardware', state: 'ready' }])))
+  responses[0](Response.json([stationFixture('physical-1','hardware')]))
   await first
   assert.equal(store.stations[0].status, 'FAULT')
   assert.equal(store.loading, false)

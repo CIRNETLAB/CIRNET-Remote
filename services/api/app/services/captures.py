@@ -1,14 +1,26 @@
 import uuid
 import os
 import time
+from contextlib import contextmanager
+from threading import RLock
+from weakref import WeakValueDictionary
 from hashlib import sha256
 from contracts.capture_codec import encode_digital, decode_digital
 from contracts.validation import validate
 from app.services.capture_store import FilesystemCaptureStore
+from app.services.observability import log_event
 
 class CaptureService:
     def __init__(self,store=None):
         self.store=store or FilesystemCaptureStore(os.getenv('NETCIRCUIT_CAPTURE_DIR','.runtime/captures'))
+        self._locks=WeakValueDictionary();self._locks_guard=RLock()
+
+    @contextmanager
+    def guard(self,capture_id):
+        with self._locks_guard:
+            lock=self._locks.get(capture_id)
+            if lock is None:lock=RLock();self._locks[capture_id]=lock
+        with lock:yield
 
     def normalize(self,capture,mode):
         samples=capture.get("samples",[])
@@ -35,6 +47,7 @@ class CaptureService:
                         sha256=sha256(binary).hexdigest() if normalized['available'] else None)
         metadata=validate('CaptureMetadata',metadata)
         if metadata['available']: self.store.put(metadata,binary)
+        log_event('capture.sealed',capture_id=metadata['capture_id'],outcome='SEALED')
         return metadata
 
     def load(self,metadata):

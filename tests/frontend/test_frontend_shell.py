@@ -43,7 +43,8 @@ def test_frontend_services_do_not_expose_physical_fpga_controls():
 
 def test_frontend_imports_stay_inside_the_application_boundary():
     source = WEB/'src'
-    allowed_packages = {'vue', 'pinia', 'vue-router', 'three'}
+    # Schema parsing inspects original numeric tokens before conversion can round them.
+    allowed_packages = {'vue', 'pinia', 'vue-router', 'three', 'lossless-json'}
     for path in source.rglob('*'):
         if path.suffix not in {'.ts', '.vue'}:
             continue
@@ -57,12 +58,15 @@ def test_frontend_imports_stay_inside_the_application_boundary():
                 assert package in allowed_packages, (path, specifier)
 
 
-def test_fetch_is_centralized_in_api_client():
+def test_fetch_has_explicit_api_and_versioned_asset_boundaries():
     callers = []
     for path in (WEB/'src').rglob('*'):
         if path.suffix in {'.ts', '.vue'} and re.search(r'\bfetch\b', path.read_text(encoding='utf-8')):
             callers.append(path.relative_to(WEB).as_posix())
-    assert callers == ['src/services/api/client.ts']
+    # API/auth traffic has one client. Imported GLB bytes have a separate
+    # bounded, integrity-checked asset adapter; renderer/core use ports.
+    # The transitive AST gate additionally rejects bypasses through barrels.
+    assert sorted(callers) == ['src/services/api/client.ts','src/services/assets/gltfAssets.ts']
 
 
 def test_frontend_typescript_build_config_includes_node_and_modern_libs():

@@ -14,7 +14,12 @@ onBeforeUnmount(()=>instrument.cancelCaptureLoad())
 const captureStatus=computed(()=>capture.value?capture.value.source+' · CAPTURED':instrument.captureLoading?'LOADING CAPTURE':instrument.captureError?'CAPTURE ERROR':instrument.captureMetadata&&!instrument.captureMetadata.available?'CAPTURE UNAVAILABLE':'NO CAPTURE SOURCE')
 const traces=computed(()=>instrument.monitor.channels.map((signal,index)=>({signal,...digitalTrace(capture.value?.samples??[],signal,capture.value?.duration_ns??0,index)})))
 const canRun=computed(()=>station.canExecute&&!experiment.busy&&(station.mode==='simulation'?!!circuit.graph:!!experiment.assignmentId))
-function runPause() {return experiment.canStop?experiment.stop():experiment.run(circuit.graph,station.executionTarget,{signals:instrument.captureSignals,duration_ns:instrument.captureDurationNs})}
+async function runPause(){
+ if(experiment.canStop)return experiment.stop()
+ if(!canRun.value)return false
+ try{const configuration=instrument.preRunConfiguration(station.executionTarget!.capabilities!);instrument.configurationError=null;return experiment.run(circuit.graph,station.executionTarget,configuration.capture_config,undefined,configuration)}
+ catch(error){instrument.configurationError=error instanceof Error?error.message:'Instrument configuration is invalid.';return false}
+}
 const rowCount = computed(() => Math.max(4, instrument.monitor.channels.length))
 const plotHeight = computed(() => Math.max(200, rowCount.value * 36))
 </script>
@@ -28,6 +33,7 @@ const plotHeight = computed(() => Math.max(200, rowCount.value * 36))
         <label>Trigger<select disabled title="Trigger acquisition is unavailable"><option>Not configured</option></select></label>
         <button type="button" @click="runPause"><span aria-hidden="true">▶</span> Run / Pause</button>
       </fieldset>
+      <p v-if="instrument.configurationError" role="alert">{{ instrument.configurationError }}</p>
       <div class="logic-capture">
         <aside class="logic-channels" aria-label="Logic analyzer channels"><div class="logic-column-heading">Channels <span>{{ instrument.monitor.channels.length }}</span></div><div v-if="!instrument.monitor.channels.length" class="logic-channels-empty"><i aria-hidden="true">＋</i><strong>No channels configured</strong><span>Signal inputs will appear here</span></div><ol v-else><li v-for="(channel, index) in instrument.monitor.channels" :key="index"><i aria-hidden="true" /><span :title="channel">{{ channel }}</span><small>{{ capture ? traces[index]?.last : '—' }}</small></li></ol></aside>
         <div class="logic-timeline">

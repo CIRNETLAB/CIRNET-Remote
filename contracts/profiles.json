@@ -1,0 +1,41 @@
+{
+  "version": "1.0",
+  "profiles": {
+    "structural": {
+      "description": "Historical document shape without transport numeric restrictions; never coerces or normalizes stored data.",
+      "integer": null,
+      "definitions": {}
+    },
+    "editor": {
+      "description": "Browser interoperable numeric shape; editor authoring and physical evidence rules remain separate.",
+      "integer": { "minimum": -9007199254740991, "maximum": 9007199254740991 },
+      "definitions": {}
+    },
+    "transport": {
+      "description": "Browser-safe Lab DTOs and protobuf v2 uint32 limits; intersect these bounds with historical schemas.",
+      "integer": { "minimum": -9007199254740991, "maximum": 9007199254740991 },
+      "definitions": {
+        "LabEndpoint": { "properties": { "channel": { "maximum": 4294967295 } } },
+        "InstrumentCapability": { "properties": { "channels": { "maximum": 4294967295 } } },
+        "GeneratorCapability": { "properties": { "channels": { "maximum": 4294967295 } } },
+        "StationCapabilities": { "properties": { "physical_execution_slots": { "maximum": 4294967295 } } },
+        "ClockConfiguration": { "properties": {
+          "period_ns": { "maximum": 4294967295 },
+          "cycles": { "maximum": 4294967295 }
+        } },
+        "GeneratorConfiguration": { "properties": { "channel": { "maximum": 4294967295 } } },
+        "CaptureConfiguration": { "properties": {
+          "duration_ns": { "maximum": 4294967295 },
+          "max_events": { "maximum": 4294967295 }
+        } },
+        "InstrumentationExecutionPlan": { "properties": {
+          "instrument_allocations": { "items": { "properties": { "channel": { "maximum": 4294967295 } } } },
+          "test_vectors": { "items": { "properties": {
+            "time_ns": { "maximum": 4294967295 },
+            "inputs": { "additionalProperties": { "maximum": 4294967295 } }
+          } } }
+        } }
+      }
+    }
+  }
+}

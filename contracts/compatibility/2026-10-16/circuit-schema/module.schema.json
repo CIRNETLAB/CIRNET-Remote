@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "module.schema.json",
+  "title": "net*CIRCUIT Module",
+  "type": "object",
+  "required": ["id", "type"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "type": {"type": "string", "minLength": 1},
+    "position": {
+      "type": "object",
+      "properties": {"x": {"type": "number"}, "y": {"type": "number"}, "z": {"type": "number"}},
+      "additionalProperties": false
+    },
+    "rotation": {"type": "number", "description": "Optional editor yaw in degrees around world Y; no electrical meaning."},
+    "properties": {"type": "object"},
+    "mount": {"$ref": "#/$defs/mount"}
+  },
+  "additionalProperties": true,
+  "allOf": [{"if": {"required": ["mount"]}, "then": {"not": {"anyOf": [{"required": ["position"]}, {"required": ["rotation"]}]}}}],
+  "$defs": {
+    "point": {
+      "type": "object", "required": ["x", "y", "z"],
+      "properties": {"x": {"type": "number"}, "y": {"type": "number"}, "z": {"type": "number"}}, "additionalProperties": false
+    },
+    "pinContact": {
+      "type": "object", "required": ["kind", "version", "pinId", "contactId"],
+      "properties": {"kind": {"const": "pin-contact"}, "version": {"const": 1}, "pinId": {"type": "string", "minLength": 1}, "contactId": {"type": "string", "minLength": 1}},
+      "additionalProperties": false
+    },
+    "mount": {
+      "type": "object", "required": ["kind", "version", "boardId", "partId", "partRevision", "packageId", "packageRevision", "pose", "contacts"],
+      "properties": {
+        "kind": {"const": "breadboard"}, "version": {"const": 1},
+        "boardId": {"type": "string", "minLength": 1}, "partId": {"type": "string", "minLength": 1}, "partRevision": {"type": "integer", "minimum": 1},
+        "packageId": {"type": "string", "minLength": 1}, "packageRevision": {"type": "integer", "minimum": 1},
+        "pose": {"type": "object", "required": ["position", "rotation"], "properties": {"position": {"$ref": "#/$defs/point"}, "rotation": {"type": "number"}}, "additionalProperties": false},
+        "contacts": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/pinContact"}}
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -155,11 +155,13 @@
       "ports": [
         {
           "id": "A",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "B",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         }
       ],
       "defaults": {
@@ -189,11 +191,13 @@
       "ports": [
         {
           "id": "A",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "B",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         }
       ],
       "defaults": {
@@ -223,7 +227,8 @@
       "ports": [
         {
           "id": "OUT",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         }
       ],
       "defaults": {
@@ -251,7 +256,8 @@
       "ports": [
         {
           "id": "OUT",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         }
       ],
       "defaults": {
@@ -279,19 +285,23 @@
       "ports": [
         {
           "id": "Q0",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "Q1",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "Q2",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "Q3",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         }
       ],
       "defaults": {
@@ -321,7 +331,8 @@
       "ports": [
         {
           "id": "OUT",
-          "direction": "output"
+          "direction": "output",
+          "domain": "CLOCK"
         }
       ],
       "defaults": {
@@ -351,7 +362,8 @@
       "ports": [
         {
           "id": "IN",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         }
       ],
       "defaults": {},
@@ -371,35 +383,43 @@
       "ports": [
         {
           "id": "A",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "B",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "C",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "D",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "E",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "F",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "G",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "DP",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         }
       ],
       "defaults": {},
@@ -420,7 +440,8 @@
         {
           "id": "DATA",
           "direction": "input",
-          "width": 8
+          "width": 8,
+          "domain": "DIGITAL"
         }
       ],
       "defaults": {},
@@ -440,7 +461,8 @@
       "ports": [
         {
           "id": "IN",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         }
       ],
       "defaults": {},
@@ -461,51 +483,63 @@
       "ports": [
         {
           "id": "A1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "B1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "Y1",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "A2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "B2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "Y2",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "A3",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "B3",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "Y3",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "A4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "B4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "Y4",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         }
       ],
       "defaults": {},
@@ -526,25 +560,30 @@
         {
           "id": "A",
           "direction": "input",
-          "width": 8
+          "width": 8,
+          "domain": "DIGITAL"
         },
         {
           "id": "B",
           "direction": "input",
-          "width": 8
+          "width": 8,
+          "domain": "DIGITAL"
         },
         {
           "id": "CIN",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "SUM",
           "direction": "output",
-          "width": 8
+          "width": 8,
+          "domain": "DIGITAL"
         },
         {
           "id": "COUT",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         }
       ],
       "defaults": {},
@@ -565,17 +604,20 @@
         {
           "id": "A",
           "direction": "input",
-          "width": 8
+          "width": 8,
+          "domain": "DIGITAL"
         },
         {
           "id": "B",
           "direction": "input",
-          "width": 8
+          "width": 8,
+          "domain": "DIGITAL"
         },
         {
           "id": "PRODUCT",
           "direction": "output",
-          "width": 16
+          "width": 16,
+          "domain": "DIGITAL"
         }
       ],
       "defaults": {},
@@ -596,29 +638,35 @@
         {
           "id": "ADDR",
           "direction": "input",
-          "width": 8
+          "width": 8,
+          "domain": "DIGITAL"
         },
         {
           "id": "DATA_IN",
           "direction": "input",
-          "width": 8
+          "width": 8,
+          "domain": "DIGITAL"
         },
         {
           "id": "DATA_OUT",
           "direction": "output",
-          "width": 8
+          "width": 8,
+          "domain": "DIGITAL"
         },
         {
           "id": "WE",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "OE",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "CLK",
-          "direction": "input"
+          "direction": "input",
+          "domain": "CLOCK"
         }
       ],
       "defaults": {},
@@ -642,59 +690,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -717,11 +779,13 @@
       "ports": [
         {
           "id": "A",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "K",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         }
       ],
       "defaults": {},
@@ -744,11 +808,13 @@
       "ports": [
         {
           "id": "A",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "B",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         }
       ],
       "defaults": {
@@ -797,11 +863,13 @@
       "ports": [
         {
           "id": "PLUS",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         },
         {
           "id": "MINUS",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         }
       ],
       "defaults": {
@@ -840,15 +908,18 @@
       "ports": [
         {
           "id": "1",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "2",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "3",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         }
       ],
       "defaults": {},
@@ -871,11 +942,13 @@
       "ports": [
         {
           "id": "A",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "K",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         }
       ],
       "defaults": {},
@@ -898,11 +971,13 @@
       "ports": [
         {
           "id": "A",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "K",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         }
       ],
       "defaults": {},
@@ -925,11 +1000,13 @@
       "ports": [
         {
           "id": "A",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "B",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         }
       ],
       "defaults": {
@@ -970,11 +1047,13 @@
       "ports": [
         {
           "id": "PLUS",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "MINUS",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         }
       ],
       "defaults": {
@@ -1015,11 +1094,13 @@
       "ports": [
         {
           "id": "1",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "2",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         }
       ],
       "defaults": {},
@@ -1042,35 +1123,43 @@
       "ports": [
         {
           "id": "1",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "8",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         }
       ],
       "defaults": {
@@ -1119,19 +1208,23 @@
       "ports": [
         {
           "id": "1",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         }
       ],
       "defaults": {
@@ -1162,43 +1255,53 @@
       "ports": [
         {
           "id": "1",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "2",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "3",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "4",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "5",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "6",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "8",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "9",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "10",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         }
       ],
       "defaults": {},
@@ -1221,75 +1324,93 @@
       "ports": [
         {
           "id": "1",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "2",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "3",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "4",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "5",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "6",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "8",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "9",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "10",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "11",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "12",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "13",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "15",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "16",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "17",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "18",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         }
       ],
       "defaults": {},
@@ -1312,51 +1433,63 @@
       "ports": [
         {
           "id": "1",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "2",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "3",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "4",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "5",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "6",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "8",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "9",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "10",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "11",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         },
         {
           "id": "12",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "ANALOG"
         }
       ],
       "defaults": {},
@@ -1379,59 +1512,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -1454,59 +1601,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -1529,59 +1690,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -1604,15 +1779,18 @@
       "ports": [
         {
           "id": "1",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         }
       ],
       "defaults": {
@@ -1643,59 +1821,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -1718,59 +1910,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -1793,59 +1999,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -1868,59 +2088,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -1943,59 +2177,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -2018,59 +2266,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -2093,59 +2355,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -2168,59 +2444,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -2243,59 +2533,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -2318,59 +2622,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -2393,59 +2711,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -2468,59 +2800,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -2543,59 +2889,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -2618,59 +2978,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -2693,59 +3067,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -2768,59 +3156,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -2843,59 +3245,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -2918,59 +3334,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -2993,59 +3423,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -3068,59 +3512,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -3143,59 +3601,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -3218,59 +3690,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -3293,59 +3779,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -3368,59 +3868,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -3443,59 +3957,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -3518,59 +4046,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -3593,59 +4135,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -3668,59 +4224,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "input"
+          "direction": "input",
+          "domain": "CLOCK"
         },
         {
           "id": "4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "input"
+          "direction": "input",
+          "domain": "CLOCK"
         },
         {
           "id": "12",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -3743,59 +4313,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -3818,59 +4402,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -3893,59 +4491,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -3968,59 +4580,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -4043,59 +4669,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -4118,59 +4758,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -4193,59 +4847,73 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
@@ -4268,63 +4936,163 @@
       "ports": [
         {
           "id": "1",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "2",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "3",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "4",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "5",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "6",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "7",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "GROUND"
         },
         {
           "id": "8",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "9",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "10",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "11",
-          "direction": "output"
+          "direction": "output",
+          "domain": "DIGITAL"
         },
         {
           "id": "12",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "13",
-          "direction": "input"
+          "direction": "input",
+          "domain": "DIGITAL"
         },
         {
           "id": "14",
-          "direction": "inout"
+          "direction": "inout",
+          "domain": "POWER"
         }
       ],
       "defaults": {},
       "parameters": []
     }
-  ]
+  ],
+  "legacyPorts": {
+    "AND": [
+      {
+        "id": "A",
+        "direction": "input",
+        "domain": "DIGITAL"
+      },
+      {
+        "id": "B",
+        "direction": "input",
+        "domain": "DIGITAL"
+      },
+      {
+        "id": "Y",
+        "direction": "output",
+        "domain": "DIGITAL"
+      }
+    ],
+    "OR": [
+      {
+        "id": "A",
+        "direction": "input",
+        "domain": "DIGITAL"
+      },
+      {
+        "id": "B",
+        "direction": "input",
+        "domain": "DIGITAL"
+      },
+      {
+        "id": "Y",
+        "direction": "output",
+        "domain": "DIGITAL"
+      }
+    ],
+    "XOR": [
+      {
+        "id": "A",
+        "direction": "input",
+        "domain": "DIGITAL"
+      },
+      {
+        "id": "B",
+        "direction": "input",
+        "domain": "DIGITAL"
+      },
+      {
+        "id": "Y",
+        "direction": "output",
+        "domain": "DIGITAL"
+      }
+    ],
+    "NOT": [
+      {
+        "id": "A",
+        "direction": "input",
+        "domain": "DIGITAL"
+      },
+      {
+        "id": "Y",
+        "direction": "output",
+        "domain": "DIGITAL"
+      }
+    ],
+    "DIGITAL_INPUT": [
+      {
+        "id": "OUT",
+        "direction": "output",
+        "domain": "DIGITAL"
+      }
+    ],
+    "INPUT": [
+      {
+        "id": "OUT",
+        "direction": "output",
+        "domain": "DIGITAL"
+      }
+    ],
+    "OUTPUT": [
+      {
+        "id": "IN",
+        "direction": "input",
+        "domain": "DIGITAL"
+      }
+    ]
+  }
 }

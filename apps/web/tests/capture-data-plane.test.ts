@@ -9,7 +9,7 @@ import { useInstrumentStore } from '../src/stores/instrument'
 import { decodeDigitalCapture } from '../src/services/captures/digital'
 import { parseLab } from '../src/types/labValidation'
 import type { CaptureMetadata } from '../src/types/lab'
-import { captureFixture, deferred } from './helpers/capture'
+import { captureFixture, captureResponse, deferred } from './helpers/capture'
 import { loadSfc, mountSfc } from './helpers/vueSfc'
 
 beforeEach(() => setActivePinia(createPinia()))
@@ -58,7 +58,11 @@ test('decoder rejects invalid UTF-8 and BOM-prefixed JSON just as the server cod
 
 test('caller cancellation while binary body is pending survives a late body completion', async () => {
   const { binary } = captureFixture(), body = deferred<ArrayBuffer>(), controller = new AbortController()
-  const client = createApiClient({ fetcher: async () => ({ ok: true, status: 200, arrayBuffer: () => body.promise }) as Response })
+  const stream = new ReadableStream<Uint8Array>({ async start(output) {
+    const value = await body.promise
+    if (!controller.signal.aborted) { output.enqueue(new Uint8Array(value)); output.close() }
+  } })
+  const client = createApiClient({ fetcher: async () => new Response(stream, { headers: { 'Content-Type': 'application/vnd.netcircuit.capture; version=1' } }) })
   const pending = createCapturesApi(client).payload('c1', controller.signal)
   await Promise.resolve(); controller.abort(); body.resolve(binary)
   await assert.rejects(pending, (error: unknown) => error instanceof ApiError && error.code === 'REQUEST_CANCELLED')
@@ -66,7 +70,7 @@ test('caller cancellation while binary body is pending survives a late body comp
 
 test('metadata updates fetch no payload until needed and repeated reads share the active cached request', async () => {
   const { binary, metadata } = captureFixture(); let requests = 0
-  configureApiClient({ fetcher: async url => { requests++; assert.equal(String(url), '/api/captures/c1/payload'); return new Response(binary) } })
+  configureApiClient({ fetcher: async url => { requests++; assert.equal(String(url), '/api/captures/c1/payload'); return captureResponse(binary) } })
   const store = useInstrumentStore(); store.captureSignals = ['requested.input']
   store.useCapture(parseLab('CaptureMetadata', metadata)); store.useCapture(parseLab('CaptureMetadata', metadata))
   assert.equal(requests, 0)
@@ -84,21 +88,21 @@ test('capture replacement aborts the previous request and late completion cannot
   let oldSignal: AbortSignal | undefined
   configureApiClient({ fetcher: async (url, options) => {
     if (String(url) === '/api/captures/old/payload') { oldSignal = options?.signal ?? undefined; return response.promise }
-    assert.equal(String(url), '/api/captures/new/payload'); return new Response(second.binary)
+    assert.equal(String(url), '/api/captures/new/payload'); return captureResponse(second.binary)
   } })
   const store = useInstrumentStore(); store.useCapture(first.metadata); const oldLoad = store.ensureCaptureLoaded()
   store.useCapture(second.metadata); assert.equal(oldSignal?.aborted, true)
-  await store.ensureCaptureLoaded(); response.resolve(new Response(first.binary)); await oldLoad
+  await store.ensureCaptureLoaded(); response.resolve(captureResponse(first.binary)); await oldLoad
   assert.equal(store.capture?.capture_id, 'new'); assert.deepEqual(store.monitor.channels, ['new'])
   assert.equal(store.captureLoading, false); assert.equal(store.captureError, null)
 })
 
 test('clearing capture releases samples and invalidates even a same-id request that ignores cancellation', async () => {
   const { binary, metadata } = captureFixture(), response = deferred<Response>(); let requests = 0
-  configureApiClient({ fetcher: async () => { requests++; return requests === 1 ? response.promise : new Response(binary) } })
+  configureApiClient({ fetcher: async () => { requests++; return requests === 1 ? response.promise : captureResponse(binary) } })
   const store = useInstrumentStore(); store.useCapture(metadata); const pending = store.ensureCaptureLoaded()
   store.useCapture(null); store.useCapture(metadata); await store.ensureCaptureLoaded()
-  response.resolve(new Response(binary)); await pending
+  response.resolve(captureResponse(binary)); await pending
   assert.equal(requests, 2); assert.equal(store.capture?.samples.length, 2)
   store.useCapture(null)
   assert.equal(store.captureMetadata, null); assert.equal(store.capture, null); assert.deepEqual(store.monitor.channels, [])
@@ -109,7 +113,7 @@ test('payload fetch uses the configured API and encoded ID rather than an untrus
   configureApiClient({ baseUrl: '/backend/api', fetcher: async (url, options) => {
     assert.equal(String(url), '/backend/api/captures/capture%2Fid/payload')
     assert.equal(new Headers(options?.headers).get('Accept'), 'application/vnd.netcircuit.capture; version=1')
-    return new Response(binary)
+    return captureResponse(binary)
   } })
   const store = useInstrumentStore(); store.useCapture({ ...metadata, payload_ref: 'https://untrusted.invalid/payload' })
   await store.ensureCaptureLoaded(); assert.equal(store.capture?.capture_id, 'capture/id')
@@ -118,7 +122,7 @@ test('payload fetch uses the configured API and encoded ID rather than an untrus
 test('owner denial retains a visible error and never renders or caches samples', async () => {
   const pinia = createPinia(); setActivePinia(pinia)
   const { metadata } = captureFixture()
-  configureApiClient({ fetcher: async () => new Response(JSON.stringify({ code: 'CAPTURE_NOT_FOUND', message: 'Capture is unavailable to this session.' }), { status: 404 }) })
+  configureApiClient({ fetcher: async () => Response.json({ code: 'CAPTURE_NOT_FOUND', message: 'Capture is unavailable to this session.' }, { status: 404 }) })
   const store = useInstrumentStore(); store.useCapture(metadata); await store.ensureCaptureLoaded()
   assert.equal(store.capture, null); assert.equal(store.captureError, 'Capture is unavailable to this session.')
   const monitor = mountSfc(await loadSfc('components/windows/SignalMonitorWindow.vue'), pinia)
@@ -133,7 +137,7 @@ test('corrupt payload and checksum mismatch fail explicitly and a subsequent req
   const sha256 = createHash('sha256').update(new Uint8Array(binary)).digest('hex')
   const changed = binary.slice(0); new Uint8Array(changed)[changed.byteLength - 1] = 0
   const responses = [binary.slice(0, -1), changed, binary]
-  configureApiClient({ fetcher: async () => new Response(responses.shift()) })
+  configureApiClient({ fetcher: async () => captureResponse(responses.shift()) })
   const store = useInstrumentStore(); store.useCapture({ ...metadata, sha256 })
   for (let i = 0; i < 2; i++) {
     await store.ensureCaptureLoaded(); assert.equal(store.capture, null); assert.match(store.captureError ?? '', /capture/i)
@@ -144,7 +148,7 @@ test('corrupt payload and checksum mismatch fail explicitly and a subsequent req
 test('future unavailable scope envelope does not request or render analog samples', async () => {
   let requests = 0; configureApiClient({ fetcher: async () => { requests++; return new Response() } })
   const store = useInstrumentStore(), { metadata } = captureFixture()
-  store.useCapture(parseLab<CaptureMetadata>('CaptureMetadata', { ...metadata, instrument: 'oscilloscope', encoding: 'FLOAT32', available: false, sample_count: 0, payload_byte_count: 0, payload_ref: null }))
+  store.useCapture(parseLab('CaptureMetadata', { ...metadata, instrument: 'oscilloscope', encoding: 'FLOAT32', available: false, sample_count: 0, payload_byte_count: 0, payload_ref: null }))
   await store.ensureCaptureLoaded(); assert.equal(requests, 0); assert.equal(store.capture, null)
 })
 
@@ -157,7 +161,7 @@ test('metadata rejects contradictory digital descriptors and unavailable payload
 
 test('metadata preserves an exact epoch-nanosecond string and rejects an unsafe numeric epoch', () => {
   const { metadata } = captureFixture()
-  const exact = parseLab<CaptureMetadata>('CaptureMetadata', { ...metadata, timestamp_ns: '1791856800123456789' })
+  const exact = parseLab('CaptureMetadata', { ...metadata, timestamp_ns: '1791856800123456789' })
   assert.equal(exact.timestamp_ns, '1791856800123456789')
   assert.throws(() => parseLab('CaptureMetadata', { ...metadata, timestamp_ns: 1791856800123456789 }), /capture/i)
 })
@@ -166,7 +170,7 @@ test('mounting the monitor fetches real events once and unmounting aborts a pend
   const pinia = createPinia(); setActivePinia(pinia)
   const { binary, metadata } = captureFixture(), response = deferred<Response>()
   let requests = 0, signal: AbortSignal | undefined
-  configureApiClient({ fetcher: async (_url, options) => { requests++; signal = options?.signal ?? undefined; return requests === 1 ? new Response(binary) : response.promise } })
+  configureApiClient({ fetcher: async (_url, options) => { requests++; signal = options?.signal ?? undefined; return requests === 1 ? captureResponse(binary) : response.promise } })
   const store = useInstrumentStore(); store.useCapture(metadata)
   const component = await loadSfc('components/windows/SignalMonitorWindow.vue'), monitor = mountSfc(component, pinia)
   await store.ensureCaptureLoaded(); await nextTick()
@@ -175,6 +179,6 @@ test('mounting the monitor fetches real events once and unmounting aborts a pend
   store.useCapture({ ...metadata, capture_id: 'next', payload_ref: '/api/captures/next/payload' }); await nextTick()
   assert.equal(requests, 2); assert.ok(monitor.text().includes('Loading capture'))
   monitor.app.unmount(); assert.equal(signal?.aborted, true)
-  response.resolve(new Response(binary)); await Promise.resolve(); await Promise.resolve()
+  response.resolve(captureResponse(binary)); await Promise.resolve(); await Promise.resolve()
   assert.equal(store.capture, null)
 })

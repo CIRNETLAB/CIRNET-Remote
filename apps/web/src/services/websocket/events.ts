@@ -1,21 +1,24 @@
 import { isRecord } from '../../types/api'
-import { isStationDescriptor, type StationDescriptor } from '../../types/station'
-import type { Experiment } from '../../types/experiment'
-import { parseExperiment } from '../api/experiments'
+import { isStationDescriptor } from '../../types/station'
+import { parseLab } from '../../contracts/validation'
+import type { LegacyServerEvent, ServerEvent as VersionedServerEvent } from '../../contracts/generated/dto'
 
-export type ServerEvent =
-  | { type: 'hello'; service: string }
-  | { type: 'echo'; payload: string }
-  | { type: 'station.updated'; station: StationDescriptor }
-  | { type: 'experiment.updated'; experiment: Experiment }
+export type ServerEvent = VersionedServerEvent | LegacyServerEvent
+export function isVersionedServerEvent(event: ServerEvent): event is VersionedServerEvent {
+  return 'protocol_version' in event && event.protocol_version === '1.0'
+}
 
+/** Legacy envelopes are a named compatibility contract, never inferred version coercion. */
 export function parseServerEvent(value: unknown): ServerEvent | null {
-  if (!isRecord(value)) return null
-  if (value.type === 'hello' && typeof value.service === 'string') return { type: 'hello', service: value.service }
-  if (value.type === 'echo' && typeof value.payload === 'string') return { type: 'echo', payload: value.payload }
-  if (value.type === 'station.updated' && isStationDescriptor(value.station)) return { type: 'station.updated', station: value.station }
-  if(value.type==='experiment.updated') {
-    try {return {type:'experiment.updated',experiment:parseExperiment(value.experiment)}} catch {return null}
-  }
-  return null
+  try {
+    const event = isRecord(value) && 'protocol_version' in value
+      ? parseLab('ServerEvent', value)
+      : parseLab('LegacyServerEvent', value)
+    if (event.type === 'experiment.updated') {
+      const experiment = parseLab('ExperimentRecord', event.experiment)
+      if (isVersionedServerEvent(event) && (event.aggregate_id !== experiment.experiment_id || event.aggregate_revision !== experiment.revision)) return null
+    }
+    if (event.type === 'station.updated' && !isStationDescriptor(event.station)) return null
+    return event
+  } catch { return null }
 }

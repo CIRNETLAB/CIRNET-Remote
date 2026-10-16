@@ -1,9 +1,9 @@
 name: Simulator
 on:
   push:
-    paths: ['simulator/**', 'device-library/**', '.github/workflows/simulator.yml']
+    paths: ['simulator/**', 'contracts/**', 'device-library/**', 'scripts/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/simulator.yml']
   pull_request:
-    paths: ['simulator/**', 'device-library/**', '.github/workflows/simulator.yml']
+    paths: ['simulator/**', 'contracts/**', 'device-library/**', 'scripts/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/simulator.yml']
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -11,7 +11,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
-      - run: python -m pip install --upgrade pip
-      - run: pip install -e . -e './simulator/circuit-simulator[test]'
+          python-version: '3.12'
+      - run: python -m pip install -r requirements-verification.txt -e . -e './simulator/circuit-simulator[test]'
       - run: pytest -q simulator/circuit-simulator/tests

@@ -1,0 +1,81 @@
+name: Real browser release gate
+on:
+  push:
+    paths: ['apps/web/**', 'tests/frontend/**', 'tests/integration/**', 'contracts/**', 'device-library/**', 'scripts/**', 'services/api/**', 'services/hardware-service/**', 'simulator/circuit-simulator/**', 'pyproject.toml', 'requirements-codegen.txt', 'requirements-verification.txt', 'requirements-benchmark.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
+  pull_request:
+    paths: ['apps/web/**', 'tests/frontend/**', 'tests/integration/**', 'contracts/**', 'device-library/**', 'scripts/**', 'services/api/**', 'services/hardware-service/**', 'simulator/circuit-simulator/**', 'pyproject.toml', 'requirements-codegen.txt', 'requirements-verification.txt', 'requirements-benchmark.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: real-browser-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  chromium:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # The harness owns a real SQLite database, API and virtual Hardware Service.
+      # Its temporary accounts and opaque cookies are created locally for this run.
+      NETCIRCUIT_E2E_PYTHON: python
+      PLAYWRIGHT_JUNIT_OUTPUT_FILE: .test-build/playwright/junit.xml
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: |
+            requirements-codegen.txt
+            requirements-verification.txt
+            requirements-benchmark.txt
+            pyproject.toml
+            services/api/pyproject.toml
+            services/hardware-service/pyproject.toml
+            simulator/circuit-simulator/pyproject.toml
+      - name: Install all real local services and pinned contract tools
+        run: python -m pip install -r requirements-verification.txt -e . -e './services/api[test]' -e './simulator/circuit-simulator[test]' -e './services/hardware-service[dev]'
+      - name: Install locked Playwright 1.64.1 and frontend dependencies
+        working-directory: apps/web
+        run: npm ci --no-audit --no-fund
+      - name: Check generated boundary artifacts
+        run: |
+          python scripts/generate_hardware_rpc.py
+          python scripts/generate_contracts.py --check
+          python scripts/export_openapi.py --check
+          python scripts/sync_editor_catalog.py --check
+      - name: AST dependency boundaries
+        working-directory: apps/web
+        run: npm run check:boundaries
+      - name: Typecheck and build production entrypoints
+        working-directory: apps/web
+        run: |
+          npx tsc --noEmit -p tsconfig.e2e.json
+          npm run build
+      - name: Install the pinned Chromium revision and Linux dependencies
+        working-directory: apps/web
+        run: npm run test:e2e:install -- --with-deps
+      - name: Real API, SQLite, Hardware Service and Chromium suite
+        working-directory: apps/web
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p .test-build
+          npm run test:e2e -- --reporter=line,junit --forbid-only 2>&1 | tee .test-build/e2e.log
+      - name: Browser failure evidence and JUnit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: real-browser-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            apps/web/.test-build/playwright
+            apps/web/.test-build/e2e.log
+          if-no-files-found: warn
+          retention-days: 7
+          # Evidence lives under the explicitly selected .test-build directory.
+          include-hidden-files: true

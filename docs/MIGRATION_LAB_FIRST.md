@@ -192,3 +192,11 @@ Finding: Old driver test explicitly bypassed scan/safety/plan/routing/power-up.
 Decision: Test guarded driver invocation, invalid sequences, unavailable/fault/freshness/acknowledgement and real loopback RPC.
 Reason: Existing test contradicted binding Lab-First safety requirements.
 Cost if wrong: Legacy physical v1 callers must migrate; v2 explicitly replaces them.
+
+## Web & Contracts W0–W8 addendum — 2026-10-16
+
+This authorized task follows the retained R0–R7/H0–H6 history above. W0–W8 local software gates passed sequentially, including final full Python1015/1 Icarus SKIP, Web1054, native Chromium14, PostgreSQL16, four clean installed wheels and50-principal workload. Current evidence and decisions live in `verification/2026-10-16-web-contracts.md`, its phase reports, `verification/2026-10-16-contract-decisions.md` and the individual acceptance matrix. Historical statements that auth, persistence or local PostgreSQL migration validation are future work describe their original phase; these software features are now implemented and tested. Target deployment/electrical validation remains separate.
+
+Canonical schema/URI/version ownership, generated runtime DTOs, durable principals/server sessions/control contexts, database session fences, immutable document/publication/config revisions and bounded snapshot recovery preserve Lab-First authority. Capture generation/lifetime is independent of execution; requested/accepted/applied instrument state is explicit. Domains/sampled descriptors do not create missing solvers or acquisition. Quotas/retention and metadata-only correlation/audit have direct regression evidence.
+
+The user requested a commit after each W phase. Each checkpoint was attempted, but linked-worktree Git metadata rejects `index.lock` creation with Permission denied. The source remains reviewable in the original worktree, with no successful phase commit, reset, push, merge or deployment. Local source-staged package checks do not imply an already-committed clean checkout or hosted CI run.

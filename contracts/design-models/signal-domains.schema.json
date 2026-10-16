@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://netcircuit.local/contracts/design/signal-domains/1.0/schema.json",
+  "title": "Explicit signal domains and simulation dispatch 1.0",
+  "$defs": {
+    "SignalDomain": {"enum": ["DIGITAL", "ANALOG", "POWER", "GROUND", "CLOCK", "MIXED"]},
+    "SignalPortDefinition": {
+      "type": "object",
+      "properties": {
+        "id": {"type": "string", "minLength": 1, "pattern": "^[^.]+$"},
+        "direction": {"enum": ["input", "output", "inout"]},
+        "width": {"type": "integer", "minimum": 1, "maximum": 65536},
+        "domain": {"$ref": "#/$defs/SignalDomain"}
+      },
+      "required": ["id", "direction"],
+      "additionalProperties": false
+    },
+    "SignalDomainNamespace": {
+      "type": "object",
+      "properties": {
+        "version": {"const": "1.0"},
+        "ports": {
+          "type": "object", "maxProperties": 65536,
+          "propertyNames": {"minLength": 1, "pattern": "^[^.]+$"},
+          "additionalProperties": {"$ref": "#/$defs/SignalDomain"}
+        }
+      },
+      "required": ["version", "ports"],
+      "additionalProperties": false
+    },
+    "SimulationClassification": {
+      "type": "object",
+      "properties": {
+        "schema_version": {"const": "1.0"},
+        "kind": {"enum": ["DIGITAL", "DC_DIGITAL", "ANALOG", "MIXED", "UNKNOWN"]},
+        "domains": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/SignalDomain"}},
+        "unsupported_components": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      },
+      "required": ["schema_version", "kind", "domains", "unsupported_components"],
+      "additionalProperties": false
+    },
+    "SimulationRequest": {
+      "type": "object",
+      "properties": {
+        "schema_version": {"const": "1.0"},
+        "graph": {"$ref": "https://netcircuit.local/contracts/circuit/1.x/circuit.schema.json"},
+        "capture_config": {"$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/CaptureConfiguration"},
+        "test_vectors": {"type": "array", "items": {"$ref": "https://netcircuit.local/contracts/public/common/1.0/schema.json#/$defs/TestVector"}},
+        "clock_config": {"anyOf": [
+          {"type": "object", "maxProperties": 0},
+          {"$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/ClockConfiguration"}
+        ]},
+        "inputs": {"type": "object", "additionalProperties": {"type": "integer", "enum": [0, 1]}}
+      },
+      "required": ["schema_version", "graph", "capture_config"],
+      "additionalProperties": false
+    },
+    "SimulationCapture": {
+      "type": "object",
+      "properties": {
+        "available": {"type": "boolean"},
+        "state": {"enum": ["COMPLETE", "STOPPED"]},
+        "duration_ns": {"type": "integer", "minimum": 0, "maximum": 1000000000},
+        "samples": {"type": "array", "maxItems": 100000, "items": {"$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/DigitalObservation"}},
+        "device_states": {"type": "object", "additionalProperties": {"$ref": "https://netcircuit.local/contracts/public/api/1.0/schema.json#/$defs/PhysicalDeviceState"}},
+        "pin_values": {"type": "object", "additionalProperties": {"enum": [0, 1, "X"]}},
+        "diagnostics": {"type": "array", "items": {"type": "string"}}
+      },
+      "required": ["available", "state", "duration_ns", "samples"],
+      "additionalProperties": false
+    },
+    "SimulationResult": {
+      "type": "object",
+      "properties": {
+        "schema_version": {"const": "1.0"},
+        "status": {"const": "COMPLETE"},
+        "classification": {"$ref": "#/$defs/SimulationClassification"},
+        "capture": {"$ref": "#/$defs/SimulationCapture"}
+      },
+      "required": ["schema_version", "status", "classification", "capture"],
+      "additionalProperties": false
+    },
+    "SimulationErrorResult": {
+      "type": "object",
+      "properties": {
+        "schema_version": {"const": "1.0"},
+        "status": {"enum": ["UNAVAILABLE", "REJECTED"]},
+        "classification": {"$ref": "#/$defs/SimulationClassification"},
+        "code": {"type": "string", "minLength": 1},
+        "message": {"type": "string", "minLength": 1}
+      },
+      "required": ["schema_version", "status", "classification", "code", "message"],
+      "additionalProperties": false
+    }
+  }
+}

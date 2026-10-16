@@ -1,0 +1,489 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://netcircuit.local/contracts/public/realtime/1.0/schema.json",
+  "title": "Bounded snapshot event protocol 1.0",
+  "$comment": "Sequence and stream identity detect lost updates. Resync fetches authorized HTTP snapshots; execution commands are never replayed. Versionless legacy envelopes remain explicit compatibility inputs.",
+  "$defs": {
+    "HelloEvent": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "1.0"
+        },
+        "stream_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "aggregate_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aggregate_revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "correlation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "const": "hello"
+        },
+        "service": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resync_required": {
+          "type": "boolean"
+        },
+        "supported_protocol_versions": {
+          "type": "array",
+          "items": {
+            "const": "1.0"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "capabilities": {
+          "type": "object",
+          "properties": {
+            "snapshot_resync": {
+              "const": true
+            },
+            "ordered_stream": {
+              "const": true
+            },
+            "replay_commands": {
+              "const": false
+            }
+          },
+          "required": [
+            "snapshot_resync",
+            "ordered_stream",
+            "replay_commands"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "type",
+        "protocol_version",
+        "stream_id",
+        "sequence",
+        "service",
+        "resync_required",
+        "supported_protocol_versions",
+        "capabilities"
+      ],
+      "additionalProperties": false
+    },
+    "EchoEvent": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "1.0"
+        },
+        "stream_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "aggregate_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aggregate_revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "correlation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "const": "echo"
+        },
+        "payload": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "protocol_version",
+        "stream_id",
+        "sequence",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
+    "StationUpdatedEvent": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "1.0"
+        },
+        "stream_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "aggregate_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aggregate_revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "correlation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "const": "station.updated"
+        },
+        "station": {
+          "$ref": "https://netcircuit.local/contracts/public/api/1.0/schema.json#/$defs/StationDescriptor"
+        }
+      },
+      "required": [
+        "type",
+        "protocol_version",
+        "stream_id",
+        "sequence",
+        "station"
+      ],
+      "additionalProperties": false
+    },
+    "ExperimentUpdatedEvent": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "1.0"
+        },
+        "stream_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "aggregate_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aggregate_revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "correlation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "const": "experiment.updated"
+        },
+        "experiment": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/ExperimentRecord"
+        }
+      },
+      "required": [
+        "type",
+        "protocol_version",
+        "stream_id",
+        "sequence",
+        "experiment",
+        "aggregate_id",
+        "aggregate_revision"
+      ],
+      "additionalProperties": false
+    },
+    "ResyncEvent": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "1.0"
+        },
+        "stream_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "aggregate_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aggregate_revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "correlation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "const": "resync.required"
+        },
+        "reason": {
+          "enum": [
+            "QUEUE_OVERFLOW",
+            "STREAM_RESET",
+            "SEQUENCE_GAP",
+            "PROTOCOL_MISMATCH",
+            "INVALID_EVENT"
+          ]
+        },
+        "dropped_events": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "type",
+        "protocol_version",
+        "stream_id",
+        "sequence",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "ProtocolErrorEvent": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "1.0"
+        },
+        "stream_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "aggregate_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aggregate_revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "correlation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "const": "protocol.error"
+        },
+        "code": {
+          "enum": [
+            "UNSUPPORTED_VERSION",
+            "INVALID_MESSAGE"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retryable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "protocol_version",
+        "stream_id",
+        "sequence",
+        "code",
+        "message",
+        "retryable"
+      ],
+      "additionalProperties": false
+    },
+    "ClientHelloMessage": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "client.hello"
+        },
+        "protocol_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "control_client_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "description": "Non-secret, volatile per-tab control context. Bound to the authenticated server session; never an authentication token. Omit for a view-only stream."
+        }
+      },
+      "required": [
+        "type",
+        "protocol_version"
+      ],
+      "additionalProperties": false
+    },
+    "ServerEvent": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/HelloEvent"
+        },
+        {
+          "$ref": "#/$defs/EchoEvent"
+        },
+        {
+          "$ref": "#/$defs/StationUpdatedEvent"
+        },
+        {
+          "$ref": "#/$defs/ExperimentUpdatedEvent"
+        },
+        {
+          "$ref": "#/$defs/ResyncEvent"
+        },
+        {
+          "$ref": "#/$defs/ProtocolErrorEvent"
+        }
+      ]
+    },
+    "LegacyServerEvent": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "hello"
+            },
+            "service": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "type",
+            "service"
+          ],
+          "not": {
+            "required": [
+              "protocol_version"
+            ]
+          },
+          "additionalProperties": true
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "echo"
+            },
+            "payload": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "payload"
+          ],
+          "not": {
+            "required": [
+              "protocol_version"
+            ]
+          },
+          "additionalProperties": true
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "station.updated"
+            },
+            "station": {
+              "type": "object",
+              "properties": {
+                "station_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "mode": {
+                  "enum": [
+                    "simulation",
+                    "hardware"
+                  ]
+                },
+                "state": {
+                  "enum": [
+                    "ready",
+                    "unavailable",
+                    "busy",
+                    "error"
+                  ]
+                },
+                "capabilities": {
+                  "$ref": "https://netcircuit.local/contracts/public/api/1.0/schema.json#/$defs/PublicStationCapabilities"
+                }
+              },
+              "required": [
+                "station_id",
+                "mode",
+                "state"
+              ],
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "type",
+            "station"
+          ],
+          "not": {
+            "required": [
+              "protocol_version"
+            ]
+          },
+          "additionalProperties": true
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "experiment.updated"
+            },
+            "experiment": {
+              "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/ExperimentRecord"
+            }
+          },
+          "required": [
+            "type",
+            "experiment"
+          ],
+          "not": {
+            "required": [
+              "protocol_version"
+            ]
+          },
+          "additionalProperties": true
+        }
+      ]
+    }
+  }
+}

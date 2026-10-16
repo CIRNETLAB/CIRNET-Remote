@@ -1,31 +1,29 @@
-import { isRecord } from '../../types/api'
+import type { ApiOperations } from '../../contracts/generated/operations'
 import type { Experiment, ExperimentInput } from '../../types/experiment'
-import type { CaptureConfiguration, GeneratorConfiguration } from '../../types/lab'
-import { parseLab } from '../../types/labValidation'
-import { apiClient, ApiError, type ApiClient } from './client'
+import type { GeneratorConfiguration } from '../../types/lab'
+import { parseLab } from '../../contracts/validation'
+import { apiClient, type ApiClient } from './client'
+import { callOperation } from './operations'
 
-export function parseExperiment(value:unknown):Experiment { return parseLab<Experiment>('ExperimentRecord',value) }
+export function parseExperiment(value:unknown):Experiment { return parseLab('ExperimentRecord',value) }
 export function createExperimentsApi(client:ApiClient) {
-  const path=(id:string)=>'/experiments/'+encodeURIComponent(id)
+  const identity=(key?:string)=>key===undefined?undefined:{'Idempotency-Key':key}
   return {
     list(signal?:AbortSignal):Promise<Experiment[]> {
-      return client.request('/experiments',{signal,parse(value) {
-        if(!Array.isArray(value)) throw new ApiError(0,'INVALID_RESPONSE','The API returned an invalid experiment list.')
-        return value.map(parseExperiment)
-      }})
+      return callOperation(client,'listExperiments',{signal})
     },
-    create(body:ExperimentInput,signal?:AbortSignal):Promise<Experiment> {
-      return client.request('/experiments',{method:'POST',body,signal,parse:parseExperiment})
+    create(body:ExperimentInput,signal?:AbortSignal,operationKey?:string):Promise<Experiment> {
+      return callOperation(client,'createExperiment',{body,signal,headers:identity(operationKey)})
     },
-    get(id:string,signal?:AbortSignal):Promise<Experiment> { return client.request(path(id),{signal,parse:parseExperiment}) },
-    run(id:string,signal?:AbortSignal):Promise<Experiment> { return client.request(path(id)+'/run',{method:'POST',signal,parse:parseExperiment}) },
-    stop(id:string,signal?:AbortSignal):Promise<Experiment> { return client.request(path(id)+'/stop',{method:'POST',signal,parse:parseExperiment}) },
-    results(id:string,signal?:AbortSignal):Promise<Experiment> { return client.request(path(id)+'/results',{signal,parse:parseExperiment}) },
-    configureGenerator(id:string,configuration:GeneratorConfiguration,signal?:AbortSignal):Promise<{accepted:boolean;code:string}> {
-      return client.request(path(id)+'/instruments',{method:'POST',body:{instrument:'generator',configuration},signal,parse(value) {
-        if(!isRecord(value)||typeof value.accepted!=='boolean'||typeof value.code!=='string') throw new ApiError(0,'INVALID_RESPONSE','Invalid instrument acknowledgement.')
-        return value as {accepted:boolean;code:string}
-      }})
+    get(id:string,signal?:AbortSignal):Promise<Experiment> { return callOperation(client,'getExperiment',{path:{experiment_id:id},signal}) },
+    run(id:string,signal?:AbortSignal,operationKey?:string):Promise<Experiment> { return callOperation(client,'runExperiment',{path:{experiment_id:id},signal,headers:identity(operationKey)}) },
+    stop(id:string,signal?:AbortSignal,operationKey?:string):Promise<Experiment> { return callOperation(client,'stopExperiment',{path:{experiment_id:id},signal,headers:identity(operationKey)}) },
+    results(id:string,signal?:AbortSignal):Promise<Experiment> { return callOperation(client,'getExperimentResults',{path:{experiment_id:id},signal}) },
+    configureGenerator(id:string,configuration:GeneratorConfiguration,signal?:AbortSignal) {
+      return callOperation(client,'configureExperimentInstrument',{path:{experiment_id:id},body:{instrument:'generator',configuration},signal})
+    },
+    operation(operationKey:string,query?:ApiOperations['getOperation']['query'],signal?:AbortSignal) {
+      return callOperation(client,'getOperation',{path:{operation_key:operationKey},query,signal})
     },
   }
 }

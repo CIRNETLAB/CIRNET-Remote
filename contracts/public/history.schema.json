@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://netcircuit.local/contracts/public/history/1.0/schema.json",
+  "title": "Owned experiment history and active snapshots 1.0",
+  "$defs": {
+    "ExperimentHistoryPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "const": "1.0" },
+        "items": {
+          "type": "array",
+          "maxItems": 100,
+          "items": { "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/ExperimentRecord" }
+        },
+        "next_cursor": { "type": ["string", "null"], "minLength": 1, "maxLength": 1024 }
+      },
+      "required": ["schema_version", "items", "next_cursor"]
+    },
+    "ExperimentActiveSnapshot": {
+      "$ref": "#/$defs/ExperimentHistoryPage",
+      "description": "Owner-scoped active, unstarted and quarantined records. Admitted executions precede CREATED records. Follow next_cursor explicitly; snapshots never authorize control or replay execution."
+    }
+  }
+}

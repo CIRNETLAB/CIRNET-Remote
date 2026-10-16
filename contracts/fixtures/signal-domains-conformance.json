@@ -1,0 +1,27 @@
+{
+  "version": "1.0",
+  "compatibility": [
+    {"source":"DIGITAL","destination":"DIGITAL","compatible":true},
+    {"source":"CLOCK","destination":"DIGITAL","compatible":true},
+    {"source":"DIGITAL","destination":"CLOCK","compatible":true},
+    {"source":"ANALOG","destination":"DIGITAL","compatible":false},
+    {"source":"MIXED","destination":"DIGITAL","compatible":false},
+    {"source":"POWER","destination":"GROUND","compatible":false},
+    {"source":null,"destination":"DIGITAL","compatible":false}
+  ],
+  "classification": [
+    {"name":"legacy digital","modules":[{"id":"D","type":"DIGITAL_SWITCH"}],"kind":"DIGITAL","domains":["DIGITAL"],"unsupported_components":[]},
+    {"name":"clock","modules":[{"id":"C","type":"CLOCK"}],"kind":"DIGITAL","domains":["CLOCK"],"unsupported_components":[]},
+    {"name":"DC infrastructure","modules":[{"id":"P","type":"DC_SUPPLY"},{"id":"R","type":"RESISTOR_AXIAL"}],"kind":"DC_DIGITAL","domains":["ANALOG","GROUND","POWER"],"unsupported_components":[]},
+    {"name":"unavailable analog","modules":[{"id":"C","type":"CAPACITOR_CERAMIC"}],"kind":"ANALOG","domains":["ANALOG"],"unsupported_components":["C"]},
+    {"name":"mixed dispatch","modules":[{"id":"C","type":"CAPACITOR_CERAMIC"},{"id":"D","type":"DIGITAL_SWITCH"}],"kind":"MIXED","domains":["ANALOG","DIGITAL"],"unsupported_components":["C"]},
+    {"name":"powered unsupported digital is not analog","modules":[{"id":"G","type":"SN7400N"}],"kind":"DIGITAL","domains":["DIGITAL","GROUND","POWER"],"unsupported_components":["G"]},
+    {"name":"unknown stays unknown","modules":[{"id":"U","type":"NO_MODEL"}],"kind":"UNKNOWN","domains":[],"unsupported_components":["U"]},
+    {"name":"annotation grants no model","modules":[{"id":"U","type":"NO_MODEL","signal_domains":{"version":"1.0","ports":{"OUT":"DIGITAL"}}}],"kind":"UNKNOWN","domains":[],"unsupported_components":["U"]}
+  ],
+  "invalid_namespaces": [
+    {"type":"CLOCK","namespace":{"version":"1.0","ports":{"OUT":"ANALOG"}},"code":"SIGNAL_DOMAIN_CONFLICT","path":"/modules/0/signal_domains/ports/OUT"},
+    {"type":"CLOCK","namespace":{"version":"1.0","ports":{"MISSING":"CLOCK"}},"code":"UNKNOWN_SIGNAL_PORT","path":"/modules/0/signal_domains/ports/MISSING"},
+    {"type":"CLOCK","namespace":null,"code":"INVALID_SIGNAL_DOMAINS","path":"/modules/0/signal_domains"}
+  ]
+}

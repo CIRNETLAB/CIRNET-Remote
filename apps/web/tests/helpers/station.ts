@@ -1,9 +1,9 @@
-import type { StationDescriptor } from '../../src/types/station'
+import type { StationDescriptor } from '../../src/contracts/generated/dto'
 import type { ExperimentRecord } from '../../src/types/lab'
 
-export function stationFixture(): StationDescriptor {
-  return { station_id: 'v1', mode: 'simulation', state: 'ready', capabilities: {
-    schema_version: '1.0', station_id: 'v1', mode: 'simulation', available: true,
+export function stationFixture(station_id='v1',mode:StationDescriptor['mode']='simulation',state:StationDescriptor['state']='ready'): StationDescriptor {
+  return { station_id, mode, state, capabilities: {
+    schema_version: '1.0', station_id, mode, available: true,
     virtual_digital: true, virtual_analog: false, physical_digital: false, physical_analog_routing: false, physical_execution_slots: 0,
     topology_scan_supported: false, safety_gate_supported: false, guarded_run_supported: false, component_resolution_modes: [],
     instrument_capabilities: {
@@ -11,7 +11,7 @@ export function stationFixture(): StationDescriptor {
       oscilloscope: { channels: 0, runtime_reconfiguration_supported: false },
       generator: { channels: 0, runtime_reconfiguration_supported: false },
     },
-    routing_resources: [], hardware_rpc_version: '2.0', fpga_protocol_version: 'UNAVAILABLE', firmware_version: 'virtual-events-1.0', hardware_profile_version: 'virtual-1.0',
+    hardware_rpc_version: '2.0', fpga_protocol_version: 'UNAVAILABLE', firmware_version: 'virtual-events-1.0', hardware_profile_version: 'virtual-1.0',
   } }
 }
 

@@ -1,0 +1,3063 @@
+{
+  "manifest_version": "1.0",
+  "contracts": [
+    {
+      "id": "CircuitGraph",
+      "kind": "schema",
+      "path": "contracts/circuit-schema/circuit.schema.json",
+      "uri": "https://netcircuit.local/contracts/circuit/1.x/circuit.schema.json",
+      "pointer": "",
+      "version": "1.0|1.1",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "CircuitModule",
+      "kind": "schema",
+      "path": "contracts/circuit-schema/module.schema.json",
+      "uri": "https://netcircuit.local/contracts/circuit/1.x/module.schema.json",
+      "pointer": "",
+      "version": "1.0|1.1",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "Point3",
+      "kind": "schema",
+      "path": "contracts/circuit-schema/module.schema.json",
+      "uri": "https://netcircuit.local/contracts/circuit/1.x/module.schema.json",
+      "pointer": "/$defs/point",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "PinContactBinding",
+      "kind": "schema",
+      "path": "contracts/circuit-schema/module.schema.json",
+      "uri": "https://netcircuit.local/contracts/circuit/1.x/module.schema.json",
+      "pointer": "/$defs/pinContact",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "MountBinding",
+      "kind": "schema",
+      "path": "contracts/circuit-schema/module.schema.json",
+      "uri": "https://netcircuit.local/contracts/circuit/1.x/module.schema.json",
+      "pointer": "/$defs/mount",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "CircuitConnection",
+      "kind": "schema",
+      "path": "contracts/circuit-schema/connection.schema.json",
+      "uri": "https://netcircuit.local/contracts/circuit/1.x/connection.schema.json",
+      "pointer": "",
+      "version": "1.0|1.1",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "MemoryImage",
+      "kind": "schema",
+      "path": "contracts/memory/memory-image.schema.json",
+      "uri": "https://netcircuit.local/contracts/memory/1.0/memory-image.schema.json",
+      "pointer": "",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "LabEndpoint",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/LabEndpoint",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "AssignmentDefinition",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/AssignmentDefinition",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "DetectedNode",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/DetectedNode",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "DetectedConnection",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/DetectedConnection",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "ObservedPhysicalComponent",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/ObservedPhysicalComponent",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "OpaquePhysicalComponent",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/OpaquePhysicalComponent",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "DetectedTopologyGraph",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/DetectedTopologyGraph",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "ExecutionDecision",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/ExecutionDecision",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "StationCapabilities",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/StationCapabilities",
+      "version": "1.0",
+      "visibility": "internal",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "ClockConfiguration",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/ClockConfiguration",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "GeneratorConfiguration",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/GeneratorConfiguration",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "CaptureConfiguration",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/CaptureConfiguration",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "InstrumentationExecutionPlan",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/InstrumentationExecutionPlan",
+      "version": "1.0",
+      "visibility": "internal",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "SafetyVerificationResult",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/SafetyVerificationResult",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "TopologyVerificationResult",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/TopologyVerificationResult",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "FunctionalVerificationResult",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/FunctionalVerificationResult",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "DigitalObservation",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/DigitalObservation",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "CaptureResult",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/CaptureResult",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "ExperimentRecord",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/ExperimentRecord",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "QueueState",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/QueueState",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "ObservedPinBinding",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/ObservedPinBinding",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "ComponentMatch",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/ComponentMatch",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "ResolvedEndpointBinding",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/ResolvedEndpointBinding",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "TopologyResolutionResult",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/TopologyResolutionResult",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "ComponentDiagnostic",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/ComponentDiagnostic",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "NetDiagnostic",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/NetDiagnostic",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "PinMappingDiagnostic",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/PinMappingDiagnostic",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "SafetyEvidence",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/SafetyEvidence",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "SignalMismatch",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/SignalMismatch",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "ObservedTruthTableCase",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/ObservedTruthTableCase",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "TimingComparison",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/TimingComparison",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "WaveformComparison",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/WaveformComparison",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "CaptureMetadata",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/CaptureMetadata",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "InstrumentCapability",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/InstrumentCapability",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "GeneratorCapability",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/GeneratorCapability",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "InstrumentCapabilities",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/InstrumentCapabilities",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "AssessmentResult",
+      "kind": "schema",
+      "path": "contracts/physical-lab/lab.schema.json",
+      "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json",
+      "pointer": "/$defs/AssessmentResult",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "AssignmentAlias",
+      "kind": "schema",
+      "path": "contracts/assignment/assignment.schema.json",
+      "uri": "https://netcircuit.local/contracts/assignment/1.0/assignment.schema.json",
+      "pointer": "",
+      "version": "1.0",
+      "visibility": "internal",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "FpgaControlScaffold",
+      "kind": "schema",
+      "path": "contracts/fpga-protocol/control.schema.json",
+      "uri": "https://netcircuit.local/contracts/fpga-protocol/control.schema.json",
+      "pointer": "",
+      "version": "1.0-scaffold",
+      "visibility": "internal",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "WireRouteMode",
+      "kind": "schema",
+      "path": "contracts/design/visual.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/visual/1.0/schema.json",
+      "pointer": "/$defs/WireRouteMode",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "WireControlPoint",
+      "kind": "schema",
+      "path": "contracts/design/visual.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/visual/1.0/schema.json",
+      "pointer": "/$defs/WireControlPoint",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "WireVisual",
+      "kind": "schema",
+      "path": "contracts/design/visual.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/visual/1.0/schema.json",
+      "pointer": "/$defs/WireVisual",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "LeadSettings",
+      "kind": "schema",
+      "path": "contracts/design/visual.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/visual/1.0/schema.json",
+      "pointer": "/$defs/LeadSettings",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "TestVector",
+      "kind": "schema",
+      "path": "contracts/public/common.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/common/1.0/schema.json",
+      "pointer": "/$defs/TestVector",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "HardwareRpcV2",
+      "kind": "protobuf",
+      "path": "contracts/hardware/v2/rpc_v2.proto",
+      "uri": "https://netcircuit.local/contracts/HardwareRpcV2",
+      "pointer": "",
+      "version": "2.0",
+      "visibility": "internal",
+      "producer": "contracts",
+      "consumers": [
+        "api",
+        "hardware-service"
+      ],
+      "validator_profile": "specialized",
+      "generated_artifacts": [
+        "contracts/generated/rpc_v2_pb2.py",
+        "contracts/generated/rpc_v2_pb2_grpc.py"
+      ],
+      "compatibility_policy": "Independent version domain; preserve legacy fixtures."
+    },
+    {
+      "id": "NcapV1",
+      "kind": "binary",
+      "path": "contracts/capture_codec.py",
+      "uri": "https://netcircuit.local/contracts/NcapV1",
+      "pointer": "",
+      "version": "1",
+      "visibility": "public",
+      "producer": "contracts",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "specialized",
+      "generated_artifacts": [],
+      "compatibility_policy": "Independent version domain; preserve legacy fixtures."
+    },
+    {
+      "id": "Breadboards",
+      "kind": "data",
+      "path": "contracts/design-models/breadboards.json",
+      "uri": "https://netcircuit.local/contracts/Breadboards",
+      "pointer": "",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "contracts",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "specialized",
+      "generated_artifacts": [],
+      "compatibility_policy": "Independent version domain; preserve legacy fixtures."
+    },
+    {
+      "id": "PhysicalParts",
+      "kind": "data",
+      "path": "contracts/design-models/physical-parts.v1.json",
+      "uri": "https://netcircuit.local/contracts/PhysicalParts",
+      "pointer": "",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "contracts",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "specialized",
+      "generated_artifacts": [],
+      "compatibility_policy": "Independent version domain; preserve legacy fixtures."
+    },
+    {
+      "id": "WirePoint3",
+      "kind": "schema",
+      "path": "contracts/design/visual.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/visual/1.0/schema.json",
+      "pointer": "/$defs/WirePoint3",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "simulator",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Preserve supported documents; breaking changes require a new version and explicit migration."
+    },
+    {
+      "id": "HealthResponse",
+      "kind": "schema",
+      "path": "contracts/public/api.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/api/1.0/schema.json",
+      "pointer": "/$defs/HealthResponse",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "api",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Versioned public application DTO; additive optional fields remain readable, breaking changes require explicit migration."
+    },
+    {
+      "id": "CircuitValidationResult",
+      "kind": "schema",
+      "path": "contracts/public/api.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/api/1.0/schema.json",
+      "pointer": "/$defs/CircuitValidationResult",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "api",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Versioned public application DTO; additive optional fields remain readable, breaking changes require explicit migration."
+    },
+    {
+      "id": "PhysicalDeviceState",
+      "kind": "schema",
+      "path": "contracts/public/api.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/api/1.0/schema.json",
+      "pointer": "/$defs/PhysicalDeviceState",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "api",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Versioned public application DTO; additive optional fields remain readable, breaking changes require explicit migration."
+    },
+    {
+      "id": "PhysicalPreviewResult",
+      "kind": "schema",
+      "path": "contracts/public/api.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/api/1.0/schema.json",
+      "pointer": "/$defs/PhysicalPreviewResult",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "api",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Versioned public application DTO; additive optional fields remain readable, breaking changes require explicit migration."
+    },
+    {
+      "id": "PublicStationCapabilities",
+      "kind": "schema",
+      "path": "contracts/public/api.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/api/1.0/schema.json",
+      "pointer": "/$defs/PublicStationCapabilities",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "api",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Versioned public application DTO; additive optional fields remain readable, breaking changes require explicit migration."
+    },
+    {
+      "id": "StationDescriptor",
+      "kind": "schema",
+      "path": "contracts/public/api.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/api/1.0/schema.json",
+      "pointer": "/$defs/StationDescriptor",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "api",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Versioned public application DTO; additive optional fields remain readable, breaking changes require explicit migration."
+    },
+    {
+      "id": "ExperimentCreate",
+      "kind": "schema",
+      "path": "contracts/public/api.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/api/1.0/schema.json",
+      "pointer": "/$defs/ExperimentCreate",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "api",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Versioned public application DTO; additive optional fields remain readable, breaking changes require explicit migration."
+    },
+    {
+      "id": "TriggerConfiguration",
+      "kind": "schema",
+      "path": "contracts/public/api.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/api/1.0/schema.json",
+      "pointer": "/$defs/TriggerConfiguration",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "api",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Versioned public application DTO; additive optional fields remain readable, breaking changes require explicit migration."
+    },
+    {
+      "id": "InstrumentConfigureRequest",
+      "kind": "schema",
+      "path": "contracts/public/api.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/api/1.0/schema.json",
+      "pointer": "/$defs/InstrumentConfigureRequest",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "api",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Versioned public application DTO; additive optional fields remain readable, breaking changes require explicit migration."
+    },
+    {
+      "id": "InstrumentOperationResult",
+      "kind": "schema",
+      "path": "contracts/public/api.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/api/1.0/schema.json",
+      "pointer": "/$defs/InstrumentOperationResult",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "api",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Versioned public application DTO; additive optional fields remain readable, breaking changes require explicit migration."
+    },
+    {
+      "id": "FieldIssue",
+      "kind": "schema",
+      "path": "contracts/public/api.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/api/1.0/schema.json",
+      "pointer": "/$defs/FieldIssue",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "api",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Versioned public application DTO; additive optional fields remain readable, breaking changes require explicit migration."
+    },
+    {
+      "id": "ErrorEnvelope",
+      "kind": "schema",
+      "path": "contracts/public/api.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/api/1.0/schema.json",
+      "pointer": "/$defs/ErrorEnvelope",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "api",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Versioned public application DTO; additive optional fields remain readable, breaking changes require explicit migration."
+    },
+    {
+      "id": "OperationRecord",
+      "kind": "schema",
+      "path": "contracts/public/api.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/api/1.0/schema.json",
+      "pointer": "/$defs/OperationRecord",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "api",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Versioned public application DTO; additive optional fields remain readable, breaking changes require explicit migration."
+    },
+    {
+      "id": "HelloEvent",
+      "kind": "schema",
+      "path": "contracts/public/realtime.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/realtime/1.0/schema.json",
+      "pointer": "/$defs/HelloEvent",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API event gateway",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Versioned bounded snapshots; legacy envelopes are compatibility-only and commands are never replayed."
+    },
+    {
+      "id": "EchoEvent",
+      "kind": "schema",
+      "path": "contracts/public/realtime.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/realtime/1.0/schema.json",
+      "pointer": "/$defs/EchoEvent",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API event gateway",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Versioned bounded snapshots; legacy envelopes are compatibility-only and commands are never replayed."
+    },
+    {
+      "id": "StationUpdatedEvent",
+      "kind": "schema",
+      "path": "contracts/public/realtime.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/realtime/1.0/schema.json",
+      "pointer": "/$defs/StationUpdatedEvent",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API event gateway",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Versioned bounded snapshots; legacy envelopes are compatibility-only and commands are never replayed."
+    },
+    {
+      "id": "ExperimentUpdatedEvent",
+      "kind": "schema",
+      "path": "contracts/public/realtime.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/realtime/1.0/schema.json",
+      "pointer": "/$defs/ExperimentUpdatedEvent",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API event gateway",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Versioned bounded snapshots; legacy envelopes are compatibility-only and commands are never replayed."
+    },
+    {
+      "id": "ResyncEvent",
+      "kind": "schema",
+      "path": "contracts/public/realtime.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/realtime/1.0/schema.json",
+      "pointer": "/$defs/ResyncEvent",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API event gateway",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Versioned bounded snapshots; legacy envelopes are compatibility-only and commands are never replayed."
+    },
+    {
+      "id": "ProtocolErrorEvent",
+      "kind": "schema",
+      "path": "contracts/public/realtime.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/realtime/1.0/schema.json",
+      "pointer": "/$defs/ProtocolErrorEvent",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API event gateway",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Versioned bounded snapshots; legacy envelopes are compatibility-only and commands are never replayed."
+    },
+    {
+      "id": "ClientHelloMessage",
+      "kind": "schema",
+      "path": "contracts/public/realtime.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/realtime/1.0/schema.json",
+      "pointer": "/$defs/ClientHelloMessage",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API event gateway",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Versioned bounded snapshots; legacy envelopes are compatibility-only and commands are never replayed."
+    },
+    {
+      "id": "ServerEvent",
+      "kind": "schema",
+      "path": "contracts/public/realtime.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/realtime/1.0/schema.json",
+      "pointer": "/$defs/ServerEvent",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API event gateway",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Versioned bounded snapshots; legacy envelopes are compatibility-only and commands are never replayed."
+    },
+    {
+      "id": "LegacyServerEvent",
+      "kind": "schema",
+      "path": "contracts/public/realtime.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/realtime/1.0/schema.json",
+      "pointer": "/$defs/LegacyServerEvent",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API event gateway",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Versioned bounded snapshots; legacy envelopes are compatibility-only and commands are never replayed."
+    },
+    {
+      "id": "PrincipalView",
+      "kind": "schema",
+      "path": "contracts/public/auth.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/auth/1.0/schema.json",
+      "pointer": "/$defs/PrincipalView",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API authentication and scoped assignment routes",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Additive fields require compatible client handling; breaking changes require a new version."
+    },
+    {
+      "id": "SessionView",
+      "kind": "schema",
+      "path": "contracts/public/auth.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/auth/1.0/schema.json",
+      "pointer": "/$defs/SessionView",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API authentication and scoped assignment routes",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Additive fields require compatible client handling; breaking changes require a new version."
+    },
+    {
+      "id": "LoginRequest",
+      "kind": "schema",
+      "path": "contracts/public/auth.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/auth/1.0/schema.json",
+      "pointer": "/$defs/LoginRequest",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API authentication and scoped assignment routes",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Additive fields require compatible client handling; breaking changes require a new version."
+    },
+    {
+      "id": "LogoutRequest",
+      "kind": "schema",
+      "path": "contracts/public/auth.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/auth/1.0/schema.json",
+      "pointer": "/$defs/LogoutRequest",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API authentication and scoped assignment routes",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Additive fields require compatible client handling; breaking changes require a new version."
+    },
+    {
+      "id": "GuestClaimRequest",
+      "kind": "schema",
+      "path": "contracts/public/auth.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/auth/1.0/schema.json",
+      "pointer": "/$defs/GuestClaimRequest",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API authentication and scoped assignment routes",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Additive fields require compatible client handling; breaking changes require a new version."
+    },
+    {
+      "id": "UserView",
+      "kind": "schema",
+      "path": "contracts/public/auth.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/auth/1.0/schema.json",
+      "pointer": "/$defs/UserView",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API authentication and scoped assignment routes",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Additive fields require compatible client handling; breaking changes require a new version."
+    },
+    {
+      "id": "UserCreate",
+      "kind": "schema",
+      "path": "contracts/public/auth.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/auth/1.0/schema.json",
+      "pointer": "/$defs/UserCreate",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API authentication and scoped assignment routes",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Additive fields require compatible client handling; breaking changes require a new version."
+    },
+    {
+      "id": "UserUpdate",
+      "kind": "schema",
+      "path": "contracts/public/auth.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/auth/1.0/schema.json",
+      "pointer": "/$defs/UserUpdate",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API authentication and scoped assignment routes",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Additive fields require compatible client handling; breaking changes require a new version."
+    },
+    {
+      "id": "AssignmentPublication",
+      "kind": "schema",
+      "path": "contracts/public/auth.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/auth/1.0/schema.json",
+      "pointer": "/$defs/AssignmentPublication",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API authentication and scoped assignment routes",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Additive fields require compatible client handling; breaking changes require a new version."
+    },
+    {
+      "id": "InstructorAssignmentDocument",
+      "kind": "schema",
+      "path": "contracts/public/auth.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/auth/1.0/schema.json",
+      "pointer": "/$defs/InstructorAssignmentDocument",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API authentication and scoped assignment routes",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Additive fields require compatible client handling; breaking changes require a new version."
+    },
+    {
+      "id": "StudentAssignmentView",
+      "kind": "schema",
+      "path": "contracts/public/auth.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/auth/1.0/schema.json",
+      "pointer": "/$defs/StudentAssignmentView",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API authentication and scoped assignment routes",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Additive fields require compatible client handling; breaking changes require a new version."
+    },
+    {
+      "id": "AssignmentView",
+      "kind": "schema",
+      "path": "contracts/public/auth.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/auth/1.0/schema.json",
+      "pointer": "/$defs/AssignmentView",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API authentication and scoped assignment routes",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Additive fields require compatible client handling; breaking changes require a new version."
+    },
+    {
+      "id": "Project",
+      "kind": "schema",
+      "path": "contracts/public/projects.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/projects/1.0/schema.json",
+      "pointer": "/$defs/Project",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API project document service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Server document identity is independent of embedded graph identity. Preserve graph 1.0/1.1 and supported metadata exactly; saves require a matching base revision."
+    },
+    {
+      "id": "ProjectPage",
+      "kind": "schema",
+      "path": "contracts/public/projects.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/projects/1.0/schema.json",
+      "pointer": "/$defs/ProjectPage",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API project document service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Server document identity is independent of embedded graph identity. Preserve graph 1.0/1.1 and supported metadata exactly; saves require a matching base revision."
+    },
+    {
+      "id": "ProjectCreate",
+      "kind": "schema",
+      "path": "contracts/public/projects.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/projects/1.0/schema.json",
+      "pointer": "/$defs/ProjectCreate",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API project document service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Server document identity is independent of embedded graph identity. Preserve graph 1.0/1.1 and supported metadata exactly; saves require a matching base revision."
+    },
+    {
+      "id": "ProjectUpdate",
+      "kind": "schema",
+      "path": "contracts/public/projects.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/projects/1.0/schema.json",
+      "pointer": "/$defs/ProjectUpdate",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API project document service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Server document identity is independent of embedded graph identity. Preserve graph 1.0/1.1 and supported metadata exactly; saves require a matching base revision."
+    },
+    {
+      "id": "ProjectDelete",
+      "kind": "schema",
+      "path": "contracts/public/projects.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/projects/1.0/schema.json",
+      "pointer": "/$defs/ProjectDelete",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API project document service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Server document identity is independent of embedded graph identity. Preserve graph 1.0/1.1 and supported metadata exactly; saves require a matching base revision."
+    },
+    {
+      "id": "ProjectDeletion",
+      "kind": "schema",
+      "path": "contracts/public/projects.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/projects/1.0/schema.json",
+      "pointer": "/$defs/ProjectDeletion",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API project document service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Server document identity is independent of embedded graph identity. Preserve graph 1.0/1.1 and supported metadata exactly; saves require a matching base revision."
+    },
+    {
+      "id": "CircuitSummary",
+      "kind": "schema",
+      "path": "contracts/public/projects.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/projects/1.0/schema.json",
+      "pointer": "/$defs/CircuitSummary",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API project document service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Server document identity is independent of embedded graph identity. Preserve graph 1.0/1.1 and supported metadata exactly; saves require a matching base revision."
+    },
+    {
+      "id": "CircuitDocument",
+      "kind": "schema",
+      "path": "contracts/public/projects.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/projects/1.0/schema.json",
+      "pointer": "/$defs/CircuitDocument",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API project document service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Server document identity is independent of embedded graph identity. Preserve graph 1.0/1.1 and supported metadata exactly; saves require a matching base revision."
+    },
+    {
+      "id": "CircuitPage",
+      "kind": "schema",
+      "path": "contracts/public/projects.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/projects/1.0/schema.json",
+      "pointer": "/$defs/CircuitPage",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API project document service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Server document identity is independent of embedded graph identity. Preserve graph 1.0/1.1 and supported metadata exactly; saves require a matching base revision."
+    },
+    {
+      "id": "CircuitCreate",
+      "kind": "schema",
+      "path": "contracts/public/projects.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/projects/1.0/schema.json",
+      "pointer": "/$defs/CircuitCreate",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API project document service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Server document identity is independent of embedded graph identity. Preserve graph 1.0/1.1 and supported metadata exactly; saves require a matching base revision."
+    },
+    {
+      "id": "CircuitSave",
+      "kind": "schema",
+      "path": "contracts/public/projects.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/projects/1.0/schema.json",
+      "pointer": "/$defs/CircuitSave",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API project document service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Server document identity is independent of embedded graph identity. Preserve graph 1.0/1.1 and supported metadata exactly; saves require a matching base revision."
+    },
+    {
+      "id": "CircuitDelete",
+      "kind": "schema",
+      "path": "contracts/public/projects.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/projects/1.0/schema.json",
+      "pointer": "/$defs/CircuitDelete",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API project document service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Server document identity is independent of embedded graph identity. Preserve graph 1.0/1.1 and supported metadata exactly; saves require a matching base revision."
+    },
+    {
+      "id": "CircuitDeletion",
+      "kind": "schema",
+      "path": "contracts/public/projects.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/projects/1.0/schema.json",
+      "pointer": "/$defs/CircuitDeletion",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API project document service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Server document identity is independent of embedded graph identity. Preserve graph 1.0/1.1 and supported metadata exactly; saves require a matching base revision."
+    },
+    {
+      "id": "ExperimentDocumentReference",
+      "kind": "schema",
+      "path": "contracts/public/projects.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/projects/1.0/schema.json",
+      "pointer": "/$defs/ExperimentDocumentReference",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API project document service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Server document identity is independent of embedded graph identity. Preserve graph 1.0/1.1 and supported metadata exactly; saves require a matching base revision."
+    },
+    {
+      "id": "AssignmentAuthoringSummary",
+      "kind": "schema",
+      "path": "contracts/public/assignments.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/assignments/1.0/schema.json",
+      "pointer": "/$defs/AssignmentAuthoringSummary",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API assignment authoring service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Legacy AssignmentView 1.0 GET shapes remain unchanged. Versioned authoring wraps the canonical definition; CAS edits retain published content until explicit publication."
+    },
+    {
+      "id": "AssignmentAuthoringDocument",
+      "kind": "schema",
+      "path": "contracts/public/assignments.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/assignments/1.0/schema.json",
+      "pointer": "/$defs/AssignmentAuthoringDocument",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API assignment authoring service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Legacy AssignmentView 1.0 GET shapes remain unchanged. Versioned authoring wraps the canonical definition; CAS edits retain published content until explicit publication."
+    },
+    {
+      "id": "AssignmentAuthoringPage",
+      "kind": "schema",
+      "path": "contracts/public/assignments.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/assignments/1.0/schema.json",
+      "pointer": "/$defs/AssignmentAuthoringPage",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API assignment authoring service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Legacy AssignmentView 1.0 GET shapes remain unchanged. Versioned authoring wraps the canonical definition; CAS edits retain published content until explicit publication."
+    },
+    {
+      "id": "AssignmentAuthoringCreate",
+      "kind": "schema",
+      "path": "contracts/public/assignments.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/assignments/1.0/schema.json",
+      "pointer": "/$defs/AssignmentAuthoringCreate",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API assignment authoring service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Legacy AssignmentView 1.0 GET shapes remain unchanged. Versioned authoring wraps the canonical definition; CAS edits retain published content until explicit publication."
+    },
+    {
+      "id": "AssignmentAuthoringSave",
+      "kind": "schema",
+      "path": "contracts/public/assignments.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/assignments/1.0/schema.json",
+      "pointer": "/$defs/AssignmentAuthoringSave",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API assignment authoring service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Legacy AssignmentView 1.0 GET shapes remain unchanged. Versioned authoring wraps the canonical definition; CAS edits retain published content until explicit publication."
+    },
+    {
+      "id": "AssignmentAuthoringPublication",
+      "kind": "schema",
+      "path": "contracts/public/assignments.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/assignments/1.0/schema.json",
+      "pointer": "/$defs/AssignmentAuthoringPublication",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API assignment authoring service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Legacy AssignmentView 1.0 GET shapes remain unchanged. Versioned authoring wraps the canonical definition; CAS edits retain published content until explicit publication."
+    },
+    {
+      "id": "ExperimentHistoryPage",
+      "kind": "schema",
+      "path": "contracts/public/history.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/history/1.0/schema.json",
+      "pointer": "/$defs/ExperimentHistoryPage",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API owned experiment history",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "New bounded owner-scoped snapshot endpoints supplement the retained legacy experiment list. No snapshot authorizes control or replays Run."
+    },
+    {
+      "id": "ExperimentActiveSnapshot",
+      "kind": "schema",
+      "path": "contracts/public/history.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/history/1.0/schema.json",
+      "pointer": "/$defs/ExperimentActiveSnapshot",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "API owned experiment history",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "New bounded owner-scoped snapshot endpoints supplement the retained legacy experiment list. No snapshot authorizes control or replays Run."
+    },
+    {
+      "id": "InstrumentControlAccess",
+      "kind": "schema",
+      "path": "contracts/public/instrument-control.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/instrument-control/1.0/schema.json",
+      "pointer": "/$defs/InstrumentControlAccess",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Owned experiment instrument control service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "New versioned access and durable command endpoints supplement the unchanged legacy instrument response. ACCEPTED is separate from APPLIED; unknown acknowledgement never permits command replay."
+    },
+    {
+      "id": "InstrumentGeneratorCommand",
+      "kind": "schema",
+      "path": "contracts/public/instrument-control.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/instrument-control/1.0/schema.json",
+      "pointer": "/$defs/InstrumentGeneratorCommand",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Owned experiment instrument control service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "New versioned access and durable command endpoints supplement the unchanged legacy instrument response. ACCEPTED is separate from APPLIED; unknown acknowledgement never permits command replay."
+    },
+    {
+      "id": "InstrumentCommandRecord",
+      "kind": "schema",
+      "path": "contracts/public/instrument-control.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/instrument-control/1.0/schema.json",
+      "pointer": "/$defs/InstrumentCommandRecord",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Owned experiment instrument control service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "New versioned access and durable command endpoints supplement the unchanged legacy instrument response. ACCEPTED is separate from APPLIED; unknown acknowledgement never permits command replay."
+    },
+    {
+      "id": "SignalDomain",
+      "kind": "schema",
+      "path": "contracts/design-models/signal-domains.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/signal-domains/1.0/schema.json",
+      "pointer": "/$defs/SignalDomain",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Canonical component port catalog and typed simulation dispatch adapters",
+      "consumers": [
+        "simulator",
+        "hardware-service",
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Opt-in signal_domains namespace preserves graph 1.0/1.1; unknown versions remain storable but unavailable for execution. New domain enums do not install analog or mixed engines."
+    },
+    {
+      "id": "SignalPortDefinition",
+      "kind": "schema",
+      "path": "contracts/design-models/signal-domains.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/signal-domains/1.0/schema.json",
+      "pointer": "/$defs/SignalPortDefinition",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Canonical component port catalog and typed simulation dispatch adapters",
+      "consumers": [
+        "simulator",
+        "hardware-service",
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Opt-in signal_domains namespace preserves graph 1.0/1.1; unknown versions remain storable but unavailable for execution. New domain enums do not install analog or mixed engines."
+    },
+    {
+      "id": "SignalDomainNamespace",
+      "kind": "schema",
+      "path": "contracts/design-models/signal-domains.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/signal-domains/1.0/schema.json",
+      "pointer": "/$defs/SignalDomainNamespace",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Canonical component port catalog and typed simulation dispatch adapters",
+      "consumers": [
+        "simulator",
+        "hardware-service",
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Opt-in signal_domains namespace preserves graph 1.0/1.1; unknown versions remain storable but unavailable for execution. New domain enums do not install analog or mixed engines."
+    },
+    {
+      "id": "SimulationClassification",
+      "kind": "schema",
+      "path": "contracts/design-models/signal-domains.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/signal-domains/1.0/schema.json",
+      "pointer": "/$defs/SimulationClassification",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Canonical component port catalog and typed simulation dispatch adapters",
+      "consumers": [
+        "simulator",
+        "hardware-service",
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Opt-in signal_domains namespace preserves graph 1.0/1.1; unknown versions remain storable but unavailable for execution. New domain enums do not install analog or mixed engines."
+    },
+    {
+      "id": "SimulationRequest",
+      "kind": "schema",
+      "path": "contracts/design-models/signal-domains.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/signal-domains/1.0/schema.json",
+      "pointer": "/$defs/SimulationRequest",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Canonical component port catalog and typed simulation dispatch adapters",
+      "consumers": [
+        "simulator",
+        "hardware-service",
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Opt-in signal_domains namespace preserves graph 1.0/1.1; unknown versions remain storable but unavailable for execution. New domain enums do not install analog or mixed engines."
+    },
+    {
+      "id": "SimulationCapture",
+      "kind": "schema",
+      "path": "contracts/design-models/signal-domains.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/signal-domains/1.0/schema.json",
+      "pointer": "/$defs/SimulationCapture",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Canonical component port catalog and typed simulation dispatch adapters",
+      "consumers": [
+        "simulator",
+        "hardware-service",
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Opt-in signal_domains namespace preserves graph 1.0/1.1; unknown versions remain storable but unavailable for execution. New domain enums do not install analog or mixed engines."
+    },
+    {
+      "id": "SimulationResult",
+      "kind": "schema",
+      "path": "contracts/design-models/signal-domains.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/signal-domains/1.0/schema.json",
+      "pointer": "/$defs/SimulationResult",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Canonical component port catalog and typed simulation dispatch adapters",
+      "consumers": [
+        "simulator",
+        "hardware-service",
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Opt-in signal_domains namespace preserves graph 1.0/1.1; unknown versions remain storable but unavailable for execution. New domain enums do not install analog or mixed engines."
+    },
+    {
+      "id": "SimulationErrorResult",
+      "kind": "schema",
+      "path": "contracts/design-models/signal-domains.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/signal-domains/1.0/schema.json",
+      "pointer": "/$defs/SimulationErrorResult",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Canonical component port catalog and typed simulation dispatch adapters",
+      "consumers": [
+        "simulator",
+        "hardware-service",
+        "api",
+        "web"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Opt-in signal_domains namespace preserves graph 1.0/1.1; unknown versions remain storable but unavailable for execution. New domain enums do not install analog or mixed engines."
+    },
+    {
+      "id": "AnalogCaptureChannel",
+      "kind": "schema",
+      "path": "contracts/capture/ncap.schema.json",
+      "uri": "https://netcircuit.local/contracts/capture/ncap/2.0/schema.json",
+      "pointer": "/$defs/AnalogCaptureChannel",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "Versioned binary format adapters and synthetic conformance corpus; sampled runtime producer unavailable",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "web",
+        "simulator"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "NCAP v2 sampled descriptors are separate from frozen CaptureMetadata 1.0 and NCAP v1 bytes. Layout 1.0 documents both formats; no runtime analog capability is implied."
+    },
+    {
+      "id": "AnalogCaptureTimeAxis",
+      "kind": "schema",
+      "path": "contracts/capture/ncap.schema.json",
+      "uri": "https://netcircuit.local/contracts/capture/ncap/2.0/schema.json",
+      "pointer": "/$defs/AnalogCaptureTimeAxis",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "Versioned binary format adapters and synthetic conformance corpus; sampled runtime producer unavailable",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "web",
+        "simulator"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "NCAP v2 sampled descriptors are separate from frozen CaptureMetadata 1.0 and NCAP v1 bytes. Layout 1.0 documents both formats; no runtime analog capability is implied."
+    },
+    {
+      "id": "AnalogCaptureGap",
+      "kind": "schema",
+      "path": "contracts/capture/ncap.schema.json",
+      "uri": "https://netcircuit.local/contracts/capture/ncap/2.0/schema.json",
+      "pointer": "/$defs/AnalogCaptureGap",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "Versioned binary format adapters and synthetic conformance corpus; sampled runtime producer unavailable",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "web",
+        "simulator"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "NCAP v2 sampled descriptors are separate from frozen CaptureMetadata 1.0 and NCAP v1 bytes. Layout 1.0 documents both formats; no runtime analog capability is implied."
+    },
+    {
+      "id": "AnalogCaptureInvalidRange",
+      "kind": "schema",
+      "path": "contracts/capture/ncap.schema.json",
+      "uri": "https://netcircuit.local/contracts/capture/ncap/2.0/schema.json",
+      "pointer": "/$defs/AnalogCaptureInvalidRange",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "Versioned binary format adapters and synthetic conformance corpus; sampled runtime producer unavailable",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "web",
+        "simulator"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "NCAP v2 sampled descriptors are separate from frozen CaptureMetadata 1.0 and NCAP v1 bytes. Layout 1.0 documents both formats; no runtime analog capability is implied."
+    },
+    {
+      "id": "AnalogCaptureQuality",
+      "kind": "schema",
+      "path": "contracts/capture/ncap.schema.json",
+      "uri": "https://netcircuit.local/contracts/capture/ncap/2.0/schema.json",
+      "pointer": "/$defs/AnalogCaptureQuality",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "Versioned binary format adapters and synthetic conformance corpus; sampled runtime producer unavailable",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "web",
+        "simulator"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "NCAP v2 sampled descriptors are separate from frozen CaptureMetadata 1.0 and NCAP v1 bytes. Layout 1.0 documents both formats; no runtime analog capability is implied."
+    },
+    {
+      "id": "AnalogCaptureHeader",
+      "kind": "schema",
+      "path": "contracts/capture/ncap.schema.json",
+      "uri": "https://netcircuit.local/contracts/capture/ncap/2.0/schema.json",
+      "pointer": "/$defs/AnalogCaptureHeader",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "Versioned binary format adapters and synthetic conformance corpus; sampled runtime producer unavailable",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "web",
+        "simulator"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "NCAP v2 sampled descriptors are separate from frozen CaptureMetadata 1.0 and NCAP v1 bytes. Layout 1.0 documents both formats; no runtime analog capability is implied."
+    },
+    {
+      "id": "AnalogCaptureDescriptor",
+      "kind": "schema",
+      "path": "contracts/capture/ncap.schema.json",
+      "uri": "https://netcircuit.local/contracts/capture/ncap/2.0/schema.json",
+      "pointer": "/$defs/AnalogCaptureDescriptor",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "Versioned binary format adapters and synthetic conformance corpus; sampled runtime producer unavailable",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "web",
+        "simulator"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "NCAP v2 sampled descriptors are separate from frozen CaptureMetadata 1.0 and NCAP v1 bytes. Layout 1.0 documents both formats; no runtime analog capability is implied."
+    },
+    {
+      "id": "NCAPLayout",
+      "kind": "schema",
+      "path": "contracts/capture/ncap.schema.json",
+      "uri": "https://netcircuit.local/contracts/capture/ncap/2.0/schema.json",
+      "pointer": "/$defs/NCAPLayout",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Versioned binary format adapters and synthetic conformance corpus; sampled runtime producer unavailable",
+      "consumers": [
+        "api",
+        "hardware-service",
+        "web",
+        "simulator"
+      ],
+      "validator_profile": "transport",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts",
+        "contracts/boundary/capture_layout.py",
+        "apps/web/src/contracts/generated/captureLayout.ts"
+      ],
+      "compatibility_policy": "NCAP v2 sampled descriptors are separate from frozen CaptureMetadata 1.0 and NCAP v1 bytes. Layout 1.0 documents both formats; no runtime analog capability is implied."
+    },
+    {
+      "id": "SignalPortCatalog",
+      "kind": "data",
+      "path": "contracts/design-models/signal-port-catalog.json",
+      "uri": "https://netcircuit.local/contracts/design/signal-port-catalog/1.0/catalog.json",
+      "pointer": "",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Canonical device library port definitions projected by sync_editor_catalog.py",
+      "consumers": [
+        "api",
+        "web",
+        "hardware-service",
+        "simulator"
+      ],
+      "validator_profile": "specialized",
+      "generated_artifacts": [],
+      "compatibility_policy": "Catalog domains do not grant execution models or capabilities."
+    },
+    {
+      "id": "NCAPLayoutData",
+      "kind": "data",
+      "path": "contracts/capture/layout.json",
+      "uri": "https://netcircuit.local/contracts/capture/layout/1.0/layout.json",
+      "pointer": "",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Versioned binary layout authority",
+      "consumers": [
+        "api",
+        "web",
+        "hardware-service",
+        "simulator"
+      ],
+      "validator_profile": "specialized",
+      "generated_artifacts": [],
+      "compatibility_policy": "Preserve supported NCAP v1 bytes and NCAP v2 sampled layout; incompatible byte changes require a new binary version."
+    },
+    {
+      "id": "PublicWireBaseline",
+      "kind": "data",
+      "path": "contracts/compatibility/2026-10-16/public-wire-baseline.json",
+      "uri": "https://netcircuit.local/contracts/compatibility/2026-10-16/public-wire-baseline.json",
+      "pointer": "",
+      "version": "1.0",
+      "visibility": "internal",
+      "producer": "Supported unpublished post-W7 wire snapshot; not a release",
+      "consumers": [
+        "CI",
+        "compatibility-checker"
+      ],
+      "validator_profile": "specialized",
+      "generated_artifacts": [],
+      "compatibility_policy": "Immutable supported wire anchors; new endpoints/versions may be added while retained anchors must remain compatible."
+    }
+  ]
+}

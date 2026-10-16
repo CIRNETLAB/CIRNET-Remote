@@ -1,31 +1,26 @@
 <script setup lang="ts">
 import { useInstrumentStore } from '../../stores/instrument'
 import { instrumentThemeStyle, SCOPE_KEYS, SCOPE_LABELS, SCOPE_SECTIONS } from '../../data/instrumentVisuals'
+import AnalogCaptureView from './AnalogCaptureView.vue'
 import InstrumentDial from './InstrumentDial.vue'
 import { computed } from 'vue'
-import { useExperimentStore } from '../../stores/experiment'
-import { useCircuitStore } from '../../stores/circuit'
 import { useStationStore } from '../../stores/station'
 const instrument = useInstrumentStore()
-const experiment=useExperimentStore(),circuit=useCircuitStore(),station=useStationStore()
+const station=useStationStore()
 const scopeChannels=computed(()=>station.instrumentCapabilities?.oscilloscope.channels??0)
 const scopeAvailable=computed(()=>station.canExecute&&scopeChannels.value>0)
-async function captureKey(label:string) {
-  if(!scopeAvailable.value) return
-  if(label===SCOPE_KEYS.run_stop_button.label&&experiment.canStop) return experiment.stop()
-  if(label===SCOPE_KEYS.run_stop_button.label||label===SCOPE_KEYS.single_button.label) return experiment.run(circuit.graph,station.executionTarget,{signals:instrument.captureSignals.slice(0,Math.min(2,scopeChannels.value)),duration_ns:instrument.captureDurationNs})
-}
 const horizontalKeys = [SCOPE_KEYS.auto_set_button, SCOPE_KEYS.run_stop_button, SCOPE_KEYS.single_button, SCOPE_KEYS.default_button]
 const triggerKeys = [SCOPE_KEYS.trigger_mode_button, SCOPE_KEYS.trigger_source_button, SCOPE_KEYS.trigger_slope_button, SCOPE_KEYS.trigger_menu_button]
-const channels = [{ name: 'CH1', accent: 'var(--instrument-ch1)' }, { name: 'CH2', accent: 'var(--instrument-ch2)' }]
+const channels=computed(()=>Array.from({length:Math.min(scopeChannels.value,16)},(_,index)=>({name:'CH'+(index+1),accent:index%2?'var(--instrument-ch2)':'var(--instrument-ch1)'})))
 </script>
 <template>
   <div class="scope-instrument" :style="instrumentThemeStyle">
     <div class="scope-faceplate">
-      <header class="scope-brand"><div><strong>net<span>*CIRCUIT</span></strong><small>DIGITAL OSCILLOSCOPE · 2 CHANNEL</small></div><span class="scope-status">NO CAPTURE SOURCE</span></header>
+      <header class="scope-brand"><div><strong>net<span>*CIRCUIT</span></strong><small>DIGITAL OSCILLOSCOPE · {{ scopeChannels }} declared channels</small></div><span class="scope-status">{{ instrument.analogCapture ? 'CAPTURE EVIDENCE' : 'NO CAPTURE SOURCE' }}</span></header>
       <div class="scope-front">
         <div class="scope-display-column">
-          <div class="scope-display">
+          <AnalogCaptureView v-if="instrument.analogCapture" :capture="instrument.analogCapture" />
+          <div v-else class="scope-display">
             <div class="scope-display-status"><span>OSC / 01</span><span>TRIGGER <b>—</b></span><span>TIMEBASE {{ instrument.oscilloscope.timeDiv }} / div</span></div>
             <div class="scope-plot">
               <svg viewBox="0 0 500 360" preserveAspectRatio="none" role="img" aria-label="Empty oscilloscope grid; no waveform data">
@@ -46,7 +41,7 @@ const channels = [{ name: 'CH1', accent: 'var(--instrument-ch1)' }, { name: 'CH2
             <div class="scope-horizontal">
               <InstrumentDial :label="SCOPE_LABELS.timeDiv" :caption="SCOPE_LABELS.timeDiv" :value="instrument.oscilloscope.timeDiv" style="--dial-accent: var(--instrument-ch2)" />
               <InstrumentDial label="Horizontal Position" :caption="SCOPE_LABELS.position" value="—" compact />
-              <div class="scope-key-stack"><button v-for="(key, index) in horizontalKeys" :key="key.label" type="button" :disabled="index===0||index===3" :class="{ 'scope-action-key': index < 2 }" :style="index < 2 ? { '--key-accent': key.color } : {}" @click="captureKey(key.label)">{{ key.label }}</button></div>
+              <div class="scope-key-stack"><button v-for="(key, index) in horizontalKeys" :key="key.label" type="button" disabled title="No confirmed analog acquisition producer" :class="{ 'scope-action-key': index < 2 }" :style="index < 2 ? { '--key-accent': key.color } : {}">{{ key.label }}</button></div>
             </div>
           </section>
           <section class="scope-control-panel" aria-labelledby="scope-trigger-title">
@@ -55,11 +50,11 @@ const channels = [{ name: 'CH1', accent: 'var(--instrument-ch1)' }, { name: 'CH2
           </section>
           <section class="scope-control-panel scope-vertical" aria-labelledby="scope-vertical-title">
             <h3 id="scope-vertical-title">{{ SCOPE_SECTIONS[2] }}</h3>
-            <div class="scope-channels"><div v-for="channel in channels" :key="channel.name" class="scope-channel" :style="{ '--dial-accent': channel.accent }"><strong>{{ channel.name }}</strong><InstrumentDial :label="channel.name + ' ' + SCOPE_LABELS.voltsDiv" :caption="SCOPE_LABELS.voltsDiv" :value="instrument.oscilloscope.channelScale" /><InstrumentDial :label="channel.name + ' Position'" :caption="SCOPE_LABELS.position" value="—" compact /></div></div>
+            <p v-if="scopeChannels > 16">{{ scopeChannels - 16 }} additional declared channels; no attached analog source.</p><div class="scope-channels"><div v-for="channel in channels" :key="channel.name" class="scope-channel" :style="{ '--dial-accent': channel.accent }"><strong>{{ channel.name }}</strong><InstrumentDial :label="channel.name + ' ' + SCOPE_LABELS.voltsDiv" :caption="SCOPE_LABELS.voltsDiv" :value="instrument.oscilloscope.channelScale" /><InstrumentDial :label="channel.name + ' Position'" :caption="SCOPE_LABELS.position" value="—" compact /></div></div>
           </section>
         </fieldset>
       </div>
-      <footer class="scope-measurements" aria-label="Oscilloscope measurements"><span>Frequency <b>—</b></span><span>Amplitude <b>—</b></span><span>Period <b>—</b></span><small>Acquisition not connected</small></footer>
+      <footer class="scope-measurements" aria-label="Oscilloscope measurements"><span>Frequency <b>—</b></span><span>Amplitude <b>—</b></span><span>Period <b>—</b></span><small>No confirmed analog acquisition producer</small></footer>
     </div>
   </div>
 </template>

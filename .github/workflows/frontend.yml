@@ -1,12 +1,19 @@
 name: Frontend
 on:
   push:
-    paths: ['apps/web/**', 'tests/frontend/**', 'contracts/circuit-schema/**', 'contracts/memory/**', 'contracts/physical-lab/**', 'contracts/assignment/**', 'device-library/**', 'scripts/sync_editor_catalog.py', 'scripts/sync_lab_contracts.py', '.github/workflows/frontend.yml']
+    paths: ['apps/web/**', 'tests/frontend/**', 'contracts/**', 'device-library/**', 'scripts/**', 'services/api/**', 'simulator/circuit-simulator/**', 'pyproject.toml', 'requirements-codegen.txt', 'requirements-verification.txt', 'requirements-benchmark.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
   pull_request:
-    paths: ['apps/web/**', 'tests/frontend/**', 'contracts/circuit-schema/**', 'contracts/memory/**', 'contracts/physical-lab/**', 'contracts/assignment/**', 'device-library/**', 'scripts/sync_editor_catalog.py', 'scripts/sync_lab_contracts.py', '.github/workflows/frontend.yml']
+    paths: ['apps/web/**', 'tests/frontend/**', 'contracts/**', 'device-library/**', 'scripts/**', 'services/api/**', 'simulator/circuit-simulator/**', 'pyproject.toml', 'requirements-codegen.txt', 'requirements-verification.txt', 'requirements-benchmark.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: frontend-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -16,17 +23,34 @@ jobs:
           cache-dependency-path: apps/web/package-lock.json
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
-      - name: Install Python smoke-test dependency
-        run: pip install pytest
-      - name: Install dependencies
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: |
+            requirements-codegen.txt
+            requirements-verification.txt
+            requirements-benchmark.txt
+            pyproject.toml
+            services/api/pyproject.toml
+            simulator/circuit-simulator/pyproject.toml
+      - name: Install local contract consumers and test tools
+        run: python -m pip install -r requirements-verification.txt -e . -e './services/api[test]' -e './simulator/circuit-simulator[test]'
+      - name: Install locked browser tools
         working-directory: apps/web
         run: npm ci --no-audit --no-fund
-      - name: Frontend runtime tests
+      - name: Check generated boundary artifacts
+        run: |
+          python scripts/generate_hardware_rpc.py
+          python scripts/generate_contracts.py --check
+          python scripts/export_openapi.py --check
+          python scripts/sync_editor_catalog.py --check
+      - name: AST dependency boundaries
+        working-directory: apps/web
+        run: npm run check:boundaries
+      - name: Typecheck and frontend runtime tests
         working-directory: apps/web
         run: npm test
-      - name: Build frontend
+      - name: Build workbench and imported GLB previews
         working-directory: apps/web
         run: npm run build
-      - name: Boundary smoke tests
-        run: pytest -q tests/frontend
+      - name: Python browser-boundary and workflow tests
+        run: python -m pytest -q tests/frontend

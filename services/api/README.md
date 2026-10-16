@@ -1,29 +1,34 @@
 # Application Backend
 
-FastAPI modular-monolith Lab-First laboratory on a Linux Mini PC. Authority: ../../docs/ARCHITECTURE.md. R4 implements assignment/experiment/station/verification/persistence and FIFO/lease lifecycle. PostgreSQL is required in production; SQLite is optional for tests/development. Public contracts: ../../contracts/api/README.md.
+FastAPI modular-monolith Lab-First laboratory. Authority: ../../docs/ARCHITECTURE.md. The application includes durable authentication/RBAC, owned Project/Circuit revisions, published assignments, experiments/history, verification, captures and FIFO/lease lifecycle. PostgreSQL is required in production; SQLite is for tests/development. Public contracts and all typed routes: ../../contracts/api/README.md.
 
-Install root contracts package into both service environments. API also needs grpcio/protobuf and psycopg (declared dependencies). Install Hardware Service dev extras and run python scripts/generate_hardware_rpc.py before startup/package build to create shared contracts/generated. Start hardware_service.server in its own process on localhost 50051. An absent gateway reports unavailable; R5 enables actual virtual execution.
+Install the root contracts package into both service environments. API also needs grpcio/protobuf and psycopg (declared dependencies). For source-checkout development, install Hardware Service dev extras and run `python scripts/generate_hardware_rpc.py` before startup/tests to create ignored shared RPC bindings. Installed production wheels already contain those bindings and resources; startup needs neither the checkout nor code generation/dev tools. Start hardware_service.server in its own process on localhost50051. An absent gateway reports unavailable; the virtual station executes the existing real digital simulator.
 
-V1 uses one API worker (systemd default); do not start multiple scheduler workers against the same stations. SQLAlchemy persists definitions/results/sessions/leases and FIFO order, creates schema on bootstrap, recovers active leases on restart and quarantines failed safety cleanup. Production PostgreSQL server/deployment have not been validated here. Anonymous owner sessions isolate users; login/RBAC is a later deployment boundary.
+Use one API worker; do not start multiple scheduler workers against the same stations. SQLAlchemy persists definitions/results/sessions/leases and FIFO order; versioned migrations through 0005 upgrade new and legacy databases. Restart recovers active leases and quarantines failed safe cleanup. Actual PostgreSQL migration/backup/restore and independent-writer tests have run locally; target production deployment remains unverified. Durable principals, server sessions, Argon2id passwords, CSRF/exact-origin and role/object authorization protect HTTP/WebSocket. Follow [auth setup](../../docs/architecture/auth-and-migrations.md) for administrator bootstrap, and the [production guide](../../deployment/README.md) for installed wheels, migration checks, TLS/origins, persistent data and maintenance. Development guests are explicit; production disables them.
 
 ## Post-R7 execution and data plane
 
 Physical orchestration is scan → safety verification → TopologyResolver → topology diagnostics → pure infrastructure compilation/executability → ExecutionPolicy → apply routing/guarded power-up → capture → functional verification/assessment. `TopologyResolutionResult.endpoint_bindings` is ResolvedLabBindings; the compiler routes observed student nodes. Reference physical node != student physical node. Topology mismatch and assessment policy cannot block a safe executable circuit; missing required bindings yield BLOCK_UNEXECUTABLE.
 
-Experiment SQL JSON and `experiment.updated` contain CaptureMetadata, never inline sample arrays. `CaptureStore` V1 uses atomic filesystem files under `NETCIRCUIT_CAPTURE_DIR` (default `.runtime/captures`); keep this directory durable alongside the database in production. FunctionalVerificationService loads the payload through CaptureService and returns declared signal/truth-case evidence, preserving X/absence. Anonymous session ownership is enforced for GET/DELETE `/api/captures/{capture_id}/payload`. GET returns NCAP binary; DELETE requires a terminal experiment after lease cleanup, removes payload and marks historical metadata unavailable. No automatic retention expiry in V1; owners delete explicitly. Restart safe cleanup precedes migration of old inline captures; storage I/O failure preserves valid old evidence for retry.
+Experiment SQL JSON and `experiment.updated` contain CaptureMetadata, never sample arrays. `CaptureStore` uses immutable, atomic NCAP v1 files under `NETCIRCUIT_CAPTURE_DIR`; keep this directory durable with the database. Functional verification consumes raw stored samples and preserves X/absence. Owner/session authorization protects GET/DELETE `/api/captures/{capture_id}/payload`, including a final check after slow reads. Indexed terminal-owner retirement commits unavailable metadata/audit before file deletion; old generations remain separate and failed cleanup is retryable. Byte I/O never holds the global control lock. Stop/release retains historical captures. Default quotas are 256 MiB/4,096 files for one writer; explicit `python -m app.capture_maintenance --limit 100 --dry-run` previews the 30-day bounded policy. Retention 0 disables expiration but retries pending cleanup; active/quarantined captures are excluded. NCAP v2 sampled codecs are library adapters only and install no runtime analog producer. Restart safe cleanup still precedes legacy inline migration. Default observed_only feedback removes reference/answer diagnostics from every HTTP/event/operation snapshot while retaining complete DB evidence.
 
 Hardware admission uses current validated capabilities.physical_execution_slots (zero means unavailable), with FIFO dispatch and station quarantine. `NETCIRCUIT_SIMULATION_WORKERS` is positive/default 4 and must match the Hardware Service setting. Keep one API scheduler process. Instrument channels are 1-based and `instrument_capabilities` is the sole authority. `/api/experiments/{id}/instruments` delegates to ExperimentManager under ownership/lease/state synchronization. Baseline generator configuration is part of the execution plan; live configuration requires RUNNING, explicit runtime support, allocation, fresh safety and profile limits. Current Scope/Generator have zero channels; no electrical bounds are invented.
+
+Typed `/instruments/access`, `/instruments/generator` and `/instruments/commands/{key}` add allocation-aware durable acknowledgement without changing the legacy instrument response. REQUESTED/unknown never replays output; ACCEPTED does not imply APPLIED. Required mutation keys and control-client headers are recorded in OpenAPI. Pre-run configuration is immutable; the server independently validates it.
+
+Projects/circuits use saved revisions and database CAS, with session fences against revoke/guest claim. Create pins the owned document revision and assignment publication. History/active endpoints are bounded and read-only; connection recovery cannot grant Run authority. Students receive only published redacted assignment views. See the architecture guides for [projects](../../docs/architecture/projects-and-revisions.md), [assignments](../../docs/architecture/assignments-and-publication.md), [capture catalog](../../docs/architecture/capture-catalog.md) and [domains](../../docs/architecture/signal-domains-and-simulation.md).
 
 Final review corrections: observed terminal aliases and resource allocations are solved jointly, without changing student wiring. Unscoped/zero-confidence pin/net evidence cannot infer required physical endpoints; fixed terminals still work. ReadCapture RPC data uses bounded NCAP binary rather than repeating sample signal names in result_json; gateway rejects inconsistent descriptors. Regenerate RPC bindings and restart both local services together before use.
 
 Full supported verification environment from root:
 
 ```bash
-pip install -e . -e './services/api[test]' -e './services/hardware-service[dev]' -e './simulator/circuit-simulator[test]'
+pip install -r requirements-verification.txt -e . -e './services/api[test]' -e './services/hardware-service[dev]' -e './simulator/circuit-simulator[test]'
 python scripts/generate_hardware_rpc.py
 python scripts/check_context.py
 python scripts/sync_lab_contracts.py --check
 pytest -q
+python scripts/check_release.py --show-plan
 ```
 
 `grpcio-tools` comes from Hardware Service dev extras; missing grpc_tools must be repaired in the environment before judging RPC tests. FPGA behavioral tests explicitly skip when Icarus/vvp are absent; static compiler tests do not establish physical safety.
@@ -37,11 +42,12 @@ does not start it.
 
 ### Windows PowerShell
 
-First-time setup, from the repository root (Python 3.11 or newer):
+First-time setup, from the repository root (verified locally with Python 3.12; package minimum 3.11):
 
 ```powershell
-py -3 -m venv services/api/.venv
-.\services\api\.venv\Scripts\python.exe -m pip install -e . -e './simulator/circuit-simulator' -e './services/api[test]'
+py -3.12 -m venv services/api/.venv
+.\services\api\.venv\Scripts\python.exe -m pip install -r requirements-verification.txt -e . -e './simulator/circuit-simulator[test]' -e './services/api[test]' -e './services/hardware-service[dev]'
+.\services\api\.venv\Scripts\python.exe scripts/generate_hardware_rpc.py
 ```
 
 Root contracts packaging automatically creates
@@ -51,6 +57,14 @@ service virtual environments. It can be deleted and is recreated on the next
 install or build; no manual directory setup is needed on a fresh checkout.
 
 Start the API and keep this terminal running:
+
+First start the local Hardware Service in another terminal with the same environment:
+
+```powershell
+.\services\api\.venv\Scripts\python.exe -m hardware_service.server 127.0.0.1:50051
+```
+
+It provides the existing virtual station. Starting Vite or the API does not start this RPC service.
 
 ```powershell
 .\services\api\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir services/api --reload-dir services/api --host 127.0.0.1 --port 8000 --reload
@@ -102,11 +116,13 @@ simulation mode should return `virtual-station-01` with state `ready`.
 cd services/api
 python -m venv .venv
 . .venv/bin/activate
-pip install -e ../.. -e '.[test]'
+pip install -r ../../requirements-verification.txt -e ../.. -e '../../simulator/circuit-simulator[test]' -e '../../services/hardware-service[dev]' -e '.[test]'
+python ../../scripts/generate_hardware_rpc.py
+# In another terminal with this environment: python -m hardware_service.server 127.0.0.1:50051
 uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-Current endpoints:
+Core execution endpoints (the [generated API reference](../../contracts/api/README.md) lists the complete typed surface):
 
 - `GET /api/health`
 - `POST /api/circuits/validate`
@@ -117,5 +133,6 @@ Current endpoints:
 - `GET /api/experiments/{id}/results`, `POST /api/experiments/{id}/instruments`
 - `GET/DELETE /api/captures/{capture_id}/payload`
 - `WS /ws/events`
+- Authentication/session/admin, Project/Circuit revisions, assignment authoring/publication, bounded history/active snapshots and durable instrument commands are documented in that reference.
 
 This layer validates application intent. It does not write FPGA registers directly.

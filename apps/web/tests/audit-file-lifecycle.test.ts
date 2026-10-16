@@ -9,6 +9,7 @@ import { createRenderer, type Component, type ComponentInternalInstance } from '
 import { createPinia, setActivePinia } from 'pinia'
 import { useCircuitStore } from '../src/stores/circuit'
 import { useWorkspaceStore } from '../src/stores/workspace'
+import { useProjectStore } from '../src/stores/projects'
 import type { MemoryImage } from '../src/types/memory'
 import { createMemoryImage } from '../src/services/files/memoryImage'
 
@@ -75,6 +76,17 @@ test('unmounted file toolbar cannot import a pending circuit read', async () => 
     h.unmount(); file.finish(graph('Late')); await pending
     assert.equal(store.drafts.length, 0)
   } finally { if (previous) Object.defineProperty(globalThis, 'window', previous); else Reflect.deleteProperty(globalThis, 'window') }
+})
+
+test('a principal switch cancels a pending local circuit import without remounting the toolbar',async()=>{
+  const previous=Object.getOwnPropertyDescriptor(globalThis,'window')
+  Object.defineProperty(globalThis,'window',{configurable:true,value:new EventTarget()})
+  const h=mount(titleBar),projects=useProjectStore();await projects.setPrincipal('first')
+  try {
+    const file=pendingFile('private.json'),pending=(h.state.openFile as (event:Event)=>Promise<void>)(file.event)
+    await projects.setPrincipal('second');file.finish(graph('Private first principal'));await pending
+    assert.equal(useCircuitStore().drafts.some(draft=>draft.name==='Private first principal'),false)
+  }finally{h.unmount();projects.dispose();if(previous)Object.defineProperty(globalThis,'window',previous);else Reflect.deleteProperty(globalThis,'window')}
 })
 
 test('newer memory image selection wins when earlier reads finish last', async () => {

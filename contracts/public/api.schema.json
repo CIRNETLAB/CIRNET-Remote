@@ -1,0 +1,634 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://netcircuit.local/contracts/public/api/1.0/schema.json",
+  "title": "Public application HTTP contracts 1.0",
+  "$defs": {
+    "HealthResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "const": "ok"
+        },
+        "service": {
+          "const": "netcircuit-api"
+        },
+        "hardware_mode": {
+          "enum": [
+            "simulation",
+            "hardware"
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "service",
+        "hardware_mode"
+      ],
+      "additionalProperties": false
+    },
+    "CircuitValidationResult": {
+      "type": "object",
+      "properties": {
+        "valid": {
+          "type": "boolean"
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "valid",
+        "code",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "PhysicalDeviceState": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "enum": [
+            "POWERED",
+            "UNPOWERED",
+            "FAULT",
+            "UNSUPPORTED",
+            "ON",
+            "OFF",
+            "UNKNOWN",
+            "PASSIVE"
+          ]
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "voltage": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resistanceOhms": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "currentAmps": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "PhysicalPreviewResult": {
+      "type": "object",
+      "properties": {
+        "device_states": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/PhysicalDeviceState"
+          }
+        },
+        "pin_values": {
+          "type": "object",
+          "additionalProperties": {
+            "enum": [
+              0,
+              1,
+              "X"
+            ]
+          }
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "provenance": {
+          "const": "simulation_preview"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "device_states",
+        "pin_values",
+        "diagnostics"
+      ],
+      "additionalProperties": false
+    },
+    "PublicStationCapabilities": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "station_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+        },
+        "mode": {
+          "enum": [
+            "simulation",
+            "hardware"
+          ]
+        },
+        "available": {
+          "type": "boolean"
+        },
+        "virtual_digital": {
+          "type": "boolean"
+        },
+        "virtual_analog": {
+          "type": "boolean"
+        },
+        "physical_digital": {
+          "type": "boolean"
+        },
+        "physical_analog_routing": {
+          "type": "boolean"
+        },
+        "physical_execution_slots": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "topology_scan_supported": {
+          "type": "boolean"
+        },
+        "safety_gate_supported": {
+          "type": "boolean"
+        },
+        "guarded_run_supported": {
+          "type": "boolean"
+        },
+        "component_resolution_modes": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "AUTO_DISCOVERY",
+              "INSTRUCTOR_PROFILE",
+              "HYBRID"
+            ]
+          }
+        },
+        "breadboards": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"
+              },
+              "model": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "id",
+              "model"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "hardware_rpc_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fpga_protocol_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "firmware_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hardware_profile_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "instrument_capabilities": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/InstrumentCapabilities"
+        }
+      },
+      "required": [
+        "schema_version",
+        "station_id",
+        "mode",
+        "available",
+        "virtual_digital",
+        "virtual_analog",
+        "physical_digital",
+        "physical_analog_routing",
+        "physical_execution_slots",
+        "topology_scan_supported",
+        "safety_gate_supported",
+        "guarded_run_supported",
+        "component_resolution_modes",
+        "hardware_rpc_version",
+        "fpga_protocol_version",
+        "firmware_version",
+        "hardware_profile_version",
+        "instrument_capabilities"
+      ],
+      "additionalProperties": false,
+      "$comment": "Public projection intentionally excludes station resource/node maps. Internal StationCapabilities remains the hardware-service contract."
+    },
+    "StationDescriptor": {
+      "type": "object",
+      "properties": {
+        "station_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mode": {
+          "enum": [
+            "simulation",
+            "hardware"
+          ]
+        },
+        "state": {
+          "enum": [
+            "ready",
+            "unavailable",
+            "busy",
+            "error"
+          ]
+        },
+        "capabilities": {
+          "$ref": "#/$defs/PublicStationCapabilities"
+        }
+      },
+      "required": [
+        "station_id",
+        "mode",
+        "state",
+        "capabilities"
+      ],
+      "additionalProperties": false
+    },
+    "ExperimentCreate": {
+      "type": "object",
+      "properties": {
+        "station_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "assignment_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "circuit_graph": {
+          "$ref": "https://netcircuit.local/contracts/circuit/1.x/circuit.schema.json"
+        },
+        "clock_config": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false
+            },
+            {
+              "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/ClockConfiguration"
+            }
+          ]
+        },
+        "generator_config": {
+          "type": "array",
+          "items": {
+            "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/GeneratorConfiguration"
+          }
+        },
+        "capture_config": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/CaptureConfiguration"
+        },
+        "test_vectors": {
+          "type": "array",
+          "items": {
+            "$ref": "https://netcircuit.local/contracts/public/common/1.0/schema.json#/$defs/TestVector"
+          }
+        },
+        "circuit_document_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "circuit_revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "station_id"
+      ],
+      "additionalProperties": false,
+      "dependentRequired": {
+        "circuit_document_id": [
+          "circuit_revision"
+        ],
+        "circuit_revision": [
+          "circuit_document_id"
+        ]
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "circuit_document_id"
+            ]
+          },
+          "then": {
+            "not": {
+              "required": [
+                "circuit_graph"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "TriggerConfiguration": {
+      "type": "object",
+      "properties": {
+        "signal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "edge": {
+          "enum": [
+            "RISING",
+            "FALLING",
+            "ANY"
+          ]
+        }
+      },
+      "required": [
+        "signal",
+        "edge"
+      ],
+      "additionalProperties": false
+    },
+    "InstrumentConfigureRequest": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "instrument": {
+              "const": "generator"
+            },
+            "configuration": {
+              "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/GeneratorConfiguration"
+            }
+          },
+          "required": [
+            "instrument",
+            "configuration"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "instrument": {
+              "const": "clock"
+            },
+            "configuration": {
+              "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/ClockConfiguration"
+            }
+          },
+          "required": [
+            "instrument",
+            "configuration"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "instrument": {
+              "const": "trigger"
+            },
+            "configuration": {
+              "$ref": "#/$defs/TriggerConfiguration"
+            }
+          },
+          "required": [
+            "instrument",
+            "configuration"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "InstrumentOperationResult": {
+      "type": "object",
+      "properties": {
+        "accepted": {
+          "type": "boolean"
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "ACCEPTED",
+            "APPLIED",
+            "FAILED"
+          ]
+        }
+      },
+      "required": [
+        "accepted",
+        "code",
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "FieldIssue": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "error",
+            "warning",
+            "info"
+          ]
+        },
+        "profile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "code",
+        "path",
+        "severity",
+        "profile",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "ErrorEnvelope": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "request_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FieldIssue"
+          }
+        },
+        "operation_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "current_revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "request_id"
+      ],
+      "additionalProperties": false
+    },
+    "OperationRecord": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "operation_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "create",
+            "run",
+            "stop"
+          ]
+        },
+        "status": {
+          "enum": [
+            "REQUESTED",
+            "ACCEPTED",
+            "APPLIED",
+            "FAILED"
+          ]
+        },
+        "experiment_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "experiment": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/ExperimentRecord"
+        }
+      },
+      "required": [
+        "schema_version",
+        "operation_key",
+        "kind",
+        "status",
+        "experiment_id",
+        "error_code",
+        "revision"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

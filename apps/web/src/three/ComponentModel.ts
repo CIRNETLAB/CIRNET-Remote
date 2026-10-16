@@ -1,4 +1,4 @@
-import { Box3, BoxGeometry, CanvasTexture, CylinderGeometry, Group, InstancedMesh, Mesh, MeshStandardMaterial, Object3D, SphereGeometry, Sprite, SpriteMaterial, SRGBColorSpace, Texture, Vector3, type BufferGeometry, type Material } from 'three'
+import { Box3, BoxGeometry, CanvasTexture, CylinderGeometry, Group, Mesh, MeshStandardMaterial, SphereGeometry, Sprite, SpriteMaterial, SRGBColorSpace, Vector3 } from 'three'
 import { getDefinition, type LogicalPort } from '../data/editorCatalog'
 import type { CircuitModule } from '../types/circuit'
 import { addBreadboardHousing, BREADBOARD_PLASTIC_COLOR } from './BreadboardHousing'
@@ -11,23 +11,7 @@ import { addPackageModel, packagePinAnchor } from './PackageModel'
 import { subduedBodyColor } from './package/PackageMaterials'
 import { preserveStructureLighting } from './StudioEnvironment'
 
-export function disposeObject(root: Object3D) {
-  const geometries = new Set<BufferGeometry>(), materials = new Set<Material>(), textures = new Set<Texture>()
-  root.traverse((object) => {
-    delete object.userData.onVisualChange
-    if (object instanceof InstancedMesh) object.dispose()
-    const renderable = object as Mesh
-    if (renderable.geometry) geometries.add(renderable.geometry)
-    const owned = renderable.material ? (Array.isArray(renderable.material) ? renderable.material : [renderable.material]) : []
-    owned.forEach((material) => materials.add(material))
-  })
-  // Factories share materials within a model; maps can also be shared across
-  // material slots. Release every owned resource once, including PBR maps.
-  for (const material of materials) for (const value of Object.values(material)) if (value instanceof Texture) textures.add(value)
-  geometries.forEach((geometry) => geometry.dispose())
-  textures.forEach((texture) => texture.dispose())
-  materials.forEach((material) => material.dispose())
-}
+export { disposeObject } from './ObjectResources'
 
 function createBreadboardTexture(type: string): CanvasTexture | null {
   if (typeof document === 'undefined') return null

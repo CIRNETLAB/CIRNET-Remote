@@ -62,7 +62,12 @@ npm run dev
 
 Open `/function-generator-preview.html` to verify the actual delivered GLB,
 switch front/side/angled views over the Y=0 grid and test CanvasTexture replacement. This is a
-development entry, separate from application routing.
+asset entry, separate from application routing and included in production builds.
+The shared provider verifies its SHA-256 revision and byte bound, shares pending
+loads, and releases owned resources when the viewer closes. The main workspace
+keeps its current procedural coating materials; this delivered export retains its
+older housing finish. See `docs/verification/2026-10-16-w5-assets.md` at repository
+root for the asset ownership decision.
 
 Source of truth: `src/three/FunctionGeneratorModel.ts` (geometry),
 `FunctionGeneratorArtwork.ts` (layout/decals), `InstrumentArtwork.ts` (Canvas/SVG),

@@ -68,13 +68,19 @@ test('duplicate layout notifications retain viewport identities and floating-win
 })
 const valid = () => ({ schema_version: '1.0', circuit_id: 'example', modules: [{ id: 'U1', type: '74HC08' }], connections: [], metadata: { name: 'AND lab' } })
 
-test('root, legacy and unknown URLs all enter the same workspace', async () => {
+test('root and legacy URLs enter the same workspace; resource and unknown addresses remain reviewable', async () => {
   const router = createRouter({ history: createMemoryHistory(), routes: workspaceRoutes })
-  for (const path of ['/', '/dashboard', '/laboratory', '/circuits', '/stations', '/experiments', '/settings', '/obsolete/deep']) {
+  for (const path of ['/', '/dashboard', '/laboratory', '/circuits', '/stations', '/experiments', '/settings']) {
     await router.push(path)
     assert.equal(router.currentRoute.value.path, '/')
     assert.equal(router.currentRoute.value.name, 'SingleWorkspace')
   }
+  await router.push('/projects/p1/circuits/d1')
+  assert.equal(router.currentRoute.value.name,'ProjectCircuit')
+  assert.deepEqual(router.currentRoute.value.params,{projectId:'p1',documentId:'d1'})
+  await router.push('/obsolete/deep')
+  assert.equal(router.currentRoute.value.name,'UnknownWorkspace')
+  assert.equal(router.currentRoute.value.path,'/obsolete/deep')
 })
 
 test('tools have one shared active state and preview is independent of circuit identity', () => {

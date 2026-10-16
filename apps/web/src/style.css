@@ -23,8 +23,8 @@ code { font-family: Consolas, monospace; }
 .brand strong { font-size: 14px; letter-spacing: -.3px; color: #e6eff3; }
 .brand strong .brand-circuit { color: #20d4ee; }
 .brand strong .brand-remote { font-weight: 400; color: #98aabd; }
-.file-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
-.file-actions button { display: flex; align-items: center; gap: 5px; padding: 5px 9px; border-color: transparent; background: transparent; font-size: 12px; }
+.file-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 1; min-width:0; overflow-x:auto; }
+.file-actions button { display: flex; align-items: center; gap: 5px; padding: 5px 9px; border-color: transparent; background: transparent; font-size: 12px; flex-shrink:0; }
 .toolbar-divider { height: 22px; width: 1px; background: var(--line); margin: 0 6px; }
 .project-title { min-width: 0; display: flex; align-items: center; gap: 7px; flex: 1; justify-content: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #c9d6e2; font-size: 12px; }
 .project-title small { font-size: 8px; letter-spacing: 1px; background: #273646; padding: 4px 5px; border-radius: 3px; flex-shrink: 0; }

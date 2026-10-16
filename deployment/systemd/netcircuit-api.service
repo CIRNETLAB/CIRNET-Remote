@@ -7,14 +7,18 @@ Wants=network-online.target
 Type=simple
 User=netcircuit
 Group=netcircuit
-WorkingDirectory=/opt/netcircuit/repo/services/api
-EnvironmentFile=-/etc/netcircuit/netcircuit.env
+StateDirectory=netcircuit
+WorkingDirectory=/var/lib/netcircuit
+EnvironmentFile=/etc/netcircuit/netcircuit.env
 Environment=NETCIRCUIT_ENV=production
-ExecStart=/opt/netcircuit/venv-api/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+Environment=NETCIRCUIT_CAPTURE_DIR=/var/lib/netcircuit/captures
+ExecStartPre=/opt/netcircuit/venv-api/bin/python -m app.migrate --check
+ExecStart=/opt/netcircuit/venv-api/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1 --proxy-headers --forwarded-allow-ips 127.0.0.1 --no-access-log
 Restart=on-failure
 RestartSec=3
 NoNewPrivileges=true
 PrivateTmp=true
+UMask=0077
 
 [Install]
 WantedBy=multi-user.target

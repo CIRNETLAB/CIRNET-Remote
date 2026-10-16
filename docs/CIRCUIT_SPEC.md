@@ -2,7 +2,7 @@
 
 Authority: ARCHITECTURE.md, canonical v3.1.
 
-CircuitGraph / DesignGraph stays schema_version 1.0 under contracts/circuit-schema. Named source/destination ports define connectivity; optional position/Y rotation are presentation. Keep canonical editor catalog, direction/width/duplicate/extra-driver authoring rules and separate memory schema 1.0. Visual supply/instrument controls imply no electrical source/measurement.
+CircuitGraph / DesignGraph supports schema_version 1.0 and 1.1 under contracts/circuit-schema. Version 1.1 adds board-local mount pose, versioned parts/packages and validated pin-contact bonds; 1.0 documents stay readable. Named source/destination ports define connectivity; optional position/Y rotation are presentation. Keep canonical editor catalog, direction/width/duplicate/extra-driver authoring rules and separate memory schema 1.0. Visual supply/instrument controls imply no electrical source/measurement.
 
 DetectedTopologyGraph is a separate versioned observation contract, preserving wrong/missing/unexpected/opaque/ambiguous student wiring. Physical contact, electrical node, routing resource and FPGA channel are distinct. AssignmentDefinition holds LabEndpoint bindings, optional reference topology/design/profiles/behavior and assessment policy. Reference placement is not grading truth.
 

@@ -96,9 +96,13 @@ original SVG palette preview. No external image service or model download is use
 Run `npm test` for names, pivots, geometry budget, catalog/graph/gizmo integration,
 GLB buffer/PNG validation and GLTFLoader round trips. For development WebGL
 inspection, run Vite and open `/oscilloscope-preview.html`: it loads the delivered
-GLB directly and provides front/side/angled views over a Y=0 grid and a
-CanvasTexture replacement test. This standalone asset
-viewer adds no navigation to the single workspace application.
+GLB through the revision-checked shared provider and provides front/side/angled
+views over a Y=0 grid and a CanvasTexture replacement test. This standalone asset
+viewer is included in production builds and adds no navigation to the single
+workspace application. The main workspace keeps its current procedural coating
+materials; this delivered export retains its older housing finish. See
+`docs/verification/2026-10-16-w5-assets.md` at repository root for the asset
+ownership decision.
 
 The regression suite verifies enclosure pitch, root transform preservation,
 ground clearance, actual case/stand/pad surface intersections, centered pivots,

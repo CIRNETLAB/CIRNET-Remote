@@ -4,6 +4,16 @@ All notable project changes will be documented in this file. The project follows
 
 ## [Unreleased]
 
+### Added and changed — 2026-10-16 Web & Contracts
+
+- Canonical offline manifest, deterministic staged Python/TypeScript/runtime/OpenAPI generation, explicit numeric/semantic profiles, retained legacy/wire/NCAP compatibility and clean installed-wheel verification.
+- Durable authentication/RBAC/CSRF, explicit guest claim, versioned migrations, owned Project/Circuit revisions and CAS, stable assignment publication and redacted student evidence.
+- Session rotation retires prior transports, verifies failed/lost outcomes without mutation replay and clears failed refresh authority. Ordinary reads cannot overwrite a newer cookie; legacy owned reads preserve proof until explicit bootstrap and keep capture/revocation/expiry checks.
+- Integrated Project Manager/authoring/history flows, principal-scoped local recovery, immutable admission snapshots, lost-ACK operation recovery and single-flight reconnect/polling without Run replay.
+- Pure document/application boundaries, stable editor/canvas/history behavior and actual shared GLB asset loading/disposal.
+- Requested versus acknowledged instrument controls, explicit SignalDomain dispatch, NCAP v1 interoperability and v2 sampled format/display adapters, indexed retained captures, quotas and bounded retirement/cleanup. Runtime analog/physical capabilities remain honest and unavailable where unsupported.
+- Independent Contracts/consumer/browser CI, reproducible release entrypoints, allowlisted correlation/audit, production configuration/retention templates and a bounded multi-session workload. Final executed gates and environmental/Git limits are tracked in `verification/2026-10-16-web-contracts.md`; no deployment or release is implied by this unreleased entry.
+
 ### Fixed — 2026-10-14 Breadboard mechanical docking
 
 - Share local mating planes, keyed contours, small joint clearance and bevel seam compensation between housing and docking for 830/630/100, including mixed pairs and rotated boards.

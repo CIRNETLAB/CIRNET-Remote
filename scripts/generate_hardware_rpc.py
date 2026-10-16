@@ -23,7 +23,12 @@ def generate(output: Path) -> None:
         path.write_text(text, encoding='utf-8', newline='\n')
         (staging / '__init__.py').write_text('', encoding='utf-8')
         for name in ('rpc_v2_pb2.py','rpc_v2_pb2_grpc.py','__init__.py'):
-            (staging/name).replace(output/name)
+            candidate,target=staging/name,output/name
+            # Consumers may be importing these deterministic bindings while a
+            # test/build requests generation again. Avoid replacing identical
+            # files (and unnecessary Windows sharing/antivirus contention).
+            if target.is_file() and candidate.read_bytes()==target.read_bytes(): continue
+            candidate.replace(target)
 
 
 if __name__ == '__main__':

@@ -10,48 +10,11 @@
     canvas { display: block; width: 100vw; height: 100vh } footer { position: absolute; bottom: 18px; left: 24px; color: #839daa }
   </style>
 </head>
-<body>
-  <!-- Development asset viewer: loads the delivered GLB, separate from app routing.
+<body data-instrument="oscilloscope">
+  <!-- Asset viewer: loads the revision-checked delivered GLB, separate from app routing.
        Run Vite and open /oscilloscope-preview.html; this is not a workflow page. -->
   <header><strong>net*CIRCUIT · Oscilloscope 2 CH</strong><span id="status">Loading GLB…</span><button id="front-view">Front view</button><button id="side-view">Side view</button><button id="angled-view">Angled view</button><button id="canvas-test" disabled>Test CanvasTexture</button></header>
   <footer>GLB asset preview · Drag to orbit · Wheel to zoom · Waveforms are illustrative</footer>
-  <script type="module">
-    import { AmbientLight, CanvasTexture, Color, DirectionalLight, GridHelper, PerspectiveCamera, Scene, SRGBColorSpace, WebGLRenderer } from 'three'
-    import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-    import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-    import { drawScopeArtwork, scopeScreenArtwork } from './src/three/OscilloscopeArtwork.ts'
-    const renderer = new WebGLRenderer({ antialias: true }); renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); document.body.append(renderer.domElement)
-    const scene = new Scene(); scene.background = new Color('#111b24')
-    scene.add(new GridHelper(16, 32, '#425967', '#263945'))
-    const camera = new PerspectiveCamera(32, innerWidth / innerHeight, 0.1, 100); camera.position.set(-4.2, 4.0, 9.0)
-    const controls = new OrbitControls(camera, renderer.domElement); controls.target.set(0, 1.9, 0); controls.update()
-    scene.add(new AmbientLight('#d8e9fa', 1.1))
-    const key = new DirectionalLight('#fff4e5', 1.9); key.position.set(-4, 8, 7); scene.add(key)
-    const fill = new DirectionalLight('#a9d8f8', .75); fill.position.set(5, 3, -4); scene.add(fill)
-    const render = () => renderer.render(scene, camera)
-    // Reference-comparison views use the delivered GLB, not a second model.
-    document.querySelector('#front-view').addEventListener('click', () => { camera.position.set(0, 1.9, 11.6); controls.target.set(0, 1.9, 0); controls.update(); render() })
-    document.querySelector('#side-view').addEventListener('click', () => { camera.position.set(11.6, 1.9, 0); controls.target.set(0, 1.9, 0); controls.update(); render() })
-    document.querySelector('#angled-view').addEventListener('click', () => { camera.position.set(-4.2, 4, 9); controls.target.set(0, 1.9, 0); controls.update(); render() })
-    const resize = () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); render() }
-    controls.addEventListener('change', render); window.addEventListener('resize', resize); resize()
-    const status = document.querySelector('#status'), button = document.querySelector('#canvas-test')
-    try {
-      const gltf = await new GLTFLoader().loadAsync('/models/oscilloscope-2ch/oscilloscope-2ch.glb'); scene.add(gltf.scene); render()
-      status.textContent = 'GLB loaded · 3 BNC · 7 knob pivots'; button.disabled = false
-      const screen = gltf.scene.getObjectByName('screen'); let dynamic
-      button.addEventListener('click', () => {
-        if (!dynamic) {
-          const canvas = document.createElement('canvas'); canvas.width = 1024; canvas.height = 704
-          dynamic = new CanvasTexture(canvas); dynamic.colorSpace = SRGBColorSpace
-          // Exported glTF UVs use image-top V=0; retain that convention for a new
-          // CanvasTexture. The procedural workspace's CanvasTextures use flipY=true.
-          dynamic.flipY = false; screen.material.map.dispose(); screen.material.map = dynamic; screen.material.needsUpdate = true
-        }
-        drawScopeArtwork(dynamic.image.getContext('2d'), scopeScreenArtwork()); dynamic.needsUpdate = true; render()
-        status.textContent = 'CanvasTexture applied to named screen mesh'
-      })
-    } catch (error) { status.textContent = `GLB failed: ${error.message}`; console.error(error) }
-  </script>
+  <script type="module" src="./src/preview/instrumentPreview.ts"></script>
 </body>
 </html>

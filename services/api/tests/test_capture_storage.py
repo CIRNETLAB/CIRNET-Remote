@@ -4,7 +4,8 @@ import json
 from copy import deepcopy
 
 import pytest
-from fastapi.testclient import TestClient
+from csrf_client import CsrfTestClient as TestClient
+from csrf_client import publish_fixture_assignment
 from contracts.validation import validate
 from test_lab_lifecycle import setup_manager, create, assignment, LabGateway, DeferredJobs, modules
 
@@ -104,8 +105,8 @@ def test_payload_rest_owner_check_and_delete_leave_small_unavailable_metadata(tm
     _,persistence=modules(); jobs=DeferredJobs()
     application=main.create_app(repository=persistence.Repository('sqlite://'),gateway=LabGateway(),submit=jobs,
                                 capture_store=store(tmp_path))
+    publish_fixture_assignment(application,assignment())
     with TestClient(application) as owner, TestClient(application) as stranger:
-        owner.post('/api/assignments',json=assignment())
         e=owner.post('/api/experiments',json={'station_id':'p1','assignment_id':'a1'}).json()
         owner.post('/api/experiments/'+e['experiment_id']+'/run'); jobs.run_one()
         record=owner.get('/api/experiments/'+e['experiment_id']).json()

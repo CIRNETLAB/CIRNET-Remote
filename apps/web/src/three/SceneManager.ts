@@ -1,4 +1,4 @@
-import { AmbientLight, BufferGeometry, Color, DirectionalLight, Group, LineBasicMaterial, LineLoop, Matrix4, Mesh, MOUSE, PerspectiveCamera, Plane, Raycaster, Scene, Vector2, Vector3, type Object3D } from 'three'
+import { AmbientLight, BufferGeometry, Color, DirectionalLight, Group, LineBasicMaterial, LineLoop, Matrix4, Mesh, MOUSE, PerspectiveCamera, Plane, Raycaster, Scene, Vector3, type Object3D } from 'three'
 import { ORIENTATION_DIRECTIONS } from '../components/workbench/viewCubeMath'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { applyPose, buildComponent, disposeObject, portAnchor } from './ComponentModel'
@@ -22,6 +22,7 @@ import { createComponentTransformGizmo, type GizmoObstacle, type TransformHandle
 import { applyPowerSupplyControls, supplyControlPatch, type SupplyControl } from './PowerSupplyModel'
 import { createWireLayer } from './WireLayer'
 import { createSelectionPreview } from './SelectionPreview'
+import { createScenePicking } from './ScenePicking'
 import type { EditorSelection } from '../editor/selection'
 import { projectedTranslationDelta } from '../geometry/transformDrag'
 import { projectedBreadboardEnclosedInRect, projectedObjectIntersectsRect, type ScreenRect } from './ProjectedSelection'
@@ -91,7 +92,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
   let gizmoLayoutRevision = 0
   const gizmoModel = () => ghost ?? (highlightedId ? models.get(highlightedId) : undefined)
   const updateGizmo = () => gizmo.update(gizmoModel(), models.values(), camera, width, height, gizmoObstacles, gizmoLayoutRevision)
-  const raycaster = new Raycaster(), plane = new Plane(new Vector3(0, 1, 0), 0)
+  const raycaster = new Raycaster()
   let width = 1, height = 1, sized = false, frame: number | null = null, disposed = false, visible = false, suspended = false, pointerLocked = false
   let bufferWidth = 0, bufferHeight = 0
   let ghost: Group | null = null
@@ -266,39 +267,9 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     controls.addEventListener('change', viewChanged); controls.saveState()
   }
   const validPointer = (x: number, y: number) => !disposed && Number.isFinite(x) && Number.isFinite(y)
-  const ray = (x: number, y: number) => { camera.updateMatrixWorld(); raycaster.params.Line.threshold = camera.position.distanceTo(controls?.target ?? viewTarget) * 2 * Math.tan(camera.fov * Math.PI / 360) / (height * camera.zoom) * 6; raycaster.setFromCamera(new Vector2(x / width * 2 - 1, -(y / height) * 2 + 1), camera) }
-  const pickOwner = (object: Object3D) => { while (object.parent && !object.userData.kind) object = object.parent; return object }
-  const ignored = (object: Object3D) => { let current: Object3D | null = object; while (current) { if (current.userData.ignorePick) return true; current = current.parent }; return false }
-  const wireMeshes = (root?: Object3D) => (root ? [root] : wires.children).flatMap(mesh => [mesh, ...mesh.children.filter(child => child instanceof Mesh)])
-  const contentHit = (x: number, y: number) => { ray(x, y); return raycaster.intersectObjects(content.children, true).find(hit => !ignored(hit.object)) ?? null }
-  const screenPoint = (point: Point3) => {
-    const world = new Vector3(point.x, point.y, point.z), projected = world.clone().project(camera), depth = -world.clone().applyMatrix4(camera.matrixWorldInverse).z
-    return { x: (projected.x + 1) * width / 2, y: (1 - projected.y) * height / 2, depth, visible: projected.z >= -1 && projected.z <= 1 }
-  }
-  const segmentHit = (a: Point3, b: Point3, x: number, y: number) => {
-    const p = screenPoint(a), q = screenPoint(b)
-    if (!p.visible || !q.visible || p.depth <= 0 || q.depth <= 0) return null
-    const dx = q.x - p.x, dy = q.y - p.y, length = dx * dx + dy * dy
-    const t = length > 1e-8 ? Math.max(0, Math.min(1, ((x - p.x) * dx + (y - p.y) * dy) / length)) : 0
-    // Screen interpolation is perspective divided; undo it before locating the world point.
-    const worldT = t * p.depth / ((1 - t) * q.depth + t * p.depth)
-    const point = new Vector3(a.x, a.y, a.z).lerp(new Vector3(b.x, b.y, b.z), worldT)
-    return { point, pixels: Math.hypot(x - p.x - dx * t, y - p.y - dy * t), distance: point.distanceTo(camera.position) }
-  }
-  const visiblePoint = (point: Point3) => {
-    const p = screenPoint(point)
-    if (!p.visible) return false
-    const hit = contentHit(p.x, p.y)
-    return !hit || hit.distance >= new Vector3(point.x, point.y, point.z).distanceTo(camera.position) - .018
-  }
-  const planeHit = (elevation: number) => {
-    plane.constant = -elevation
-    const hit = raycaster.ray.intersectPlane(plane, new Vector3())
-    if (!hit) return null
-    const distance = hit.distanceTo(camera.position)
-    // Nearly horizontal rays otherwise intersect arbitrarily far away and jump the camera.
-    return Number.isFinite(distance) && distance >= camera.near && distance <= camera.far ? hit : null
-  }
+  const { ray, pickOwner, ignored, wireMeshes, contentHit, screenPoint, segmentHit, visiblePoint, planeHit } = createScenePicking({
+    camera, content, wires, raycaster, viewport: () => ({ width, height }), target,
+  })
   const translateView = (delta: Vector3) => { cancelTransition(); camera.position.add(delta); (controls?.target ?? viewTarget).add(delta); camera.updateMatrixWorld(); controls?.update(); schedule() }
   let activeOutline: { id: string; group: Group } | null = null
   const removeActiveOutline = () => {

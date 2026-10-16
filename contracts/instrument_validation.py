@@ -25,11 +25,27 @@ def validate_generator(configuration,capability):
     return configuration
 
 
-def validate_plan_instruments(plan,capabilities):
+def validate_instrument_paths(plan,capabilities):
+    """Validate allocated channels and profile-authorized infrastructure paths.
+
+    Instrument paths are explicit role/node permissions on routing resources;
+    arbitrary analog circuit routing is a separate capability. The physical
+    adapter still proves observed nodes, protection and lifecycle readiness.
+    """
     caps=capabilities['instrument_capabilities']
     validate('InstrumentCapabilities',caps)
     bindings={entry['endpoint_id']:entry for entry in plan['endpoint_bindings']}
-    channels=set(); instrument_endpoints=set(); generator_channels=set()
+    if len(bindings)!=len(plan['endpoint_bindings']): raise ValueError('UNEXECUTABLE')
+    hardware=capabilities['mode']=='hardware'
+    resources={}; routes={}; uses={}
+    if hardware:
+        available=capabilities.get('routing_resources',[])
+        resources={entry['resource_id']:entry for entry in available}
+        if len(resources)!=len(available): raise ValueError('UNEXECUTABLE')
+        for route in plan['routing_allocations']:
+            routes.setdefault(route['endpoint_id'],[]).append(route['resource_id'])
+            uses[route['resource_id']]=uses.get(route['resource_id'],0)+1
+    channels=set(); instrument_endpoints=set()
     for allocation in plan['instrument_allocations']:
         role=allocation['instrument']; name=ROLE_INSTRUMENT.get(role)
         binding=bindings.get(allocation['endpoint_id']); channel=allocation['channel']
@@ -37,12 +53,25 @@ def validate_plan_instruments(plan,capabilities):
                 or not 1<=channel<=caps[name]['channels'] or (name,channel) in channels
                 or allocation['endpoint_id'] in instrument_endpoints):
             raise ValueError('UNEXECUTABLE')
-        if capabilities['mode']=='hardware' and role in ('SCOPE','GENERATOR') and not capabilities['physical_analog_routing']:
-            raise ValueError('UNEXECUTABLE')
+        if hardware:
+            endpoint_routes=routes.get(allocation['endpoint_id'],[])
+            if len(endpoint_routes)!=1: raise ValueError('UNEXECUTABLE')
+            resource_id=endpoint_routes[0]
+            resource=resources.get(resource_id)
+            if (resource is None or uses[resource_id]!=1 or role not in resource['roles']
+                    or binding['node_id'] not in resource['node_ids']):
+                raise ValueError('UNEXECUTABLE')
         channels.add((name,channel)); instrument_endpoints.add(allocation['endpoint_id'])
-        if role=='GENERATOR': generator_channels.add(channel)
     if {key for key,binding in bindings.items() if binding['role'] in ROLE_INSTRUMENT}!=instrument_endpoints:
         raise ValueError('UNEXECUTABLE')
+    return plan
+
+
+def validate_plan_instruments(plan,capabilities):
+    validate_instrument_paths(plan,capabilities)
+    caps=capabilities['instrument_capabilities']
+    generator_channels={allocation['channel'] for allocation in plan['instrument_allocations']
+                        if allocation['instrument']=='GENERATOR'}
     configured=set()
     for config in plan['generator_config']:
         validate_generator(config,caps['generator'])

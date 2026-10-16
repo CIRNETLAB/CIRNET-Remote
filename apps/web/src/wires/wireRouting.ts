@@ -33,7 +33,7 @@ export function controlPointWorld(point: WireControlPoint, context: WireRouteCon
 }
 export function ownedPoint(world: Point3, moduleId: string | null, context: WireRouteContext): WireControlPoint {
   const module = moduleId && context.modulePose(moduleId)
-  return module ? { space: 'module', moduleId: module.id, position: worldToModuleLocal(world, module) } : { space: 'world', position: { ...world } }
+  return module ? { space: 'module', moduleId: module.id, position: { ...worldToModuleLocal(world, module) } } : { space: 'world', position: { ...world } }
 }
 export function wireBaseClearance(visual: WireVisual): number { return renderWireDiameter(visual) / 2 + WIRE_SURFACE_CLEARANCE }
 export function wireClearance(visual: WireVisual): number { return wireBaseClearance(visual) }
@@ -46,7 +46,7 @@ export function snapWirePoint(point: Point3, module: CircuitModule | null, snap:
     local.z = Math.round(((local.z - origin[2]) / pitch)) * pitch + origin[2]
     local.x = Math.round(local.x * 1e9) / 1e9; local.z = Math.round(local.z * 1e9) / 1e9
   }
-  return topology && module ? { space: 'module', moduleId: module.id, position: local } : { space: 'world', position: local }
+  return topology && module ? { space: 'module', moduleId: module.id, position: { ...local } } : { space: 'world', position: { ...local } }
 }
 
 export function endpointLeadPosition(endpoint: WireRouteEndpoint, visual: WireVisual, context: WireRouteContext): Point3 {

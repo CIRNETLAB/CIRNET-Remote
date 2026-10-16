@@ -1,0 +1,11 @@
+[Unit]
+Description=net*CIRCUIT hourly bounded capture retention
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+RandomizedDelaySec=2m
+Unit=netcircuit-capture-maintenance.service
+
+[Install]
+WantedBy=timers.target

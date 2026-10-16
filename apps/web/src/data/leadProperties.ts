@@ -1,6 +1,9 @@
-/** Frontend-only projection settings. They never change a footprint or net. */
-export type LeadForm = 'straight' | 'formed90' | 'offset-s'
-export interface LeadProperties { leadForm: LeadForm; leadLengthMm: number; bodyLiftMm: number }
+import type { LeadSettings } from '../contracts/generated/dto'
+import { ContractValidationError, parseStructural } from '../contracts/structural'
+
+/** Persisted projection settings never change a footprint or net. */
+export type LeadForm = NonNullable<LeadSettings['leadForm']>
+export type LeadProperties = Required<Pick<LeadSettings, 'leadForm' | 'leadLengthMm' | 'bodyLiftMm'>>
 export const defaultLeadProperties: Readonly<LeadProperties> = Object.freeze({ leadForm: 'formed90', leadLengthMm: 0, bodyLiftMm: 0 })
 export const leadPropertyBounds = { leadLengthMm: { min: 0, max: 4 }, bodyLiftMm: { min: 0, max: 6 } } as const
 export type LeadQuantityKey = keyof typeof leadPropertyBounds
@@ -21,15 +24,20 @@ export function parseLeadQuantity(value: unknown, key: LeadQuantityKey): number 
 /** Validate present fields; omitted fields preserve the original formed leads. */
 export function validateLeadProperties(type: string, properties: Record<string, unknown>): string[] {
   if (!isLeadEditableType(type)) return []
-  const errors: string[] = []
-  if ('leadForm' in properties && (typeof properties.leadForm !== 'string' || !['straight', 'formed90', 'offset-s'].includes(properties.leadForm))) errors.push('Choose Straight, 90° formed or Offset/S-bend.')
-  for (const key of ['leadLengthMm', 'bodyLiftMm'] as const) {
-    if (!(key in properties)) continue
-    const value = properties[key], bounds = leadPropertyBounds[key]
-    if (typeof value !== 'number' || !Number.isFinite(value) || value < bounds.min || value > bounds.max) errors.push(`${key} must be a finite number between ${bounds.min} and ${bounds.max} mm.`)
+  try {
+    parseStructural('LeadSettings', properties, 'editor')
+    return []
+  } catch (error) {
+    if (!(error instanceof ContractValidationError)) throw error
+    return [...new Set(error.issues.filter(issue => issue.code !== 'SCHEMA_IF').map(issue => {
+      if (issue.path === '/leadForm') return 'Choose Straight, 90° formed or Offset/S-bend.'
+      if (issue.path === '/leadLengthMm' && issue.code === 'SCHEMA_CONST') return 'Straight leads cannot include extra slack while their endpoints remain fixed.'
+      const key = issue.path === '/leadLengthMm' ? 'leadLengthMm' : issue.path === '/bodyLiftMm' ? 'bodyLiftMm' : null
+      if (!key) return issue.message
+      const bounds = leadPropertyBounds[key]
+      return `${key} must be a finite number between ${bounds.min} and ${bounds.max} mm.`
+    }))]
   }
-  if (properties.leadForm === 'straight' && typeof properties.leadLengthMm === 'number' && properties.leadLengthMm !== 0) errors.push('Straight leads cannot include extra slack while their endpoints remain fixed.')
-  return errors
 }
 
 export function normalizeLeadProperties(type: string, properties: Record<string, unknown> | undefined): Record<string, unknown> {

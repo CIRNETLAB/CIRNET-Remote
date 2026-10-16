@@ -16,6 +16,7 @@ import type { TransformHandle } from '../three/ComponentTransformGizmo'
 import { supplyControlMaximum, supplyControlPatch, supplyControlValue, type SupplyControl } from '../three/PowerSupplyModel'
 import { useWireRouting } from './useWireRouting'
 import { normalizeSelection } from '../editor/selection'
+import { PointerGestureSession } from '../editor/PointerGestureSession'
 type Manager = ReturnType<typeof createSceneManager>
 export type Position = { x: number; y: number; z: number }
 interface PlacementDraft { type: string; position: Position; rotation: number }
@@ -67,7 +68,14 @@ export function snapPosition(
 
 export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, manager: () => Manager | undefined) {
   const circuit = useCircuitStore(), workspace = useWorkspaceStore(), ui = useUiStore()
-  let gesture: MoveGesture | PanGesture | TransformGesture | ControlGesture | ZoomAreaGesture | MarqueeGesture | null = null
+  type EditorGesture = MoveGesture | PanGesture | TransformGesture | ControlGesture | ZoomAreaGesture | MarqueeGesture
+  let gesture: EditorGesture | null = null
+  const pointerSession = new PointerGestureSession()
+  function beginGesture(value: EditorGesture) {
+    if (!pointerSession.begin(value.pointer, circuit.activeId)) return false
+    gesture = value
+    return true
+  }
   const wireRouting = useWireRouting(canvas, manager, () => !!gesture)
   // A pose only: never a graph module, electrical identity or history entry.
   let placementDraft: PlacementDraft | null = null
@@ -132,6 +140,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
   }
   function sync() { manager()?.syncGraph(circuit.graph); highlightSelection(); updatePorts() }
   function cancelGesture() {
+    pointerSession.cancel()
     rightPress = null
     if (gesture?.kind === 'transform' && gesture.target === 'placement' && placementDraft) {
       placementDraft.position = gesture.initial; placementDraft.rotation = gesture.initialRotation
@@ -176,7 +185,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       const start = areaCoordinates(event)
       if (!start) return
       const kind = workspace.marqueeActive ? 'marquee' : 'zoom-area'
-      canvas.value.focus(); gesture = { kind, pointer: event.pointerId, start, end: start, dragged: false }
+      canvas.value.focus(); beginGesture({ kind, pointer: event.pointerId, start, end: start, dragged: false })
       const rectangle = { left: start.x, top: start.y, width: 0, height: 0 }
       if (kind === 'marquee') marqueeRect.value = rectangle
       else zoomAreaRect.value = rectangle
@@ -218,7 +227,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       const initial = { x: pose.position?.x ?? 0, y: pose.position?.y ?? 0, z: pose.position?.z ?? 0 }
       const initialRotation = (pose.rotation ?? 0) % 360
       const screen = manager()!.project(center)
-      gesture = { kind: 'transform', target: placing ? 'placement' : 'module', pointer: event.pointerId, start: { x, y }, dragged: false, id: transform.id, draft: circuit.activeId, handle: transform.handle, center, initial, position: initial, initialRotation, rotation: initialRotation, lastAngle: Math.atan2(y - screen.y, x - screen.x), angle: 0 }
+      beginGesture({ kind: 'transform', target: placing ? 'placement' : 'module', pointer: event.pointerId, start: { x, y }, dragged: false, id: transform.id, draft: circuit.activeId, handle: transform.handle, center, initial, position: initial, initialRotation, rotation: initialRotation, lastAngle: Math.atan2(y - screen.y, x - screen.x), angle: 0 })
       manager()!.activateGizmo(transform.handle); manager()!.lockPointer(true); canvas.value.setPointerCapture(event.pointerId); event.preventDefault?.(); return
     }
     if (workspace.placementType) {
@@ -238,20 +247,20 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     }
     if (!hit) {
       if (point) {
-        gesture = { kind: 'pan', pointer: event.pointerId, start: { x, y }, dragged: false, anchor: point }
+        beginGesture({ kind: 'pan', pointer: event.pointerId, start: { x, y }, dragged: false, anchor: point })
         manager()!.lockPointer(true); canvas.value.setPointerCapture(event.pointerId)
       } else { workspace.clearSelection(); sync() }
       return
     }
     if (workspace.tool === 'select' && hit.kind !== 'control' && circuit.graph) {
-      gesture = { kind: 'pan', pointer: event.pointerId, start: { x, y }, dragged: false, anchor: hit.point.clone(), selection: { moduleId: hit.id, graph: circuit.graph, draft: circuit.activeId } }
+      beginGesture({ kind: 'pan', pointer: event.pointerId, start: { x, y }, dragged: false, anchor: hit.point.clone(), selection: { moduleId: hit.id, graph: circuit.graph, draft: circuit.activeId } })
       manager()!.lockPointer(true); canvas.value.setPointerCapture(event.pointerId); event.preventDefault?.(); return
     }
     workspace.selectModule(hit.id)
     if (!(workspace.tool === 'select' && hit.kind === 'control')) ui.openWindow('component-info', { activate: false })
     if (workspace.tool === 'select' && hit.kind === 'control') {
       const initial = supplyControlValue(selected.value?.properties, hit.control, selected.value?.type)
-      gesture = { kind: 'control', pointer: event.pointerId, start: { x, y }, dragged: false, id: hit.id, draft: circuit.activeId, control: hit.control, initial, value: initial, axis: null, last: { x, y }, raw: typeof initial === 'number' ? initial : 0 }
+      beginGesture({ kind: 'control', pointer: event.pointerId, start: { x, y }, dragged: false, id: hit.id, draft: circuit.activeId, control: hit.control, initial, value: initial, axis: null, last: { x, y }, raw: typeof initial === 'number' ? initial : 0 })
       manager()!.lockPointer(true); canvas.value.setPointerCapture(event.pointerId); event.preventDefault?.()
     }
     else if (workspace.tool === 'rotate') attempt(() => circuit.rotateModule(hit.id))
@@ -260,7 +269,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       // Drag through the picked surface, including bodies above a low camera's ground horizon.
       const dragPoint = getPartForType(module.type) ? placementPoint(x, y, module.type) : manager()!.groundPoint(x, y, hit.point.y)
       if (!dragPoint) { sync(); return }
-      gesture = { kind: 'move', pointer: event.pointerId, start: { x, y }, dragged: false, id: hit.id, draft: circuit.activeId, planeHeight: hit.point.y, offset: { x: position.x - dragPoint.x, y: position.y, z: position.z - dragPoint.z }, position }
+      beginGesture({ kind: 'move', pointer: event.pointerId, start: { x, y }, dragged: false, id: hit.id, draft: circuit.activeId, planeHeight: hit.point.y, offset: { x: position.x - dragPoint.x, y: position.y, z: position.z - dragPoint.z }, position })
       manager()!.lockPointer(true)
       canvas.value.setPointerCapture(event.pointerId)
     }
@@ -278,6 +287,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     if ((workspace.zoomAreaActive || workspace.marqueeActive) && !gesture) return
     if (gesture) {
       if (event.pointerId !== gesture.pointer) return
+      if (!pointerSession.owns(event.pointerId, circuit.activeId)) { cancelGesture(); return }
       if (gesture.kind === 'zoom-area' || gesture.kind === 'marquee') {
         const end = areaCoordinates(event)
         if (!end) { cancel(); return }
@@ -393,6 +403,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     if (!gesture || event.pointerId !== gesture.pointer) return
     pointerMove(event)
     if (!gesture) return
+    if (!pointerSession.complete(event.pointerId, circuit.activeId)) { cancelGesture(); return }
     const completed = gesture; gesture = null; dragging.value = null; manager()?.activateGizmo(null); manager()?.lockPointer(false)
     if (canvas.value?.hasPointerCapture(event.pointerId)) canvas.value.releasePointerCapture(event.pointerId)
     if (completed.kind === 'zoom-area') {

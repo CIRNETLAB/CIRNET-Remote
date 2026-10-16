@@ -1,4 +1,5 @@
 import registry from './editorParts.json'
+import type { SignalDomain } from '../contracts/generated/dto'
 
 /** The existing board pitch is .13 world units for 2.54 mm. */
 export const MM_TO_WORLD = .13 / 2.54
@@ -9,6 +10,8 @@ export interface PhysicalPin {
   number: string
   name: string
   role: PinRole
+  /** Historical external descriptors may omit this; canonical catalogs declare it. */
+  domain?: SignalDomain
   outputType?: 'push-pull' | 'open-collector' | 'open-drain'
   polarity?: 'active-high' | 'active-low'
   signal?: 'data' | 'clock' | 'set' | 'reset' | 'enable'

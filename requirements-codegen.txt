@@ -1,0 +1,12 @@
+# Reproducible structural/code-generation toolchain; application dependencies are separate.
+datamodel-code-generator==0.84.0
+jsonschema==4.26.0
+referencing==0.37.0
+pydantic==2.14.1
+black==26.10.1
+isort==8.0.1
+grpcio-tools==1.84.0
+protobuf==7.36.2
+build==1.4.0
+wheel==0.47.0
+fastapi==0.143.0

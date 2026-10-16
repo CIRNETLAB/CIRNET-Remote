@@ -21,9 +21,11 @@ Completed frontend history: Single Workspace, catalog, editing/wiring/history, m
 | H4 | Completed: sole instrument capability authority and synchronized runtime control |
 | H5 | Completed: structured independent learning feedback, measured observations and assessment |
 | H6 | Architecture/provenance/final verification and user review; no automatic merge |
+| Web/Contracts W0–W7 | Implemented and verified: canonical boundaries, auth, owned persistence, Web separation, recovery/publication, instruments/domains/captures |
+| Web/Contracts W8 | Local software gates verified: full Python/Web/native browser/PostgreSQL/wheels/workload; individual acceptance, source inventory and handoff recorded. Git delivery blocked by metadata permissions; hosted CI/target deployment remain separate. |
 
 Milestone W1 requires virtual execution/results, lifecycle/ownership/queue and truthful frontend capabilities before actual FPGA integration. R7 validates scaffold only.
 
 Post-R7 hardening preserves the existing editor and discrete-event engine. Required unresolved endpoints affect executability; topology/function/assessment do not become safety gates. Reference physical node != student physical node. Capture payload storage and actual capability capacity precede scaling; no analog acquisition or electrical rating is inferred from these software tests.
 
-After user review (no automatic merge): Linux Mini PC/PostgreSQL deployment; selected EP4CE6 transport/switching/protection schematic, measured topology scan/infrastructure routing; EP4CE10 SDRAM/ADC/DAC/AFE selection/timing/CDC; measured Logic Analyzer/Scope 2CH/Generator 2CH. Physical analog routing is future work. Validate 30–50 sessions and bounded physical slots/recovery. No fixed breadboard count.
+After user review (no automatic merge): Linux Mini PC/PostgreSQL deployment; selected EP4CE6 transport/switching/protection schematic, measured topology scan/infrastructure routing; EP4CE10 SDRAM/ADC/DAC/AFE selection/timing/CDC; measured Logic Analyzer/Scope 2CH/Generator 2CH. Physical analog routing is future work. A bounded local50-session software workload has executed; target capacity, sustained load and real physical slots/recovery still require target evidence. No fixed breadboard count.

@@ -1,0 +1,3986 @@
+{
+  "version": "1.0",
+  "components": [
+    {
+      "type": "GENERATOR",
+      "ports": [],
+      "execution": "VISUAL"
+    },
+    {
+      "type": "OSCILLOSCOPE",
+      "ports": [],
+      "execution": "VISUAL"
+    },
+    {
+      "type": "BREADBOARD",
+      "ports": [],
+      "execution": "VISUAL"
+    },
+    {
+      "type": "BREADBOARD_630",
+      "ports": [],
+      "execution": "VISUAL"
+    },
+    {
+      "type": "BREADBOARD_100",
+      "ports": [],
+      "execution": "VISUAL"
+    },
+    {
+      "type": "BOARD",
+      "ports": [],
+      "execution": "VISUAL"
+    },
+    {
+      "type": "POWER_SUPPLY",
+      "ports": [],
+      "execution": "VISUAL"
+    },
+    {
+      "type": "RESISTOR",
+      "ports": [
+        {
+          "id": "A",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "B",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "CAPACITOR",
+      "ports": [
+        {
+          "id": "A",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "B",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "PUSH_BUTTON",
+      "ports": [
+        {
+          "id": "OUT",
+          "direction": "output",
+          "domain": "DIGITAL"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "DIGITAL_SWITCH",
+      "ports": [
+        {
+          "id": "OUT",
+          "direction": "output",
+          "domain": "DIGITAL"
+        }
+      ],
+      "execution": "DIGITAL"
+    },
+    {
+      "type": "DIP_SWITCH",
+      "ports": [
+        {
+          "id": "Q0",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "Q1",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "Q2",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "Q3",
+          "direction": "output",
+          "domain": "DIGITAL"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "CLOCK",
+      "ports": [
+        {
+          "id": "OUT",
+          "direction": "output",
+          "domain": "CLOCK"
+        }
+      ],
+      "execution": "DIGITAL"
+    },
+    {
+      "type": "LED",
+      "ports": [
+        {
+          "id": "IN",
+          "direction": "input",
+          "domain": "DIGITAL"
+        }
+      ],
+      "execution": "DIGITAL"
+    },
+    {
+      "type": "SEGMENT_1",
+      "ports": [
+        {
+          "id": "A",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "B",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "C",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "D",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "E",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "F",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "G",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "DP",
+          "direction": "input",
+          "domain": "DIGITAL"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "DISPLAY",
+      "ports": [
+        {
+          "id": "DATA",
+          "direction": "input",
+          "width": 8,
+          "domain": "DIGITAL"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "PROBE",
+      "ports": [
+        {
+          "id": "IN",
+          "direction": "input",
+          "domain": "DIGITAL"
+        }
+      ],
+      "execution": "DIGITAL"
+    },
+    {
+      "type": "74HC08",
+      "ports": [
+        {
+          "id": "A1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "B1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "Y1",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "A2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "B2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "Y2",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "A3",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "B3",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "Y3",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "A4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "B4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "Y4",
+          "direction": "output",
+          "domain": "DIGITAL"
+        }
+      ],
+      "execution": "DIGITAL"
+    },
+    {
+      "type": "ADDER",
+      "ports": [
+        {
+          "id": "A",
+          "direction": "input",
+          "width": 8,
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "B",
+          "direction": "input",
+          "width": 8,
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "CIN",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "SUM",
+          "direction": "output",
+          "width": 8,
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "COUT",
+          "direction": "output",
+          "domain": "DIGITAL"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "MULTIPLIER",
+      "ports": [
+        {
+          "id": "A",
+          "direction": "input",
+          "width": 8,
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "B",
+          "direction": "input",
+          "width": 8,
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "PRODUCT",
+          "direction": "output",
+          "width": 16,
+          "domain": "DIGITAL"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "MEMORY",
+      "ports": [
+        {
+          "id": "ADDR",
+          "direction": "input",
+          "width": 8,
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "DATA_IN",
+          "direction": "input",
+          "width": 8,
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "DATA_OUT",
+          "direction": "output",
+          "width": 8,
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "WE",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "OE",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "CLK",
+          "direction": "input",
+          "domain": "CLOCK"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN74HC08N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "DC_DIGITAL"
+    },
+    {
+      "type": "LED_LTL307EE",
+      "ports": [
+        {
+          "id": "A",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "K",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "execution": "DC_DIGITAL"
+    },
+    {
+      "type": "RESISTOR_AXIAL",
+      "ports": [
+        {
+          "id": "A",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "B",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "execution": "DC_DIGITAL"
+    },
+    {
+      "type": "DC_SUPPLY",
+      "ports": [
+        {
+          "id": "PLUS",
+          "direction": "inout",
+          "domain": "POWER"
+        },
+        {
+          "id": "MINUS",
+          "direction": "inout",
+          "domain": "GROUND"
+        }
+      ],
+      "execution": "DC_DIGITAL"
+    },
+    {
+      "type": "TRANSISTOR_2N3904",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "2",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "3",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "DIODE_1N4148",
+      "ports": [
+        {
+          "id": "A",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "K",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "ZENER_1N4733A",
+      "ports": [
+        {
+          "id": "A",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "K",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "CAPACITOR_CERAMIC",
+      "ports": [
+        {
+          "id": "A",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "B",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "CAPACITOR_ELECTROLYTIC",
+      "ports": [
+        {
+          "id": "PLUS",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "MINUS",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "BUZZER_PS1240",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "2",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "DIP_SWITCH_A6D4100",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "8",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        }
+      ],
+      "execution": "DC_DIGITAL"
+    },
+    {
+      "type": "PUSH_BUTTON_B3F1000",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        }
+      ],
+      "execution": "DC_DIGITAL"
+    },
+    {
+      "type": "SEGMENT_SC5611EWA",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "2",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "3",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "4",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "5",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "6",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "8",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "9",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "10",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SEGMENT_DC5611EWA",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "2",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "3",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "4",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "5",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "6",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "8",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "9",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "10",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "11",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "12",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "13",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "15",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "16",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "17",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "18",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SEGMENT_CC5612EWA",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "2",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "3",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "4",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "5",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "6",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "8",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "9",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "10",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "11",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "12",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN74HC02N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN74HC04N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN74LS266N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "TOGGLE_SWITCH_200MSP1",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        }
+      ],
+      "execution": "DC_DIGITAL"
+    },
+    {
+      "type": "SN7400N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN7401N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN7402N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN7403N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN7404N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN7405N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN7408N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN7409N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN7410N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN74LS11N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN7412N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN7413N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN7414N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN74LS15N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN7420N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN74LS21N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN7427N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN7430N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN7432N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN7437N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN7438N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN7440N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN7486N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SN74LS136N",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "CD4001BE",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "CD4011BE",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "CD4012BE",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "CD4013BE",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "input",
+          "domain": "CLOCK"
+        },
+        {
+          "id": "4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "input",
+          "domain": "CLOCK"
+        },
+        {
+          "id": "12",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "CD4030BE",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "CD4069UBE",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "CD4070BE",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "CD4071BE",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "CD4072BE",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "CD4077BE",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "CD4081BE",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "CD4093BE",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "4",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "5",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "6",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "7",
+          "direction": "inout",
+          "domain": "GROUND"
+        },
+        {
+          "id": "8",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "9",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "10",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "11",
+          "direction": "output",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "12",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "13",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "14",
+          "direction": "inout",
+          "domain": "POWER"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "AND",
+      "ports": [
+        {
+          "id": "A",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "B",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "Y",
+          "direction": "output",
+          "domain": "DIGITAL"
+        }
+      ],
+      "execution": "DIGITAL"
+    },
+    {
+      "type": "OR",
+      "ports": [
+        {
+          "id": "A",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "B",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "Y",
+          "direction": "output",
+          "domain": "DIGITAL"
+        }
+      ],
+      "execution": "DIGITAL"
+    },
+    {
+      "type": "XOR",
+      "ports": [
+        {
+          "id": "A",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "B",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "Y",
+          "direction": "output",
+          "domain": "DIGITAL"
+        }
+      ],
+      "execution": "DIGITAL"
+    },
+    {
+      "type": "NOT",
+      "ports": [
+        {
+          "id": "A",
+          "direction": "input",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "Y",
+          "direction": "output",
+          "domain": "DIGITAL"
+        }
+      ],
+      "execution": "DIGITAL"
+    },
+    {
+      "type": "DIGITAL_INPUT",
+      "ports": [
+        {
+          "id": "OUT",
+          "direction": "output",
+          "domain": "DIGITAL"
+        }
+      ],
+      "execution": "DIGITAL"
+    },
+    {
+      "type": "INPUT",
+      "ports": [
+        {
+          "id": "OUT",
+          "direction": "output",
+          "domain": "DIGITAL"
+        }
+      ],
+      "execution": "DIGITAL"
+    },
+    {
+      "type": "OUTPUT",
+      "ports": [
+        {
+          "id": "IN",
+          "direction": "input",
+          "domain": "DIGITAL"
+        }
+      ],
+      "execution": "DIGITAL"
+    }
+  ]
+}

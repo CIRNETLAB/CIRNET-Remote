@@ -4,11 +4,10 @@ import sys
 import time
 from pathlib import Path
 
-from fastapi.testclient import TestClient
-
 ROOT=Path(__file__).resolve().parents[2]
-for relative in ['services/api','services/hardware-service','simulator/circuit-simulator']:
+for relative in ['services/api','services/api/tests','services/hardware-service','simulator/circuit-simulator']:
     sys.path.insert(0,str(ROOT/relative))
+from csrf_client import CsrfTestClient as TestClient, login_admin
 
 
 def test_real_virtual_and_run_returns_capture_and_function_after_alias_mapping():
@@ -21,6 +20,7 @@ def test_real_virtual_and_run_returns_capture_and_function_after_alias_mapping()
     application=create_app(repository=Repository('sqlite://'),gateway=HardwareServiceClient(f'127.0.0.1:{port}'))
     try:
         with TestClient(application) as client:
+            login_admin(client)
             assignment={'schema_version':'1.0','assignment_id':'virtual-and','title':'AND',
                         'assessment_policy':'FUNCTIONAL_ONLY',
                         'lab_endpoints':[{'endpoint_id':'x','role':'INPUT_SOURCE','design_port':'X.OUT'},

@@ -8,7 +8,8 @@ from contracts.validation import validate
 from contracts.instrument_validation import validate_plan_instruments
 from hardware_service.models import BreadboardCapability, StationCapabilities
 from hardware_service.station.base import HardwareStation, HardwareError, StationState as S, serialized
-from netcircuit_sim.engine import VirtualCompiler, SimulationError, run_plan
+from netcircuit_sim.engine import SimulationError, run_plan
+from netcircuit_sim.dispatch import SimulationDispatcher
 
 _pool=None
 _pool_lock=RLock()
@@ -57,13 +58,14 @@ class VirtualHardwareStation(HardwareStation):
     @serialized
     def apply_circuit(self, circuit):
         self._require_state(S.IDLE, S.SAFE_STATE, S.READY)
-        if not isinstance(circuit, dict) or circuit.get("schema_version") != "1.0" or not isinstance(circuit.get("modules"),list) or not isinstance(circuit.get("connections"),list):
+        self._circuit=self._virtual_plan=None
+        if not isinstance(circuit, dict) or circuit.get("schema_version") not in ("1.0","1.1") or not isinstance(circuit.get("modules"),list) or not isinstance(circuit.get("connections"),list):
             raise HardwareError("UNEXECUTABLE")
-        self._circuit = deepcopy(circuit)
-        try: self._virtual_plan=VirtualCompiler().compile(circuit)
+        try: self._virtual_plan=SimulationDispatcher().compile(circuit)
         except SimulationError:
             self._circuit=self._virtual_plan=None
             raise HardwareError('UNEXECUTABLE') from None
+        self._circuit = deepcopy(circuit)
         self._generation+=1
         self._inputs.clear()
         self._plan = self._capture = None

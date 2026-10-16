@@ -13,7 +13,7 @@ import type { CircuitModule } from '../src/types/circuit'
 const point = (x: number, z: number, y = .36): Point3 => ({ x, y, z })
 function input(index: number, path = [point(-2, 0), point(2, 0)], patch: Partial<WireVisual> = {}): WireLayoutInput {
   const wire = { source: `S${index}`, destination: `D${index}` }
-  const visual: WireVisual = { ...defaultWireVisual(), thickness: .052, routeMode: 'FREE', layer: index, ...patch, controlPoints: path.slice(1, -1).map(position => ({ space: 'world', position })) }
+  const visual: WireVisual = { ...defaultWireVisual(), thickness: .052, routeMode: 'FREE', layer: index, ...patch, controlPoints: path.slice(1, -1).map(position => ({ space: 'world', position: { ...position } })) }
   const route = solveWireRoute(wire, visual, { modulePose: () => null, endpoint: endpoint => ({ endpoint, position: endpoint === wire.source ? path[0] : path.at(-1)! }) })!
   return { wire, visual, route }
 }
@@ -165,7 +165,7 @@ test('cache invalidates edit-frame and mode changes even when their current rend
 test('multi-bend contact bundle and its fixed collars transform rigidly with board move and arbitrary yaw', () => {
   const board: CircuitModule = { id: 'BB', type: 'BREADBOARD', rotation: 0, position: { x: 0, y: 0, z: 0 } }
   const entries = () => [0, 1, 2].map(index => {
-    const wire = { source: `S${index}`, destination: `D${index}` }, visual: WireVisual = { ...defaultWireVisual(), routeMode: 'FREE', thickness: .052, layer: index, controlPoints: [{ space: 'module', moduleId: 'BB', position: point(0, 0) }] }
+    const wire = { source: `S${index}`, destination: `D${index}` }, visual: WireVisual = { ...defaultWireVisual(), routeMode: 'FREE', thickness: .052, layer: index, controlPoints: [{ space: 'module', moduleId: 'BB', position: { ...point(0, 0) } }] }
     const route = solveWireRoute(wire, visual, { modulePose: () => board, endpoint: endpoint => ({ endpoint, contactModuleId: 'BB', position: moduleLocalToWorld(endpoint.startsWith('S') ? point(-2, 0, .309) : point(0, 2, .309), board) }) })!
     return { wire, visual, route }
   })

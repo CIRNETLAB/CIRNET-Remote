@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://netcircuit.local/contracts/public/common/1.0/schema.json",
+  "title": "Public configuration vocabulary 1.0",
+  "$defs": {
+    "TestVector": {
+      "type": "object", "required": ["time_ns", "inputs"], "properties": {
+        "time_ns": {"type": "integer", "minimum": 0, "maximum": 4294967295},
+        "inputs": {"type": "object", "propertyNames": {"pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]*$"}, "additionalProperties": {"enum": [0, 1]}}
+      }, "additionalProperties": false
+    }
+  }
+}

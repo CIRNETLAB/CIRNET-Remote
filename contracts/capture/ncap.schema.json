@@ -1,0 +1,598 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://netcircuit.local/contracts/capture/ncap/2.0/schema.json",
+  "title": "Versioned NCAP capture descriptors and binary layout authority",
+  "$defs": {
+    "AnalogCaptureChannel": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.:-]{1,128}$(?![\\s\\S])"
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32,
+          "not": {
+            "pattern": "[\\u0000-\\u001F\\u007F]"
+          }
+        },
+        "scale": {
+          "type": "number",
+          "not": {
+            "const": 0
+          }
+        },
+        "offset": {
+          "type": "number"
+        },
+        "range_min": {
+          "type": "number"
+        },
+        "range_max": {
+          "type": "number"
+        },
+        "calibration_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_.:-]{1,128}$(?![\\s\\S])"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "unit",
+        "scale",
+        "offset",
+        "range_min",
+        "range_max",
+        "calibration_id"
+      ],
+      "additionalProperties": false
+    },
+    "AnalogCaptureTimeAxis": {
+      "type": "object",
+      "properties": {
+        "reference": {
+          "enum": [
+            "capture_relative",
+            "unix_epoch",
+            "device_clock"
+          ]
+        },
+        "clock_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_.:-]{1,128}$(?![\\s\\S])"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "anchor_ns": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,38})$(?![\\s\\S])"
+        },
+        "sample_rate_hz": {
+          "type": "object",
+          "properties": {
+            "numerator": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000000000
+            },
+            "denominator": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000000000
+            }
+          },
+          "required": [
+            "numerator",
+            "denominator"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "reference",
+        "clock_id",
+        "anchor_ns",
+        "sample_rate_hz"
+      ],
+      "additionalProperties": false
+    },
+    "AnalogCaptureGap": {
+      "type": "object",
+      "properties": {
+        "at_frame": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "missing_frames": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        }
+      },
+      "required": [
+        "at_frame",
+        "missing_frames"
+      ],
+      "additionalProperties": false
+    },
+    "AnalogCaptureInvalidRange": {
+      "type": "object",
+      "properties": {
+        "first_frame": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 99999
+        },
+        "frame_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        }
+      },
+      "required": [
+        "first_frame",
+        "frame_count"
+      ],
+      "additionalProperties": false
+    },
+    "AnalogCaptureQuality": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "enum": [
+            "VALID",
+            "PARTIAL",
+            "INVALID",
+            "LOSS"
+          ]
+        },
+        "termination_reason": {
+          "enum": [
+            "COMPLETE",
+            "STOPPED",
+            "DURATION_LIMIT",
+            "BUFFER_LIMIT",
+            "TRANSPORT_LOSS",
+            "DRIVER_ERROR",
+            "UNKNOWN"
+          ]
+        },
+        "lost_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "gaps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AnalogCaptureGap"
+          },
+          "minItems": 0,
+          "maxItems": 256
+        },
+        "invalid_ranges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AnalogCaptureInvalidRange"
+          },
+          "minItems": 0,
+          "maxItems": 256
+        },
+        "clipped_channels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.:-]{1,128}$(?![\\s\\S])"
+          },
+          "minItems": 0,
+          "maxItems": 8,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "status",
+        "termination_reason",
+        "lost_frames",
+        "gaps",
+        "invalid_ranges",
+        "clipped_channels"
+      ],
+      "additionalProperties": false
+    },
+    "AnalogCaptureHeader": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "NCAP_SAMPLED_V2"
+        },
+        "capture_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.:-]{1,128}$(?![\\s\\S])"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "source": {
+          "enum": [
+            "simulation",
+            "hardware"
+          ]
+        },
+        "provenance": {
+          "enum": [
+            "measured",
+            "synthetic_fixture"
+          ]
+        },
+        "instrument": {
+          "const": "oscilloscope"
+        },
+        "encoding": {
+          "enum": [
+            "INT16",
+            "UINT16",
+            "FLOAT32"
+          ]
+        },
+        "byte_order": {
+          "const": "little"
+        },
+        "layout": {
+          "const": "frame_interleaved"
+        },
+        "frame_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AnalogCaptureChannel"
+          },
+          "minItems": 1,
+          "maxItems": 8
+        },
+        "time_axis": {
+          "$ref": "#/$defs/AnalogCaptureTimeAxis"
+        },
+        "quality": {
+          "$ref": "#/$defs/AnalogCaptureQuality"
+        }
+      },
+      "required": [
+        "format",
+        "capture_id",
+        "generation",
+        "source",
+        "provenance",
+        "instrument",
+        "encoding",
+        "byte_order",
+        "layout",
+        "frame_count",
+        "channels",
+        "time_axis",
+        "quality"
+      ],
+      "additionalProperties": false
+    },
+    "AnalogCaptureDescriptor": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "header": {
+          "$ref": "#/$defs/AnalogCaptureHeader"
+        },
+        "payload_byte_count": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 3265545
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$(?![\\s\\S])"
+        }
+      },
+      "required": [
+        "schema_version",
+        "header",
+        "payload_byte_count",
+        "sha256"
+      ],
+      "additionalProperties": false
+    },
+    "NCAPLayout": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "prefix": {
+          "type": "object",
+          "properties": {
+            "magic_hex": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "struct_format": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "byte_length": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "version_offset": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "header_length_offset": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "byte_order": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          "required": [
+            "magic_hex",
+            "struct_format",
+            "byte_length",
+            "version_offset",
+            "header_length_offset",
+            "byte_order"
+          ],
+          "additionalProperties": false
+        },
+        "max_header_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "digital_v1": {
+          "type": "object",
+          "properties": {
+            "version": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "encoding": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "struct_format": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "record_bytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "channel_offset": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "time_offset": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "value_offset": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "max_events": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "max_channels": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "max_time_ns": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "unknown_value_code": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "version",
+            "encoding",
+            "struct_format",
+            "record_bytes",
+            "channel_offset",
+            "time_offset",
+            "value_offset",
+            "max_events",
+            "max_channels",
+            "max_time_ns",
+            "unknown_value_code"
+          ],
+          "additionalProperties": false
+        },
+        "sampled_v2": {
+          "type": "object",
+          "properties": {
+            "version": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "layout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "byte_order": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "max_frames": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "max_channels": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "max_gaps": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "max_invalid_ranges": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "max_lost_frames": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "max_rate_term": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "encodings": {
+              "type": "object",
+              "properties": {
+                "INT16": {
+                  "type": "object",
+                  "properties": {
+                    "struct_format": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "bytes_per_value": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "struct_format",
+                    "bytes_per_value"
+                  ],
+                  "additionalProperties": false
+                },
+                "UINT16": {
+                  "type": "object",
+                  "properties": {
+                    "struct_format": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "bytes_per_value": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "struct_format",
+                    "bytes_per_value"
+                  ],
+                  "additionalProperties": false
+                },
+                "FLOAT32": {
+                  "type": "object",
+                  "properties": {
+                    "struct_format": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "bytes_per_value": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "struct_format",
+                    "bytes_per_value"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "INT16",
+                "UINT16",
+                "FLOAT32"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "version",
+            "layout",
+            "byte_order",
+            "max_frames",
+            "max_channels",
+            "max_gaps",
+            "max_invalid_ranges",
+            "max_lost_frames",
+            "max_rate_term",
+            "encodings"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schema_version",
+        "prefix",
+        "max_header_bytes",
+        "digital_v1",
+        "sampled_v2"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

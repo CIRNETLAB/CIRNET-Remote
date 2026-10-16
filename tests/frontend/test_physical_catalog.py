@@ -61,5 +61,5 @@ def test_generation_adds_physical_pin_ports_without_mutating_legacy_metadata():
     assert catalog['components'][:len(legacy['components'])] == legacy['components']
     hc08 = next(item for item in catalog['components'] if item['type'] == 'SN74HC08N')
     assert [pin['id'] for pin in hc08['ports']] == [str(i) for i in range(1, 15)]
-    assert hc08['ports'][6] == {'id': '7', 'direction': 'inout'}
+    assert hc08['ports'][6] == {'id': '7', 'direction': 'inout', 'domain':'GROUND'}
     assert hc08['mode'] == 'physical'

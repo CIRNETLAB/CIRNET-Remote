@@ -5,7 +5,7 @@ import { formatEndpoint, parseEndpoint } from '../electrical/endpoints'
 import { moduleLocalToWorld, moduleWorldPose, worldToModuleLocal } from '../electrical/modulePose'
 import { validateMountBindings } from '../electrical/mounting'
 import { assertConnectionAllowed, assertElectricalNetsAllowed } from '../electrical/nets'
-import { parseCircuitFile } from '../services/files/circuitFile'
+import { parseCircuitFile } from '../domain/document/circuitFile'
 import { shiftBreadboardContact, shiftedWireCopy, wireCopyAtContact } from '../wires/wireClipboard'
 import { readWireVisual, validateWireVisual, wireKey } from '../wires/wireVisual'
 import { normalizeSelection, type EditorSelection } from './selection'
@@ -161,11 +161,11 @@ export function buildPasteCandidate(graph: CircuitGraph, snapshot: SelectionClip
           const owner = control.space === 'module' ? snapshot.sourceModules.find(module => module.id === control.moduleId) : null
           if (control.space === 'module' && !owner) throw new Error('A copied wire control point refers to a missing module.')
           const world = owner ? moduleLocalToWorld(control.position, moduleWorldPose(owner, snapshot.sourceModules)) : control.position
-          if (control.space === 'world') return { space: 'world' as const, position: transform(world) }
+          if (control.space === 'world') return { space: 'world' as const, position: { ...transform(world) } }
           const moduleId = owners.get(control.moduleId) ?? control.moduleId, next = draft.modules.find(module => module.id === moduleId)
           if (!next) throw new Error('A copied wire control point refers to a missing module.')
           if (idMap.has(control.moduleId)) return { space: 'module' as const, moduleId, position: { ...control.position } }
-          return { space: 'module' as const, moduleId, position: worldToModuleLocal(transform(world), moduleWorldPose(next, draft.modules)) }
+          return { space: 'module' as const, moduleId, position: { ...worldToModuleLocal(transform(world), moduleWorldPose(next, draft.modules)) } }
         })
       }
       const metadata = clone(original.metadata ?? {})
@@ -228,7 +228,7 @@ export function buildDeleteCandidate(graph: CircuitGraph, selection: EditorSelec
     visual.controlPoints = visual.controlPoints.map(control => {
       if (control.space !== 'module' || !ids.has(control.moduleId)) return control
       const owner = graph.modules.find(module => module.id === control.moduleId)!
-      return { space: 'world' as const, position: moduleLocalToWorld(control.position, moduleWorldPose(owner, graph.modules)) }
+      return { space: 'world' as const, position: { ...moduleLocalToWorld(control.position, moduleWorldPose(owner, graph.modules)) } }
     })
     return { ...wire, metadata: { ...wire.metadata, wireVisual: visual } }
   })

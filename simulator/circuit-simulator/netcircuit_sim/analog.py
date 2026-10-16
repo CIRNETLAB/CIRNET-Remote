@@ -2,6 +2,10 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass
 import math
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from contracts.boundary.models import SimulationRequest, SimulationResult, SimulationErrorResult
 
 from contracts.execution_profiles import get_execution_part as get_physical_part
 from .nets import resolve_connectivity
@@ -9,15 +13,26 @@ from .nets import resolve_connectivity
 class AnalogSimulationEngine(ABC):
     available=False
     @abstractmethod
-    def simulate(self,plan): ...
+    def simulate(self,request:'SimulationRequest')->'SimulationResult|SimulationErrorResult': ...
+
+
+def _unavailable(request,code):
+    from contracts.boundary.models import SimulationRequest, SimulationErrorResult
+    from contracts.signal_domains import classify_graph
+    # Historical direct adapter calls raised RuntimeError. Typed callers pass a
+    # validated request and receive the canonical error without any samples.
+    if not isinstance(request,SimulationRequest):raise RuntimeError(code)
+    graph=request.model_dump(exclude_unset=True)['graph']
+    return SimulationErrorResult.model_validate({'schema_version':'1.0','status':'UNAVAILABLE',
+        'classification':classify_graph(graph),'code':code,'message':code})
 
 class SPICEAdapter(AnalogSimulationEngine):
     """Boundary only; no installed SPICE engine or analog solver."""
-    def simulate(self,plan): raise RuntimeError('ANALOG_UNAVAILABLE')
+    def simulate(self,request:'SimulationRequest')->'SimulationErrorResult':return _unavailable(request,'ANALOG_UNAVAILABLE')
 
 class MixedSignalCoordinator:
     available=False
-    def simulate(self,plan): raise RuntimeError('MIXED_SIGNAL_UNAVAILABLE')
+    def simulate(self,request:'SimulationRequest')->'SimulationErrorResult':return _unavailable(request,'MIXED_SIGNAL_UNAVAILABLE')
 
 
 @dataclass(frozen=True)

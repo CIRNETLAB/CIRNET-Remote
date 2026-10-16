@@ -1,0 +1,18 @@
+[Unit]
+Description=net*CIRCUIT bounded sealed capture retention
+After=postgresql.service
+
+[Service]
+Type=oneshot
+User=netcircuit
+Group=netcircuit
+StateDirectory=netcircuit
+WorkingDirectory=/var/lib/netcircuit
+EnvironmentFile=/etc/netcircuit/netcircuit.env
+Environment=NETCIRCUIT_ENV=production
+Environment=NETCIRCUIT_CAPTURE_DIR=/var/lib/netcircuit/captures
+ExecStartPre=/opt/netcircuit/venv-api/bin/python -m app.migrate --check
+ExecStart=/opt/netcircuit/venv-api/bin/python -m app.capture_maintenance --limit 100
+NoNewPrivileges=true
+PrivateTmp=true
+UMask=0077

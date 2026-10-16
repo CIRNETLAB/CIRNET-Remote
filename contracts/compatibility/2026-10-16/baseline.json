@@ -1,0 +1,26 @@
+{
+  "baseline": "pre-W1",
+  "git_head": "8100039988272c2fa2b5972a00a603261e80064e",
+  "status": "supported-unpublished-not-a-release",
+  "sha256": {
+    "contracts/circuit-schema/circuit.schema.json": "6b497f927bc6b8a2e0f15198c5da783d61add1495f8049bd7e5bf0df8ea516f4",
+    "contracts/circuit-schema/module.schema.json": "5e666012077d65a8ae87f29c810ca2987ec8450291a012a44d9c76b61e055356",
+    "contracts/circuit-schema/connection.schema.json": "ccde9a3fa64c97cd8f2f37375bdd2bbc1437859c97d43e363d832f10ca1235ca",
+    "contracts/memory/memory-image.schema.json": "be127644e1b4ed5d616e75fc734ec773a9e1c715ac573de2af9ed8358de7ce83",
+    "contracts/physical-lab/lab.schema.json": "07db1b3047a607fc5880f2142b3c5c822477ab442eb5d49eecdcbaab9c6bacd0",
+    "contracts/assignment/assignment.schema.json": "caaa1dd941a60b5760fa2d9099e0b190a780b98dce858ab446c608f370e37c1f",
+    "contracts/fpga-protocol/control.schema.json": "dc6f1843f667e8b338fc3a92aacf6f59aaad7b5a23622b211b003d66daab7eaf",
+    "contracts/hardware/v2/rpc_v2.proto": "d2e0fae4ce917280010a712b5ed1254c9e3043663113a268eb5cde061f3d1175"
+  },
+  "canonicalization": "Exact Git source blobs at recorded HEAD (UTF-8 LF); current checkout comparison normalizes CRLF to LF only.",
+  "working_tree_sha256": {
+    "contracts/circuit-schema/circuit.schema.json": "5a2d1686d4a6be059720b1553c5044878ec4faf42df8ea937d7d3a0378bc1f8f",
+    "contracts/circuit-schema/module.schema.json": "2ca4fbf5a55e5591db774e62f19b89d7711d042cceee7211db61dfbabac23084",
+    "contracts/circuit-schema/connection.schema.json": "c3d0952e62313dcc6ecd5485177f3394fbc74a8bb1f24fa98ef0a98394aac963",
+    "contracts/memory/memory-image.schema.json": "472c5f05f1f4a00e6f1b0e6aef65ab8bbf33ef3e5c4caa493399e103b89d8e0b",
+    "contracts/physical-lab/lab.schema.json": "b417795e901f393fc33fc816c7f1d1ddfecde7cf48d80dee91a382dff62dfdcf",
+    "contracts/assignment/assignment.schema.json": "caaa1dd941a60b5760fa2d9099e0b190a780b98dce858ab446c608f370e37c1f",
+    "contracts/fpga-protocol/control.schema.json": "dc6f1843f667e8b338fc3a92aacf6f59aaad7b5a23622b211b003d66daab7eaf",
+    "contracts/hardware/v2/rpc_v2.proto": "d2e0fae4ce917280010a712b5ed1254c9e3043663113a268eb5cde061f3d1175"
+  }
+}

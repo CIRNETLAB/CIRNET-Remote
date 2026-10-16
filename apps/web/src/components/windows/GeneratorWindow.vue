@@ -1,69 +1,99 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useInstrumentStore } from '../../stores/instrument'
-import { GENERATOR_LAYOUT, GENERATOR_CH1, GENERATOR_CH2, GENERATOR_SYNC, GENERATOR_THEME, GENERATOR_PARAMETER_LABELS } from '../../three/FunctionGeneratorArtwork'
+import {computed,ref,watch} from 'vue'
+import {useInstrumentStore} from '../../stores/instrument'
+import {GENERATOR_LAYOUT,GENERATOR_CH1,GENERATOR_CH2,GENERATOR_SYNC,GENERATOR_THEME,GENERATOR_PARAMETER_LABELS} from '../../three/FunctionGeneratorArtwork'
 import InstrumentDial from './InstrumentDial.vue'
-import { useStationStore } from '../../stores/station'
-import { useExperimentStore } from '../../stores/experiment'
-import { generatorConfigurationIssue, runtimeGeneratorIssue } from '../../types/station'
-const instrument = useInstrumentStore()
-const station=useStationStore(),experiment=useExperimentStore()
-const selectedChannel = ref<1|2>(1)
+import {useStationStore} from '../../stores/station'
+import {useExperimentStore} from '../../stores/experiment'
+import {generatorConfigurationIssue,runtimeGeneratorIssue} from '../../types/station'
+import {parseDocumentJson} from '../../domain/document/json'
+import {parseLab} from '../../contracts/validation'
+const instrument=useInstrumentStore(),station=useStationStore(),experiment=useExperimentStore()
+const selectedChannel=ref<1|2>(1),formError=ref('')
+const declaredChannels=computed(()=>station.instrumentCapabilities?.generator.channels??0)
+const generatorAvailable=computed(()=>declaredChannels.value>0)
+const selectedDraft=computed(()=>selectedChannel.value===1?instrument.generator:instrument.generator.channel2)
+const selectedCommand=computed(()=>instrument.generatorControl.channels[selectedChannel.value])
+const blocked=computed(()=>Object.values(instrument.generatorControl.channels).some(value=>value.pending||value.phase==='unknown'))
 const controlIssue=computed(()=>{
-  const issue=runtimeGeneratorIssue(station.executionTarget,experiment.active,selectedChannel.value,station.canExecute)
-  if(issue) return issue
-  try {return generatorConfigurationIssue(station.instrumentCapabilities!.generator,instrument.generatorConfiguration(selectedChannel.value,true))}
-  catch(error) {return error instanceof Error?error.message:'Generator configuration is invalid.'}
+ const current=experiment.currentExecution
+ const issue=runtimeGeneratorIssue(station.executionTarget,current,selectedChannel.value,station.canExecute)
+ if(issue)return issue
+ if(!current||experiment.controlledExperimentId!==current.experiment_id)return 'Live control requires an acknowledged Run in this tab.'
+ if(current.lease_expires_at===null)return 'The running experiment has no active lease.'
+ if(blocked.value)return 'A command is pending or its acknowledgement is unknown. Refresh that command or Stop.'
+ const access=instrument.generatorControl.access
+ if(!access||access.experiment_id!==current.experiment_id||access.revision!==current.revision)return instrument.generatorControl.accessError??'Checking allocated generator channels.'
+ if(!access.can_configure_generator||!access.generator_channels.includes(selectedChannel.value))return `Live control unavailable: ${access.reason}.`
+ try{return generatorConfigurationIssue(station.instrumentCapabilities!.generator,instrument.generatorConfiguration(selectedChannel.value,instrument.generatorEnabled[selectedChannel.value]))}
+ catch(error){return error instanceof Error?error.message:'Generator configuration is invalid.'}
 })
-const canConfigure=computed(()=>controlIssue.value===null)
-const generatorAvailable=computed(()=>(station.instrumentCapabilities?.generator.channels??0)>0)
-const acknowledgement=ref('')
-async function apply() {
-  if(!canConfigure.value||!experiment.activeId) return
-  try {const reply=await instrument.configureGenerator(experiment.activeId,selectedChannel.value,true);acknowledgement.value=reply.accepted?'Configuration acknowledged':reply.code}
-  catch(error) {acknowledgement.value=error instanceof Error?error.message:'Configuration unavailable';instrument.log(acknowledgement.value,'error')}
+const invalidInput=computed(()=>Object.entries(instrument.requestedInputErrors).find(([key])=>key.startsWith('generator.'))?.[1])
+const canConfigure=computed(()=>!formError.value&&!invalidInput.value&&controlIssue.value===null)
+watch(()=>[experiment.currentExecution?.experiment_id,experiment.currentExecution?.revision,experiment.controlledExperimentId,station.executionTarget,station.canExecute],()=>{
+ if(generatorAvailable.value&&experiment.currentExecution)void instrument.refreshGeneratorAccess(experiment.currentExecution.experiment_id)
+},{immediate:true})
+watch(()=>instrument.principalId,()=>{formError.value='';selectedChannel.value=1},{flush:'sync'})
+async function apply(){
+ if(!canConfigure.value||!experiment.currentExecution)return
+ try{await instrument.configureGenerator(experiment.currentExecution.experiment_id,selectedChannel.value,instrument.generatorEnabled[selectedChannel.value])}
+ catch(error){formError.value=error instanceof Error?error.message:'Configuration unavailable';instrument.log(formError.value,'error')}
 }
-// Selection changes only this window's visual focus, never output or editor mode.
-const channels = computed(() => [{ id: 1, name: 'CH1', color: GENERATOR_CH1, config: instrument.generator }, { id: 2, name: 'CH2', color: GENERATOR_CH2, config: instrument.generator.channel2 }])
-const functionKeys = GENERATOR_LAYOUT.buttons.filter(key => !key.accent && key.name !== 'ok_button')
-const channelKeys = GENERATOR_LAYOUT.buttons.filter(key => key.accent || key.name === 'ok_button')
-const softLabels = [...GENERATOR_PARAMETER_LABELS, 'Output']
-const previewShapes: Record<string, string> = {
-  Sine: Array.from({ length: 65 }, (_, i) => `${i * 2.5},${45 - Math.sin(i / 64 * Math.PI * 4) * 28}`).join(' '),
-  Square: '0,73 0,17 40,17 40,73 80,73 80,17 120,17 120,73 160,73',
-  Triangle: '0,45 20,17 60,73 100,17 140,73 160,45', Pulse: '0,73 0,17 20,17 20,73 80,73 80,17 100,17 100,73 160,73',
+type NumericField='frequency'|'amplitude'|'offset'|'phase'|'dutyCycle'
+const fields:readonly {key:NumericField;label:string}[]=[{key:'frequency',label:'frequency (Hz)'},{key:'amplitude',label:'amplitude (Vpp)'},{key:'offset',label:'offset (V)'},{key:'phase',label:'phase (degrees)'},{key:'dutyCycle',label:'duty cycle (%)'}]
+function change(field:NumericField,event:Event){
+ try{
+  const value=parseDocumentJson((event.target as HTMLInputElement).value)
+  if(typeof value!=='number'||!Number.isFinite(value))throw new Error('A finite numeric value is required.')
+  if(field==='dutyCycle'){if(value<0||value>100)throw new Error('Duty cycle must be between 0 and 100.');selectedDraft.value[field]=value}
+  else{
+   const candidate={...instrument.generatorConfiguration(selectedChannel.value,instrument.generatorEnabled[selectedChannel.value]),[({frequency:'frequency_hz',amplitude:'amplitude_vpp',offset:'offset_v',phase:'phase_degrees'} as const)[field]]:value}
+   parseLab('GeneratorConfiguration',candidate);selectedDraft.value[field]=value
+  }
+  instrument.clearRequestedInputError(`generator.${selectedChannel.value}.${field}`);formError.value=''
+ }catch(error){formError.value=error instanceof Error?error.message:'Invalid setting.';instrument.setRequestedInputError(`generator.${selectedChannel.value}.${field}`,(event.target as HTMLInputElement).value,formError.value)}
 }
-function parameters(config: typeof instrument.generator.channel2) {
-  return [
-    { label: GENERATOR_PARAMETER_LABELS[0], value: config.frequency.toLocaleString(), unit: 'Hz' },
-    { label: GENERATOR_PARAMETER_LABELS[1], value: config.amplitude.toFixed(3), unit: 'V' },
-    { label: GENERATOR_PARAMETER_LABELS[2], value: config.offset.toFixed(3), unit: 'V' },
-    { label: GENERATOR_PARAMETER_LABELS[3], value: config.dutyCycle.toFixed(1), unit: '%' },
-    { label: GENERATOR_PARAMETER_LABELS[4], value: '—', unit: '' },
-  ]
-}
+function include(event:Event){const checked=(event.target as HTMLInputElement).checked;instrument.generatorPlanChannels=checked?[...new Set([...instrument.generatorPlanChannels,selectedChannel.value])]:instrument.generatorPlanChannels.filter(id=>id!==selectedChannel.value)}
+const channels=computed(()=>[{id:1,name:'CH1',color:GENERATOR_CH1,config:instrument.generator},{id:2,name:'CH2',color:GENERATOR_CH2,config:instrument.generator.channel2}].filter(channel=>channel.id<=declaredChannels.value))
+const channelSelectors=computed(()=>Array.from({length:Math.min(declaredChannels.value,16)},(_,index)=>index+1))
+const commandStatus=computed(()=>({idle:'No command acknowledged',pending:'Awaiting command acknowledgement',unknown:'Acknowledgement unknown; output may have changed',accepted:'Accepted; output not confirmed',applied:'Applied by driver',failed:'Command failed'}[selectedCommand.value.phase]))
+const functionKeys=GENERATOR_LAYOUT.buttons.filter(key=>!key.accent&&key.name!=='ok_button')
+const softLabels=[...GENERATOR_PARAMETER_LABELS,'Output']
+const previewShapes:Record<string,string>={Sine:Array.from({length:65},(_,i)=>`${i*2.5},${45-Math.sin(i/64*Math.PI*4)*28}`).join(' '),Square:'0,73 0,17 40,17 40,73 80,73 80,17 120,17 120,73 160,73',Triangle:'0,45 20,17 60,73 100,17 140,73 160,45',Pulse:'0,73 0,17 20,17 20,73 80,73 80,17 100,17 100,73 160,73'}
+function parameters(config:typeof instrument.generator.channel2){return [{label:GENERATOR_PARAMETER_LABELS[0],value:config.frequency.toLocaleString(),unit:'Hz'},{label:GENERATOR_PARAMETER_LABELS[1],value:config.amplitude.toFixed(3),unit:'V'},{label:GENERATOR_PARAMETER_LABELS[2],value:config.offset.toFixed(3),unit:'V'},{label:GENERATOR_PARAMETER_LABELS[3],value:config.dutyCycle.toFixed(1),unit:'%'},{label:'Phase',value:config.phase.toFixed(1),unit:'deg'}]}
 </script>
 <template>
   <div class="generator-instrument" :style="{ '--generator-ch1': GENERATOR_CH1, '--generator-ch2': GENERATOR_CH2, '--generator-sync': GENERATOR_SYNC, '--generator-screen': GENERATOR_THEME.screen, '--generator-bezel': GENERATOR_THEME.bezel, '--generator-panel': GENERATOR_THEME.panel }">
     <div class="generator-faceplate">
-      <header class="generator-header"><div><strong>net<span>*CIRCUIT</span></strong><small>L1571979 · FUNCTION GENERATOR · 2 CHANNEL</small></div><span>{{ canConfigure ? 'OUTPUT CONTROL AVAILABLE' : generatorAvailable ? 'PLAN CONFIGURATION ONLY' : 'OUTPUT UNAVAILABLE' }}</span></header>
+      <header class="generator-header"><div><strong>net<span>*CIRCUIT</span></strong><small>L1571979 · FUNCTION GENERATOR · {{ declaredChannels }} declared channels</small></div><span>{{ canConfigure ? 'OUTPUT CONTROL AVAILABLE' : generatorAvailable ? 'PLAN CONFIGURATION ONLY' : 'OUTPUT UNAVAILABLE' }}</span></header>
       <div class="generator-front">
         <div class="generator-screen"><div class="generator-preview-heading">CONFIGURATION PREVIEW <span>Not generated / not captured</span></div>
           <section v-for="channel in channels" :key="channel.id" class="generator-channel" :class="{ 'is-selected': selectedChannel === channel.id }" :style="{ '--channel-color': channel.color }" :aria-label="channel.name + ' configuration preview'"><header><strong>{{ channel.name }}</strong><span>{{ channel.config.waveform }}</span><small>NOT APPLIED</small></header><div class="generator-channel-body"><dl><div v-for="parameter in parameters(channel.config)" :key="parameter.label"><dt>{{ parameter.label }}</dt><dd>{{ parameter.value }} <small>{{ parameter.unit }}</small></dd></div></dl><div class="generator-waveform"><svg viewBox="0 0 160 90" role="img" :aria-label="channel.name + ' illustrative ' + channel.config.waveform + ' shape; not generated or captured data'"><line v-for="n in 9" :key="'x' + n" :x1="(n - 1) * 20" :x2="(n - 1) * 20" y1="0" y2="90" /><line v-for="n in 5" :key="'y' + n" x1="0" x2="160" :y1="(n - 1) * 22.5" :y2="(n - 1) * 22.5" /><polyline v-if="previewShapes[channel.config.waveform]" :points="previewShapes[channel.config.waveform]" /></svg><span>SCHEMATIC PREVIEW</span></div></div></section>
         </div>
-        <fieldset disabled class="generator-softkeys" aria-label="Generator screen keys" title="Generator contract is not connected"><legend class="visually-hidden">Screen keys unavailable</legend><button v-for="(key, index) in GENERATOR_LAYOUT.softKeys" :key="key.name" :aria-label="'Soft key ' + (index + 1) + ': ' + softLabels[index]"><span aria-hidden="true">—</span></button></fieldset>
+        <fieldset disabled class="generator-softkeys" aria-label="Generator screen keys" title="Front panel keys are unavailable; edit requested settings below"><legend class="visually-hidden">Front panel keys unavailable</legend><button v-for="(key, index) in GENERATOR_LAYOUT.softKeys" :key="key.name" :aria-label="'Soft key ' + (index + 1) + ': ' + softLabels[index]"><span aria-hidden="true">—</span></button></fieldset>
         <div class="generator-console">
-          <fieldset disabled class="generator-functions" aria-label="Generator function controls" title="Generator contract is not connected"><legend>FUNCTION</legend><div class="generator-keypad"><button v-for="key in functionKeys" :key="key.name" :style="{ '--key-color': key.color }">{{ key.label }}</button></div><div class="generator-encoder"><InstrumentDial label="Generator encoder" caption="VALUE" value="—" unavailable-reason="Output control unavailable · generator contract is not connected" /><div class="generator-arrows"><button v-for="key in GENERATOR_LAYOUT.arrows" :key="key.name" :aria-label="key.direction < 0 ? 'Previous digit' : 'Next digit'">{{ key.direction < 0 ? '◀' : '▶' }}</button></div></div></fieldset>
-          <div class="generator-channel-keys" role="group" aria-label="Configuration channel selection"><button v-for="key in channelKeys" :key="key.name" :disabled="!key.accent" :aria-label="key.accent ? 'Select ' + key.label + ' configuration' : key.label" :aria-pressed="key.accent ? selectedChannel === (key.label === 'CH1' ? 1 : 2) : undefined" :style="{ '--key-accent': key.accent || '#93aab9' }" @click="selectedChannel = key.label === 'CH1' ? 1 : 2">{{ key.label }}</button></div>
+          <fieldset disabled class="generator-functions" aria-label="Generator function controls" title="Front panel keys are unavailable; edit requested settings below"><legend>FUNCTION</legend><div class="generator-keypad"><button v-for="key in functionKeys" :key="key.name" :style="{ '--key-color': key.color }">{{ key.label }}</button></div><div class="generator-encoder"><InstrumentDial label="Generator encoder" caption="VALUE" value="—" unavailable-reason="Front panel encoder unavailable; edit requested settings below" /><div class="generator-arrows"><button v-for="key in GENERATOR_LAYOUT.arrows" :key="key.name" :aria-label="key.direction < 0 ? 'Previous digit' : 'Next digit'">{{ key.direction < 0 ? '◀' : '▶' }}</button></div></div></fieldset>
+          <div class="generator-channel-keys" role="group" aria-label="Configuration channel selection"><button v-for="channel in channelSelectors" :key="channel" :disabled="channel > 2" :aria-label="'Select CH' + channel + ' configuration'" :aria-pressed="selectedChannel === channel" :title="channel > 2 ? 'Live configuration supports channels 1 and 2 only.' : 'Select requested channel settings'" @click="selectedChannel = channel === 1 ? 1 : 2">CH{{ channel }}</button><button disabled aria-label="OK">OK</button></div>
+          <p v-if="declaredChannels > 16">{{ declaredChannels - 16 }} additional declared channels do not support configuration here.</p>
+          <fieldset class="generator-request" :disabled="!generatorAvailable"><legend>Requested CH{{ selectedChannel }} settings</legend>
+            <label>Waveform <select aria-label="Generator waveform" :value="selectedDraft.waveform" @change="selectedDraft.waveform = ($event.target as HTMLSelectElement).value"><option v-for="shape in ['Sine','Square','Triangle','Ramp','Pulse','Arbitrary']" :key="shape">{{ shape }}</option></select></label>
+            <label v-for="field in fields" :key="field.key">{{ field.label }}<input :aria-label="'Generator ' + field.label" :value="instrument.requestedInputErrors[`generator.${selectedChannel}.${field.key}`]?.text ?? selectedDraft[field.key]" inputmode="decimal" @change="change(field.key,$event)" /></label>
+            <label><input type="checkbox" aria-label="Requested generator enabled" :checked="instrument.generatorEnabled[selectedChannel]" @change="instrument.generatorEnabled[selectedChannel] = ($event.target as HTMLInputElement).checked" />Requested output enabled</label>
+            <label><input type="checkbox" aria-label="Include generator in next Run" :checked="instrument.generatorPlanChannels.includes(selectedChannel)" @change="include" />Include in next Run</label>
+            <small>Duty cycle is local-only. It is not sent to the laboratory.</small><p v-if="formError || invalidInput" role="alert">{{ formError || invalidInput?.error }}</p>
+          </fieldset>
           <p class="generator-console-note">Channel selection changes preview focus only.<br />{{ controlIssue || 'Runtime configuration can be sent to the running experiment.' }}</p>
         </div>
       </div>
-      <div class="generator-output-row"><div class="generator-power"><button :disabled="!canConfigure" :aria-label="canConfigure ? 'Apply generator configuration' : 'Generator power unavailable'" :title="controlIssue || 'Send channel configuration through the laboratory API'" @click="apply">⏻</button><small>{{ acknowledgement || 'PREVIEW ONLY' }}</small></div><div v-for="output in GENERATOR_LAYOUT.outputs" :key="output.name" class="generator-output" :style="{ '--output-color': output.accent }"><i aria-hidden="true" /><strong>{{ output.label }}</strong><small>{{ output.channel !== null && output.channel <= (station.instrumentCapabilities?.generator.channels ?? 0) ? 'AVAILABLE' : 'UNAVAILABLE' }}</small></div></div>
-      <footer class="generator-footer"><span>{{ generatorAvailable ? 'CONFIGURATION PREVIEW · NO OUTPUT TELEMETRY' : 'LOCAL CONFIGURATION · NO DDS OUTPUT' }}</span><small>Waveform shapes are illustrative. A supported generator contract is required to apply output.</small></footer>
+      <div class="generator-output-row"><div class="generator-power"><button :disabled="!canConfigure" aria-label="Apply generator configuration" :title="controlIssue || 'Send channel configuration through the laboratory API'" @click="apply">⏻</button><small>{{ commandStatus }}</small></div><div v-for="output in GENERATOR_LAYOUT.outputs" :key="output.name" class="generator-output" :style="{ '--output-color': output.accent }"><i aria-hidden="true" /><strong>{{ output.label }}</strong><small>{{ output.channel !== null && output.channel <= (station.instrumentCapabilities?.generator.channels ?? 0) ? 'AVAILABLE' : 'UNAVAILABLE' }}</small></div></div>
+      <section class="generator-ack" aria-label="Generator acknowledgement"><strong>{{ commandStatus }}</strong><p v-if="selectedCommand.error" role="alert">{{ selectedCommand.error }}</p><p v-if="selectedCommand.lastAcknowledged">Last acknowledged CH{{ selectedCommand.lastAcknowledged.configuration.channel }}: {{ selectedCommand.lastAcknowledged.configuration.frequency_hz }} Hz · {{ selectedCommand.lastAcknowledged.configuration.amplitude_vpp }} Vpp · {{ selectedCommand.lastAcknowledged.configuration.offset_v }} V · output {{ selectedCommand.lastAcknowledged.configuration.enabled ? 'enabled' : 'disabled' }}</p><button v-if="selectedCommand.operationKey" aria-label="Refresh generator command status" :disabled="selectedCommand.pending" @click="instrument.reconcileGenerator(selectedChannel)">Refresh command status</button></section>
+      <footer class="generator-footer"><span>{{ generatorAvailable ? 'CONFIGURATION PREVIEW · NO OUTPUT TELEMETRY' : 'LOCAL CONFIGURATION · NO DDS OUTPUT' }}</span><small>Waveform shapes are illustrative. A supported station profile and driver are required to apply output.</small></footer>
     </div>
   </div>
 </template>
 <style scoped>
+.generator-request {display:grid;gap:7px;padding:8px;border:1px solid #61717b;font:11px 'Segoe UI',sans-serif}.generator-request label {display:flex;align-items:center;justify-content:space-between;gap:6px}.generator-request input:not([type=checkbox]),.generator-request select {width:105px;min-width:0}.generator-request small {color:#adc4ce}.generator-ack {padding:8px;font:11px 'Segoe UI',sans-serif}.generator-ack p {margin:5px 0}.generator-ack [role=alert] {color:#ffb8a8}
+
 .generator-instrument { container-type: inline-size; min-width: 0; color: #d6e3e8; }.generator-faceplate { padding: 10px; border: 2px solid #69757d; border-radius: 7px; background: var(--generator-bezel); box-shadow: inset 0 0 0 1px #141d23; }
 .generator-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }.generator-header > div { display: grid; gap: 3px; }.generator-header strong { font-size: 12px; }.generator-header strong span { color: var(--generator-ch2); }.generator-header small { font: 8px Consolas, monospace; color: #a9bbc6; letter-spacing: .4px; }.generator-header > span { font: 8px Consolas, monospace; padding: 6px; border: 1px solid #7b8b94; border-radius: 3px; }
 .generator-front { display: grid; grid-template-columns: minmax(0, 1fr) 26px 232px; gap: 8px; }.generator-screen { min-width: 0; padding: 7px; border: 3px solid #111d22; border-radius: 5px; background: var(--generator-screen); box-shadow: 0 0 0 1px #617580; }.generator-preview-heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px; padding-bottom: 7px; color: #a6bfc7; font: 8px Consolas, monospace; }.generator-preview-heading span { font-size: 7px; color: #698d9b; }

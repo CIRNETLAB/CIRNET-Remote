@@ -5,6 +5,8 @@ import { createPinia } from 'pinia'
 import { useUiStore } from '../src/stores/ui'
 import { useWorkspaceStore } from '../src/stores/workspace'
 import { useCircuitStore } from '../src/stores/circuit'
+import {useStationStore} from '../src/stores/station'
+import {stationFixture} from './helpers/station'
 import { useInstrumentStore } from '../src/stores/instrument'
 import { windowDefinitions } from '../src/types/windows'
 import { GENERATOR_LAYOUT, GENERATOR_CH1, GENERATOR_CH2, GENERATOR_SYNC } from '../src/three/FunctionGeneratorArtwork'
@@ -121,12 +123,12 @@ test('invalid supply input cannot commit a graph edit; non-supply selection neve
 
 test('generator renders two independent configuration previews and shared controls without applying output', async () => {
   const pinia = createPinia(), instrument = useInstrumentStore(pinia), circuit = useCircuitStore(pinia)
-  circuit.createDraft()
+  circuit.createDraft();const station=useStationStore(pinia),target=stationFixture();target.capabilities!.instrument_capabilities.generator.channels=2;station.setStations([target])
   const view = mountSfc(await loadSfc('components/windows/GeneratorWindow.vue'), pinia)
   try {
-    for (const label of ['CONFIGURATION PREVIEW', 'OUTPUT UNAVAILABLE', 'CH1', 'CH2', 'FUNCTION', 'Frequency', 'Amplitude', 'Offset', 'Duty', 'Phase', ...GENERATOR_LAYOUT.buttons.map(b => b.label), ...GENERATOR_LAYOUT.outputs.map(o => o.label)]) assert.ok(view.text().includes(label), label)
+    for (const label of ['CONFIGURATION PREVIEW', 'PLAN CONFIGURATION ONLY', 'CH1', 'CH2', 'FUNCTION', 'Frequency', 'Amplitude', 'Offset', 'Duty', 'Phase', ...GENERATOR_LAYOUT.buttons.map(b => b.label), ...GENERATOR_LAYOUT.outputs.map(o => o.label)]) assert.ok(view.text().includes(label), label)
     assert.ok(view.find('button', 'aria-label', 'Generator encoder'))
-    for (const control of [view.find('fieldset', 'aria-label', 'Generator function controls'), view.find('fieldset', 'aria-label', 'Generator screen keys'), view.find('button', 'aria-label', 'Generator power unavailable')]) {
+    for (const control of [view.find('fieldset', 'aria-label', 'Generator function controls'), view.find('fieldset', 'aria-label', 'Generator screen keys'), view.find('button', 'aria-label', 'Apply generator configuration')]) {
       assert.ok(control.props.disabled === true || control.props.disabled === '', 'HTML disabled attributes must be present')
     }
     assert.equal(view.all().filter(node => node.tag === 'canvas').length, 0)

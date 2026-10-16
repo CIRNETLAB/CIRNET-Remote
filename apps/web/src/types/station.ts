@@ -1,17 +1,14 @@
 import { isRecord } from './api'
-import type { ExperimentRecord, GeneratorCapability, GeneratorConfiguration, StationCapabilities } from './lab'
+import type { ExperimentRecord, GeneratorCapability, GeneratorConfiguration } from './lab'
+import type { PublicStationCapabilities, StationDescriptor as PublicStationDescriptor } from '../contracts/generated/dto'
 import { parseLab } from './labValidation'
 
 export const LAB_STATUSES = ['SIMULATION', 'HARDWARE_AVAILABLE', 'HARDWARE_BUSY', 'HARDWARE_OFFLINE', 'FAULT'] as const
 export type LabStatus = typeof LAB_STATUSES[number]
-export type HardwareMode = 'simulation' | 'hardware'
-export type HardwareState = 'ready' | 'unavailable' | 'busy' | 'error'
-export interface StationDescriptor {
-  station_id: string
-  mode: HardwareMode
-  state: HardwareState
-  capabilities?: StationCapabilities
-}
+export type HardwareMode = PublicStationDescriptor['mode']
+export type HardwareState = PublicStationDescriptor['state']
+/** Legacy event descriptors may omit capabilities; execution still requires advertised support. */
+export type StationDescriptor = Omit<PublicStationDescriptor,'capabilities'> & {capabilities?:PublicStationCapabilities}
 export interface Station extends StationDescriptor { status: LabStatus }
 export function runtimeGeneratorIssue(target:StationDescriptor|null,active:ExperimentRecord|null,channel:number,connected:boolean):string|null {
   if(!connected||!target?.capabilities?.available||['unavailable','error'].includes(target.state)) return 'Station connection is unavailable.'
@@ -44,7 +41,7 @@ export function isStationDescriptor(value: unknown): value is StationDescriptor 
   if(!descriptor) return false
   if(value.capabilities!==undefined) {
     try {
-      const caps=parseLab<StationCapabilities>('StationCapabilities',value.capabilities)
+      const caps=parseLab('PublicStationCapabilities',value.capabilities)
       return caps.station_id===value.station_id && caps.mode===value.mode
     } catch { return false }
   }

@@ -1,0 +1,5 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://netcircuit.local/contracts/assignment/1.0/assignment.schema.json",
+  "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition"
+}

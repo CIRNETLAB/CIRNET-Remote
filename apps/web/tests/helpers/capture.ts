@@ -1,5 +1,9 @@
 import type { CaptureMetadata } from '../../src/types/lab'
 
+export function captureResponse(binary: BodyInit | undefined): Response {
+  return new Response(binary, { headers: { 'Content-Type': 'application/vnd.netcircuit.capture; version=1' } })
+}
+
 export function captureFixture(signal = 'y', captureId = 'c1') {
   const header = new TextEncoder().encode(JSON.stringify({ encoding: 'digital_events', signals: [signal], sample_count: 2, duration_ns: 20 }))
   const bytes = new Uint8Array(9 + header.length + 22), view = new DataView(bytes.buffer)

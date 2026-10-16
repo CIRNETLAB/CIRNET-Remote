@@ -113,6 +113,24 @@ def test_clock_budget_fails_instead_of_returning_a_silently_truncated_capture():
                    [{'time_ns':150000000,'inputs':{'B.OUT':1}}])
 
 
+def test_scheduling_budget_is_distinct_from_the_digital_capture_sample_limit():
+    e=engine()
+    value={'schema_version':'1.0','circuit_id':'clock-capture-bound',
+        'modules':[{'id':'C','type':'CLOCK','properties':{'frequency_hz':500000000}}],
+        'connections':[]}
+    plan=e.VirtualCompiler().compile(value)
+    # The supported scheduling budget may exceed the 100k capture transport
+    # bound. A small requested capture still completes with its actual samples.
+    small=e.run_plan(plan,{'signals':['C.OUT'],'duration_ns':40,'max_events':1000000})
+    assert small['state']=='COMPLETE' and len(small['samples'])==41
+    assert small['samples'][-1]=={'signal':'C.OUT','time_ns':40,'value':0}
+    # A 2ns clock has one change per ns: 100001 observations including t=0.
+    # This remains below the clock-cycle and scheduling limits, so the capture
+    # limit itself must reject the result rather than return 100k partial data.
+    with pytest.raises(e.SimulationError,match='^CAPTURE_LIMIT$'):
+        e.run_plan(plan,{'signals':['C.OUT'],'duration_ns':100000,'max_events':1000000})
+
+
 def test_tiny_positive_clock_frequency_has_a_stable_unexecutable_error():
     e=engine()
     value={'schema_version':'1.0','circuit_id':'tiny','modules':[{'id':'C','type':'CLOCK','properties':{'frequency_hz':1e-320}}], 'connections':[]}

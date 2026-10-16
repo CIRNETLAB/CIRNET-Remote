@@ -1,0 +1,282 @@
+{
+  "status": "PASS",
+  "started_at": "2026-10-16T08:36:16.358554+00:00",
+  "environment": {
+    "platform": "Windows-11-10.0.26300-SP0",
+    "python": "3.12.14",
+    "logical_cpus": 16,
+    "host_ram_bytes": 34049417216,
+    "database": "isolated development SQLite",
+    "api_workers": 1,
+    "virtual_worker_limit": 4,
+    "physical_executions": 0
+  },
+  "workload": {
+    "sessions": 50,
+    "max_inflight_http": 10,
+    "read_rounds": 3,
+    "bootstrap_login_policy": "shared loopback address paced to10 logins/60.25seconds including administrator; server10/60s policy unchanged",
+    "real_virtual_runs": 8,
+    "max_concurrent_virtual_runs": 4,
+    "graph": "switches \u2192 74HC08 AND \u2192 LED; x changes at20ns; observed X@0,0@8,1@28ns"
+  },
+  "http_transport": {
+    "protocol": "HTTP/1.1",
+    "max_connections_per_session": 1,
+    "max_keepalive_connections_per_session": 1,
+    "keepalive_expiry_seconds": 1.0,
+    "automatic_retries": 0
+  },
+  "artifacts": {
+    "data_directory": ".runtime/e2e/benchmark-16374a8a9d064c73843f08f162650390",
+    "backend_log": ".runtime/e2e/benchmark-16374a8a9d064c73843f08f162650390/backend.log"
+  },
+  "verification": {
+    "authenticated_distinct_principals": 50,
+    "saved_and_reopened_documents": 50,
+    "cas_conflicts_verified": 50,
+    "foreign_document_denials_verified": 50,
+    "real_virtual_captures_verified": 8,
+    "observed_samples_verified": 24,
+    "captures_retained_after_stop": 8,
+    "paced_bootstrap_seconds": 301.704,
+    "active_workload_seconds": 17.848
+  },
+  "backend_exit_code": 0,
+  "resources": {
+    "peak_sum_rss_bytes": 395427840,
+    "sum_observed_cpu_seconds": 59.938,
+    "peak_processes": 7,
+    "samples": 2971,
+    "interval_seconds": 0.1,
+    "coverage_errors": {},
+    "complete_observed_access": true,
+    "scope": "owned API + local Hardware Service + descendant virtual workers; sum RSS counts shared pages per process"
+  },
+  "duration_seconds": 324.689,
+  "latency_by_operation": {
+    "capture_after_stop": {
+      "count": 8,
+      "unexpected": 0,
+      "status_counts": {
+        "200": 8
+      },
+      "p50_ms": 49.51,
+      "p95_ms": 65.148,
+      "p99_ms": 65.148,
+      "max_ms": 65.148
+    },
+    "capture_payload": {
+      "count": 8,
+      "unexpected": 0,
+      "status_counts": {
+        "200": 8
+      },
+      "p50_ms": 42.304,
+      "p95_ms": 56.809,
+      "p99_ms": 56.809,
+      "max_ms": 56.809
+    },
+    "create_circuit": {
+      "count": 50,
+      "unexpected": 0,
+      "status_counts": {
+        "201": 50
+      },
+      "p50_ms": 270.902,
+      "p95_ms": 351.261,
+      "p99_ms": 396.881,
+      "max_ms": 396.881
+    },
+    "create_experiment": {
+      "count": 8,
+      "unexpected": 0,
+      "status_counts": {
+        "201": 8
+      },
+      "p50_ms": 156.134,
+      "p95_ms": 202.321,
+      "p99_ms": 202.321,
+      "max_ms": 202.321
+    },
+    "create_project": {
+      "count": 50,
+      "unexpected": 0,
+      "status_counts": {
+        "201": 50
+      },
+      "p50_ms": 181.624,
+      "p95_ms": 285.138,
+      "p99_ms": 312.037,
+      "max_ms": 312.037
+    },
+    "create_student": {
+      "count": 50,
+      "unexpected": 0,
+      "status_counts": {
+        "201": 50
+      },
+      "p50_ms": 117.998,
+      "p95_ms": 148.552,
+      "p99_ms": 151.845,
+      "max_ms": 151.845
+    },
+    "foreign_document": {
+      "count": 50,
+      "unexpected": 0,
+      "status_counts": {
+        "403": 50
+      },
+      "p50_ms": 80.603,
+      "p95_ms": 120.893,
+      "p99_ms": 134.488,
+      "max_ms": 134.488
+    },
+    "login": {
+      "count": 51,
+      "unexpected": 0,
+      "status_counts": {
+        "200": 51
+      },
+      "p50_ms": 425.682,
+      "p95_ms": 837.023,
+      "p99_ms": 914.027,
+      "max_ms": 914.027
+    },
+    "open_circuit": {
+      "count": 50,
+      "unexpected": 0,
+      "status_counts": {
+        "200": 50
+      },
+      "p50_ms": 132.091,
+      "p95_ms": 199.272,
+      "p99_ms": 307.468,
+      "max_ms": 307.468
+    },
+    "poll_experiment": {
+      "count": 103,
+      "unexpected": 0,
+      "status_counts": {
+        "200": 103
+      },
+      "p50_ms": 74.064,
+      "p95_ms": 164.156,
+      "p99_ms": 200.78,
+      "max_ms": 241.164
+    },
+    "read_active": {
+      "count": 150,
+      "unexpected": 0,
+      "status_counts": {
+        "200": 150
+      },
+      "p50_ms": 81.748,
+      "p95_ms": 122.558,
+      "p99_ms": 137.117,
+      "max_ms": 220.229
+    },
+    "read_history": {
+      "count": 150,
+      "unexpected": 0,
+      "status_counts": {
+        "200": 150
+      },
+      "p50_ms": 82.641,
+      "p95_ms": 133.205,
+      "p99_ms": 159.099,
+      "max_ms": 164.879
+    },
+    "read_projects": {
+      "count": 150,
+      "unexpected": 0,
+      "status_counts": {
+        "200": 150
+      },
+      "p50_ms": 93.234,
+      "p95_ms": 140.987,
+      "p99_ms": 169.78,
+      "max_ms": 200.655
+    },
+    "read_stations": {
+      "count": 150,
+      "unexpected": 0,
+      "status_counts": {
+        "200": 150
+      },
+      "p50_ms": 201.087,
+      "p95_ms": 284.487,
+      "p99_ms": 325.86,
+      "max_ms": 395.74
+    },
+    "run": {
+      "count": 8,
+      "unexpected": 0,
+      "status_counts": {
+        "200": 8
+      },
+      "p50_ms": 199.646,
+      "p95_ms": 302.744,
+      "p99_ms": 302.744,
+      "max_ms": 302.744
+    },
+    "save_circuit": {
+      "count": 50,
+      "unexpected": 0,
+      "status_counts": {
+        "200": 50
+      },
+      "p50_ms": 306.811,
+      "p95_ms": 434.84,
+      "p99_ms": 442.828,
+      "max_ms": 442.828
+    },
+    "save_conflict": {
+      "count": 50,
+      "unexpected": 0,
+      "status_counts": {
+        "409": 50
+      },
+      "p50_ms": 247.146,
+      "p95_ms": 309.723,
+      "p99_ms": 327.566,
+      "max_ms": 327.566
+    },
+    "session": {
+      "count": 51,
+      "unexpected": 0,
+      "status_counts": {
+        "200": 51
+      },
+      "p50_ms": 32.681,
+      "p95_ms": 92.513,
+      "p99_ms": 232.745,
+      "max_ms": 232.745
+    },
+    "stop_terminal": {
+      "count": 8,
+      "unexpected": 0,
+      "status_counts": {
+        "200": 8
+      },
+      "p50_ms": 121.182,
+      "p95_ms": 158.934,
+      "p99_ms": 158.934,
+      "max_ms": 158.934
+    }
+  },
+  "transport_errors": {
+    "count": 0,
+    "recent": []
+  },
+  "disk": {
+    "total_bytes": 744609,
+    "capture_payload_bytes": 992,
+    "capture_payload_count": 8
+  },
+  "limitations": [
+    "One bounded local run; not a sustained-load, production PostgreSQL, TLS or target Mini PC capacity benchmark.",
+    "HTTP session count is distinct from virtual job concurrency; no physical execution or analog acquisition is exercised.",
+    "Resource samples cover the owned backend tree, not browser, other tools or unique physical memory."
+  ]
+}

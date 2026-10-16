@@ -1,0 +1,1166 @@
+{
+  "version": "1.0",
+  "cases": [
+    {
+      "id": "digital-zero",
+      "contract": "DigitalObservation",
+      "profile": "transport",
+      "valid": true,
+      "value": {
+        "signal": "out",
+        "time_ns": 0,
+        "value": 0
+      }
+    },
+    {
+      "id": "digital-one",
+      "contract": "DigitalObservation",
+      "profile": "transport",
+      "valid": true,
+      "value": {
+        "signal": "out",
+        "time_ns": 0,
+        "value": 1
+      }
+    },
+    {
+      "id": "digital-x",
+      "contract": "DigitalObservation",
+      "profile": "transport",
+      "valid": true,
+      "value": {
+        "signal": "out",
+        "time_ns": 0,
+        "value": "X"
+      }
+    },
+    {
+      "id": "digital-safe-integer-edge",
+      "contract": "DigitalObservation",
+      "profile": "transport",
+      "valid": true,
+      "value": {
+        "signal": "out",
+        "time_ns": 9007199254740991,
+        "value": 0
+      }
+    },
+    {
+      "id": "digital-bool-not-enum",
+      "contract": "DigitalObservation",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "signal": "out",
+        "time_ns": 0,
+        "value": false
+      }
+    },
+    {
+      "id": "digital-bool-not-time",
+      "contract": "DigitalObservation",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "signal": "out",
+        "time_ns": false,
+        "value": 0
+      }
+    },
+    {
+      "id": "digital-numeric-string",
+      "contract": "DigitalObservation",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "signal": "out",
+        "time_ns": "0",
+        "value": 0
+      }
+    },
+    {
+      "id": "digital-null-time",
+      "contract": "DigitalObservation",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "signal": "out",
+        "time_ns": null,
+        "value": 0
+      }
+    },
+    {
+      "id": "digital-extra-field",
+      "contract": "DigitalObservation",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "signal": "out",
+        "time_ns": 0,
+        "value": 0,
+        "unexpected": 1
+      }
+    },
+    {
+      "id": "digital-unsafe-integer",
+      "contract": "DigitalObservation",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "signal": "out",
+        "time_ns": 9007199254740992,
+        "value": 0
+      }
+    },
+    {
+      "id": "digital-required-signal",
+      "contract": "DigitalObservation",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "time_ns": 0,
+        "value": 0
+      }
+    },
+    {
+      "id": "structural-preserves-legacy-large-integer",
+      "contract": "DigitalObservation",
+      "profile": "structural",
+      "valid": true,
+      "value": {
+        "signal": "out",
+        "time_ns": 9007199254740992,
+        "value": 0
+      }
+    },
+    {
+      "id": "clock-uint32-edge",
+      "contract": "ClockConfiguration",
+      "profile": "transport",
+      "valid": true,
+      "value": {
+        "signal": "CLK.OUT",
+        "period_ns": 4294967295,
+        "cycles": 1
+      }
+    },
+    {
+      "id": "clock-uint32-overflow",
+      "contract": "ClockConfiguration",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "signal": "CLK.OUT",
+        "period_ns": 4294967296,
+        "cycles": 1
+      },
+      "issue": {
+        "code": "SCHEMA_MAXIMUM",
+        "path": "/period_ns"
+      }
+    },
+    {
+      "id": "clock-no-string-coercion",
+      "contract": "ClockConfiguration",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "signal": "CLK.OUT",
+        "period_ns": "10",
+        "cycles": 1
+      }
+    },
+    {
+      "id": "clock-no-boolean-coercion",
+      "contract": "ClockConfiguration",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "signal": "CLK.OUT",
+        "period_ns": 4294967295,
+        "cycles": true
+      }
+    },
+    {
+      "id": "optional-binding-false-required",
+      "contract": "LabEndpoint",
+      "profile": "transport",
+      "valid": true,
+      "value": {
+        "endpoint_id": "input",
+        "role": "INPUT_SOURCE",
+        "required": false
+      }
+    },
+    {
+      "id": "binding-omitted",
+      "contract": "LabEndpoint",
+      "profile": "transport",
+      "valid": true,
+      "value": {
+        "endpoint_id": "input",
+        "role": "INPUT_SOURCE"
+      }
+    },
+    {
+      "id": "binding-null-is-not-omission",
+      "contract": "LabEndpoint",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "endpoint_id": "input",
+        "role": "INPUT_SOURCE",
+        "required": false,
+        "node_id": null
+      }
+    },
+    {
+      "id": "binding-forms-conflict",
+      "contract": "LabEndpoint",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "endpoint_id": "input",
+        "role": "INPUT_SOURCE",
+        "required": false,
+        "node_id": "N1",
+        "design_port": "X.OUT"
+      },
+      "issue": {
+        "code": "ENDPOINT_BINDING_CONFLICT",
+        "path": ""
+      }
+    },
+    {
+      "id": "opaque-unknown",
+      "contract": "OpaquePhysicalComponent",
+      "profile": "transport",
+      "valid": true,
+      "value": {
+        "component_id": "U1",
+        "kind": "OPAQUE_PHYSICAL_COMPONENT",
+        "identity": "UNKNOWN",
+        "node_ids": [
+          "N1"
+        ]
+      }
+    },
+    {
+      "id": "opaque-must-not-guess-identity",
+      "contract": "OpaquePhysicalComponent",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "component_id": "U1",
+        "kind": "OPAQUE_PHYSICAL_COMPONENT",
+        "identity": "74HC08",
+        "node_ids": [
+          "N1"
+        ]
+      },
+      "issue": {
+        "code": "SCHEMA_CONST",
+        "path": "/identity"
+      }
+    },
+    {
+      "id": "duplicate-observed-pins",
+      "contract": "OpaquePhysicalComponent",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "component_id": "U1",
+        "kind": "OPAQUE_PHYSICAL_COMPONENT",
+        "identity": "UNKNOWN",
+        "node_ids": [
+          "N1"
+        ],
+        "pins": [
+          {
+            "pin_id": "1",
+            "node_id": "N1"
+          },
+          {
+            "pin_id": "1",
+            "node_id": "N1"
+          }
+        ]
+      },
+      "issue": {
+        "code": "DUPLICATE_ID",
+        "path": "/pins/1/pin_id"
+      }
+    },
+    {
+      "id": "assignment-empty-endpoints",
+      "contract": "AssignmentDefinition",
+      "profile": "transport",
+      "valid": true,
+      "value": {
+        "schema_version": "1.0",
+        "assignment_id": "a",
+        "title": "A",
+        "lab_endpoints": [],
+        "assessment_policy": "FUNCTIONAL_ONLY"
+      }
+    },
+    {
+      "id": "duplicate-assignment-endpoints",
+      "contract": "AssignmentDefinition",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "schema_version": "1.0",
+        "assignment_id": "a",
+        "title": "A",
+        "lab_endpoints": [
+          {
+            "endpoint_id": "input",
+            "role": "INPUT_SOURCE",
+            "required": false
+          },
+          {
+            "endpoint_id": "input",
+            "role": "INPUT_SOURCE",
+            "required": false
+          }
+        ],
+        "assessment_policy": "FUNCTIONAL_ONLY"
+      },
+      "issue": {
+        "code": "DUPLICATE_ID",
+        "path": "/lab_endpoints/1/endpoint_id"
+      }
+    },
+    {
+      "id": "capture-valid-zero-sample",
+      "contract": "CaptureResult",
+      "profile": "transport",
+      "valid": true,
+      "value": {
+        "schema_version": "1.0",
+        "capture_id": "capture",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 10,
+        "sample_count": 1,
+        "samples": [
+          {
+            "signal": "out",
+            "time_ns": 0,
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "capture-count-mismatch",
+      "contract": "CaptureResult",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "schema_version": "1.0",
+        "capture_id": "capture",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 10,
+        "sample_count": 2,
+        "samples": [
+          {
+            "signal": "out",
+            "time_ns": 0,
+            "value": 0
+          }
+        ]
+      },
+      "issue": {
+        "code": "CAPTURE_COUNT_MISMATCH",
+        "path": "/sample_count"
+      }
+    },
+    {
+      "id": "capture-time-outside-duration",
+      "contract": "CaptureResult",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "schema_version": "1.0",
+        "capture_id": "capture",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 10,
+        "sample_count": 1,
+        "samples": [
+          {
+            "signal": "out",
+            "time_ns": 11,
+            "value": 0
+          }
+        ]
+      },
+      "issue": {
+        "code": "CAPTURE_TIME_OUTSIDE_DURATION",
+        "path": "/samples/0/time_ns"
+      }
+    },
+    {
+      "id": "capture-unavailable-null-reference",
+      "contract": "CaptureMetadata",
+      "profile": "transport",
+      "valid": true,
+      "value": {
+        "schema_version": "1.0",
+        "capture_id": "capture",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": false,
+        "duration_ns": 0,
+        "sample_count": 0,
+        "channel_count": 0,
+        "payload_ref": null,
+        "payload_byte_count": 0,
+        "sha256": null,
+        "signals": [],
+        "timestamp_ns": "9007199254740992000"
+      }
+    },
+    {
+      "id": "capture-available-without-payload",
+      "contract": "CaptureMetadata",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "schema_version": "1.0",
+        "capture_id": "capture",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": true,
+        "duration_ns": 0,
+        "sample_count": 0,
+        "channel_count": 0,
+        "payload_ref": null,
+        "payload_byte_count": 0,
+        "sha256": null,
+        "signals": [],
+        "timestamp_ns": "9007199254740992000"
+      },
+      "issue": {
+        "code": "CAPTURE_AVAILABILITY_MISMATCH",
+        "path": "/available"
+      }
+    },
+    {
+      "id": "capture-wrong-instrument-encoding",
+      "contract": "CaptureMetadata",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "schema_version": "1.0",
+        "capture_id": "capture",
+        "source": "simulation",
+        "instrument": "oscilloscope",
+        "encoding": "digital_events",
+        "available": false,
+        "duration_ns": 0,
+        "sample_count": 0,
+        "channel_count": 0,
+        "payload_ref": null,
+        "payload_byte_count": 0,
+        "sha256": null,
+        "signals": [],
+        "timestamp_ns": "9007199254740992000"
+      },
+      "issue": {
+        "code": "CAPTURE_ENCODING_MISMATCH",
+        "path": "/encoding"
+      }
+    },
+    {
+      "id": "capture-channel-count-mismatch",
+      "contract": "CaptureMetadata",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "schema_version": "1.0",
+        "capture_id": "capture",
+        "source": "simulation",
+        "instrument": "logic_analyzer",
+        "encoding": "digital_events",
+        "available": false,
+        "duration_ns": 0,
+        "sample_count": 0,
+        "channel_count": 1,
+        "payload_ref": null,
+        "payload_byte_count": 0,
+        "sha256": null,
+        "signals": [],
+        "timestamp_ns": "9007199254740992000"
+      },
+      "issue": {
+        "code": "CAPTURE_CHANNEL_MISMATCH",
+        "path": "/signals"
+      }
+    },
+    {
+      "id": "record-null-optionals-zero-revision",
+      "contract": "ExperimentRecord",
+      "profile": "transport",
+      "valid": true,
+      "value": {
+        "schema_version": "1.0",
+        "experiment_id": "e",
+        "circuit_id": "c",
+        "station_id": "s",
+        "assignment_id": null,
+        "mode": "simulation",
+        "state": "CREATED",
+        "state_history": [
+          "CREATED"
+        ],
+        "revision": 0,
+        "execution_decision": null,
+        "safety_verification": null,
+        "topology_verification": null,
+        "functional_verification": {
+          "schema_version": "1.0",
+          "status": "NOT_EVALUATED",
+          "issues": []
+        },
+        "capture": null,
+        "error_code": null,
+        "queue_position": null,
+        "lease_expires_at": null
+      }
+    },
+    {
+      "id": "record-history-current-state-mismatch",
+      "contract": "ExperimentRecord",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "schema_version": "1.0",
+        "experiment_id": "e",
+        "circuit_id": "c",
+        "station_id": "s",
+        "assignment_id": null,
+        "mode": "simulation",
+        "state": "RUNNING",
+        "state_history": [
+          "CREATED"
+        ],
+        "revision": 0,
+        "execution_decision": null,
+        "safety_verification": null,
+        "topology_verification": null,
+        "functional_verification": {
+          "schema_version": "1.0",
+          "status": "NOT_EVALUATED",
+          "issues": []
+        },
+        "capture": null,
+        "error_code": null,
+        "queue_position": null,
+        "lease_expires_at": null
+      },
+      "issue": {
+        "code": "STATE_HISTORY_MISMATCH",
+        "path": "/state_history"
+      }
+    },
+    {
+      "id": "record-revision-bool",
+      "contract": "ExperimentRecord",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "schema_version": "1.0",
+        "experiment_id": "e",
+        "circuit_id": "c",
+        "station_id": "s",
+        "assignment_id": null,
+        "mode": "simulation",
+        "state": "CREATED",
+        "state_history": [
+          "CREATED"
+        ],
+        "revision": false,
+        "execution_decision": null,
+        "safety_verification": null,
+        "topology_verification": null,
+        "functional_verification": {
+          "schema_version": "1.0",
+          "status": "NOT_EVALUATED",
+          "issues": []
+        },
+        "capture": null,
+        "error_code": null,
+        "queue_position": null,
+        "lease_expires_at": null
+      }
+    },
+    {
+      "id": "record-negative-revision",
+      "contract": "ExperimentRecord",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "schema_version": "1.0",
+        "experiment_id": "e",
+        "circuit_id": "c",
+        "station_id": "s",
+        "assignment_id": null,
+        "mode": "simulation",
+        "state": "CREATED",
+        "state_history": [
+          "CREATED"
+        ],
+        "revision": -1,
+        "execution_decision": null,
+        "safety_verification": null,
+        "topology_verification": null,
+        "functional_verification": {
+          "schema_version": "1.0",
+          "status": "NOT_EVALUATED",
+          "issues": []
+        },
+        "capture": null,
+        "error_code": null,
+        "queue_position": null,
+        "lease_expires_at": null
+      }
+    },
+    {
+      "id": "record-history-empty",
+      "contract": "ExperimentRecord",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "schema_version": "1.0",
+        "experiment_id": "e",
+        "circuit_id": "c",
+        "station_id": "s",
+        "assignment_id": null,
+        "mode": "simulation",
+        "state": "CREATED",
+        "state_history": [],
+        "revision": 0,
+        "execution_decision": null,
+        "safety_verification": null,
+        "topology_verification": null,
+        "functional_verification": {
+          "schema_version": "1.0",
+          "status": "NOT_EVALUATED",
+          "issues": []
+        },
+        "capture": null,
+        "error_code": null,
+        "queue_position": null,
+        "lease_expires_at": null
+      }
+    },
+    {
+      "id": "observed-evidence-valid",
+      "contract": "DetectedTopologyGraph",
+      "profile": "transport",
+      "valid": true,
+      "value": {
+        "schema_version": "1.0",
+        "scan_id": "scan",
+        "nodes": [
+          {
+            "node_id": "N1"
+          }
+        ],
+        "connections": [],
+        "components": [
+          {
+            "component_id": "U1",
+            "kind": "OPAQUE_PHYSICAL_COMPONENT",
+            "identity": "UNKNOWN",
+            "node_ids": [
+              "N1"
+            ]
+          }
+        ],
+        "ambiguities": []
+      }
+    },
+    {
+      "id": "observed-evidence-dangling-pin",
+      "contract": "DetectedTopologyGraph",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "schema_version": "1.0",
+        "scan_id": "scan",
+        "nodes": [
+          {
+            "node_id": "N1"
+          }
+        ],
+        "connections": [],
+        "components": [
+          {
+            "component_id": "U1",
+            "kind": "OPAQUE_PHYSICAL_COMPONENT",
+            "identity": "UNKNOWN",
+            "node_ids": [
+              "N1"
+            ],
+            "pins": [
+              {
+                "pin_id": "1",
+                "node_id": "MISSING"
+              }
+            ]
+          }
+        ],
+        "ambiguities": []
+      },
+      "issue": {
+        "code": "INVALID_NODE_REFERENCE",
+        "path": "/components/0"
+      }
+    },
+    {
+      "id": "observed-evidence-duplicate-node",
+      "contract": "DetectedTopologyGraph",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "schema_version": "1.0",
+        "scan_id": "scan",
+        "nodes": [
+          {
+            "node_id": "N1"
+          },
+          {
+            "node_id": "N1"
+          }
+        ],
+        "connections": [],
+        "components": [
+          {
+            "component_id": "U1",
+            "kind": "OPAQUE_PHYSICAL_COMPONENT",
+            "identity": "UNKNOWN",
+            "node_ids": [
+              "N1"
+            ]
+          }
+        ],
+        "ambiguities": []
+      },
+      "issue": {
+        "code": "DUPLICATE_ID",
+        "path": "/nodes/1/node_id"
+      }
+    },
+    {
+      "id": "generator-false-output-zero-amplitude",
+      "contract": "GeneratorConfiguration",
+      "profile": "transport",
+      "valid": true,
+      "value": {
+        "channel": 1,
+        "waveform": "SINE",
+        "frequency_hz": 1000,
+        "amplitude_vpp": 0,
+        "offset_v": 0,
+        "enabled": false
+      }
+    },
+    {
+      "id": "generator-channel-bool-not-enum",
+      "contract": "GeneratorConfiguration",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "channel": true,
+        "waveform": "SINE",
+        "frequency_hz": 1000,
+        "amplitude_vpp": 0,
+        "offset_v": 0,
+        "enabled": false
+      }
+    },
+    {
+      "id": "memory-depth-matches-data",
+      "contract": "MemoryImage",
+      "profile": "structural",
+      "valid": true,
+      "value": {
+        "version": "1.0",
+        "word_bits": 8,
+        "depth": 2,
+        "data": [
+          0,
+          255
+        ]
+      }
+    },
+    {
+      "id": "memory-depth-data-mismatch",
+      "contract": "MemoryImage",
+      "profile": "structural",
+      "valid": false,
+      "value": {
+        "version": "1.0",
+        "word_bits": 8,
+        "depth": 2,
+        "data": [
+          0
+        ]
+      },
+      "issue": {
+        "code": "MEMORY_DEPTH_MISMATCH",
+        "path": "/data"
+      }
+    },
+    {
+      "id": "internal-station-capabilities",
+      "contract": "StationCapabilities",
+      "visibility": "internal",
+      "profile": "transport",
+      "valid": true,
+      "value": {
+        "schema_version": "1.0",
+        "station_id": "v1",
+        "mode": "simulation",
+        "available": true,
+        "virtual_digital": true,
+        "virtual_analog": false,
+        "physical_digital": false,
+        "physical_analog_routing": false,
+        "physical_execution_slots": 0,
+        "topology_scan_supported": false,
+        "safety_gate_supported": false,
+        "guarded_run_supported": false,
+        "component_resolution_modes": [],
+        "hardware_rpc_version": "2.0",
+        "fpga_protocol_version": "UNAVAILABLE",
+        "firmware_version": "virtual-events-1.0",
+        "hardware_profile_version": "virtual-1.0",
+        "instrument_capabilities": {
+          "logic_analyzer": {
+            "channels": 4,
+            "runtime_reconfiguration_supported": false
+          },
+          "oscilloscope": {
+            "channels": 0,
+            "runtime_reconfiguration_supported": false
+          },
+          "generator": {
+            "channels": 0,
+            "runtime_reconfiguration_supported": false
+          }
+        },
+        "routing_resources": [
+          {
+            "resource_id": "internal_route",
+            "roles": [
+              "CLOCK"
+            ],
+            "node_ids": [
+              "internal_node"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "internal-station-invalid-generator-limits",
+      "contract": "StationCapabilities",
+      "visibility": "internal",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "schema_version": "1.0",
+        "station_id": "v1",
+        "mode": "simulation",
+        "available": true,
+        "virtual_digital": true,
+        "virtual_analog": false,
+        "physical_digital": false,
+        "physical_analog_routing": false,
+        "physical_execution_slots": 0,
+        "topology_scan_supported": false,
+        "safety_gate_supported": false,
+        "guarded_run_supported": false,
+        "component_resolution_modes": [],
+        "hardware_rpc_version": "2.0",
+        "fpga_protocol_version": "UNAVAILABLE",
+        "firmware_version": "virtual-events-1.0",
+        "hardware_profile_version": "virtual-1.0",
+        "instrument_capabilities": {
+          "logic_analyzer": {
+            "channels": 4,
+            "runtime_reconfiguration_supported": false
+          },
+          "oscilloscope": {
+            "channels": 0,
+            "runtime_reconfiguration_supported": false
+          },
+          "generator": {
+            "channels": 0,
+            "runtime_reconfiguration_supported": false,
+            "frequency_min_hz": 2000,
+            "frequency_max_hz": 1000
+          }
+        },
+        "routing_resources": [
+          {
+            "resource_id": "internal_route",
+            "roles": [
+              "CLOCK"
+            ],
+            "node_ids": [
+              "internal_node"
+            ]
+          }
+        ]
+      },
+      "issue": {
+        "code": "PROFILE_LIMIT_ORDER",
+        "path": "/instrument_capabilities/generator/frequency_min_hz"
+      }
+    },
+    {
+      "id": "public-station-capabilities",
+      "contract": "PublicStationCapabilities",
+      "visibility": "public",
+      "profile": "transport",
+      "valid": true,
+      "value": {
+        "schema_version": "1.0",
+        "station_id": "v1",
+        "mode": "simulation",
+        "available": true,
+        "virtual_digital": true,
+        "virtual_analog": false,
+        "physical_digital": false,
+        "physical_analog_routing": false,
+        "physical_execution_slots": 0,
+        "topology_scan_supported": false,
+        "safety_gate_supported": false,
+        "guarded_run_supported": false,
+        "component_resolution_modes": [],
+        "hardware_rpc_version": "2.0",
+        "fpga_protocol_version": "UNAVAILABLE",
+        "firmware_version": "virtual-events-1.0",
+        "hardware_profile_version": "virtual-1.0",
+        "instrument_capabilities": {
+          "logic_analyzer": {
+            "channels": 4,
+            "runtime_reconfiguration_supported": false
+          },
+          "oscilloscope": {
+            "channels": 0,
+            "runtime_reconfiguration_supported": false
+          },
+          "generator": {
+            "channels": 0,
+            "runtime_reconfiguration_supported": false
+          }
+        }
+      }
+    },
+    {
+      "id": "public-station-invalid-generator-limits",
+      "contract": "PublicStationCapabilities",
+      "visibility": "public",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "schema_version": "1.0",
+        "station_id": "v1",
+        "mode": "simulation",
+        "available": true,
+        "virtual_digital": true,
+        "virtual_analog": false,
+        "physical_digital": false,
+        "physical_analog_routing": false,
+        "physical_execution_slots": 0,
+        "topology_scan_supported": false,
+        "safety_gate_supported": false,
+        "guarded_run_supported": false,
+        "component_resolution_modes": [],
+        "hardware_rpc_version": "2.0",
+        "fpga_protocol_version": "UNAVAILABLE",
+        "firmware_version": "virtual-events-1.0",
+        "hardware_profile_version": "virtual-1.0",
+        "instrument_capabilities": {
+          "logic_analyzer": {
+            "channels": 4,
+            "runtime_reconfiguration_supported": false
+          },
+          "oscilloscope": {
+            "channels": 0,
+            "runtime_reconfiguration_supported": false
+          },
+          "generator": {
+            "channels": 0,
+            "runtime_reconfiguration_supported": false,
+            "frequency_min_hz": 2000,
+            "frequency_max_hz": 1000
+          }
+        }
+      },
+      "issue": {
+        "code": "PROFILE_LIMIT_ORDER",
+        "path": "/instrument_capabilities/generator/frequency_min_hz"
+      }
+    },
+    {
+      "id": "public-station-routing-resources-rejected",
+      "contract": "PublicStationCapabilities",
+      "visibility": "public",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "schema_version": "1.0",
+        "station_id": "v1",
+        "mode": "simulation",
+        "available": true,
+        "virtual_digital": true,
+        "virtual_analog": false,
+        "physical_digital": false,
+        "physical_analog_routing": false,
+        "physical_execution_slots": 0,
+        "topology_scan_supported": false,
+        "safety_gate_supported": false,
+        "guarded_run_supported": false,
+        "component_resolution_modes": [],
+        "hardware_rpc_version": "2.0",
+        "fpga_protocol_version": "UNAVAILABLE",
+        "firmware_version": "virtual-events-1.0",
+        "hardware_profile_version": "virtual-1.0",
+        "instrument_capabilities": {
+          "logic_analyzer": {
+            "channels": 4,
+            "runtime_reconfiguration_supported": false
+          },
+          "oscilloscope": {
+            "channels": 0,
+            "runtime_reconfiguration_supported": false
+          },
+          "generator": {
+            "channels": 0,
+            "runtime_reconfiguration_supported": false
+          }
+        },
+        "routing_resources": [
+          {
+            "resource_id": "internal_route",
+            "roles": [
+              "CLOCK"
+            ],
+            "node_ids": [
+              "internal_node"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "station-descriptor-identity-mismatch",
+      "contract": "StationDescriptor",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "station_id": "other",
+        "mode": "simulation",
+        "state": "ready",
+        "capabilities": {
+          "schema_version": "1.0",
+          "station_id": "v1",
+          "mode": "simulation",
+          "available": true,
+          "virtual_digital": true,
+          "virtual_analog": false,
+          "physical_digital": false,
+          "physical_analog_routing": false,
+          "physical_execution_slots": 0,
+          "topology_scan_supported": false,
+          "safety_gate_supported": false,
+          "guarded_run_supported": false,
+          "component_resolution_modes": [],
+          "hardware_rpc_version": "2.0",
+          "fpga_protocol_version": "UNAVAILABLE",
+          "firmware_version": "virtual-events-1.0",
+          "hardware_profile_version": "virtual-1.0",
+          "instrument_capabilities": {
+            "logic_analyzer": {
+              "channels": 4,
+              "runtime_reconfiguration_supported": false
+            },
+            "oscilloscope": {
+              "channels": 0,
+              "runtime_reconfiguration_supported": false
+            },
+            "generator": {
+              "channels": 0,
+              "runtime_reconfiguration_supported": false
+            }
+          }
+        }
+      },
+      "issue": {
+        "code": "STATION_IDENTITY_MISMATCH",
+        "path": "/capabilities"
+      }
+    },
+    {
+      "id": "operation-nested-experiment-history-mismatch",
+      "contract": "OperationRecord",
+      "profile": "transport",
+      "valid": false,
+      "value": {
+        "schema_version": "1.0",
+        "operation_key": "lost-ack",
+        "kind": "run",
+        "status": "ACCEPTED",
+        "experiment_id": "e",
+        "error_code": null,
+        "revision": 1,
+        "experiment": {
+          "schema_version": "1.0",
+          "experiment_id": "e",
+          "circuit_id": "c",
+          "station_id": "s",
+          "assignment_id": null,
+          "mode": "simulation",
+          "state": "RUNNING",
+          "state_history": [
+            "CREATED"
+          ],
+          "revision": 0,
+          "execution_decision": null,
+          "safety_verification": null,
+          "topology_verification": null,
+          "functional_verification": {
+            "schema_version": "1.0",
+            "status": "NOT_EVALUATED",
+            "issues": []
+          },
+          "capture": null,
+          "error_code": null,
+          "queue_position": null,
+          "lease_expires_at": null
+        }
+      },
+      "issue": {
+        "code": "STATE_HISTORY_MISMATCH",
+        "path": "/experiment/state_history"
+      }
+    }
+  ]
+}

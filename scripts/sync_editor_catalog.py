@@ -5,6 +5,9 @@ import math
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+SIGNAL_DOMAINS={'DIGITAL','ANALOG','POWER','GROUND','CLOCK','MIXED'}
+DIGITAL_TYPES={'DIGITAL_SWITCH','DIGITAL_INPUT','INPUT','CLOCK','LED','PROBE','OUTPUT','74HC08','AND','OR','XOR','NOT'}
+DC_MODELS={'dc-source','hc08-powered','resistor-dc','led-dc','contact-switch'}
 
 
 def validate_parts(registry):
@@ -32,6 +35,10 @@ def validate_parts(registry):
         positions = set()
         for pin in pins:
             position = pin['positionMm']
+            if pin.get('domain') not in SIGNAL_DOMAINS:
+                raise ValueError('Physical pin requires an explicit signal domain')
+            if pin['role'] in {'power','ground'} and pin['domain'] != {'power':'POWER','ground':'GROUND'}[pin['role']]:
+                raise ValueError('Supply pin signal domain must match its declared role')
             if pin['role'] not in {'input', 'output', 'power', 'ground', 'passive', 'nc'} or not all(type(position.get(axis)) in (int, float) and math.isfinite(position[axis]) for axis in ('x', 'y', 'z')):
                 raise ValueError('Invalid physical pin descriptor')
             if footprint['mountable'] and position['y'] != 0:
@@ -101,13 +108,30 @@ def generate_catalog(catalog, registry):
             'size': [package['bodyMm'][axis] * scale for axis in ('x', 'y', 'z')],
             'color': editor['color'],
             'partDefinitionId': part['id'], 'partRevision': part['revision'],
-            'ports': [{'id': pin['id'], 'direction': pin['role'] if pin['role'] in ('input', 'output') else 'inout'} for pin in package['pins']],
+            'ports': [{'id': pin['id'], 'direction': pin['role'] if pin['role'] in ('input', 'output') else 'inout', 'domain':pin['domain']} for pin in package['pins']],
             'defaults': editor['defaults'], 'parameters': editor['parameters'],
         })
     types = [component['type'] for component in result['components']]
     if len(types) != len(set(types)):
         raise ValueError('Duplicate editor type')
     return result
+
+
+def generate_domain_catalog(catalog,registry):
+    """Shared authoring domains and existing local model selection, never hardware capability."""
+    generated=generate_catalog(catalog,registry)
+    parts={part['editorType']:part for part in registry['parts']}
+    result=[]
+    definitions=[*generated['components'],*({'type':kind,'ports':ports} for kind,ports in catalog.get('legacyPorts',{}).items())]
+    for component in definitions:
+        ports=component['ports']
+        if any(port.get('domain') not in SIGNAL_DOMAINS for port in ports):
+            raise ValueError('Editor port requires an explicit signal domain')
+        part=parts.get(component['type']); model=part.get('simulation',{}) if part else {}
+        execution='DC_DIGITAL' if model.get('status')=='supported' and model.get('model') in DC_MODELS else 'DIGITAL' if component['type'] in DIGITAL_TYPES else 'VISUAL' if component.get('visualOnly') else 'UNAVAILABLE'
+        result.append({'type':component['type'],'ports':ports,'execution':execution})
+    if len({item['type'] for item in result})!=len(result):raise ValueError('Duplicate signal-domain catalog type')
+    return {'version':'1.0','components':result}
 
 
 def main():
@@ -118,10 +142,13 @@ def main():
     catalog = json.loads(source.read_text(encoding='utf-8'))
     registry = json.loads((ROOT / 'device-library/parts/physical-parts.json').read_text(encoding='utf-8'))
     generated = generate_catalog(catalog, registry)
+    domains=generate_domain_catalog(catalog,registry)
     outputs = [(ROOT / 'apps/web/src/data/editorCatalog.json', generated),
                (ROOT / 'apps/web/src/data/editorParts.json', generate_editor_parts(registry)),
                (ROOT / 'apps/web/src/data/physicalParts.json', registry),
-               (ROOT / 'contracts/design-models/physical-parts.v1.json', registry)]
+               (ROOT / 'contracts/design-models/physical-parts.v1.json', registry),
+               (ROOT / 'contracts/design-models/signal-port-catalog.json', domains),
+               (ROOT / 'apps/web/src/data/signalPortCatalog.json', domains)]
     for target, data in outputs:
         if args.check:
             if not target.exists() or json.loads(target.read_text(encoding='utf-8')) != data:

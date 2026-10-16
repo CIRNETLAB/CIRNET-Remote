@@ -1,0 +1,139 @@
+{
+  "version": "1.0",
+  "cases": [
+    {
+      "id": "valid-owned-page",
+      "valid": true,
+      "value": {
+        "schema_version": "1.0",
+        "items": [
+          {
+            "schema_version": "1.0",
+            "experiment_id": "e",
+            "circuit_id": "c",
+            "station_id": "s",
+            "assignment_id": null,
+            "mode": "simulation",
+            "state": "CREATED",
+            "state_history": [
+              "CREATED"
+            ],
+            "revision": 0,
+            "execution_decision": null,
+            "safety_verification": null,
+            "topology_verification": null,
+            "functional_verification": {
+              "schema_version": "1.0",
+              "status": "NOT_EVALUATED",
+              "issues": []
+            },
+            "capture": null,
+            "error_code": null,
+            "queue_position": null,
+            "lease_expires_at": null
+          }
+        ],
+        "next_cursor": null
+      }
+    },
+    {
+      "id": "nested-state-mismatch",
+      "valid": false,
+      "code": "STATE_HISTORY_MISMATCH",
+      "path": "/items/0/state_history",
+      "value": {
+        "schema_version": "1.0",
+        "items": [
+          {
+            "schema_version": "1.0",
+            "experiment_id": "e",
+            "circuit_id": "c",
+            "station_id": "s",
+            "assignment_id": null,
+            "mode": "simulation",
+            "state": "CREATED",
+            "state_history": [
+              "FAULT"
+            ],
+            "revision": 0,
+            "execution_decision": null,
+            "safety_verification": null,
+            "topology_verification": null,
+            "functional_verification": {
+              "schema_version": "1.0",
+              "status": "NOT_EVALUATED",
+              "issues": []
+            },
+            "capture": null,
+            "error_code": null,
+            "queue_position": null,
+            "lease_expires_at": null
+          }
+        ],
+        "next_cursor": null
+      }
+    },
+    {
+      "id": "duplicate-experiment",
+      "valid": false,
+      "code": "DUPLICATE_ID",
+      "path": "/items/1/experiment_id",
+      "value": {
+        "schema_version": "1.0",
+        "items": [
+          {
+            "schema_version": "1.0",
+            "experiment_id": "e",
+            "circuit_id": "c",
+            "station_id": "s",
+            "assignment_id": null,
+            "mode": "simulation",
+            "state": "CREATED",
+            "state_history": [
+              "CREATED"
+            ],
+            "revision": 0,
+            "execution_decision": null,
+            "safety_verification": null,
+            "topology_verification": null,
+            "functional_verification": {
+              "schema_version": "1.0",
+              "status": "NOT_EVALUATED",
+              "issues": []
+            },
+            "capture": null,
+            "error_code": null,
+            "queue_position": null,
+            "lease_expires_at": null
+          },
+          {
+            "schema_version": "1.0",
+            "experiment_id": "e",
+            "circuit_id": "c",
+            "station_id": "s",
+            "assignment_id": null,
+            "mode": "simulation",
+            "state": "CREATED",
+            "state_history": [
+              "CREATED"
+            ],
+            "revision": 0,
+            "execution_decision": null,
+            "safety_verification": null,
+            "topology_verification": null,
+            "functional_verification": {
+              "schema_version": "1.0",
+              "status": "NOT_EVALUATED",
+              "issues": []
+            },
+            "capture": null,
+            "error_code": null,
+            "queue_position": null,
+            "lease_expires_at": null
+          }
+        ],
+        "next_cursor": null
+      }
+    }
+  ]
+}

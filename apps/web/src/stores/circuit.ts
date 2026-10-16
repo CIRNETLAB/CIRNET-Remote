@@ -1,262 +1,125 @@
 import { defineStore } from 'pinia'
-import type { CircuitGraph, CircuitModule, WireIdentity, WireVisual } from '../types/circuit'
+import { effectScope,toRaw,watch,type WatchStopHandle } from 'vue'
+import { StoreScopeMap } from '../services/session/storeScope'
+import type { CircuitGraph,CircuitModule,WireIdentity,WireVisual } from '../types/circuit'
 import type { MemoryImage } from '../types/memory'
-import { getDefinition, validateProperties } from '../data/editorCatalog'
-import { assertConnectionAllowed } from '../electrical/nets'
-import { copyWireVisual, readWireVisual, validateWireVisual } from '../wires/wireVisual'
-import { moduleWorldPose } from '../electrical/modulePose'
-import { solveMounting, validateMountBindings } from '../electrical/mounting'
-import { getPartForType } from '../data/partCatalog'
-import { createMemoryImage, parseMemoryImage } from '../services/files/memoryImage'
 import type { CircuitValidation } from '../types/api'
-import { circuitsApi, type PhysicalPreview } from '../services/api/circuits'
+import { circuitsApi,type PhysicalPreview } from '../services/api/circuits'
 import { errorMessage } from '../services/api/client'
-import { MAX_CIRCUIT_FILE_BYTES, parseCircuitFile } from '../services/files/circuitFile'
-import { normalizeComponentProperties } from '../data/componentProperties'
-import { isLeadEditableType } from '../data/leadProperties'
-import type { ExecutionPresentationAdapter } from '../services/execution/presentation'
-import { buildDeleteCandidate, buildPasteCandidate, type PasteOptions } from '../editor/batchCommands'
-import { captureSelectionClipboard, type SelectionClipboard } from '../editor/selectionClipboard'
-import { emptyEditorSelection, type EditorSelection } from '../editor/selection'
-
-export interface CircuitDraft { id: string; name: string; graph: CircuitGraph }
-// Conservative UTF-16 string storage budget, shared by both history directions.
-export const MAX_HISTORY_STORAGE_BYTES = 20_000_000
-const validationControllers = new WeakMap<object, AbortController>()
-let presentationAdapter: ExecutionPresentationAdapter = (graph, signal) => circuitsApi.physicalPreview(graph, signal)
-export function configureExecutionPresentationAdapter(adapter?: ExecutionPresentationAdapter) { presentationAdapter = adapter ?? ((graph, signal) => circuitsApi.physicalPreview(graph, signal)) }
-export const useCircuitStore = defineStore('circuit', {
-  state: () => ({
-    drafts: [] as CircuitDraft[], activeId: null as string | null,
-    validationResult: null as CircuitValidation | null, validatedSnapshot: '',
-    validating: false, validationError: null as string | null, validationVersion: 0,
-    past: [] as string[], future: [] as string[], saved: {} as Record<string, string>,
-    physicalPreview: null as PhysicalPreview | null, physicalSnapshot: '', physicalPreviewBusy: false,
-  }),
-  getters: {
-    current: (state): CircuitDraft | null => state.drafts.find((draft) => draft.id === state.activeId) ?? null,
-    graph(): CircuitGraph | null { return this.current?.graph ?? null },
-    validation(): CircuitValidation | null { return JSON.stringify(this.graph) === this.validatedSnapshot ? this.validationResult : null },
-    canUndo: (state) => state.past.length > 0,
-    canRedo: (state) => state.future.length > 0,
-    dirty(): boolean { return !!this.current && this.saved[this.current.id] !== JSON.stringify(this.current) },
-    physicalStates(): PhysicalPreview['device_states'] | null { return this.physicalSnapshot === JSON.stringify(this.graph) ? this.physicalPreview?.device_states ?? null : null },
+import type { ExecutionPresentationAdapter } from '../application/ports/execution'
+import type { PasteOptions } from '../editor/batchCommands'
+import type { SelectionClipboard } from '../editor/selectionClipboard'
+import type { EditorSelection } from '../editor/selection'
+import * as document from '../domain/document/editorDocument'
+import * as commands from '../domain/document/graphCommands'
+export type { CircuitDraft } from '../domain/document/editorDocument'
+export { MAX_HISTORY_STORAGE_BYTES } from '../domain/document/editorDocument'
+const validationControllers=new StoreScopeMap<AbortController>(),physicalControllers=new StoreScopeMap<AbortController>()
+const presentationAdapters=new StoreScopeMap<ExecutionPresentationAdapter>()
+interface MutationPort extends document.EditorDocumentState {clearValidation():void;physicalVersion:number;physicalPreviewBusy:boolean}
+interface Tracking {batch:number;stop:()=>void}
+// HMR and independently compiled consumers can load this adapter more than once.
+// The observer belongs to the store; this non-state anchor never owns a graph copy.
+const trackingKey=Symbol.for('netcircuit.editorDocument.observer')
+const observerFor=(store:object)=>Reflect.get(toRaw(store),trackingKey) as Tracking|undefined
+function invalidate(store:MutationPort){store.clearValidation();physicalControllers.get(store)?.abort();physicalControllers.delete(store);store.physicalVersion++;store.physicalPreviewBusy=false}
+function mutateDocument<T>(store:MutationPort,call:()=>T):T {
+  const tracker=observerFor(store),id=store.activeId,revision=id?store.draftGraphRevisions[id]:undefined
+  if(tracker)tracker.batch++
+  try{return call()}finally{if(tracker)tracker.batch--;if(!tracker?.batch&&(id!==store.activeId||revision!==(store.activeId?store.draftGraphRevisions[store.activeId]:undefined)))invalidate(store)}
+}
+const useBaseCircuitStore=defineStore('circuit',{
+  state:()=>({...document.createEditorDocumentState(),validationResult:null as CircuitValidation|null,validatedSnapshot:'',validatedDraftId:null as string|null,validatedRevision:-1,
+    validating:false,validationError:null as string|null,validationVersion:0,physicalPreview:null as PhysicalPreview|null,physicalSnapshot:'',physicalDraftId:null as string|null,physicalRevision:-1,physicalPreviewBusy:false,physicalVersion:0}),
+  getters:{
+    current:state=>document.currentDocument(state),
+    graph():CircuitGraph|null{return this.current?.graph??null},
+    graphRevision:state=>state.activeId?(state.draftGraphRevisions[state.activeId]??-1):-1,
+    validation():CircuitValidation|null{return this.activeId===this.validatedDraftId&&this.graphRevision===this.validatedRevision?this.validationResult:null},
+    canUndo:state=>state.past.length>0,canRedo:state=>state.future.length>0,
+    dirty:state=>document.isDocumentDirty(state),
+    physicalStates():PhysicalPreview['device_states']|null{return this.activeId===this.physicalDraftId&&this.graphRevision===this.physicalRevision?this.physicalPreview?.device_states??null:null},
   },
-  actions: {
-    async evaluatePhysical() {
-      if (!this.graph || this.physicalPreviewBusy) return
-      const snapshot = JSON.stringify(this.graph)
-      this.physicalPreviewBusy = true
-      try {
-        const preview = await presentationAdapter(JSON.parse(snapshot) as CircuitGraph)
-        if (snapshot === JSON.stringify(this.graph)) { this.physicalPreview = preview; this.physicalSnapshot = snapshot }
-      } finally { this.physicalPreviewBusy = false }
+  actions:{
+    attachExecutionPresentation(adapter:ExecutionPresentationAdapter){physicalControllers.get(this)?.abort();physicalControllers.delete(this);this.physicalVersion++;this.physicalPreviewBusy=false;this.physicalPreview=null;this.physicalSnapshot='';this.physicalDraftId=null;this.physicalRevision=-1;presentationAdapters.set(this,adapter)},
+    async evaluatePhysical(){
+      if(!this.graph||this.physicalPreviewBusy)return
+      const adapter=presentationAdapters.get(this);if(!adapter)throw new Error('Execution presentation is not connected.')
+      const snapshot=JSON.stringify(this.graph),id=this.activeId,revision=this.graphRevision,version=this.physicalVersion,controller=new AbortController()
+      physicalControllers.set(this,controller);this.physicalPreviewBusy=true
+      try{const preview=await adapter(JSON.parse(snapshot) as CircuitGraph,controller.signal)
+        if(!controller.signal.aborted&&version===this.physicalVersion&&id===this.activeId&&revision===this.graphRevision){this.physicalPreview=preview;this.physicalSnapshot=snapshot;this.physicalDraftId=id;this.physicalRevision=revision}
+      }finally{if(physicalControllers.get(this)===controller)physicalControllers.delete(this);if(version===this.physicalVersion)this.physicalPreviewBusy=false}
     },
-    commitGraph(graph: CircuitGraph) {
-      if (!this.current || JSON.stringify(graph) === JSON.stringify(this.graph)) return
-      validateMountBindings(graph)
-      this.recordChange(); this.current.graph = graph; this.clearValidation()
+    commitGraph(graph:CircuitGraph){return mutateDocument(this,()=>document.commitGraph(this,graph))},
+    captureSelection(selection:EditorSelection):SelectionClipboard|null{return commands.captureSelection(this,selection)},
+    deleteSelection(selection:EditorSelection){return mutateDocument(this,()=>commands.deleteSelection(this,selection))},
+    pasteSelection(snapshot:SelectionClipboard,options?:PasteOptions){return mutateDocument(this,()=>commands.pasteSelection(this,snapshot,options))},
+    placeModule(type:string,position:Required<NonNullable<CircuitModule['position']>>,rotation=0,initialProperties?:Record<string,unknown>):string{return mutateDocument(this,()=>commands.placeModule(this,type,position,rotation,initialProperties))},
+    moveModule(id:string,position:Required<NonNullable<CircuitModule['position']>>){return mutateDocument(this,()=>commands.moveModule(this,id,position))},
+    rotateModule(id:string,degrees=90){return mutateDocument(this,()=>commands.rotateModule(this,id,degrees))},
+    detachModule(id:string){return mutateDocument(this,()=>commands.detachModule(this,id))},
+    removeModule(id:string){return mutateDocument(this,()=>commands.removeModule(this,id))},
+    connectPorts(first:string,second:string){return mutateDocument(this,()=>commands.connectPorts(this,first,second))},
+    connectEndpoints(first:string,second:string,visual?:WireVisual){return mutateDocument(this,()=>commands.connectEndpoints(this,first,second,visual))},
+    updateWireVisual(wire:WireIdentity,visual:WireVisual){return mutateDocument(this,()=>commands.updateWireVisual(this,wire,visual))},
+    disconnectPorts(source:string,destination:string){return mutateDocument(this,()=>commands.disconnectPorts(this,source,destination))},
+    updateModuleProperties(id:string,patch:Record<string,unknown>){return mutateDocument(this,()=>commands.updateModuleProperties(this,id,patch))},
+    setMemoryImage(id:string,image:MemoryImage){return mutateDocument(this,()=>commands.setMemoryImage(this,id,image))},
+    snapshot(){return document.snapshotDocument(this)},recordChange(){document.recordChange(this)},trimHistory(){document.trimHistory(this)},pruneSaved(){document.pruneSaved(this)},
+    restore(snapshot:string){return mutateDocument(this,()=>document.restoreDocument(this,snapshot))},
+    undo(){return mutateDocument(this,()=>document.undoDocument(this))},redo(){return mutateDocument(this,()=>document.redoDocument(this))},markSaved(){document.markSaved(this)},
+    importGraph(graph:CircuitGraph){return mutateDocument(this,()=>document.importGraph(this,crypto.randomUUID(),graph))},
+    replaceDocument(value:{name:string;graph:CircuitGraph}){return mutateDocument(this,()=>document.replaceDocument(this,crypto.randomUUID(),value))},
+    touchDocument(){mutateDocument(this,()=>document.touchDocument(this))},exportGraph(){return document.exportGraph(this)},
+    createDraft(name?:string):string{return mutateDocument(this,()=>document.createDraft(this,crypto.randomUUID(),name))},
+    openDraft(id:string){return mutateDocument(this,()=>document.openDraft(this,id))},renameCurrent(name:string){return mutateDocument(this,()=>document.renameCurrent(this,name))},
+    resetForPrincipal(){
+      validationControllers.get(this)?.abort();validationControllers.delete(this);physicalControllers.get(this)?.abort();physicalControllers.delete(this)
+      const revision=this.documentRevision+1,validation=this.validationVersion+1,physical=this.physicalVersion+1,tracker=observerFor(this)
+      if(tracker)tracker.batch++
+      try{this.$reset();this.documentRevision=revision;this.validationVersion=validation;this.physicalVersion=physical}finally{if(tracker)tracker.batch--}
     },
-    captureSelection(selection: EditorSelection): SelectionClipboard | null {
-      return this.graph ? captureSelectionClipboard(this.graph, selection) : null
-    },
-    deleteSelection(selection: EditorSelection): EditorSelection {
-      if (this.graph) this.commitGraph(buildDeleteCandidate(this.graph, selection))
-      return emptyEditorSelection()
-    },
-    pasteSelection(snapshot: SelectionClipboard, options?: PasteOptions) {
-      if (!this.graph) throw new Error('Create a circuit first.')
-      const candidate = buildPasteCandidate(this.graph, snapshot, options)
-      this.commitGraph(candidate.graph)
-      return candidate
-    },
-    placeModule(type: string, position: Required<NonNullable<CircuitModule['position']>>, rotation = 0, initialProperties?: Record<string, unknown>): string {
-      if (!this.graph) throw new Error('Create a circuit first.')
-      const definition = getDefinition(type)
-      if (!definition) throw new Error('Placement metadata is unavailable for this type.')
-      if (!Object.values(position).every(Number.isFinite)) throw new Error('Position must be finite.')
-      if (!Number.isFinite(rotation)) throw new Error('Rotation must be finite.')
-      const ids = new Set(this.graph.modules.map((module) => module.id))
-      let serial = 1
-      while (ids.has(`${type}_${serial}`)) serial++
-      const id = `${type}_${serial}`
-      const properties = { ...structuredClone(definition.defaults), ...normalizeComponentProperties(type, initialProperties) }
-      validateProperties(type, properties)
-      if (definition.memoryContract) properties.memory = createMemoryImage()
-      const physical = getPartForType(type), candidate = physical ? solveMounting(type, position, rotation, this.graph.modules, id) : null
-      if (candidate && !candidate.valid) throw new Error(candidate.reason)
-      const module: CircuitModule = { id, type, ...(candidate ? { mount: candidate.mount } : { position: { ...position }, rotation: ((rotation % 360) + 360) % 360 }), properties }
-      this.commitGraph({ ...this.graph, schema_version: physical ? '1.1' : this.graph.schema_version, modules: [...this.graph.modules, module] })
-      return id
-    },
-    moveModule(id: string, position: Required<NonNullable<CircuitModule['position']>>) {
-      if (!Object.values(position).every(Number.isFinite)) throw new Error('Position must be finite.')
-      if (!this.graph?.modules.some((module) => module.id === id)) return
-      const module = this.graph.modules.find(m => m.id === id)!, world = moduleWorldPose(module, this.graph.modules)
-      const candidate = getPartForType(module.type) ? solveMounting(module.type, position, world.rotation ?? 0, this.graph.modules, id) : null
-      if (candidate && !candidate.valid) throw new Error(candidate.reason)
-      const { mount: _mount, ...free } = module
-      const next = candidate ? { ...free, position: undefined, rotation: undefined, mount: candidate.mount } : { ...free, position: { ...position }, rotation: world.rotation }
-      this.commitGraph({ ...this.graph, modules: this.graph.modules.map(item => item.id === id ? next : item) })
-    },
-    rotateModule(id: string, degrees = 90) {
-      if (!Number.isFinite(degrees)) throw new Error('Rotation must be finite.')
-      if (!this.graph?.modules.some((module) => module.id === id)) return
-      const module = this.graph.modules.find(m => m.id === id)!, world = moduleWorldPose(module, this.graph.modules)
-      const rotation = (((world.rotation ?? 0) % 360 + degrees % 360) % 360 + 360) % 360
-      if (module.mount) {
-        const candidate = solveMounting(module.type, world.position as Required<NonNullable<CircuitModule['position']>>, rotation, this.graph.modules, id)
-        if (!candidate?.valid) throw new Error(candidate?.reason ?? 'This rotation does not fit the footprint.')
-        this.commitGraph({ ...this.graph, modules: this.graph.modules.map(item => item.id === id ? { ...module, mount: candidate.mount } : item) })
-      } else this.commitGraph({ ...this.graph, modules: this.graph.modules.map(item => item.id === id ? { ...item, rotation } : item) })
-    },
-    detachModule(id: string) {
-      const module = this.graph?.modules.find(m => m.id === id)
-      if (!this.graph || !module?.mount) return
-      const { mount: _mount, ...free } = moduleWorldPose(module, this.graph.modules)
-      this.commitGraph({ ...this.graph, modules: this.graph.modules.map(item => item.id === id ? free : item) })
-    },
-    removeModule(id: string) {
-      if (!this.graph?.modules.some((module) => module.id === id)) return
-      this.deleteSelection({ moduleIds: [id], wires: [] })
-    },
-    connectPorts(first: string, second: string) {
-      this.connectEndpoints(first, second)
-    },
-    connectEndpoints(first: string, second: string, visual?: WireVisual) {
-      if (!this.graph) throw new Error('Create a circuit first.')
-      const { source, destination, reversed } = assertConnectionAllowed(this.graph, first, second)
-      if (visual) validateWireVisual(visual, this.graph.modules)
-      const copy = visual ? copyWireVisual(visual) : undefined
-      if (copy && reversed) copy.controlPoints.reverse()
-      this.commitGraph({ ...this.graph, connections: [...this.graph.connections, { source, destination, ...(copy ? { metadata: { wireVisual: copy } } : {}) }] })
-    },
-    updateWireVisual(wire: WireIdentity, visual: WireVisual) {
-      if (!this.graph) return
-      if (!this.graph.connections.some(c => c.source === wire.source && c.destination === wire.destination)) return
-      validateWireVisual(visual, this.graph.modules)
-      const copy = copyWireVisual(visual)
-      this.commitGraph({ ...this.graph, connections: this.graph.connections.map(c => c.source === wire.source && c.destination === wire.destination ? { ...c, metadata: { ...c.metadata, wireVisual: copy } } : c) })
-    },
-    disconnectPorts(source: string, destination: string) {
-      if (!this.graph?.connections.some(wire => wire.source === source && wire.destination === destination)) return
-      this.deleteSelection({ moduleIds: [], wires: [{ source, destination }] })
-    },
-    updateModuleProperties(id: string, patch: Record<string, unknown>) {
-      const module = this.graph?.modules.find((module) => module.id === id)
-      if (!module || !this.graph) return
-      const definition = getDefinition(module.type)
-      const normalizedPatch = normalizeComponentProperties(module.type, patch)
-      if (Object.keys(normalizedPatch).some((key) => !definition?.parameters.some((parameter) => parameter.key === key) && !(isLeadEditableType(module.type) && ['leadForm', 'leadLengthMm', 'bodyLiftMm'].includes(key)))) throw new Error('Unsupported component parameter.')
-      const properties = normalizeComponentProperties(module.type, { ...definition?.defaults, ...normalizeComponentProperties(module.type, module.properties), ...normalizedPatch })
-      validateProperties(module.type, properties)
-      this.commitGraph({ ...this.graph, modules: this.graph.modules.map((item) => item.id === id ? { ...item, properties } : item) })
-    },
-    setMemoryImage(id: string, image: MemoryImage) {
-      const module = this.graph?.modules.find((module) => module.id === id)
-      if (!this.graph || !module || !getDefinition(module.type)?.memoryContract) throw new Error('Select a supported memory component.')
-      const copy = parseMemoryImage(JSON.stringify(image))
-      this.commitGraph({ ...this.graph, modules: this.graph.modules.map((item) => item.id === id ? { ...item, properties: { ...item.properties, memory: copy } } : item) })
-    },
-    snapshot(): string { return JSON.stringify({ drafts: this.drafts, activeId: this.activeId }) },
-    recordChange() {
-      this.past.push(this.snapshot())
-      this.future = []
-      this.trimHistory()
-    },
-    trimHistory() {
-      let bytes = [...this.past, ...this.future].reduce((total, snapshot) => total + snapshot.length * 2, 0)
-      // Keep one immediate Undo/Redo even when a multi-draft snapshot exceeds the budget.
-      while (this.past.length + this.future.length > 1 && (this.past.length + this.future.length > 50 || bytes > MAX_HISTORY_STORAGE_BYTES)) {
-        const removed = this.past.length ? this.past.shift()! : this.future.shift()!
-        bytes -= removed.length * 2
-      }
-      this.pruneSaved()
-    },
-    pruneSaved() {
-      const reachable = new Set(this.drafts.map((draft) => draft.id))
-      const candidates = Object.keys(this.saved).filter((id) => !reachable.has(id))
-      if (!candidates.length) return
-      for (const snapshot of [...this.past, ...this.future]) {
-        const state = JSON.parse(snapshot) as { drafts: CircuitDraft[] }
-        for (const draft of state.drafts) reachable.add(draft.id)
-      }
-      for (const id of candidates) if (!reachable.has(id)) delete this.saved[id]
-    },
-    restore(snapshot: string) {
-      const state = JSON.parse(snapshot) as { drafts: CircuitDraft[]; activeId: string | null }
-      this.drafts = state.drafts; this.activeId = state.activeId
+    clearValidation(){validationControllers.get(this)?.abort();validationControllers.delete(this);this.validationVersion++;this.validationResult=null;this.validationError=null;this.validatedSnapshot='';this.validatedDraftId=null;this.validatedRevision=-1;this.validating=false},
+    async validateCurrent(){
+      if(!this.graph||this.validating)return
       this.clearValidation()
-    },
-    undo() { const previous = this.past.pop(); if (previous) { this.future.push(this.snapshot()); this.restore(previous); this.trimHistory() } },
-    redo() { const next = this.future.pop(); if (next) { this.past.push(this.snapshot()); this.restore(next); this.trimHistory() } },
-    markSaved() { if (this.current) this.saved[this.current.id] = JSON.stringify(this.current) },
-    importGraph(graph: CircuitGraph) {
-      const copy = parseCircuitFile(JSON.stringify(graph))
-      this.recordChange()
-      const id = crypto.randomUUID()
-      const name = typeof copy.metadata?.name === 'string' && copy.metadata.name.trim() ? copy.metadata.name.trim() : 'Imported circuit'
-      this.drafts.push({ id, name, graph: copy })
-      this.activeId = id
-      this.clearValidation()
-      this.markSaved()
-    },
-    exportGraph(): string {
-      if (!this.current) throw new Error('Create or open a circuit first.')
-      const graph = { ...this.current.graph, metadata: { ...this.current.graph.metadata, name: this.current.name } }
-      const compact = JSON.stringify(graph)
-      parseCircuitFile(compact)
-      const pretty = JSON.stringify(graph, null, 2)
-      return new TextEncoder().encode(pretty).length <= MAX_CIRCUIT_FILE_BYTES ? pretty : compact
-    },
-    clearValidation() {
-      validationControllers.get(this)?.abort()
-      validationControllers.delete(this)
-      this.validationVersion++
-      this.validationResult = null
-      this.validationError = null
-      this.validatedSnapshot = ''
-      this.validating = false
-    },
-    createDraft(name?: string): string {
-      this.recordChange()
-      const id = crypto.randomUUID()
-      const title = name ?? `Untitled circuit ${this.drafts.length + 1}`
-      this.drafts.push({ id, name: title.trim() || 'Untitled circuit', graph: { schema_version: '1.0', circuit_id: id, modules: [], connections: [] } })
-      this.activeId = id
-      this.clearValidation()
-      return id
-    },
-    openDraft(id: string) {
-      if (!this.drafts.some((draft) => draft.id === id)) return
-      if (this.activeId === id) return
-      this.recordChange()
-      this.activeId = id
-      this.clearValidation()
-    },
-    renameCurrent(name: string) {
-      if (this.current && name.trim() && this.current.name !== name.trim()) { this.recordChange(); this.current.name = name.trim() }
-    },
-    async validateCurrent() {
-      if (!this.graph || this.validating) return
-      this.clearValidation()
-      const version = this.validationVersion
-      const snapshot = JSON.stringify(this.graph)
-      const controller = new AbortController()
-      validationControllers.set(this, controller)
-      this.validating = true
-      try {
-        const result = await circuitsApi.validate(JSON.parse(snapshot) as CircuitGraph, controller.signal)
-        if (version === this.validationVersion && JSON.stringify(this.graph) === snapshot) {
-          this.validationResult = result
-          this.validatedSnapshot = snapshot
-        }
-      } catch (error) {
-        if (version === this.validationVersion && JSON.stringify(this.graph) === snapshot) this.validationError = errorMessage(error)
-      } finally {
-        if (validationControllers.get(this) === controller) validationControllers.delete(this)
-        if (version === this.validationVersion) this.validating = false
-      }
+      const version=this.validationVersion,id=this.activeId,revision=this.graphRevision,snapshot=JSON.stringify(this.graph),controller=new AbortController()
+      validationControllers.set(this,controller);this.validating=true
+      try{const result=await circuitsApi.validate(JSON.parse(snapshot) as CircuitGraph,controller.signal)
+        if(!controller.signal.aborted&&version===this.validationVersion&&id===this.activeId&&revision===this.graphRevision){this.validationResult=result;this.validatedSnapshot=snapshot;this.validatedDraftId=id;this.validatedRevision=revision}
+      }catch(error){if(!controller.signal.aborted&&version===this.validationVersion&&id===this.activeId&&revision===this.graphRevision)this.validationError=errorMessage(error)}
+      finally{if(validationControllers.get(this)===controller)validationControllers.delete(this);if(version===this.validationVersion)this.validating=false}
     },
   },
 })
+type CircuitStore=ReturnType<typeof useBaseCircuitStore>
+function trackDocuments(store:CircuitStore){
+  if(observerFor(store))return
+  const entries=new Map<string,{draft:document.CircuitDraft;stops:WatchStopHandle[]}>(),tracker:Tracking={batch:0,stop:()=>{}}
+  Object.defineProperty(toRaw(store),trackingKey,{value:tracker,configurable:true})
+  const observerScope=effectScope(true)
+  observerScope.run(()=>{
+    const changed=(id:string,graph:boolean)=>{if(!tracker.batch){document.touchDocument(store,id,graph);if(graph&&id===store.activeId)invalidate(store)}}
+    let observing=false
+    const stopDrafts=watch(()=>store.drafts.map(draft=>draft),drafts=>{
+      let removed=false
+      for(const [id,entry]of entries)if(!drafts.some(draft=>draft.id===id&&toRaw(draft)===toRaw(entry.draft))){entry.stops.forEach(stop=>stop());entries.delete(id);removed=true}
+      for(const draft of drafts)if(!entries.has(draft.id)){
+        const stops=observerScope.run(()=>[watch(()=>draft.name,()=>changed(draft.id,false),{flush:'sync'}),watch(()=>draft.graph,()=>changed(draft.id,true),{deep:true,flush:'sync'})])!
+        entries.set(draft.id,{draft,stops});if(observing)changed(draft.id,true)
+      }
+      if(removed&&!tracker.batch){store.documentRevision++;if(!store.current)invalidate(store)}
+    },{immediate:true,flush:'sync'})
+    observing=true
+    const stopActive=watch(()=>store.activeId,()=>{if(!tracker.batch){store.documentRevision++;invalidate(store)}},{flush:'sync'})
+    // Preserve the existing explicit snapshot fixture/adapter surface; serialization occurs on assignment, never a getter.
+    const stopValidation=watch(()=>store.validatedSnapshot,value=>{store.validatedDraftId=value&&value===JSON.stringify(store.graph)?store.activeId:null;store.validatedRevision=store.validatedDraftId?store.graphRevision:-1},{flush:'sync'})
+    tracker.stop=()=>{stopDrafts();stopActive();stopValidation();entries.forEach(entry=>entry.stops.forEach(stop=>stop()));entries.clear();observerScope.stop()}
+  })
+  const dispose=store.$dispose
+  store.$dispose=()=>{tracker.stop();if(observerFor(store)===tracker)Reflect.deleteProperty(toRaw(store),trackingKey);presentationAdapters.delete(store);validationControllers.get(store)?.abort();physicalControllers.get(store)?.abort();dispose()}
+}
+export const useCircuitStore=Object.assign((...args:Parameters<typeof useBaseCircuitStore>)=>{const store=useBaseCircuitStore(...args);trackDocuments(store);return store},{$id:useBaseCircuitStore.$id})
+/** Compatibility helper now targets the current store instance, never a global adapter. */
+export function configureExecutionPresentationAdapter(adapter?:ExecutionPresentationAdapter){useCircuitStore().attachExecutionPresentation(adapter??circuitsApi.physicalPreview)}

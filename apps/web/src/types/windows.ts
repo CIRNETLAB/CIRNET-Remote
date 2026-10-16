@@ -1,4 +1,7 @@
 export const windowDefinitions = {
+  projects: { title:'Project Manager',width:800,height:610 },
+  assignments:{title:'Assignments',width:780,height:650},
+  history:{title:'History & Queue',width:780,height:640},
   oscilloscope: { title: 'Oscilloscope', width: 760, height: 530 },
   generator: { title: 'Function Generator', width: 760, height: 530 },
   'power-supply': { title: 'Power Supply', width: 600, height: 510 },

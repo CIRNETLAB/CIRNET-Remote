@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://netcircuit.local/contracts/public/instrument-control/1.0/schema.json",
+  "title": "Owned instrument command acknowledgement 1.0",
+  "$defs": {
+    "InstrumentControlAccess": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "schema_version": { "const": "1.0" },
+        "experiment_id": { "type": "string", "minLength": 1 },
+        "revision": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "can_configure_generator": { "type": "boolean" },
+        "generator_channels": { "type": "array", "maxItems": 2, "uniqueItems": true, "items": { "enum": [1, 2] } },
+        "reason": { "enum": ["READY", "NOT_RUNNING", "CONTROL_CONTEXT_REQUIRED", "LEASE_UNAVAILABLE", "GENERATOR_UNAVAILABLE", "RUNTIME_CONFIGURATION_UNSUPPORTED", "NO_ALLOCATED_CHANNEL"] }
+      },
+      "required": ["schema_version", "experiment_id", "revision", "can_configure_generator", "generator_channels", "reason"]
+    },
+    "InstrumentGeneratorCommand": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "configuration": { "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/GeneratorConfiguration" }
+      },
+      "required": ["configuration"]
+    },
+    "InstrumentCommandRecord": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "schema_version": { "const": "1.0" },
+        "experiment_id": { "type": "string", "minLength": 1 },
+        "operation_key": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9_.:-]+$(?![\\s\\S])" },
+        "status": { "enum": ["REQUESTED", "ACCEPTED", "APPLIED", "FAILED"] },
+        "revision": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "accepted": { "type": "boolean" },
+        "hardware_applied": { "type": "boolean" },
+        "error_code": { "type": ["string", "null"], "minLength": 1 },
+        "configuration": { "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/GeneratorConfiguration" }
+      },
+      "required": ["schema_version", "experiment_id", "operation_key", "status", "revision", "accepted", "hardware_applied", "error_code", "configuration"]
+    }
+  }
+}

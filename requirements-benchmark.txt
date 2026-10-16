@@ -1,0 +1,2 @@
+# Optional local release workload monitor; separate from product runtime.
+psutil==7.2.2

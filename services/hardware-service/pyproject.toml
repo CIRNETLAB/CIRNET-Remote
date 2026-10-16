@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools==84.0.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "netcircuit-hardware-service"
 version = "0.1.0"
@@ -6,12 +10,12 @@ requires-python = ">=3.11"
 dependencies = [
   "netcircuit-contracts==1.0.0",
   "netcircuit-simulator==0.1.0",
-  "grpcio>=1.60",
-  "protobuf>=5"
+  "grpcio==1.84.0",
+  "protobuf==7.36.2"
 ]
 
 [project.optional-dependencies]
-dev = ["grpcio-tools>=1.60", "pytest>=8"]
+dev = ["grpcio-tools==1.84.0", "pytest==9.1.1"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

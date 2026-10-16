@@ -7,13 +7,15 @@ Wants=network-online.target
 Type=simple
 User=netcircuit
 Group=netcircuit
-WorkingDirectory=/opt/netcircuit/repo/services/hardware-service
-EnvironmentFile=-/etc/netcircuit/netcircuit.env
+StateDirectory=netcircuit-hardware
+WorkingDirectory=/var/lib/netcircuit-hardware
+EnvironmentFile=/etc/netcircuit/netcircuit.env
 ExecStart=/opt/netcircuit/venv-hardware/bin/python -m hardware_service.server 127.0.0.1:50051
 Restart=on-failure
 RestartSec=3
 NoNewPrivileges=true
 PrivateTmp=true
+UMask=0077
 
 [Install]
 WantedBy=multi-user.target

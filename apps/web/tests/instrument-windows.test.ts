@@ -45,8 +45,8 @@ async function renderWindow(name: string, channels: string[] = []) {
 test('scope renders its front-panel controls with an empty capture screen and no sample renderer', async () => {
   const html = await renderWindow('OscilloscopeWindow')
   for (const label of ['Horizontal', 'Trigger', 'Vertical', 'Auto Set', 'Run/Stop', 'Single', 'Default', 'Mode', 'Source', 'Slope', 'Menu', 'NO CAPTURE SOURCE']) assert.ok(html.includes(label), label)
-  for (const label of ['Time / Div', 'Horizontal Position', 'Trigger Level', 'CH1 Volts / Div', 'CH1 Position', 'CH2 Volts / Div', 'CH2 Position']) assert.ok(html.includes(`aria-label="${label}"`), label)
-  assert.match(html, /<fieldset[^>]*disabled/)
+  for (const label of ['Time / Div','Horizontal Position','Trigger Level']) assert.ok(html.includes(`aria-label="${label}"`), label)
+  assert.match(html,/0 declared channels/);assert.doesNotMatch(html,/aria-label="CH[12] Volts/);assert.match(html, /<fieldset[^>]*disabled/)
   assert.match(html, /Empty oscilloscope grid; no waveform data/)
   assert.match(html, /Frequency[\s\S]*—/)
   assert.doesNotMatch(html, /<canvas|<polyline|PREVIEW|1GSa\/s/)

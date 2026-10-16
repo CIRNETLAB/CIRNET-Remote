@@ -1,9 +1,9 @@
 name: Backend
 on:
   push:
-    paths: ['services/api/**', 'contracts/circuit-schema/**', '.github/workflows/backend.yml']
+    paths: ['services/api/**', 'simulator/**', 'contracts/**', 'device-library/**', 'scripts/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/backend.yml']
   pull_request:
-    paths: ['services/api/**', 'contracts/circuit-schema/**', '.github/workflows/backend.yml']
+    paths: ['services/api/**', 'simulator/**', 'contracts/**', 'device-library/**', 'scripts/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/backend.yml']
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
-      - run: python -m pip install --upgrade pip
-      - run: pip install -e . -e './services/api[test]'
+          python-version: '3.12'
+      - run: python -m pip install -r requirements-verification.txt -e . -e './simulator/circuit-simulator[test]' -e './services/api[test]'
+      - run: python scripts/generate_hardware_rpc.py
       - run: pytest -q services/api/tests

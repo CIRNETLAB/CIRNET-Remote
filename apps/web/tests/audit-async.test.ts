@@ -6,6 +6,7 @@ import { useStationStore } from '../src/stores/station'
 import { MAX_HISTORY_STORAGE_BYTES, useCircuitStore } from '../src/stores/circuit'
 import { useWorkspaceStore } from '../src/stores/workspace'
 import type { CircuitModule } from '../src/types/circuit'
+import { stationFixture } from './helpers/station'
 
 beforeEach(() => setActivePinia(createPinia()))
 
@@ -23,7 +24,7 @@ test('an in-flight discovery cannot overwrite a newer station fault event', asyn
   store.selectStation('p1'); store.setEventsConnected(true)
   const pending = store.refresh()
   store.updateStation({ station_id: 'p1', mode: 'hardware', state: 'error' })
-  response.resolve(new Response(JSON.stringify([{ station_id: 'p1', mode: 'hardware', state: 'ready' }, { station_id: 'p2', mode: 'hardware', state: 'ready' }])))
+  response.resolve(Response.json([stationFixture('p1','hardware'),stationFixture('p2','hardware')]))
   await pending
   assert.equal(store.status, 'FAULT')
   assert.equal(store.stations.find((station) => station.station_id === 'p2')?.status, 'HARDWARE_AVAILABLE')
@@ -36,7 +37,7 @@ test('a station first seen in an event survives older discovery without blocking
   const store = useStationStore()
   const pending = store.refresh()
   store.updateStation({ station_id: 'p3', mode: 'hardware', state: 'busy' })
-  response.resolve(new Response(JSON.stringify([{ station_id: 'p1', mode: 'hardware', state: 'ready' }])))
+  response.resolve(Response.json([stationFixture('p1','hardware')]))
   await pending
   assert.equal(store.stations.find((station) => station.station_id === 'p3')?.status, 'HARDWARE_BUSY')
   assert.equal(store.stations.find((station) => station.station_id === 'p1')?.status, 'HARDWARE_AVAILABLE')
@@ -48,7 +49,7 @@ test('cancelled API body completion cannot update station discovery after dispos
   const store = useStationStore(), controller = new AbortController()
   const pending = store.refresh(controller.signal)
   controller.abort()
-  response.resolve(new Response(JSON.stringify([{ station_id: 'p1', mode: 'hardware', state: 'ready' }])))
+  response.resolve(Response.json([stationFixture('p1','hardware')]))
   await pending
   assert.deepEqual(store.stations, [])
   assert.equal(store.loaded, false)
@@ -58,7 +59,11 @@ test('cancelled API body completion cannot update station discovery after dispos
 
 test('caller cancellation while JSON is pending is preserved even if the body completes', async () => {
   const body = deferred<unknown>(), controller = new AbortController()
-  const client = createApiClient({ fetcher: async () => ({ ok: true, status: 200, json: () => body.promise }) as Response })
+  const stream = new ReadableStream<Uint8Array>({ async start(output) {
+    const value = await body.promise
+    if (!controller.signal.aborted) { output.enqueue(new TextEncoder().encode(JSON.stringify(value))); output.close() }
+  } })
+  const client = createApiClient({ fetcher: async () => new Response(stream, { headers: { 'Content-Type': 'application/json' } }) })
   const pending = client.request('/health', { signal: controller.signal })
   await Promise.resolve()
   controller.abort(); body.resolve({ status: 'ok' })
@@ -128,7 +133,7 @@ test('changing drafts cancels obsolete validation transport while preserving cle
   store.createDraft('Second')
   try { assert.equal(signal?.aborted, true, 'invalidated graph validation must release the request') }
   finally {
-    response.resolve(new Response(JSON.stringify({ valid: true, code: 'VALID', message: 'Valid graph' })))
+    response.resolve(Response.json({ valid: true, code: 'VALID', message: 'Valid graph' }))
     await pending
   }
   assert.equal(store.current?.name, 'Second')

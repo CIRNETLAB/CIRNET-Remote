@@ -1,6 +1,7 @@
 import catalog from './editorCatalog.json'
 import type { CircuitModule } from '../types/circuit'
-export interface LogicalPort { id: string; direction: 'input' | 'output' | 'inout'; width?: number }
+export type { SignalDomain } from '../contracts/generated/dto'
+export type LogicalPort = import('../contracts/generated/dto').SignalPortDefinition
 export interface ComponentParameter { key: string; label: string; kind: 'number' | 'integer' | 'boolean'; min?: number; max?: number }
 export interface ComponentDefinition {
   type: string; name: string; family: string; visual: string; size: number[]; color: string
