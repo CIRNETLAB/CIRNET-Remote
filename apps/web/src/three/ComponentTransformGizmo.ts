@@ -11,7 +11,7 @@ const segmentDistance = (x: number, y: number, a: { x: number; y: number }, b: {
 
 const ARC_RADIUS = 1.35, ARC_START = 0, ARC_END = Math.PI * 1.5, ARC_KNOB_RADIUS = .16
 const AXIS_OFFSET = .95, FREE_HALF_SIZE = .29, GRIP_RADIUS = ARC_RADIUS
-const ARC_TUBE_RADIUS = 0.02, KNOB_TUBE_RADIUS = 0.028
+const ARC_TUBE_RADIUS = 0.02, KNOB_TUBE_RADIUS = 0.024
 // The meshes retain their XZ footprints. Facing that plane toward the camera
 // maps +X to screen right and +Z to screen down, independent of object yaw.
 const SCREEN_PLANE = new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2)
@@ -76,37 +76,83 @@ export function createComponentTransformGizmo() {
     cap.name = name; cap.position.copy(rotationPoint(angle))
   }
   // Either torus surface is visible for this overlay, including side views.
-  const gripMaterial = material('#ffffff', false, 1)
+  const gripMaterial = material('#FFD54A')
   gripMaterial.side = DoubleSide
-  const grip = add(rotate, new Mesh(new TorusGeometry(ARC_KNOB_RADIUS, KNOB_TUBE_RADIUS, 12, 48), gripMaterial))
-  grip.name = 'rotation-knob'; grip.rotation.x = Math.PI / 2; grip.position.copy(rotationGrip); grip.renderOrder = 22
-  const gripTarget = add(rotate, new Mesh(new SphereGeometry(.28, 16, 12), material('#ffffff', true)), true)
+  const grip = add(rotate, new Mesh(new TorusGeometry(ARC_KNOB_RADIUS, KNOB_TUBE_RADIUS, 16, 48), gripMaterial))
+  grip.name = 'rotation-knob'; grip.rotation.x = Math.PI / 2; grip.position.copy(rotationGrip); grip.renderOrder = 23
+  grip.userData.role = 'knob-outer'
+
+  const groove = add(rotate, new Mesh(new CylinderGeometry(0.136, 0.136, 0.02, 32), material('#1e2631')))
+  groove.name = 'rotation-knob-groove'; groove.position.copy(rotationGrip); groove.renderOrder = 22
+  groove.userData.role = 'knob-groove'
+
+  const core = add(rotate, new Mesh(new CylinderGeometry(0.085, 0.085, 0.025, 32), material('#FFE375')))
+  core.name = 'rotation-knob-core'; core.position.copy(rotationGrip); core.renderOrder = 24
+  core.userData.role = 'knob-core'
+
+  const highlight = add(rotate, new Mesh(new CylinderGeometry(0.048, 0.048, 0.03, 32), material('#FFF3B0')))
+  highlight.name = 'rotation-knob-highlight'; highlight.position.copy(rotationGrip); highlight.renderOrder = 25
+  highlight.userData.role = 'knob-highlight'
+
+  const gripTarget = add(rotate, new Mesh(new SphereGeometry(.28, 16, 12), material('#FFD54A', true)), true)
   gripTarget.name = 'rotation-knob-target'; gripTarget.position.copy(rotationGrip)
-  const deleteBtn = handle('delete', '#ff473d', new Vector3(1.42, 0, 1.42))
-  const deleteBase = add(deleteBtn, new Mesh(new CylinderGeometry(0.30, 0.30, 0.05, 32), material('#19222b')))
-  deleteBase.renderOrder = 19; deleteBase.userData.fixedColor = true; deleteBase.position.set(1.42, 0.025, 1.42)
-  const deleteRing = add(deleteBtn, new Mesh(new TorusGeometry(0.28, 0.022, 8, 32), material('#2d3c4a')))
-  deleteRing.rotation.x = Math.PI / 2; deleteRing.renderOrder = 20; deleteRing.userData.fixedColor = true; deleteRing.position.set(1.42, 0.038, 1.42)
-  const cross1 = add(deleteBtn, new Mesh(new BoxGeometry(0.30, 0.055, 0.075), material('#ff473d')))
-  cross1.rotation.y = Math.PI / 4; cross1.position.set(1.42, 0.05, 1.42); cross1.renderOrder = 21
-  const cross2 = add(deleteBtn, new Mesh(new BoxGeometry(0.30, 0.055, 0.075), material('#ff473d')))
-  cross2.rotation.y = -Math.PI / 4; cross2.position.set(1.42, 0.05, 1.42); cross2.renderOrder = 21
-  const deleteTarget = add(deleteBtn, new Mesh(new CylinderGeometry(0.35, 0.35, 0.16, 16), material('#ff473d', true)), true)
-  deleteTarget.position.set(1.42, 0.05, 1.42)
+
+  const deleteBtn = handle('delete', '#FF6C68', new Vector3(1.42, 0, 1.42))
+  const deleteBase = add(deleteBtn, new Mesh(new CylinderGeometry(0.30, 0.30, 0.05, 32), material('#405362', false, 0.85)))
+  deleteBase.name = 'delete-base'; deleteBase.renderOrder = 19; deleteBase.position.set(1.42, 0.025, 1.42)
+  const deleteRing = add(deleteBtn, new Mesh(new TorusGeometry(0.28, 0.022, 8, 32), material('#8193A0', false, 0.9)))
+  deleteRing.name = 'delete-ring'; deleteRing.rotation.x = Math.PI / 2; deleteRing.renderOrder = 20; deleteRing.position.set(1.42, 0.038, 1.42)
+  const cross1 = add(deleteBtn, new Mesh(new BoxGeometry(0.30, 0.055, 0.075), material('#FF6C68')))
+  cross1.name = 'delete-cross-1'; cross1.rotation.y = Math.PI / 4; cross1.position.set(1.42, 0.05, 1.42); cross1.renderOrder = 21
+  const cross2 = add(deleteBtn, new Mesh(new BoxGeometry(0.30, 0.055, 0.075), material('#FF6C68')))
+  cross2.name = 'delete-cross-2'; cross2.rotation.y = -Math.PI / 4; cross2.position.set(1.42, 0.05, 1.42); cross2.renderOrder = 21
+  const deleteTarget = add(deleteBtn, new Mesh(new CylinderGeometry(0.35, 0.35, 0.16, 16), material('#FF6C68', true)), true)
+  deleteTarget.name = 'delete-target'; deleteTarget.position.set(1.42, 0.05, 1.42)
+
   const paint = () => {
     for (const [id, group] of handles) {
       if (id === 'rotate-y') {
         const isHovered = hovered === 'rotate-y'
         const isActive = active === 'rotate-y'
         const arcOpacity = isActive ? 1.0 : isHovered ? .75 : .4
+        const outerColor = isActive ? '#FFF3B0' : isHovered ? '#FFE375' : '#FFD54A'
+        const coreColor = isActive ? '#FFFBEA' : isHovered ? '#FFF3B0' : '#FFE375'
+        const highlightColor = isActive || isHovered ? '#FFFFFF' : '#FFF3B0'
+        const grooveColor = isActive ? '#283646' : isHovered ? '#222d3a' : '#1e2631'
         for (const mesh of group.children as Mesh[]) {
-          if (!mesh.userData.pickOnly && !mesh.userData.fixedColor) {
-            const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
-            for (const entry of materials as MeshBasicMaterial[]) {
-              entry.color.set('#ffffff')
-              entry.opacity = mesh.name === 'rotation-knob' ? 1 : arcOpacity
-            }
+          if (mesh.userData.pickOnly) continue
+          const mat = mesh.material as MeshBasicMaterial
+          if (mesh.name === 'rotation-knob') {
+            mat.color.set(outerColor)
+            mat.opacity = 1
+          } else if (mesh.name === 'rotation-knob-core') {
+            mat.color.set(coreColor)
+            mat.opacity = 1
+          } else if (mesh.name === 'rotation-knob-highlight') {
+            mat.color.set(highlightColor)
+            mat.opacity = 1
+          } else if (mesh.name === 'rotation-knob-groove') {
+            mat.color.set(grooveColor)
+            mat.opacity = 1
+          } else {
+            mat.color.set('#ffffff')
+            mat.opacity = arcOpacity
           }
+        }
+        continue
+      }
+      if (id === 'delete') {
+        const isHovered = hovered === 'delete'
+        const isActive = active === 'delete'
+        const baseColor = isActive ? '#5a7286' : isHovered ? '#506577' : '#405362'
+        const ringColor = isActive ? '#b0c2ce' : isHovered ? '#9db0be' : '#8193A0'
+        const crossColor = isActive ? '#FFA09D' : isHovered ? '#FF8582' : '#FF6C68'
+        for (const mesh of group.children as Mesh[]) {
+          if (mesh.userData.pickOnly) continue
+          const mat = mesh.material as MeshBasicMaterial
+          if (mesh.name === 'delete-base') mat.color.set(baseColor)
+          else if (mesh.name === 'delete-ring') mat.color.set(ringColor)
+          else if (mesh.name === 'delete-cross-1' || mesh.name === 'delete-cross-2') mat.color.set(crossColor)
         }
         continue
       }

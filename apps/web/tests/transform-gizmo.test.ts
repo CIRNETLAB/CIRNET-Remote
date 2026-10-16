@@ -41,7 +41,7 @@ test('separate white triangle handles and a cyan rounded square replace the shaf
   assert.equal(h.pick(new Vector3(.47, 0, 0)), null, 'empty space between square and triangle is not an old shaft hitbox')
 })
 
-test('the translucent white arc keeps its rounded ends and hollow visual knob on the arc with an enlarged invisible grip target', () => {
+test('the translucent white arc keeps its rounded ends and concentric yellow knob on the arc with an enlarged invisible grip target', () => {
   const h = setup(), group = h.group('rotate-y')
   const arc = group.getObjectByName('rotation-arc') as Mesh
   assert.ok(arc)
@@ -49,13 +49,34 @@ test('the translucent white arc keeps its rounded ends and hollow visual knob on
   assert.ok((arc.material as MeshBasicMaterial).opacity >= 0.35 && (arc.material as MeshBasicMaterial).opacity <= 0.45)
   assert.ok(group.getObjectByName('rotation-start-cap'))
   assert.ok(group.getObjectByName('rotation-end-cap'))
+
+  // Multi-layered concentric yellow knob
   const knob = group.getObjectByName('rotation-knob') as Mesh
-  assert.equal(knob.geometry.type, 'TorusGeometry', 'the knob must remain visually hollow')
-  assert.equal((knob.material as MeshBasicMaterial).color.getHexString(), 'ffffff')
+  assert.ok(knob, 'outer border ring must exist')
+  assert.equal(knob.geometry.type, 'TorusGeometry')
+  assert.equal((knob.material as MeshBasicMaterial).color.getHexString(), 'ffd54a', 'knob outer border must be yellow #FFD54A')
+
+  const groove = group.getObjectByName('rotation-knob-groove') as Mesh
+  assert.ok(groove, 'middle groove must exist')
+  assert.equal(groove.geometry.type, 'CylinderGeometry')
+  assert.equal((groove.material as MeshBasicMaterial).color.getHexString(), '1e2631', 'knob groove must be dark blue-gray')
+
+  const core = group.getObjectByName('rotation-knob-core') as Mesh
+  assert.ok(core, 'inner core must exist')
+  assert.equal(core.geometry.type, 'CylinderGeometry')
+  assert.equal((core.material as MeshBasicMaterial).color.getHexString(), 'ffe375', 'knob core must be bright yellow #FFE375')
+
+  const highlight = group.getObjectByName('rotation-knob-highlight') as Mesh
+  assert.ok(highlight, 'core highlight must exist')
+  assert.equal(highlight.geometry.type, 'CylinderGeometry')
+  assert.equal((highlight.material as MeshBasicMaterial).color.getHexString(), 'fff3b0', 'knob highlight must be #FFF3B0')
+
   const marker = h.gizmo.position('rotate-y')!
   const markerLocal = h.gizmo.root.worldToLocal(marker.clone())
   assert.equal(h.pick(markerLocal), 'rotate-y', 'the advertised grip center must be easy to acquire')
   assert.ok(Math.abs(Math.hypot(knob.position.x, knob.position.z) - 1.35) < 1e-6, 'knob center must lie directly on the arc radius')
+  assert.ok(Math.abs(Math.hypot(groove.position.x, groove.position.z) - 1.35) < 1e-6, 'groove must be centered on the arc radius')
+  assert.ok(Math.abs(Math.hypot(core.position.x, core.position.z) - 1.35) < 1e-6, 'core must be centered on the arc radius')
   for (const angle of [0.3, 1.1, 3.8, 4.4]) {
     assert.equal(h.pick(new Vector3(Math.cos(angle) * 1.35, 0, Math.sin(angle) * 1.35), group), 'rotate-y')
   }
@@ -248,39 +269,111 @@ test('hover and active feedback retain the bevel border and restore the requeste
   assert.equal(materials[1].color.getHexString(), 'd1d7dc')
 })
 
-test('Rotate Y hover and drag only increase white prominence without changing color to cyan or yellow', () => {
+test('Rotate Y hover and drag brighten the concentric yellow knob and increase white arc prominence without changing color to cyan', () => {
   const h = setup(), group = h.group('rotate-y')
   const arc = group.getObjectByName('rotation-arc') as Mesh
   const knob = group.getObjectByName('rotation-knob') as Mesh
+  const groove = group.getObjectByName('rotation-knob-groove') as Mesh
+  const core = group.getObjectByName('rotation-knob-core') as Mesh
+  const highlight = group.getObjectByName('rotation-knob-highlight') as Mesh
+
   const arcMat = arc.material as MeshBasicMaterial
   const knobMat = knob.material as MeshBasicMaterial
+  const grooveMat = groove.material as MeshBasicMaterial
+  const coreMat = core.material as MeshBasicMaterial
+  const highlightMat = highlight.material as MeshBasicMaterial
 
   // Normal rest state
   assert.equal(arcMat.color.getHexString(), 'ffffff')
   assert.equal(arcMat.opacity, 0.4)
-  assert.equal(knobMat.color.getHexString(), 'ffffff')
-  assert.equal(knobMat.opacity, 1.0)
+  assert.equal(knobMat.color.getHexString(), 'ffd54a', 'knob outer border is #FFD54A')
+  assert.equal(grooveMat.color.getHexString(), '1e2631', 'groove is dark blue-gray #1e2631')
+  assert.equal(coreMat.color.getHexString(), 'ffe375', 'core is bright yellow #FFE375')
+  assert.equal(highlightMat.color.getHexString(), 'fff3b0', 'highlight is #FFF3B0')
 
   // Hover state
   h.gizmo.hover('rotate-y')
-  assert.equal(arcMat.color.getHexString(), 'ffffff', 'hover must remain white, not cyan or yellow')
-  assert.equal(arcMat.opacity, 0.75, 'hover increases white prominence')
-  assert.equal(knobMat.color.getHexString(), 'ffffff')
-  assert.equal(knobMat.opacity, 1.0)
+  assert.equal(arcMat.color.getHexString(), 'ffffff', 'hover arc must remain white, not cyan or yellow')
+  assert.equal(arcMat.opacity, 0.75, 'hover increases arc white prominence')
+  assert.equal(knobMat.color.getHexString(), 'ffe375', 'hover outer border brightens to #FFE375')
+  assert.equal(coreMat.color.getHexString(), 'fff3b0', 'hover core brightens to #FFF3B0')
+  assert.notEqual(knobMat.color.getHexString(), '46d7c7', 'never turn cyan')
+  assert.notEqual(knobMat.color.getHexString(), 'a6eee4', 'never turn cyan')
 
   // Active / drag state
   h.gizmo.activate('rotate-y', h.model)
-  assert.equal(arcMat.color.getHexString(), 'ffffff', 'active drag must remain white, not cyan or yellow')
-  assert.equal(arcMat.opacity, 1.0, 'drag increases white prominence to maximum')
-  assert.equal(knobMat.color.getHexString(), 'ffffff')
-  assert.equal(knobMat.opacity, 1.0)
+  assert.equal(arcMat.color.getHexString(), 'ffffff', 'active drag arc must remain white, not cyan or yellow')
+  assert.equal(arcMat.opacity, 1.0, 'drag increases arc white prominence to maximum')
+  assert.equal(knobMat.color.getHexString(), 'fff3b0', 'active outer border is #FFF3B0')
+  assert.notEqual(knobMat.color.getHexString(), '46d7c7', 'never turn cyan')
 
   // Release state
   h.gizmo.activate(null)
   assert.equal(arcMat.color.getHexString(), 'ffffff')
   assert.equal(arcMat.opacity, 0.4)
-  assert.equal(knobMat.color.getHexString(), 'ffffff')
-  assert.equal(knobMat.opacity, 1.0)
+  assert.equal(knobMat.color.getHexString(), 'ffd54a')
+  assert.equal(coreMat.color.getHexString(), 'ffe375')
+  assert.equal(highlightMat.color.getHexString(), 'fff3b0')
+})
+
+test('Delete button geometry and hitbox remain exact with redesigned blue-gray base, subtle ring, and coral red X', () => {
+  const h = setup(), group = h.group('delete')
+  const base = group.getObjectByName('delete-base') as Mesh
+  const ring = group.getObjectByName('delete-ring') as Mesh
+  const cross1 = group.getObjectByName('delete-cross-1') as Mesh
+  const cross2 = group.getObjectByName('delete-cross-2') as Mesh
+  const target = group.getObjectByName('delete-target') as Mesh
+
+  // Verification of exact geometries
+  assert.ok(base && ring && cross1 && cross2 && target)
+  assert.equal(base.geometry.type, 'CylinderGeometry')
+  assert.equal(ring.geometry.type, 'TorusGeometry')
+  assert.equal(cross1.geometry.type, 'BoxGeometry')
+  assert.equal(cross2.geometry.type, 'BoxGeometry')
+  assert.equal(target.geometry.type, 'CylinderGeometry')
+  assert.ok(target.userData.pickOnly, 'delete target must be pickOnly')
+
+  // Exact positions
+  assert.ok(Math.abs(base.position.x - 1.42) < 1e-6 && Math.abs(base.position.z - 1.42) < 1e-6)
+  assert.ok(Math.abs(ring.position.x - 1.42) < 1e-6 && Math.abs(ring.position.z - 1.42) < 1e-6)
+  assert.ok(Math.abs(cross1.position.x - 1.42) < 1e-6 && Math.abs(cross1.position.z - 1.42) < 1e-6)
+  assert.ok(Math.abs(cross2.position.x - 1.42) < 1e-6 && Math.abs(cross2.position.z - 1.42) < 1e-6)
+  assert.ok(Math.abs(target.position.x - 1.42) < 1e-6 && Math.abs(target.position.z - 1.42) < 1e-6)
+
+  // Color & material styling at rest
+  const baseMat = base.material as MeshBasicMaterial
+  const ringMat = ring.material as MeshBasicMaterial
+  const cross1Mat = cross1.material as MeshBasicMaterial
+  const cross2Mat = cross2.material as MeshBasicMaterial
+
+  assert.equal(baseMat.color.getHexString(), '405362', 'delete base is blue-gray #405362')
+  assert.ok(baseMat.opacity >= 0.8 && baseMat.opacity <= 0.9, 'delete base opacity is between 0.8 and 0.9')
+  assert.equal(ringMat.color.getHexString(), '8193a0', 'delete ring is #8193A0')
+  assert.equal(cross1Mat.color.getHexString(), 'ff6c68', 'delete cross 1 is coral red #FF6C68')
+  assert.equal(cross2Mat.color.getHexString(), 'ff6c68', 'delete cross 2 is coral red #FF6C68')
+
+  // Hover state
+  h.gizmo.hover('delete')
+  assert.equal(baseMat.color.getHexString(), '506577', 'delete base brightens slightly on hover')
+  assert.equal(ringMat.color.getHexString(), '9db0be', 'delete ring brightens slightly on hover')
+  assert.equal(cross1Mat.color.getHexString(), 'ff8582', 'cross brightens to coral red on hover')
+  assert.notEqual(cross1Mat.color.getHexString(), '46d7c7', 'never turn cyan')
+  assert.notEqual(cross1Mat.color.getHexString(), 'a6eee4', 'never turn cyan')
+
+  // Active state
+  h.gizmo.activate('delete')
+  assert.equal(baseMat.color.getHexString(), '5a7286', 'delete base on active')
+  assert.equal(cross1Mat.color.getHexString(), 'ffa09d', 'cross on active')
+  assert.notEqual(cross1Mat.color.getHexString(), '46d7c7', 'never turn cyan')
+
+  // Release state
+  h.gizmo.activate(null)
+  assert.equal(baseMat.color.getHexString(), '405362', 'restores rest color on release')
+  assert.equal(ringMat.color.getHexString(), '8193a0', 'restores rest color on release')
+  assert.equal(cross1Mat.color.getHexString(), 'ff6c68', 'restores coral red on release')
+
+  // Raycasting picks delete
+  assert.equal(h.pick(new Vector3(1.42, 0, 1.42)), 'delete')
 })
 
 test('dragging Rotate Y rotates arc and knob synchronously with the drag angle while other buttons stay fixed', () => {
