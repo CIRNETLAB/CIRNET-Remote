@@ -50,6 +50,41 @@ py -3.12 -m venv services/api/.venv
 .\services\api\.venv\Scripts\python.exe scripts/generate_hardware_rpc.py
 ```
 
+#### Refresh an existing environment after pulling source changes
+
+An editable install updates imported source immediately, but its installed
+dependency metadata is only refreshed when the package is installed again. An
+older `.venv` can therefore run new API source without its new dependencies;
+`pip check` may still pass because it reads the old metadata. For example,
+`ModuleNotFoundError: No module named 'argon2'` means the active interpreter lacks
+`argon2-cffi`, the package that provides `argon2`. Authentication also requires
+Alembic for the database migrations. Both are already declared in
+`services/api/pyproject.toml`.
+
+Keep the existing environment and refresh all local packages from the repository
+root, then regenerate the ignored RPC bindings:
+
+```powershell
+.\services\api\.venv\Scripts\python.exe -m pip install -r requirements-verification.txt -e . -e './simulator/circuit-simulator[test]' -e './services/api[test]' -e './services/hardware-service[dev]'
+.\services\api\.venv\Scripts\python.exe scripts/generate_hardware_rpc.py
+.\services\api\.venv\Scripts\python.exe -m pip check
+.\services\api\.venv\Scripts\python.exe -c "from argon2 import PasswordHasher; import alembic; from app.main import app; print('API imports OK')"
+```
+
+Use this interpreter explicitly for installation and startup; installing into a
+different Python environment does not repair this one. Restart the API after the
+refresh. Installing only `argon2-cffi` can leave other newly declared dependencies
+missing. No database deletion or virtual environment reset is needed.
+
+If your terminal is in `apps/web`, the refresh and checks are equivalent to:
+
+```powershell
+..\..\services\api\.venv\Scripts\python.exe -m pip install -r ..\..\requirements-verification.txt -e ..\.. -e '../../simulator/circuit-simulator[test]' -e '../../services/api[test]' -e '../../services/hardware-service[dev]'
+..\..\services\api\.venv\Scripts\python.exe ..\..\scripts\generate_hardware_rpc.py
+..\..\services\api\.venv\Scripts\python.exe -m pip check
+..\..\services\api\.venv\Scripts\python.exe -c "from argon2 import PasswordHasher; import alembic; from app.main import app; print('API imports OK')"
+```
+
 Root contracts packaging automatically creates
 `.build/metadata/netcircuit_contracts.egg-info/` and places other build files
 under `.build/`. This ignored cache is independent of `.audit-runtime` and the
