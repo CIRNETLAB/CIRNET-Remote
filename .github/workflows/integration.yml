@@ -21,7 +21,7 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Generate hardware RPC bindings
         run: python scripts/generate_hardware_rpc.py
-      - run: pytest -q tests/integration tests/contracts tests/frontend tests/deployment tests/fpga tests/test_docs_baseline.py tests/test_root_config.py
+      - run: python -m pytest -q tests/integration tests/contracts tests/frontend tests/deployment tests/fpga tests/test_docs_baseline.py tests/test_root_config.py
   postgresql-migrations:
     runs-on: ubuntu-latest
     services:

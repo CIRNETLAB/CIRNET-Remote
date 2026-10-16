@@ -167,9 +167,16 @@ def main(argv=None):
         build=Path(build);dist=build/'dist';dist.mkdir()
         log_path=workspace/f'package-check-{os.getpid()}.log'
         def checked(command,*,cwd):
-            with log_path.open('a',encoding='utf-8') as log:
+            with log_path.open('ab+') as log:
+                log.write((f'\nCommand: {command!r}\nWorking directory: {cwd}\n').encode('utf-8'))
+                log.flush();start=log.tell()
                 completed=subprocess.run(command,cwd=cwd,env=environment,stdout=log,stderr=subprocess.STDOUT)
-            if completed.returncode:raise RuntimeError(f'Installed package verification failed; inspect {log_path}.')
+                if completed.returncode:
+                    log.flush();end=log.tell();log.seek(max(start,end-16000))
+                    output=log.read().decode('utf-8',errors='replace')
+                    raise RuntimeError(f'Installed package verification failed ({completed.returncode}). '
+                        f'Command: {command!r}\nWorking directory: {cwd}\n'
+                        f'Last command output (up to 16000 bytes):\n{output}\nFull log: {log_path}')
         environment={key:value for key,value in os.environ.items() if key not in {'PYTHONPATH','PYTHONHOME','PYTHONUSERBASE','VIRTUAL_ENV','PIP_TARGET','PIP_PREFIX'}}
         environment.update(TMP=str(target),TEMP=str(target),NETCIRCUIT_ENV='test',NETCIRCUIT_ALLOW_GUEST='true')
         for project in WHEEL_PROJECTS:

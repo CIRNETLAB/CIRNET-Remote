@@ -1,6 +1,6 @@
 import {test,expect,type Browser,type BrowserContext,type Page} from '@playwright/test'
 import {randomUUID} from 'node:crypto'
-import type {ExperimentRecord} from '../src/contracts/generated/dto'
+import type {ExperimentCreate,ExperimentRecord} from '../src/contracts/generated/dto'
 import {parseStructural} from '../src/contracts/structural'
 const origin='http://127.0.0.1:14173'
 const assignmentPanel=(page:Page)=>page.getByRole('region',{name:'Assignments',exact:true})
@@ -55,8 +55,21 @@ test('a student submits typed pre-run vectors to the real virtual AND circuit an
   await login(page,student);await importGraph(page);const canvas=page.getByLabel('Three-dimensional circuit workspace',{exact:true});await canvas.evaluate(element=>element.setAttribute('data-w6-canvas','history-preserved'))
   await openAssignments(page);await assignmentPanel(page).getByRole('button',{name:'Use assignment Capture AND exercise',exact:true}).click();await page.getByRole('button',{name:'Close Assignments',exact:true}).click()
   await page.getByRole('button',{name:'Open Inspector',exact:true}).click();await page.getByLabel('Capture duration (ns)',{exact:true}).fill('40');await page.getByLabel('Capture signals',{exact:true}).fill('y');await page.getByLabel('Capture signals',{exact:true}).press('Tab');await page.getByLabel('Capture maximum events',{exact:true}).fill('100');await page.getByLabel('Test vector time (ns)',{exact:true}).fill('20');await page.getByLabel('Test vector inputs',{exact:true}).fill('x=1');await page.getByRole('button',{name:'Add test vector',exact:true}).click();await expect(page.getByLabel('Include trigger in next Run',{exact:true})).toBeDisabled();await page.getByRole('button',{name:'Close Inspector',exact:true}).click()
-  const createResponse=page.waitForResponse(response=>response.request().method()==='POST'&&new URL(response.url()).pathname==='/api/experiments')
-  await page.getByRole('button',{name:'Run',exact:true}).click();const createdResponse=await createResponse,submitted=parseStructural('ExperimentCreate',createdResponse.request().postDataJSON());expect(submitted.capture_config).toEqual({signals:['y'],duration_ns:40,max_events:100});expect(submitted.test_vectors).toEqual([{time_ns:20,inputs:{x:1}}]);expect(submitted).not.toHaveProperty('generator_config');expect(submitted).not.toHaveProperty('clock_config');const record=parseStructural('ExperimentRecord',await createdResponse.json());expect(record.assignment_id).toBe(id)
+  let captureCreate!:(value:{submitted:ExperimentCreate;record:ExperimentRecord})=>void,rejectCreate!:(reason:unknown)=>void,createPosts=0
+  const actualCreate=new Promise<{submitted:ExperimentCreate;record:ExperimentRecord}>((resolve,reject)=>{captureCreate=resolve;rejectCreate=reject})
+  await page.route('**/api/experiments',async route=>{
+   if(route.request().method()!=='POST'){await route.continue();return}
+   try{
+    createPosts++
+    // Read the real committed server response before the page can navigate.
+    // A page Response body can disappear from Chromium after navigation.
+    const response=await route.fetch({maxRetries:0,timeout:10_000});expect(response.status()).toBe(201)
+    const submitted=parseStructural('ExperimentCreate',route.request().postDataJSON()),record=parseStructural('ExperimentRecord',await response.json())
+    captureCreate({submitted,record})
+    await route.fulfill({response})
+   }catch(error){rejectCreate(error);throw error}
+  })
+  await page.getByRole('button',{name:'Run',exact:true}).click();const {submitted,record}=await actualCreate;expect(submitted.capture_config).toEqual({signals:['y'],duration_ns:40,max_events:100});expect(submitted.test_vectors).toEqual([{time_ns:20,inputs:{x:1}}]);expect(submitted).not.toHaveProperty('generator_config');expect(submitted).not.toHaveProperty('clock_config');expect(record.assignment_id).toBe(id);expect(createPosts).toBe(1)
   await expect.poll(async()=> (await(await context.request.get(`/api/experiments/${record.experiment_id}`)).json()).state,{timeout:30_000}).toBe('COMPLETE')
   const result=parseStructural('ExperimentRecord',await(await context.request.get(`/api/experiments/${record.experiment_id}`)).json());expect(result.capture?.available).toBe(true);expect(result.functional_verification?.status).toBe('PASS');expect(result.functional_verification).not.toHaveProperty('expected_signals')
   await history(page);await historyPanel(page).getByRole('button',{name:'Refresh execution history',exact:true}).click();await historyPanel(page).getByRole('button',{name:`Read experiment ${record.experiment_id}`,exact:true}).click();await expect(page).toHaveURL(new RegExp(`/experiments/${record.experiment_id}$`));await expect(historyPanel(page).getByLabel('Evidence access',{exact:true})).toContainText('Read-only history')

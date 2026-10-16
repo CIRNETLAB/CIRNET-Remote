@@ -1,7 +1,11 @@
 """Package verification must physically leave the source checkout."""
 import importlib.util
+from contextlib import nullcontext
+import subprocess
+import sys
 from pathlib import Path
 import pytest
+import yaml
 from zipfile import ZipFile
 
 ROOT=Path(__file__).resolve().parents[2]
@@ -46,3 +50,31 @@ def test_clean_build_staging_excludes_ignored_rpc_and_cached_build_outputs(tmp_p
     assert (target/'scripts/generate_hardware_rpc.py').is_file()
     assert (target/'contracts/hardware/v2/rpc_v2.proto').is_file()
     assert not (target/'contracts/generated').exists() and not (target/'.build').exists()
+
+
+@pytest.mark.parametrize('prefix',['','x'*20000],ids=['short-output','long-output'])
+def test_failed_package_command_exposes_output_and_preserves_complete_log(tmp_path,monkeypatch,prefix):
+    checkout=tmp_path/'checkout';checkout.mkdir()
+    monkeypatch.setattr(checker,'ROOT',checkout)
+    monkeypatch.setattr(checker,'external_workspace',lambda base:nullcontext(tmp_path))
+    monkeypatch.setattr(checker,'stage_project',lambda project,target:tmp_path)
+    actual_run=subprocess.run
+    def failed_build(command,**kwargs):
+        script=f'import sys; print({prefix!r},flush=True); print("missing setuptools build dependency",flush=True); print("compiler stderr detail",file=sys.stderr); sys.exit(23)'
+        return actual_run([sys.executable,'-c',script],**kwargs)
+    monkeypatch.setattr(checker.subprocess,'run',failed_build)
+    with pytest.raises(RuntimeError) as error:checker.main([])
+    message=str(error.value)
+    assert 'missing setuptools build dependency' in message and 'compiler stderr detail' in message
+    assert '23' in message and '--no-isolation' in message
+    assert len(message)<18000
+    log=next((checkout/'.build').glob('package-check-*.log')).read_text(encoding='utf-8')
+    assert prefix in log and 'missing setuptools build dependency' in log and 'compiler stderr detail' in log
+
+
+def test_installed_package_ci_preserves_diagnostics_when_the_probe_fails():
+    workflow=yaml.safe_load((ROOT/'.github/workflows/contracts.yml').read_text(encoding='utf-8'))
+    steps=workflow['jobs']['installed-packages']['steps']
+    uploads=[step for step in steps if step.get('uses','').startswith('actions/upload-artifact@')]
+    assert any(step.get('if')=='always()' and '.build/package-check-*.log' in step.get('with',{}).get('path','')
+               and step.get('with',{}).get('include-hidden-files') is True for step in uploads)

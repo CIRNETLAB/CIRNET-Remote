@@ -3,9 +3,30 @@ from pathlib import Path
 import os
 import subprocess
 import sys
+import tomllib
 from zipfile import ZipFile
+from packaging.requirements import Requirement
 
 ROOT=Path(__file__).resolve().parents[2]
+
+
+def test_verification_toolchain_satisfies_every_no_isolation_build_requirement():
+    def requirements(path):
+        for line in path.read_text(encoding='utf-8').splitlines():
+            line=line.strip()
+            if not line or line.startswith('#'):continue
+            if line.startswith('-r '):yield from requirements(path.parent/line[3:].strip())
+            else:yield Requirement(line)
+
+    pinned={requirement.name:next(iter(requirement.specifier)).version
+            for requirement in requirements(ROOT/'requirements-verification.txt')
+            if len(requirement.specifier)==1 and next(iter(requirement.specifier)).operator=='=='}
+    for project in ('.','services/api','simulator/circuit-simulator','services/hardware-service'):
+        metadata=tomllib.loads((ROOT/project/'pyproject.toml').read_text(encoding='utf-8'))
+        for value in metadata['build-system']['requires']:
+            requirement=Requirement(value)
+            assert requirement.name in pinned,f'{project}: uninstalled build requirement {value}'
+            assert pinned[requirement.name] in requirement.specifier,(project,value,pinned[requirement.name])
 
 
 def test_wheel_contains_generated_rpc_and_offline_resources(tmp_path):

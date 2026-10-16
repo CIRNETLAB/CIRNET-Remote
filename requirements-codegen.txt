@@ -1,4 +1,5 @@
 # Reproducible structural/code-generation toolchain; application dependencies are separate.
+setuptools==84.0.0
 datamodel-code-generator==0.84.0
 jsonschema==4.26.0
 referencing==0.37.0
