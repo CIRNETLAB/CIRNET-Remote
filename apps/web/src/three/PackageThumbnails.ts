@@ -2,8 +2,10 @@ import { AmbientLight, Box3, DirectionalLight, Group, InstancedMesh, Matrix4, Me
 import { getDefinition } from '../data/editorCatalog'
 import { getPartForType } from '../data/partCatalog'
 import { normalizeComponentProperties } from '../data/componentProperties'
+import { isLeadEditableType, readLeadProperties } from '../data/leadProperties'
 import type { CircuitModule } from '../types/circuit'
 import { buildComponent, disposeObject } from './ComponentModel'
+import { supplyControlValue } from './PowerSupplyModel'
 import { createStudioEnvironment } from './StudioEnvironment'
 
 export interface PackageThumbnailRenderer {
@@ -11,13 +13,29 @@ export interface PackageThumbnailRenderer {
   render(model: Group): string | Promise<string>
   dispose(): void
 }
-export interface PackageThumbnailLease { ready: Promise<string | null>; release(): void }
-export interface PackageThumbnailCache { acquire(type: string, properties?: Record<string, unknown>): PackageThumbnailLease }
+export type PackageThumbnailPriority = 'high' | 'visible' | 'preload'
+export interface PackageThumbnailRequest { priority?: PackageThumbnailPriority }
+export interface PackageThumbnailLease { ready: Promise<string | null>; release(): void; setPriority?(priority: PackageThumbnailPriority): void }
+export interface PackageThumbnailCache {
+  acquire(type: string, properties?: Record<string, unknown>, request?: PackageThumbnailRequest): PackageThumbnailLease
+  dispose?(): void
+}
+/** Schedule one deferred capture; the returned function cancels a pending task. */
+export type PackageThumbnailScheduler = (task: () => void, priority: PackageThumbnailPriority) => (() => void)
+export interface PackageThumbnailCacheOptions {
+  createRenderer?: () => PackageThumbnailRenderer | null
+  maxEntries?: number
+  scheduleTask?: PackageThumbnailScheduler
+  /** Retain the single context across short visibility gaps, then release it. */
+  idleDelayMs?: number
+}
 export const packageThumbnailCacheKey = Symbol.for('netcircuit.package-thumbnails')
 
 interface Entry {
-  module: CircuitModule
+  module?: CircuitModule
   refs: number
+  priorities: Map<symbol, PackageThumbnailPriority>
+  order: number
   state: 'queued' | 'rendering' | 'complete'
   ready: Promise<string | null>
   resolve: (image: string | null) => void
@@ -27,6 +45,58 @@ function stableValue(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(stableValue)
   if (value !== null && typeof value === 'object') return Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => [key, stableValue(item)]))
   return value
+}
+
+const priorityRank: Record<PackageThumbnailPriority, number> = { high: 0, visible: 1, preload: 2 }
+
+/** Only properties actually read by the model factories define an image. Keep
+ * this projection beside the cache; editor graph metadata must not bust it. */
+function visualProperties(type: string, properties: Record<string, unknown>): Record<string, unknown> {
+  const definition = getDefinition(type)!, part = getPartForType(type), visual: Record<string, unknown> = {}
+  const copy = (keys: string[]) => { for (const key of keys) visual[key] = properties[key] ?? part?.editor.defaults[key] ?? definition.defaults[key] }
+  if (part?.package.family === 'axial' && (part.package.visualVariant === 'resistor' || part.function === 'resistor')) copy(['resistanceOhms', 'powerWatts', 'tolerancePercent'])
+  if (part?.package.family === 'radial-capacitor') copy(['capacitanceFarads', 'voltageRatingVolts'])
+  if (isLeadEditableType(type)) Object.assign(visual, readLeadProperties(properties))
+  if (part?.package.family === 'switch') {
+    copy((part.internalConnections ?? []).flatMap(connection => connection.when ? [connection.when.property] : []))
+    if (part.package.visualVariant === 'toggle') copy(['state'])
+  }
+  if (definition.visual === 'supply') {
+    visual[type === 'DC_SUPPLY' ? 'voltage' : 'voltage_v'] = supplyControlValue(properties, 'voltage_v', type)
+    visual.power_on = supplyControlValue(properties, 'power_on', type)
+    if (type !== 'DC_SUPPLY') visual.current_limit_a = supplyControlValue(properties, 'current_limit_a', type)
+  } else if (!part) {
+    if (definition.visual === 'button' || definition.visual === 'toggle') visual.state = !!properties.state
+    if (definition.visual === 'dip') visual.value = Number(properties.value ?? 0) & 15
+  }
+  return visual
+}
+
+/** Idle work never starts in the input/Vue microtask turn. Where idle callbacks
+ * are absent, wait until after a frame so input and paint can finish first. */
+const schedulePackageThumbnailTask: PackageThumbnailScheduler = (task, priority) => {
+  let canceled = false
+  if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
+    const timeout = { high: 50, visible: 150, preload: 500 }[priority], expires = performance.now() + timeout
+    const run = (deadline: IdleDeadline) => {
+      if (canceled) return
+      const remaining = expires - performance.now()
+      if (!deadline.didTimeout && deadline.timeRemaining() < 4 && remaining > 0) {
+        handle = window.requestIdleCallback(run, { timeout: Math.max(1, remaining) })
+      } else task()
+    }
+    let handle = window.requestIdleCallback(run, { timeout })
+    return () => { canceled = true; window.cancelIdleCallback(handle) }
+  }
+  let frame: number | undefined, timer: ReturnType<typeof setTimeout> | undefined
+  const afterPaint = () => { frame = undefined; timer = setTimeout(() => { if (!canceled) task() }, 0) }
+  if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') frame = window.requestAnimationFrame(afterPaint)
+  else afterPaint()
+  return () => {
+    canceled = true
+    if (frame !== undefined) window.cancelAnimationFrame(frame)
+    if (timer !== undefined) clearTimeout(timer)
+  }
 }
 
 /** Only geometry that contributes to the image participates in framing. In
@@ -89,95 +159,139 @@ export function createPackageThumbnailScene(): Scene {
   return scene
 }
 
-/** Cached CPU images outlive cards. One lazily created GPU renderer serves all
- * active leases, and is released after its final capture and final lease. */
-export function createPackageThumbnailCache(options: { createRenderer?: () => PackageThumbnailRenderer | null; maxEntries?: number } = {}): PackageThumbnailCache {
+/** Cached CPU images outlive cards. Every capture owns one transient model and
+ * reuses the same lazy renderer, including across short offscreen lease gaps. */
+export function createPackageThumbnailCache(options: PackageThumbnailCacheOptions = {}): PackageThumbnailCache {
   const entries = new Map<string, Entry>()
-  const maxEntries = Math.max(1, options.maxEntries ?? 256)
-  let renderer: PackageThumbnailRenderer | null = null, rendererAttempted = false, refs = 0, running = false
+  const maxEntries = Math.max(1, options.maxEntries ?? 256), idleDelayMs = Math.max(0, options.idleDelayMs ?? 30_000)
+  const scheduleTask = options.scheduleTask ?? schedulePackageThumbnailTask
+  let renderer: PackageThumbnailRenderer | null = null, failed = false, disposed = false, refs = 0, running = false, sequence = 0
+  let cancelTask: (() => void) | undefined, scheduledPriority: PackageThumbnailPriority | undefined, idleTimer: ReturnType<typeof setTimeout> | undefined
 
+  const clearIdle = () => { if (idleTimer !== undefined) { clearTimeout(idleTimer); idleTimer = undefined } }
   const disposeRenderer = () => { const owned = renderer; renderer = null; owned?.dispose() }
-  const idle = () => { if (!running && refs === 0) { disposeRenderer(); rendererAttempted = false } }
+  const idle = () => {
+    if (running || !renderer) return
+    if (disposed) { disposeRenderer(); return }
+    if (refs > 0 || idleTimer !== undefined) return
+    if (idleDelayMs === 0) { disposeRenderer(); return }
+    idleTimer = setTimeout(() => { idleTimer = undefined; if (!running && refs === 0) disposeRenderer() }, idleDelayMs)
+    // A headless test/SSR process need not remain alive for an unused GPU cache.
+    if (typeof idleTimer === 'object' && 'unref' in idleTimer) idleTimer.unref()
+  }
   const trim = () => {
     for (const [key, entry] of entries) {
       if (entries.size <= maxEntries) break
       if (entry.refs === 0 && entry.state === 'complete') entries.delete(key)
     }
   }
-  const drain = async () => {
-    let captured = false
+  const entryPriority = (entry: Entry): PackageThumbnailPriority => {
+    let highest: PackageThumbnailPriority = 'preload'
+    for (const priority of entry.priorities.values()) if (priorityRank[priority] < priorityRank[highest]) highest = priority
+    return highest
+  }
+  const nextEntry = () => {
+    let next: Entry | undefined
+    for (const entry of entries.values()) {
+      if (entry.state !== 'queued' || entry.refs === 0) continue
+      if (!next || priorityRank[entryPriority(entry)] < priorityRank[entryPriority(next)] || entryPriority(entry) === entryPriority(next) && entry.order < next.order) next = entry
+    }
+    return next
+  }
+  const cancelScheduled = () => { cancelTask?.(); cancelTask = undefined; scheduledPriority = undefined }
+  const complete = (entry: Entry, image: string | null) => { entry.module = undefined; entry.state = 'complete'; entry.resolve(image) }
+  const settleFallbacks = () => {
+    cancelScheduled()
+    for (const entry of entries.values()) if (entry.state === 'queued') complete(entry, null)
+  }
+  const capture = async (entry: Entry) => {
+    running = true; entry.state = 'rendering'
+    let model: Group | undefined, image: string | null = null
     try {
-      for (const entry of entries.values()) {
-        if (entry.state !== 'queued' || entry.refs === 0) continue
-        // Rendering/toDataURL is synchronous in browsers. Yield between models
-        // so palette input/unmount can cancel pending work before another capture.
-        // This schedules tasks only while requested images remain in the queue.
-        if (captured) await new Promise<void>(resolve => setTimeout(resolve, 0))
-        if (entry.state !== 'queued' || entry.refs === 0) continue
-        entry.state = 'rendering'
-        let model: Group | undefined, image: string | null = null
+      if (!renderer) {
+        try { renderer = (options.createRenderer ?? createWebGLThumbnailRenderer)() }
+        catch { failed = true }
+        if (!renderer) failed = true
+      }
+      if (renderer && !disposed) {
+        // Factory errors affect this image, whereas context/capture failures
+        // permanently disable GPU retries for the lifetime of this cache.
+        model = buildComponent(entry.module!)
         try {
-          if (!rendererAttempted) {
-            rendererAttempted = true
-            renderer = (options.createRenderer ?? createWebGLThumbnailRenderer)()
-          }
-          if (renderer) {
-            model = buildComponent(entry.module)
-            captured = true
-            image = await renderer.render(model)
-          }
+          image = await renderer.render(model)
         } catch {
-          // A lost/unsupported context gets one attempt per lease lifetime,
-          // rather than creating a new context for each card in the queue.
-          disposeRenderer()
-        } finally {
-          if (model) disposeObject(model)
-          entry.state = 'complete'
-          entry.resolve(image)
+          failed = true; disposeRenderer()
         }
       }
-    } finally { running = false; trim(); idle() }
+    } catch {
+      // Invalid model data falls back without poisoning other component types.
+    } finally {
+      if (model) disposeObject(model)
+      running = false; complete(entry, image)
+      if (failed) settleFallbacks()
+      trim(); schedule(); idle()
+    }
   }
   const schedule = () => {
-    if (running) return
-    running = true
-    void Promise.resolve().then(drain)
+    if (running || disposed || failed) return
+    const next = nextEntry()
+    if (!next) { cancelScheduled(); return }
+    const priority = entryPriority(next)
+    if (cancelTask && scheduledPriority === priority) return
+    cancelScheduled(); scheduledPriority = priority
+    cancelTask = scheduleTask(() => {
+      cancelTask = undefined; scheduledPriority = undefined
+      const requested = nextEntry()
+      if (requested && !disposed && !failed) void capture(requested)
+    }, priority)
   }
 
   return {
-    acquire(type, properties) {
+    acquire(type, properties, request) {
       const definition = getDefinition(type), descriptor = getPartForType(type)
-      if (!definition) return { ready: Promise.resolve(null), release() {} }
+      if (!definition || disposed) return { ready: Promise.resolve(null), release() {} }
       let module: CircuitModule, key: string
       try {
         // Snapshot reactive draft data without retaining or mutating an instance
         // or the shared descriptor defaults. Legacy input normalizes at this boundary.
         const effective = normalizeComponentProperties(type, { ...(descriptor?.editor.defaults ?? definition.defaults), ...normalizeComponentProperties(type, properties) })
-        const snapshot = JSON.stringify(stableValue(effective))
+        const snapshot = JSON.stringify(stableValue(visualProperties(type, effective)))
         module = { id: 'thumbnail', type, properties: JSON.parse(snapshot) as Record<string, unknown> }
         key = JSON.stringify([type, descriptor?.id ?? definition.partDefinitionId, descriptor?.revision ?? definition.partRevision, descriptor?.package.id, descriptor?.package.revision, snapshot])
       } catch { return { ready: Promise.resolve(null), release() {} } }
       let entry = entries.get(key)
       if (!entry) {
+        if (failed) return { ready: Promise.resolve(null), release() {} }
         let resolve!: Entry['resolve']
         const ready = new Promise<string | null>(done => { resolve = done })
-        entry = { module, ready, resolve, refs: 0, state: 'queued' }
+        entry = { module, ready, resolve, refs: 0, priorities: new Map(), order: sequence++, state: 'queued' }
       } else entries.delete(key)
       entries.set(key, entry)
+      clearIdle()
       entry.refs++; refs++
-      const owned = entry
+      const owned = entry, token = Symbol()
+      entry.priorities.set(token, request?.priority ?? 'high')
       let released = false
       if (entry.state === 'queued') schedule()
       trim()
       return {
-        ready: entry.ready.then(image => released ? null : image),
+        ready: entry.ready.then(image => released || disposed ? null : image),
         release() {
           if (released) return
-          released = true; owned.refs--; refs--
-          if (owned.refs === 0 && owned.state === 'queued') { entries.delete(key); owned.resolve(null) }
-          trim(); idle()
+          released = true; owned.priorities.delete(token); owned.refs--; refs--
+          if (owned.refs === 0 && owned.state === 'queued') { entries.delete(key); complete(owned, null) }
+          trim(); schedule(); idle()
+        },
+        setPriority(priority) {
+          if (released || disposed || owned.state !== 'queued') return
+          owned.priorities.set(token, priority); schedule()
         },
       }
+    },
+    dispose() {
+      if (disposed) return
+      disposed = true; cancelScheduled(); clearIdle(); settleFallbacks(); entries.clear()
+      if (!running) disposeRenderer()
     },
   }
 }
@@ -199,10 +313,12 @@ function createWebGLThumbnailRenderer(): PackageThumbnailRenderer | null {
     let disposed = false
     return {
       render(model) {
+        if (ownedRenderer.getContext().isContextLost()) throw new Error('Thumbnail WebGL context was lost.')
         scene.add(model)
         try {
           fitPackageThumbnailCamera(model, camera, aspect)
           ownedRenderer.render(scene, camera)
+          if (ownedRenderer.getContext().isContextLost()) throw new Error('Thumbnail WebGL context was lost.')
           return ownedRenderer.domElement.toDataURL('image/png')
         } finally { scene.remove(model) }
       },
@@ -219,3 +335,4 @@ function createWebGLThumbnailRenderer(): PackageThumbnailRenderer | null {
 }
 
 export const packageThumbnails = createPackageThumbnailCache()
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') window.addEventListener('pagehide', event => { if (!event.persisted) packageThumbnails.dispose?.() })

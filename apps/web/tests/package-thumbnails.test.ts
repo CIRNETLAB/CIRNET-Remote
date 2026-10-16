@@ -7,7 +7,7 @@ import { createPackageThumbnailCache, packageThumbnailCacheKey, type PackageThum
 import { buildComponent, disposeObject } from '../src/three/ComponentModel'
 import { loadSfc, mountSfc } from './helpers/vueSfc'
 
-const flush = async () => { await Promise.resolve(); await Promise.resolve(); await nextTick() }
+const flush = async () => { await Promise.resolve(); await Promise.resolve(); await nextTick(); await new Promise(resolve => setTimeout(resolve, 0)); await nextTick() }
 const waitFor = async (condition: () => boolean) => {
   for (let attempt = 0; !condition() && attempt < 100; attempt++) await new Promise(resolve => setTimeout(resolve, 0))
   assert.ok(condition(), 'expected queued capture to become ready')
@@ -26,7 +26,7 @@ function deferredRenderer() {
 test('equal effective properties share one bitmap and cached cards need no renderer', async () => {
   const backend = deferredRenderer()
   let contexts = 0
-  const cache = createPackageThumbnailCache({ createRenderer: () => { contexts++; return backend.renderer } })
+  const cache = createPackageThumbnailCache({ idleDelayMs: 0, createRenderer: () => { contexts++; return backend.renderer } })
   const a = cache.acquire('RESISTOR_AXIAL'), b = cache.acquire('RESISTOR_AXIAL', { tolerancePercent: 1, resistanceOhms: 330, powerWatts: .25 })
   await flush()
   assert.equal(contexts, 1)
@@ -47,7 +47,7 @@ test('equal effective properties share one bitmap and cached cards need no rende
 test('pending renders cannot reuse the canvas concurrently or dispose an in-flight renderer', async () => {
   const backend = deferredRenderer()
   let contexts = 0
-  const cache = createPackageThumbnailCache({ createRenderer: () => { contexts++; return backend.renderer } })
+  const cache = createPackageThumbnailCache({ idleDelayMs: 0, createRenderer: () => { contexts++; return backend.renderer } })
   const first = cache.acquire('RESISTOR_AXIAL', { resistanceOhms: 1000 })
   await flush()
   let geometryDisposals = 0
@@ -73,7 +73,7 @@ test('pending renders cannot reuse the canvas concurrently or dispose an in-flig
 
 test('released queued drafts are skipped and renderer failures settle as cached fallbacks', async () => {
   let contexts = 0, renders = 0, disposed = 0
-  const cache = createPackageThumbnailCache({ createRenderer: () => {
+  const cache = createPackageThumbnailCache({ idleDelayMs: 0, createRenderer: () => {
     contexts++
     return { render() { renders++; throw new Error('context lost') }, dispose() { disposed++ } }
   } })
@@ -96,7 +96,7 @@ test('released queued drafts are skipped and renderer failures settle as cached 
 test('synchronous GPU captures yield to cancellation between queued cards', async () => {
   const rendered: number[] = []
   let cancelled!: ReturnType<ReturnType<typeof createPackageThumbnailCache>['acquire']>
-  const cache = createPackageThumbnailCache({ createRenderer: () => ({
+  const cache = createPackageThumbnailCache({ idleDelayMs: 0, createRenderer: () => ({
     render(model) {
       rendered.push(JSON.parse(model.userData.signature)[1].resistanceOhms)
       if (rendered.length === 1) setTimeout(() => cancelled.release(), 0)
@@ -115,7 +115,7 @@ test('synchronous GPU captures yield to cancellation between queued cards', asyn
 
 test('bounded cache evicts inactive images without invalidating active leases', async () => {
   let contexts = 0, renders = 0
-  const cache = createPackageThumbnailCache({ maxEntries: 1, createRenderer: () => {
+  const cache = createPackageThumbnailCache({ idleDelayMs: 0, maxEntries: 1, createRenderer: () => {
     contexts++
     return { render(model) { renders++; return `data:image/png;base64,${model.userData.signature}` }, dispose() {} }
   } })
@@ -143,7 +143,7 @@ test('thumbnail disposal leaves editor model resources and caller properties int
     for (const material of Array.isArray(object.material) ? object.material : [object.material]) material.addEventListener('dispose', () => editorDisposals++)
   })
   const input = { resistanceOhms: 1000 }, backend = deferredRenderer()
-  const cache = createPackageThumbnailCache({ createRenderer: () => backend.renderer })
+  const cache = createPackageThumbnailCache({ idleDelayMs: 0, createRenderer: () => backend.renderer })
   const lease = cache.acquire('RESISTOR_AXIAL', input)
   input.resistanceOhms = 4700
   try {
@@ -158,7 +158,7 @@ test('thumbnail disposal leaves editor model resources and caller properties int
 })
 
 test('ComponentThumbnail ignores stale draft completion and releases its final lease on unmount', async () => {
-  const backend = deferredRenderer(), cache = createPackageThumbnailCache({ createRenderer: () => backend.renderer })
+  const backend = deferredRenderer(), cache = createPackageThumbnailCache({ idleDelayMs: 0, createRenderer: () => backend.renderer })
   const component = await loadSfc('components/workbench/ComponentThumbnail.vue')
   const properties = reactive({ resistanceOhms: 1000 })
   const wrapper = defineComponent({ setup() {

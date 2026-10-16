@@ -1,0 +1,5171 @@
+{
+  "schemaVersion": 1,
+  "capturedAtUtc": "2026-10-16T01:50:19.877Z",
+  "config": {
+    "baselineRef": "40a4cad80be76a5b08943fab51ee2218cb7d7012",
+    "baselineOnly": false,
+    "reuseBaselineSearch": "docs/verification/2026-10-16-component-palette-benchmark-baseline.json",
+    "searchSamples": 30,
+    "thumbnailSamples": 8,
+    "warmups": 3,
+    "visibleCards": 10,
+    "desktopVisibleCards": 20,
+    "preloadCards": 5
+  },
+  "baselineRef": "40a4cad80be76a5b08943fab51ee2218cb7d7012",
+  "currentHead": "40a4cad80be76a5b08943fab51ee2218cb7d7012",
+  "environment": {
+    "node": "v24.20.0",
+    "v8": "13.6.233.17-node.53",
+    "esbuild": "0.25.12",
+    "threeRevision": "171",
+    "os": "Windows_NT 10.0.26300 x64",
+    "cpu": "12th Gen Intel(R) Core(TM) i5-12500H",
+    "logicalCpus": 16,
+    "totalMemoryBytes": 34049417216,
+    "execArgv": [],
+    "browser": "unavailable: localhost browser access was denied; no browser automation workaround attempted",
+    "webgl": "not measured; injected CPU renderer boundary only"
+  },
+  "sourceHashes": {
+    "baseline": {
+      "apps/web/src/data/componentSearch.ts": "5de699676ba1b485921390c5d38bc674a4de8b9ed2a67cf395274bc294fde89a",
+      "apps/web/src/three/PackageThumbnails.ts": "f8efcc125baa56daddb77c0e7e627923600d759f4f03ac5a8a7d80129ed1f481"
+    },
+    "current": {
+      "apps/web/src/data/componentSearch.ts": "68e217bed5a2d1e704283dc837cfbaa9add50606ba063c0164d09518bf8f4f57",
+      "apps/web/src/three/PackageThumbnails.ts": "25518c65b8040187bcd1135d975bb1c5b34b6f6096d414483468b30428d8fbaf"
+    },
+    "sharedComponentModel": "7a4eecd4d40d7689c2ecf3840a77fa8070c7bbcea004ebfc16f6d045dc62385c"
+  },
+  "sharedDependencyHashes": {
+    "apps/web/package-lock.json": "1138703252afea99c76e2bc3c1a034047f032dbaac0071a1474962da1d24e810",
+    "apps/web/src/data/ribbon.ts": "bc1b3cd50c73b099f9ea2b58d5cc625b2319460d43ff45f0547799e36fc7d997",
+    "apps/web/src/data/partCatalog.ts": "97ff3913cc308ad09ce0c8060827454b03acbf4ce178aac392a6728dc17595bd",
+    "apps/web/src/data/editorCatalog.ts": "6f3261b51fb37ac5c09b025a2f931801bd3c14b4c7df8f3c6ed68890fe2b580c",
+    "apps/web/src/data/physicalParts.json": "fa98b5bf700fcaff782da9fdfe6478679d0850b01959190d3599aae2ebed0bec",
+    "apps/web/src/data/editorCatalog.json": "49582a296dd2b71e0699dc1977f53e9469e98fe83ef4d3deee9e8bbae1b0d135",
+    "apps/web/src/data/editorParts.json": "dc5dfdf9c33c27c32083b32552fffa0abe1a73c8986ee351a1e8731d48f29db5"
+  },
+  "baselineSearchOrigin": {
+    "mode": "reused unchanged earlier process",
+    "report": "docs/verification/2026-10-16-component-palette-benchmark-baseline.json",
+    "capturedAtUtc": "2026-10-16T01:40:14.449Z",
+    "finishedAtUtc": "2026-10-16T01:42:15.509Z",
+    "environment": {
+      "node": "v24.20.0",
+      "v8": "13.6.233.17-node.53",
+      "esbuild": "0.25.12",
+      "threeRevision": "171",
+      "os": "Windows_NT 10.0.26300 x64",
+      "cpu": "12th Gen Intel(R) Core(TM) i5-12500H",
+      "logicalCpus": 16,
+      "totalMemoryBytes": 34049417216,
+      "execArgv": [],
+      "browser": "unavailable: localhost browser access was denied; no browser automation workaround attempted",
+      "webgl": "not measured; injected CPU renderer boundary only"
+    }
+  },
+  "workingTreeAtStart": " M apps/web/src/components/windows/ComponentInfoWindow.vue\n M apps/web/src/components/workbench/ComponentRibbon.vue\n M apps/web/src/components/workbench/ComponentThumbnail.vue\n M apps/web/src/data/componentSearch.ts\n M apps/web/src/three/PackageThumbnails.ts\n M apps/web/tests/package-thumbnails.test.ts\n?? apps/web/.benchmark-build/\n?? apps/web/scripts/benchmark-component-palette.mjs\n?? apps/web/src/composables/thumbnailVisibility.ts\n?? apps/web/src/data/paletteCatalog.ts\n?? apps/web/tests/component-search-index.test.ts\n?? apps/web/tests/package-thumbnail-queue.test.ts\n?? apps/web/tests/palette-thumbnails.test.ts\n?? apps/web/tests/thumbnail-visibility.test.ts\n?? docs/superpowers/plans/2026-10-16-component-palette-performance.md\n?? docs/verification/2026-10-16-component-palette-benchmark-baseline.json\n?? docs/verification/2026-10-16-component-palette-benchmark-intermediate.json\n?? docs/verification/2026-10-16-component-palette-benchmark-intermediate.md\n?? docs/verification/2026-10-16-component-palette-benchmark.json\n?? docs/verification/2026-10-16-component-palette-benchmark.md\n?? package-lock.json\n?? tmp/",
+  "logicCount": 40,
+  "querySet": [
+    "",
+    "74",
+    "740",
+    "7400",
+    "74hc00",
+    "CD4013BE",
+    "AND",
+    "NAND",
+    "not",
+    "flip-flop",
+    "TTL AND",
+    "logic IC",
+    "DIP14",
+    "schmitt",
+    "đảo",
+    "absolutely-not-a-component"
+  ],
+  "methodology": {
+    "clock": "performance.now milliseconds",
+    "quantiles": "nearest rank ceil(N*p)-1",
+    "queryBatch": "one invocation of every query; query order rotates by sample; result lengths consumed",
+    "synthetic": "repeat real 40 Logic parts; append deterministic unique suffixes to name and description; preserve type/metadata lookups",
+    "cacheBoundary": "production acquire/queue/buildComponent/disposeObject; injected render calls real fitPackageThumbnailCamera then returns a marker data URL; resource-disposal observer instrumentation is enabled",
+    "gpu": "none; no WebGL context, browser canvas, pixel capture, PNG encoding or 2D label texture work",
+    "viewport": {
+      "actualBrowserMeasurement": false,
+      "rootMarginPx": 72,
+      "assumedCardHeightPx": 120,
+      "assumedColumns": 5,
+      "scenarios": [
+        {
+          "label": "compact",
+          "visibleCards": 10,
+          "preloadCards": 5,
+          "assumedViewportHeightPx": 240
+        },
+        {
+          "label": "desktop-sized",
+          "visibleCards": 20,
+          "preloadCards": 5,
+          "assumedViewportHeightPx": 420
+        }
+      ]
+    },
+    "indexConstructionIncludedInQueries": false
+  },
+  "search": [
+    {
+      "fixture": "current Logic menu",
+      "count": 40,
+      "baseline": {
+        "batch": {
+          "samples": 30,
+          "p50Ms": 2.4485,
+          "p95Ms": 2.9218,
+          "maxMs": 3.0941,
+          "totalMs": 75.1999
+        },
+        "allQueries": {
+          "samples": 480,
+          "p50Ms": 0.1501,
+          "p95Ms": 0.2679,
+          "maxMs": 0.5404,
+          "totalMs": 75.0063
+        },
+        "queries": [
+          {
+            "query": "",
+            "matches": 40,
+            "samples": 30,
+            "p50Ms": 0.0011,
+            "p95Ms": 0.0024,
+            "maxMs": 0.0035,
+            "totalMs": 0.0403
+          },
+          {
+            "query": "74",
+            "matches": 28,
+            "samples": 30,
+            "p50Ms": 0.1517,
+            "p95Ms": 0.3352,
+            "maxMs": 0.3953,
+            "totalMs": 5.1023
+          },
+          {
+            "query": "740",
+            "matches": 8,
+            "samples": 30,
+            "p50Ms": 0.1513,
+            "p95Ms": 0.1938,
+            "maxMs": 0.1955,
+            "totalMs": 4.738
+          },
+          {
+            "query": "7400",
+            "matches": 1,
+            "samples": 30,
+            "p50Ms": 0.1506,
+            "p95Ms": 0.2722,
+            "maxMs": 0.2852,
+            "totalMs": 4.8843
+          },
+          {
+            "query": "74hc00",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 0.1491,
+            "p95Ms": 0.3064,
+            "maxMs": 0.3079,
+            "totalMs": 5.2809
+          },
+          {
+            "query": "CD4013BE",
+            "matches": 1,
+            "samples": 30,
+            "p50Ms": 0.1489,
+            "p95Ms": 0.231,
+            "maxMs": 0.3345,
+            "totalMs": 4.7776
+          },
+          {
+            "query": "AND",
+            "matches": 7,
+            "samples": 30,
+            "p50Ms": 0.1476,
+            "p95Ms": 0.251,
+            "maxMs": 0.3117,
+            "totalMs": 4.9502
+          },
+          {
+            "query": "NAND",
+            "matches": 14,
+            "samples": 30,
+            "p50Ms": 0.1479,
+            "p95Ms": 0.246,
+            "maxMs": 0.2641,
+            "totalMs": 4.7547
+          },
+          {
+            "query": "not",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 0.1439,
+            "p95Ms": 0.3114,
+            "maxMs": 0.5404,
+            "totalMs": 5.0762
+          },
+          {
+            "query": "flip-flop",
+            "matches": 1,
+            "samples": 30,
+            "p50Ms": 0.1452,
+            "p95Ms": 0.232,
+            "maxMs": 0.3475,
+            "totalMs": 4.6821
+          },
+          {
+            "query": "TTL AND",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 0.1531,
+            "p95Ms": 0.3516,
+            "maxMs": 0.3576,
+            "totalMs": 5.1925
+          },
+          {
+            "query": "logic IC",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 0.1499,
+            "p95Ms": 0.1904,
+            "maxMs": 0.3064,
+            "totalMs": 4.7271
+          },
+          {
+            "query": "DIP14",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 0.1544,
+            "p95Ms": 0.2456,
+            "maxMs": 0.304,
+            "totalMs": 5.0375
+          },
+          {
+            "query": "schmitt",
+            "matches": 3,
+            "samples": 30,
+            "p50Ms": 0.1487,
+            "p95Ms": 0.2106,
+            "maxMs": 0.2874,
+            "totalMs": 4.703
+          },
+          {
+            "query": "đảo",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 0.1595,
+            "p95Ms": 0.3495,
+            "maxMs": 0.3622,
+            "totalMs": 5.6234
+          },
+          {
+            "query": "absolutely-not-a-component",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 0.159,
+            "p95Ms": 0.2729,
+            "maxMs": 0.3507,
+            "totalMs": 5.4362
+          }
+        ]
+      },
+      "indexConstruction": {
+        "samples": 30,
+        "p50Ms": 1.0928,
+        "p95Ms": 1.948,
+        "maxMs": 1.9591,
+        "totalMs": 35.8425
+      },
+      "current": {
+        "batch": {
+          "samples": 30,
+          "p50Ms": 0.2175,
+          "p95Ms": 0.4279,
+          "maxMs": 0.5521,
+          "totalMs": 7.663
+        },
+        "allQueries": {
+          "samples": 480,
+          "p50Ms": 0.0123,
+          "p95Ms": 0.0394,
+          "maxMs": 0.3916,
+          "totalMs": 7.5004
+        },
+        "queries": [
+          {
+            "query": "",
+            "matches": 40,
+            "samples": 30,
+            "p50Ms": 0.0004,
+            "p95Ms": 0.001,
+            "maxMs": 0.0011,
+            "totalMs": 0.0135
+          },
+          {
+            "query": "74",
+            "matches": 28,
+            "samples": 30,
+            "p50Ms": 0.0182,
+            "p95Ms": 0.0326,
+            "maxMs": 0.0381,
+            "totalMs": 0.5864
+          },
+          {
+            "query": "740",
+            "matches": 8,
+            "samples": 30,
+            "p50Ms": 0.0139,
+            "p95Ms": 0.0261,
+            "maxMs": 0.0262,
+            "totalMs": 0.4927
+          },
+          {
+            "query": "7400",
+            "matches": 1,
+            "samples": 30,
+            "p50Ms": 0.013,
+            "p95Ms": 0.0272,
+            "maxMs": 0.0319,
+            "totalMs": 0.4703
+          },
+          {
+            "query": "74hc00",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 0.0113,
+            "p95Ms": 0.0214,
+            "maxMs": 0.3916,
+            "totalMs": 0.7542
+          },
+          {
+            "query": "CD4013BE",
+            "matches": 1,
+            "samples": 30,
+            "p50Ms": 0.0121,
+            "p95Ms": 0.0248,
+            "maxMs": 0.0464,
+            "totalMs": 0.4643
+          },
+          {
+            "query": "AND",
+            "matches": 7,
+            "samples": 30,
+            "p50Ms": 0.0042,
+            "p95Ms": 0.0143,
+            "maxMs": 0.0739,
+            "totalMs": 0.2361
+          },
+          {
+            "query": "NAND",
+            "matches": 14,
+            "samples": 30,
+            "p50Ms": 0.005,
+            "p95Ms": 0.0111,
+            "maxMs": 0.0259,
+            "totalMs": 0.1897
+          },
+          {
+            "query": "not",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 0.0018,
+            "p95Ms": 0.007,
+            "maxMs": 0.0075,
+            "totalMs": 0.0706
+          },
+          {
+            "query": "flip-flop",
+            "matches": 1,
+            "samples": 30,
+            "p50Ms": 0.0223,
+            "p95Ms": 0.0406,
+            "maxMs": 0.0428,
+            "totalMs": 0.8106
+          },
+          {
+            "query": "TTL AND",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 0.0132,
+            "p95Ms": 0.0223,
+            "maxMs": 0.0238,
+            "totalMs": 0.4312
+          },
+          {
+            "query": "logic IC",
+            "matches": 40,
+            "samples": 30,
+            "p50Ms": 0.0301,
+            "p95Ms": 0.0695,
+            "maxMs": 0.0987,
+            "totalMs": 1.0551
+          },
+          {
+            "query": "DIP14",
+            "matches": 40,
+            "samples": 30,
+            "p50Ms": 0.0156,
+            "p95Ms": 0.0288,
+            "maxMs": 0.0427,
+            "totalMs": 0.5531
+          },
+          {
+            "query": "schmitt",
+            "matches": 3,
+            "samples": 30,
+            "p50Ms": 0.0126,
+            "p95Ms": 0.0243,
+            "maxMs": 0.0477,
+            "totalMs": 0.4748
+          },
+          {
+            "query": "đảo",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 0.0128,
+            "p95Ms": 0.0222,
+            "maxMs": 0.0489,
+            "totalMs": 0.4649
+          },
+          {
+            "query": "absolutely-not-a-component",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 0.0129,
+            "p95Ms": 0.0237,
+            "maxMs": 0.0363,
+            "totalMs": 0.4329
+          }
+        ]
+      },
+      "batchMedianSpeedup": 11.257471,
+      "behaviorComparison": [
+        {
+          "query": "",
+          "baselineMatches": 40,
+          "currentMatches": 40,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "74",
+          "baselineMatches": 28,
+          "currentMatches": 28,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "740",
+          "baselineMatches": 8,
+          "currentMatches": 8,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "7400",
+          "baselineMatches": 1,
+          "currentMatches": 1,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "74hc00",
+          "baselineMatches": 0,
+          "currentMatches": 0,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "CD4013BE",
+          "baselineMatches": 1,
+          "currentMatches": 1,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "AND",
+          "baselineMatches": 7,
+          "currentMatches": 7,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "NAND",
+          "baselineMatches": 14,
+          "currentMatches": 14,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "not",
+          "baselineMatches": 0,
+          "currentMatches": 0,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "flip-flop",
+          "baselineMatches": 1,
+          "currentMatches": 1,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "TTL AND",
+          "baselineMatches": 0,
+          "currentMatches": 0,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "logic IC",
+          "baselineMatches": 0,
+          "currentMatches": 40,
+          "sameMembership": false,
+          "sameOrder": false,
+          "removed": 0,
+          "added": 40
+        },
+        {
+          "query": "DIP14",
+          "baselineMatches": 0,
+          "currentMatches": 40,
+          "sameMembership": false,
+          "sameOrder": false,
+          "removed": 0,
+          "added": 40
+        },
+        {
+          "query": "schmitt",
+          "baselineMatches": 3,
+          "currentMatches": 3,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "đảo",
+          "baselineMatches": 0,
+          "currentMatches": 0,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "absolutely-not-a-component",
+          "baselineMatches": 0,
+          "currentMatches": 0,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        }
+      ]
+    },
+    {
+      "fixture": "synthetic repeated Logic metadata with unique name/description suffixes",
+      "count": 4000,
+      "baseline": {
+        "batch": {
+          "samples": 30,
+          "p50Ms": 960.042,
+          "p95Ms": 1107.9029,
+          "maxMs": 1225.8555,
+          "totalMs": 27003.7384
+        },
+        "allQueries": {
+          "samples": 480,
+          "p50Ms": 62.1828,
+          "p95Ms": 87.1233,
+          "maxMs": 127.339,
+          "totalMs": 27001.6353
+        },
+        "queries": [
+          {
+            "query": "",
+            "matches": 4000,
+            "samples": 30,
+            "p50Ms": 0.0068,
+            "p95Ms": 0.0097,
+            "maxMs": 0.0214,
+            "totalMs": 0.2172
+          },
+          {
+            "query": "74",
+            "matches": 2828,
+            "samples": 30,
+            "p50Ms": 60.4376,
+            "p95Ms": 76.1406,
+            "maxMs": 87.1344,
+            "totalMs": 1745.0107
+          },
+          {
+            "query": "740",
+            "matches": 804,
+            "samples": 30,
+            "p50Ms": 63.9058,
+            "p95Ms": 77.5695,
+            "maxMs": 81.023,
+            "totalMs": 1788.8971
+          },
+          {
+            "query": "7400",
+            "matches": 100,
+            "samples": 30,
+            "p50Ms": 66.2736,
+            "p95Ms": 83.5692,
+            "maxMs": 86.6895,
+            "totalMs": 1814.2508
+          },
+          {
+            "query": "74hc00",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 65.0899,
+            "p95Ms": 91.0056,
+            "maxMs": 100.8579,
+            "totalMs": 1798.6611
+          },
+          {
+            "query": "CD4013BE",
+            "matches": 100,
+            "samples": 30,
+            "p50Ms": 66.9364,
+            "p95Ms": 97.0152,
+            "maxMs": 102.9845,
+            "totalMs": 1864.3417
+          },
+          {
+            "query": "AND",
+            "matches": 700,
+            "samples": 30,
+            "p50Ms": 63.0861,
+            "p95Ms": 90.8305,
+            "maxMs": 100.3422,
+            "totalMs": 1778.014
+          },
+          {
+            "query": "NAND",
+            "matches": 1400,
+            "samples": 30,
+            "p50Ms": 61.0951,
+            "p95Ms": 97.3394,
+            "maxMs": 106.6818,
+            "totalMs": 1777.2825
+          },
+          {
+            "query": "not",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 66.5199,
+            "p95Ms": 78.7653,
+            "maxMs": 79.1897,
+            "totalMs": 1801.1575
+          },
+          {
+            "query": "flip-flop",
+            "matches": 100,
+            "samples": 30,
+            "p50Ms": 62.4646,
+            "p95Ms": 88.8335,
+            "maxMs": 111.6369,
+            "totalMs": 1821.424
+          },
+          {
+            "query": "TTL AND",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 68.971,
+            "p95Ms": 95.9656,
+            "maxMs": 127.339,
+            "totalMs": 1976.2894
+          },
+          {
+            "query": "logic IC",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 60.5009,
+            "p95Ms": 89.3821,
+            "maxMs": 125.6271,
+            "totalMs": 1810.8581
+          },
+          {
+            "query": "DIP14",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 60.0774,
+            "p95Ms": 83.3493,
+            "maxMs": 86.9252,
+            "totalMs": 1806.027
+          },
+          {
+            "query": "schmitt",
+            "matches": 300,
+            "samples": 30,
+            "p50Ms": 60.2856,
+            "p95Ms": 86.0991,
+            "maxMs": 89.5802,
+            "totalMs": 1708.7352
+          },
+          {
+            "query": "đảo",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 62.1315,
+            "p95Ms": 84.6046,
+            "maxMs": 88.7047,
+            "totalMs": 1795.2231
+          },
+          {
+            "query": "absolutely-not-a-component",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 59.8257,
+            "p95Ms": 82.2331,
+            "maxMs": 82.7351,
+            "totalMs": 1715.2459
+          }
+        ]
+      },
+      "indexConstruction": {
+        "samples": 30,
+        "p50Ms": 122.8997,
+        "p95Ms": 419.2955,
+        "maxMs": 453.0012,
+        "totalMs": 7362.29
+      },
+      "current": {
+        "batch": {
+          "samples": 30,
+          "p50Ms": 11.2448,
+          "p95Ms": 18.5337,
+          "maxMs": 18.8281,
+          "totalMs": 353.0216
+        },
+        "allQueries": {
+          "samples": 480,
+          "p50Ms": 0.6096,
+          "p95Ms": 1.9214,
+          "maxMs": 3.4765,
+          "totalMs": 351.989
+        },
+        "queries": [
+          {
+            "query": "",
+            "matches": 4000,
+            "samples": 30,
+            "p50Ms": 0.0049,
+            "p95Ms": 0.0191,
+            "maxMs": 0.0511,
+            "totalMs": 0.2786
+          },
+          {
+            "query": "74",
+            "matches": 2828,
+            "samples": 30,
+            "p50Ms": 1.3143,
+            "p95Ms": 2.4593,
+            "maxMs": 2.6775,
+            "totalMs": 42.9049
+          },
+          {
+            "query": "740",
+            "matches": 804,
+            "samples": 30,
+            "p50Ms": 0.7559,
+            "p95Ms": 1.867,
+            "maxMs": 1.9898,
+            "totalMs": 27.9966
+          },
+          {
+            "query": "7400",
+            "matches": 100,
+            "samples": 30,
+            "p50Ms": 0.6463,
+            "p95Ms": 1.388,
+            "maxMs": 1.4733,
+            "totalMs": 23.2547
+          },
+          {
+            "query": "74hc00",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 0.3885,
+            "p95Ms": 0.7971,
+            "maxMs": 0.9166,
+            "totalMs": 14.6709
+          },
+          {
+            "query": "CD4013BE",
+            "matches": 100,
+            "samples": 30,
+            "p50Ms": 0.5351,
+            "p95Ms": 0.9253,
+            "maxMs": 0.9341,
+            "totalMs": 16.0069
+          },
+          {
+            "query": "AND",
+            "matches": 700,
+            "samples": 30,
+            "p50Ms": 0.1648,
+            "p95Ms": 0.3258,
+            "maxMs": 0.3265,
+            "totalMs": 5.176
+          },
+          {
+            "query": "NAND",
+            "matches": 1400,
+            "samples": 30,
+            "p50Ms": 0.2195,
+            "p95Ms": 0.3231,
+            "maxMs": 0.5166,
+            "totalMs": 6.6223
+          },
+          {
+            "query": "not",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 0.0603,
+            "p95Ms": 0.1403,
+            "maxMs": 0.1595,
+            "totalMs": 2.1186
+          },
+          {
+            "query": "flip-flop",
+            "matches": 100,
+            "samples": 30,
+            "p50Ms": 1.4489,
+            "p95Ms": 2.3177,
+            "maxMs": 2.8756,
+            "totalMs": 44.3763
+          },
+          {
+            "query": "TTL AND",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 0.7786,
+            "p95Ms": 1.4636,
+            "maxMs": 1.5426,
+            "totalMs": 23.9261
+          },
+          {
+            "query": "logic IC",
+            "matches": 4000,
+            "samples": 30,
+            "p50Ms": 1.8697,
+            "p95Ms": 2.8274,
+            "maxMs": 3.4765,
+            "totalMs": 55.4933
+          },
+          {
+            "query": "DIP14",
+            "matches": 4000,
+            "samples": 30,
+            "p50Ms": 1.0294,
+            "p95Ms": 1.8597,
+            "maxMs": 1.9202,
+            "totalMs": 31.3449
+          },
+          {
+            "query": "schmitt",
+            "matches": 300,
+            "samples": 30,
+            "p50Ms": 0.4859,
+            "p95Ms": 0.932,
+            "maxMs": 1.0702,
+            "totalMs": 16.9669
+          },
+          {
+            "query": "đảo",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 0.7681,
+            "p95Ms": 1.3722,
+            "maxMs": 1.4009,
+            "totalMs": 24.3644
+          },
+          {
+            "query": "absolutely-not-a-component",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 0.5471,
+            "p95Ms": 0.8425,
+            "maxMs": 1.2709,
+            "totalMs": 16.4876
+          }
+        ]
+      },
+      "batchMedianSpeedup": 85.37653,
+      "behaviorComparison": [
+        {
+          "query": "",
+          "baselineMatches": 4000,
+          "currentMatches": 4000,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "74",
+          "baselineMatches": 2828,
+          "currentMatches": 2828,
+          "sameMembership": true,
+          "sameOrder": false,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "740",
+          "baselineMatches": 804,
+          "currentMatches": 804,
+          "sameMembership": true,
+          "sameOrder": false,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "7400",
+          "baselineMatches": 100,
+          "currentMatches": 100,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "74hc00",
+          "baselineMatches": 0,
+          "currentMatches": 0,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "CD4013BE",
+          "baselineMatches": 100,
+          "currentMatches": 100,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "AND",
+          "baselineMatches": 700,
+          "currentMatches": 700,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "NAND",
+          "baselineMatches": 1400,
+          "currentMatches": 1400,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "not",
+          "baselineMatches": 0,
+          "currentMatches": 0,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "flip-flop",
+          "baselineMatches": 100,
+          "currentMatches": 100,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "TTL AND",
+          "baselineMatches": 0,
+          "currentMatches": 0,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "logic IC",
+          "baselineMatches": 0,
+          "currentMatches": 4000,
+          "sameMembership": false,
+          "sameOrder": false,
+          "removed": 0,
+          "added": 4000
+        },
+        {
+          "query": "DIP14",
+          "baselineMatches": 0,
+          "currentMatches": 4000,
+          "sameMembership": false,
+          "sameOrder": false,
+          "removed": 0,
+          "added": 4000
+        },
+        {
+          "query": "schmitt",
+          "baselineMatches": 300,
+          "currentMatches": 300,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "đảo",
+          "baselineMatches": 0,
+          "currentMatches": 0,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "absolutely-not-a-component",
+          "baselineMatches": 0,
+          "currentMatches": 0,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        }
+      ]
+    },
+    {
+      "fixture": "synthetic repeated Logic metadata with unique name/description suffixes",
+      "count": 10000,
+      "baseline": {
+        "batch": {
+          "samples": 30,
+          "p50Ms": 2172.9689,
+          "p95Ms": 2450.3802,
+          "maxMs": 2483.0126,
+          "totalMs": 66054.014
+        },
+        "allQueries": {
+          "samples": 480,
+          "p50Ms": 143.1377,
+          "p95Ms": 181.3139,
+          "maxMs": 312.585,
+          "totalMs": 66051.514
+        },
+        "queries": [
+          {
+            "query": "",
+            "matches": 10000,
+            "samples": 30,
+            "p50Ms": 0.0066,
+            "p95Ms": 0.0093,
+            "maxMs": 0.0104,
+            "totalMs": 0.206
+          },
+          {
+            "query": "74",
+            "matches": 7093,
+            "samples": 30,
+            "p50Ms": 146.9178,
+            "p95Ms": 196.8658,
+            "maxMs": 214.0399,
+            "totalMs": 4512.4721
+          },
+          {
+            "query": "740",
+            "matches": 2014,
+            "samples": 30,
+            "p50Ms": 144.0847,
+            "p95Ms": 181.3139,
+            "maxMs": 185.7191,
+            "totalMs": 4423.1722
+          },
+          {
+            "query": "7400",
+            "matches": 251,
+            "samples": 30,
+            "p50Ms": 147.7359,
+            "p95Ms": 182.7215,
+            "maxMs": 190.2932,
+            "totalMs": 4427.5365
+          },
+          {
+            "query": "74hc00",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 144.6413,
+            "p95Ms": 181.4551,
+            "maxMs": 200.673,
+            "totalMs": 4489.7253
+          },
+          {
+            "query": "CD4013BE",
+            "matches": 250,
+            "samples": 30,
+            "p50Ms": 142.7132,
+            "p95Ms": 181.5085,
+            "maxMs": 252.5718,
+            "totalMs": 4366.4776
+          },
+          {
+            "query": "AND",
+            "matches": 1750,
+            "samples": 30,
+            "p50Ms": 149.3566,
+            "p95Ms": 183.2569,
+            "maxMs": 193.5557,
+            "totalMs": 4427.9412
+          },
+          {
+            "query": "NAND",
+            "matches": 3500,
+            "samples": 30,
+            "p50Ms": 146.3217,
+            "p95Ms": 180.4795,
+            "maxMs": 252.6374,
+            "totalMs": 4461.575
+          },
+          {
+            "query": "not",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 147.0061,
+            "p95Ms": 187.7681,
+            "maxMs": 312.585,
+            "totalMs": 4603.5595
+          },
+          {
+            "query": "flip-flop",
+            "matches": 250,
+            "samples": 30,
+            "p50Ms": 139.7207,
+            "p95Ms": 176.1667,
+            "maxMs": 176.3277,
+            "totalMs": 4255.6356
+          },
+          {
+            "query": "TTL AND",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 144.1098,
+            "p95Ms": 184.9139,
+            "maxMs": 187.2764,
+            "totalMs": 4402.4265
+          },
+          {
+            "query": "logic IC",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 145.5408,
+            "p95Ms": 183.9873,
+            "maxMs": 184.8785,
+            "totalMs": 4382.6414
+          },
+          {
+            "query": "DIP14",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 144.8296,
+            "p95Ms": 169.5519,
+            "maxMs": 181.722,
+            "totalMs": 4322.0795
+          },
+          {
+            "query": "schmitt",
+            "matches": 750,
+            "samples": 30,
+            "p50Ms": 141.4004,
+            "p95Ms": 169.5003,
+            "maxMs": 175.6516,
+            "totalMs": 4322.8428
+          },
+          {
+            "query": "đảo",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 135.851,
+            "p95Ms": 179.5787,
+            "maxMs": 197.2839,
+            "totalMs": 4285.879
+          },
+          {
+            "query": "absolutely-not-a-component",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 140.4997,
+            "p95Ms": 186.4235,
+            "maxMs": 204.7133,
+            "totalMs": 4367.3438
+          }
+        ]
+      },
+      "indexConstruction": {
+        "samples": 30,
+        "p50Ms": 986.3153,
+        "p95Ms": 1098.4974,
+        "maxMs": 1181.1954,
+        "totalMs": 29951.6093
+      },
+      "current": {
+        "batch": {
+          "samples": 30,
+          "p50Ms": 45.761,
+          "p95Ms": 57.4169,
+          "maxMs": 68.3764,
+          "totalMs": 1324.3389
+        },
+        "allQueries": {
+          "samples": 480,
+          "p50Ms": 2.4526,
+          "p95Ms": 6.9553,
+          "maxMs": 10.241,
+          "totalMs": 1322.1774
+        },
+        "queries": [
+          {
+            "query": "",
+            "matches": 10000,
+            "samples": 30,
+            "p50Ms": 0.0111,
+            "p95Ms": 0.0315,
+            "maxMs": 0.3094,
+            "totalMs": 0.6909
+          },
+          {
+            "query": "74",
+            "matches": 7093,
+            "samples": 30,
+            "p50Ms": 4.9547,
+            "p95Ms": 6.7549,
+            "maxMs": 10.0967,
+            "totalMs": 150.5924
+          },
+          {
+            "query": "740",
+            "matches": 2014,
+            "samples": 30,
+            "p50Ms": 4.1874,
+            "p95Ms": 5.5223,
+            "maxMs": 5.6009,
+            "totalMs": 116.708
+          },
+          {
+            "query": "7400",
+            "matches": 251,
+            "samples": 30,
+            "p50Ms": 3.3859,
+            "p95Ms": 4.2754,
+            "maxMs": 4.3158,
+            "totalMs": 96.4295
+          },
+          {
+            "query": "74hc00",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 1.8916,
+            "p95Ms": 3.1083,
+            "maxMs": 3.6814,
+            "totalMs": 58.8392
+          },
+          {
+            "query": "CD4013BE",
+            "matches": 250,
+            "samples": 30,
+            "p50Ms": 1.8193,
+            "p95Ms": 2.8761,
+            "maxMs": 3.1047,
+            "totalMs": 58.8734
+          },
+          {
+            "query": "AND",
+            "matches": 1750,
+            "samples": 30,
+            "p50Ms": 0.4004,
+            "p95Ms": 0.6184,
+            "maxMs": 0.6201,
+            "totalMs": 11.6667
+          },
+          {
+            "query": "NAND",
+            "matches": 3500,
+            "samples": 30,
+            "p50Ms": 0.5046,
+            "p95Ms": 0.7919,
+            "maxMs": 0.8754,
+            "totalMs": 15.7726
+          },
+          {
+            "query": "not",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 0.133,
+            "p95Ms": 0.2331,
+            "maxMs": 0.2608,
+            "totalMs": 4.2134
+          },
+          {
+            "query": "flip-flop",
+            "matches": 250,
+            "samples": 30,
+            "p50Ms": 6.1247,
+            "p95Ms": 7.9207,
+            "maxMs": 9.899,
+            "totalMs": 179.4651
+          },
+          {
+            "query": "TTL AND",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 3.1192,
+            "p95Ms": 4.1674,
+            "maxMs": 6.4239,
+            "totalMs": 91.1658
+          },
+          {
+            "query": "logic IC",
+            "matches": 10000,
+            "samples": 30,
+            "p50Ms": 6.9553,
+            "p95Ms": 9.3237,
+            "maxMs": 10.241,
+            "totalMs": 206.0756
+          },
+          {
+            "query": "DIP14",
+            "matches": 10000,
+            "samples": 30,
+            "p50Ms": 3.8517,
+            "p95Ms": 5.9714,
+            "maxMs": 7.8261,
+            "totalMs": 115.3835
+          },
+          {
+            "query": "schmitt",
+            "matches": 750,
+            "samples": 30,
+            "p50Ms": 2.2375,
+            "p95Ms": 3.0757,
+            "maxMs": 4.7567,
+            "totalMs": 66.5602
+          },
+          {
+            "query": "đảo",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 2.8941,
+            "p95Ms": 4.4348,
+            "maxMs": 6.0042,
+            "totalMs": 90.9488
+          },
+          {
+            "query": "absolutely-not-a-component",
+            "matches": 0,
+            "samples": 30,
+            "p50Ms": 1.7686,
+            "p95Ms": 3.2446,
+            "maxMs": 4.6698,
+            "totalMs": 58.7923
+          }
+        ]
+      },
+      "batchMedianSpeedup": 47.485171,
+      "behaviorComparison": [
+        {
+          "query": "",
+          "baselineMatches": 10000,
+          "currentMatches": 10000,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "74",
+          "baselineMatches": 7093,
+          "currentMatches": 7093,
+          "sameMembership": true,
+          "sameOrder": false,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "740",
+          "baselineMatches": 2014,
+          "currentMatches": 2014,
+          "sameMembership": true,
+          "sameOrder": false,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "7400",
+          "baselineMatches": 251,
+          "currentMatches": 251,
+          "sameMembership": true,
+          "sameOrder": false,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "74hc00",
+          "baselineMatches": 0,
+          "currentMatches": 0,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "CD4013BE",
+          "baselineMatches": 250,
+          "currentMatches": 250,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "AND",
+          "baselineMatches": 1750,
+          "currentMatches": 1750,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "NAND",
+          "baselineMatches": 3500,
+          "currentMatches": 3500,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "not",
+          "baselineMatches": 0,
+          "currentMatches": 0,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "flip-flop",
+          "baselineMatches": 250,
+          "currentMatches": 250,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "TTL AND",
+          "baselineMatches": 0,
+          "currentMatches": 0,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "logic IC",
+          "baselineMatches": 0,
+          "currentMatches": 10000,
+          "sameMembership": false,
+          "sameOrder": false,
+          "removed": 0,
+          "added": 10000
+        },
+        {
+          "query": "DIP14",
+          "baselineMatches": 0,
+          "currentMatches": 10000,
+          "sameMembership": false,
+          "sameOrder": false,
+          "removed": 0,
+          "added": 10000
+        },
+        {
+          "query": "schmitt",
+          "baselineMatches": 750,
+          "currentMatches": 750,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "đảo",
+          "baselineMatches": 0,
+          "currentMatches": 0,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        },
+        {
+          "query": "absolutely-not-a-component",
+          "baselineMatches": 0,
+          "currentMatches": 0,
+          "sameMembership": true,
+          "sameOrder": true,
+          "removed": 0,
+          "added": 0
+        }
+      ]
+    }
+  ],
+  "thumbnails": {
+    "models": {
+      "implementation": "shared current ComponentModel / unchanged dependency graph",
+      "itemCount": 40,
+      "construction": {
+        "samples": 320,
+        "p50Ms": 9.5854,
+        "p95Ms": 16.2698,
+        "maxMs": 34.2372,
+        "totalMs": 3315.5621
+      },
+      "cameraFraming": {
+        "samples": 320,
+        "p50Ms": 0.097,
+        "p95Ms": 0.2041,
+        "maxMs": 0.4866,
+        "totalMs": 36.7629
+      },
+      "disposal": {
+        "samples": 320,
+        "p50Ms": 0.0575,
+        "p95Ms": 0.16,
+        "maxMs": 1.1838,
+        "totalMs": 23.9017
+      },
+      "resources": {
+        "geometryCreated": 6400,
+        "geometryDisposed": 6400,
+        "materialCreated": 2240,
+        "materialDisposed": 2240,
+        "textureCreated": 0,
+        "textureDisposed": 0
+      }
+    },
+    "cold": [
+      {
+        "label": "baseline, eager all cards",
+        "demand": 40,
+        "visibleCards": 40,
+        "preloadCards": 0,
+        "acquisition": {
+          "samples": 8,
+          "p50Ms": 0.7371,
+          "p95Ms": 1.0337,
+          "maxMs": 1.0337,
+          "totalMs": 5.1793
+        },
+        "firstCaptureBoundary": {
+          "samples": 8,
+          "p50Ms": 10.2573,
+          "p95Ms": 18.6037,
+          "maxMs": 18.6037,
+          "totalMs": 90.9895
+        },
+        "allReady": {
+          "samples": 8,
+          "p50Ms": 671.8842,
+          "p95Ms": 752.3311,
+          "maxMs": 752.3311,
+          "totalMs": 5452.5105
+        },
+        "revisit": {
+          "samples": 8,
+          "p50Ms": 0.4338,
+          "p95Ms": 1.7531,
+          "maxMs": 1.7531,
+          "totalMs": 6.1108
+        },
+        "runs": [
+          {
+            "requested": 40,
+            "captures": 40,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 40,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 1.0337,
+            "firstCaptureBoundaryMs": 11.6599,
+            "allReadyMs": 682.8835,
+            "framingMs": {
+              "samples": 40,
+              "p50Ms": 0.1432,
+              "p95Ms": 0.2562,
+              "maxMs": 0.8243,
+              "totalMs": 6.722
+            },
+            "resources": {
+              "geometryCreated": 800,
+              "geometryDisposed": 800,
+              "materialCreated": 280,
+              "materialDisposed": 280,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N",
+              "SN7440N",
+              "SN7486N",
+              "SN74LS136N",
+              "CD4001BE",
+              "CD4011BE",
+              "CD4012BE",
+              "CD4013BE",
+              "CD4030BE",
+              "CD4069UBE",
+              "CD4070BE",
+              "CD4071BE",
+              "CD4072BE",
+              "CD4077BE",
+              "CD4081BE",
+              "CD4093BE"
+            ],
+            "revisit": {
+              "requested": 40,
+              "allReadyMs": 1.3782,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 40,
+            "captures": 40,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 40,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.3985,
+            "firstCaptureBoundaryMs": 9.6869,
+            "allReadyMs": 653.925,
+            "framingMs": {
+              "samples": 40,
+              "p50Ms": 0.1704,
+              "p95Ms": 0.3162,
+              "maxMs": 0.715,
+              "totalMs": 8.024
+            },
+            "resources": {
+              "geometryCreated": 800,
+              "geometryDisposed": 800,
+              "materialCreated": 280,
+              "materialDisposed": 280,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N",
+              "SN7440N",
+              "SN7486N",
+              "SN74LS136N",
+              "CD4001BE",
+              "CD4011BE",
+              "CD4012BE",
+              "CD4013BE",
+              "CD4030BE",
+              "CD4069UBE",
+              "CD4070BE",
+              "CD4071BE",
+              "CD4072BE",
+              "CD4077BE",
+              "CD4081BE",
+              "CD4093BE"
+            ],
+            "revisit": {
+              "requested": 40,
+              "allReadyMs": 1.7531,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 40,
+            "captures": 40,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 40,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.4715,
+            "firstCaptureBoundaryMs": 11.3104,
+            "allReadyMs": 671.8842,
+            "framingMs": {
+              "samples": 40,
+              "p50Ms": 0.1587,
+              "p95Ms": 0.4881,
+              "maxMs": 0.7191,
+              "totalMs": 8.6958
+            },
+            "resources": {
+              "geometryCreated": 800,
+              "geometryDisposed": 800,
+              "materialCreated": 280,
+              "materialDisposed": 280,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N",
+              "SN7440N",
+              "SN7486N",
+              "SN74LS136N",
+              "CD4001BE",
+              "CD4011BE",
+              "CD4012BE",
+              "CD4013BE",
+              "CD4030BE",
+              "CD4069UBE",
+              "CD4070BE",
+              "CD4071BE",
+              "CD4072BE",
+              "CD4077BE",
+              "CD4081BE",
+              "CD4093BE"
+            ],
+            "revisit": {
+              "requested": 40,
+              "allReadyMs": 0.4338,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 40,
+            "captures": 40,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 40,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.7371,
+            "firstCaptureBoundaryMs": 10.2573,
+            "allReadyMs": 643.5899,
+            "framingMs": {
+              "samples": 40,
+              "p50Ms": 0.1513,
+              "p95Ms": 0.2569,
+              "maxMs": 0.361,
+              "totalMs": 6.8809
+            },
+            "resources": {
+              "geometryCreated": 800,
+              "geometryDisposed": 800,
+              "materialCreated": 280,
+              "materialDisposed": 280,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N",
+              "SN7440N",
+              "SN7486N",
+              "SN74LS136N",
+              "CD4001BE",
+              "CD4011BE",
+              "CD4012BE",
+              "CD4013BE",
+              "CD4030BE",
+              "CD4069UBE",
+              "CD4070BE",
+              "CD4071BE",
+              "CD4072BE",
+              "CD4077BE",
+              "CD4081BE",
+              "CD4093BE"
+            ],
+            "revisit": {
+              "requested": 40,
+              "allReadyMs": 0.9586,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 40,
+            "captures": 40,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 40,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.8018,
+            "firstCaptureBoundaryMs": 18.6037,
+            "allReadyMs": 741.6108,
+            "framingMs": {
+              "samples": 40,
+              "p50Ms": 0.1262,
+              "p95Ms": 0.5646,
+              "maxMs": 1.7088,
+              "totalMs": 8.6648
+            },
+            "resources": {
+              "geometryCreated": 800,
+              "geometryDisposed": 800,
+              "materialCreated": 280,
+              "materialDisposed": 280,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N",
+              "SN7440N",
+              "SN7486N",
+              "SN74LS136N",
+              "CD4001BE",
+              "CD4011BE",
+              "CD4012BE",
+              "CD4013BE",
+              "CD4030BE",
+              "CD4069UBE",
+              "CD4070BE",
+              "CD4071BE",
+              "CD4072BE",
+              "CD4077BE",
+              "CD4081BE",
+              "CD4093BE"
+            ],
+            "revisit": {
+              "requested": 40,
+              "allReadyMs": 0.2021,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 40,
+            "captures": 40,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 40,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.2358,
+            "firstCaptureBoundaryMs": 6.8854,
+            "allReadyMs": 706.83,
+            "framingMs": {
+              "samples": 40,
+              "p50Ms": 0.1505,
+              "p95Ms": 0.412,
+              "maxMs": 0.467,
+              "totalMs": 7.6037
+            },
+            "resources": {
+              "geometryCreated": 800,
+              "geometryDisposed": 800,
+              "materialCreated": 280,
+              "materialDisposed": 280,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N",
+              "SN7440N",
+              "SN7486N",
+              "SN74LS136N",
+              "CD4001BE",
+              "CD4011BE",
+              "CD4012BE",
+              "CD4013BE",
+              "CD4030BE",
+              "CD4069UBE",
+              "CD4070BE",
+              "CD4071BE",
+              "CD4072BE",
+              "CD4077BE",
+              "CD4081BE",
+              "CD4093BE"
+            ],
+            "revisit": {
+              "requested": 40,
+              "allReadyMs": 0.5752,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 40,
+            "captures": 40,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 40,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.7411,
+            "firstCaptureBoundaryMs": 13.4514,
+            "allReadyMs": 752.3311,
+            "framingMs": {
+              "samples": 40,
+              "p50Ms": 0.1329,
+              "p95Ms": 0.513,
+              "maxMs": 0.6966,
+              "totalMs": 7.6981
+            },
+            "resources": {
+              "geometryCreated": 800,
+              "geometryDisposed": 800,
+              "materialCreated": 280,
+              "materialDisposed": 280,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N",
+              "SN7440N",
+              "SN7486N",
+              "SN74LS136N",
+              "CD4001BE",
+              "CD4011BE",
+              "CD4012BE",
+              "CD4013BE",
+              "CD4030BE",
+              "CD4069UBE",
+              "CD4070BE",
+              "CD4071BE",
+              "CD4072BE",
+              "CD4077BE",
+              "CD4081BE",
+              "CD4093BE"
+            ],
+            "revisit": {
+              "requested": 40,
+              "allReadyMs": 0.4142,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 40,
+            "captures": 40,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 40,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.7598,
+            "firstCaptureBoundaryMs": 9.1345,
+            "allReadyMs": 599.456,
+            "framingMs": {
+              "samples": 40,
+              "p50Ms": 0.0883,
+              "p95Ms": 0.2044,
+              "maxMs": 0.2622,
+              "totalMs": 4.2676
+            },
+            "resources": {
+              "geometryCreated": 800,
+              "geometryDisposed": 800,
+              "materialCreated": 280,
+              "materialDisposed": 280,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N",
+              "SN7440N",
+              "SN7486N",
+              "SN74LS136N",
+              "CD4001BE",
+              "CD4011BE",
+              "CD4012BE",
+              "CD4013BE",
+              "CD4030BE",
+              "CD4069UBE",
+              "CD4070BE",
+              "CD4071BE",
+              "CD4072BE",
+              "CD4077BE",
+              "CD4081BE",
+              "CD4093BE"
+            ],
+            "revisit": {
+              "requested": 40,
+              "allReadyMs": 0.3956,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          }
+        ]
+      },
+      {
+        "label": "baseline, compact viewport",
+        "demand": 15,
+        "visibleCards": 10,
+        "preloadCards": 5,
+        "acquisition": {
+          "samples": 8,
+          "p50Ms": 0.1524,
+          "p95Ms": 0.2673,
+          "maxMs": 0.2673,
+          "totalMs": 1.3173
+        },
+        "firstCaptureBoundary": {
+          "samples": 8,
+          "p50Ms": 10.429,
+          "p95Ms": 22.9238,
+          "maxMs": 22.9238,
+          "totalMs": 96.152
+        },
+        "allReady": {
+          "samples": 8,
+          "p50Ms": 233.5709,
+          "p95Ms": 323.4807,
+          "maxMs": 323.4807,
+          "totalMs": 2006.8121
+        },
+        "revisit": {
+          "samples": 8,
+          "p50Ms": 0.1972,
+          "p95Ms": 0.8327,
+          "maxMs": 0.8327,
+          "totalMs": 2.1583
+        },
+        "runs": [
+          {
+            "requested": 15,
+            "captures": 15,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 15,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.227,
+            "firstCaptureBoundaryMs": 22.9238,
+            "allReadyMs": 230.6943,
+            "framingMs": {
+              "samples": 15,
+              "p50Ms": 0.0893,
+              "p95Ms": 0.1419,
+              "maxMs": 0.1419,
+              "totalMs": 1.4011
+            },
+            "resources": {
+              "geometryCreated": 300,
+              "geometryDisposed": 300,
+              "materialCreated": 105,
+              "materialDisposed": 105,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N"
+            ],
+            "revisit": {
+              "requested": 15,
+              "allReadyMs": 0.1972,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 15,
+            "captures": 15,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 15,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.2673,
+            "firstCaptureBoundaryMs": 10.429,
+            "allReadyMs": 233.5709,
+            "framingMs": {
+              "samples": 15,
+              "p50Ms": 0.1119,
+              "p95Ms": 0.3708,
+              "maxMs": 0.3708,
+              "totalMs": 1.7702
+            },
+            "resources": {
+              "geometryCreated": 300,
+              "geometryDisposed": 300,
+              "materialCreated": 105,
+              "materialDisposed": 105,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N"
+            ],
+            "revisit": {
+              "requested": 15,
+              "allReadyMs": 0.1875,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 15,
+            "captures": 15,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 15,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.1524,
+            "firstCaptureBoundaryMs": 11.5324,
+            "allReadyMs": 220.1141,
+            "framingMs": {
+              "samples": 15,
+              "p50Ms": 0.0915,
+              "p95Ms": 0.1854,
+              "maxMs": 0.1854,
+              "totalMs": 1.3551
+            },
+            "resources": {
+              "geometryCreated": 300,
+              "geometryDisposed": 300,
+              "materialCreated": 105,
+              "materialDisposed": 105,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N"
+            ],
+            "revisit": {
+              "requested": 15,
+              "allReadyMs": 0.1035,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 15,
+            "captures": 15,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 15,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.1571,
+            "firstCaptureBoundaryMs": 10.7756,
+            "allReadyMs": 252.64,
+            "framingMs": {
+              "samples": 15,
+              "p50Ms": 0.0966,
+              "p95Ms": 0.1917,
+              "maxMs": 0.1917,
+              "totalMs": 1.5714
+            },
+            "resources": {
+              "geometryCreated": 300,
+              "geometryDisposed": 300,
+              "materialCreated": 105,
+              "materialDisposed": 105,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N"
+            ],
+            "revisit": {
+              "requested": 15,
+              "allReadyMs": 0.1196,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 15,
+            "captures": 15,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 15,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.1047,
+            "firstCaptureBoundaryMs": 10.1604,
+            "allReadyMs": 277.6878,
+            "framingMs": {
+              "samples": 15,
+              "p50Ms": 0.103,
+              "p95Ms": 0.2181,
+              "maxMs": 0.2181,
+              "totalMs": 1.6621
+            },
+            "resources": {
+              "geometryCreated": 300,
+              "geometryDisposed": 300,
+              "materialCreated": 105,
+              "materialDisposed": 105,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N"
+            ],
+            "revisit": {
+              "requested": 15,
+              "allReadyMs": 0.8327,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 15,
+            "captures": 15,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 15,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.218,
+            "firstCaptureBoundaryMs": 13.6734,
+            "allReadyMs": 323.4807,
+            "framingMs": {
+              "samples": 15,
+              "p50Ms": 0.1086,
+              "p95Ms": 0.3824,
+              "maxMs": 0.3824,
+              "totalMs": 1.9349
+            },
+            "resources": {
+              "geometryCreated": 300,
+              "geometryDisposed": 300,
+              "materialCreated": 105,
+              "materialDisposed": 105,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N"
+            ],
+            "revisit": {
+              "requested": 15,
+              "allReadyMs": 0.238,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 15,
+            "captures": 15,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 15,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.0965,
+            "firstCaptureBoundaryMs": 8.0084,
+            "allReadyMs": 226.7405,
+            "framingMs": {
+              "samples": 15,
+              "p50Ms": 0.0617,
+              "p95Ms": 0.1154,
+              "maxMs": 0.1154,
+              "totalMs": 1.0859
+            },
+            "resources": {
+              "geometryCreated": 300,
+              "geometryDisposed": 300,
+              "materialCreated": 105,
+              "materialDisposed": 105,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N"
+            ],
+            "revisit": {
+              "requested": 15,
+              "allReadyMs": 0.2491,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 15,
+            "captures": 15,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 15,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.0943,
+            "firstCaptureBoundaryMs": 8.649,
+            "allReadyMs": 241.8838,
+            "framingMs": {
+              "samples": 15,
+              "p50Ms": 0.1113,
+              "p95Ms": 0.1671,
+              "maxMs": 0.1671,
+              "totalMs": 1.6178
+            },
+            "resources": {
+              "geometryCreated": 300,
+              "geometryDisposed": 300,
+              "materialCreated": 105,
+              "materialDisposed": 105,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N"
+            ],
+            "revisit": {
+              "requested": 15,
+              "allReadyMs": 0.2307,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          }
+        ]
+      },
+      {
+        "label": "baseline, desktop-sized viewport",
+        "demand": 25,
+        "visibleCards": 20,
+        "preloadCards": 5,
+        "acquisition": {
+          "samples": 8,
+          "p50Ms": 0.2318,
+          "p95Ms": 0.4672,
+          "maxMs": 0.4672,
+          "totalMs": 2.1743
+        },
+        "firstCaptureBoundary": {
+          "samples": 8,
+          "p50Ms": 10.8384,
+          "p95Ms": 15.495,
+          "maxMs": 15.495,
+          "totalMs": 84.6565
+        },
+        "allReady": {
+          "samples": 8,
+          "p50Ms": 415.5102,
+          "p95Ms": 529.174,
+          "maxMs": 529.174,
+          "totalMs": 3558.4489
+        },
+        "revisit": {
+          "samples": 8,
+          "p50Ms": 0.2152,
+          "p95Ms": 0.3458,
+          "maxMs": 0.3458,
+          "totalMs": 1.9249
+        },
+        "runs": [
+          {
+            "requested": 25,
+            "captures": 25,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 25,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.3366,
+            "firstCaptureBoundaryMs": 11.9212,
+            "allReadyMs": 404.6447,
+            "framingMs": {
+              "samples": 25,
+              "p50Ms": 0.0791,
+              "p95Ms": 0.1228,
+              "maxMs": 0.8248,
+              "totalMs": 2.733
+            },
+            "resources": {
+              "geometryCreated": 500,
+              "geometryDisposed": 500,
+              "materialCreated": 175,
+              "materialDisposed": 175,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N"
+            ],
+            "revisit": {
+              "requested": 25,
+              "allReadyMs": 0.2848,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 25,
+            "captures": 25,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 25,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.2175,
+            "firstCaptureBoundaryMs": 11.88,
+            "allReadyMs": 446.2981,
+            "framingMs": {
+              "samples": 25,
+              "p50Ms": 0.0823,
+              "p95Ms": 0.2337,
+              "maxMs": 0.3913,
+              "totalMs": 2.6133
+            },
+            "resources": {
+              "geometryCreated": 500,
+              "geometryDisposed": 500,
+              "materialCreated": 175,
+              "materialDisposed": 175,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N"
+            ],
+            "revisit": {
+              "requested": 25,
+              "allReadyMs": 0.2001,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 25,
+            "captures": 25,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 25,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.212,
+            "firstCaptureBoundaryMs": 8.5849,
+            "allReadyMs": 415.5102,
+            "framingMs": {
+              "samples": 25,
+              "p50Ms": 0.0754,
+              "p95Ms": 0.118,
+              "maxMs": 0.1734,
+              "totalMs": 1.9633
+            },
+            "resources": {
+              "geometryCreated": 500,
+              "geometryDisposed": 500,
+              "materialCreated": 175,
+              "materialDisposed": 175,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N"
+            ],
+            "revisit": {
+              "requested": 25,
+              "allReadyMs": 0.3381,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 25,
+            "captures": 25,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 25,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.2403,
+            "firstCaptureBoundaryMs": 10.8384,
+            "allReadyMs": 379.494,
+            "framingMs": {
+              "samples": 25,
+              "p50Ms": 0.0675,
+              "p95Ms": 0.1131,
+              "maxMs": 0.2065,
+              "totalMs": 1.9661
+            },
+            "resources": {
+              "geometryCreated": 500,
+              "geometryDisposed": 500,
+              "materialCreated": 175,
+              "materialDisposed": 175,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N"
+            ],
+            "revisit": {
+              "requested": 25,
+              "allReadyMs": 0.3458,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 25,
+            "captures": 25,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 25,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.3553,
+            "firstCaptureBoundaryMs": 12.1274,
+            "allReadyMs": 493.6409,
+            "framingMs": {
+              "samples": 25,
+              "p50Ms": 0.0937,
+              "p95Ms": 0.3266,
+              "maxMs": 0.4931,
+              "totalMs": 3.069
+            },
+            "resources": {
+              "geometryCreated": 500,
+              "geometryDisposed": 500,
+              "materialCreated": 175,
+              "materialDisposed": 175,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N"
+            ],
+            "revisit": {
+              "requested": 25,
+              "allReadyMs": 0.2819,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 25,
+            "captures": 25,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 25,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.4672,
+            "firstCaptureBoundaryMs": 15.495,
+            "allReadyMs": 519.5674,
+            "framingMs": {
+              "samples": 25,
+              "p50Ms": 0.1055,
+              "p95Ms": 0.1892,
+              "maxMs": 0.1944,
+              "totalMs": 2.7094
+            },
+            "resources": {
+              "geometryCreated": 500,
+              "geometryDisposed": 500,
+              "materialCreated": 175,
+              "materialDisposed": 175,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N"
+            ],
+            "revisit": {
+              "requested": 25,
+              "allReadyMs": 0.1324,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 25,
+            "captures": 25,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 25,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.2318,
+            "firstCaptureBoundaryMs": 8.6835,
+            "allReadyMs": 529.174,
+            "framingMs": {
+              "samples": 25,
+              "p50Ms": 0.096,
+              "p95Ms": 0.2728,
+              "maxMs": 0.2734,
+              "totalMs": 2.8088
+            },
+            "resources": {
+              "geometryCreated": 500,
+              "geometryDisposed": 500,
+              "materialCreated": 175,
+              "materialDisposed": 175,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N"
+            ],
+            "revisit": {
+              "requested": 25,
+              "allReadyMs": 0.1266,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 25,
+            "captures": 25,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 25,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.1136,
+            "firstCaptureBoundaryMs": 5.1261,
+            "allReadyMs": 370.1196,
+            "framingMs": {
+              "samples": 25,
+              "p50Ms": 0.0631,
+              "p95Ms": 0.2082,
+              "maxMs": 0.3238,
+              "totalMs": 2.1335
+            },
+            "resources": {
+              "geometryCreated": 500,
+              "geometryDisposed": 500,
+              "materialCreated": 175,
+              "materialDisposed": 175,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N"
+            ],
+            "revisit": {
+              "requested": 25,
+              "allReadyMs": 0.2152,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          }
+        ]
+      },
+      {
+        "label": "current, eager all cards",
+        "demand": 40,
+        "visibleCards": 40,
+        "preloadCards": 0,
+        "acquisition": {
+          "samples": 8,
+          "p50Ms": 0.8465,
+          "p95Ms": 1.3281,
+          "maxMs": 1.3281,
+          "totalMs": 6.6406
+        },
+        "firstCaptureBoundary": {
+          "samples": 8,
+          "p50Ms": 14.1899,
+          "p95Ms": 21.1456,
+          "maxMs": 21.1456,
+          "totalMs": 124.3597
+        },
+        "allReady": {
+          "samples": 8,
+          "p50Ms": 716.2351,
+          "p95Ms": 762.3452,
+          "maxMs": 762.3452,
+          "totalMs": 5713.2171
+        },
+        "revisit": {
+          "samples": 8,
+          "p50Ms": 0.4774,
+          "p95Ms": 1.2164,
+          "maxMs": 1.2164,
+          "totalMs": 5.5705
+        },
+        "runs": [
+          {
+            "requested": 40,
+            "captures": 40,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 40,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.4195,
+            "firstCaptureBoundaryMs": 21.1456,
+            "allReadyMs": 746.2112,
+            "framingMs": {
+              "samples": 40,
+              "p50Ms": 0.0974,
+              "p95Ms": 0.1596,
+              "maxMs": 0.3108,
+              "totalMs": 4.1626
+            },
+            "resources": {
+              "geometryCreated": 800,
+              "geometryDisposed": 800,
+              "materialCreated": 280,
+              "materialDisposed": 280,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N",
+              "SN7440N",
+              "SN7486N",
+              "SN74LS136N",
+              "CD4001BE",
+              "CD4011BE",
+              "CD4012BE",
+              "CD4013BE",
+              "CD4030BE",
+              "CD4069UBE",
+              "CD4070BE",
+              "CD4071BE",
+              "CD4072BE",
+              "CD4077BE",
+              "CD4081BE",
+              "CD4093BE"
+            ],
+            "revisit": {
+              "requested": 40,
+              "allReadyMs": 1.0059,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 40,
+            "captures": 40,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 40,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 1.0102,
+            "firstCaptureBoundaryMs": 12.1902,
+            "allReadyMs": 731.8461,
+            "framingMs": {
+              "samples": 40,
+              "p50Ms": 0.0875,
+              "p95Ms": 0.12,
+              "maxMs": 0.3204,
+              "totalMs": 3.6941
+            },
+            "resources": {
+              "geometryCreated": 800,
+              "geometryDisposed": 800,
+              "materialCreated": 280,
+              "materialDisposed": 280,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N",
+              "SN7440N",
+              "SN7486N",
+              "SN74LS136N",
+              "CD4001BE",
+              "CD4011BE",
+              "CD4012BE",
+              "CD4013BE",
+              "CD4030BE",
+              "CD4069UBE",
+              "CD4070BE",
+              "CD4071BE",
+              "CD4072BE",
+              "CD4077BE",
+              "CD4081BE",
+              "CD4093BE"
+            ],
+            "revisit": {
+              "requested": 40,
+              "allReadyMs": 0.4774,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 40,
+            "captures": 40,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 40,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 1.3281,
+            "firstCaptureBoundaryMs": 11.9934,
+            "allReadyMs": 756.536,
+            "framingMs": {
+              "samples": 40,
+              "p50Ms": 0.0865,
+              "p95Ms": 0.1473,
+              "maxMs": 0.4023,
+              "totalMs": 4.2441
+            },
+            "resources": {
+              "geometryCreated": 800,
+              "geometryDisposed": 800,
+              "materialCreated": 280,
+              "materialDisposed": 280,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N",
+              "SN7440N",
+              "SN7486N",
+              "SN74LS136N",
+              "CD4001BE",
+              "CD4011BE",
+              "CD4012BE",
+              "CD4013BE",
+              "CD4030BE",
+              "CD4069UBE",
+              "CD4070BE",
+              "CD4071BE",
+              "CD4072BE",
+              "CD4077BE",
+              "CD4081BE",
+              "CD4093BE"
+            ],
+            "revisit": {
+              "requested": 40,
+              "allReadyMs": 0.3378,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 40,
+            "captures": 40,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 40,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.93,
+            "firstCaptureBoundaryMs": 17.5293,
+            "allReadyMs": 668.2089,
+            "framingMs": {
+              "samples": 40,
+              "p50Ms": 0.0843,
+              "p95Ms": 0.2033,
+              "maxMs": 0.3413,
+              "totalMs": 3.9906
+            },
+            "resources": {
+              "geometryCreated": 800,
+              "geometryDisposed": 800,
+              "materialCreated": 280,
+              "materialDisposed": 280,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N",
+              "SN7440N",
+              "SN7486N",
+              "SN74LS136N",
+              "CD4001BE",
+              "CD4011BE",
+              "CD4012BE",
+              "CD4013BE",
+              "CD4030BE",
+              "CD4069UBE",
+              "CD4070BE",
+              "CD4071BE",
+              "CD4072BE",
+              "CD4077BE",
+              "CD4081BE",
+              "CD4093BE"
+            ],
+            "revisit": {
+              "requested": 40,
+              "allReadyMs": 0.8051,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 40,
+            "captures": 40,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 40,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.7111,
+            "firstCaptureBoundaryMs": 11.8481,
+            "allReadyMs": 716.2351,
+            "framingMs": {
+              "samples": 40,
+              "p50Ms": 0.0905,
+              "p95Ms": 0.2371,
+              "maxMs": 0.3059,
+              "totalMs": 4.2868
+            },
+            "resources": {
+              "geometryCreated": 800,
+              "geometryDisposed": 800,
+              "materialCreated": 280,
+              "materialDisposed": 280,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N",
+              "SN7440N",
+              "SN7486N",
+              "SN74LS136N",
+              "CD4001BE",
+              "CD4011BE",
+              "CD4012BE",
+              "CD4013BE",
+              "CD4030BE",
+              "CD4069UBE",
+              "CD4070BE",
+              "CD4071BE",
+              "CD4072BE",
+              "CD4077BE",
+              "CD4081BE",
+              "CD4093BE"
+            ],
+            "revisit": {
+              "requested": 40,
+              "allReadyMs": 1.2164,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 40,
+            "captures": 40,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 40,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.9942,
+            "firstCaptureBoundaryMs": 14.1899,
+            "allReadyMs": 762.3452,
+            "framingMs": {
+              "samples": 40,
+              "p50Ms": 0.0955,
+              "p95Ms": 0.1531,
+              "maxMs": 0.2181,
+              "totalMs": 3.9865
+            },
+            "resources": {
+              "geometryCreated": 800,
+              "geometryDisposed": 800,
+              "materialCreated": 280,
+              "materialDisposed": 280,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N",
+              "SN7440N",
+              "SN7486N",
+              "SN74LS136N",
+              "CD4001BE",
+              "CD4011BE",
+              "CD4012BE",
+              "CD4013BE",
+              "CD4030BE",
+              "CD4069UBE",
+              "CD4070BE",
+              "CD4071BE",
+              "CD4072BE",
+              "CD4077BE",
+              "CD4081BE",
+              "CD4093BE"
+            ],
+            "revisit": {
+              "requested": 40,
+              "allReadyMs": 0.8306,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 40,
+            "captures": 40,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 40,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.8465,
+            "firstCaptureBoundaryMs": 14.5916,
+            "allReadyMs": 675.5519,
+            "framingMs": {
+              "samples": 40,
+              "p50Ms": 0.0905,
+              "p95Ms": 0.1765,
+              "maxMs": 0.5937,
+              "totalMs": 4.5424
+            },
+            "resources": {
+              "geometryCreated": 800,
+              "geometryDisposed": 800,
+              "materialCreated": 280,
+              "materialDisposed": 280,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N",
+              "SN7440N",
+              "SN7486N",
+              "SN74LS136N",
+              "CD4001BE",
+              "CD4011BE",
+              "CD4012BE",
+              "CD4013BE",
+              "CD4030BE",
+              "CD4069UBE",
+              "CD4070BE",
+              "CD4071BE",
+              "CD4072BE",
+              "CD4077BE",
+              "CD4081BE",
+              "CD4093BE"
+            ],
+            "revisit": {
+              "requested": 40,
+              "allReadyMs": 0.454,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 40,
+            "captures": 40,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 40,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.401,
+            "firstCaptureBoundaryMs": 20.8716,
+            "allReadyMs": 656.2827,
+            "framingMs": {
+              "samples": 40,
+              "p50Ms": 0.0865,
+              "p95Ms": 0.1184,
+              "maxMs": 0.2292,
+              "totalMs": 3.6417
+            },
+            "resources": {
+              "geometryCreated": 800,
+              "geometryDisposed": 800,
+              "materialCreated": 280,
+              "materialDisposed": 280,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N",
+              "SN7440N",
+              "SN7486N",
+              "SN74LS136N",
+              "CD4001BE",
+              "CD4011BE",
+              "CD4012BE",
+              "CD4013BE",
+              "CD4030BE",
+              "CD4069UBE",
+              "CD4070BE",
+              "CD4071BE",
+              "CD4072BE",
+              "CD4077BE",
+              "CD4081BE",
+              "CD4093BE"
+            ],
+            "revisit": {
+              "requested": 40,
+              "allReadyMs": 0.4433,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          }
+        ]
+      },
+      {
+        "label": "current, compact viewport",
+        "demand": 15,
+        "visibleCards": 10,
+        "preloadCards": 5,
+        "acquisition": {
+          "samples": 8,
+          "p50Ms": 0.3054,
+          "p95Ms": 0.6546,
+          "maxMs": 0.6546,
+          "totalMs": 2.9171
+        },
+        "firstCaptureBoundary": {
+          "samples": 8,
+          "p50Ms": 17.1748,
+          "p95Ms": 32.5852,
+          "maxMs": 32.5852,
+          "totalMs": 157.1849
+        },
+        "allReady": {
+          "samples": 8,
+          "p50Ms": 265.799,
+          "p95Ms": 285.1647,
+          "maxMs": 285.1647,
+          "totalMs": 2122.5476
+        },
+        "revisit": {
+          "samples": 8,
+          "p50Ms": 0.273,
+          "p95Ms": 0.4786,
+          "maxMs": 0.4786,
+          "totalMs": 2.3839
+        },
+        "runs": [
+          {
+            "requested": 15,
+            "captures": 15,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 15,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.456,
+            "firstCaptureBoundaryMs": 32.5852,
+            "allReadyMs": 258.0662,
+            "framingMs": {
+              "samples": 15,
+              "p50Ms": 0.0909,
+              "p95Ms": 0.1976,
+              "maxMs": 0.1976,
+              "totalMs": 1.4504
+            },
+            "resources": {
+              "geometryCreated": 300,
+              "geometryDisposed": 300,
+              "materialCreated": 105,
+              "materialDisposed": 105,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N"
+            ],
+            "revisit": {
+              "requested": 15,
+              "allReadyMs": 0.1909,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 15,
+            "captures": 15,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 15,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.2277,
+            "firstCaptureBoundaryMs": 17.1748,
+            "allReadyMs": 271.1629,
+            "framingMs": {
+              "samples": 15,
+              "p50Ms": 0.0872,
+              "p95Ms": 0.1007,
+              "maxMs": 0.1007,
+              "totalMs": 1.1772
+            },
+            "resources": {
+              "geometryCreated": 300,
+              "geometryDisposed": 300,
+              "materialCreated": 105,
+              "materialDisposed": 105,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N"
+            ],
+            "revisit": {
+              "requested": 15,
+              "allReadyMs": 0.273,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 15,
+            "captures": 15,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 15,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.4601,
+            "firstCaptureBoundaryMs": 12.9163,
+            "allReadyMs": 279.2764,
+            "framingMs": {
+              "samples": 15,
+              "p50Ms": 0.0775,
+              "p95Ms": 0.2138,
+              "maxMs": 0.2138,
+              "totalMs": 1.5578
+            },
+            "resources": {
+              "geometryCreated": 300,
+              "geometryDisposed": 300,
+              "materialCreated": 105,
+              "materialDisposed": 105,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N"
+            ],
+            "revisit": {
+              "requested": 15,
+              "allReadyMs": 0.2582,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 15,
+            "captures": 15,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 15,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.6546,
+            "firstCaptureBoundaryMs": 11.798,
+            "allReadyMs": 271.9343,
+            "framingMs": {
+              "samples": 15,
+              "p50Ms": 0.0855,
+              "p95Ms": 0.206,
+              "maxMs": 0.206,
+              "totalMs": 1.4457
+            },
+            "resources": {
+              "geometryCreated": 300,
+              "geometryDisposed": 300,
+              "materialCreated": 105,
+              "materialDisposed": 105,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N"
+            ],
+            "revisit": {
+              "requested": 15,
+              "allReadyMs": 0.3636,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 15,
+            "captures": 15,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 15,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.2635,
+            "firstCaptureBoundaryMs": 13.3223,
+            "allReadyMs": 233.1882,
+            "framingMs": {
+              "samples": 15,
+              "p50Ms": 0.0915,
+              "p95Ms": 0.1106,
+              "maxMs": 0.1106,
+              "totalMs": 1.2561
+            },
+            "resources": {
+              "geometryCreated": 300,
+              "geometryDisposed": 300,
+              "materialCreated": 105,
+              "materialDisposed": 105,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N"
+            ],
+            "revisit": {
+              "requested": 15,
+              "allReadyMs": 0.1689,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 15,
+            "captures": 15,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 15,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.3118,
+            "firstCaptureBoundaryMs": 24.4916,
+            "allReadyMs": 265.799,
+            "framingMs": {
+              "samples": 15,
+              "p50Ms": 0.0884,
+              "p95Ms": 0.1092,
+              "maxMs": 0.1092,
+              "totalMs": 1.2632
+            },
+            "resources": {
+              "geometryCreated": 300,
+              "geometryDisposed": 300,
+              "materialCreated": 105,
+              "materialDisposed": 105,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N"
+            ],
+            "revisit": {
+              "requested": 15,
+              "allReadyMs": 0.4786,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 15,
+            "captures": 15,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 15,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.3054,
+            "firstCaptureBoundaryMs": 23.7448,
+            "allReadyMs": 285.1647,
+            "framingMs": {
+              "samples": 15,
+              "p50Ms": 0.1018,
+              "p95Ms": 0.293,
+              "maxMs": 0.293,
+              "totalMs": 1.6248
+            },
+            "resources": {
+              "geometryCreated": 300,
+              "geometryDisposed": 300,
+              "materialCreated": 105,
+              "materialDisposed": 105,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N"
+            ],
+            "revisit": {
+              "requested": 15,
+              "allReadyMs": 0.2933,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 15,
+            "captures": 15,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 15,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.238,
+            "firstCaptureBoundaryMs": 21.1519,
+            "allReadyMs": 257.9559,
+            "framingMs": {
+              "samples": 15,
+              "p50Ms": 0.0947,
+              "p95Ms": 0.154,
+              "maxMs": 0.154,
+              "totalMs": 1.4751
+            },
+            "resources": {
+              "geometryCreated": 300,
+              "geometryDisposed": 300,
+              "materialCreated": 105,
+              "materialDisposed": 105,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N"
+            ],
+            "revisit": {
+              "requested": 15,
+              "allReadyMs": 0.3574,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          }
+        ]
+      },
+      {
+        "label": "current, desktop-sized viewport",
+        "demand": 25,
+        "visibleCards": 20,
+        "preloadCards": 5,
+        "acquisition": {
+          "samples": 8,
+          "p50Ms": 0.398,
+          "p95Ms": 0.7218,
+          "maxMs": 0.7218,
+          "totalMs": 3.3618
+        },
+        "firstCaptureBoundary": {
+          "samples": 8,
+          "p50Ms": 17.6727,
+          "p95Ms": 29.6021,
+          "maxMs": 29.6021,
+          "totalMs": 142.5297
+        },
+        "allReady": {
+          "samples": 8,
+          "p50Ms": 410.6321,
+          "p95Ms": 479.1279,
+          "maxMs": 479.1279,
+          "totalMs": 3381.7935
+        },
+        "revisit": {
+          "samples": 8,
+          "p50Ms": 0.2574,
+          "p95Ms": 1.5518,
+          "maxMs": 1.5518,
+          "totalMs": 3.427
+        },
+        "runs": [
+          {
+            "requested": 25,
+            "captures": 25,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 25,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.7218,
+            "firstCaptureBoundaryMs": 13.5502,
+            "allReadyMs": 418.2512,
+            "framingMs": {
+              "samples": 25,
+              "p50Ms": 0.093,
+              "p95Ms": 0.1872,
+              "maxMs": 0.1952,
+              "totalMs": 2.4615
+            },
+            "resources": {
+              "geometryCreated": 500,
+              "geometryDisposed": 500,
+              "materialCreated": 175,
+              "materialDisposed": 175,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N"
+            ],
+            "revisit": {
+              "requested": 25,
+              "allReadyMs": 0.2684,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 25,
+            "captures": 25,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 25,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.398,
+            "firstCaptureBoundaryMs": 7.673,
+            "allReadyMs": 353.0965,
+            "framingMs": {
+              "samples": 25,
+              "p50Ms": 0.0674,
+              "p95Ms": 0.1224,
+              "maxMs": 0.2378,
+              "totalMs": 1.9894
+            },
+            "resources": {
+              "geometryCreated": 500,
+              "geometryDisposed": 500,
+              "materialCreated": 175,
+              "materialDisposed": 175,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N"
+            ],
+            "revisit": {
+              "requested": 25,
+              "allReadyMs": 0.2654,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 25,
+            "captures": 25,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 25,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.2643,
+            "firstCaptureBoundaryMs": 21.7508,
+            "allReadyMs": 410.6321,
+            "framingMs": {
+              "samples": 25,
+              "p50Ms": 0.0835,
+              "p95Ms": 0.142,
+              "maxMs": 0.2007,
+              "totalMs": 2.2546
+            },
+            "resources": {
+              "geometryCreated": 500,
+              "geometryDisposed": 500,
+              "materialCreated": 175,
+              "materialDisposed": 175,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N"
+            ],
+            "revisit": {
+              "requested": 25,
+              "allReadyMs": 0.1959,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 25,
+            "captures": 25,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 25,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.5567,
+            "firstCaptureBoundaryMs": 11.7914,
+            "allReadyMs": 479.1279,
+            "framingMs": {
+              "samples": 25,
+              "p50Ms": 0.1177,
+              "p95Ms": 0.2347,
+              "maxMs": 0.3946,
+              "totalMs": 3.205
+            },
+            "resources": {
+              "geometryCreated": 500,
+              "geometryDisposed": 500,
+              "materialCreated": 175,
+              "materialDisposed": 175,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N"
+            ],
+            "revisit": {
+              "requested": 25,
+              "allReadyMs": 1.5518,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 25,
+            "captures": 25,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 25,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.2174,
+            "firstCaptureBoundaryMs": 17.6727,
+            "allReadyMs": 409.3762,
+            "framingMs": {
+              "samples": 25,
+              "p50Ms": 0.0814,
+              "p95Ms": 0.1246,
+              "maxMs": 0.1519,
+              "totalMs": 2.2533
+            },
+            "resources": {
+              "geometryCreated": 500,
+              "geometryDisposed": 500,
+              "materialCreated": 175,
+              "materialDisposed": 175,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N"
+            ],
+            "revisit": {
+              "requested": 25,
+              "allReadyMs": 0.489,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 25,
+            "captures": 25,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 25,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.4695,
+            "firstCaptureBoundaryMs": 18.1822,
+            "allReadyMs": 439.4798,
+            "framingMs": {
+              "samples": 25,
+              "p50Ms": 0.1232,
+              "p95Ms": 0.3509,
+              "maxMs": 0.4616,
+              "totalMs": 3.5418
+            },
+            "resources": {
+              "geometryCreated": 500,
+              "geometryDisposed": 500,
+              "materialCreated": 175,
+              "materialDisposed": 175,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N"
+            ],
+            "revisit": {
+              "requested": 25,
+              "allReadyMs": 0.2574,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 25,
+            "captures": 25,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 25,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.4884,
+            "firstCaptureBoundaryMs": 29.6021,
+            "allReadyMs": 472.1855,
+            "framingMs": {
+              "samples": 25,
+              "p50Ms": 0.0847,
+              "p95Ms": 0.1223,
+              "maxMs": 0.1501,
+              "totalMs": 2.2055
+            },
+            "resources": {
+              "geometryCreated": 500,
+              "geometryDisposed": 500,
+              "materialCreated": 175,
+              "materialDisposed": 175,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N"
+            ],
+            "revisit": {
+              "requested": 25,
+              "allReadyMs": 0.2195,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          },
+          {
+            "requested": 25,
+            "captures": 25,
+            "rendererAttempts": 1,
+            "rendererDisposals": 1,
+            "successes": 25,
+            "fallbacksOrReleased": 0,
+            "acquisitionMs": 0.2457,
+            "firstCaptureBoundaryMs": 22.3073,
+            "allReadyMs": 399.6443,
+            "framingMs": {
+              "samples": 25,
+              "p50Ms": 0.0688,
+              "p95Ms": 0.1712,
+              "maxMs": 0.3029,
+              "totalMs": 2.481
+            },
+            "resources": {
+              "geometryCreated": 500,
+              "geometryDisposed": 500,
+              "materialCreated": 175,
+              "materialDisposed": 175,
+              "textureCreated": 0,
+              "textureDisposed": 0
+            },
+            "renderedTypes": [
+              "SN74HC08N",
+              "SN74HC02N",
+              "SN74HC04N",
+              "SN74LS266N",
+              "SN7400N",
+              "SN7401N",
+              "SN7402N",
+              "SN7403N",
+              "SN7404N",
+              "SN7405N",
+              "SN7408N",
+              "SN7409N",
+              "SN7410N",
+              "SN74LS11N",
+              "SN7412N",
+              "SN7413N",
+              "SN7414N",
+              "SN74LS15N",
+              "SN7420N",
+              "SN74LS21N",
+              "SN7427N",
+              "SN7430N",
+              "SN7432N",
+              "SN7437N",
+              "SN7438N"
+            ],
+            "revisit": {
+              "requested": 25,
+              "allReadyMs": 0.1796,
+              "additionalCaptures": 0,
+              "additionalRendererAttempts": 0
+            }
+          }
+        ]
+      }
+    ],
+    "lifecycle": [
+      {
+        "implementation": "baseline",
+        "mode": "cancel-all",
+        "requested": 40,
+        "captures": 0,
+        "rendererAttempts": 0,
+        "rendererDisposals": 0,
+        "successes": 0,
+        "fallbacksOrReleased": 40,
+        "acquisitionMs": 0.1733,
+        "firstCaptureBoundaryMs": null,
+        "allReadyMs": 0.3388,
+        "framingMs": {
+          "samples": 0,
+          "p50Ms": null,
+          "p95Ms": null,
+          "maxMs": null,
+          "totalMs": 0
+        },
+        "resources": {
+          "geometryCreated": 0,
+          "geometryDisposed": 0,
+          "materialCreated": 0,
+          "materialDisposed": 0,
+          "textureCreated": 0,
+          "textureDisposed": 0
+        },
+        "renderedTypes": [],
+        "revisit": {
+          "requested": 0,
+          "allReadyMs": 0.0429,
+          "additionalCaptures": 0,
+          "additionalRendererAttempts": 0
+        }
+      },
+      {
+        "implementation": "baseline",
+        "mode": "cancel-offscreen",
+        "requested": 40,
+        "captures": 15,
+        "rendererAttempts": 1,
+        "rendererDisposals": 1,
+        "successes": 15,
+        "fallbacksOrReleased": 25,
+        "acquisitionMs": 0.1481,
+        "firstCaptureBoundaryMs": 13.7558,
+        "allReadyMs": 277.0874,
+        "framingMs": {
+          "samples": 15,
+          "p50Ms": 0.1147,
+          "p95Ms": 0.1734,
+          "maxMs": 0.1734,
+          "totalMs": 1.6379
+        },
+        "resources": {
+          "geometryCreated": 300,
+          "geometryDisposed": 300,
+          "materialCreated": 105,
+          "materialDisposed": 105,
+          "textureCreated": 0,
+          "textureDisposed": 0
+        },
+        "renderedTypes": [
+          "SN74HC08N",
+          "SN74HC02N",
+          "SN74HC04N",
+          "SN74LS266N",
+          "SN7400N",
+          "SN7401N",
+          "SN7402N",
+          "SN7403N",
+          "SN7404N",
+          "SN7405N",
+          "SN7408N",
+          "SN7409N",
+          "SN7410N",
+          "SN74LS11N",
+          "SN7412N"
+        ],
+        "revisit": {
+          "requested": 0,
+          "allReadyMs": 0.014,
+          "additionalCaptures": 0,
+          "additionalRendererAttempts": 0
+        }
+      },
+      {
+        "implementation": "baseline",
+        "mode": "close-after-first",
+        "requested": 40,
+        "captures": 1,
+        "rendererAttempts": 1,
+        "rendererDisposals": 1,
+        "successes": 1,
+        "fallbacksOrReleased": 39,
+        "acquisitionMs": 0.2199,
+        "firstCaptureBoundaryMs": 10.1502,
+        "allReadyMs": 11.1382,
+        "framingMs": {
+          "samples": 1,
+          "p50Ms": 0.1103,
+          "p95Ms": 0.1103,
+          "maxMs": 0.1103,
+          "totalMs": 0.1103
+        },
+        "resources": {
+          "geometryCreated": 20,
+          "geometryDisposed": 20,
+          "materialCreated": 7,
+          "materialDisposed": 7,
+          "textureCreated": 0,
+          "textureDisposed": 0
+        },
+        "renderedTypes": [
+          "SN74HC08N"
+        ],
+        "revisit": {
+          "requested": 0,
+          "allReadyMs": 0.0141,
+          "additionalCaptures": 0,
+          "additionalRendererAttempts": 0
+        }
+      },
+      {
+        "implementation": "baseline",
+        "mode": "failure",
+        "requested": 40,
+        "captures": 1,
+        "rendererAttempts": 1,
+        "rendererDisposals": 1,
+        "successes": 0,
+        "fallbacksOrReleased": 40,
+        "acquisitionMs": 0.6661,
+        "firstCaptureBoundaryMs": 16.4864,
+        "allReadyMs": 381.6783,
+        "framingMs": {
+          "samples": 1,
+          "p50Ms": 0.106,
+          "p95Ms": 0.106,
+          "maxMs": 0.106,
+          "totalMs": 0.106
+        },
+        "resources": {
+          "geometryCreated": 20,
+          "geometryDisposed": 20,
+          "materialCreated": 7,
+          "materialDisposed": 7,
+          "textureCreated": 0,
+          "textureDisposed": 0
+        },
+        "renderedTypes": [
+          "SN74HC08N"
+        ],
+        "revisit": {
+          "requested": 0,
+          "allReadyMs": 0.0224,
+          "additionalCaptures": 0,
+          "additionalRendererAttempts": 0
+        }
+      },
+      {
+        "implementation": "baseline",
+        "mode": "unsupported",
+        "requested": 40,
+        "captures": 0,
+        "rendererAttempts": 1,
+        "rendererDisposals": 0,
+        "successes": 0,
+        "fallbacksOrReleased": 40,
+        "acquisitionMs": 0.8785,
+        "firstCaptureBoundaryMs": null,
+        "allReadyMs": 0.9397,
+        "framingMs": {
+          "samples": 0,
+          "p50Ms": null,
+          "p95Ms": null,
+          "maxMs": null,
+          "totalMs": 0
+        },
+        "resources": {
+          "geometryCreated": 0,
+          "geometryDisposed": 0,
+          "materialCreated": 0,
+          "materialDisposed": 0,
+          "textureCreated": 0,
+          "textureDisposed": 0
+        },
+        "renderedTypes": [],
+        "revisit": {
+          "requested": 0,
+          "allReadyMs": 0.0268,
+          "additionalCaptures": 0,
+          "additionalRendererAttempts": 0
+        }
+      },
+      {
+        "implementation": "current",
+        "mode": "cancel-all",
+        "requested": 40,
+        "captures": 0,
+        "rendererAttempts": 0,
+        "rendererDisposals": 0,
+        "successes": 0,
+        "fallbacksOrReleased": 40,
+        "acquisitionMs": 0.9009,
+        "firstCaptureBoundaryMs": null,
+        "allReadyMs": 2.4474,
+        "framingMs": {
+          "samples": 0,
+          "p50Ms": null,
+          "p95Ms": null,
+          "maxMs": null,
+          "totalMs": 0
+        },
+        "resources": {
+          "geometryCreated": 0,
+          "geometryDisposed": 0,
+          "materialCreated": 0,
+          "materialDisposed": 0,
+          "textureCreated": 0,
+          "textureDisposed": 0
+        },
+        "renderedTypes": [],
+        "revisit": {
+          "requested": 0,
+          "allReadyMs": 0.0161,
+          "additionalCaptures": 0,
+          "additionalRendererAttempts": 0
+        }
+      },
+      {
+        "implementation": "current",
+        "mode": "cancel-offscreen",
+        "requested": 40,
+        "captures": 15,
+        "rendererAttempts": 1,
+        "rendererDisposals": 1,
+        "successes": 15,
+        "fallbacksOrReleased": 25,
+        "acquisitionMs": 0.8669,
+        "firstCaptureBoundaryMs": 12.8093,
+        "allReadyMs": 269.4744,
+        "framingMs": {
+          "samples": 15,
+          "p50Ms": 0.1031,
+          "p95Ms": 0.2032,
+          "maxMs": 0.2032,
+          "totalMs": 1.5467
+        },
+        "resources": {
+          "geometryCreated": 300,
+          "geometryDisposed": 300,
+          "materialCreated": 105,
+          "materialDisposed": 105,
+          "textureCreated": 0,
+          "textureDisposed": 0
+        },
+        "renderedTypes": [
+          "SN74HC08N",
+          "SN74HC02N",
+          "SN74HC04N",
+          "SN74LS266N",
+          "SN7400N",
+          "SN7401N",
+          "SN7402N",
+          "SN7403N",
+          "SN7404N",
+          "SN7405N",
+          "SN7408N",
+          "SN7409N",
+          "SN7410N",
+          "SN74LS11N",
+          "SN7412N"
+        ],
+        "revisit": {
+          "requested": 0,
+          "allReadyMs": 0.0215,
+          "additionalCaptures": 0,
+          "additionalRendererAttempts": 0
+        }
+      },
+      {
+        "implementation": "current",
+        "mode": "close-after-first",
+        "requested": 40,
+        "captures": 1,
+        "rendererAttempts": 1,
+        "rendererDisposals": 1,
+        "successes": 1,
+        "fallbacksOrReleased": 39,
+        "acquisitionMs": 1.5164,
+        "firstCaptureBoundaryMs": 12.197,
+        "allReadyMs": 13.6805,
+        "framingMs": {
+          "samples": 1,
+          "p50Ms": 0.0847,
+          "p95Ms": 0.0847,
+          "maxMs": 0.0847,
+          "totalMs": 0.0847
+        },
+        "resources": {
+          "geometryCreated": 20,
+          "geometryDisposed": 20,
+          "materialCreated": 7,
+          "materialDisposed": 7,
+          "textureCreated": 0,
+          "textureDisposed": 0
+        },
+        "renderedTypes": [
+          "SN74HC08N"
+        ],
+        "revisit": {
+          "requested": 0,
+          "allReadyMs": 0.0145,
+          "additionalCaptures": 0,
+          "additionalRendererAttempts": 0
+        }
+      },
+      {
+        "implementation": "current",
+        "mode": "failure",
+        "requested": 40,
+        "captures": 1,
+        "rendererAttempts": 1,
+        "rendererDisposals": 1,
+        "successes": 0,
+        "fallbacksOrReleased": 40,
+        "acquisitionMs": 1.3408,
+        "firstCaptureBoundaryMs": 13.9489,
+        "allReadyMs": 14.6762,
+        "framingMs": {
+          "samples": 1,
+          "p50Ms": 0.0913,
+          "p95Ms": 0.0913,
+          "maxMs": 0.0913,
+          "totalMs": 0.0913
+        },
+        "resources": {
+          "geometryCreated": 20,
+          "geometryDisposed": 20,
+          "materialCreated": 7,
+          "materialDisposed": 7,
+          "textureCreated": 0,
+          "textureDisposed": 0
+        },
+        "renderedTypes": [
+          "SN74HC08N"
+        ],
+        "revisit": {
+          "requested": 0,
+          "allReadyMs": 0.0137,
+          "additionalCaptures": 0,
+          "additionalRendererAttempts": 0
+        }
+      },
+      {
+        "implementation": "current",
+        "mode": "unsupported",
+        "requested": 40,
+        "captures": 0,
+        "rendererAttempts": 1,
+        "rendererDisposals": 0,
+        "successes": 0,
+        "fallbacksOrReleased": 40,
+        "acquisitionMs": 0.7655,
+        "firstCaptureBoundaryMs": null,
+        "allReadyMs": 7.2968,
+        "framingMs": {
+          "samples": 0,
+          "p50Ms": null,
+          "p95Ms": null,
+          "maxMs": null,
+          "totalMs": 0
+        },
+        "resources": {
+          "geometryCreated": 0,
+          "geometryDisposed": 0,
+          "materialCreated": 0,
+          "materialDisposed": 0,
+          "textureCreated": 0,
+          "textureDisposed": 0
+        },
+        "renderedTypes": [],
+        "revisit": {
+          "requested": 0,
+          "allReadyMs": 0.0108,
+          "additionalCaptures": 0,
+          "additionalRendererAttempts": 0
+        }
+      }
+    ],
+    "shortReopen": [
+      {
+        "implementation": "baseline",
+        "reopenedAfterMs": 7.8413,
+        "beforeExplicitCleanup": {
+          "captures": 2,
+          "rendererAttempts": 2,
+          "rendererDisposals": 2
+        },
+        "afterExplicitCleanup": {
+          "captures": 2,
+          "rendererAttempts": 2,
+          "rendererDisposals": 2
+        },
+        "resources": {
+          "geometryCreated": 40,
+          "geometryDisposed": 40,
+          "materialCreated": 14,
+          "materialDisposed": 14,
+          "textureCreated": 0,
+          "textureDisposed": 0
+        }
+      },
+      {
+        "implementation": "current",
+        "reopenedAfterMs": 4.7195,
+        "beforeExplicitCleanup": {
+          "captures": 2,
+          "rendererAttempts": 1,
+          "rendererDisposals": 0
+        },
+        "afterExplicitCleanup": {
+          "captures": 2,
+          "rendererAttempts": 1,
+          "rendererDisposals": 1
+        },
+        "resources": {
+          "geometryCreated": 40,
+          "geometryDisposed": 40,
+          "materialCreated": 14,
+          "materialDisposed": 14,
+          "textureCreated": 0,
+          "textureDisposed": 0
+        }
+      }
+    ]
+  },
+  "resultConsumer": 2587629,
+  "finishedAtUtc": "2026-10-16T01:51:45.822Z"
+}

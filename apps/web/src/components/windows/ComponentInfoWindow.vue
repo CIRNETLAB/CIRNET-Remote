@@ -56,7 +56,7 @@ watch(() => selected.value?.id, () => { leadDraft.value = null })
       <button aria-label="Close Component Info" @click="close"><WorkbenchIcon name="close" /></button>
     </header>
     <div class="component-information-content">
-      <div class="component-information-art"><ComponentThumbnail v-if="part" :type="selected.type" :properties="previewProperties" :alt="name + ' preview'" /><img v-else-if="item?.icon" :src="iconUrl(item.icon)" :alt="name + ' preview'" width="250" height="110" /><WorkbenchIcon v-else :name="item?.glyph || 'chip'" /></div>
+      <div class="component-information-art"><ComponentThumbnail v-if="part" :type="selected.type" :properties="previewProperties" :alt="name + ' preview'" :lazy="false" priority="high" /><img v-else-if="item?.icon" :src="iconUrl(item.icon)" :alt="name + ' preview'" width="250" height="110" /><WorkbenchIcon v-else :name="item?.glyph || 'chip'" /></div>
       <div class="component-information-heading"><small>INFORMATION</small><h2>{{ name }}</h2></div>
       <p class="component-information-introduction">{{ description }}</p>
       <p class="component-information-note">{{ note }}</p>
