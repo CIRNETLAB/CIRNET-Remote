@@ -68,6 +68,23 @@ def led_loop(reverse=False, opened=False, from_gate=False):
     return value
 
 
+def test_generic_led_uses_validated_instance_voltage_and_current_without_changing_legacy(monkeypatch):
+    from contracts import physical_mounting
+    parts=copy.deepcopy(physical_mounting.physical_parts())
+    generic=copy.deepcopy(next(part for part in parts if part['editorType']=='LED_LTL307EE'))
+    generic.update(id='GENERIC-LED-5MM',editorType='GENERIC_LED')
+    parts=[part for part in parts if part['editorType']!='GENERIC_LED']+[generic]
+    monkeypatch.setattr(physical_mounting,'physical_parts',lambda:parts)
+    value=led_loop();value['schema_version']='1.2';led=value['modules'][-1]
+    led.update(type='GENERIC_LED',properties={'forwardVoltageVolts':3,'maxCurrentAmps':.005,'color':'#3344ff'})
+    result=run_plan(VirtualCompiler().compile(value),{'signals':[],'duration_ns':20})
+    assert result['device_states']['L']['currentAmps']==pytest.approx(2/330)
+    assert result['device_states']['L']['state']=='FAULT'
+    led['type']='LED_LTL307EE'
+    legacy=run_plan(VirtualCompiler().compile(value),{'signals':[],'duration_ns':20})
+    assert legacy['device_states']['L']['currentAmps']==pytest.approx(3/330)
+
+
 @pytest.mark.parametrize('reverse,opened,state', [(False, False, 'ON'), (True, False, 'OFF'), (False, True, 'OFF')])
 def test_bounded_dc_led_requires_closed_forward_source_resistor_loop(reverse, opened, state):
     result = run_plan(VirtualCompiler().compile(led_loop(reverse, opened)), {'signals': [], 'duration_ns': 20})

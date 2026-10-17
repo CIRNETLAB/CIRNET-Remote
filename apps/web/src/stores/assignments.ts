@@ -1,5 +1,5 @@
 import {defineStore} from 'pinia'
-import type {AssignmentDefinition,AssignmentAuthoringDocument,AssignmentAuthoringSummary} from '../contracts/generated/dto'
+import type {AssignmentDefinition,AssignmentAuthoringDocument,AssignmentAuthoringSummary} from '../types/assignment'
 import {assignmentDocumentsApi} from '../services/api/assignmentDocuments'
 import {StoreScopeMap} from '../services/session/storeScope'
 import {errorMessage} from '../services/api/client'
@@ -73,7 +73,7 @@ export const useAssignmentStore=defineStore('assignment-authoring',{
    if(this.unappliedDefinition){this.error='Apply the advanced JSON edits before saving.';return false}
    const definition=parseAuthoringDefinition(JSON.stringify(this.draft)),captured=JSON.stringify(definition),revision=this.editRevision,generation=this.generation,selection=this.selectionVersion,binding=this.binding,controller=request(this)
    this.pending=true;this.phase='saving';this.error=null
-   try{const document=binding?await assignmentDocumentsApi.save(binding.assignment_id,{base_revision:binding.revision,definition},controller.signal):await assignmentDocumentsApi.create(definition,controller.signal)
+   try{const document=binding?await assignmentDocumentsApi.save(binding.assignment_id,{base_revision:binding.revision,definition},controller.signal,binding.schema_version):await assignmentDocumentsApi.create(definition,controller.signal)
     if(controller.signal.aborted||generation!==this.generation||selection!==this.selectionVersion)return false
     this.binding=summary(document);this.documents=[...this.documents.filter(value=>value.assignment_id!==document.assignment_id),summary(document)]
     if(revision===this.editRevision&&captured===JSON.stringify(this.draft)){this.draft=document.definition;this.definitionText=JSON.stringify(document.definition,null,2);this.unappliedDefinition=false;this.savedEditRevision=revision;this.phase='saved'}else this.phase='dirty'
@@ -84,7 +84,7 @@ export const useAssignmentStore=defineStore('assignment-authoring',{
   async publish(published:boolean,feedback_policy:'observed_only'|'detailed'){
    if(!this.canAuthor||!this.binding||!this.draft||this.dirty||this.pending){this.error='Save the current draft before changing publication.';return false}
    const binding=this.binding,generation=this.generation,selection=this.selectionVersion,revision=this.editRevision,controller=request(this);this.pending=true;this.error=null
-   try{const document=await assignmentDocumentsApi.publish(binding.assignment_id,{base_revision:binding.revision,published,feedback_policy},controller.signal)
+   try{const document=await assignmentDocumentsApi.publish(binding.assignment_id,{base_revision:binding.revision,published,feedback_policy},controller.signal,binding.schema_version)
     if(controller.signal.aborted||generation!==this.generation||selection!==this.selectionVersion)return false
     this.binding=summary(document);this.documents=[...this.documents.filter(value=>value.assignment_id!==document.assignment_id),summary(document)]
     if(revision===this.editRevision){this.draft=document.definition;this.definitionText=JSON.stringify(document.definition,null,2);this.unappliedDefinition=false;this.savedEditRevision=revision;this.phase='saved'}else this.phase='dirty'

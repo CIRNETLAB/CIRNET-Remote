@@ -10,6 +10,8 @@ import { getPartForType } from '../data/partCatalog'
 import { addPackageModel, packagePinAnchor } from './PackageModel'
 import { subduedBodyColor } from './package/PackageMaterials'
 import { preserveStructureLighting } from './StudioEnvironment'
+import { updateFlexiblePackageGeometry } from './package/FlexiblePackageGeometry'
+import { moduleWorldPose } from '../electrical/modulePose'
 
 export { disposeObject } from './ObjectResources'
 
@@ -287,12 +289,12 @@ function createBreadboard100Texture(type: string): CanvasTexture | null {
   return texture
 }
 
-export function portAnchor(type: string, port: LogicalPort): Vector3 {
+export function portAnchor(type: string, port: LogicalPort, module?: CircuitModule, modules: CircuitModule[] = []): Vector3 {
   // DC is not mountable: this visual projection aligns wires/picking with the
   // detailed Structure posts while its canonical pin IDs/footprint stay intact.
   const supply = type === 'DC_SUPPLY' ? supplyTerminalAnchor(port.id) : null
   if (supply) return supply
-  const physical = packagePinAnchor(type, port.id)
+  const physical = packagePinAnchor(type, port.id, module, modules)
   if (physical) return physical
   const definition = getDefinition(type)!
   const side = port.direction === 'output' || (port.direction === 'inout' && definition.ports.indexOf(port) % 2 === 1) ? 1 : -1
@@ -300,7 +302,7 @@ export function portAnchor(type: string, port: LogicalPort): Vector3 {
   return new Vector3(side * (definition.size[0] / 2 + 0.2), definition.size[1] + 0.16, ((peers.indexOf(port) + 1) / (peers.length + 1) - 0.5) * definition.size[2])
 }
 
-export function buildComponent(module: CircuitModule): Group {
+export function buildComponent(module: CircuitModule, modules: CircuitModule[] = []): Group {
   const definition = getDefinition(module.type)
   const part = getPartForType(module.type)
   const [w, h, d] = definition?.visual === 'supply' ? POWER_SUPPLY_VISUAL_SIZE : definition?.size ?? [1.5, 0.5, 1]
@@ -375,7 +377,8 @@ export function buildComponent(module: CircuitModule): Group {
   // world AABB again after yaw needlessly inflates the silhouette of tall models.
   const visualBounds = new Box3().setFromObject(group)
   group.userData.visualBounds = [visualBounds.min.toArray(), visualBounds.max.toArray()]
-  applyPose(group, module)
+  updateFlexiblePackageGeometry(group, module, modules)
+  applyPose(group, modules.length ? moduleWorldPose(module, modules) : module)
   preserveStructureLighting(group)
   return group
 }

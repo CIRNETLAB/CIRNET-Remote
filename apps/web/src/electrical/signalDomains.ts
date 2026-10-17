@@ -1,5 +1,6 @@
 import catalog from '../data/signalPortCatalog.json'
-import type { CircuitGraph, CircuitModule, SignalDomain, SignalPortDefinition, SimulationClassification } from '../contracts/generated/dto'
+import type { SignalDomain, SignalPortDefinition, SimulationClassification } from '../contracts/generated/dto'
+import type { CircuitGraph,CircuitModule } from '../types/circuit'
 import { contractIssue, ContractValidationError, parseStructural, type ValidationProfile } from '../contracts/structural'
 
 interface DomainDescriptor { type:string;ports:SignalPortDefinition[];execution:'DIGITAL'|'DC_DIGITAL'|'VISUAL'|'UNAVAILABLE' }
@@ -30,9 +31,9 @@ function namespace(module:CircuitModule,path:string,profile:ValidationProfile,ex
 }
 
 export function validateSignalDomains(name:string,value:unknown,profile:ValidationProfile='transport',path=''):void {
-  if(name==='CircuitGraph') (value as CircuitGraph).modules.forEach((module,index)=>namespace(module,`${path}/modules/${index}`,profile))
-  else if(name==='CircuitModule')namespace(value as CircuitModule,path,profile)
-  else if(name==='SimulationRequest')validateSignalDomains('CircuitGraph',(value as {graph:CircuitGraph}).graph,profile,path+'/graph')
+  if(['CircuitGraph','CircuitGraphV12','AnySupportedCircuitGraph'].includes(name)) (value as CircuitGraph).modules.forEach((module,index)=>namespace(module,`${path}/modules/${index}`,profile))
+  else if(name==='CircuitModule'||name==='CircuitModuleV12')namespace(value as CircuitModule,path,profile)
+  else if(name==='SimulationRequest'||name==='SimulationRequestV2')validateSignalDomains('CircuitGraph',(value as {graph:CircuitGraph}).graph,profile,path+'/graph')
 }
 
 /** Direct compatibility only. Unknown and MIXED are never universal adapters. */
@@ -50,7 +51,7 @@ export function portDomain(module:CircuitModule,port:string):SignalDomain|undefi
 
 /** Catalog selection describes local models; it never asserts hardware capability. */
 export function classifyGraph(graph:CircuitGraph):SimulationClassification {
-  parseStructural('CircuitGraph',graph,'structural')
+  parseStructural('AnySupportedCircuitGraph',graph,'structural')
   const domains=new Set<SignalDomain>(),unsupported:string[]=[]
   let digital=false,dc=false,analog=false,mixed=false,unknown=false
   graph.modules.forEach((module,index)=>{

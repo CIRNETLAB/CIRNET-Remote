@@ -11,6 +11,9 @@ import { readWireVisual, validateWireVisual, wireKey } from '../wires/wireVisual
 import { normalizeSelection, type EditorSelection } from './selection'
 import { cloneClipboardData as clone, type SelectionClipboard } from './selectionClipboard'
 import { clipboardContactWorld as contactWorld, selectionModulePosition as positionOf, selectionPoint as point } from './selectionContacts'
+import {isFlexibleMount} from '../electrical/flexibleGeometry'
+import {reframeFlexibleMount} from '../electrical/reframeFlexibleMount'
+import {withCircuitModules} from '../domain/document/graphVersion'
 
 export const WORLD_PASTE_STEP = .5
 const EPS = 1e-7
@@ -50,7 +53,7 @@ export function buildPasteCandidate(graph: CircuitGraph, snapshot: SelectionClip
   const idMap = uniqueIds(graph, snapshot.modules), newIds = new Set(idMap.values()), boardMap = new Map<string, string>()
   let delta: Point3 = options.delta ? { ...options.delta } : { x: WORLD_PASTE_STEP * step, y: 0, z: 0 }
   let rotate = 0, transform = (world: Point3): Point3 => add(world, delta)
-  let draft: CircuitGraph = { ...graph, modules: [...graph.modules], connections: [...graph.connections] }
+  let draft: CircuitGraph = withCircuitModules(graph, [...graph.modules], [...graph.connections])
   const selection: EditorSelection = { moduleIds: [...idMap.values()], wires: [] }
   try {
     if (options.targetContact) {
@@ -85,7 +88,7 @@ export function buildPasteCandidate(graph: CircuitGraph, snapshot: SelectionClip
       const mapped = idMap.get(endpoint.moduleId)
       if (mapped) return formatEndpoint({ ...endpoint, moduleId: mapped })
       if (!options.delta && !options.targetContact) {
-        const shifted = shiftBreadboardContact({ ...graph, modules: snapshot.sourceModules }, value, step)
+        const shifted = shiftBreadboardContact(withCircuitModules(graph,snapshot.sourceModules), value, step)
         if (!close(contactWorld(graph.modules, shifted.endpoint).world, transform(contactWorld(snapshot.sourceModules, value).world))) throw new Error('Paste requires breadboards with the same local X pitch direction to preserve the selection shape.')
         return shifted.endpoint
       }
@@ -119,7 +122,7 @@ export function buildPasteCandidate(graph: CircuitGraph, snapshot: SelectionClip
 
     // Boards precede their copied mounted parts so their poses can be resolved immediately.
     const copies = snapshot.modules.filter(module => !module.mount).map(module => ({ ...clone(module), id: idMap.get(module.id)!, position: transform(positionOf(moduleWorldPose(module, snapshot.sourceModules))), rotation: norm((module.rotation ?? 0) + rotate) }))
-    draft = { ...draft, modules: [...graph.modules, ...copies] }
+    draft = withCircuitModules(draft, [...graph.modules, ...copies])
     for (const original of snapshot.modules.filter(module => module.mount)) {
       const module = clone(original), mount = module.mount!
       module.id = idMap.get(original.id)!
@@ -134,11 +137,17 @@ export function buildPasteCandidate(graph: CircuitGraph, snapshot: SelectionClip
         if (!bindings.length || bindings.some(binding => binding.boardId !== bindings[0].boardId)) throw new Error('A copied footprint must fit one breadboard.')
         const board = draft.modules.find(item => item.id === bindings[0].boardId)!
         const pose = moduleWorldPose(original, snapshot.sourceModules), boardPose = moduleWorldPose(board, draft.modules)
-        mount.boardId = board.id
-        mount.pose = { position: worldToModuleLocal(transform(positionOf(pose)), boardPose), rotation: norm((pose.rotation ?? 0) + rotate - (boardPose.rotation ?? 0)) }
-        mount.contacts = bindings.map(({ boardId: _boardId, ...binding }) => binding)
+        const contacts=bindings.map(({ boardId: _boardId, ...binding }) => binding)
+        if(isFlexibleMount(mount)){
+          const source=snapshot.sourceModules.find(item=>item.id===mount.boardId)!
+          module.mount=reframeFlexibleMount(mount,source,boardPose,transform,rotate,contacts)
+        }else{
+          mount.boardId = board.id
+          mount.pose = { position: worldToModuleLocal(transform(positionOf(pose)), boardPose), rotation: norm((pose.rotation ?? 0) + rotate - (boardPose.rotation ?? 0)) }
+          mount.contacts = contacts
+        }
       }
-      draft.modules.push(module)
+      draft=withCircuitModules(draft,[...draft.modules,module])
     }
 
     const newWires: CircuitConnection[] = []
@@ -148,7 +157,7 @@ export function buildPasteCandidate(graph: CircuitGraph, snapshot: SelectionClip
       if (!snapshot.modules.length && !snapshot.anchorContact && !options.delta && !options.targetContact) throw new Error('Paste requires declared breadboard contacts; component ports cannot be guessed.')
       if (!snapshot.modules.length && bothContacts && !options.delta && !options.targetContact) {
         mapContact(original.source); mapContact(original.destination)
-        const shifted = shiftedWireCopy({ ...graph, modules: snapshot.sourceModules }, original, visual, step)
+        const shifted = shiftedWireCopy(withCircuitModules(graph,snapshot.sourceModules), original, visual, step)
         const moved = wireCopyAtContact(graph, original, visual, shifted.wire.source, snapshot.sourceModules, owners)
         if (moved.wire.destination !== shifted.wire.destination) throw new Error('Paste requires breadboards with the same local X pitch direction to preserve the wire shape.')
         source = moved.wire.source; destination = moved.wire.destination; visual = moved.visual
@@ -207,7 +216,7 @@ export function buildPasteCandidate(graph: CircuitGraph, snapshot: SelectionClip
       const id = idMap.get(original.id)!
       if (draft.modules.some(module => module.id === id)) continue
       const { mount: _mount, ...free } = clone(moduleWorldPose(original, snapshot.sourceModules))
-      draft.modules.push({ ...free, id, position: transform(positionOf(free)), rotation: norm((free.rotation ?? 0) + rotate) })
+      draft=withCircuitModules(draft,[...draft.modules,{ ...free, id, position: transform(positionOf(free)), rotation: norm((free.rotation ?? 0) + rotate) }])
     }
     if (!selection.wires.length && snapshot.connections.length) {
       selection.wires = snapshot.connections.map(wire => ({ source: wire.source, destination: wire.destination }))
@@ -220,6 +229,7 @@ export function buildPasteCandidate(graph: CircuitGraph, snapshot: SelectionClip
 
 export function buildDeleteCandidate(graph: CircuitGraph, selection: EditorSelection): CircuitGraph {
   const normalized = normalizeSelection(graph, selection), ids = new Set(normalized.moduleIds), wires = new Set(normalized.wires.map(wireKey))
+  for(const module of graph.modules)if(isFlexibleMount(module.mount)&&ids.has(module.mount.boardId))ids.add(module.id)
   if (!ids.size && !wires.size) return graph
   const modules = graph.modules.filter(module => !ids.has(module.id)).map(module => {
     if (!module.mount || !ids.has(module.mount.boardId)) return module
@@ -237,7 +247,7 @@ export function buildDeleteCandidate(graph: CircuitGraph, selection: EditorSelec
     })
     return { ...wire, metadata: { ...wire.metadata, wireVisual: visual } }
   })
-  const candidate = { ...graph, modules, connections }
+  const candidate = withCircuitModules(graph, modules, connections)
   parseCircuitFile(JSON.stringify(candidate))
   return candidate
 }
@@ -287,7 +297,7 @@ export function buildMoveSelectionCandidate(graph: CircuitGraph, selection: Edit
         previewModules.push({ ...rest, position: freePos, rotation: item.rotation ?? currentPose.rotation })
       }
     }
-    return { ...graph, modules: previewModules, connections: [...graph.connections] }
+    return withCircuitModules(graph,previewModules,[...graph.connections])
   }
 
   for (const module of remountQueue) {
@@ -299,6 +309,20 @@ export function buildMoveSelectionCandidate(graph: CircuitGraph, selection: Edit
       z: currentPosition.z + delta.z,
     }
     const availableBoards = draftModules.filter(m => getBreadboardTopology(m.type) && !m.mount)
+    if(isFlexibleMount(module.mount)){
+      try{
+        const source=graph.modules.find(item=>item.id===module.mount!.boardId)!,board=availableBoards.find(item=>item.id===source.id)!
+        if(!board)throw Error('The mounting breadboard is unavailable.')
+        const contacts=module.mount.contacts.map(binding=>{
+          const current=contactWorld(graph.modules,`${source.id}.contact:${binding.contactId}`),expected=worldToModuleLocal(add(current.world,{x:delta.x,y:0,z:delta.z}),board)
+          const contact=getBreadboardTopology(board.type)!.contacts.find(contact=>close(point(contact.localPosition),expected))
+          if(!contact)throw Error('Assembly move requires exact breadboard holes.')
+          return{...binding,contactId:contact.contactId}
+        })
+        draftModules.push({...clone(module),mount:reframeFlexibleMount(module.mount,source,board,p=>add(p,{x:delta.x,y:0,z:delta.z}),0,contacts)})
+        continue
+      }catch(error){throw new MoveCandidateError(error instanceof Error?error.message:String(error),makePreviewDraft(),normalized,delta)}
+    }
     const candidate = solveMounting(module.type, desiredWorld, currentPose.rotation ?? 0, availableBoards, module.id)
 
     if (!candidate || !candidate.valid) {
@@ -310,7 +334,7 @@ export function buildMoveSelectionCandidate(graph: CircuitGraph, selection: Edit
     draftModules.push({ ...rest, mount: candidate.mount })
   }
 
-  const draft: CircuitGraph = { ...graph, modules: draftModules, connections: [] }
+  const draft: CircuitGraph = withCircuitModules(graph,draftModules,[])
 
   try {
     validateMountBindings(draft)

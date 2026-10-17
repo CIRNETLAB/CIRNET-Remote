@@ -69,3 +69,22 @@ def test_optional_execution_profile_adapter_preserves_declared_profiles_and_neve
     assert get_execution_part('CAPACITOR_CERAMIC')['simulation']['status'] == 'unsupported'
     assert get_execution_part('UNKNOWN_LEGACY') is None
     assert parts == original
+
+
+@pytest.mark.parametrize('module_type,properties',[
+    ('GENERIC_LED',{'forwardVoltageVolts':True}),('GENERIC_LED',{'maxCurrentAmps':0}),
+    ('GENERIC_LED',{'color':'red'}),('GENERIC_BUZZER',{'buzzerType':'MOTOR'}),
+    ('GENERIC_BJT',{'transistorType':'MOSFET'}),('GENERIC_CAPACITOR',{'capacitorType':'ELECTROLYTIC'}),
+])
+def test_generic_design_properties_validate_typed_parameters(module_type,properties):
+    from contracts.component_properties import normalize_component_properties
+    with pytest.raises(ValueError):normalize_component_properties(module_type,properties)
+
+
+def test_graph_12_schema_itself_enforces_new_generic_enums_while_preserving_unknown_metadata():
+    from contracts.registry import validate_contract
+    from jsonschema import ValidationError
+    value=graph('GENERIC_BUZZER',{'buzzerType':'MOTOR','opaque':{'preserve':True}});value['schema_version']='1.2'
+    with pytest.raises(ValidationError):validate_contract('CircuitGraphV12',value)
+    value['modules'][0]['properties']['buzzerType']='PASSIVE'
+    assert validate_contract('CircuitGraphV12',value)==value

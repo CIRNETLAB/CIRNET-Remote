@@ -9,7 +9,7 @@ from jsonschema import ValidationError
 from contracts.validation import validate
 from contracts.runtime_config import simulation_worker_count
 from contracts.instrument_validation import validate_generator
-from app.services.circuit_validator import validate_circuit_graph
+from app.services.circuit_validator import validate_supported_circuit_graph as validate_circuit_graph
 from app.services.execution_policy import ExecutionPolicy
 from app.services.assessment import AssessmentService
 from app.services.verification import SafetyVerificationService, TopologyVerificationService, FunctionalVerificationService, result

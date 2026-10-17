@@ -112,7 +112,7 @@ onUnmounted(() => { observer?.disconnect(); drawerObserver?.disconnect(); manage
     <div class="scene-ports"><button v-for="port in editor.ports.value" :key="port.endpoint" :class="['port-anchor', port.direction, { pending: workspace.pendingPort === port.endpoint }]" :style="{ left: port.x + 'px', top: port.y + 'px' }" :aria-label="'Connect port ' + port.endpoint" @click.stop="editor.connect(port.endpoint)">{{ port.endpoint.split('.')[1] }}</button></div>
     <p v-if="workspace.editError" class="editor-error" role="alert">{{ workspace.editError }}<button @click="workspace.editError = ''">Dismiss</button></p>
     <p v-if="graphicsError" class="graphics-notice" role="status">{{ graphicsError }}</p>
-    <p v-if="workspace.placementType" class="placement-notice">Preview follows pointer · X/Z/XZ/Rotate Y to adjust · Click to place · Right click or Esc to cancel</p>
+    <p v-if="workspace.placementType" class="placement-notice">{{ editor.controlHint.value || 'Preview follows pointer · X/Z/XZ/Rotate Y to adjust · Click to place · Right click or Esc to cancel' }}</p>
     <WorkspaceNavigator
       :axes="axes"
       :camera-quaternion="cameraQuaternion"

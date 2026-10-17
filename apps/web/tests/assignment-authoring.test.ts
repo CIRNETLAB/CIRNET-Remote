@@ -21,3 +21,13 @@ test('using the editor design as an instructor reference takes an independent va
   assert.deepEqual(definition.lab_endpoints,[]);assert.equal(definition.reference_design_graph,undefined)
   assert.throws(()=>copyReferenceDesign(definition,{...graph,modules:[{id:'duplicate',type:'LED'},{id:'duplicate',type:'LED'}]}))
 })
+
+test('flexible reference snapshots explicitly use the new assignment definition version',()=>{
+  const before=structuredClone(definition)
+  const graph={schema_version:'1.2' as const,circuit_id:'new-design',modules:[],connections:[],metadata:{kept:true}}
+  const snapshot=copyReferenceDesign(definition,graph)
+  assert.equal(snapshot.schema_version,'2.0')
+  assert.deepEqual(snapshot.reference_design_graph,graph)
+  assert.deepEqual(parseAuthoringDefinition(JSON.stringify(snapshot)),snapshot)
+  assert.deepEqual(definition,before)
+})

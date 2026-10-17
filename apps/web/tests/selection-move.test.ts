@@ -4,7 +4,7 @@ import { nextTick } from 'vue'
 import { Vector3 } from 'three'
 import { wireHarness } from './helpers/wireHarness'
 import { buildMoveSelectionCandidate, MoveCandidateError } from '../src/editor/batchCommands'
-import type { CircuitGraph, CircuitModule } from '../src/types/circuit'
+import type { CircuitGraph, CircuitModule } from '../src/contracts/generated/dto'
 import { moduleLocalToWorld, moduleWorldPose } from '../src/electrical/modulePose'
 import { solveMounting } from '../src/electrical/mounting'
 

@@ -65,7 +65,7 @@ test('Component Info updates resistor design properties in one transaction and e
   } finally { view.app.unmount() }
 })
 
-test('capacitor units, voltage, Cancel and Update preserve mounted pin bonds and nets through history and save', async () => {
+test('capacitor units, voltage, Escape reset and Update preserve mounted pin bonds and nets through history and save', async () => {
   for (const type of ['CAPACITOR_CERAMIC','CAPACITOR_ELECTROLYTIC']) {
     const pinia = createPinia(); setActivePinia(pinia)
     const store = useCircuitStore(), workspace = useWorkspaceStore(), ui = useUiStore()
@@ -79,7 +79,7 @@ test('capacitor units, voltage, Cancel and Update preserve mounted pin bonds and
       dispatch(view.find('input','aria-label','Capacitance'), 'onInput', '47')
       dispatch(view.find('select','aria-label','Capacitance unit'), 'onChange', 'µF')
       dispatch(view.find('input','aria-label','Rated voltage'), 'onInput', '25')
-      dispatch(view.find('button','aria-label','Cancel component property changes'), 'onClick'); await nextTick()
+      ;(view.find('section','aria-label','Component design properties').props.onKeydown as (event: unknown) => void)({ key: 'Escape', stopPropagation() {} }); await nextTick()
       assert.equal(store.past.length, 0)
       dispatch(view.find('input','aria-label','Capacitance'), 'onInput', '47')
       dispatch(view.find('select','aria-label','Capacitance unit'), 'onChange', 'µF')
@@ -121,7 +121,8 @@ test('Component Info Add also works for physical parts without an R/C property f
     const view = mountSfc(await loadSfc('components/windows/ComponentInfoWindow.vue'), pinia)
     try {
       dispatch(view.all().find(n => n.tag === 'button' && String(n.props['aria-label']).startsWith('Add '))!, 'onClick')
-      await nextTick(); assert.equal(workspace.placementType, type); assert.equal(workspace.editError, '')
+      await nextTick(); assert.equal(workspace.placementType, type === 'LED_LTL307EE' ? 'GENERIC_LED' : type); assert.equal(workspace.editError, '')
+      assert.equal(store.graph!.modules[0].type, type, 'Add does not silently migrate the selected legacy instance')
     } finally { view.app.unmount() }
   }
 })

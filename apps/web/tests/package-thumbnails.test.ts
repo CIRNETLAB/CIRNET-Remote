@@ -6,6 +6,8 @@ import { Mesh, type Group } from 'three'
 import { createPackageThumbnailCache, packageThumbnailCacheKey, type PackageThumbnailRenderer } from '../src/three/PackageThumbnails'
 import { buildComponent, disposeObject } from '../src/three/ComponentModel'
 import { loadSfc, mountSfc } from './helpers/vueSfc'
+import fixtures from '../../../contracts/design-models/fixtures/flexible-mounting-parity.json'
+import type { CircuitModule } from '../src/types/circuit'
 
 const flush = async () => { await Promise.resolve(); await Promise.resolve(); await nextTick(); await new Promise(resolve => setTimeout(resolve, 0)); await nextTick() }
 const waitFor = async (condition: () => boolean) => {
@@ -42,6 +44,47 @@ test('equal effective properties share one bitmap and cached cards need no rende
   assert.equal(await cached.ready, 'data:image/png;base64,resistor', 'legacy properties use the same canonical appearance key')
   assert.equal(contexts, 1, 'cached images never create a replacement GPU context')
   cached.release()
+})
+
+test('generic LED thumbnails distinguish color and share identical colors without any observed emission', async () => {
+  const backend = deferredRenderer(), cache = createPackageThumbnailCache({ idleDelayMs: 0, createRenderer: () => backend.renderer })
+  const blue = cache.acquire('GENERIC_LED', { color: '#3a78dc' }), green = cache.acquire('GENERIC_LED', { color: '#42b567' })
+  try {
+    await flush(); backend.jobs[0]!.finish('blue'); assert.equal(await blue.ready, 'blue')
+    await waitFor(() => backend.jobs.length === 2)
+    backend.jobs[1]!.finish('green'); assert.equal(await green.ready, 'green')
+    const same = cache.acquire('GENERIC_LED', { color: '#42b567', forwardVoltageVolts: 2.7 })
+    assert.equal(await same.ready, 'green'); assert.equal(backend.jobs.length, 2)
+    same.release()
+  } finally { blue.release(); green.release(); cache.dispose?.() }
+})
+
+test('thumbnail requests snapshot a flexible instance and its supporting board without retaining other graph modules', async () => {
+  const graph = JSON.parse(JSON.stringify(fixtures.cases[0]!.graph)) as { modules: CircuitModule[] }
+  const module = graph.modules.find(item => item.id === 'R')!, board = graph.modules.find(item => item.id === 'BB')!
+  const backend = deferredRenderer(), cache = createPackageThumbnailCache({ idleDelayMs: 0, createRenderer: () => backend.renderer })
+  const lease = cache.acquire(module.type, module.properties, { module, modules: graph.modules })
+  if (module.mount?.kind !== 'breadboard-flexible') assert.fail('fixture needs a flexible mount')
+  module.mount.bodyPose.rotation.z = 80
+  board.rotation = 90
+  try {
+    await flush()
+    const captured = backend.jobs[0]!.model
+    assert.ok(captured.getObjectByName('flexible-rigid-body'), 'preview contains the mounted body and all resolved flexible leads')
+    assert.equal(captured.rotation.y, 37 * Math.PI / 180, 'acquisition snapshots the referenced board pose')
+    assert.equal(captured.getObjectByName('flexible-rigid-body')!.rotation.z, 0, 'a later draft edit cannot alter a queued image')
+    assert.ok(captured.userData.resolvedPinAnchors.A)
+    backend.jobs[0]!.finish('flexible'); assert.equal(await lease.ready, 'flexible')
+  } finally { lease.release(); cache.dispose?.() }
+})
+
+test('module thumbnail requests use instance properties when no explicit property override is supplied', async () => {
+  const backend = deferredRenderer(), cache = createPackageThumbnailCache({ idleDelayMs: 0, createRenderer: () => backend.renderer })
+  const lease = cache.acquire('GENERIC_RESISTOR', undefined, { module: { id: 'R', type: 'GENERIC_RESISTOR', properties: { resistanceOhms: 4700 } } })
+  try {
+    await flush(); assert.equal(JSON.parse(backend.jobs[0]!.model.userData.signature)[1].resistanceOhms, 4700)
+    backend.jobs[0]!.finish('4700'); assert.equal(await lease.ready, '4700')
+  } finally { lease.release(); cache.dispose?.() }
 })
 
 test('pending renders cannot reuse the canvas concurrently or dispose an in-flight renderer', async () => {

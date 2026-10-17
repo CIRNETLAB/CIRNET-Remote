@@ -1,4 +1,4 @@
-import type { ExperimentCreate,ExperimentRecord,OperationRecord } from '../contracts/generated/dto'
+import type { ExperimentCreateV2 as ExperimentCreate,ExperimentRecord,OperationRecord } from '../contracts/generated/dto'
 
 export const isReleasedExperiment=(record:ExperimentRecord|null)=>!record||(['COMPLETE','FAULT'].includes(record.state)&&record.lease_expires_at===null)
 type Kind='create'|'run'|'stop'

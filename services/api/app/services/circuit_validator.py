@@ -20,3 +20,14 @@ def validate_circuit_graph(payload: Any) -> tuple[bool, str, str]:
     except (ValueError, TypeError, KeyError) as exc:
         return False, "SCHEMA_VALIDATION_ERROR", str(exc)
     return True, "OK", "Circuit Graph is structurally valid."
+
+
+def validate_supported_circuit_graph(payload:Any)->tuple[bool,str,str]:
+    """Explicit versioned entrypoint; the legacy validator stays unchanged."""
+    from contracts.design_validation import validate_design_graph
+    from jsonschema import ValidationError as SchemaError
+    if isinstance(payload,dict) and payload.get('schema_version') not in ('1.0','1.1','1.2'):
+        return False,'UNSUPPORTED_SCHEMA_VERSION','Unsupported Circuit Graph schema.'
+    try:validate_design_graph(payload)
+    except (SchemaError,ValueError,TypeError,KeyError) as error:return False,'SCHEMA_VALIDATION_ERROR',str(error)
+    return True,'OK','Circuit Graph is structurally and mechanically valid.'

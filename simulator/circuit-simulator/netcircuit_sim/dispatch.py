@@ -1,6 +1,6 @@
 """Typed local dispatch; unavailable solvers never return invented captures."""
 from jsonschema import ValidationError
-from contracts.boundary.models import SimulationRequest, SimulationResult, SimulationErrorResult
+from contracts.boundary.models import SimulationRequest, SimulationRequestV2, SimulationResult, SimulationErrorResult
 from contracts.signal_domains import classify_graph, validate_domain_connections
 from .engine import VirtualCompiler, SimulationError, run_plan
 from .analog import SPICEAdapter, MixedSignalCoordinator
@@ -19,8 +19,10 @@ class SimulationDispatcher:
         except ValidationError as error:
             raise SimulationError(getattr(error,'issues',[{'code':'UNEXECUTABLE'}])[0]['code']) from None
 
-    def simulate(self,request:SimulationRequest|dict)->SimulationResult|SimulationErrorResult:
-        request=SimulationRequest.model_validate(request)
+    def simulate(self,request:SimulationRequest|SimulationRequestV2|dict)->SimulationResult|SimulationErrorResult:
+        payload=request.model_dump(exclude_unset=True) if isinstance(request,(SimulationRequest,SimulationRequestV2)) else request
+        boundary=SimulationRequestV2 if isinstance(payload,dict) and payload.get('schema_version')=='2.0' else SimulationRequest
+        request=boundary.model_validate(payload)
         data=request.model_dump(exclude_unset=True)
         try:classification=classify_graph(data['graph'])
         except ValidationError as error:

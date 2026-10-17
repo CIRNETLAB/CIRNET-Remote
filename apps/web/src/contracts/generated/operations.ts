@@ -49,6 +49,21 @@ export interface ApiOperations {
   "listStations": { request: undefined; response: Array<DTO.StationDescriptor>; path: Record<string, never>; query: Record<string, never>; headers: Record<string, never>; error: DTO.ErrorEnvelope }
   "getStationCapabilities": { request: undefined; response: DTO.PublicStationCapabilities; path: { "station_id": string }; query: Record<string, never>; headers: Record<string, never>; error: DTO.ErrorEnvelope }
   "getStationQueue": { request: undefined; response: DTO.QueueState; path: { "station_id": string }; query: Record<string, never>; headers: Record<string, never>; error: DTO.ErrorEnvelope }
+  "listAssignmentDocumentsV2": { request: undefined; response: DTO.AssignmentAuthoringPageV2; path: Record<string, never>; query: { "limit"?: number; "cursor"?: string | null }; headers: Record<string, never>; error: DTO.ErrorEnvelope }
+  "createAssignmentDocumentV2": { request: DTO.AssignmentAuthoringCreateV2; response: DTO.AssignmentAuthoringDocumentV2; path: Record<string, never>; query: Record<string, never>; headers: { "Origin": string }; error: DTO.ErrorEnvelope }
+  "getAssignmentDocumentV2": { request: undefined; response: DTO.AssignmentAuthoringDocumentV2; path: { "assignment_id": string }; query: Record<string, never>; headers: Record<string, never>; error: DTO.ErrorEnvelope }
+  "saveAssignmentDocumentV2": { request: DTO.AssignmentAuthoringSaveV2; response: DTO.AssignmentAuthoringDocumentV2; path: { "assignment_id": string }; query: Record<string, never>; headers: { "Origin": string }; error: DTO.ErrorEnvelope }
+  "publishAssignmentDocumentV2": { request: DTO.AssignmentAuthoringPublicationV2; response: DTO.AssignmentAuthoringDocumentV2; path: { "assignment_id": string }; query: Record<string, never>; headers: { "Origin": string }; error: DTO.ErrorEnvelope }
+  "listAssignmentsV2": { request: undefined; response: Array<DTO.AssignmentViewV2>; path: Record<string, never>; query: Record<string, never>; headers: Record<string, never>; error: DTO.ErrorEnvelope }
+  "getAssignmentV2": { request: undefined; response: DTO.AssignmentViewV2; path: { "assignment_id": string }; query: Record<string, never>; headers: Record<string, never>; error: DTO.ErrorEnvelope }
+  "previewCircuitV2": { request: DTO.AnySupportedCircuitGraph; response: DTO.PhysicalPreviewResult; path: Record<string, never>; query: Record<string, never>; headers: { "Origin": string }; error: DTO.ErrorEnvelope | DTO.CircuitValidationResult }
+  "validateCircuitV2": { request: DTO.AnySupportedCircuitGraph; response: DTO.CircuitValidationResult; path: Record<string, never>; query: Record<string, never>; headers: { "Origin": string }; error: DTO.ErrorEnvelope | DTO.CircuitValidationResult }
+  "getCircuitV2": { request: undefined; response: DTO.CircuitDocumentV2; path: { "document_id": string }; query: Record<string, never>; headers: Record<string, never>; error: DTO.ErrorEnvelope }
+  "saveCircuitV2": { request: DTO.CircuitSaveV2; response: DTO.CircuitDocumentV2; path: { "document_id": string }; query: Record<string, never>; headers: { "Origin": string }; error: DTO.ErrorEnvelope }
+  "createExperimentV2": { request: DTO.ExperimentCreateV2; response: DTO.ExperimentRecord; path: Record<string, never>; query: Record<string, never>; headers: { "Idempotency-Key"?: string | null; "Origin": string }; error: DTO.ErrorEnvelope }
+  "getExperimentDocumentReferenceV2": { request: undefined; response: DTO.ExperimentDocumentReferenceV2; path: { "experiment_id": string }; query: Record<string, never>; headers: Record<string, never>; error: DTO.ErrorEnvelope }
+  "listCircuitsV2": { request: undefined; response: DTO.CircuitPageV2; path: { "project_id": string }; query: { "limit"?: number; "cursor"?: string | null }; headers: Record<string, never>; error: DTO.ErrorEnvelope }
+  "createCircuitV2": { request: DTO.CircuitCreateV2; response: DTO.CircuitDocumentV2; path: { "project_id": string }; query: Record<string, never>; headers: { "Origin": string }; error: DTO.ErrorEnvelope }
 }
 export const apiOperations = {
   "listUsers": {
@@ -768,6 +783,231 @@ export const apiOperations = {
     ],
     "successStatuses": [
       200
+    ],
+    "binary": false
+  },
+  "listAssignmentDocumentsV2": {
+    "method": "GET",
+    "path": "/api/v2/assignment-documents",
+    "requestContract": null,
+    "requestBodyRequired": false,
+    "responseContract": "AssignmentAuthoringPageV2",
+    "responseArray": false,
+    "responseMedia": [
+      "application/json"
+    ],
+    "successStatuses": [
+      200
+    ],
+    "binary": false
+  },
+  "createAssignmentDocumentV2": {
+    "method": "POST",
+    "path": "/api/v2/assignment-documents",
+    "requestContract": "AssignmentAuthoringCreateV2",
+    "requestBodyRequired": true,
+    "responseContract": "AssignmentAuthoringDocumentV2",
+    "responseArray": false,
+    "responseMedia": [
+      "application/json"
+    ],
+    "successStatuses": [
+      201
+    ],
+    "binary": false
+  },
+  "getAssignmentDocumentV2": {
+    "method": "GET",
+    "path": "/api/v2/assignment-documents/{assignment_id}",
+    "requestContract": null,
+    "requestBodyRequired": false,
+    "responseContract": "AssignmentAuthoringDocumentV2",
+    "responseArray": false,
+    "responseMedia": [
+      "application/json"
+    ],
+    "successStatuses": [
+      200
+    ],
+    "binary": false
+  },
+  "saveAssignmentDocumentV2": {
+    "method": "PUT",
+    "path": "/api/v2/assignment-documents/{assignment_id}",
+    "requestContract": "AssignmentAuthoringSaveV2",
+    "requestBodyRequired": true,
+    "responseContract": "AssignmentAuthoringDocumentV2",
+    "responseArray": false,
+    "responseMedia": [
+      "application/json"
+    ],
+    "successStatuses": [
+      200
+    ],
+    "binary": false
+  },
+  "publishAssignmentDocumentV2": {
+    "method": "PATCH",
+    "path": "/api/v2/assignment-documents/{assignment_id}/publication",
+    "requestContract": "AssignmentAuthoringPublicationV2",
+    "requestBodyRequired": true,
+    "responseContract": "AssignmentAuthoringDocumentV2",
+    "responseArray": false,
+    "responseMedia": [
+      "application/json"
+    ],
+    "successStatuses": [
+      200
+    ],
+    "binary": false
+  },
+  "listAssignmentsV2": {
+    "method": "GET",
+    "path": "/api/v2/assignments",
+    "requestContract": null,
+    "requestBodyRequired": false,
+    "responseContract": "AssignmentViewV2",
+    "responseArray": true,
+    "responseMedia": [
+      "application/json"
+    ],
+    "successStatuses": [
+      200
+    ],
+    "binary": false
+  },
+  "getAssignmentV2": {
+    "method": "GET",
+    "path": "/api/v2/assignments/{assignment_id}",
+    "requestContract": null,
+    "requestBodyRequired": false,
+    "responseContract": "AssignmentViewV2",
+    "responseArray": false,
+    "responseMedia": [
+      "application/json"
+    ],
+    "successStatuses": [
+      200
+    ],
+    "binary": false
+  },
+  "previewCircuitV2": {
+    "method": "POST",
+    "path": "/api/v2/circuits/physical-preview",
+    "requestContract": "AnySupportedCircuitGraph",
+    "requestBodyRequired": true,
+    "responseContract": "PhysicalPreviewResult",
+    "responseArray": false,
+    "responseMedia": [
+      "application/json"
+    ],
+    "successStatuses": [
+      200
+    ],
+    "binary": false
+  },
+  "validateCircuitV2": {
+    "method": "POST",
+    "path": "/api/v2/circuits/validate",
+    "requestContract": "AnySupportedCircuitGraph",
+    "requestBodyRequired": true,
+    "responseContract": "CircuitValidationResult",
+    "responseArray": false,
+    "responseMedia": [
+      "application/json"
+    ],
+    "successStatuses": [
+      200
+    ],
+    "binary": false
+  },
+  "getCircuitV2": {
+    "method": "GET",
+    "path": "/api/v2/circuits/{document_id}",
+    "requestContract": null,
+    "requestBodyRequired": false,
+    "responseContract": "CircuitDocumentV2",
+    "responseArray": false,
+    "responseMedia": [
+      "application/json"
+    ],
+    "successStatuses": [
+      200
+    ],
+    "binary": false
+  },
+  "saveCircuitV2": {
+    "method": "PUT",
+    "path": "/api/v2/circuits/{document_id}",
+    "requestContract": "CircuitSaveV2",
+    "requestBodyRequired": true,
+    "responseContract": "CircuitDocumentV2",
+    "responseArray": false,
+    "responseMedia": [
+      "application/json"
+    ],
+    "successStatuses": [
+      200
+    ],
+    "binary": false
+  },
+  "createExperimentV2": {
+    "method": "POST",
+    "path": "/api/v2/experiments",
+    "requestContract": "ExperimentCreateV2",
+    "requestBodyRequired": true,
+    "responseContract": "ExperimentRecord",
+    "responseArray": false,
+    "responseMedia": [
+      "application/json"
+    ],
+    "successStatuses": [
+      201
+    ],
+    "binary": false
+  },
+  "getExperimentDocumentReferenceV2": {
+    "method": "GET",
+    "path": "/api/v2/experiments/{experiment_id}/document-reference",
+    "requestContract": null,
+    "requestBodyRequired": false,
+    "responseContract": "ExperimentDocumentReferenceV2",
+    "responseArray": false,
+    "responseMedia": [
+      "application/json"
+    ],
+    "successStatuses": [
+      200
+    ],
+    "binary": false
+  },
+  "listCircuitsV2": {
+    "method": "GET",
+    "path": "/api/v2/projects/{project_id}/circuits",
+    "requestContract": null,
+    "requestBodyRequired": false,
+    "responseContract": "CircuitPageV2",
+    "responseArray": false,
+    "responseMedia": [
+      "application/json"
+    ],
+    "successStatuses": [
+      200
+    ],
+    "binary": false
+  },
+  "createCircuitV2": {
+    "method": "POST",
+    "path": "/api/v2/projects/{project_id}/circuits",
+    "requestContract": "CircuitCreateV2",
+    "requestBodyRequired": true,
+    "responseContract": "CircuitDocumentV2",
+    "responseArray": false,
+    "responseMedia": [
+      "application/json"
+    ],
+    "successStatuses": [
+      201
     ],
     "binary": false
   }

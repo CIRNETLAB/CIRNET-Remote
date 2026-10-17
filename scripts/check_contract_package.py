@@ -21,6 +21,10 @@ REQUIRED_RESOURCES=(
     'contracts/api/openapi.json','contracts/capture/layout.json','contracts/capture/ncap.schema.json',
     'contracts/fixtures/capture/conformance.json','contracts/design-models/signal-port-catalog.json',
     'contracts/design-models/signal-domains.schema.json','contracts/signal_domains.py','contracts/capture_validation.py',
+    'contracts/design-models/flexible-mount.schema.json','contracts/design-models/flexible-mechanics.json',
+    'contracts/design-models/fixtures/flexible-mounting-parity.json','contracts/circuit-schema/circuit-v1.2.schema.json',
+    'contracts/public/placement.schema.json','contracts/flexible_mounting.py',
+    'contracts/public/assignments-v2.schema.json','contracts/fixtures/assignment-v2-conformance.json',
     'contracts/compatibility/2026-10-16/public-wire-baseline.json',
     'contracts/design-models/fixtures/physical-mounting-parity.json')
 
@@ -85,7 +89,8 @@ for name in ('contracts','app','netcircuit_sim','hardware_service'):
     assert module.__file__ and not Path(module.__file__).resolve().is_relative_to(checkout),name
 
 from contracts.registry import check_manifest,validate_contract
-from contracts.boundary.models import CircuitGraph,SimulationRequest
+from contracts.boundary.models import CircuitGraph,SimulationRequest,AnySupportedCircuitGraph
+from contracts.design_validation import validate_design_graph
 from contracts.generated import rpc_v2_pb2,rpc_v2_pb2_grpc
 from contracts.physical_mounting import physical_parts
 from contracts.capture_layout import CAPTURE_LAYOUT
@@ -102,7 +107,16 @@ check_compatibility(json.loads(resource.joinpath('api/openapi.json').read_text(e
 graph={'schema_version':'1.1','circuit_id':'wheel','modules':[{'id':'D','type':'DIGITAL_SWITCH','properties':{'state':True}}],'connections':[],'metadata':{'retain':[None,True,10**50]}}
 assert CircuitGraph.model_validate(graph).model_dump(exclude_unset=True)==graph
 assert validate_contract('MemoryImage',{'version':'1.0','word_bits':8,'depth':1,'data':[0]})['data']==[0]
-assert len(physical_parts())==55 and CAPTURE_LAYOUT==GENERATED_LAYOUT
+assert len(physical_parts())==63 and CAPTURE_LAYOUT==GENERATED_LAYOUT
+assert {'SN74HC08N','RESISTOR_AXIAL','LED_LTL307EE','GENERIC_RESISTOR','GENERIC_LED'}<={part['editorType'] for part in physical_parts()}
+placement=json.loads(resource.joinpath('design-models/fixtures/flexible-mounting-parity.json').read_text(encoding='utf-8'))
+for case in placement['cases']:
+    if case['valid']:
+        validate_design_graph(case['graph'])
+        assert AnySupportedCircuitGraph.model_validate(case['graph']).model_dump(exclude_unset=True)==case['graph']
+assignment_cases=json.loads(resource.joinpath('fixtures/assignment-v2-conformance.json').read_text(encoding='utf-8'))
+for case in assignment_cases['cases']:
+    if case['valid']:assert validate_contract(case['contract'],case['value'])==case['value']
 assert classify_graph(graph)['kind']=='DIGITAL'
 assert rpc_v2_pb2.ClockConfiguration(period_ns=4294967295).period_ns==4294967295
 assert rpc_v2_pb2_grpc.HardwareServiceStub is not None
@@ -130,7 +144,7 @@ from app.main import create_app
 from app.config import Settings
 schema=create_app(schema_only=True,configuration=Settings(database_url='not-a-runtime-database',hardware_grpc_target='unavailable-hardware:1'))
 assert not hasattr(schema.state,'repository')
-assert {'/api/projects','/api/auth/session','/api/assignment-documents'}<=set(schema.openapi()['paths'])
+assert {'/api/projects','/api/auth/session','/api/assignment-documents','/api/v2/circuits/{document_id}','/api/v2/experiments','/api/v2/assignment-documents','/api/v2/assignments/{assignment_id}'}<=set(schema.openapi()['paths'])
 from app.migrations import HEAD
 from app.services.persistence import Repository
 from app.services.auth import AuthService

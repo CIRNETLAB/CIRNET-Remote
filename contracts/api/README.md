@@ -1,5 +1,18 @@
 # Public Application API 1.0
 
+The additive component-placement API uses `/api/v2/projects/{id}/circuits`,
+`/api/v2/circuits/{id}`, `/api/v2/circuits/validate`,
+`/api/v2/circuits/physical-preview`, `/api/v2/experiments` and
+`/api/v2/experiments/{id}/document-reference`. Its generated V2 DTOs accept the
+separate CircuitGraph 1.2 schema and retain legacy graphs. The original routes
+and DTOs below remain unchanged; a legacy document read/list/save or saved-run
+request that selects a 1.2 document returns `UNSUPPORTED_DOCUMENT_VERSION`.
+See [`flexible-placement.md`](../design-models/flexible-placement.md) for the
+wire frame and explicit migration. Assignment authoring also has opt-in
+`/api/v2/assignment-documents` CRUD/publication and `/api/v2/assignments`
+authorized views. `AssignmentDefinitionV2` supports flexible reference graphs;
+old assignment definitions and API wires retain their original versions.
+
 The canonical schema families registered in `contracts/manifest.json` own public DTO shapes: API, auth, projects/revisions, assignment authoring, history, realtime and instrument control. Lab domain definitions remain in `physical-lab/lab.schema.json`; CircuitGraph supports 1.0 and 1.1. FastAPI route registrations own methods, paths and status codes. `openapi.json` is exported from those routes with canonical schemas and explicit validation profiles. Generated browser operation bindings choose the named response parser from the operation identity; callers cannot assert an unrelated generic response shape.
 
 Generate DTOs with `python scripts/generate_contracts.py`. Export or check operations with `python scripts/export_openapi.py` and `python scripts/export_openapi.py --check`. Export uses `create_app(schema_only=True)`, without database creation, experiment recovery or hardware connection.

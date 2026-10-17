@@ -8,7 +8,7 @@ import { partCatalog, type PartDefinition } from '../src/data/partCatalog'
 import { createSceneManager } from '../src/three/SceneManager'
 import { solveMounting } from '../src/electrical/mounting'
 import { moduleLocalToWorld } from '../src/electrical/modulePose'
-import type { CircuitModule } from '../src/types/circuit'
+import type { CircuitModule } from '../src/contracts/generated/dto'
 
 test('SN74HC08N renders fourteen separate metal leads on the physical PDIP rows', () => {
   const model = buildComponent({ id: 'U1', type: 'SN74HC08N' })

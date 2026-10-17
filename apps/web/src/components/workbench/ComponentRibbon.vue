@@ -52,7 +52,7 @@ function choose(card: PaletteCard) {
   root.value?.querySelector?.<HTMLButtonElement>(`[data-group="${ui.activeRibbonGroup}"]`)?.focus()
   if (item.window) ui.openWindow(item.window)
   else if (item.type === 'JUMPER') workspace.setTool('wire')
-  else if (card.placeable) workspace.armPlacement(item.type)
+  else if (card.placeable) { workspace.armPlacement(item.type); ui.openWindow('component-info', { activate: false }) }
   else { workspace.preview(item.type); workspace.editError = item.name + ' has no placeable editor model yet.' }
   ui.activeRibbonGroup = null
 }
@@ -62,6 +62,7 @@ function drag(event: DragEvent, card: PaletteCard) {
   event.dataTransfer.setData('application/x-netcircuit-component', item.type)
   event.dataTransfer.effectAllowed = 'copy'
   workspace.armPlacement(item.type)
+  ui.openWindow('component-info', { activate: false })
 }
 function outside(event: PointerEvent) { if (event.target instanceof Node && !root.value?.contains(event.target)) ui.activeRibbonGroup = null }
 function clearSearch() { query.value = ''; searchInput.value?.focus?.() }

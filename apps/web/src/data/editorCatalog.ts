@@ -1,8 +1,10 @@
 import catalog from './editorCatalog.json'
 import type { CircuitModule } from '../types/circuit'
+import { validParameterValue } from './componentParameters'
+import type { ComponentParameter } from './componentParameters'
+export type { ComponentParameter } from './componentParameters'
 export type { SignalDomain } from '../contracts/generated/dto'
 export type LogicalPort = import('../contracts/generated/dto').SignalPortDefinition
-export interface ComponentParameter { key: string; label: string; kind: 'number' | 'integer' | 'boolean'; min?: number; max?: number }
 export interface ComponentDefinition {
   type: string; name: string; family: string; visual: string; size: number[]; color: string
   ports: LogicalPort[]; defaults: Record<string, unknown>; parameters: ComponentParameter[]
@@ -21,6 +23,6 @@ export function validateProperties(type: string, properties: Record<string, unkn
   if (!definition) throw new Error('This component has no editor configuration contract.')
   for (const parameter of definition.parameters) {
     const value = properties[parameter.key]
-    if (parameter.kind === 'boolean' ? typeof value !== 'boolean' : typeof value !== 'number' || !Number.isFinite(value) || (parameter.kind === 'integer' && !Number.isInteger(value)) || value < (parameter.min ?? -Infinity) || value > (parameter.max ?? Infinity)) throw new Error(`Invalid ${parameter.label}.`)
+    if (!validParameterValue(parameter, value)) throw new Error(`Invalid ${parameter.label}.`)
   }
 }

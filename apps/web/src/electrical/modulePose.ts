@@ -5,6 +5,7 @@ export function moduleWorldPose(module: CircuitModule, modules: CircuitModule[])
   if (!module.mount) return module
   const board = modules.find(item => item.id === module.mount!.boardId)
   if (!board || board.mount) throw new Error('Mount references a missing or mounted board.')
+  if (module.mount.kind === 'breadboard-flexible') return { ...module, position: moduleLocalToWorld(module.mount.bodyPose.position, board), rotation: ((board.rotation ?? 0) + module.mount.bodyPose.rotation.y) % 360 }
   return { ...module, position: moduleLocalToWorld(module.mount.pose.position, board), rotation: ((board.rotation ?? 0) + module.mount.pose.rotation) % 360 }
 }
 

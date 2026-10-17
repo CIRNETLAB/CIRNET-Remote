@@ -1,4 +1,5 @@
-import type { AssignmentDefinition,CircuitGraph } from '../../contracts/generated/dto'
+import type { AnySupportedAssignmentDefinition as AssignmentDefinition } from '../../contracts/generated/dto'
+import type { CircuitGraph } from '../../types/circuit'
 import { parseLab } from '../../contracts/validation'
 import { parseDocumentJson } from '../../domain/document/json'
 import { parseCircuitFile } from '../../domain/document/circuitFile'
@@ -17,9 +18,9 @@ export function parseBitAssignments(text:string):Record<string,0|1> {
 }
 
 export function parseAuthoringDefinition(text:string):AssignmentDefinition {
-  return parseLab('AssignmentDefinition',parseDocumentJson(text))
+  return parseLab('AnySupportedAssignmentDefinition',parseDocumentJson(text))
 }
 
 export function copyReferenceDesign(definition:AssignmentDefinition,graph:CircuitGraph):AssignmentDefinition {
-  return parseAuthoringDefinition(JSON.stringify({...definition,reference_design_graph:parseCircuitFile(JSON.stringify(graph))}))
+  return parseAuthoringDefinition(JSON.stringify({...definition,...(graph.schema_version==='1.2'?{schema_version:'2.0'}:{}),reference_design_graph:parseCircuitFile(JSON.stringify(graph))}))
 }

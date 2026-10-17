@@ -1,6 +1,7 @@
 import type { CircuitConnection } from '../contracts/generated/dto'
 
-export type { CircuitGraph, CircuitModule, CircuitConnection, Point3, PinContactBinding, MountBinding,
+export type { AnySupportedCircuitGraph as CircuitGraph, CircuitModuleV12 as CircuitModule, CircuitConnection, Point3, PinContactBinding, MountBinding,
+  FlexibleMountV1, BodyPose3D,
   WireRouteMode, WireControlPoint, WireVisual } from '../contracts/generated/dto'
 
 // Editor selections identify canonical connections; they do not own another wire shape.

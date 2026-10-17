@@ -28,3 +28,23 @@ class ProjectService(ProjectRepository):
     def resolve_snapshot(self,owner,document_id,revision):
         validate_contract('CircuitDelete',{'base_revision':revision},profile='structural')
         return self.get_circuit(owner,document_id,revision=revision)
+
+    def _request_v2(self,name,payload):
+        from contracts.design_validation import validate_design_graph
+        value=self._request(name,payload)
+        validate_design_graph(value['graph'])
+        return value
+
+    def create_circuit_v2(self,owner,project_id,payload,*,auth_session_id=None):
+        result=self.create_circuit_record(owner,project_id,self._request_v2('CircuitCreateV2',payload),auth_session_id=auth_session_id)
+        return {**result,'schema_version':'2.0'}
+
+    def save_circuit_v2(self,owner,document_id,payload,*,auth_session_id=None):
+        result=self.save_circuit_record(owner,document_id,self._request_v2('CircuitSaveV2',payload),auth_session_id=auth_session_id)
+        return {**result,'schema_version':'2.0'}
+
+    def get_circuit_v2(self,owner,document_id):return {**self.get_circuit(owner,document_id),'schema_version':'2.0'}
+
+    def list_circuits_v2(self,owner,project_id,*,limit=50,cursor=None):
+        result=self.list_circuits(owner,project_id,limit=limit,cursor=cursor)
+        return {**result,'schema_version':'2.0','items':[{**item,'schema_version':'2.0'} for item in result['items']]}

@@ -8,6 +8,9 @@ import type { MountCandidate } from '../electrical/mounting'
 import { applyPackageSimulation, setPackagePinHighlight } from './PackageModel'
 import { getPartForType } from '../data/partCatalog'
 import { canUpdatePackageAppearance, updatePackageAppearance } from './PackageModel'
+import { updateFlexiblePackageGeometry } from './package/FlexiblePackageGeometry'
+import { MeshBasicMaterial, SphereGeometry, TorusGeometry } from 'three'
+import { isFlexibleMount } from '../electrical/flexibleGeometry'
 import { createStudioEnvironment } from './StudioEnvironment'
 import type { WebGLRenderer } from 'three'
 import { setPackagePinLabels } from './PackagePinLabels'
@@ -34,6 +37,7 @@ export type PickResult = ({ kind: 'module'; id: string } | { kind: 'control'; id
 export interface EndpointPick { kind: 'port' | 'contact'; id: string; endpoint: string; point: Vector3; contactId?: string }
 export type WireEditPick = { kind: 'bend' | 'segment'; wire: WireIdentity; index: number; point: Vector3; basePoint?: Vector3 }
 export interface OrientationAxis { label: 'X' | 'Y' | 'Z'; x: number; y: number; depth: number; color: string }
+export type FlexibleHandle = {id:string;handle:'pin-0'|'pin-1'|'lift'|'tilt';point:Vector3}
 
 // Geometry is a projection of graph IDs and named logical ports, never a source of nets.
 export function createSceneManager({ renderer, canvas, onBeforeRender, onRender, onZoomChange, requestFrame = requestAnimationFrame, cancelFrame = cancelAnimationFrame }: SceneOptions) {
@@ -62,7 +66,8 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     }
     const name = parsed.portId
     const port = module && getDefinition(module.type)?.ports.find((item) => item.id === name)
-    return model && module && port ? model.localToWorld(portAnchor(module.type, port)) : null
+    const resolved = model?.userData.resolvedPinAnchors?.[name] as [number,number,number] | undefined
+    return model && module && port ? model.localToWorld(resolved ? new Vector3(...resolved) : portAnchor(module.type, port)) : null
   }
   const modulePose = (id: string): CircuitModule | null => {
     const module = modules.get(id), model = models.get(id)
@@ -87,11 +92,28 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
   contactHover.name = 'contact-hover'; contactHover.visible = false; contactHover.userData.ignorePick = true
   scene.add(grid, ambient, light, fillLight, content, wires, wireLayer.tools, contactHover)
   const gizmo = createComponentTransformGizmo(); scene.add(gizmo.root)
+  const flexibleHandles = new Group(); flexibleHandles.name = 'flexible-edit-handles'; scene.add(flexibleHandles)
+  const handleSphere = new SphereGeometry(.032,12,8), handleRing = new TorusGeometry(.055,.009,8,24)
+  for (const [handle,color] of [['pin-0','#ffd467'],['pin-1','#ffd467'],['lift','#6be6bc'],['tilt','#86baff']] as const) {
+    const marker=new Mesh(handle==='tilt'?handleRing:handleSphere,new MeshBasicMaterial({color,depthTest:false,transparent:true,opacity:.95}));marker.userData={flexibleHandle:handle,ignorePick:true};marker.renderOrder=40;flexibleHandles.add(marker)
+  }
+  let flexibleEditing=true, flexibleGhost:Group|null=null
+  function updateFlexibleHandles(){
+    const model=highlightedId?models.get(highlightedId):null,module=highlightedId?modules.get(highlightedId):null
+    flexibleHandles.visible=!!(flexibleEditing&&model&&isFlexibleMount(module?.mount))
+    if(!flexibleHandles.visible||!model||!module||!isFlexibleMount(module.mount))return
+    const anchors=model.userData.resolvedPinAnchors as Record<string,[number,number,number]>
+    flexibleHandles.children.forEach((marker,index)=>{
+      if(index<2){const pinId=getPartForType(module.type)!.package.pins[index].id,anchor=anchors[pinId];marker.position.copy(model.localToWorld(new Vector3(...anchor)));marker.position.y+=.018}
+      else {marker.position.copy(model.position);marker.position.y+=index===2?.16:.08;if(index===3)marker.position.x+=.16}
+      marker.userData.id=module.id
+    })
+  }
   const selectionPreview = createSelectionPreview(); scene.add(selectionPreview.root)
   let gizmoObstacles: GizmoObstacle[] = []
   let gizmoLayoutRevision = 0
   const gizmoModel = () => ghost ?? (highlightedId ? models.get(highlightedId) : undefined)
-  const updateGizmo = () => gizmo.update(gizmoModel(), models.values(), camera, width, height, gizmoObstacles, gizmoLayoutRevision)
+  const updateGizmo = () => {gizmo.update(gizmoModel(), models.values(), camera, width, height, gizmoObstacles, gizmoLayoutRevision);updateFlexibleHandles()}
   const raycaster = new Raycaster()
   let width = 1, height = 1, sized = false, frame: number | null = null, disposed = false, visible = false, suspended = false, pointerLocked = false
   let bufferWidth = 0, bufferHeight = 0
@@ -303,6 +325,26 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     scene, camera, grid, models, wires,
     requestRender: schedule,
     endpointPosition,
+    setFlexibleEditing(value:boolean){flexibleEditing=value;updateFlexibleHandles();schedule()},
+    flexibleHandlePosition(handle:FlexibleHandle['handle']){updateFlexibleHandles();return flexibleHandles.visible?flexibleHandles.children.find(item=>item.userData.flexibleHandle===handle)?.position.clone()??null:null},
+    pickFlexibleHandle(x:number,y:number):FlexibleHandle|null {
+      if(!validPointer(x,y))return null;updateFlexibleHandles();if(!flexibleHandles.visible)return null
+      let best:FlexibleHandle|null=null,distance=12
+      for(const marker of flexibleHandles.children){const p=screenPoint(marker.position),d=Math.hypot(x-p.x,y-p.y);if(p.visible&&d<distance){distance=d;best={id:marker.userData.id,handle:marker.userData.flexibleHandle,point:marker.position.clone()}}}return best
+    },
+    previewFlexibleModule(module:CircuitModule){
+      const model=models.get(module.id);if(!model||disposed)return
+      updateFlexiblePackageGeometry(model,module,[...modules.values()]);applyPose(model,moduleWorldPose(module,[...modules.values()]));wireLayer.updateModule(module.id);updateFlexibleHandles();schedule()
+    },
+    setFlexiblePreview(module:CircuitModule|null,context:CircuitModule[]=[],valid=true){
+      if(disposed)return
+      if(!module){if(flexibleGhost){flexibleGhost.removeFromParent();disposeObject(flexibleGhost);flexibleGhost=null}schedule();return}
+      const signature=JSON.stringify([module.type,module.properties])
+      if(flexibleGhost&&flexibleGhost.userData.signature!==signature){flexibleGhost.removeFromParent();disposeObject(flexibleGhost);flexibleGhost=null}
+      if(!flexibleGhost){flexibleGhost=buildComponent(module,context);flexibleGhost.userData.ignorePick=true;scene.add(flexibleGhost)}
+      else{updateFlexiblePackageGeometry(flexibleGhost,module,context);applyPose(flexibleGhost,moduleWorldPose(module,context))}
+      flexibleGhost.traverse(object=>{if(object instanceof Mesh){const materials=Array.isArray(object.material)?object.material:[object.material];for(const material of materials){material.transparent=true;material.opacity=valid?.5:.25;material.depthWrite=false}}});schedule()
+    },
     setGizmoObstacles(areas: GizmoObstacle[]) { if (!disposed && JSON.stringify(areas) !== JSON.stringify(gizmoObstacles)) { gizmoObstacles = areas.map((area) => ({ ...area })); schedule() } },
     gizmoHandlePosition(handle: TransformHandle) { if (disposed) return null; updateGizmo(); return gizmo.position(handle) },
     gizmoOrigin() { if (disposed) return null; updateGizmo(); return gizmo.origin() },
@@ -321,6 +363,9 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       for (const [id, model] of models) if (!ids.has(id)) { if (activeOutline?.id === id) removeActiveOutline(); removeMultiOutline(id); multiOutlineIds.delete(id); if (highlightedId === id) highlightedId = null; disposeObject(model); content.remove(model); models.delete(id) }
       for (const module of next?.modules ?? []) {
         let model = models.get(module.id)
+        if(model&&!!model.userData.resolvedPinAnchors!==isFlexibleMount(module.mount)){
+          if(activeOutline?.id===module.id)removeActiveOutline();removeMultiOutline(module.id);disposeObject(model);content.remove(model);models.delete(module.id);model=undefined
+        }
         const signature = JSON.stringify([module.type, module.properties])
         if (model && model.userData.signature !== signature) {
           const part = getPartForType(module.type)
@@ -334,7 +379,10 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
           else if (model.userData.type === module.type && getDefinition(module.type)?.visual === 'supply') model.userData.signature = signature
           else { if (activeOutline?.id === module.id) removeActiveOutline(); removeMultiOutline(module.id); disposeObject(model); content.remove(model); models.delete(module.id); model = undefined }
         }
-        if (!model) { model = buildComponent(module); model.userData.onVisualChange = schedule; models.set(module.id, model); content.add(model) }
+        if (!model) { model = buildComponent(module, next!.modules); model.userData.onVisualChange = schedule; models.set(module.id, model); content.add(model) }
+        const previousRevision = model.userData.visualGeometryRevision
+        updateFlexiblePackageGeometry(model, module, next!.modules)
+        if (previousRevision !== model.userData.visualGeometryRevision) { if (activeOutline?.id === module.id) removeActiveOutline(); removeMultiOutline(module.id) }
         applyPose(model, moduleWorldPose(module, next!.modules))
         if (showPins) { const part = getPartForType(module.type); if (part) setPackagePinLabels(model, part, null, true) }
       }
@@ -448,10 +496,10 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       const owner = body && pickOwner(body.object)
       return owner?.userData.kind ? { ...owner.userData, point: body!.point.clone() } as PickResult : null
     },
-    pickEndpoint(x: number, y: number): EndpointPick | null {
+    pickEndpoint(x: number, y: number, excludeModuleId?:string): EndpointPick | null {
       if (!validPointer(x, y)) return null
       scene.updateMatrixWorld(true)
-      const hit = contentHit(x, y)
+      const hit = contentHit(x, y, excludeModuleId)
       if (!hit) return null
       const owner = pickOwner(hit.object)
       if (owner.userData.kind === 'port') return { kind: 'port', id: owner.userData.id, endpoint: owner.userData.endpoint, point: hit.point.clone() }

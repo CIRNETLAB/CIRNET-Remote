@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { reactive } from 'vue'
-import { fiveBandResistorCode, normalizeComponentProperties, parseEngineeringQuantity, validateComponentProperties } from '../src/data/componentProperties'
+import { engineeringInput, fiveBandResistorCode, normalizeComponentProperties, parseEngineeringQuantity, validateComponentProperties } from '../src/data/componentProperties'
 
 test('engineering quantities convert supported units and reject empty, mismatched or nonfinite values', () => {
   for (const [text, unit, expected] of [
@@ -14,6 +14,10 @@ test('engineering quantities convert supported units and reject empty, mismatche
     assert.throws(() => parseEngineeringQuantity(value, 'ohm'))
   }
   assert.throws(() => parseEngineeringQuantity('0 Ω', 'ohm', { min: .1, max: 1e9 }))
+})
+
+test('engineering input formatting shifts decimal units exactly without leading zero padding or rounding', () => {
+  for (const [value, exponent, expected] of [[.000123, -6, '123'], [1e-7, -9, '100'], [12345.678901234567, 3, '12.345678901234567'], [.25, 0, '0.25'], [0, 0, '0']] as const) assert.equal(engineeringInput(value, exponent), expected)
 })
 
 test('five-band resistor codes use three exact digits and a separate tolerance band', () => {

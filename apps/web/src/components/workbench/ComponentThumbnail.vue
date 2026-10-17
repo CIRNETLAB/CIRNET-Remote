@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { inject, onUnmounted, ref, watch } from 'vue'
+import { computed, inject, onUnmounted, ref, watch } from 'vue'
+import type { CircuitModule } from '../../types/circuit'
 import { packageThumbnailCacheKey, packageThumbnails, type PackageThumbnailCache, type PackageThumbnailLease, type PackageThumbnailPriority } from '../../three/PackageThumbnails'
 import { observeThumbnailVisibility } from '../../composables/thumbnailVisibility'
 import WorkbenchIcon from './WorkbenchIcon.vue'
 
-const props = withDefaults(defineProps<{ type: string; properties?: Record<string, unknown>; alt?: string; lazy?: boolean; visibilityRoot?: Element; priority?: PackageThumbnailPriority; fallbackIcon?: string }>(), { alt: '', lazy: false, priority: 'high' })
+const props = withDefaults(defineProps<{ type: string; properties?: Record<string, unknown>; module?: CircuitModule; modules?: readonly CircuitModule[]; alt?: string; lazy?: boolean; visibilityRoot?: Element; priority?: PackageThumbnailPriority; fallbackIcon?: string }>(), { alt: '', lazy: false, priority: 'high' })
+const support = computed(() => props.module?.mount ? props.modules?.find(item => item.id === props.module!.mount!.boardId) : undefined)
 const thumbnails = inject<PackageThumbnailCache>(packageThumbnailCacheKey, packageThumbnails)
 const source = ref<string | null>(null), target = ref<HTMLElement>(), fallbackFailed = ref(false)
 let lease: PackageThumbnailLease | null = null, generation = 0
@@ -13,7 +15,7 @@ function release() { generation++; lease?.release(); lease = null }
 function acquire() {
   if (!demand || lease) return
   const current = ++generation
-  lease = thumbnails.acquire(props.type, props.properties, { priority: demand })
+  lease = thumbnails.acquire(props.type, props.properties ?? props.module?.properties, { priority: demand, module: props.module, modules: support.value ? [support.value] : undefined })
   void lease.ready.then(image => { if (current === generation) source.value = image }, () => { if (current === generation) source.value = null })
 }
 function setDemand(priority: PackageThumbnailPriority | null) {
@@ -23,7 +25,7 @@ function setDemand(priority: PackageThumbnailPriority | null) {
   else if (lease) lease.setPriority?.(priority)
   else acquire()
 }
-watch(() => [props.type, props.properties], () => {
+watch(() => [props.type, props.properties, props.module, support.value], () => {
   release(); source.value = null; fallbackFailed.value = false; acquire()
 }, { deep: true, immediate: true })
 watch(() => [props.lazy, props.visibilityRoot, target.value] as const, (_value, _previous, onCleanup) => {

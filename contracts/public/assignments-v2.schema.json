@@ -1,0 +1,424 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://netcircuit.local/contracts/public/assignments/2.0/schema.json",
+  "title": "Assignment authoring and flexible references 2.0",
+  "$defs": {
+    "AssignmentDefinitionV2": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "assignment_id": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/assignment_id"
+        },
+        "title": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/title"
+        },
+        "reference_design_graph": {
+          "$ref": "https://netcircuit.local/contracts/circuit/1.2/schema.json#/$defs/AnySupportedCircuitGraph"
+        },
+        "reference_topology_graph": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/reference_topology_graph"
+        },
+        "expected_component_set": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/expected_component_set"
+        },
+        "instructor_pin_profiles": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/instructor_pin_profiles"
+        },
+        "lab_endpoints": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/lab_endpoints"
+        },
+        "expected_behavior": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/expected_behavior"
+        },
+        "assessment_policy": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/assessment_policy"
+        },
+        "component_resolution_mode": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/component_resolution_mode"
+        }
+      },
+      "required": [
+        "schema_version",
+        "assignment_id",
+        "title",
+        "lab_endpoints",
+        "assessment_policy"
+      ],
+      "additionalProperties": false
+    },
+    "AnySupportedAssignmentDefinition": {
+      "anyOf": [
+        {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition"
+        },
+        {
+          "$ref": "#/$defs/AssignmentDefinitionV2"
+        }
+      ]
+    },
+    "AssignmentAuthoringSummaryV2": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "assignment_id": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/assignment_id"
+        },
+        "title": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/title"
+        },
+        "owner_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "published": {
+          "type": "boolean"
+        },
+        "published_revision": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "feedback_policy": {
+          "enum": [
+            "observed_only",
+            "detailed"
+          ]
+        },
+        "created_at": {
+          "type": "number",
+          "minimum": 0
+        },
+        "updated_at": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "schema_version",
+        "assignment_id",
+        "title",
+        "owner_id",
+        "revision",
+        "published",
+        "published_revision",
+        "feedback_policy",
+        "created_at",
+        "updated_at"
+      ],
+      "additionalProperties": false
+    },
+    "AssignmentAuthoringDocumentV2": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "assignment_id": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/assignment_id"
+        },
+        "title": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/title"
+        },
+        "owner_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "published": {
+          "type": "boolean"
+        },
+        "published_revision": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "feedback_policy": {
+          "enum": [
+            "observed_only",
+            "detailed"
+          ]
+        },
+        "created_at": {
+          "type": "number",
+          "minimum": 0
+        },
+        "updated_at": {
+          "type": "number",
+          "minimum": 0
+        },
+        "definition": {
+          "$ref": "#/$defs/AnySupportedAssignmentDefinition"
+        }
+      },
+      "required": [
+        "schema_version",
+        "assignment_id",
+        "title",
+        "owner_id",
+        "revision",
+        "published",
+        "published_revision",
+        "feedback_policy",
+        "created_at",
+        "updated_at",
+        "definition"
+      ],
+      "additionalProperties": false
+    },
+    "AssignmentAuthoringPageV2": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AssignmentAuthoringSummaryV2"
+          }
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "items",
+        "next_cursor"
+      ],
+      "additionalProperties": false
+    },
+    "AssignmentAuthoringCreateV2": {
+      "type": "object",
+      "properties": {
+        "definition": {
+          "$ref": "#/$defs/AnySupportedAssignmentDefinition"
+        }
+      },
+      "required": [
+        "definition"
+      ],
+      "additionalProperties": false
+    },
+    "AssignmentAuthoringSaveV2": {
+      "type": "object",
+      "properties": {
+        "base_revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "definition": {
+          "$ref": "#/$defs/AnySupportedAssignmentDefinition"
+        }
+      },
+      "required": [
+        "base_revision",
+        "definition"
+      ],
+      "additionalProperties": false
+    },
+    "AssignmentAuthoringPublicationV2": {
+      "type": "object",
+      "properties": {
+        "base_revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "published": {
+          "type": "boolean"
+        },
+        "feedback_policy": {
+          "enum": [
+            "observed_only",
+            "detailed"
+          ]
+        }
+      },
+      "required": [
+        "base_revision",
+        "published"
+      ],
+      "additionalProperties": false
+    },
+    "InstructorAssignmentDocumentV2": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "enum": [
+            "1.0",
+            "2.0"
+          ]
+        },
+        "assignment_id": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/assignment_id"
+        },
+        "title": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/title"
+        },
+        "reference_design_graph": {
+          "$ref": "https://netcircuit.local/contracts/circuit/1.2/schema.json#/$defs/AnySupportedCircuitGraph"
+        },
+        "reference_topology_graph": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/reference_topology_graph"
+        },
+        "expected_component_set": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/expected_component_set"
+        },
+        "instructor_pin_profiles": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/instructor_pin_profiles"
+        },
+        "lab_endpoints": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/lab_endpoints"
+        },
+        "expected_behavior": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/expected_behavior"
+        },
+        "assessment_policy": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/assessment_policy"
+        },
+        "component_resolution_mode": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/component_resolution_mode"
+        },
+        "document_kind": {
+          "const": "instructor"
+        },
+        "owner_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "published": {
+          "type": "boolean"
+        },
+        "feedback_policy": {
+          "enum": [
+            "observed_only",
+            "detailed"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "assignment_id",
+        "title",
+        "lab_endpoints",
+        "assessment_policy",
+        "document_kind",
+        "owner_id",
+        "published",
+        "feedback_policy"
+      ],
+      "additionalProperties": false
+    },
+    "StudentAssignmentViewV2": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "enum": [
+            "1.0",
+            "2.0"
+          ]
+        },
+        "assignment_id": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/assignment_id"
+        },
+        "title": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/title"
+        },
+        "assessment_policy": {
+          "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/AssignmentDefinition/properties/assessment_policy"
+        },
+        "lab_endpoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "endpoint_id": {
+                "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/LabEndpoint/properties/endpoint_id"
+              },
+              "role": {
+                "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/LabEndpoint/properties/role"
+              },
+              "channel": {
+                "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/LabEndpoint/properties/channel"
+              },
+              "required": {
+                "$ref": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/LabEndpoint/properties/required"
+              }
+            },
+            "required": [
+              "endpoint_id",
+              "role"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "document_kind": {
+          "const": "student"
+        },
+        "published": {
+          "const": true
+        },
+        "feedback_policy": {
+          "enum": [
+            "observed_only",
+            "detailed"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "assignment_id",
+        "title",
+        "assessment_policy",
+        "lab_endpoints",
+        "document_kind",
+        "published",
+        "feedback_policy"
+      ],
+      "additionalProperties": false
+    },
+    "AssignmentViewV2": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/InstructorAssignmentDocumentV2"
+        },
+        {
+          "$ref": "#/$defs/StudentAssignmentViewV2"
+        }
+      ]
+    }
+  }
+}

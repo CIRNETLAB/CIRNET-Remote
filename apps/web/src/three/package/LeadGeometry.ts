@@ -1,4 +1,27 @@
-import { CurvePath, ExtrudeGeometry, LineCurve3, QuadraticBezierCurve3, Shape, TubeGeometry, Vector3, type BufferGeometry } from 'three'
+import { Curve, CurvePath, ExtrudeGeometry, LineCurve3, QuadraticBezierCurve3, Shape, TubeGeometry, Vector3, type BufferGeometry } from 'three'
+
+/** Circular fillets honor the mechanical profile's minimum radius. */
+export function createFlexibleLeadGeometry(points: Vector3[], diameter: number, radius: number): BufferGeometry {
+  class Arc extends Curve<Vector3> {
+    constructor(private center: Vector3, private offset: Vector3, private axis: Vector3, private angle: number) { super() }
+    getPoint(t: number, target = new Vector3()) { return target.copy(this.offset).applyAxisAngle(this.axis, this.angle * t).add(this.center) }
+  }
+  const path = new CurvePath<Vector3>()
+  let previous = points[0]!.clone()
+  for (let i = 1; i < points.length - 1; i++) {
+    const corner = points[i]!, u = corner.clone().sub(points[i - 1]!).normalize(), v = points[i + 1]!.clone().sub(corner).normalize()
+    const angle = Math.acos(Math.max(-1, Math.min(1, u.dot(v)))), trim = radius * Math.tan(angle / 2)
+    if (angle < 1e-7) continue
+    if (!Number.isFinite(trim) || angle > Math.PI - 1e-7) throw Error('Lead cannot reverse at a bend.')
+    const before = corner.clone().addScaledVector(u, -trim), after = corner.clone().addScaledVector(v, trim), axis = u.clone().cross(v).normalize()
+    if (previous.distanceTo(before) > 1e-8) path.add(new LineCurve3(previous, before))
+    const center = before.clone().addScaledVector(axis.clone().cross(u), radius)
+    path.add(new Arc(center, before.clone().sub(center), axis, angle)); previous = after
+  }
+  const end = points.at(-1)!.clone()
+  if (previous.distanceTo(end) > 1e-8) path.add(new LineCurve3(previous, end))
+  return new TubeGeometry(path, Math.max(64, points.length * 24), diameter / 2, 12, false)
+}
 
 /** One sweep, with end caps only at the socket/body ends of a rectangular lead.
  * The rounded elbow shares its surface and normals with both straight runs.

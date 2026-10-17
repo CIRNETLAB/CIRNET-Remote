@@ -46,7 +46,9 @@ test('drawing, placement and zoom cancellation win over wire menus while empty r
     assert.equal(h.editor.wireRouting.contextMenuState.value, null)
     assert.equal(h.editor.wireRouting.drawing.value, true); assert.equal(h.editor.wireRouting.controlPoints.value.length, 1)
     h.editor.cancel(); h.workspace.armPlacement('RESISTOR_AXIAL')
-    h.editor.pointerDown(h.pointer(p.x, p.y, 1, 2)); assert.equal(h.workspace.placementType, null)
+    h.editor.pointerDown(h.pointer(p.x, p.y, 1, 2))
+    assert.equal(h.workspace.placementType, 'RESISTOR_AXIAL', 'the press remains available for Orbit until a short release is known')
+    h.editor.pointerUp(h.pointer(p.x, p.y, 1, 2)); assert.equal(h.workspace.placementType, null)
     assert.equal(h.editor.wireRouting.contextMenuState.value, null)
     h.workspace.toggleZoomArea(); h.editor.pointerDown(h.pointer(p.x, p.y, 1, 2))
     assert.equal(h.workspace.zoomAreaActive, false); assert.equal(h.editor.wireRouting.contextMenuState.value, null)
@@ -58,6 +60,21 @@ test('drawing, placement and zoom cancellation win over wire menus while empty r
     assert.equal(consumed, false, 'empty right press remains with existing OrbitControls')
     assert.equal(h.editor.wireRouting.contextMenuState.value, null, 'ending Orbit over a wire does not open a menu')
   } finally { h.dispose() }
+})
+
+test('right Orbit drag preserves a flexible placement draft and cannot open a wire menu', async () => {
+  const {h,p}=await setupWire()
+  try {
+    h.workspace.armPlacement('RESISTOR_AXIAL');await nextTick()
+    const before=h.circuit.exportGraph(),epoch=h.workspace.placementEpoch
+    let consumed=false
+    const down=h.pointer(p.x,p.y,1,2);down.stopImmediatePropagation=()=>{consumed=true}
+    h.editor.pointerDown(down);h.editor.pointerMove(h.pointer(p.x+15,p.y+8,1,2));h.editor.pointerUp(h.pointer(p.x+15,p.y+8,1,2))
+    assert.equal(consumed,false,'the real Orbit listener must receive the right press')
+    assert.equal(h.workspace.placementType,'RESISTOR_AXIAL');assert.equal(h.workspace.placementEpoch,epoch)
+    assert.equal(h.editor.wireRouting.contextMenuState.value,null)
+    assert.equal(h.circuit.exportGraph(),before);assert.equal(h.circuit.past.length,0)
+  }finally{h.dispose()}
 })
 
 test('editor pointer priority commits and repeats duplicate previews; invalid click and right cancel never open another menu', async () => {

@@ -42,12 +42,17 @@ class AssignmentService:
     def _admin_audit(self,db,current,head,action):
         if current.role=='ADMIN' and current.principal_id!=head['owner_id']:self._audit(db,current,'ASSIGNMENT_ADMIN_'+action,head['assignment_id'])
 
-    def _summary(self,head,title):
-        return {'schema_version':'1.0',**{key:head[key] for key in ('assignment_id','owner_id','revision','published_revision','published','feedback_policy','created_at','updated_at')},'title':title}
+    def _legacy_definition(self,definition):
+        if definition['schema_version']!='1.0' or definition.get('reference_design_graph',{}).get('schema_version')=='1.2':
+            raise ValueError('UNSUPPORTED_DOCUMENT_VERSION')
 
-    def _document(self,db,head):
+    def _summary(self,head,title,wire_version='1.0'):
+        return {'schema_version':wire_version,**{key:head[key] for key in ('assignment_id','owner_id','revision','published_revision','published','feedback_policy','created_at','updated_at')},'title':title}
+
+    def _document(self,db,head,wire_version='1.0'):
         definition=self._definition(db,head['assignment_id'],head['revision'])
-        return {**self._summary(head,definition['title']),'definition':definition}
+        if wire_version=='1.0':self._legacy_definition(definition)
+        return {**self._summary(head,definition['title'],wire_version),'definition':definition}
 
     def _request(self,name,payload):
         value=validate_contract(name,payload,profile='structural')
@@ -58,8 +63,8 @@ class AssignmentService:
             if len(raw)>MAX_ASSIGNMENT_BYTES:raise ValueError('DOCUMENT_TOO_LARGE')
         return value
 
-    def create(self,context,definition):
-        value=self._request('AssignmentAuthoringCreate',{'definition':definition})['definition'];identity=value['assignment_id'];now=self.clock()
+    def create(self,context,definition,*,wire_version='1.0'):
+        value=self._request('AssignmentAuthoringCreateV2' if wire_version=='2.0' else 'AssignmentAuthoringCreate',{'definition':definition})['definition'];identity=value['assignment_id'];now=self.clock()
         try:
             with self.repo.lock,self.repo.engine.begin() as db:
                 current=self._current(db,context,author=True)
@@ -68,15 +73,15 @@ class AssignmentService:
                 db.execute(insert(self.repo.assignment_revisions).values(assignment_id=identity,revision=1,definition=value,saved_by=current.principal_id,saved_at=now))
                 db.execute(insert(self.repo.assignment_documents).values(assignment_id=identity,revision=1,published_revision=None,created_at=now,updated_at=now))
                 self._audit(db,current,'ASSIGNMENT_CREATED',identity)
-                return self._document(db,self._head(db,identity))
+                return self._document(db,self._head(db,identity),wire_version)
         except IntegrityError:raise ValueError('ASSIGNMENT_EXISTS') from None
 
-    def get_document(self,context,identity):
+    def get_document(self,context,identity,*,wire_version='1.0'):
         with self.repo.lock,self.repo.engine.begin() as db:
             current=self._current(db,context,author=True);head=self._head(db,identity)
             if not is_author(current,head):raise AuthError('FORBIDDEN')
             self._admin_audit(db,current,head,'READ')
-            return self._document(db,head)
+            return self._document(db,head,wire_version)
 
     def _cursor(self,cursor,owner):
         if cursor is None:return 0
@@ -87,26 +92,33 @@ class AssignmentService:
             return value['after']
         except (ValueError,TypeError,UnicodeError):raise ValueError('INVALID_CURSOR') from None
 
-    def list_documents(self,context,*,limit=50,cursor=None):
+    def list_documents(self,context,*,limit=50,cursor=None,wire_version='1.0'):
         if type(limit) is not int or not 1<=limit<=100:raise ValueError('INVALID_PAGE_LIMIT')
         with self.repo.lock,self.repo.engine.begin() as db:
             current=self._current(db,context,author=True);scope=current.principal_id;after=self._cursor(cursor,scope)
             document,access,versions=self.repo.assignment_documents,self.repo.assignment_access,self.repo.assignment_revisions
-            query=select(document,access.c.owner_id,access.c.published,access.c.feedback_policy,versions.c.definition['title'].as_string().label('title')).join(access,document.c.assignment_id==access.c.assignment_id).join(versions,(versions.c.assignment_id==document.c.assignment_id)&(versions.c.revision==document.c.revision)).where(document.c.sequence>after)
+            query=select(document,access.c.owner_id,access.c.published,access.c.feedback_policy,
+                versions.c.definition['title'].as_string().label('title'),
+                versions.c.definition['schema_version'].as_string().label('definition_version'),
+                versions.c.definition['reference_design_graph']['schema_version'].as_string().label('graph_version')).join(access,document.c.assignment_id==access.c.assignment_id).join(versions,(versions.c.assignment_id==document.c.assignment_id)&(versions.c.revision==document.c.revision)).where(document.c.sequence>after)
             if current.role!='ADMIN':query=query.where(access.c.owner_id==current.principal_id)
             rows=list(db.execute(query.order_by(document.c.sequence).limit(limit+1)).mappings());next_cursor=None
             if len(rows)>limit:
                 payload={'version':1,'scope':scope,'after':rows[limit-1]['sequence']}
                 next_cursor=base64.urlsafe_b64encode(json.dumps(payload,separators=(',',':')).encode()).decode().rstrip('=')
-            for row in rows[:limit]:self._admin_audit(db,current,row,'READ')
-            return {'schema_version':'1.0','items':[self._summary(row,row['title']) for row in rows[:limit]],'next_cursor':next_cursor}
+            for row in rows[:limit]:
+                if wire_version=='1.0':self._legacy_definition({'schema_version':row['definition_version'],'reference_design_graph':{'schema_version':row['graph_version']}})
+                self._admin_audit(db,current,row,'READ')
+            return {'schema_version':wire_version,'items':[self._summary(row,row['title'],wire_version) for row in rows[:limit]],'next_cursor':next_cursor}
 
-    def _replace(self,context,identity,payload,*,publication=False,legacy=False):
-        value=self._request('AssignmentPublication' if legacy else 'AssignmentAuthoringPublication' if publication else 'AssignmentAuthoringSave',payload)
+    def _replace(self,context,identity,payload,*,publication=False,legacy=False,wire_version='1.0'):
+        name='AssignmentPublication' if legacy else 'AssignmentAuthoringPublication' if publication else 'AssignmentAuthoringSave'
+        value=self._request(name+('V2' if wire_version=='2.0' and not legacy else ''),payload)
         if not publication and value['definition']['assignment_id']!=identity:raise ValueError('ASSIGNMENT_ID_MISMATCH')
         with self.repo.lock,self.repo.engine.begin() as db:
             current=self._current(db,context,author=True);head=self._head(db,identity,lock=True)
             if not is_author(current,head):raise AuthError('FORBIDDEN')
+            if wire_version=='1.0':self._legacy_definition(self._definition(db,identity,head['revision']))
             base=head['revision'] if legacy else value['base_revision']
             if base!=head['revision']:raise RevisionConflict(head['revision'])
             if head['revision']>=MAX_REVISION:raise ValueError('REVISION_LIMIT_REACHED')
@@ -122,23 +134,25 @@ class AssignmentService:
                 if value['published']:db.execute(update(self.repo.assignments).where(self.repo.assignments.c.assignment_id==identity).values(payload=definition))
             action='PUBLICATION' if publication else 'UPDATED'
             self._audit(db,current,'ASSIGNMENT_'+action,identity);self._admin_audit(db,current,head,action)
-            return self._document(db,self._head(db,identity))
+            return self._document(db,self._head(db,identity),wire_version)
 
-    def save(self,context,identity,payload):return self._replace(context,identity,payload)
-    def publish(self,context,identity,payload):return self._replace(context,identity,payload,publication=True)
+    def save(self,context,identity,payload,*,wire_version='1.0'):return self._replace(context,identity,payload,wire_version=wire_version)
+    def publish(self,context,identity,payload,*,wire_version='1.0'):return self._replace(context,identity,payload,publication=True,wire_version=wire_version)
     def legacy_publish(self,context,identity,payload):
         self._replace(context,identity,payload,publication=True,legacy=True)
         return self.legacy_view(context,identity)
 
-    def legacy_view(self,context,identity):
+    def legacy_view(self,context,identity,*,wire_version='1.0'):
         with self.repo.lock,self.repo.engine.begin() as db:
             current=self._current(db,context);head=self._head(db,identity)
             if not can_read(current,head):raise AuthError('FORBIDDEN')
             version=head['revision'] if is_author(current,head) else head['published_revision']
             self._admin_audit(db,current,head,'READ')
-            return legacy_assignment_view(current,head,self._definition(db,identity,version))
+            definition=self._definition(db,identity,version)
+            if wire_version=='1.0':self._legacy_definition(definition)
+            return legacy_assignment_view(current,head,definition)
 
-    def legacy_list(self,context):
+    def legacy_list(self,context,*,wire_version='1.0'):
         with self.repo.lock,self.repo.engine.begin() as db:
             current=self._current(db,context);result=[]
             for identity in db.execute(select(self.repo.assignment_documents.c.assignment_id).order_by(self.repo.assignment_documents.c.assignment_id)).scalars():
@@ -146,7 +160,9 @@ class AssignmentService:
                 if not can_read(current,head):continue
                 version=head['revision'] if is_author(current,head) else head['published_revision']
                 self._admin_audit(db,current,head,'READ')
-                result.append(legacy_assignment_view(current,head,self._definition(db,identity,version)))
+                definition=self._definition(db,identity,version)
+                if wire_version=='1.0':self._legacy_definition(definition)
+                result.append(legacy_assignment_view(current,head,definition))
             return result
 
     def _principal(self,db,owner):

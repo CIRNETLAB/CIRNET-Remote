@@ -38,21 +38,28 @@ def _world_pose(module, by_id):
 
 
 def _body_envelope(module, part, by_id):
+    if module.get('mount',{}).get('kind')=='breadboard-flexible':
+        from .flexible_mounting import body_envelope
+        return body_envelope(module,part,by_id[module['mount']['boardId']])
     position, rotation = _world_pose(module, by_id)
     angle = math.radians(rotation % 360); cos, sin = math.cos(angle), math.sin(angle)
     package = part['package']; body = package['bodyMm']
     low = position['y'] + package['standoffMm']*MM_TO_WORLD
-    return {'center': (position['x'], position['z']), 'axes': ((cos, -sin), (sin, cos)),
-            'half': (body['x']*MM_TO_WORLD/2, body['z']*MM_TO_WORLD/2), 'low': low, 'high': low + body['y']*MM_TO_WORLD}
+    return {'center': (position['x'],low+body['y']*MM_TO_WORLD/2,position['z']),
+            'axes': ((cos,0,-sin),(0,1,0),(sin,0,cos)),
+            'half': tuple(body[axis]*MM_TO_WORLD/2 for axis in ('x','y','z'))}
 
 
 def _bodies_overlap(a, b):
-    if a['high'] <= b['low'] + MOUNT_TOLERANCE or b['high'] <= a['low'] + MOUNT_TOLERANCE: return False
-    delta = tuple(b['center'][i] - a['center'][i] for i in (0, 1))
-    for axis in (*a['axes'], *b['axes']):
+    delta = tuple(b['center'][i] - a['center'][i] for i in range(3))
+    def cross(first,second):return (first[1]*second[2]-first[2]*second[1],first[2]*second[0]-first[0]*second[2],first[0]*second[1]-first[1]*second[0])
+    for raw_axis in (*a['axes'], *b['axes'],*(cross(first,second) for first in a['axes'] for second in b['axes'])):
+        length=math.sqrt(sum(value*value for value in raw_axis))
+        if length<1e-10:continue
+        axis=tuple(value/length for value in raw_axis)
         def radius(rect):
-            return sum(half*abs(sum(rect['axes'][i][j]*axis[j] for j in (0, 1))) for i, half in enumerate(rect['half']))
-        if abs(sum(delta[i]*axis[i] for i in (0, 1))) >= radius(a) + radius(b) - MOUNT_TOLERANCE: return False
+            return sum(half*abs(sum(rect['axes'][i][j]*axis[j] for j in range(3))) for i, half in enumerate(rect['half']))
+        if abs(sum(delta[i]*axis[i] for i in range(3))) >= radius(a) + radius(b) - MOUNT_TOLERANCE: return False
     return True
 
 
@@ -65,8 +72,8 @@ def validate_physical_design(graph):
     physical = [(m, get_physical_part(m['type'])) for m in modules]
     if not any(p or 'mount' in m for m, p in physical):
         return
-    if graph['schema_version'] != '1.1':
-        raise ValueError('Physical packages and mounting require CircuitGraph 1.1')
+    if graph['schema_version'] not in ('1.1','1.2'):
+        raise ValueError('Physical packages and mounting require CircuitGraph 1.1 or 1.2')
     if len(modules) > 2000 or len(graph['connections']) > 10000:
         raise ValueError('Physical design graph exceeds supported limits')
     by_id = {m['id']: m for m in modules}
@@ -94,6 +101,15 @@ def validate_physical_design(graph):
         bindings = mount['contacts']
         if len(bindings) != len(pins) or {b['pinId'] for b in bindings} != set(pins):
             raise ValueError('Mount must bind each package pin exactly once')
+        if mount.get('kind')=='breadboard-flexible':
+            if graph['schema_version']!='1.2':raise ValueError('Flexible assemblies require CircuitGraph 1.2')
+            from .flexible_mounting import resolve_flexible_geometry
+            resolve_flexible_geometry(module,part,board)
+            for binding in bindings:
+                claim=(board['id'],binding['contactId'])
+                if claim in occupied:raise ValueError('Breadboard contact occupancy conflict')
+                occupied.add(claim)
+            continue
         pose = mount['pose']; position = pose['position']; rotation = pose['rotation']
         try:
             finite_pose = all(type(n) in (int, float) and math.isfinite(n) for n in (*position.values(), rotation))
@@ -132,6 +148,13 @@ def validate_physical_design(graph):
         for other, other_body in bodies[index+1:]:
             if ('mount' in module or 'mount' in other) and _bodies_overlap(body, other_body):
                 raise ValueError('Physical component bodies overlap')
+    from .flexible_mounting import world_lead_paths,lead_hits_body
+    for module,part in physical:
+        if module.get('mount',{}).get('kind')!='breadboard-flexible':continue
+        paths=world_lead_paths(module,part,by_id[module['mount']['boardId']])
+        radius=part['package']['leadDiameterMm']*MM_TO_WORLD/2
+        if any(lead_hits_body(path,body,radius) for other,body in bodies if other['id']!=module['id'] for path in paths):
+            raise ValueError('Flexible lead intersects another component body')
     # Validate all physical pin endpoints even when a part is connected without mounting.
     for edge in graph['connections']:
         for endpoint in (edge['source'], edge['destination']):

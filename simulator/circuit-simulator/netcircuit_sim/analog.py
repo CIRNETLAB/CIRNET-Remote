@@ -17,11 +17,11 @@ class AnalogSimulationEngine(ABC):
 
 
 def _unavailable(request,code):
-    from contracts.boundary.models import SimulationRequest, SimulationErrorResult
+    from contracts.boundary.models import SimulationRequest, SimulationRequestV2, SimulationErrorResult
     from contracts.signal_domains import classify_graph
     # Historical direct adapter calls raised RuntimeError. Typed callers pass a
     # validated request and receive the canonical error without any samples.
-    if not isinstance(request,SimulationRequest):raise RuntimeError(code)
+    if not isinstance(request,(SimulationRequest,SimulationRequestV2)):raise RuntimeError(code)
     graph=request.model_dump(exclude_unset=True)['graph']
     return SimulationErrorResult.model_validate({'schema_version':'1.0','status':'UNAVAILABLE',
         'classification':classify_graph(graph),'code':code,'message':code})
@@ -188,7 +188,7 @@ def evaluate_physical_circuit(circuit, values):
 
     leds = [m for m in circuit.modules if get_physical_part(m['type'])['simulation']['model'] == 'led-dc']
     for module in leds:
-        mid = module['id']; model = get_physical_part(module['type'])['simulation']
+        mid = module['id']; model = get_physical_part(module['type'],module.get('properties',{}))['simulation']
         a_node = circuit.endpoint_nodes[f'{mid}.A']; k_node = circuit.endpoint_nodes[f'{mid}.K']
         a = trace(a_node); k = trace(k_node); resistance = a[2] + k[2]
         other_led_nodes = {circuit.endpoint_nodes[f"{other['id']}.{pin}"] for other in leds if other['id'] != mid for pin in ('A', 'K')}

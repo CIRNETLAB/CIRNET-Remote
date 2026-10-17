@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { useCircuitStore } from '../../stores/circuit'
 import { useWorkspaceStore } from '../../stores/workspace'
 import { componentCatalog, getDefinition } from '../../data/editorCatalog'
-import { getPartForType } from '../../data/partCatalog'
+import { componentAddType, componentDesignTransition, getPartForType } from '../../data/partCatalog'
 import { moduleWorldPose } from '../../electrical/modulePose'
 import { isNormallyAddable } from '../../data/ribbon'
 import { useStationStore } from '../../stores/station'
@@ -22,23 +22,29 @@ const definition = computed(() => selected.value && getDefinition(selected.value
 const part = computed(() => selected.value && getPartForType(selected.value.type))
 const physicalState = computed(() => selected.value && circuit.physicalStates?.[selected.value.id])
 const addableComponents = componentCatalog.filter(item => isNormallyAddable(item.type))
-const source = ref(''), destination = ref(''), addType = ref('RESISTOR_AXIAL')
+const source = ref(''), destination = ref(''), addType = ref('GENERIC_RESISTOR')
 const endpoints = computed(() => circuit.graph?.modules.flatMap((module) => (getDefinition(module.type)?.ports ?? []).map((port) => ({ ...port, id: `${module.id}.${port.id}` }))) ?? [])
 function edit(action: () => void) { try { action(); workspace.editError = '' } catch (error) { workspace.editError = error instanceof Error ? error.message : 'Circuit edit failed.' } }
 function position(axis: 'x' | 'y' | 'z', event: Event) { if (selected.value) { const module = selected.value; edit(() => circuit.moveModule(module.id, { x: module.position?.x ?? 0, y: module.position?.y ?? 0, z: module.position?.z ?? 0, [axis]: Number((event.target as HTMLInputElement).value) })) } }
 function select(event: Event) { const value = (event.target as HTMLSelectElement).value; value === '' ? station.useSimulation() : station.selectStation(value) }
+function add() { edit(() => { workspace.armPlacement(componentAddType(addType.value)); ui.openWindow('component-info', { activate: false }) }) }
+function property(key: string, value: unknown) {
+  if (!selected.value) return
+  const module = selected.value, patch = { [key]: value }
+  edit(() => { const target = componentDesignTransition(module.type, patch); target.type !== module.type ? circuit.changeComponentDesign(module.id, target.type, patch, target.pinMap) : circuit.updateModuleProperties(module.id, patch) })
+}
 </script>
 <template>
   <section class="inspector-section"><h2>Component editor</h2>
     <p v-if="workspace.selectionCount > 1" role="status">{{ workspace.selection.moduleIds.length }} components and {{ workspace.selection.wires.length }} wires selected. Use Delete, Duplicate or Paste for the complete selection.</p>
-    <label>Add component at origin<select v-model="addType"><option v-for="item in addableComponents" :key="item.type" :value="item.type">{{ item.name }}</option></select></label><button @click="edit(() => workspace.selectModule(circuit.placeModule(addType, { x: 0, y: 0, z: 0 })))">Add component</button>
+    <label>Add component<select v-model="addType"><option v-for="item in addableComponents" :key="item.type" :value="item.type">{{ item.name }}</option></select></label><button @click="add">Add component</button>
     <label>Select component<select :value="workspace.selectedModuleId || ''" @change="workspace.selectModule(($event.target as HTMLSelectElement).value || null)"><option value="">None</option><option v-for="module in circuit.graph?.modules" :key="module.id" :value="module.id">{{ module.id }} · {{ module.type }}</option></select></label>
     <template v-if="selected"><strong>{{ selected.id }}</strong><p class="window-note">{{ part ? part.name + ' · ' + part.package.id + ' · ' + part.package.pins.length + ' physical pins' : definition?.breadboardTopologyRef ? 'Breadboard contacts use declared virtual nodes; physical station mapping is separate.' : definition?.visualOnly ? 'Visual structure only; no electrical source or node map.' : 'Legacy logical component.' }}</p>
       <template v-if="part"><p v-if="physicalState">{{ physicalState.state }}{{ physicalState.reason ? ': ' + physicalState.reason : '' }}</p><p v-if="selected.mount">Mounted on {{ selected.mount.boardId }} · {{ selected.mount.contacts.length }} contacts</p><details><summary>Physical pins</summary><p v-for="pin in part.package.pins" :key="pin.id">{{ pin.number }} · {{ pin.name }} · {{ pin.role }}{{ pin.outputType ? ' · ' + pin.outputType : '' }}</p></details></template>
       <div class="property-coordinates"><label v-for="axis in (['x', 'y', 'z'] as const)" :key="axis">{{ axis.toUpperCase() }}<input :aria-label="'Component ' + axis.toUpperCase()" type="number" step="0.5" :value="selected.position?.[axis] ?? 0" @change="position(axis, $event)" /></label></div>
       <label>Rotation (degrees)<input type="number" :value="selected.rotation ?? 0" step="90" @change="edit(() => circuit.rotateModule(selected!.id, Number(($event.target as HTMLInputElement).value) - (selected!.rotation ?? 0)))" /></label>
-      <label v-for="parameter in definition?.parameters" :key="parameter.key">{{ parameter.label }}<input v-if="parameter.kind === 'boolean'" type="checkbox" :checked="Boolean(selected.properties?.[parameter.key] ?? definition?.defaults[parameter.key])" @change="edit(() => circuit.updateModuleProperties(selected!.id, { [parameter.key]: ($event.target as HTMLInputElement).checked }))" /><input v-else type="number" :min="parameter.min" :max="parameter.max" :step="parameter.kind === 'integer' ? 1 : 'any'" :value="Number(selected.properties?.[parameter.key] ?? definition?.defaults[parameter.key])" @change="edit(() => circuit.updateModuleProperties(selected!.id, { [parameter.key]: Number(($event.target as HTMLInputElement).value) }))" /></label>
-      <div class="component-edit-actions"><button @click="edit(() => circuit.rotateModule(selected!.id))">Rotate 90°</button><button v-if="selected.mount" @click="edit(() => circuit.detachModule(selected!.id))">Unplug component</button><button @click="circuit.removeModule(selected!.id)">Delete component</button><button v-if="definition?.memoryContract" @click="ui.openWindow('hex-editor')">Edit memory image</button></div>
+      <label v-for="parameter in definition?.parameters" :key="parameter.key">{{ parameter.label }}<input v-if="parameter.kind === 'boolean'" type="checkbox" :checked="Boolean(selected.properties?.[parameter.key] ?? definition?.defaults[parameter.key])" @change="property(parameter.key, ($event.target as HTMLInputElement).checked)" /><select v-else-if="parameter.kind === 'enum'" :value="selected.properties?.[parameter.key] ?? definition?.defaults[parameter.key]" @change="property(parameter.key, ($event.target as HTMLSelectElement).value)"><option v-for="option in parameter.options" :key="option.value" :value="option.value">{{ option.label }}</option></select><input v-else-if="parameter.kind === 'color' || parameter.kind === 'string'" :type="parameter.kind === 'color' ? 'color' : 'text'" :maxlength="parameter.maxLength" :pattern="parameter.pattern" :value="selected.properties?.[parameter.key] ?? definition?.defaults[parameter.key]" @change="property(parameter.key, ($event.target as HTMLInputElement).value)" /><input v-else type="number" :min="parameter.min" :max="parameter.max" :step="parameter.kind === 'integer' ? 1 : 'any'" :value="Number(selected.properties?.[parameter.key] ?? definition?.defaults[parameter.key])" @change="property(parameter.key, Number(($event.target as HTMLInputElement).value))" /></label>
+      <div class="component-edit-actions"><button @click="edit(() => circuit.rotateModule(selected!.id))">Rotate 90°</button><button v-if="selected.mount?.kind === 'breadboard'" @click="edit(() => circuit.detachModule(selected!.id))">Unplug component</button><button @click="circuit.removeModule(selected!.id)">Delete component</button><button v-if="definition?.memoryContract" @click="ui.openWindow('hex-editor')">Edit memory image</button></div>
       <p v-if="!definition" class="window-note">Unknown imported type retained. Port map is unavailable.</p>
     </template>
   </section>

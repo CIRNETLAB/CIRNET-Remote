@@ -1,5 +1,9 @@
 # Editor descriptors and instance properties
 
+Versioned flexible assemblies and generic component properties are described in
+[`flexible-placement.md`](flexible-placement.md). Graph 1.2 and its opt-in API
+coexist with the unchanged legacy graph and rigid mounting contracts below.
+
 Signal domains and typed local dispatch are described in
 [`signal-domains-and-simulation.md`](../../docs/architecture/signal-domains-and-simulation.md).
 Run `scripts/sync_editor_catalog.py` to refresh their shared port-domain

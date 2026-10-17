@@ -1,0 +1,210 @@
+{
+  "schema_version": "1.0",
+  "units": "mm",
+  "profiles": [
+    {
+      "id": "flex-axial-resistor",
+      "revision": 1,
+      "packageId": "MRS25-1016",
+      "packageRevision": 1,
+      "strategy": "axial",
+      "bodyOrigin": "center",
+      "pins": [
+        {
+          "pinId": "A",
+          "bodyExitMm": {
+            "x": -3.25,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "pinId": "B",
+          "bodyExitMm": {
+            "x": 3.25,
+            "y": 0,
+            "z": 0
+          }
+        }
+      ],
+      "minLeadLengthMm": 0.5,
+      "maxLeadLengthMm": 35,
+      "contactStubMm": 0.6,
+      "exitStraightMm": 0.4,
+      "minBendRadiusMm": 0.3,
+      "bodyClearanceMm": 0.2,
+      "maxBodyLiftMm": 30,
+      "maxControlsPerLead": 8
+    },
+    {
+      "id": "flex-axial-diode",
+      "revision": 1,
+      "packageId": "DO35-1016",
+      "packageRevision": 1,
+      "strategy": "axial",
+      "bodyOrigin": "center",
+      "pins": [
+        {
+          "pinId": "A",
+          "bodyExitMm": {
+            "x": -1.95,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "pinId": "K",
+          "bodyExitMm": {
+            "x": 1.95,
+            "y": 0,
+            "z": 0
+          }
+        }
+      ],
+      "minLeadLengthMm": 0.5,
+      "maxLeadLengthMm": 35,
+      "contactStubMm": 0.6,
+      "exitStraightMm": 0.4,
+      "minBendRadiusMm": 0.3,
+      "bodyClearanceMm": 0.2,
+      "maxBodyLiftMm": 30,
+      "maxControlsPerLead": 8
+    },
+    {
+      "id": "flex-axial-zener",
+      "revision": 1,
+      "packageId": "DO41-1016",
+      "packageRevision": 1,
+      "strategy": "axial",
+      "bodyOrigin": "center",
+      "pins": [
+        {
+          "pinId": "A",
+          "bodyExitMm": {
+            "x": -2.6,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "pinId": "K",
+          "bodyExitMm": {
+            "x": 2.6,
+            "y": 0,
+            "z": 0
+          }
+        }
+      ],
+      "minLeadLengthMm": 0.5,
+      "maxLeadLengthMm": 35,
+      "contactStubMm": 0.6,
+      "exitStraightMm": 0.4,
+      "minBendRadiusMm": 0.3,
+      "bodyClearanceMm": 0.2,
+      "maxBodyLiftMm": 30,
+      "maxControlsPerLead": 8
+    },
+    {
+      "id": "flex-radial-ceramic",
+      "revision": 1,
+      "packageId": "K15-H5-508",
+      "packageRevision": 1,
+      "strategy": "radial",
+      "bodyOrigin": "center",
+      "pins": [
+        {
+          "pinId": "A",
+          "bodyExitMm": {
+            "x": -1.27,
+            "y": -2,
+            "z": 0
+          }
+        },
+        {
+          "pinId": "B",
+          "bodyExitMm": {
+            "x": 1.27,
+            "y": -2,
+            "z": 0
+          }
+        }
+      ],
+      "minLeadLengthMm": 0.5,
+      "maxLeadLengthMm": 35,
+      "contactStubMm": 0.6,
+      "exitStraightMm": 0.4,
+      "minBendRadiusMm": 0.3,
+      "bodyClearanceMm": 0.2,
+      "maxBodyLiftMm": 30,
+      "maxControlsPerLead": 8
+    },
+    {
+      "id": "flex-radial-electrolytic",
+      "revision": 1,
+      "packageId": "UVR-D10-508",
+      "packageRevision": 1,
+      "strategy": "radial",
+      "bodyOrigin": "center",
+      "pins": [
+        {
+          "pinId": "PLUS",
+          "bodyExitMm": {
+            "x": -2.54,
+            "y": -6.25,
+            "z": 0
+          }
+        },
+        {
+          "pinId": "MINUS",
+          "bodyExitMm": {
+            "x": 2.54,
+            "y": -6.25,
+            "z": 0
+          }
+        }
+      ],
+      "minLeadLengthMm": 0.5,
+      "maxLeadLengthMm": 35,
+      "contactStubMm": 0.6,
+      "exitStraightMm": 0.4,
+      "minBendRadiusMm": 0.3,
+      "bodyClearanceMm": 0.2,
+      "maxBodyLiftMm": 30,
+      "maxControlsPerLead": 8
+    },
+    {
+      "id": "flex-radial-led",
+      "revision": 1,
+      "packageId": "T1-5MM-254",
+      "packageRevision": 1,
+      "strategy": "radial",
+      "bodyOrigin": "center",
+      "pins": [
+        {
+          "pinId": "A",
+          "bodyExitMm": {
+            "x": -1.27,
+            "y": -4.3,
+            "z": 0
+          }
+        },
+        {
+          "pinId": "K",
+          "bodyExitMm": {
+            "x": 1.27,
+            "y": -4.3,
+            "z": 0
+          }
+        }
+      ],
+      "minLeadLengthMm": 0.5,
+      "maxLeadLengthMm": 35,
+      "contactStubMm": 0.6,
+      "exitStraightMm": 0.4,
+      "minBendRadiusMm": 0.3,
+      "bodyClearanceMm": 0.2,
+      "maxBodyLiftMm": 30,
+      "maxControlsPerLead": 8
+    }
+  ]
+}

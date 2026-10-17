@@ -2,7 +2,8 @@ import { beforeEach, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createPinia, setActivePinia } from 'pinia'
 import { useCircuitStore } from '../src/stores/circuit'
-import type { CircuitGraph, CircuitModule, Point3, WireIdentity } from '../src/types/circuit'
+import type { CircuitGraph, CircuitModule } from '../src/contracts/generated/dto'
+import type { Point3, WireIdentity,CircuitModule as SupportedModule } from '../src/types/circuit'
 import { solveMounting, validateMountBindings } from '../src/electrical/mounting'
 import { moduleLocalToWorld, moduleWorldPose } from '../src/electrical/modulePose'
 import { defaultWireVisual, readWireVisual } from '../src/wires/wireVisual'
@@ -10,6 +11,7 @@ import { buildPasteCandidate, PasteCandidateError } from '../src/editor/batchCom
 import { captureSelectionClipboard } from '../src/editor/selectionClipboard'
 
 type Selection = { moduleIds: string[]; wires: WireIdentity[] }
+function rigidMount(module:SupportedModule){assert.equal(module.mount?.kind,'breadboard');assert.ok(module.mount?.kind==='breadboard');return module.mount}
 interface BatchApi {
   captureSelection(selection: Selection): { modules: CircuitModule[]; connections: CircuitGraph['connections']; anchor: Point3 }
   pasteSelection(snapshot: unknown, options?: { step?: number; delta?: Point3; targetContact?: string }): { graph: CircuitGraph; selection: Selection }
@@ -72,7 +74,7 @@ test('mounted part copy retains its unselected board and advances by local X pit
   const result = api.pasteSelection(snapshot, { step: 1 })
   const pasted = store.graph!.modules.find(m => m.id === result.selection.moduleIds[0])!
   assert.equal(pasted.mount!.boardId, 'BB'); assert.equal(pasted.position, undefined)
-  assert.ok(Math.abs(pasted.mount!.pose.position.x - store.graph!.modules[1].mount!.pose.position.x - .13) < 1e-8)
+  assert.ok(Math.abs(rigidMount(pasted).pose.position.x - rigidMount(store.graph!.modules[1]).pose.position.x - .13) < 1e-8)
   const pose = moduleWorldPose(pasted, store.graph!.modules)
   assert.ok(Math.abs(pose.position!.x! - original.position!.x!) < 1e-8)
   assert.ok(Math.abs(pose.position!.z! - original.position!.z! + .13) < 1e-8)
@@ -170,8 +172,8 @@ test('mounted clipboard placements follow the current board pose while preservin
   const result = api.pasteSelection(snapshot)
   const original = store.graph!.modules.find(module => module.id === 'R')!, copied = store.graph!.modules.find(module => module.id === result.selection.moduleIds[0])!
   assert.equal(copied.mount!.boardId, 'BB')
-  assert.ok(Math.abs(copied.mount!.pose.position.x - original.mount!.pose.position.x - .13) < 1e-8)
-  assert.equal(copied.mount!.pose.rotation, original.mount!.pose.rotation)
+  assert.ok(Math.abs(rigidMount(copied).pose.position.x - rigidMount(original).pose.position.x - .13) < 1e-8)
+  assert.equal(rigidMount(copied).pose.rotation, rigidMount(original).pose.rotation)
   validateMountBindings(store.graph!); assert.equal(store.past.length, 1)
 })
 

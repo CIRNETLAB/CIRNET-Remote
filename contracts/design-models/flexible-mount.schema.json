@@ -1,0 +1,355 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://netcircuit.local/contracts/design/flexible-mount/1.0/schema.json",
+  "title": "Flexible two-lead authoring assemblies 1.0",
+  "$defs": {
+    "BodyPose3D": {
+      "type": "object",
+      "required": [
+        "position",
+        "rotation"
+      ],
+      "properties": {
+        "position": {
+          "$ref": "https://netcircuit.local/contracts/circuit/1.x/module.schema.json#/$defs/point"
+        },
+        "rotation": {
+          "type": "object",
+          "required": [
+            "x",
+            "y",
+            "z"
+          ],
+          "properties": {
+            "x": {
+              "type": "number",
+              "minimum": -360,
+              "maximum": 360
+            },
+            "y": {
+              "type": "number",
+              "minimum": -360,
+              "maximum": 360
+            },
+            "z": {
+              "type": "number",
+              "minimum": -360,
+              "maximum": 360
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false,
+      "description": "Authoritative body-center pose in board-local world units; rotation is degrees in fixed Euler YXZ order (Ry * Rx * Rz). No scale."
+    },
+    "FlexibleLeadIntent": {
+      "type": "object",
+      "required": [
+        "pinId",
+        "controlPoints"
+      ],
+      "properties": {
+        "pinId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "controlPoints": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "$ref": "https://netcircuit.local/contracts/circuit/1.x/module.schema.json#/$defs/point"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "description": "Ordered board-local world-space bend intent from body exit toward the named contact; endpoints derive from the descriptor and contact."
+    },
+    "FlexibleMountV1": {
+      "type": "object",
+      "required": [
+        "kind",
+        "version",
+        "boardId",
+        "partId",
+        "partRevision",
+        "packageId",
+        "packageRevision",
+        "mechanicalProfileId",
+        "mechanicalProfileRevision",
+        "geometryRevision",
+        "bodyPose",
+        "contacts",
+        "leads"
+      ],
+      "properties": {
+        "kind": {
+          "const": "breadboard-flexible"
+        },
+        "version": {
+          "const": 1
+        },
+        "boardId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "partId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "partRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "packageId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "packageRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "mechanicalProfileId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mechanicalProfileRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "geometryRevision": {
+          "const": 1
+        },
+        "bodyPose": {
+          "$ref": "#/$defs/BodyPose3D"
+        },
+        "contacts": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "https://netcircuit.local/contracts/circuit/1.x/module.schema.json#/$defs/pinContact"
+          }
+        },
+        "leads": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/FlexibleLeadIntent"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "MechanicalBodyExitV1": {
+      "type": "object",
+      "required": [
+        "pinId",
+        "bodyExitMm"
+      ],
+      "properties": {
+        "pinId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bodyExitMm": {
+          "$ref": "https://netcircuit.local/contracts/circuit/1.x/module.schema.json#/$defs/point"
+        }
+      },
+      "additionalProperties": false
+    },
+    "MechanicalAuthoringProfileV1": {
+      "type": "object",
+      "required": [
+        "id",
+        "revision",
+        "packageId",
+        "packageRevision",
+        "strategy",
+        "bodyOrigin",
+        "pins",
+        "minLeadLengthMm",
+        "maxLeadLengthMm",
+        "contactStubMm",
+        "exitStraightMm",
+        "minBendRadiusMm",
+        "bodyClearanceMm",
+        "maxBodyLiftMm",
+        "maxControlsPerLead"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "packageId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "packageRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "strategy": {
+          "enum": [
+            "axial",
+            "radial"
+          ]
+        },
+        "bodyOrigin": {
+          "const": "center"
+        },
+        "pins": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/MechanicalBodyExitV1"
+          }
+        },
+        "minLeadLengthMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "maxLeadLengthMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "contactStubMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10
+        },
+        "exitStraightMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10
+        },
+        "minBendRadiusMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10
+        },
+        "bodyClearanceMm": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "maxBodyLiftMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "maxControlsPerLead": {
+          "const": 8
+        }
+      },
+      "additionalProperties": false,
+      "description": "Versioned authoring limits and body exits. These are design geometry limits, not observed hardware ratings or safety evidence."
+    },
+    "ComponentDesignPropertiesV1": {
+      "type": "object",
+      "properties": {
+        "resistanceOhms": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 1000000000
+        },
+        "powerWatts": {
+          "type": "number",
+          "minimum": 0.001,
+          "maximum": 100
+        },
+        "tolerancePercent": {
+          "type": "number",
+          "minimum": 0.001,
+          "maximum": 20
+        },
+        "capacitanceFarads": {
+          "type": "number",
+          "minimum": 1e-12,
+          "maximum": 1
+        },
+        "voltageRatingVolts": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 10000
+        },
+        "capacitorType": {
+          "enum": [
+            "CERAMIC",
+            "ELECTROLYTIC"
+          ]
+        },
+        "buzzerType": {
+          "enum": [
+            "PASSIVE",
+            "ACTIVE"
+          ]
+        },
+        "transistorType": {
+          "enum": [
+            "NPN",
+            "PNP"
+          ]
+        },
+        "forwardVoltageVolts": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "leakageCurrentAmps": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "zenerVoltageVolts": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000
+        },
+        "maxCurrentAmps": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "maxLength": 7
+        }
+      },
+      "additionalProperties": true
+    },
+    "FlexibleMechanicsCatalog": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "units",
+        "profiles"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "units": {
+          "const": "mm"
+        },
+        "profiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MechanicalAuthoringProfileV1"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

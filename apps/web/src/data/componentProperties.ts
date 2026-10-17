@@ -1,7 +1,10 @@
 import { validateLeadProperties } from './leadProperties'
+import { ComponentDesignPropertiesV1 } from '../contracts/generated/validators.structural'
+import { getPartForType } from './partCatalog'
+import { validParameterValue } from './componentParameters'
 /** Design properties are SI numbers. This module has no execution/profile dependency. */
-export type EngineeringUnit = 'ohm' | 'F' | 'W' | 'V' | '%'
-export interface QuantityBounds { min?: number; max?: number }
+export type EngineeringUnit = 'ohm' | 'F' | 'W' | 'V' | 'A' | '%'
+export interface QuantityBounds { min?: number; max?: number; exclusiveMin?: boolean }
 export const componentPropertyBounds = {
   resistanceOhms: { min: .1, max: 1e9 }, powerWatts: { min: .001, max: 100 }, tolerancePercent: { min: .001, max: 20 },
   capacitanceFarads: { min: 1e-12, max: 1 }, voltageRatingVolts: { min: .1, max: 10000 },
@@ -12,6 +15,7 @@ const suffixExponents: Record<EngineeringUnit, Record<string, number>> = {
   F: { '': 0, F: 0, pF: -12, nF: -9, uF: -6, 'µF': -6, 'μF': -6, mF: -3 },
   W: { '': 0, W: 0, mW: -3, kW: 3 },
   V: { '': 0, V: 0, mV: -3, kV: 3 },
+  A: { '': 0, A: 0, mA: -3, uA: -6, 'µA': -6, 'μA': -6, nA: -9 },
   '%': { '': 0, '%': 0 },
 }
 
@@ -30,6 +34,7 @@ export function parseEngineeringQuantity(value: unknown, unit: EngineeringUnit, 
   } else throw new Error('Enter a finite numeric value.')
   if (!Number.isFinite(result)) throw new Error('Enter a finite numeric value.')
   if (result < (bounds.min ?? -Infinity) || result > (bounds.max ?? Infinity)) throw new Error(`Value must be between ${bounds.min ?? '-∞'} and ${bounds.max ?? '∞'} ${unit}.`)
+  if (bounds.exclusiveMin && result <= (bounds.min ?? -Infinity)) throw new Error(`Value must be greater than ${bounds.min} ${unit}.`)
   return result
 }
 
@@ -39,11 +44,28 @@ const propertyKeys = (type: string): (keyof typeof componentPropertyBounds)[] =>
 
 /** Validate present canonical fields; omitted legacy fields resolve from the descriptor defaults. */
 export function validateComponentProperties(type: string, properties: Record<string, unknown>): string[] {
+  if (type.startsWith('GENERIC_') && getPartForType(type)) {
+    const errors = ComponentDesignPropertiesV1(properties) ? [] : ['Invalid component design properties. Use finite SI values and the declared Type and color options.']
+    const part = getPartForType(type)
+    for (const parameter of part?.editor.parameters ?? []) if (parameter.key in properties && !validParameterValue(parameter, properties[parameter.key])) errors.push(`Invalid ${parameter.label}.`)
+    if (type === 'GENERIC_CAPACITOR' && properties.capacitorType !== undefined && properties.capacitorType !== 'CERAMIC'
+      || type === 'GENERIC_CAPACITOR_ELECTROLYTIC' && properties.capacitorType !== undefined && properties.capacitorType !== 'ELECTROLYTIC') errors.push('Capacitor Type must match its package.')
+    return errors
+  }
   return propertyKeys(type).flatMap(key => {
     if (!(key in properties)) return []
     const value = properties[key], bounds = componentPropertyBounds[key]
     return typeof value === 'number' && Number.isFinite(value) && value >= bounds.min && value <= bounds.max ? [] : [`${key} must be a finite SI number between ${bounds.min} and ${bounds.max}.`]
   })
+}
+
+/** Decimal exponent shifting preserves the exact shortest SI token on untouched Update. */
+export function engineeringInput(value: number, exponent = 0): string {
+  const [mantissa = '', originalExponent = '0'] = String(value).split(/[eE]/)
+  const sign = mantissa.startsWith('-') ? '-' : ''
+  const unsigned = mantissa.replace(/^[+-]/, ''), point = unsigned.indexOf('.')
+  const digits = unsigned.replace('.', ''), offset = (point < 0 ? digits.length : point) + Number(originalExponent) - exponent
+  return sign + (offset <= 0 ? '0.' + '0'.repeat(-offset) + digits : offset >= digits.length ? digits + '0'.repeat(offset - digits.length) : digits.slice(0, offset) + '.' + digits.slice(offset)).replace(/^0+(?=\d)/, '')
 }
 
 /** The sole legacy resistance key migration, called at load/update/API boundaries. */

@@ -5007,6 +5007,487 @@
       ],
       "defaults": {},
       "parameters": []
+    },
+    {
+      "type": "GENERIC_RESISTOR",
+      "name": "Resistor",
+      "mode": "physical",
+      "family": "passive",
+      "visual": "resistor",
+      "size": [
+        0.33267716535433073,
+        0.1279527559055118,
+        0.1279527559055118
+      ],
+      "color": "#b4c7c0",
+      "partDefinitionId": "GENERIC-RESISTOR-AXIAL",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "A",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "B",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "defaults": {
+        "resistanceOhms": 330,
+        "powerWatts": 0.25,
+        "tolerancePercent": 1
+      },
+      "parameters": [
+        {
+          "key": "resistanceOhms",
+          "label": "Resistance",
+          "kind": "number",
+          "unit": "ohm",
+          "min": 0.1,
+          "max": 1000000000.0
+        },
+        {
+          "key": "powerWatts",
+          "label": "Max power",
+          "kind": "number",
+          "unit": "W",
+          "min": 0.001,
+          "max": 100
+        },
+        {
+          "key": "tolerancePercent",
+          "label": "Tolerance",
+          "kind": "number",
+          "unit": "%",
+          "min": 0.001,
+          "max": 20,
+          "advanced": true
+        }
+      ]
+    },
+    {
+      "type": "GENERIC_CAPACITOR",
+      "name": "Capacitor",
+      "mode": "physical",
+      "family": "passive",
+      "visual": "capacitor",
+      "size": [
+        0.2047244094488189,
+        0.2047244094488189,
+        0.13307086614173227
+      ],
+      "color": "#293136",
+      "partDefinitionId": "GENERIC-CAPACITOR-CERAMIC",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "A",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "B",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "defaults": {
+        "capacitanceFarads": 1e-07,
+        "voltageRatingVolts": 50,
+        "capacitorType": "CERAMIC"
+      },
+      "parameters": [
+        {
+          "key": "capacitanceFarads",
+          "label": "Capacitance",
+          "kind": "number",
+          "unit": "F",
+          "min": 1e-12,
+          "max": 1
+        },
+        {
+          "key": "capacitorType",
+          "label": "Type",
+          "kind": "enum",
+          "options": [
+            {
+              "value": "CERAMIC",
+              "label": "Ceramic"
+            },
+            {
+              "value": "ELECTROLYTIC",
+              "label": "Electrolytic"
+            }
+          ]
+        },
+        {
+          "key": "voltageRatingVolts",
+          "label": "Rated voltage",
+          "kind": "number",
+          "unit": "V",
+          "min": 0.1,
+          "max": 10000,
+          "advanced": true
+        }
+      ]
+    },
+    {
+      "type": "GENERIC_CAPACITOR_ELECTROLYTIC",
+      "name": "Capacitor",
+      "mode": "physical",
+      "family": "passive",
+      "visual": "capacitor",
+      "size": [
+        0.5118110236220472,
+        0.639763779527559,
+        0.5118110236220472
+      ],
+      "color": "#3e4249",
+      "partDefinitionId": "GENERIC-CAPACITOR-ELECTROLYTIC",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "PLUS",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "MINUS",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "defaults": {
+        "capacitanceFarads": 4.7e-05,
+        "voltageRatingVolts": 25,
+        "capacitorType": "ELECTROLYTIC"
+      },
+      "parameters": [
+        {
+          "key": "capacitanceFarads",
+          "label": "Capacitance",
+          "kind": "number",
+          "unit": "F",
+          "min": 1e-12,
+          "max": 1
+        },
+        {
+          "key": "capacitorType",
+          "label": "Type",
+          "kind": "enum",
+          "options": [
+            {
+              "value": "CERAMIC",
+              "label": "Ceramic"
+            },
+            {
+              "value": "ELECTROLYTIC",
+              "label": "Electrolytic"
+            }
+          ]
+        },
+        {
+          "key": "voltageRatingVolts",
+          "label": "Rated voltage",
+          "kind": "number",
+          "unit": "V",
+          "min": 0.1,
+          "max": 10000,
+          "advanced": true
+        }
+      ]
+    },
+    {
+      "type": "GENERIC_DIODE",
+      "name": "Diode",
+      "mode": "physical",
+      "family": "active",
+      "visual": "diode",
+      "size": [
+        0.19960629921259843,
+        0.09724409448818896,
+        0.09724409448818896
+      ],
+      "color": "#4b3831",
+      "partDefinitionId": "GENERIC-DIODE-AXIAL",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "A",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "K",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "defaults": {
+        "forwardVoltageVolts": 0.7,
+        "leakageCurrentAmps": 1e-09
+      },
+      "parameters": [
+        {
+          "key": "forwardVoltageVolts",
+          "label": "Forward voltage",
+          "kind": "number",
+          "unit": "V",
+          "min": 0,
+          "max": 1000
+        },
+        {
+          "key": "leakageCurrentAmps",
+          "label": "Leakage current",
+          "kind": "number",
+          "unit": "A",
+          "min": 0,
+          "max": 100
+        }
+      ]
+    },
+    {
+      "type": "GENERIC_ZENER_DIODE",
+      "name": "Zener Diode",
+      "mode": "physical",
+      "family": "active",
+      "visual": "zener",
+      "size": [
+        0.26614173228346455,
+        0.13818897637795277,
+        0.13818897637795277
+      ],
+      "color": "#4b3831",
+      "partDefinitionId": "GENERIC-ZENER-DIODE-AXIAL",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "A",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "K",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "defaults": {
+        "forwardVoltageVolts": 0.7,
+        "leakageCurrentAmps": 1e-09,
+        "zenerVoltageVolts": 5.1
+      },
+      "parameters": [
+        {
+          "key": "forwardVoltageVolts",
+          "label": "Forward voltage",
+          "kind": "number",
+          "unit": "V",
+          "min": 0,
+          "max": 1000
+        },
+        {
+          "key": "leakageCurrentAmps",
+          "label": "Leakage current",
+          "kind": "number",
+          "unit": "A",
+          "min": 0,
+          "max": 100
+        },
+        {
+          "key": "zenerVoltageVolts",
+          "label": "Zener voltage",
+          "kind": "number",
+          "unit": "V",
+          "min": 0,
+          "max": 10000,
+          "exclusiveMin": true
+        }
+      ]
+    },
+    {
+      "type": "GENERIC_LED",
+      "name": "LED",
+      "mode": "physical",
+      "family": "output",
+      "visual": "led",
+      "size": [
+        0.2559055118110236,
+        0.4401574803149606,
+        0.2559055118110236
+      ],
+      "color": "#ce3935",
+      "partDefinitionId": "GENERIC-LED-5MM",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "A",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "K",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "defaults": {
+        "color": "#ce3935",
+        "forwardVoltageVolts": 2,
+        "maxCurrentAmps": 0.02
+      },
+      "parameters": [
+        {
+          "key": "color",
+          "label": "Color",
+          "kind": "color",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "options": [
+            {
+              "value": "#ce3935",
+              "label": "Red"
+            },
+            {
+              "value": "#ef9d35",
+              "label": "Amber"
+            },
+            {
+              "value": "#f5dc50",
+              "label": "Yellow"
+            },
+            {
+              "value": "#42b567",
+              "label": "Green"
+            },
+            {
+              "value": "#3a78dc",
+              "label": "Blue"
+            },
+            {
+              "value": "#ffffff",
+              "label": "White"
+            }
+          ]
+        },
+        {
+          "key": "forwardVoltageVolts",
+          "label": "Forward voltage",
+          "kind": "number",
+          "unit": "V",
+          "min": 0,
+          "max": 1000
+        },
+        {
+          "key": "maxCurrentAmps",
+          "label": "Max current",
+          "kind": "number",
+          "unit": "A",
+          "min": 0,
+          "max": 100,
+          "exclusiveMin": true
+        }
+      ]
+    },
+    {
+      "type": "GENERIC_BUZZER",
+      "name": "Buzzer",
+      "mode": "physical",
+      "family": "output",
+      "visual": "buzzer",
+      "size": [
+        0.6244094488188976,
+        0.33267716535433073,
+        0.6244094488188976
+      ],
+      "color": "#24292b",
+      "partDefinitionId": "GENERIC-BUZZER-12MM",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "2",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "defaults": {
+        "buzzerType": "PASSIVE"
+      },
+      "parameters": [
+        {
+          "key": "buzzerType",
+          "label": "Type",
+          "kind": "enum",
+          "options": [
+            {
+              "value": "PASSIVE",
+              "label": "Passive"
+            },
+            {
+              "value": "ACTIVE",
+              "label": "Active"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "GENERIC_BJT",
+      "name": "Transistor",
+      "mode": "physical",
+      "family": "active",
+      "visual": "transistor",
+      "size": [
+        0.24720472440944882,
+        0.24362204724409448,
+        0.2016535433070866
+      ],
+      "color": "#292b2b",
+      "partDefinitionId": "GENERIC-BJT-TO92",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "2",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "3",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "defaults": {
+        "transistorType": "NPN"
+      },
+      "parameters": [
+        {
+          "key": "transistorType",
+          "label": "Type",
+          "kind": "enum",
+          "options": [
+            {
+              "value": "NPN",
+              "label": "NPN"
+            },
+            {
+              "value": "PNP",
+              "label": "PNP"
+            }
+          ]
+        }
+      ]
     }
   ],
   "legacyPorts": {

@@ -93,12 +93,14 @@ test('NOR/inverter pinouts are separately declared and LS266 has open collector 
 
 test('palette exposes physical parts and hides legacy-only families without deleting definitions', () => {
   const items = ribbonGroups.flatMap(group => group.items)
-  for (const type of ['SN74HC08N', 'LED_LTL307EE', 'RESISTOR_AXIAL', 'DC_SUPPLY', 'TRANSISTOR_2N3904', 'DIODE_1N4148', 'ZENER_1N4733A', 'BUZZER_PS1240', 'SEGMENT_SC5611EWA', 'SEGMENT_DC5611EWA', 'SEGMENT_CC5612EWA', 'PUSH_BUTTON_B3F1000', 'DIP_SWITCH_A6D4100', 'CAPACITOR_CERAMIC', 'CAPACITOR_ELECTROLYTIC', 'SN74HC02N', 'SN74HC04N', 'SN74LS266N']) {
+  for (const type of ['SN74HC08N', 'GENERIC_LED', 'GENERIC_RESISTOR', 'DC_SUPPLY', 'GENERIC_BJT', 'GENERIC_DIODE', 'GENERIC_ZENER_DIODE', 'GENERIC_BUZZER', 'SEGMENT_SC5611EWA', 'SEGMENT_DC5611EWA', 'SEGMENT_CC5612EWA', 'PUSH_BUTTON_B3F1000', 'DIP_SWITCH_A6D4100', 'GENERIC_CAPACITOR', 'SN74HC02N', 'SN74HC04N', 'SN74LS266N']) {
     assert.ok(items.some(item => item.type === type), `${type} must be accessible in the palette`)
   }
   const legacy = ribbonGroups.find(group => group.id === 'logical-tools')
   assert.equal(legacy, undefined)
   assert.ok(getDefinition('LED')); assert.ok(getDefinition('DIP_SWITCH')); assert.ok(getDefinition('MEMORY'))
   assert.ok(!ribbonGroups.some(group => ['memory', 'embedded'].includes(group.id)))
-  assert.equal(items.find(item => item.type === 'TRANSISTOR_2N3904')!.support, 'Place / wire')
+  assert.equal(items.find(item => item.type === 'GENERIC_BJT')!.support, 'Place / wire')
+  assert.equal(items.some(item => item.type === 'GENERIC_CAPACITOR_ELECTROLYTIC'), false, 'Type selects the second capacitor package')
+  for (const type of ['LED_LTL307EE', 'RESISTOR_AXIAL', 'CAPACITOR_CERAMIC', 'CAPACITOR_ELECTROLYTIC', 'DIODE_1N4148', 'ZENER_1N4733A', 'BUZZER_PS1240', 'TRANSISTOR_2N3904']) assert.ok(getDefinition(type), `${type} legacy files retain their original definition`)
 })

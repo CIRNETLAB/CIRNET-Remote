@@ -1,4 +1,4 @@
-import type { CircuitGraph } from '../../contracts/generated/dto'
+import type { CircuitGraph } from '../../types/circuit'
 import { MAX_CIRCUIT_FILE_BYTES,parseCircuitFile } from './circuitFile'
 import { validateMountBindings } from '../../electrical/mounting'
 

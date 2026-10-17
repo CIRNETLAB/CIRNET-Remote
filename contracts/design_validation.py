@@ -6,7 +6,7 @@ from .registry import validate_contract
 
 def validate_design_graph(value):
     try:
-        validate_contract('CircuitGraph', value, profile='structural')
+        validate_contract('AnySupportedCircuitGraph', value, profile='structural')
     except ValidationError as error:
         # Canonical component property checks historically expose ValueError.
         # Preserve that public boundary while retaining the shared issue detail.

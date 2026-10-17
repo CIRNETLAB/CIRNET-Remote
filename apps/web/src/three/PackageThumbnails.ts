@@ -14,7 +14,7 @@ export interface PackageThumbnailRenderer {
   dispose(): void
 }
 export type PackageThumbnailPriority = 'high' | 'visible' | 'preload'
-export interface PackageThumbnailRequest { priority?: PackageThumbnailPriority }
+export interface PackageThumbnailRequest { priority?: PackageThumbnailPriority; module?: CircuitModule; modules?: readonly CircuitModule[] }
 export interface PackageThumbnailLease { ready: Promise<string | null>; release(): void; setPriority?(priority: PackageThumbnailPriority): void }
 export interface PackageThumbnailCache {
   acquire(type: string, properties?: Record<string, unknown>, request?: PackageThumbnailRequest): PackageThumbnailLease
@@ -33,6 +33,7 @@ export const packageThumbnailCacheKey = Symbol.for('netcircuit.package-thumbnail
 
 interface Entry {
   module?: CircuitModule
+  modules?: CircuitModule[]
   refs: number
   priorities: Map<symbol, PackageThumbnailPriority>
   order: number
@@ -56,6 +57,7 @@ function visualProperties(type: string, properties: Record<string, unknown>): Re
   const copy = (keys: string[]) => { for (const key of keys) visual[key] = properties[key] ?? part?.editor.defaults[key] ?? definition.defaults[key] }
   if (part?.package.family === 'axial' && (part.package.visualVariant === 'resistor' || part.function === 'resistor')) copy(['resistanceOhms', 'powerWatts', 'tolerancePercent'])
   if (part?.package.family === 'radial-capacitor') copy(['capacitanceFarads', 'voltageRatingVolts'])
+  if (type === 'GENERIC_LED') copy(['color'])
   if (isLeadEditableType(type)) Object.assign(visual, readLeadProperties(properties))
   if (part?.package.family === 'switch') {
     copy((part.internalConnections ?? []).flatMap(connection => connection.when ? [connection.when.property] : []))
@@ -199,7 +201,7 @@ export function createPackageThumbnailCache(options: PackageThumbnailCacheOption
     return next
   }
   const cancelScheduled = () => { cancelTask?.(); cancelTask = undefined; scheduledPriority = undefined }
-  const complete = (entry: Entry, image: string | null) => { entry.module = undefined; entry.state = 'complete'; entry.resolve(image) }
+  const complete = (entry: Entry, image: string | null) => { entry.module = undefined; entry.modules = undefined; entry.state = 'complete'; entry.resolve(image) }
   const settleFallbacks = () => {
     cancelScheduled()
     for (const entry of entries.values()) if (entry.state === 'queued') complete(entry, null)
@@ -216,7 +218,7 @@ export function createPackageThumbnailCache(options: PackageThumbnailCacheOption
       if (renderer && !disposed) {
         // Factory errors affect this image, whereas context/capture failures
         // permanently disable GPU retries for the lifetime of this cache.
-        model = buildComponent(entry.module!)
+        model = buildComponent(entry.module!, entry.modules)
         try {
           image = await renderer.render(model)
         } catch {
@@ -250,21 +252,35 @@ export function createPackageThumbnailCache(options: PackageThumbnailCacheOption
     acquire(type, properties, request) {
       const definition = getDefinition(type), descriptor = getPartForType(type)
       if (!definition || disposed) return { ready: Promise.resolve(null), release() {} }
-      let module: CircuitModule, key: string
+      let module: CircuitModule, modules: CircuitModule[] = [], key: string
       try {
         // Snapshot reactive draft data without retaining or mutating an instance
         // or the shared descriptor defaults. Legacy input normalizes at this boundary.
-        const effective = normalizeComponentProperties(type, { ...(descriptor?.editor.defaults ?? definition.defaults), ...normalizeComponentProperties(type, properties) })
+        const effective = normalizeComponentProperties(type, { ...(descriptor?.editor.defaults ?? definition.defaults), ...normalizeComponentProperties(type, properties ?? request?.module?.properties) })
         const snapshot = JSON.stringify(stableValue(visualProperties(type, effective)))
         module = { id: 'thumbnail', type, properties: JSON.parse(snapshot) as Record<string, unknown> }
-        key = JSON.stringify([type, descriptor?.id ?? definition.partDefinitionId, descriptor?.revision ?? definition.partRevision, descriptor?.package.id, descriptor?.package.revision, snapshot])
+        if (request?.module) {
+          const original = request.module
+          if (original.type !== type) throw Error('Thumbnail type does not match its module.')
+          if (original.mount) {
+            const support = request.modules?.find(item => item.id === original.mount!.boardId)
+            if (!support) throw Error('A mounted thumbnail requires its supporting board.')
+            if (support.mount) throw Error('A supporting board cannot itself be mounted.')
+            // Preserve only the one geometry dependency, never a whole graph or
+            // unrelated private instance metadata. World translation is framed out.
+            modules = [{ id: 'thumbnail-board', type: support.type, position: { x: 0, y: 0, z: 0 }, rotation: support.rotation ?? 0 }]
+            module.mount = JSON.parse(JSON.stringify(original.mount)) as CircuitModule['mount']
+            module.mount!.boardId = 'thumbnail-board'
+          } else if (original.rotation !== undefined) module.rotation = original.rotation
+        }
+        key = JSON.stringify([type, descriptor?.id ?? definition.partDefinitionId, descriptor?.revision ?? definition.partRevision, descriptor?.package.id, descriptor?.package.revision, snapshot, stableValue(module.mount ?? null), module.rotation ?? 0, modules])
       } catch { return { ready: Promise.resolve(null), release() {} } }
       let entry = entries.get(key)
       if (!entry) {
         if (failed) return { ready: Promise.resolve(null), release() {} }
         let resolve!: Entry['resolve']
         const ready = new Promise<string | null>(done => { resolve = done })
-        entry = { module, ready, resolve, refs: 0, priorities: new Map(), order: sequence++, state: 'queued' }
+        entry = { module, modules, ready, resolve, refs: 0, priorities: new Map(), order: sequence++, state: 'queued' }
       } else entries.delete(key)
       entries.set(key, entry)
       clearIdle()

@@ -9,6 +9,7 @@ import { useWorkspaceStore, type WorkspaceTool } from '../src/stores/workspace'
 import { createSceneManager } from '../src/three/SceneManager'
 import { breadboardBodiesOverlap, isMechanicalBreadboardDock } from '../src/geometry/breadboardDocking'
 import { useUiStore } from '../src/stores/ui'
+import {solveFlexibleMount} from '../src/electrical/flexibleGeometry'
 
 // Only the DOM/canvas host and GPU boundary are replaced; picking, camera math,
 // Vue lifecycle, graph commands and history use the production implementations.
@@ -63,6 +64,25 @@ function acquirePlacementGizmo(h: ReturnType<typeof setup>) {
   assert.equal(h.manager.placementFollowBlocked(), true, 'approaching a separated handle pauses cursor-follow before free movement')
 }
 
+test('common camera/resize cancellation rolls back a flexible edit and releases capture before later pointerup',async()=>{
+ const oldRequest=Object.getOwnPropertyDescriptor(globalThis,'requestAnimationFrame'),oldCancel=Object.getOwnPropertyDescriptor(globalThis,'cancelAnimationFrame')
+ let queued:FrameRequestCallback|null=null
+ Object.defineProperty(globalThis,'requestAnimationFrame',{configurable:true,value:(cb:FrameRequestCallback)=>{queued=cb;return 1}});Object.defineProperty(globalThis,'cancelAnimationFrame',{configurable:true,value:()=>{queued=null}})
+ const h=setup()
+ try{
+  const board=h.circuit.placeModule('BREADBOARD',{x:0,y:0,z:0}),mount=solveFlexibleMount('GENERIC_RESISTOR',board,'terminal:A:10','terminal:A:14',h.circuit.graph!.modules).mount!
+  const id=h.circuit.placeFlexibleModule('GENERIC_RESISTOR',mount);h.workspace.selectModule(id);await nextTick();h.editor.sync();h.circuit.past=[]
+  const lift=h.manager.project(h.manager.flexibleHandlePosition('lift')!),event=(x:number,y:number)=>({...h.pointer(x,y),stopImmediatePropagation(){}})
+  const before=h.circuit.snapshot();h.editor.pointerDown(event(lift.x,lift.y));assert.equal(h.captured.size,1)
+  const surface=h.manager.models.get(id)!.getObjectByName('package-lead-A')!.getObjectByName('lead-metal') as import('three').Mesh,geometry=surface.geometry
+  for(let step=1;step<=10;step++)h.editor.pointerMove(event(lift.x,lift.y-step))
+  assert.equal(surface.geometry,geometry,'pointer events are coalesced before the next frame')
+  const pendingFrame=queued as FrameRequestCallback|null;if(pendingFrame)pendingFrame(0);assert.notEqual(surface.geometry,geometry)
+  h.editor.cancel();assert.equal(h.captured.size,0)
+  h.editor.pointerUp(event(lift.x,lift.y-10));await nextTick();assert.equal(h.circuit.snapshot(),before);assert.equal(h.circuit.past.length,0)
+ }finally{h.dispose();if(oldRequest)Object.defineProperty(globalThis,'requestAnimationFrame',oldRequest);else Reflect.deleteProperty(globalThis,'requestAnimationFrame');if(oldCancel)Object.defineProperty(globalThis,'cancelAnimationFrame',oldCancel);else Reflect.deleteProperty(globalThis,'cancelAnimationFrame')}
+})
+
 test('mounted physical component dragging keeps the same board-plane grab offset in an oblique view', async () => {
   const h = setup('move')
   try {
@@ -76,7 +96,9 @@ test('mounted physical component dragging keeps the same board-plane grab offset
     h.editor.pointerUp(h.pointer(screen.x + 5, screen.y))
     await nextTick()
     assert.equal(h.workspace.editError, '')
-    assert.equal(h.circuit.graph!.modules.find(m => m.id === id)!.mount!.pose.position.z, 0)
+    const mount=h.circuit.graph!.modules.find(m => m.id === id)!.mount
+    assert.equal(mount?.kind,'breadboard');assert.ok(mount?.kind==='breadboard')
+    assert.equal(mount.pose.position.z, 0)
   } finally { h.dispose() }
 })
 
@@ -653,7 +675,7 @@ test('active 3D model placement places on left click and exits on right click', 
   } finally { h.dispose() }
 })
 
-test('Component Info closes when selection is cleared, placement starts or the selected model is deleted', async () => {
+test('Component Info closes on cleared or deleted selection and opens for an independent placement draft', async () => {
   const h = setup()
   try {
     const id = h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 })
@@ -664,7 +686,9 @@ test('Component Info closes when selection is cleared, placement starts or the s
     h.workspace.clearSelection(); await nextTick()
     assert.equal(info()?.open, false, 'blank workspace must have no Info panel')
     h.workspace.selectModule(id); await nextTick(); h.workspace.armPlacement('BREADBOARD_630'); await nextTick()
-    assert.equal(info()?.open, false, 'library placement preview is not a selected 3D model')
+    assert.equal(info()?.open, true, 'the new placement draft exposes its properties before an instance exists')
+    assert.equal(h.workspace.selectedModuleId,null)
+    assert.equal(h.circuit.graph!.modules.length,1,'opening draft Info must not create an instance')
     h.workspace.selectModule(id); await nextTick(); h.circuit.removeModule(id); await nextTick()
     assert.equal(info()?.open, false, 'deleting the selected model must hide Info')
   } finally { h.dispose() }

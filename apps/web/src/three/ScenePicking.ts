@@ -13,7 +13,7 @@ export function createScenePicking({camera,content,wires,raycaster,viewport,targ
   const pickOwner=(initial:Object3D)=>{let object=initial;while(object.parent&&!object.userData.kind) object=object.parent;return object}
   const ignored=(object:Object3D)=>{let current:Object3D|null=object;while(current) {if(current.userData.ignorePick) return true;current=current.parent}return false}
   const wireMeshes=(root?:Object3D)=>(root?[root]:wires.children).flatMap(mesh=>[mesh,...mesh.children.filter(child=>child instanceof Mesh)])
-  const contentHit=(x:number,y:number)=>{ray(x,y);return raycaster.intersectObjects(content.children,true).find(hit=>!ignored(hit.object))??null}
+  const contentHit=(x:number,y:number,excludeModuleId?:string)=>{ray(x,y);return raycaster.intersectObjects(content.children,true).find(hit=>!ignored(hit.object)&&(!excludeModuleId||pickOwner(hit.object).userData.id!==excludeModuleId))??null}
   const screenPoint=(point:Point3)=>{
     const {width,height}=viewport(),world=new Vector3(point.x,point.y,point.z),projected=world.clone().project(camera)
     const depth=-world.clone().applyMatrix4(camera.matrixWorldInverse).z

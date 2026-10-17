@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { domainsCompatible, classifyGraph, validateSignalDomains } from '../src/electrical/signalDomains'
-import type { CircuitGraph } from '../src/types/circuit'
+import type { CircuitGraph } from '../src/contracts/generated/dto'
 import type { SignalDomain } from '../src/contracts/generated/dto'
 import corpus from '../../../contracts/fixtures/signal-domains-conformance.json'
 import { parseLab,ContractValidationError } from '../src/contracts/validation'

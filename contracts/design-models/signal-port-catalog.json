@@ -3871,6 +3871,139 @@
       "execution": "UNAVAILABLE"
     },
     {
+      "type": "GENERIC_RESISTOR",
+      "ports": [
+        {
+          "id": "A",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "B",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "execution": "DC_DIGITAL"
+    },
+    {
+      "type": "GENERIC_CAPACITOR",
+      "ports": [
+        {
+          "id": "A",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "B",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "GENERIC_CAPACITOR_ELECTROLYTIC",
+      "ports": [
+        {
+          "id": "PLUS",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "MINUS",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "GENERIC_DIODE",
+      "ports": [
+        {
+          "id": "A",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "K",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "GENERIC_ZENER_DIODE",
+      "ports": [
+        {
+          "id": "A",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "K",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "GENERIC_LED",
+      "ports": [
+        {
+          "id": "A",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "K",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "execution": "DC_DIGITAL"
+    },
+    {
+      "type": "GENERIC_BUZZER",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "2",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "GENERIC_BJT",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "2",
+          "direction": "inout",
+          "domain": "ANALOG"
+        },
+        {
+          "id": "3",
+          "direction": "inout",
+          "domain": "ANALOG"
+        }
+      ],
+      "execution": "UNAVAILABLE"
+    },
+    {
       "type": "AND",
       "ports": [
         {

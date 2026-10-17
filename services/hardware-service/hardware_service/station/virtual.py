@@ -59,7 +59,7 @@ class VirtualHardwareStation(HardwareStation):
     def apply_circuit(self, circuit):
         self._require_state(S.IDLE, S.SAFE_STATE, S.READY)
         self._circuit=self._virtual_plan=None
-        if not isinstance(circuit, dict) or circuit.get("schema_version") not in ("1.0","1.1") or not isinstance(circuit.get("modules"),list) or not isinstance(circuit.get("connections"),list):
+        if not isinstance(circuit, dict) or circuit.get("schema_version") not in ("1.0","1.1","1.2") or not isinstance(circuit.get("modules"),list) or not isinstance(circuit.get("connections"),list):
             raise HardwareError("UNEXECUTABLE")
         try: self._virtual_plan=SimulationDispatcher().compile(circuit)
         except SimulationError:

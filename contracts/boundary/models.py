@@ -1207,6 +1207,125 @@ class NCAPLayout(ContractBoundary):
     digital_v1: DigitalV1
     sampled_v2: SampledV2
 
+class Rotation(ContractBoundary):
+    model_config = ConfigDict(extra='forbid')
+    x: StrictInt | StrictFloat = Field(..., ge=-360.0, le=360.0)
+    y: StrictInt | StrictFloat = Field(..., ge=-360.0, le=360.0)
+    z: StrictInt | StrictFloat = Field(..., ge=-360.0, le=360.0)
+
+class BodyPose3D(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'BodyPose3D'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    position: Point3
+    rotation: Rotation
+
+class FlexibleLeadIntent(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'FlexibleLeadIntent'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    pinId: StrictStr = Field(..., min_length=1)
+    controlPoints: list[Point3] = Field(..., max_length=8)
+
+class FlexibleMountV1(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'FlexibleMountV1'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    kind: Literal['breadboard-flexible']
+    version: Annotated[Literal[1] | StrictFloat, WrapValidator(preserve_json_literal((1,)))]
+    boardId: StrictStr = Field(..., min_length=1)
+    partId: StrictStr = Field(..., min_length=1)
+    partRevision: StrictInt | StrictFloat = Field(..., ge=1)
+    packageId: StrictStr = Field(..., min_length=1)
+    packageRevision: StrictInt | StrictFloat = Field(..., ge=1)
+    mechanicalProfileId: StrictStr = Field(..., min_length=1)
+    mechanicalProfileRevision: StrictInt | StrictFloat = Field(..., ge=1)
+    geometryRevision: Annotated[Literal[1] | StrictFloat, WrapValidator(preserve_json_literal((1,)))]
+    bodyPose: BodyPose3D
+    contacts: list[PinContactBinding] = Field(..., max_length=2, min_length=2)
+    leads: list[FlexibleLeadIntent] = Field(..., max_length=2, min_length=2)
+
+class ComponentDesignPropertiesV1(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'ComponentDesignPropertiesV1'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='allow')
+    resistanceOhms: StrictInt | StrictFloat | None = Field(None, ge=0.1, le=1000000000.0)
+    powerWatts: StrictInt | StrictFloat | None = Field(None, ge=0.001, le=100.0)
+    tolerancePercent: StrictInt | StrictFloat | None = Field(None, ge=0.001, le=20.0)
+    capacitanceFarads: StrictInt | StrictFloat | None = Field(None, ge=1e-12, le=1.0)
+    voltageRatingVolts: StrictInt | StrictFloat | None = Field(None, ge=0.1, le=10000.0)
+    capacitorType: Literal['CERAMIC', 'ELECTROLYTIC'] | None = None
+    buzzerType: Literal['PASSIVE', 'ACTIVE'] | None = None
+    transistorType: Literal['NPN', 'PNP'] | None = None
+    forwardVoltageVolts: StrictInt | StrictFloat | None = Field(None, ge=0.0, le=1000.0)
+    leakageCurrentAmps: StrictInt | StrictFloat | None = Field(None, ge=0.0, le=100.0)
+    zenerVoltageVolts: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=10000.0)
+    maxCurrentAmps: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    color: StrictStr | None = Field(None, max_length=7, pattern='^#[0-9a-fA-F]{6}$')
+
+class CircuitModuleV12(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'CircuitModuleV12'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='allow')
+    id: StrictStr = Field(..., min_length=1)
+    type: StrictStr = Field(..., min_length=1)
+    position: Position | None = None
+    rotation: StrictInt | StrictFloat | None = None
+    properties: dict[str, Any] | None = None
+    mount: MountBinding | FlexibleMountV1 | None = None
+
+class CircuitSummaryV2(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'CircuitSummaryV2'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    schema_version: Literal['2.0']
+    document_id: StrictStr = Field(..., max_length=128, min_length=1)
+    project_id: StrictStr = Field(..., max_length=128, min_length=1)
+    owner_id: StrictStr = Field(..., max_length=128, min_length=1)
+    name: StrictStr = Field(..., max_length=128, min_length=1)
+    graph_schema_version: Literal['1.0', '1.1', '1.2']
+    revision: StrictInt | StrictFloat = Field(..., ge=1, le=9007199254740991)
+    created_at: StrictInt | StrictFloat = Field(..., ge=0.0, le=9007199254740991.0)
+    updated_at: StrictInt | StrictFloat = Field(..., ge=0.0, le=9007199254740991.0)
+
+class CircuitPageV2(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'CircuitPageV2'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    schema_version: Literal['2.0']
+    items: list[CircuitSummaryV2] = Field(..., max_length=100)
+    next_cursor: StrictStr | None = Field(..., max_length=256)
+
+class ExperimentDocumentReferenceV2(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'ExperimentDocumentReferenceV2'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    schema_version: Literal['2.0']
+    experiment_id: StrictStr = Field(..., max_length=128, min_length=1)
+    snapshot_id: StrictStr = Field(..., max_length=128, min_length=1)
+    source: Literal['INLINE_GRAPH', 'SAVED_DOCUMENT', 'ASSIGNMENT_CONTEXT']
+    execution_mode: Literal['simulation', 'hardware']
+    circuit_id: StrictStr = Field(..., min_length=1)
+    graph_schema_version: Literal['1.0', '1.1', '1.2'] | None
+    assignment_id: StrictStr | None = Field(None, min_length=1)
+    document_id: StrictStr | None = Field(None, max_length=128, min_length=1)
+    revision: StrictInt | StrictFloat | None = Field(None, ge=1, le=9007199254740991)
+
+class MechanicalBodyExitV1(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'MechanicalBodyExitV1'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    pinId: StrictStr = Field(..., min_length=1)
+    bodyExitMm: Point3
+
+class AssignmentAuthoringPublicationV2(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'AssignmentAuthoringPublicationV2'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    base_revision: StrictInt | StrictFloat = Field(..., ge=1, le=9007199254740991)
+    published: StrictBool
+    feedback_policy: Literal['observed_only', 'detailed'] | None = None
+
 class AssessmentPolicy(ContractRootBoundary[Literal['STRICT_TOPOLOGY', 'FUNCTIONAL_ONLY', 'TOPOLOGY_AND_FUNCTION']]):
     root: Literal['STRICT_TOPOLOGY', 'FUNCTIONAL_ONLY', 'TOPOLOGY_AND_FUNCTION']
 
@@ -1570,6 +1689,80 @@ class ExperimentActiveSnapshot(ContractRootBoundary[ExperimentHistoryPage]):
     __validation_profile__: ClassVar[str] = 'transport'
     root: ExperimentHistoryPage = Field(..., description='Owner-scoped active, unstarted and quarantined records. Admitted executions precede CREATED records. Follow next_cursor explicitly; snapshots never authorize control or replay execution.', title='ExperimentActiveSnapshot')
 
+class MechanicalAuthoringProfileV1(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'MechanicalAuthoringProfileV1'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    id: StrictStr = Field(..., min_length=1)
+    revision: StrictInt | StrictFloat = Field(..., ge=1)
+    packageId: StrictStr = Field(..., min_length=1)
+    packageRevision: StrictInt | StrictFloat = Field(..., ge=1)
+    strategy: Literal['axial', 'radial']
+    bodyOrigin: Literal['center']
+    pins: list[MechanicalBodyExitV1] = Field(..., max_length=2, min_length=2)
+    minLeadLengthMm: StrictInt | StrictFloat = Field(..., gt=0.0, le=100.0)
+    maxLeadLengthMm: StrictInt | StrictFloat = Field(..., gt=0.0, le=100.0)
+    contactStubMm: StrictInt | StrictFloat = Field(..., gt=0.0, le=10.0)
+    exitStraightMm: StrictInt | StrictFloat = Field(..., gt=0.0, le=10.0)
+    minBendRadiusMm: StrictInt | StrictFloat = Field(..., gt=0.0, le=10.0)
+    bodyClearanceMm: StrictInt | StrictFloat = Field(..., ge=0.0, le=10.0)
+    maxBodyLiftMm: StrictInt | StrictFloat = Field(..., gt=0.0, le=100.0)
+    maxControlsPerLead: Annotated[Literal[8] | StrictFloat, WrapValidator(preserve_json_literal((8,)))]
+
+class FlexibleMechanicsCatalog(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'FlexibleMechanicsCatalog'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    schema_version: Literal['1.0']
+    units: Literal['mm']
+    profiles: list[MechanicalAuthoringProfileV1]
+
+class CircuitGraphV12(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'CircuitGraphV12'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    schema_version: Literal['1.2']
+    circuit_id: StrictStr = Field(..., min_length=1)
+    modules: list[CircuitModuleV12] = Field(..., max_length=2000)
+    connections: list[CircuitConnection] = Field(..., max_length=10000)
+    metadata: dict[str, Any] | None = None
+
+class AssignmentAuthoringSummaryV2(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'AssignmentAuthoringSummaryV2'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    schema_version: Literal['2.0']
+    assignment_id: AssignmentIdModel
+    title: Title
+    owner_id: StrictStr = Field(..., min_length=1)
+    revision: StrictInt | StrictFloat = Field(..., ge=1, le=9007199254740991)
+    published: StrictBool
+    published_revision: PublishedRevision | None
+    feedback_policy: Literal['observed_only', 'detailed']
+    created_at: StrictInt | StrictFloat = Field(..., ge=0.0)
+    updated_at: StrictInt | StrictFloat = Field(..., ge=0.0)
+
+class AssignmentAuthoringPageV2(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'AssignmentAuthoringPageV2'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    schema_version: Literal['2.0']
+    items: list[AssignmentAuthoringSummaryV2]
+    next_cursor: StrictStr | None
+
+class StudentAssignmentViewV2(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'StudentAssignmentViewV2'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    schema_version: Literal['1.0', '2.0']
+    assignment_id: AssignmentIdModel
+    title: Title
+    assessment_policy: AssessmentPolicy
+    lab_endpoints: list[LabEndpoint1]
+    document_kind: Literal['student']
+    published: Literal[True]
+    feedback_policy: Literal['observed_only', 'detailed']
+
 class ReferenceTopologyGraph(ContractRootBoundary[DetectedTopologyGraph]):
     root: DetectedTopologyGraph
 
@@ -1712,3 +1905,138 @@ class SimulationRequest(ContractBoundary):
     test_vectors: list[TestVector] | None = None
     clock_config: dict[str, Any] | ClockConfiguration | None = None
     inputs: dict[str, Annotated[Literal[0, 1] | StrictFloat, WrapValidator(preserve_json_literal((0, 1)))]] | None = None
+
+class AnySupportedCircuitGraph(ContractRootBoundary[CircuitGraph | CircuitGraphV12]):
+    __contract_id__: ClassVar[str] = 'AnySupportedCircuitGraph'
+    __validation_profile__: ClassVar[str] = 'structural'
+    root: CircuitGraph | CircuitGraphV12 = Field(..., title='AnySupportedCircuitGraph')
+
+class CircuitDocumentV2(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'CircuitDocumentV2'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    schema_version: Literal['2.0']
+    document_id: StrictStr = Field(..., max_length=128, min_length=1)
+    project_id: StrictStr = Field(..., max_length=128, min_length=1)
+    owner_id: StrictStr = Field(..., max_length=128, min_length=1)
+    name: StrictStr = Field(..., max_length=128, min_length=1)
+    graph_schema_version: Literal['1.0', '1.1', '1.2']
+    revision: StrictInt | StrictFloat = Field(..., ge=1, le=9007199254740991)
+    created_at: StrictInt | StrictFloat = Field(..., ge=0.0, le=9007199254740991.0)
+    updated_at: StrictInt | StrictFloat = Field(..., ge=0.0, le=9007199254740991.0)
+    graph: AnySupportedCircuitGraph
+
+class CircuitCreateV2(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'CircuitCreateV2'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    name: StrictStr = Field(..., max_length=128, min_length=1)
+    graph: AnySupportedCircuitGraph
+
+class CircuitSaveV2(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'CircuitSaveV2'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    base_revision: StrictInt | StrictFloat = Field(..., ge=1, le=9007199254740991)
+    name: StrictStr = Field(..., max_length=128, min_length=1)
+    graph: AnySupportedCircuitGraph
+
+class ExperimentCreateV2(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'ExperimentCreateV2'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    station_id: StrictStr = Field(..., min_length=1)
+    assignment_id: StrictStr | None = Field(None, min_length=1)
+    circuit_graph: AnySupportedCircuitGraph | None = None
+    clock_config: dict[str, Any] | ClockConfiguration | None = None
+    generator_config: list[GeneratorConfiguration] | None = None
+    capture_config: CaptureConfiguration | None = None
+    test_vectors: list[TestVector] | None = None
+    circuit_document_id: StrictStr | None = Field(None, max_length=128, min_length=1)
+    circuit_revision: StrictInt | StrictFloat | None = Field(None, ge=1, le=9007199254740991)
+
+class SimulationRequestV2(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'SimulationRequestV2'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    schema_version: Literal['2.0']
+    graph: AnySupportedCircuitGraph
+    capture_config: CaptureConfiguration
+    test_vectors: list[TestVector] | None = None
+    clock_config: dict[str, Any] | ClockConfiguration | None = None
+    inputs: dict[str, Annotated[Literal[0, 1] | StrictFloat, WrapValidator(preserve_json_literal((0, 1)))]] | None = None
+
+class AssignmentDefinitionV2(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'AssignmentDefinitionV2'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    schema_version: Literal['2.0']
+    assignment_id: AssignmentIdModel
+    title: Title
+    reference_design_graph: AnySupportedCircuitGraph | None = None
+    reference_topology_graph: ReferenceTopologyGraph | None = None
+    expected_component_set: ExpectedComponentSet | None = None
+    instructor_pin_profiles: InstructorPinProfiles | None = None
+    lab_endpoints: LabEndpoints
+    expected_behavior: ExpectedBehaviorModel | None = None
+    assessment_policy: AssessmentPolicy
+    component_resolution_mode: ComponentResolutionMode | None = None
+
+class AnySupportedAssignmentDefinition(ContractRootBoundary[AssignmentDefinition | AssignmentDefinitionV2]):
+    __contract_id__: ClassVar[str] = 'AnySupportedAssignmentDefinition'
+    __validation_profile__: ClassVar[str] = 'structural'
+    root: AssignmentDefinition | AssignmentDefinitionV2 = Field(..., title='AnySupportedAssignmentDefinition')
+
+class AssignmentAuthoringDocumentV2(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'AssignmentAuthoringDocumentV2'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    schema_version: Literal['2.0']
+    assignment_id: AssignmentIdModel
+    title: Title
+    owner_id: StrictStr = Field(..., min_length=1)
+    revision: StrictInt | StrictFloat = Field(..., ge=1, le=9007199254740991)
+    published: StrictBool
+    published_revision: PublishedRevision | None
+    feedback_policy: Literal['observed_only', 'detailed']
+    created_at: StrictInt | StrictFloat = Field(..., ge=0.0)
+    updated_at: StrictInt | StrictFloat = Field(..., ge=0.0)
+    definition: AnySupportedAssignmentDefinition
+
+class AssignmentAuthoringCreateV2(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'AssignmentAuthoringCreateV2'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    definition: AnySupportedAssignmentDefinition
+
+class AssignmentAuthoringSaveV2(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'AssignmentAuthoringSaveV2'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    base_revision: StrictInt | StrictFloat = Field(..., ge=1, le=9007199254740991)
+    definition: AnySupportedAssignmentDefinition
+
+class InstructorAssignmentDocumentV2(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'InstructorAssignmentDocumentV2'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    schema_version: Literal['1.0', '2.0']
+    assignment_id: AssignmentIdModel
+    title: Title
+    reference_design_graph: AnySupportedCircuitGraph | None = None
+    reference_topology_graph: ReferenceTopologyGraph | None = None
+    expected_component_set: ExpectedComponentSet | None = None
+    instructor_pin_profiles: InstructorPinProfiles | None = None
+    lab_endpoints: LabEndpoints
+    expected_behavior: ExpectedBehaviorModel | None = None
+    assessment_policy: AssessmentPolicy
+    component_resolution_mode: ComponentResolutionMode | None = None
+    document_kind: Literal['instructor']
+    owner_id: StrictStr = Field(..., min_length=1)
+    published: StrictBool
+    feedback_policy: Literal['observed_only', 'detailed']
+
+class AssignmentViewV2(ContractRootBoundary[InstructorAssignmentDocumentV2 | StudentAssignmentViewV2]):
+    __contract_id__: ClassVar[str] = 'AssignmentViewV2'
+    __validation_profile__: ClassVar[str] = 'structural'
+    root: InstructorAssignmentDocumentV2 | StudentAssignmentViewV2 = Field(..., title='AssignmentViewV2')

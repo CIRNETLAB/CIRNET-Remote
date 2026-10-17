@@ -10,10 +10,10 @@ export type PhysicalPreview = ExecutionPresentationResult
 export function createCircuitsApi(client: ApiClient) {
   return {
     async physicalPreview(circuit: CircuitGraph, signal?: AbortSignal): Promise<PhysicalPreview> {
-      return parseExecutionPresentationResult(await callOperation(client,'previewCircuit',{body:circuit,signal}))
+      return parseExecutionPresentationResult(await callOperation(client,circuit.schema_version==='1.2'?'previewCircuitV2':'previewCircuit',{body:circuit,signal}))
     },
     validate(circuit: CircuitGraph, signal?: AbortSignal): Promise<CircuitValidation> {
-      return callOperation(client,'validateCircuit',{body:circuit,signal,acceptStatuses:[422]})
+      return callOperation(client,circuit.schema_version==='1.2'?'validateCircuitV2':'validateCircuit',{body:circuit,signal,acceptStatuses:[422]})
     },
   }
 }

@@ -25,7 +25,8 @@ export function graphWireRouteContext(current: () => CircuitGraph | null): WireR
       if (!parsed || !module) return null
       const contact = parsed.kind === 'contact' ? getBreadboardContact(module.type, parsed.contactId) : null
       const port = parsed.kind === 'port' ? getDefinition(module.type)?.ports.find(item => item.id === parsed.portId) : null
-      const local = contact ? new Vector3(...contact.localPosition) : port ? portAnchor(module.type, port) : null
+      const canonical=current()?.modules.find(item=>item.id===module.id)
+      const local = contact ? new Vector3(...contact.localPosition) : port ? portAnchor(module.type, port, canonical,current()?.modules??[]) : null
       if (!local) return null
       const boardId = parsed.kind === 'contact' ? module.id : module.mount?.boardId
       return { endpoint: value, position: moduleLocalToWorld(local, module), ...(boardId ? { contactModuleId: boardId } : {}) }
@@ -35,7 +36,7 @@ export function graphWireRouteContext(current: () => CircuitGraph | null): WireR
 
 /** Invalid placement has no electrical endpoints. Project captured solved geometry only. */
 export function buildSelectionGhostRoutes(snapshot: SelectionClipboard, transformPoint: (point: Point3) => Point3): SelectionGhostRoute[] {
-  const graph: CircuitGraph = { schema_version: '1.1', circuit_id: '@clipboard-preview', modules: snapshot.sourceModules, connections: snapshot.sourceConnections ?? snapshot.connections }
+  const graph: CircuitGraph = { schema_version: '1.2', circuit_id: '@clipboard-preview', modules: snapshot.sourceModules, connections: snapshot.sourceConnections ?? snapshot.connections }
   const context = graphWireRouteContext(() => graph)
   const inputs = graph.connections.flatMap(wire => {
     const visual = readWireVisual(wire), route = solveWireRoute(wire, visual, context)

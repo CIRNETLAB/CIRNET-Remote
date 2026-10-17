@@ -170,6 +170,71 @@ export type ExperimentDocumentReference = {
  * via the `definition` "SignalDomain".
  */
 export type SignalDomain = 'DIGITAL' | 'ANALOG' | 'POWER' | 'GROUND' | 'CLOCK' | 'MIXED'
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "CircuitModuleV12".
+ */
+export type CircuitModuleV12 = {
+  id: string
+  type: string
+  position?: {
+    x?: number
+    y?: number
+    z?: number
+  }
+  rotation?: number
+  properties?: {
+    [k: string]: unknown
+  }
+  mount?: MountBinding | FlexibleMountV1
+  [k: string]: unknown
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "AnySupportedCircuitGraph".
+ */
+export type AnySupportedCircuitGraph = CircuitGraph | CircuitGraphV12
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "ExperimentDocumentReferenceV2".
+ */
+export type ExperimentDocumentReferenceV2 = {
+  schema_version: '2.0'
+  experiment_id: string
+  snapshot_id: string
+  source: 'INLINE_GRAPH' | 'SAVED_DOCUMENT' | 'ASSIGNMENT_CONTEXT'
+  execution_mode: 'simulation' | 'hardware'
+  circuit_id: string
+  graph_schema_version: ('1.0' | '1.1' | '1.2') | null
+  assignment_id?: string | null
+  document_id?: string
+  revision?: number
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "ExperimentCreateV2".
+ */
+export type ExperimentCreateV2 = {
+  station_id: string
+  assignment_id?: string
+  circuit_graph?: AnySupportedCircuitGraph
+  clock_config?: {} | ClockConfiguration
+  generator_config?: GeneratorConfiguration[]
+  capture_config?: CaptureConfiguration
+  test_vectors?: TestVector[]
+  circuit_document_id?: string
+  circuit_revision?: number
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "AnySupportedAssignmentDefinition".
+ */
+export type AnySupportedAssignmentDefinition = AssignmentDefinition | AssignmentDefinitionV2
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "AssignmentViewV2".
+ */
+export type AssignmentViewV2 = InstructorAssignmentDocumentV2 | StudentAssignmentViewV2
 
 export interface ContractMap {
   CircuitGraph: CircuitGraph
@@ -295,6 +360,35 @@ export interface ContractMap {
   AnalogCaptureHeader: AnalogCaptureHeader
   AnalogCaptureDescriptor: AnalogCaptureDescriptor
   NCAPLayout: NCAPLayout
+  BodyPose3D: BodyPose3D
+  FlexibleLeadIntent: FlexibleLeadIntent
+  FlexibleMountV1: FlexibleMountV1
+  MechanicalAuthoringProfileV1: MechanicalAuthoringProfileV1
+  ComponentDesignPropertiesV1: ComponentDesignPropertiesV1
+  FlexibleMechanicsCatalog: FlexibleMechanicsCatalog
+  CircuitGraphV12: CircuitGraphV12
+  CircuitModuleV12: CircuitModuleV12
+  AnySupportedCircuitGraph: AnySupportedCircuitGraph
+  CircuitSummaryV2: CircuitSummaryV2
+  CircuitDocumentV2: CircuitDocumentV2
+  CircuitPageV2: CircuitPageV2
+  CircuitCreateV2: CircuitCreateV2
+  CircuitSaveV2: CircuitSaveV2
+  ExperimentDocumentReferenceV2: ExperimentDocumentReferenceV2
+  ExperimentCreateV2: ExperimentCreateV2
+  SimulationRequestV2: SimulationRequestV2
+  MechanicalBodyExitV1: MechanicalBodyExitV1
+  AssignmentDefinitionV2: AssignmentDefinitionV2
+  AnySupportedAssignmentDefinition: AnySupportedAssignmentDefinition
+  AssignmentAuthoringSummaryV2: AssignmentAuthoringSummaryV2
+  AssignmentAuthoringDocumentV2: AssignmentAuthoringDocumentV2
+  AssignmentAuthoringPageV2: AssignmentAuthoringPageV2
+  AssignmentAuthoringCreateV2: AssignmentAuthoringCreateV2
+  AssignmentAuthoringSaveV2: AssignmentAuthoringSaveV2
+  AssignmentAuthoringPublicationV2: AssignmentAuthoringPublicationV2
+  InstructorAssignmentDocumentV2: InstructorAssignmentDocumentV2
+  StudentAssignmentViewV2: StudentAssignmentViewV2
+  AssignmentViewV2: AssignmentViewV2
 }
 /**
  * This interface was referenced by `ContractMap`'s JSON-Schema
@@ -1823,4 +1917,342 @@ export interface NCAPLayout {
       }
     }
   }
+}
+/**
+ * Authoritative body-center pose in board-local world units; rotation is degrees in fixed Euler YXZ order (Ry * Rx * Rz). No scale.
+ *
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "BodyPose3D".
+ */
+export interface BodyPose3D {
+  position: Point3
+  rotation: {
+    x: number
+    y: number
+    z: number
+  }
+}
+/**
+ * Ordered board-local world-space bend intent from body exit toward the named contact; endpoints derive from the descriptor and contact.
+ *
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "FlexibleLeadIntent".
+ */
+export interface FlexibleLeadIntent {
+  pinId: string
+  /**
+   * @maxItems 8
+   */
+  controlPoints: Point3[]
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "FlexibleMountV1".
+ */
+export interface FlexibleMountV1 {
+  kind: 'breadboard-flexible'
+  version: 1
+  boardId: string
+  partId: string
+  partRevision: number
+  packageId: string
+  packageRevision: number
+  mechanicalProfileId: string
+  mechanicalProfileRevision: number
+  geometryRevision: 1
+  bodyPose: BodyPose3D
+  /**
+   * @minItems 2
+   * @maxItems 2
+   */
+  contacts: PinContactBinding[]
+  /**
+   * @minItems 2
+   * @maxItems 2
+   */
+  leads: FlexibleLeadIntent[]
+}
+/**
+ * Versioned authoring limits and body exits. These are design geometry limits, not observed hardware ratings or safety evidence.
+ *
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "MechanicalAuthoringProfileV1".
+ */
+export interface MechanicalAuthoringProfileV1 {
+  id: string
+  revision: number
+  packageId: string
+  packageRevision: number
+  strategy: 'axial' | 'radial'
+  bodyOrigin: 'center'
+  /**
+   * @minItems 2
+   * @maxItems 2
+   */
+  pins: MechanicalBodyExitV1[]
+  minLeadLengthMm: number
+  maxLeadLengthMm: number
+  contactStubMm: number
+  exitStraightMm: number
+  minBendRadiusMm: number
+  bodyClearanceMm: number
+  maxBodyLiftMm: number
+  maxControlsPerLead: 8
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "MechanicalBodyExitV1".
+ */
+export interface MechanicalBodyExitV1 {
+  pinId: string
+  bodyExitMm: Point3
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "ComponentDesignPropertiesV1".
+ */
+export interface ComponentDesignPropertiesV1 {
+  resistanceOhms?: number
+  powerWatts?: number
+  tolerancePercent?: number
+  capacitanceFarads?: number
+  voltageRatingVolts?: number
+  capacitorType?: 'CERAMIC' | 'ELECTROLYTIC'
+  buzzerType?: 'PASSIVE' | 'ACTIVE'
+  transistorType?: 'NPN' | 'PNP'
+  forwardVoltageVolts?: number
+  leakageCurrentAmps?: number
+  zenerVoltageVolts?: number
+  maxCurrentAmps?: number
+  color?: string
+  [k: string]: unknown
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "FlexibleMechanicsCatalog".
+ */
+export interface FlexibleMechanicsCatalog {
+  schema_version: '1.0'
+  units: 'mm'
+  profiles: MechanicalAuthoringProfileV1[]
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "CircuitGraphV12".
+ */
+export interface CircuitGraphV12 {
+  schema_version: '1.2'
+  circuit_id: string
+  /**
+   * @maxItems 2000
+   */
+  modules: CircuitModuleV12[]
+  /**
+   * @maxItems 10000
+   */
+  connections: CircuitConnection[]
+  metadata?: {
+    [k: string]: unknown
+  }
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "CircuitSummaryV2".
+ */
+export interface CircuitSummaryV2 {
+  schema_version: '2.0'
+  document_id: string
+  project_id: string
+  owner_id: string
+  name: string
+  graph_schema_version: '1.0' | '1.1' | '1.2'
+  revision: number
+  created_at: number
+  updated_at: number
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "CircuitDocumentV2".
+ */
+export interface CircuitDocumentV2 {
+  schema_version: '2.0'
+  document_id: string
+  project_id: string
+  owner_id: string
+  name: string
+  graph_schema_version: '1.0' | '1.1' | '1.2'
+  revision: number
+  created_at: number
+  updated_at: number
+  graph: AnySupportedCircuitGraph
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "CircuitPageV2".
+ */
+export interface CircuitPageV2 {
+  schema_version: '2.0'
+  /**
+   * @maxItems 100
+   */
+  items: CircuitSummaryV2[]
+  next_cursor: string | null
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "CircuitCreateV2".
+ */
+export interface CircuitCreateV2 {
+  name: string
+  graph: AnySupportedCircuitGraph
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "CircuitSaveV2".
+ */
+export interface CircuitSaveV2 {
+  base_revision: number
+  name: string
+  graph: AnySupportedCircuitGraph
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "SimulationRequestV2".
+ */
+export interface SimulationRequestV2 {
+  schema_version: '2.0'
+  graph: AnySupportedCircuitGraph
+  capture_config: CaptureConfiguration
+  test_vectors?: TestVector[]
+  clock_config?:
+    | {
+        [k: string]: unknown
+      }
+    | ClockConfiguration
+  inputs?: {
+    [k: string]: 0 | 1
+  }
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "AssignmentDefinitionV2".
+ */
+export interface AssignmentDefinitionV2 {
+  schema_version: '2.0'
+  assignment_id: string
+  title: string
+  reference_design_graph?: AnySupportedCircuitGraph
+  reference_topology_graph?: DetectedTopologyGraph
+  expected_component_set?: ExpectedComponentSet
+  instructor_pin_profiles?: InstructorPinProfiles
+  lab_endpoints: LabEndpoints
+  expected_behavior?: ExpectedBehavior
+  assessment_policy: 'STRICT_TOPOLOGY' | 'FUNCTIONAL_ONLY' | 'TOPOLOGY_AND_FUNCTION'
+  component_resolution_mode?: 'AUTO_DISCOVERY' | 'INSTRUCTOR_PROFILE' | 'HYBRID'
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "AssignmentAuthoringSummaryV2".
+ */
+export interface AssignmentAuthoringSummaryV2 {
+  schema_version: '2.0'
+  assignment_id: string
+  title: string
+  owner_id: string
+  revision: number
+  published: boolean
+  published_revision: number | null
+  feedback_policy: 'observed_only' | 'detailed'
+  created_at: number
+  updated_at: number
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "AssignmentAuthoringDocumentV2".
+ */
+export interface AssignmentAuthoringDocumentV2 {
+  schema_version: '2.0'
+  assignment_id: string
+  title: string
+  owner_id: string
+  revision: number
+  published: boolean
+  published_revision: number | null
+  feedback_policy: 'observed_only' | 'detailed'
+  created_at: number
+  updated_at: number
+  definition: AnySupportedAssignmentDefinition
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "AssignmentAuthoringPageV2".
+ */
+export interface AssignmentAuthoringPageV2 {
+  schema_version: '2.0'
+  items: AssignmentAuthoringSummaryV2[]
+  next_cursor: string | null
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "AssignmentAuthoringCreateV2".
+ */
+export interface AssignmentAuthoringCreateV2 {
+  definition: AnySupportedAssignmentDefinition
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "AssignmentAuthoringSaveV2".
+ */
+export interface AssignmentAuthoringSaveV2 {
+  base_revision: number
+  definition: AnySupportedAssignmentDefinition
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "AssignmentAuthoringPublicationV2".
+ */
+export interface AssignmentAuthoringPublicationV2 {
+  base_revision: number
+  published: boolean
+  feedback_policy?: 'observed_only' | 'detailed'
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "InstructorAssignmentDocumentV2".
+ */
+export interface InstructorAssignmentDocumentV2 {
+  schema_version: '1.0' | '2.0'
+  assignment_id: string
+  title: string
+  reference_design_graph?: AnySupportedCircuitGraph
+  reference_topology_graph?: DetectedTopologyGraph
+  expected_component_set?: ExpectedComponentSet
+  instructor_pin_profiles?: InstructorPinProfiles
+  lab_endpoints: LabEndpoints
+  expected_behavior?: ExpectedBehavior
+  assessment_policy: 'STRICT_TOPOLOGY' | 'FUNCTIONAL_ONLY' | 'TOPOLOGY_AND_FUNCTION'
+  component_resolution_mode?: 'AUTO_DISCOVERY' | 'INSTRUCTOR_PROFILE' | 'HYBRID'
+  document_kind: 'instructor'
+  owner_id: string
+  published: boolean
+  feedback_policy: 'observed_only' | 'detailed'
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "StudentAssignmentViewV2".
+ */
+export interface StudentAssignmentViewV2 {
+  schema_version: '1.0' | '2.0'
+  assignment_id: string
+  title: string
+  assessment_policy: 'STRICT_TOPOLOGY' | 'FUNCTIONAL_ONLY' | 'TOPOLOGY_AND_FUNCTION'
+  lab_endpoints: {
+    endpoint_id: string
+    role: 'INPUT_SOURCE' | 'OUTPUT_SENSE' | 'CLOCK' | 'VCC' | 'GND' | 'GENERATOR' | 'SCOPE' | 'LOGIC_ANALYZER'
+    channel?: number
+    required?: boolean
+  }[]
+  document_kind: 'student'
+  published: true
+  feedback_policy: 'observed_only' | 'detailed'
 }

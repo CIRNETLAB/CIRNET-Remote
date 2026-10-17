@@ -359,6 +359,36 @@
           "version": "2.0"
         }
       },
+      "AnySupportedAssignmentDefinition": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/AssignmentDefinition"
+          },
+          {
+            "$ref": "#/components/schemas/AssignmentDefinitionV2"
+          }
+        ],
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/public/assignments/2.0/schema.json#/$defs/AnySupportedAssignmentDefinition",
+          "version": "2.0"
+        }
+      },
+      "AnySupportedCircuitGraph": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/CircuitGraph"
+          },
+          {
+            "$ref": "#/components/schemas/CircuitGraphV12"
+          }
+        ],
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/circuit/1.2/schema.json#/$defs/AnySupportedCircuitGraph",
+          "version": "1.2"
+        }
+      },
       "AssessmentPolicy": {
         "enum": [
           "STRICT_TOPOLOGY",
@@ -436,6 +466,23 @@
           "version": "1.0"
         }
       },
+      "AssignmentAuthoringCreateV2": {
+        "additionalProperties": false,
+        "properties": {
+          "definition": {
+            "$ref": "#/components/schemas/AnySupportedAssignmentDefinition"
+          }
+        },
+        "required": [
+          "definition"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/public/assignments/2.0/schema.json#/$defs/AssignmentAuthoringCreateV2",
+          "version": "2.0"
+        }
+      },
       "AssignmentAuthoringDocument": {
         "additionalProperties": false,
         "properties": {
@@ -510,6 +557,80 @@
           "version": "1.0"
         }
       },
+      "AssignmentAuthoringDocumentV2": {
+        "additionalProperties": false,
+        "properties": {
+          "assignment_id": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/assignment_id"
+          },
+          "created_at": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "definition": {
+            "$ref": "#/components/schemas/AnySupportedAssignmentDefinition"
+          },
+          "feedback_policy": {
+            "enum": [
+              "observed_only",
+              "detailed"
+            ]
+          },
+          "owner_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "published": {
+            "type": "boolean"
+          },
+          "published_revision": {
+            "anyOf": [
+              {
+                "maximum": 9007199254740991,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revision": {
+            "maximum": 9007199254740991,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "schema_version": {
+            "const": "2.0"
+          },
+          "title": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/title"
+          },
+          "updated_at": {
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "schema_version",
+          "assignment_id",
+          "title",
+          "owner_id",
+          "revision",
+          "published",
+          "published_revision",
+          "feedback_policy",
+          "created_at",
+          "updated_at",
+          "definition"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/public/assignments/2.0/schema.json#/$defs/AssignmentAuthoringDocumentV2",
+          "version": "2.0"
+        }
+      },
       "AssignmentAuthoringPage": {
         "additionalProperties": false,
         "properties": {
@@ -541,6 +662,37 @@
           "version": "1.0"
         }
       },
+      "AssignmentAuthoringPageV2": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AssignmentAuthoringSummaryV2"
+            },
+            "type": "array"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "schema_version": {
+            "const": "2.0"
+          }
+        },
+        "required": [
+          "schema_version",
+          "items",
+          "next_cursor"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/public/assignments/2.0/schema.json#/$defs/AssignmentAuthoringPageV2",
+          "version": "2.0"
+        }
+      },
       "AssignmentAuthoringPublication": {
         "additionalProperties": false,
         "properties": {
@@ -570,6 +722,35 @@
           "version": "1.0"
         }
       },
+      "AssignmentAuthoringPublicationV2": {
+        "additionalProperties": false,
+        "properties": {
+          "base_revision": {
+            "maximum": 9007199254740991,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "feedback_policy": {
+            "enum": [
+              "observed_only",
+              "detailed"
+            ]
+          },
+          "published": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "base_revision",
+          "published"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/public/assignments/2.0/schema.json#/$defs/AssignmentAuthoringPublicationV2",
+          "version": "2.0"
+        }
+      },
       "AssignmentAuthoringSave": {
         "additionalProperties": false,
         "properties": {
@@ -591,6 +772,29 @@
           "profile": "structural",
           "uri": "https://netcircuit.local/contracts/public/assignments/1.0/schema.json#/$defs/AssignmentAuthoringSave",
           "version": "1.0"
+        }
+      },
+      "AssignmentAuthoringSaveV2": {
+        "additionalProperties": false,
+        "properties": {
+          "base_revision": {
+            "maximum": 9007199254740991,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "definition": {
+            "$ref": "#/components/schemas/AnySupportedAssignmentDefinition"
+          }
+        },
+        "required": [
+          "base_revision",
+          "definition"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/public/assignments/2.0/schema.json#/$defs/AssignmentAuthoringSaveV2",
+          "version": "2.0"
         }
       },
       "AssignmentAuthoringSummary": {
@@ -661,6 +865,76 @@
           "profile": "structural",
           "uri": "https://netcircuit.local/contracts/public/assignments/1.0/schema.json#/$defs/AssignmentAuthoringSummary",
           "version": "1.0"
+        }
+      },
+      "AssignmentAuthoringSummaryV2": {
+        "additionalProperties": false,
+        "properties": {
+          "assignment_id": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/assignment_id"
+          },
+          "created_at": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "feedback_policy": {
+            "enum": [
+              "observed_only",
+              "detailed"
+            ]
+          },
+          "owner_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "published": {
+            "type": "boolean"
+          },
+          "published_revision": {
+            "anyOf": [
+              {
+                "maximum": 9007199254740991,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revision": {
+            "maximum": 9007199254740991,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "schema_version": {
+            "const": "2.0"
+          },
+          "title": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/title"
+          },
+          "updated_at": {
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "schema_version",
+          "assignment_id",
+          "title",
+          "owner_id",
+          "revision",
+          "published",
+          "published_revision",
+          "feedback_policy",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/public/assignments/2.0/schema.json#/$defs/AssignmentAuthoringSummaryV2",
+          "version": "2.0"
         }
       },
       "AssignmentDefinition": {
@@ -835,6 +1109,57 @@
           "version": "1.0"
         }
       },
+      "AssignmentDefinitionV2": {
+        "additionalProperties": false,
+        "properties": {
+          "assessment_policy": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/assessment_policy"
+          },
+          "assignment_id": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/assignment_id"
+          },
+          "component_resolution_mode": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/component_resolution_mode"
+          },
+          "expected_behavior": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/expected_behavior"
+          },
+          "expected_component_set": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/expected_component_set"
+          },
+          "instructor_pin_profiles": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/instructor_pin_profiles"
+          },
+          "lab_endpoints": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/lab_endpoints"
+          },
+          "reference_design_graph": {
+            "$ref": "#/components/schemas/AnySupportedCircuitGraph"
+          },
+          "reference_topology_graph": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/reference_topology_graph"
+          },
+          "schema_version": {
+            "const": "2.0"
+          },
+          "title": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/title"
+          }
+        },
+        "required": [
+          "schema_version",
+          "assignment_id",
+          "title",
+          "lab_endpoints",
+          "assessment_policy"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/public/assignments/2.0/schema.json#/$defs/AssignmentDefinitionV2",
+          "version": "2.0"
+        }
+      },
       "AssignmentId": {
         "minLength": 1,
         "title": "AssignmentId",
@@ -880,6 +1205,66 @@
         "x-netcircuit-contract": {
           "profile": "transport",
           "uri": "https://netcircuit.local/contracts/public/auth/1.0/schema.json#/$defs/AssignmentView",
+          "version": "1.0"
+        }
+      },
+      "AssignmentViewV2": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/InstructorAssignmentDocumentV2"
+          },
+          {
+            "$ref": "#/components/schemas/StudentAssignmentViewV2"
+          }
+        ],
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/public/assignments/2.0/schema.json#/$defs/AssignmentViewV2",
+          "version": "2.0"
+        }
+      },
+      "BodyPose3D": {
+        "additionalProperties": false,
+        "description": "Authoritative body-center pose in board-local world units; rotation is degrees in fixed Euler YXZ order (Ry * Rx * Rz). No scale.",
+        "properties": {
+          "position": {
+            "$ref": "#/components/schemas/Point3"
+          },
+          "rotation": {
+            "additionalProperties": false,
+            "properties": {
+              "x": {
+                "maximum": 360,
+                "minimum": -360,
+                "type": "number"
+              },
+              "y": {
+                "maximum": 360,
+                "minimum": -360,
+                "type": "number"
+              },
+              "z": {
+                "maximum": 360,
+                "minimum": -360,
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "position",
+          "rotation"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/design/flexible-mount/1.0/schema.json#/$defs/BodyPose3D",
           "version": "1.0"
         }
       },
@@ -1193,6 +1578,29 @@
           "version": "1.0"
         }
       },
+      "CircuitCreateV2": {
+        "additionalProperties": false,
+        "properties": {
+          "graph": {
+            "$ref": "#/components/schemas/AnySupportedCircuitGraph"
+          },
+          "name": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "graph"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/public/placement/2.0/schema.json#/$defs/CircuitCreateV2",
+          "version": "2.0"
+        }
+      },
       "CircuitDelete": {
         "additionalProperties": false,
         "properties": {
@@ -1312,6 +1720,77 @@
           "version": "1.0"
         }
       },
+      "CircuitDocumentV2": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "number"
+          },
+          "document_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "graph": {
+            "$ref": "#/components/schemas/AnySupportedCircuitGraph"
+          },
+          "graph_schema_version": {
+            "enum": [
+              "1.0",
+              "1.1",
+              "1.2"
+            ]
+          },
+          "name": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "owner_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "project_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "revision": {
+            "maximum": 9007199254740991,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "schema_version": {
+            "const": "2.0"
+          },
+          "updated_at": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "schema_version",
+          "document_id",
+          "project_id",
+          "owner_id",
+          "name",
+          "graph_schema_version",
+          "revision",
+          "created_at",
+          "updated_at",
+          "graph"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/public/placement/2.0/schema.json#/$defs/CircuitDocumentV2",
+          "version": "2.0"
+        }
+      },
       "CircuitGraph": {
         "additionalProperties": false,
         "properties": {
@@ -1352,6 +1831,47 @@
           "profile": "structural",
           "uri": "https://netcircuit.local/contracts/circuit/1.x/circuit.schema.json",
           "version": "1.0|1.1"
+        }
+      },
+      "CircuitGraphV12": {
+        "additionalProperties": false,
+        "properties": {
+          "circuit_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "connections": {
+            "items": {
+              "$ref": "#/components/schemas/CircuitConnection"
+            },
+            "maxItems": 10000,
+            "type": "array"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "modules": {
+            "items": {
+              "$ref": "#/components/schemas/CircuitModuleV12"
+            },
+            "maxItems": 2000,
+            "type": "array"
+          },
+          "schema_version": {
+            "const": "1.2"
+          }
+        },
+        "required": [
+          "schema_version",
+          "circuit_id",
+          "modules",
+          "connections"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/circuit/1.2/schema.json",
+          "version": "1.2"
         }
       },
       "CircuitModule": {
@@ -1427,6 +1947,159 @@
           "version": "1.0|1.1"
         }
       },
+      "CircuitModuleV12": {
+        "additionalProperties": true,
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "mount"
+              ]
+            },
+            "then": {
+              "not": {
+                "anyOf": [
+                  {
+                    "required": [
+                      "position"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "rotation"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "enum": [
+                    "GENERIC_RESISTOR",
+                    "GENERIC_CAPACITOR",
+                    "GENERIC_CAPACITOR_ELECTROLYTIC",
+                    "GENERIC_DIODE",
+                    "GENERIC_ZENER_DIODE",
+                    "GENERIC_LED",
+                    "GENERIC_BUZZER",
+                    "GENERIC_BJT"
+                  ]
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "properties": {
+                  "$ref": "#/components/schemas/ComponentDesignPropertiesV1"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "GENERIC_CAPACITOR"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "properties": {
+                  "properties": {
+                    "capacitorType": {
+                      "const": "CERAMIC"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "GENERIC_CAPACITOR_ELECTROLYTIC"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "properties": {
+                  "properties": {
+                    "capacitorType": {
+                      "const": "ELECTROLYTIC"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "mount": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/MountBinding"
+              },
+              {
+                "$ref": "#/components/schemas/FlexibleMountV1"
+              }
+            ]
+          },
+          "position": {
+            "additionalProperties": false,
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "z": {
+                "type": "number"
+              }
+            },
+            "type": "object"
+          },
+          "properties": {
+            "type": "object"
+          },
+          "rotation": {
+            "type": "number"
+          },
+          "type": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/circuit/1.2/schema.json#/$defs/CircuitModuleV12",
+          "version": "1.2"
+        }
+      },
       "CircuitPage": {
         "additionalProperties": false,
         "properties": {
@@ -1460,6 +2133,39 @@
           "version": "1.0"
         }
       },
+      "CircuitPageV2": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CircuitSummaryV2"
+            },
+            "maxItems": 100,
+            "type": "array"
+          },
+          "next_cursor": {
+            "maxLength": 256,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "schema_version": {
+            "const": "2.0"
+          }
+        },
+        "required": [
+          "schema_version",
+          "items",
+          "next_cursor"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/public/placement/2.0/schema.json#/$defs/CircuitPageV2",
+          "version": "2.0"
+        }
+      },
       "CircuitSave": {
         "additionalProperties": false,
         "properties": {
@@ -1487,6 +2193,35 @@
           "profile": "structural",
           "uri": "https://netcircuit.local/contracts/public/projects/1.0/schema.json#/$defs/CircuitSave",
           "version": "1.0"
+        }
+      },
+      "CircuitSaveV2": {
+        "additionalProperties": false,
+        "properties": {
+          "base_revision": {
+            "maximum": 9007199254740991,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "graph": {
+            "$ref": "#/components/schemas/AnySupportedCircuitGraph"
+          },
+          "name": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "base_revision",
+          "name",
+          "graph"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/public/placement/2.0/schema.json#/$defs/CircuitSaveV2",
+          "version": "2.0"
         }
       },
       "CircuitSummary": {
@@ -1550,6 +2285,73 @@
           "profile": "structural",
           "uri": "https://netcircuit.local/contracts/public/projects/1.0/schema.json#/$defs/CircuitSummary",
           "version": "1.0"
+        }
+      },
+      "CircuitSummaryV2": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "number"
+          },
+          "document_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "graph_schema_version": {
+            "enum": [
+              "1.0",
+              "1.1",
+              "1.2"
+            ]
+          },
+          "name": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "owner_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "project_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "revision": {
+            "maximum": 9007199254740991,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "schema_version": {
+            "const": "2.0"
+          },
+          "updated_at": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "schema_version",
+          "document_id",
+          "project_id",
+          "owner_id",
+          "name",
+          "graph_schema_version",
+          "revision",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/public/placement/2.0/schema.json#/$defs/CircuitSummaryV2",
+          "version": "2.0"
         }
       },
       "CircuitValidationResult": {
@@ -1635,6 +2437,85 @@
         "x-netcircuit-contract": {
           "profile": "transport",
           "uri": "https://netcircuit.local/contracts/physical-lab/1.0/lab.schema.json#/$defs/ClockConfiguration",
+          "version": "1.0"
+        }
+      },
+      "ComponentDesignPropertiesV1": {
+        "additionalProperties": true,
+        "properties": {
+          "buzzerType": {
+            "enum": [
+              "PASSIVE",
+              "ACTIVE"
+            ]
+          },
+          "capacitanceFarads": {
+            "maximum": 1,
+            "minimum": 1e-12,
+            "type": "number"
+          },
+          "capacitorType": {
+            "enum": [
+              "CERAMIC",
+              "ELECTROLYTIC"
+            ]
+          },
+          "color": {
+            "maxLength": 7,
+            "pattern": "^#[0-9a-fA-F]{6}$",
+            "type": "string"
+          },
+          "forwardVoltageVolts": {
+            "maximum": 1000,
+            "minimum": 0,
+            "type": "number"
+          },
+          "leakageCurrentAmps": {
+            "maximum": 100,
+            "minimum": 0,
+            "type": "number"
+          },
+          "maxCurrentAmps": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "powerWatts": {
+            "maximum": 100,
+            "minimum": 0.001,
+            "type": "number"
+          },
+          "resistanceOhms": {
+            "maximum": 1000000000,
+            "minimum": 0.1,
+            "type": "number"
+          },
+          "tolerancePercent": {
+            "maximum": 20,
+            "minimum": 0.001,
+            "type": "number"
+          },
+          "transistorType": {
+            "enum": [
+              "NPN",
+              "PNP"
+            ]
+          },
+          "voltageRatingVolts": {
+            "maximum": 10000,
+            "minimum": 0.1,
+            "type": "number"
+          },
+          "zenerVoltageVolts": {
+            "exclusiveMinimum": 0,
+            "maximum": 10000,
+            "type": "number"
+          }
+        },
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/design/flexible-mount/1.0/schema.json#/$defs/ComponentDesignPropertiesV1",
           "version": "1.0"
         }
       },
@@ -2260,6 +3141,91 @@
           "version": "1.0"
         }
       },
+      "ExperimentCreateV2": {
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "circuit_document_id"
+              ]
+            },
+            "then": {
+              "not": {
+                "required": [
+                  "circuit_graph"
+                ]
+              }
+            }
+          }
+        ],
+        "dependentRequired": {
+          "circuit_document_id": [
+            "circuit_revision"
+          ],
+          "circuit_revision": [
+            "circuit_document_id"
+          ]
+        },
+        "properties": {
+          "assignment_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "capture_config": {
+            "$ref": "#/components/schemas/CaptureConfiguration"
+          },
+          "circuit_document_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "circuit_graph": {
+            "$ref": "#/components/schemas/AnySupportedCircuitGraph"
+          },
+          "circuit_revision": {
+            "maximum": 9007199254740991,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "clock_config": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "type": "object"
+              },
+              {
+                "$ref": "#/components/schemas/ClockConfiguration"
+              }
+            ]
+          },
+          "generator_config": {
+            "items": {
+              "$ref": "#/components/schemas/GeneratorConfiguration"
+            },
+            "type": "array"
+          },
+          "station_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "test_vectors": {
+            "items": {
+              "$ref": "#/components/schemas/TestVector"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "station_id"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/public/placement/2.0/schema.json#/$defs/ExperimentCreateV2",
+          "version": "2.0"
+        }
+      },
       "ExperimentDocumentReference": {
         "additionalProperties": false,
         "allOf": [
@@ -2397,6 +3363,153 @@
           "profile": "structural",
           "uri": "https://netcircuit.local/contracts/public/projects/1.0/schema.json#/$defs/ExperimentDocumentReference",
           "version": "1.0"
+        }
+      },
+      "ExperimentDocumentReferenceV2": {
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "else": {
+              "not": {
+                "anyOf": [
+                  {
+                    "required": [
+                      "document_id"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "revision"
+                    ]
+                  }
+                ]
+              }
+            },
+            "if": {
+              "properties": {
+                "source": {
+                  "const": "SAVED_DOCUMENT"
+                }
+              },
+              "required": [
+                "source"
+              ]
+            },
+            "then": {
+              "required": [
+                "document_id",
+                "revision"
+              ]
+            }
+          },
+          {
+            "else": {
+              "properties": {
+                "graph_schema_version": {
+                  "enum": [
+                    "1.0",
+                    "1.1",
+                    "1.2"
+                  ]
+                }
+              }
+            },
+            "if": {
+              "properties": {
+                "source": {
+                  "const": "ASSIGNMENT_CONTEXT"
+                }
+              },
+              "required": [
+                "source"
+              ]
+            },
+            "then": {
+              "properties": {
+                "graph_schema_version": {
+                  "type": "null"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "assignment_id": {
+            "minLength": 1,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "circuit_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "document_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "execution_mode": {
+            "enum": [
+              "simulation",
+              "hardware"
+            ]
+          },
+          "experiment_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "graph_schema_version": {
+            "anyOf": [
+              {
+                "enum": [
+                  "1.0",
+                  "1.1",
+                  "1.2"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revision": {
+            "maximum": 9007199254740991,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "schema_version": {
+            "const": "2.0"
+          },
+          "snapshot_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "INLINE_GRAPH",
+              "SAVED_DOCUMENT",
+              "ASSIGNMENT_CONTEXT"
+            ]
+          }
+        },
+        "required": [
+          "schema_version",
+          "experiment_id",
+          "snapshot_id",
+          "source",
+          "execution_mode",
+          "circuit_id",
+          "graph_schema_version"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/public/placement/2.0/schema.json#/$defs/ExperimentDocumentReferenceV2",
+          "version": "2.0"
         }
       },
       "ExperimentHistoryPage": {
@@ -2741,6 +3854,143 @@
         "x-netcircuit-contract": {
           "profile": "transport",
           "uri": "https://netcircuit.local/contracts/public/api/1.0/schema.json#/$defs/FieldIssue",
+          "version": "1.0"
+        }
+      },
+      "FlexibleLeadIntent": {
+        "additionalProperties": false,
+        "description": "Ordered board-local world-space bend intent from body exit toward the named contact; endpoints derive from the descriptor and contact.",
+        "properties": {
+          "controlPoints": {
+            "items": {
+              "$ref": "#/components/schemas/Point3"
+            },
+            "maxItems": 8,
+            "type": "array"
+          },
+          "pinId": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "pinId",
+          "controlPoints"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/design/flexible-mount/1.0/schema.json#/$defs/FlexibleLeadIntent",
+          "version": "1.0"
+        }
+      },
+      "FlexibleMechanicsCatalog": {
+        "additionalProperties": false,
+        "properties": {
+          "profiles": {
+            "items": {
+              "$ref": "#/components/schemas/MechanicalAuthoringProfileV1"
+            },
+            "type": "array"
+          },
+          "schema_version": {
+            "const": "1.0"
+          },
+          "units": {
+            "const": "mm"
+          }
+        },
+        "required": [
+          "schema_version",
+          "units",
+          "profiles"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/design/flexible-mount/1.0/schema.json#/$defs/FlexibleMechanicsCatalog",
+          "version": "1.0"
+        }
+      },
+      "FlexibleMountV1": {
+        "additionalProperties": false,
+        "properties": {
+          "boardId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "bodyPose": {
+            "$ref": "#/components/schemas/BodyPose3D"
+          },
+          "contacts": {
+            "items": {
+              "$ref": "#/components/schemas/PinContactBinding"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "geometryRevision": {
+            "const": 1
+          },
+          "kind": {
+            "const": "breadboard-flexible"
+          },
+          "leads": {
+            "items": {
+              "$ref": "#/components/schemas/FlexibleLeadIntent"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "mechanicalProfileId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "mechanicalProfileRevision": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "packageId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "packageRevision": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "partId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "partRevision": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "version": {
+            "const": 1
+          }
+        },
+        "required": [
+          "kind",
+          "version",
+          "boardId",
+          "partId",
+          "partRevision",
+          "packageId",
+          "packageRevision",
+          "mechanicalProfileId",
+          "mechanicalProfileRevision",
+          "geometryRevision",
+          "bodyPose",
+          "contacts",
+          "leads"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/design/flexible-mount/1.0/schema.json#/$defs/FlexibleMountV1",
           "version": "1.0"
         }
       },
@@ -3181,6 +4431,80 @@
           "profile": "transport",
           "uri": "https://netcircuit.local/contracts/public/auth/1.0/schema.json#/$defs/InstructorAssignmentDocument",
           "version": "1.0"
+        }
+      },
+      "InstructorAssignmentDocumentV2": {
+        "additionalProperties": false,
+        "properties": {
+          "assessment_policy": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/assessment_policy"
+          },
+          "assignment_id": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/assignment_id"
+          },
+          "component_resolution_mode": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/component_resolution_mode"
+          },
+          "document_kind": {
+            "const": "instructor"
+          },
+          "expected_behavior": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/expected_behavior"
+          },
+          "expected_component_set": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/expected_component_set"
+          },
+          "feedback_policy": {
+            "enum": [
+              "observed_only",
+              "detailed"
+            ]
+          },
+          "instructor_pin_profiles": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/instructor_pin_profiles"
+          },
+          "lab_endpoints": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/lab_endpoints"
+          },
+          "owner_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "published": {
+            "type": "boolean"
+          },
+          "reference_design_graph": {
+            "$ref": "#/components/schemas/AnySupportedCircuitGraph"
+          },
+          "reference_topology_graph": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/reference_topology_graph"
+          },
+          "schema_version": {
+            "enum": [
+              "1.0",
+              "2.0"
+            ]
+          },
+          "title": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/title"
+          }
+        },
+        "required": [
+          "schema_version",
+          "assignment_id",
+          "title",
+          "lab_endpoints",
+          "assessment_policy",
+          "document_kind",
+          "owner_id",
+          "published",
+          "feedback_policy"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/public/assignments/2.0/schema.json#/$defs/InstructorAssignmentDocumentV2",
+          "version": "2.0"
         }
       },
       "InstructorPinProfile": {
@@ -3909,6 +5233,128 @@
         "x-netcircuit-contract": {
           "profile": "transport",
           "uri": "https://netcircuit.local/contracts/public/auth/1.0/schema.json#/$defs/LogoutRequest",
+          "version": "1.0"
+        }
+      },
+      "MechanicalAuthoringProfileV1": {
+        "additionalProperties": false,
+        "description": "Versioned authoring limits and body exits. These are design geometry limits, not observed hardware ratings or safety evidence.",
+        "properties": {
+          "bodyClearanceMm": {
+            "maximum": 10,
+            "minimum": 0,
+            "type": "number"
+          },
+          "bodyOrigin": {
+            "const": "center"
+          },
+          "contactStubMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 10,
+            "type": "number"
+          },
+          "exitStraightMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 10,
+            "type": "number"
+          },
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxBodyLiftMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "maxControlsPerLead": {
+            "const": 8
+          },
+          "maxLeadLengthMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "minBendRadiusMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 10,
+            "type": "number"
+          },
+          "minLeadLengthMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "packageId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "packageRevision": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "pins": {
+            "items": {
+              "$ref": "#/components/schemas/MechanicalBodyExitV1"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "revision": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "strategy": {
+            "enum": [
+              "axial",
+              "radial"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "packageId",
+          "packageRevision",
+          "strategy",
+          "bodyOrigin",
+          "pins",
+          "minLeadLengthMm",
+          "maxLeadLengthMm",
+          "contactStubMm",
+          "exitStraightMm",
+          "minBendRadiusMm",
+          "bodyClearanceMm",
+          "maxBodyLiftMm",
+          "maxControlsPerLead"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/design/flexible-mount/1.0/schema.json#/$defs/MechanicalAuthoringProfileV1",
+          "version": "1.0"
+        }
+      },
+      "MechanicalBodyExitV1": {
+        "additionalProperties": false,
+        "properties": {
+          "bodyExitMm": {
+            "$ref": "#/components/schemas/Point3"
+          },
+          "pinId": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "pinId",
+          "bodyExitMm"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/design/flexible-mount/1.0/schema.json#/$defs/MechanicalBodyExitV1",
           "version": "1.0"
         }
       },
@@ -5835,6 +7281,57 @@
         "title": "Role",
         "type": "string"
       },
+      "Rotation": {
+        "additionalProperties": false,
+        "properties": {
+          "x": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "ge": -360.0,
+            "le": 360.0,
+            "title": "X"
+          },
+          "y": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "ge": -360.0,
+            "le": 360.0,
+            "title": "Y"
+          },
+          "z": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "ge": -360.0,
+            "le": 360.0,
+            "title": "Z"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "title": "Rotation",
+        "type": "object"
+      },
       "SafetyEvidence": {
         "additionalProperties": false,
         "properties": {
@@ -6394,6 +7891,58 @@
           "version": "1.0"
         }
       },
+      "SimulationRequestV2": {
+        "additionalProperties": false,
+        "properties": {
+          "capture_config": {
+            "$ref": "#/components/schemas/CaptureConfiguration"
+          },
+          "clock_config": {
+            "anyOf": [
+              {
+                "maxProperties": 0,
+                "type": "object"
+              },
+              {
+                "$ref": "#/components/schemas/ClockConfiguration"
+              }
+            ]
+          },
+          "graph": {
+            "$ref": "#/components/schemas/AnySupportedCircuitGraph"
+          },
+          "inputs": {
+            "additionalProperties": {
+              "enum": [
+                0,
+                1
+              ],
+              "type": "integer"
+            },
+            "type": "object"
+          },
+          "schema_version": {
+            "const": "2.0"
+          },
+          "test_vectors": {
+            "items": {
+              "$ref": "#/components/schemas/TestVector"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "schema_version",
+          "graph",
+          "capture_config"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/public/placement/2.0/schema.json#/$defs/SimulationRequestV2",
+          "version": "2.0"
+        }
+      },
       "SimulationResult": {
         "additionalProperties": false,
         "properties": {
@@ -6579,6 +8128,79 @@
           "profile": "transport",
           "uri": "https://netcircuit.local/contracts/public/auth/1.0/schema.json#/$defs/StudentAssignmentView",
           "version": "1.0"
+        }
+      },
+      "StudentAssignmentViewV2": {
+        "additionalProperties": false,
+        "properties": {
+          "assessment_policy": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/assessment_policy"
+          },
+          "assignment_id": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/assignment_id"
+          },
+          "document_kind": {
+            "const": "student"
+          },
+          "feedback_policy": {
+            "enum": [
+              "observed_only",
+              "detailed"
+            ]
+          },
+          "lab_endpoints": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "channel": {
+                  "$ref": "#/components/schemas/LabEndpoint/properties/channel"
+                },
+                "endpoint_id": {
+                  "$ref": "#/components/schemas/LabEndpoint/properties/endpoint_id"
+                },
+                "required": {
+                  "$ref": "#/components/schemas/LabEndpoint/properties/required"
+                },
+                "role": {
+                  "$ref": "#/components/schemas/LabEndpoint/properties/role"
+                }
+              },
+              "required": [
+                "endpoint_id",
+                "role"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "published": {
+            "const": true
+          },
+          "schema_version": {
+            "enum": [
+              "1.0",
+              "2.0"
+            ]
+          },
+          "title": {
+            "$ref": "#/components/schemas/AssignmentDefinition/properties/title"
+          }
+        },
+        "required": [
+          "schema_version",
+          "assignment_id",
+          "title",
+          "assessment_policy",
+          "lab_endpoints",
+          "document_kind",
+          "published",
+          "feedback_policy"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/public/assignments/2.0/schema.json#/$defs/StudentAssignmentViewV2",
+          "version": "2.0"
         }
       },
       "TestVector": {
@@ -14710,6 +16332,2344 @@
           }
         ],
         "summary": "Queue"
+      }
+    },
+    "/api/v2/assignment-documents": {
+      "get": {
+        "operationId": "listAssignmentDocumentsV2",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 256,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssignmentAuthoringPageV2"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Access denied"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "State or operation conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Revision precondition failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Contract or configuration validation failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Admission limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unexpected service failure"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Required service unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Gateway timeout"
+          }
+        },
+        "security": [
+          {
+            "ServerSession": []
+          }
+        ],
+        "summary": "List Documents V2"
+      },
+      "post": {
+        "operationId": "createAssignmentDocumentV2",
+        "parameters": [
+          {
+            "description": "Exact configured HTTP origin. Browser fetch supplies this header; wildcard credentials are forbidden.",
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignmentAuthoringCreateV2"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssignmentAuthoringDocumentV2"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Access denied"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "State or operation conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Revision precondition failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Contract or configuration validation failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Admission limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unexpected service failure"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Required service unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Gateway timeout"
+          }
+        },
+        "security": [
+          {
+            "CsrfToken": [],
+            "ServerSession": []
+          }
+        ],
+        "summary": "Create Document V2"
+      }
+    },
+    "/api/v2/assignment-documents/{assignment_id}": {
+      "get": {
+        "operationId": "getAssignmentDocumentV2",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assignment_id",
+            "required": true,
+            "schema": {
+              "title": "Assignment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssignmentAuthoringDocumentV2"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Access denied"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "State or operation conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Revision precondition failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Contract or configuration validation failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Admission limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unexpected service failure"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Required service unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Gateway timeout"
+          }
+        },
+        "security": [
+          {
+            "ServerSession": []
+          }
+        ],
+        "summary": "Get Document V2"
+      },
+      "put": {
+        "operationId": "saveAssignmentDocumentV2",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assignment_id",
+            "required": true,
+            "schema": {
+              "title": "Assignment Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Exact configured HTTP origin. Browser fetch supplies this header; wildcard credentials are forbidden.",
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignmentAuthoringSaveV2"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssignmentAuthoringDocumentV2"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Access denied"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "State or operation conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Revision precondition failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Contract or configuration validation failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Admission limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unexpected service failure"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Required service unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Gateway timeout"
+          }
+        },
+        "security": [
+          {
+            "CsrfToken": [],
+            "ServerSession": []
+          }
+        ],
+        "summary": "Save Document V2"
+      }
+    },
+    "/api/v2/assignment-documents/{assignment_id}/publication": {
+      "patch": {
+        "operationId": "publishAssignmentDocumentV2",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assignment_id",
+            "required": true,
+            "schema": {
+              "title": "Assignment Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Exact configured HTTP origin. Browser fetch supplies this header; wildcard credentials are forbidden.",
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignmentAuthoringPublicationV2"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssignmentAuthoringDocumentV2"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Access denied"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "State or operation conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Revision precondition failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Contract or configuration validation failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Admission limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unexpected service failure"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Required service unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Gateway timeout"
+          }
+        },
+        "security": [
+          {
+            "CsrfToken": [],
+            "ServerSession": []
+          }
+        ],
+        "summary": "Publish Document V2"
+      }
+    },
+    "/api/v2/assignments": {
+      "get": {
+        "operationId": "listAssignmentsV2",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AssignmentViewV2"
+                  },
+                  "title": "Response Listassignmentsv2",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Access denied"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "State or operation conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Revision precondition failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Contract or configuration validation failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Admission limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unexpected service failure"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Required service unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Gateway timeout"
+          }
+        },
+        "security": [
+          {
+            "ServerSession": []
+          }
+        ],
+        "summary": "List Assignments V2"
+      }
+    },
+    "/api/v2/assignments/{assignment_id}": {
+      "get": {
+        "operationId": "getAssignmentV2",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assignment_id",
+            "required": true,
+            "schema": {
+              "title": "Assignment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssignmentViewV2"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Access denied"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "State or operation conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Revision precondition failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Contract or configuration validation failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Admission limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unexpected service failure"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Required service unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Gateway timeout"
+          }
+        },
+        "security": [
+          {
+            "ServerSession": []
+          }
+        ],
+        "summary": "Get Assignment V2"
+      }
+    },
+    "/api/v2/circuits/physical-preview": {
+      "post": {
+        "operationId": "previewCircuitV2",
+        "parameters": [
+          {
+            "description": "Exact configured HTTP origin. Browser fetch supplies this header; wildcard credentials are forbidden.",
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnySupportedCircuitGraph",
+                "title": "Payload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhysicalPreviewResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Access denied"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "State or operation conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Revision precondition failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CircuitValidationResult"
+                }
+              }
+            },
+            "description": "Versioned graph validation result"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Admission limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unexpected service failure"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Required service unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Gateway timeout"
+          }
+        },
+        "security": [
+          {
+            "CsrfToken": [],
+            "ServerSession": []
+          }
+        ],
+        "summary": "Preview Circuit"
+      }
+    },
+    "/api/v2/circuits/validate": {
+      "post": {
+        "operationId": "validateCircuitV2",
+        "parameters": [
+          {
+            "description": "Exact configured HTTP origin. Browser fetch supplies this header; wildcard credentials are forbidden.",
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnySupportedCircuitGraph",
+                "title": "Payload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CircuitValidationResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Access denied"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "State or operation conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Revision precondition failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CircuitValidationResult"
+                }
+              }
+            },
+            "description": "Versioned graph validation result"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Admission limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unexpected service failure"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Required service unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Gateway timeout"
+          }
+        },
+        "security": [
+          {
+            "CsrfToken": [],
+            "ServerSession": []
+          }
+        ],
+        "summary": "Validate Circuit"
+      }
+    },
+    "/api/v2/circuits/{document_id}": {
+      "get": {
+        "operationId": "getCircuitV2",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CircuitDocumentV2"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Access denied"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "State or operation conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Revision precondition failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Contract or configuration validation failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Admission limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unexpected service failure"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Required service unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Gateway timeout"
+          }
+        },
+        "security": [
+          {
+            "ServerSession": []
+          }
+        ],
+        "summary": "Get Circuit"
+      },
+      "put": {
+        "operationId": "saveCircuitV2",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "title": "Document Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Exact configured HTTP origin. Browser fetch supplies this header; wildcard credentials are forbidden.",
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CircuitSaveV2"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CircuitDocumentV2"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Access denied"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "State or operation conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Revision precondition failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Contract or configuration validation failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Admission limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unexpected service failure"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Required service unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Gateway timeout"
+          }
+        },
+        "security": [
+          {
+            "CsrfToken": [],
+            "ServerSession": []
+          }
+        ],
+        "summary": "Save Circuit"
+      }
+    },
+    "/api/v2/experiments": {
+      "post": {
+        "operationId": "createExperimentV2",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "description": "Exact configured HTTP origin. Browser fetch supplies this header; wildcard credentials are forbidden.",
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExperimentCreateV2"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentRecord"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Access denied"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "State or operation conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Revision precondition failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Contract or configuration validation failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Admission limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unexpected service failure"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Required service unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Gateway timeout"
+          }
+        },
+        "security": [
+          {
+            "CsrfToken": [],
+            "ServerSession": []
+          }
+        ],
+        "summary": "Create Experiment"
+      }
+    },
+    "/api/v2/experiments/{experiment_id}/document-reference": {
+      "get": {
+        "operationId": "getExperimentDocumentReferenceV2",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "experiment_id",
+            "required": true,
+            "schema": {
+              "title": "Experiment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentDocumentReferenceV2"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Access denied"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "State or operation conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Revision precondition failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Contract or configuration validation failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Admission limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unexpected service failure"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Required service unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Gateway timeout"
+          }
+        },
+        "security": [
+          {
+            "ServerSession": []
+          }
+        ],
+        "summary": "Document Reference"
+      }
+    },
+    "/api/v2/projects/{project_id}/circuits": {
+      "get": {
+        "operationId": "listCircuitsV2",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 256,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CircuitPageV2"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Access denied"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "State or operation conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Revision precondition failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Contract or configuration validation failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Admission limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unexpected service failure"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Required service unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Gateway timeout"
+          }
+        },
+        "security": [
+          {
+            "ServerSession": []
+          }
+        ],
+        "summary": "List Circuits"
+      },
+      "post": {
+        "operationId": "createCircuitV2",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Exact configured HTTP origin. Browser fetch supplies this header; wildcard credentials are forbidden.",
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CircuitCreateV2"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CircuitDocumentV2"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Access denied"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "State or operation conflict"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Revision precondition failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Contract or configuration validation failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Admission limit exceeded"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unexpected service failure"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Required service unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Gateway timeout"
+          }
+        },
+        "security": [
+          {
+            "CsrfToken": [],
+            "ServerSession": []
+          }
+        ],
+        "summary": "Create Circuit"
       }
     }
   }

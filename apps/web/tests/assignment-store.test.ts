@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {createPinia,setActivePinia} from 'pinia'
 import {configureApiClient} from '../src/services/api/client'
 import {useAssignmentStore} from '../src/stores/assignments'
+import {copyReferenceDesign} from '../src/application/assignments/authoring'
 import type {AssignmentDefinition,AssignmentAuthoringDocument} from '../src/contracts/generated/dto'
 const definition:AssignmentDefinition={schema_version:'1.0',assignment_id:'author-and',title:'Original',lab_endpoints:[],assessment_policy:'FUNCTIONAL_ONLY'}
 const document:AssignmentAuthoringDocument={schema_version:'1.0',assignment_id:'author-and',title:'Original',owner_id:'teacher',revision:1,published:false,published_revision:null,feedback_policy:'observed_only',created_at:1,updated_at:1,definition}
@@ -65,5 +66,26 @@ test('a new raw source edit made during a confirmed open survives its late respo
  configureApiClient({fetcher:async()=>loading?late.promise:Response.json(document)});await store.openDocument('author-and');loading=true
  const opening=store.openDocument('author-and',true);const text='{"private":"Typed during load"}';store.setDefinitionText(text)
  late.resolve(Response.json({...document,title:'Remote',revision:2,definition:{...definition,title:'Remote'}}));assert.equal(await opening,false);assert.equal(store.definitionText,text);assert.equal(store.draft!.title,'Original');assert.equal(store.dirty,true)
+ store.dispose()
+})
+
+test('flexible authoring selects v2 before mutation and retains its saved reference across reopen',async()=>{
+ const store=setup(),paths:string[]=[]
+ const flexible=copyReferenceDesign(definition,{schema_version:'1.2',circuit_id:'private-reference',modules:[],connections:[],metadata:{retain:true}})
+ let saved={...document,schema_version:'2.0',definition:flexible}
+ configureApiClient({fetcher:async(url,options)=>{
+  paths.push(`${options?.method} ${String(url)}`)
+  if(!String(url).includes('/v2/'))return Response.json({code:'UNSUPPORTED_DOCUMENT_VERSION',message:'Use the supported assignment endpoint.'},{status:422})
+  if(options?.method==='PATCH')saved={...saved,revision:2,published:true,published_revision:2}
+  return Response.json(saved)
+ }})
+ store.newDraft('author-and');store.editDefinition(flexible)
+ assert.equal(await store.saveDraft(),true);assert.equal(store.binding?.schema_version,'2.0')
+ assert.equal(await store.publish(true,'observed_only'),true)
+ assert.equal(await store.openDocument('author-and',true),true)
+ assert.deepEqual(store.draft,flexible)
+ assert.equal(store.binding?.published_revision,2)
+ assert.deepEqual(paths.map(value=>value.replace(/^.*?(\/api\/)/,'$1')),['/api/v2/assignment-documents','/api/v2/assignment-documents/author-and/publication','/api/assignment-documents/author-and','/api/v2/assignment-documents/author-and'])
+ assert.deepEqual(paths.map(value=>value.split(' ')[0]),['POST','PATCH','GET','GET'])
  store.dispose()
 })

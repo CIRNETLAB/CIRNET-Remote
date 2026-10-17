@@ -200,20 +200,20 @@ test('statusbar Run pins the clean saved revision and submits an inline immutabl
   const projects=useProjectStore(),circuit=useCircuitStore(),experiment=useExperimentStore(),station=useStationStore()
   await projects.setPrincipal('owner');station.setStations([target()]);station.setEventsConnected(true)
   const graph={schema_version:'1.0',circuit_id:'original-embedded-id',modules:[],connections:[],metadata:{preserved:true}}
-  const bodies:Record<string,unknown>[]=[]
+  const bodies:Record<string,unknown>[]=[],createPaths:string[]=[]
   configureApiClient({fetcher:async(url,options)=>{
     if(String(url)==='/api/circuits/d1')return Response.json({schema_version:'1.0',document_id:'d1',project_id:'p1',owner_id:'owner',name:'Saved',graph,graph_schema_version:'1.0',revision:7,created_at:1,updated_at:1})
-    if(String(url)==='/api/experiments')bodies.push(JSON.parse(String(options?.body)))
+    if(['/api/experiments','/api/v2/experiments'].includes(String(url))){createPaths.push(String(url));bodies.push(JSON.parse(String(options?.body)))}
     return Response.json(record(String(url).endsWith('/run')?'QUEUED':'CREATED',String(url).endsWith('/run')?2:0))
   }})
   assert.equal(await projects.openDocument('d1',true),true)
   const mounted=mountSfc(await loadSfc('components/workbench/SimulationStatusBar.vue'),pinia)
   try {
     await (mounted.find('button','aria-label','Run').props.onClick as ()=>Promise<unknown>)()
-    assert.equal(bodies[0]!.circuit_document_id,'d1');assert.equal(bodies[0]!.circuit_revision,7);assert.equal('circuit_graph'in bodies[0]!,false)
+    assert.equal(createPaths[0],'/api/v2/experiments');assert.equal(bodies[0]!.circuit_document_id,'d1');assert.equal(bodies[0]!.circuit_revision,7);assert.equal('circuit_graph'in bodies[0]!,false)
     experiment.cancelPending();experiment.$reset();circuit.renameCurrent('Edited local');await nextTick()
     await (mounted.find('button','aria-label','Run').props.onClick as ()=>Promise<unknown>)()
-    assert.deepEqual(bodies[1]!.circuit_graph,graph);assert.equal('circuit_document_id'in bodies[1]!,false)
+    assert.deepEqual(createPaths,['/api/v2/experiments','/api/experiments']);assert.deepEqual(bodies[1]!.circuit_graph,graph);assert.equal('circuit_document_id'in bodies[1]!,false)
     circuit.graph!.metadata!.preserved=false
     assert.equal((bodies[1]!.circuit_graph as typeof graph).metadata.preserved,true)
   }finally{mounted.app.unmount();projects.dispose()}

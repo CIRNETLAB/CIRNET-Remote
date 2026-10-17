@@ -113,26 +113,32 @@ def validate_semantics(name, value, profile="transport", *, _path=()):
     """Check relationships after shape validation; preserve the original data."""
     path = list(_path)
     _finite(value, path, profile)
-    if name in ('CircuitGraph','CircuitModule','SimulationRequest'):
+    if name in ('CircuitGraph','CircuitGraphV12','AnySupportedCircuitGraph','CircuitModule','CircuitModuleV12','SimulationRequest','SimulationRequestV2'):
         from .signal_domains import validate_signal_domains
-        validate_signal_domains(name,value,profile,_path=_path)
+        signal_name='CircuitGraph' if name in ('CircuitGraphV12','AnySupportedCircuitGraph') else 'CircuitModule' if name=='CircuitModuleV12' else 'SimulationRequest' if name=='SimulationRequestV2' else name
+        validate_signal_domains(signal_name,value,profile,_path=_path)
     if name == "MemoryImage" and len(value["data"]) != value["depth"]:
         _fail("MEMORY_DEPTH_MISMATCH", [*path, "data"], "Memory image data length differs from depth", profile)
-    if name in ("AssignmentAuthoringCreate", "AssignmentAuthoringSave", "AssignmentAuthoringDocument"):
-        validate_semantics("AssignmentDefinition", value["definition"], profile, _path=(*path, "definition"))
-    if name in ("AssignmentAuthoringSummary", "AssignmentAuthoringDocument"):
+    if name in ("AssignmentAuthoringCreate", "AssignmentAuthoringSave", "AssignmentAuthoringDocument", "AssignmentAuthoringCreateV2", "AssignmentAuthoringSaveV2", "AssignmentAuthoringDocumentV2"):
+        validate_semantics("AssignmentDefinitionV2" if value["definition"]["schema_version"]=='2.0' else "AssignmentDefinition", value["definition"], profile, _path=(*path, "definition"))
+    if name in ("AssignmentAuthoringSummary", "AssignmentAuthoringDocument", "AssignmentAuthoringSummaryV2", "AssignmentAuthoringDocumentV2"):
         selected = value["published_revision"]
         if (selected is None) == value["published"] or selected is not None and selected > value["revision"]:
             _fail("ASSIGNMENT_PUBLICATION_MISMATCH", [*path, "published_revision"], "published revision is inconsistent with the authoring head", profile)
-        if name == "AssignmentAuthoringDocument":
+        if name in ("AssignmentAuthoringDocument", "AssignmentAuthoringDocumentV2"):
             if value["assignment_id"] != value["definition"]["assignment_id"]:
                 _fail("ASSIGNMENT_ID_MISMATCH", [*path, "definition", "assignment_id"], "assignment identity differs from its definition", profile)
             if value["title"] != value["definition"]["title"]:
                 _fail("ASSIGNMENT_TITLE_MISMATCH", [*path, "definition", "title"], "assignment title differs from its definition", profile)
-    if name == "AssignmentAuthoringPage":
+    if name in ("AssignmentAuthoringPage", "AssignmentAuthoringPageV2"):
         for index, item in enumerate(value["items"]):
-            validate_semantics("AssignmentAuthoringSummary", item, profile, _path=(*path, "items", index))
-    if name == "AssignmentDefinition":
+            validate_semantics("AssignmentAuthoringSummaryV2" if name.endswith('V2') else "AssignmentAuthoringSummary", item, profile, _path=(*path, "items", index))
+    if name == 'AnySupportedAssignmentDefinition':
+        validate_semantics('AssignmentDefinitionV2' if value['schema_version']=='2.0' else 'AssignmentDefinition', value, profile, _path=_path)
+    if name in ('AssignmentViewV2','InstructorAssignmentDocumentV2') and value['document_kind']=='instructor':
+        definition={key:item for key,item in value.items() if key not in ('document_kind','owner_id','published','feedback_policy')}
+        validate_semantics('AssignmentDefinitionV2' if value['schema_version']=='2.0' else 'AssignmentDefinition',definition,profile,_path=_path)
+    if name in ("AssignmentDefinition", "AssignmentDefinitionV2"):
         _unique(value["lab_endpoints"], "endpoint_id", [*path, "lab_endpoints"], profile)
         for index, endpoint in enumerate(value["lab_endpoints"]):
             _endpoint(endpoint, [*path, "lab_endpoints", index], profile)
@@ -142,6 +148,9 @@ def validate_semantics(name, value, profile="transport", *, _path=()):
         if "reference_design_graph" in value:
             from contracts.design_validation import validate_design_graph
             try:
+                if name=='AssignmentDefinition':
+                    from contracts.registry import validate_contract
+                    validate_contract('CircuitGraph',value['reference_design_graph'],profile=profile)
                 validate_design_graph(value["reference_design_graph"])
             except ValidationError as error:
                 issues = validation_issues(error, profile)
@@ -149,6 +158,8 @@ def validate_semantics(name, value, profile="transport", *, _path=()):
                     issue["path"] = _pointer([*path, "reference_design_graph"]) + issue["path"]
                 error.issues = issues
                 raise
+            except ValueError as error:
+                _fail('INVALID_REFERENCE_DESIGN', [*path, 'reference_design_graph'], str(error), profile)
         _unique(value.get("instructor_pin_profiles", []), "profile_id", [*path, "instructor_pin_profiles"], profile)
         for index, entry in enumerate(value.get("instructor_pin_profiles", [])):
             _unique(entry["pins"], "pin_id", [*path, "instructor_pin_profiles", index, "pins"], profile)

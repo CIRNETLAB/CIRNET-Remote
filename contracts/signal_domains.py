@@ -71,7 +71,7 @@ def port_domain(module,port):
 def classify_graph(graph):
     """Classify selection separately from whether the selected engine exists."""
     from .registry import validate_contract
-    validate_contract('CircuitGraph',graph,profile='structural')
+    validate_contract('AnySupportedCircuitGraph',graph,profile='structural')
     domains=set(); unsupported=[]; digital=False; dc=False; analog=False; mixed=False; unknown=False
     for index,module in enumerate(graph['modules']):
         _namespace(module,['modules',index],'transport',execution=True)

@@ -2,6 +2,7 @@
 import argparse
 import json
 import math
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -69,7 +70,18 @@ def validate_parts(registry):
             if parameter['kind'] == 'boolean':
                 if type(value) is not bool:
                     raise ValueError('Boolean property default is required')
-            elif type(value) not in (int, float) or not math.isfinite(value) or (parameter['kind'] == 'integer' and int(value) != value) or value < parameter.get('min', -math.inf) or value > parameter.get('max', math.inf):
+            elif parameter['kind'] in {'enum', 'string', 'color'}:
+                options = parameter.get('options', [])
+                if options and (any(type(option.get('value')) is not str or type(option.get('label')) is not str for option in options) or len({option['value'] for option in options}) != len(options)):
+                    raise ValueError('Property options require unique string values and labels')
+                if type(value) is not str or len(value) > parameter.get('maxLength', 256) or (parameter['kind'] == 'enum' and (not options or value not in {option['value'] for option in options})):
+                    raise ValueError('String property default must match its declared options and bounds')
+                pattern = parameter.get('pattern', '^#[0-9a-fA-F]{6}$' if parameter['kind'] == 'color' else None)
+                if pattern and re.fullmatch(pattern, value) is None:
+                    raise ValueError('String property default must match its declared pattern')
+            elif parameter['kind'] not in {'number', 'integer'}:
+                raise ValueError('Unknown property kind')
+            elif type(value) not in (int, float) or not math.isfinite(value) or (parameter['kind'] == 'integer' and int(value) != value) or value < parameter.get('min', -math.inf) or value > parameter.get('max', math.inf) or (parameter.get('exclusiveMin') and value <= parameter.get('min', -math.inf)):
                 raise ValueError('Property default must be finite and within its declared range')
         simulation = part.get('simulation')
         if simulation is None:
@@ -143,12 +155,14 @@ def main():
     registry = json.loads((ROOT / 'device-library/parts/physical-parts.json').read_text(encoding='utf-8'))
     generated = generate_catalog(catalog, registry)
     domains=generate_domain_catalog(catalog,registry)
+    mechanics=json.loads((ROOT / 'contracts/design-models/flexible-mechanics.json').read_text(encoding='utf-8'))
     outputs = [(ROOT / 'apps/web/src/data/editorCatalog.json', generated),
                (ROOT / 'apps/web/src/data/editorParts.json', generate_editor_parts(registry)),
                (ROOT / 'apps/web/src/data/physicalParts.json', registry),
                (ROOT / 'contracts/design-models/physical-parts.v1.json', registry),
                (ROOT / 'contracts/design-models/signal-port-catalog.json', domains),
-               (ROOT / 'apps/web/src/data/signalPortCatalog.json', domains)]
+               (ROOT / 'apps/web/src/data/signalPortCatalog.json', domains),
+               (ROOT / 'apps/web/src/data/flexibleMechanics.json', mechanics)]
     for target, data in outputs:
         if args.check:
             if not target.exists() or json.loads(target.read_text(encoding='utf-8')) != data:

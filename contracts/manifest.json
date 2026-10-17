@@ -3058,6 +3058,718 @@
       "validator_profile": "specialized",
       "generated_artifacts": [],
       "compatibility_policy": "Immutable supported wire anchors; new endpoints/versions may be added while retained anchors must remain compatible."
+    },
+    {
+      "id": "BodyPose3D",
+      "kind": "schema",
+      "path": "contracts/design-models/flexible-mount.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/flexible-mount/1.0/schema.json",
+      "pointer": "/$defs/BodyPose3D",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Versioned component placement contract",
+      "consumers": [
+        "api",
+        "web",
+        "simulator",
+        "hardware-service"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Additive placement version; preserve legacy graph 1.0/1.1 and rigid mount v1 without silent migration."
+    },
+    {
+      "id": "FlexibleLeadIntent",
+      "kind": "schema",
+      "path": "contracts/design-models/flexible-mount.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/flexible-mount/1.0/schema.json",
+      "pointer": "/$defs/FlexibleLeadIntent",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Versioned component placement contract",
+      "consumers": [
+        "api",
+        "web",
+        "simulator",
+        "hardware-service"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Additive placement version; preserve legacy graph 1.0/1.1 and rigid mount v1 without silent migration."
+    },
+    {
+      "id": "FlexibleMountV1",
+      "kind": "schema",
+      "path": "contracts/design-models/flexible-mount.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/flexible-mount/1.0/schema.json",
+      "pointer": "/$defs/FlexibleMountV1",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Versioned component placement contract",
+      "consumers": [
+        "api",
+        "web",
+        "simulator",
+        "hardware-service"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Additive placement version; preserve legacy graph 1.0/1.1 and rigid mount v1 without silent migration."
+    },
+    {
+      "id": "MechanicalAuthoringProfileV1",
+      "kind": "schema",
+      "path": "contracts/design-models/flexible-mount.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/flexible-mount/1.0/schema.json",
+      "pointer": "/$defs/MechanicalAuthoringProfileV1",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Versioned component placement contract",
+      "consumers": [
+        "api",
+        "web",
+        "simulator",
+        "hardware-service"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Additive placement version; preserve legacy graph 1.0/1.1 and rigid mount v1 without silent migration."
+    },
+    {
+      "id": "ComponentDesignPropertiesV1",
+      "kind": "schema",
+      "path": "contracts/design-models/flexible-mount.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/flexible-mount/1.0/schema.json",
+      "pointer": "/$defs/ComponentDesignPropertiesV1",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Versioned component placement contract",
+      "consumers": [
+        "api",
+        "web",
+        "simulator",
+        "hardware-service"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Additive placement version; preserve legacy graph 1.0/1.1 and rigid mount v1 without silent migration."
+    },
+    {
+      "id": "FlexibleMechanicsCatalog",
+      "kind": "schema",
+      "path": "contracts/design-models/flexible-mount.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/flexible-mount/1.0/schema.json",
+      "pointer": "/$defs/FlexibleMechanicsCatalog",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Versioned component placement contract",
+      "consumers": [
+        "api",
+        "web",
+        "simulator",
+        "hardware-service"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Additive placement version; preserve legacy graph 1.0/1.1 and rigid mount v1 without silent migration."
+    },
+    {
+      "id": "CircuitGraphV12",
+      "kind": "schema",
+      "path": "contracts/circuit-schema/circuit-v1.2.schema.json",
+      "uri": "https://netcircuit.local/contracts/circuit/1.2/schema.json",
+      "pointer": "",
+      "version": "1.2",
+      "visibility": "public",
+      "producer": "Versioned component placement contract",
+      "consumers": [
+        "api",
+        "web",
+        "simulator",
+        "hardware-service"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Additive placement version; preserve legacy graph 1.0/1.1 and rigid mount v1 without silent migration."
+    },
+    {
+      "id": "CircuitModuleV12",
+      "kind": "schema",
+      "path": "contracts/circuit-schema/circuit-v1.2.schema.json",
+      "uri": "https://netcircuit.local/contracts/circuit/1.2/schema.json",
+      "pointer": "/$defs/CircuitModuleV12",
+      "version": "1.2",
+      "visibility": "public",
+      "producer": "Versioned component placement contract",
+      "consumers": [
+        "api",
+        "web",
+        "simulator",
+        "hardware-service"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Additive placement version; preserve legacy graph 1.0/1.1 and rigid mount v1 without silent migration."
+    },
+    {
+      "id": "AnySupportedCircuitGraph",
+      "kind": "schema",
+      "path": "contracts/circuit-schema/circuit-v1.2.schema.json",
+      "uri": "https://netcircuit.local/contracts/circuit/1.2/schema.json",
+      "pointer": "/$defs/AnySupportedCircuitGraph",
+      "version": "1.2",
+      "visibility": "public",
+      "producer": "Versioned component placement contract",
+      "consumers": [
+        "api",
+        "web",
+        "simulator",
+        "hardware-service"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Additive placement version; preserve legacy graph 1.0/1.1 and rigid mount v1 without silent migration."
+    },
+    {
+      "id": "FlexibleMechanicsData",
+      "kind": "data",
+      "path": "contracts/design-models/flexible-mechanics.json",
+      "uri": "https://netcircuit.local/contracts/design/flexible-mechanics/1.0/catalog.json",
+      "pointer": "",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Versioned component placement contract",
+      "consumers": [
+        "api",
+        "web",
+        "simulator",
+        "hardware-service"
+      ],
+      "validator_profile": "specialized",
+      "generated_artifacts": [],
+      "compatibility_policy": "Additive placement version; preserve legacy graph 1.0/1.1 and rigid mount v1 without silent migration."
+    },
+    {
+      "id": "CircuitSummaryV2",
+      "kind": "schema",
+      "path": "contracts/public/placement.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/placement/2.0/schema.json",
+      "pointer": "/$defs/CircuitSummaryV2",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "Explicit graph 1.2 application boundary",
+      "consumers": [
+        "api",
+        "web",
+        "simulator"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Opt-in new routes; legacy 1.0/1.1 wire shapes remain unchanged."
+    },
+    {
+      "id": "CircuitDocumentV2",
+      "kind": "schema",
+      "path": "contracts/public/placement.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/placement/2.0/schema.json",
+      "pointer": "/$defs/CircuitDocumentV2",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "Explicit graph 1.2 application boundary",
+      "consumers": [
+        "api",
+        "web",
+        "simulator"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Opt-in new routes; legacy 1.0/1.1 wire shapes remain unchanged."
+    },
+    {
+      "id": "CircuitPageV2",
+      "kind": "schema",
+      "path": "contracts/public/placement.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/placement/2.0/schema.json",
+      "pointer": "/$defs/CircuitPageV2",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "Explicit graph 1.2 application boundary",
+      "consumers": [
+        "api",
+        "web",
+        "simulator"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Opt-in new routes; legacy 1.0/1.1 wire shapes remain unchanged."
+    },
+    {
+      "id": "CircuitCreateV2",
+      "kind": "schema",
+      "path": "contracts/public/placement.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/placement/2.0/schema.json",
+      "pointer": "/$defs/CircuitCreateV2",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "Explicit graph 1.2 application boundary",
+      "consumers": [
+        "api",
+        "web",
+        "simulator"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Opt-in new routes; legacy 1.0/1.1 wire shapes remain unchanged."
+    },
+    {
+      "id": "CircuitSaveV2",
+      "kind": "schema",
+      "path": "contracts/public/placement.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/placement/2.0/schema.json",
+      "pointer": "/$defs/CircuitSaveV2",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "Explicit graph 1.2 application boundary",
+      "consumers": [
+        "api",
+        "web",
+        "simulator"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Opt-in new routes; legacy 1.0/1.1 wire shapes remain unchanged."
+    },
+    {
+      "id": "ExperimentDocumentReferenceV2",
+      "kind": "schema",
+      "path": "contracts/public/placement.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/placement/2.0/schema.json",
+      "pointer": "/$defs/ExperimentDocumentReferenceV2",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "Explicit graph 1.2 application boundary",
+      "consumers": [
+        "api",
+        "web",
+        "simulator"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Opt-in new routes; legacy 1.0/1.1 wire shapes remain unchanged."
+    },
+    {
+      "id": "ExperimentCreateV2",
+      "kind": "schema",
+      "path": "contracts/public/placement.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/placement/2.0/schema.json",
+      "pointer": "/$defs/ExperimentCreateV2",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "Explicit graph 1.2 application boundary",
+      "consumers": [
+        "api",
+        "web",
+        "simulator"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Opt-in new routes; legacy 1.0/1.1 wire shapes remain unchanged."
+    },
+    {
+      "id": "SimulationRequestV2",
+      "kind": "schema",
+      "path": "contracts/public/placement.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/placement/2.0/schema.json",
+      "pointer": "/$defs/SimulationRequestV2",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "Explicit graph 1.2 application boundary",
+      "consumers": [
+        "api",
+        "web",
+        "simulator"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Opt-in new routes; legacy 1.0/1.1 wire shapes remain unchanged."
+    },
+    {
+      "id": "MechanicalBodyExitV1",
+      "kind": "schema",
+      "path": "contracts/design-models/flexible-mount.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/flexible-mount/1.0/schema.json",
+      "pointer": "/$defs/MechanicalBodyExitV1",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Component placement authoring",
+      "consumers": [
+        "api",
+        "web",
+        "simulator"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Additive version; retain legacy data and explicit migration."
+    },
+    {
+      "id": "FlexibleMountingParity",
+      "kind": "data",
+      "path": "contracts/design-models/fixtures/flexible-mounting-parity.json",
+      "uri": "https://netcircuit.local/contracts/design/flexible-mount/1.0/parity.json",
+      "pointer": "",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Component placement authoring",
+      "consumers": [
+        "api",
+        "web",
+        "simulator"
+      ],
+      "validator_profile": "specialized",
+      "generated_artifacts": [],
+      "compatibility_policy": "Additive version; retain legacy data and explicit migration."
+    },
+    {
+      "id": "AssignmentDefinitionV2",
+      "kind": "schema",
+      "path": "contracts/public/assignments-v2.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/assignments/2.0/schema.json",
+      "pointer": "/$defs/AssignmentDefinitionV2",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "API assignment authoring service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Opt-in assignment reference 2.0 accepts CircuitGraph 1.2. Legacy assignment wires remain unchanged; immutable revisions, publication and disclosure authority are shared."
+    },
+    {
+      "id": "AnySupportedAssignmentDefinition",
+      "kind": "schema",
+      "path": "contracts/public/assignments-v2.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/assignments/2.0/schema.json",
+      "pointer": "/$defs/AnySupportedAssignmentDefinition",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "API assignment authoring service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Opt-in assignment reference 2.0 accepts CircuitGraph 1.2. Legacy assignment wires remain unchanged; immutable revisions, publication and disclosure authority are shared."
+    },
+    {
+      "id": "AssignmentAuthoringSummaryV2",
+      "kind": "schema",
+      "path": "contracts/public/assignments-v2.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/assignments/2.0/schema.json",
+      "pointer": "/$defs/AssignmentAuthoringSummaryV2",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "API assignment authoring service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Opt-in assignment reference 2.0 accepts CircuitGraph 1.2. Legacy assignment wires remain unchanged; immutable revisions, publication and disclosure authority are shared."
+    },
+    {
+      "id": "AssignmentAuthoringDocumentV2",
+      "kind": "schema",
+      "path": "contracts/public/assignments-v2.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/assignments/2.0/schema.json",
+      "pointer": "/$defs/AssignmentAuthoringDocumentV2",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "API assignment authoring service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Opt-in assignment reference 2.0 accepts CircuitGraph 1.2. Legacy assignment wires remain unchanged; immutable revisions, publication and disclosure authority are shared."
+    },
+    {
+      "id": "AssignmentAuthoringPageV2",
+      "kind": "schema",
+      "path": "contracts/public/assignments-v2.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/assignments/2.0/schema.json",
+      "pointer": "/$defs/AssignmentAuthoringPageV2",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "API assignment authoring service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Opt-in assignment reference 2.0 accepts CircuitGraph 1.2. Legacy assignment wires remain unchanged; immutable revisions, publication and disclosure authority are shared."
+    },
+    {
+      "id": "AssignmentAuthoringCreateV2",
+      "kind": "schema",
+      "path": "contracts/public/assignments-v2.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/assignments/2.0/schema.json",
+      "pointer": "/$defs/AssignmentAuthoringCreateV2",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "API assignment authoring service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Opt-in assignment reference 2.0 accepts CircuitGraph 1.2. Legacy assignment wires remain unchanged; immutable revisions, publication and disclosure authority are shared."
+    },
+    {
+      "id": "AssignmentAuthoringSaveV2",
+      "kind": "schema",
+      "path": "contracts/public/assignments-v2.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/assignments/2.0/schema.json",
+      "pointer": "/$defs/AssignmentAuthoringSaveV2",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "API assignment authoring service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Opt-in assignment reference 2.0 accepts CircuitGraph 1.2. Legacy assignment wires remain unchanged; immutable revisions, publication and disclosure authority are shared."
+    },
+    {
+      "id": "AssignmentAuthoringPublicationV2",
+      "kind": "schema",
+      "path": "contracts/public/assignments-v2.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/assignments/2.0/schema.json",
+      "pointer": "/$defs/AssignmentAuthoringPublicationV2",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "API assignment authoring service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Opt-in assignment reference 2.0 accepts CircuitGraph 1.2. Legacy assignment wires remain unchanged; immutable revisions, publication and disclosure authority are shared."
+    },
+    {
+      "id": "InstructorAssignmentDocumentV2",
+      "kind": "schema",
+      "path": "contracts/public/assignments-v2.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/assignments/2.0/schema.json",
+      "pointer": "/$defs/InstructorAssignmentDocumentV2",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "API assignment authoring service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Opt-in assignment reference 2.0 accepts CircuitGraph 1.2. Legacy assignment wires remain unchanged; immutable revisions, publication and disclosure authority are shared."
+    },
+    {
+      "id": "StudentAssignmentViewV2",
+      "kind": "schema",
+      "path": "contracts/public/assignments-v2.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/assignments/2.0/schema.json",
+      "pointer": "/$defs/StudentAssignmentViewV2",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "API assignment authoring service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Opt-in assignment reference 2.0 accepts CircuitGraph 1.2. Legacy assignment wires remain unchanged; immutable revisions, publication and disclosure authority are shared."
+    },
+    {
+      "id": "AssignmentViewV2",
+      "kind": "schema",
+      "path": "contracts/public/assignments-v2.schema.json",
+      "uri": "https://netcircuit.local/contracts/public/assignments/2.0/schema.json",
+      "pointer": "/$defs/AssignmentViewV2",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "API assignment authoring service",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js",
+        "contracts/api/openapi.json",
+        "apps/web/src/contracts/generated/operations.ts"
+      ],
+      "compatibility_policy": "Opt-in assignment reference 2.0 accepts CircuitGraph 1.2. Legacy assignment wires remain unchanged; immutable revisions, publication and disclosure authority are shared."
+    },
+    {
+      "id": "AssignmentV2Conformance",
+      "kind": "data",
+      "path": "contracts/fixtures/assignment-v2-conformance.json",
+      "uri": "https://netcircuit.local/contracts/public/assignments/2.0/conformance.json",
+      "pointer": "",
+      "version": "2.0",
+      "visibility": "public",
+      "producer": "Versioned assignment authoring",
+      "consumers": [
+        "api",
+        "web"
+      ],
+      "validator_profile": "specialized",
+      "generated_artifacts": [],
+      "compatibility_policy": "Shared positive and negative versioned reference/disclosure invariants; legacy definitions remain unchanged."
     }
   ]
 }

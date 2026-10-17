@@ -1,4 +1,4 @@
-import type { CircuitGraph } from '../../contracts/generated/dto'
+import type { CircuitGraph } from '../../types/circuit'
 import { parseCircuitFile } from '../../domain/document/circuitFile'
 
 export interface RecoveryBinding { documentId:string; projectId:string; serverRevision:number }

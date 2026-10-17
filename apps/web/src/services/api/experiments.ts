@@ -13,7 +13,10 @@ export function createExperimentsApi(client:ApiClient) {
       return callOperation(client,'listExperiments',{signal})
     },
     create(body:ExperimentInput,signal?:AbortSignal,operationKey?:string):Promise<Experiment> {
-      return callOperation(client,'createExperiment',{body,signal,headers:identity(operationKey)})
+      const graph=body.circuit_graph
+      return graph?.schema_version==='1.2'||body.circuit_document_id!=null
+        ?callOperation(client,'createExperimentV2',{body,signal,headers:identity(operationKey)})
+        :callOperation(client,'createExperiment',{body:{...body,circuit_graph:graph},signal,headers:identity(operationKey)})
     },
     get(id:string,signal?:AbortSignal):Promise<Experiment> { return callOperation(client,'getExperiment',{path:{experiment_id:id},signal}) },
     run(id:string,signal?:AbortSignal,operationKey?:string):Promise<Experiment> { return callOperation(client,'runExperiment',{path:{experiment_id:id},signal,headers:identity(operationKey)}) },

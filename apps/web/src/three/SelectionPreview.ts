@@ -5,6 +5,8 @@ import { applyPose, buildComponent, disposeObject } from './ComponentModel'
 import { createWireLayer } from './WireLayer'
 import { wireKey } from '../wires/wireVisual'
 import { graphWireRouteContext, type SelectionGhostRoute } from './SelectionGhostRoutes'
+import { updateFlexiblePackageGeometry } from './package/FlexiblePackageGeometry'
+import { isFlexibleMount } from '../electrical/flexibleGeometry'
 
 /** Render-only projection of a complete candidate. Never registered for picking. */
 export function createSelectionPreview() {
@@ -39,13 +41,14 @@ export function createSelectionPreview() {
       const ids = new Set(selection.moduleIds)
       for (const [id, model] of models) if (!ids.has(id)) { model.removeFromParent(); disposeObject(model); models.delete(id) }
       for (const id of ids) {
-        const module = pose(id)
+        const module = candidate.modules.find(item=>item.id===id)
         if (!module) continue
         const signature = JSON.stringify([module.type, module.properties])
         let model = models.get(id)
-        if (model && model.userData.previewSignature !== signature) { model.removeFromParent(); disposeObject(model); models.delete(id); model = undefined }
-        if (!model) { model = buildComponent(module); model.userData.previewSignature = signature; models.set(id, model); root.add(model) }
-        applyPose(model, module); tint(model, valid)
+        if (model && (model.userData.previewSignature !== signature || !!model.userData.resolvedPinAnchors!==isFlexibleMount(module.mount))) { model.removeFromParent(); disposeObject(model); models.delete(id); model = undefined }
+        if (!model) { model = buildComponent(module,candidate.modules); model.userData.previewSignature = signature; models.set(id, model); root.add(model) }
+        updateFlexiblePackageGeometry(model,module,candidate.modules)
+        applyPose(model, pose(id)!); tint(model, valid)
       }
       if (fallbackRoutes) {
         wires.sync([])

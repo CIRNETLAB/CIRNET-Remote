@@ -3,7 +3,10 @@ import type { Vector3 } from 'three'
 import type { createSceneManager } from '../three/SceneManager'
 import { getDefinition } from '../data/editorCatalog'
 import { getPartForType } from '../data/partCatalog'
-import { moduleWorldPose } from '../electrical/modulePose'
+import { moduleWorldPose, moduleLocalToWorld, worldToModuleLocal } from '../electrical/modulePose'
+import { isFlexibleMount } from '../electrical/flexibleGeometry'
+import { buildFlexibleTransformCandidate } from '../electrical/flexibleTransforms'
+import { getBreadboardTopology } from '../electrical/BreadboardTopology'
 import { solveMounting } from '../electrical/mounting'
 import { getBreadboardGeometrySpec } from '../geometry/BreadboardGeometrySpec'
 import { snapBreadboardPosition } from '../geometry/breadboardDocking'
@@ -17,6 +20,7 @@ import { supplyControlMaximum, supplyControlPatch, supplyControlValue, type Supp
 import { useWireRouting } from './useWireRouting'
 import { normalizeSelection } from '../editor/selection'
 import { PointerGestureSession } from '../editor/PointerGestureSession'
+import { useFlexibleAuthoring } from './useFlexibleAuthoring'
 type Manager = ReturnType<typeof createSceneManager>
 export type Position = { x: number; y: number; z: number }
 interface PlacementDraft { type: string; position: Position; rotation: number }
@@ -48,6 +52,11 @@ export function snapPosition(
   if (activeType && getPartForType(activeType)) {
     const module = activeId ? modules.find(m => m.id === activeId) : undefined
     const pose = module ? moduleWorldPose(module, modules) : undefined
+    if(module&&isFlexibleMount(module.mount)&&pose){
+      const board=modules.find(item=>item.id===module.mount!.boardId)!,topology=getBreadboardTopology(board.type)!,current=worldToModuleLocal({x:pose.position?.x??0,y:pose.position?.y??0,z:pose.position?.z??0},board),desired=worldToModuleLocal({x:point.x,y:pose.position?.y??0,z:point.z},board)
+      if(snapEnabled){desired.x=current.x+Math.round((desired.x-current.x)/topology.pitch)*topology.pitch;desired.z=current.z+Math.round((desired.z-current.z)/topology.pitch)*topology.pitch}
+      return moduleLocalToWorld({x:desired.x,y:current.y,z:desired.z},board)
+    }
     const candidate = solveMounting(activeType, { x: point.x, y: point.y ?? elevation, z: point.z }, rotation ?? pose?.rotation ?? 0, modules, activeId ?? 'PLACE')
     if (candidate) return candidate.position
     if (module?.mount) elevation = 0
@@ -68,6 +77,7 @@ export function snapPosition(
 
 export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, manager: () => Manager | undefined) {
   const circuit = useCircuitStore(), workspace = useWorkspaceStore(), ui = useUiStore()
+  const flexible = useFlexibleAuthoring(canvas, manager)
   type EditorGesture = MoveGesture | PanGesture | TransformGesture | ControlGesture | ZoomAreaGesture | MarqueeGesture
   let gesture: EditorGesture | null = null
   const pointerSession = new PointerGestureSession()
@@ -91,6 +101,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
   const mountHint = ref('')
   const pinHint = ref('')
   const controlHint = computed(() => {
+    if (flexible.hint.value) return flexible.hint.value
     if (mountHint.value) return mountHint.value
     if (pinHint.value) return pinHint.value
     if (workspace.tool === 'wire' || workspace.selectedWire) return wireRouting.hint.value
@@ -116,6 +127,13 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     mountHint.value = candidate ? candidate.valid ? 'All pins fit. Click to mount.' : candidate.reason : ''
     manager()?.setGhost(placementDraft.type, placementDraft.position, placementDraft.rotation, workspace.placementProperties ?? undefined)
     manager()?.setMountPreview?.(candidate)
+  }
+  function previewFlexibleTransform(id:string, position?:Position, degrees=0):boolean {
+    const module=circuit.graph?.modules.find(item=>item.id===id)
+    if(!circuit.graph||!module||!isFlexibleMount(module.mount))return false
+    try{const candidate=buildFlexibleTransformCandidate(circuit.graph,id,position,degrees);manager()?.previewFlexibleModule(candidate);mountHint.value='Release to move the assembly.'}
+    catch(error){mountHint.value=error instanceof Error?error.message:'Invalid assembly transform.'}
+    return true
   }
   function clearPlacement() { placementDraft = null; mountHint.value = ''; manager()?.setGhost(null); manager()?.setMountPreview?.(null) }
   const placementPoint = (x: number, y: number, type?: string) => getPartForType(type ?? '') ? manager()?.placementPoint?.(x, y) ?? manager()?.groundPoint(x, y) : manager()?.groundPoint(x, y)
@@ -150,10 +168,11 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     hoveredHandle.value = null; hoveredControl.value = null; manager()?.clearGizmoHover()
     showPlacement()
   }
-  function cancel(clearSelection = true) { workspace.cancelZoomArea(); workspace.cancelMarquee(clearSelection); wireRouting.cancel(); cancelGesture() }
-  function cancelPlacement() { cancel(); workspace.cancelPlacement(); clearPlacement(); workspace.editError = '' }
-  function lostPointerCapture(event: PointerEvent) { if (rightPress?.pointer === event.pointerId) { rightPress = null; suppressWireContext = true }; if (wireRouting.lostPointerCapture(event)) return; if (gesture?.pointer === event.pointerId) { cancel(); clearPlacement() } }
+  function cancel(clearSelection = true) { flexible.cancelEdit(); workspace.cancelZoomArea(); workspace.cancelMarquee(clearSelection); wireRouting.cancel(); cancelGesture() }
+  function cancelPlacement() { flexible.cancel(); cancel(); workspace.cancelPlacement(); clearPlacement(); workspace.editError = '' }
+  function lostPointerCapture(event: PointerEvent) { if(flexible.pointerCancel(event))return; if (rightPress?.pointer === event.pointerId) { rightPress = null; suppressWireContext = true }; if (wireRouting.lostPointerCapture(event)) return; if (gesture?.pointer === event.pointerId) { cancel(); clearPlacement() } }
   function contextMenu(event: MouseEvent) {
+    if (flexible.contextMenu(event)) return
     if (rightPress) { event.preventDefault(); return }
     if (wireRouting.contextMenu(event)) { suppressWireContext = false; return }
     event.preventDefault()
@@ -192,6 +211,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       manager()!.lockPointer(true); canvas.value.setPointerCapture(event.pointerId)
       return
     }
+    if (flexible.pointerDown(event)) return
     if (event.button === 2 && workspace.placementType) {
       event.preventDefault?.()
       event.stopPropagation?.()
@@ -277,6 +297,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
   }
   function pointerMove(event: PointerEvent) {
     if (!manager() || !canvas.value) return
+    if (flexible.pointerMove(event)) return
     if (rightPress?.pointer === event.pointerId) {
       const point = coordinates(event)
       if (Math.hypot(point.x - rightPress.start.x, point.y - rightPress.start.y) >= 4) rightPress.dragged = true
@@ -337,7 +358,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
             placementDraft.rotation = transform.rotation
             placementDraft.position = snap(transform.initial, placementDraft.type, null, transform.initial.y, placementDraft.rotation)
             showPlacement()
-          } else manager()!.previewRotation(transform.id, transform.rotation)
+          } else if(!previewFlexibleTransform(transform.id,undefined,transform.rotation-transform.initialRotation))manager()!.previewRotation(transform.id, transform.rotation)
         } else {
           const point = manager()!.transformTranslation(transform.center, transform.start, { x, y }, transform.handle as 'x' | 'z' | 'xz')
           point.x += transform.initial.x; point.z += transform.initial.z
@@ -348,10 +369,10 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
           if (transform.handle === 'x') transform.position.z = transform.initial.z
           if (transform.handle === 'z') transform.position.x = transform.initial.x
           if (transform.target === 'placement' && placementDraft) { placementDraft.position = transform.position; showPlacement() }
-          else manager()!.previewMove(transform.id, transform.position)
+          else if(!previewFlexibleTransform(transform.id,transform.position))manager()!.previewMove(transform.id, transform.position)
         }
         if (transform.target === 'module') {
-          if (type && getPartForType(type)) {
+          if (type && getPartForType(type) && !isFlexibleMount(circuit.graph?.modules.find(m=>m.id===transform.id)?.mount)) {
             const candidate = solveMounting(type, transform.position, transform.rotation, circuit.graph?.modules ?? [], transform.id)
             manager()?.setMountPreview?.(candidate)
             mountHint.value = candidate ? candidate.valid ? 'All pins fit. Release to mount.' : candidate.reason : ''
@@ -382,6 +403,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       point.x += move.offset.x; point.z += move.offset.z
       const module = circuit.graph?.modules.find((m) => m.id === move.id)
       move.position = snap(point, module?.type, move.id, move.offset.y)
+      if(previewFlexibleTransform(move.id,move.position)){updatePorts();return}
       const candidate = module && solveMounting(module.type, move.position, selected.value?.rotation ?? 0, circuit.graph?.modules ?? [], move.id)
       manager()?.setMountPreview?.(candidate || null)
       mountHint.value = candidate ? candidate.valid ? 'All pins fit. Release to mount.' : candidate.reason : ''
@@ -393,6 +415,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     }
   }
   function pointerUp(event: PointerEvent) {
+    if (flexible.pointerUp(event)) return
     if (rightPress?.pointer === event.pointerId) {
       const completed = rightPress; rightPress = null; suppressWireContext = completed.dragged
       if (canvas.value) { const end = coordinates(event); suppressWireContext ||= Math.hypot(end.x - completed.start.x, end.y - completed.start.y) >= 4 }
@@ -464,6 +487,8 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     event.preventDefault(); cancelPlacement()
     const type = event.dataTransfer?.getData('application/x-netcircuit-component')
     if (!type || !getDefinition(type) || !manager() || !canvas.value) return
+    const dropPoint = coordinates(event)
+    if(flexible.drop(type, dropPoint.x, dropPoint.y)){ui.activeRibbonGroup=null;ui.openWindow('component-info',{activate:false});canvas.value.focus();return}
     const { x, y } = coordinates(event), point = placementPoint(x, y, type)
     if (point) {
       const draft = createPlacementDraft(type, point)
@@ -471,6 +496,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     }
   }
   function keydown(event: KeyboardEvent) {
+    if (flexible.keydown(event)) return
     if (workspace.marqueeActive && event.key === 'Escape') { event.preventDefault(); cancel(); return }
     if (wireRouting.keydown(event)) return
     if (event.key === 'Escape') { cancelPlacement(); return }
@@ -517,7 +543,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     highlightSelection(); updatePorts()
   })
   watch(() => selected.value?.id, (id) => {
-    if (id) ui.openWindow('component-info', { activate: false })
+    if (id || workspace.placementType) ui.openWindow('component-info', { activate: false })
     else ui.closeWindow('component-info')
   }, { immediate: true })
   onUnmounted(() => { cancel(); clearPlacement() })

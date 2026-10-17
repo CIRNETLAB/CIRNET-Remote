@@ -22,6 +22,10 @@ export function setPackagePinLabels(group: Group, part: PartDefinition, pinId: s
       else label.position.x += Math.sign(pin.positionMm.x || 1) * .08
       group.add(label); holder = label
     }
-    if (holder) holder.visible = visible
+    if (holder) {
+      const anchor = group.userData.resolvedPinAnchors?.[pin.id] as [number,number,number] | undefined
+      if (anchor) holder.position.set(anchor[0] + Math.sign(pin.positionMm.x || 1) * .08, anchor[1] + .045, anchor[2])
+      holder.visible = visible
+    }
   }
 }

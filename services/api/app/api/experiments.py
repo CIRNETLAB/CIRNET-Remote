@@ -7,6 +7,9 @@ router=APIRouter(prefix="/api/experiments", responses=ERROR_RESPONSES)
 @router.post("", operation_id='createExperiment',status_code=201, response_model=ExperimentRecord, response_model_exclude_unset=True)
 def create_experiment(payload:ExperimentCreate,request:Request,
                       operation_key:str|None=Header(default=None,alias='Idempotency-Key',min_length=1,max_length=128)):
+    if payload.circuit_document_id is not None:
+        snapshot=request.app.state.projects.resolve_snapshot(request.state.owner,payload.circuit_document_id,payload.circuit_revision)
+        if snapshot['graph_schema_version']=='1.2':raise ValueError('UNSUPPORTED_DOCUMENT_VERSION')
     if payload.assignment_id:
         request.app.state.auth.authorize_assignment(request.state.auth,payload.assignment_id)
     return request.app.state.manager.create(request.state.owner,payload.model_dump(),operation_key=operation_key,
@@ -46,7 +49,9 @@ def results(experiment_id:str,request:Request):
 
 @router.get('/{experiment_id}/document-reference',operation_id='getExperimentDocumentReference',response_model=ExperimentDocumentReference,response_model_exclude_unset=True)
 def document_reference(experiment_id:str,request:Request):
-    return request.app.state.manager.document_reference(experiment_id,request.state.owner)
+    value=request.app.state.manager.document_reference(experiment_id,request.state.owner)
+    if value['graph_schema_version']=='1.2':raise ValueError('UNSUPPORTED_DOCUMENT_VERSION')
+    return value
 
 @router.post("/{experiment_id}/instruments", operation_id='configureExperimentInstrument', response_model=InstrumentOperationResult, response_model_exclude_unset=True)
 def configure_instrument(experiment_id:str,payload:InstrumentConfigureRequest,request:Request,

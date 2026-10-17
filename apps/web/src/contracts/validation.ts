@@ -104,27 +104,38 @@ export function parseLab<K extends keyof ContractMap>(name: K, value: unknown, p
       if (sample.time_ns > capture.duration_ns) contractIssue('Capture sample exceeds declared duration.', `/samples/${index}/time_ns`, 'CAPTURE_TIME_OUTSIDE_DURATION', profile)
     })
   }
-  if (name === 'AssignmentAuthoringCreate' || name === 'AssignmentAuthoringSave' || name === 'AssignmentAuthoringDocument') {
-    try { parseLab('AssignmentDefinition',(data as ContractMap['AssignmentAuthoringCreate']).definition,profile) }
+  if (name === 'AssignmentAuthoringCreate' || name === 'AssignmentAuthoringSave' || name === 'AssignmentAuthoringDocument' || name === 'AssignmentAuthoringCreateV2' || name === 'AssignmentAuthoringSaveV2' || name === 'AssignmentAuthoringDocumentV2') {
+    try { parseLab(name.endsWith('V2')?'AnySupportedAssignmentDefinition':'AssignmentDefinition',(data as ContractMap['AssignmentAuthoringCreateV2']).definition,profile) }
     catch(error) { prefix(error,'/definition') }
   }
-  if (name === 'AssignmentAuthoringSummary' || name === 'AssignmentAuthoringDocument') {
-    const document=data as ContractMap['AssignmentAuthoringSummary'],selected=document.published_revision
+  if (name === 'AssignmentAuthoringSummary' || name === 'AssignmentAuthoringDocument' || name === 'AssignmentAuthoringSummaryV2' || name === 'AssignmentAuthoringDocumentV2') {
+    const document=data as ContractMap['AssignmentAuthoringSummaryV2'],selected=document.published_revision
     if ((selected===null)===document.published || selected!==null && selected>document.revision) contractIssue('The published revision is inconsistent with the authoring head.','/published_revision','ASSIGNMENT_PUBLICATION_MISMATCH',profile)
-    if(name==='AssignmentAuthoringDocument') {
-      const definition=(data as ContractMap['AssignmentAuthoringDocument']).definition
+    if(name==='AssignmentAuthoringDocument' || name==='AssignmentAuthoringDocumentV2') {
+      const definition=(data as ContractMap['AssignmentAuthoringDocumentV2']).definition
       if(document.assignment_id!==definition.assignment_id) contractIssue('Assignment identity differs from its definition.','/definition/assignment_id','ASSIGNMENT_ID_MISMATCH',profile)
       if(document.title!==definition.title) contractIssue('Assignment title differs from its definition.','/definition/title','ASSIGNMENT_TITLE_MISMATCH',profile)
     }
   }
-  if(name==='AssignmentAuthoringPage') {
-    (data as ContractMap['AssignmentAuthoringPage']).items.forEach((item,index)=>{
-      try { parseLab('AssignmentAuthoringSummary',item,profile) }
+  if(name==='AssignmentAuthoringPage' || name==='AssignmentAuthoringPageV2') {
+    (data as ContractMap['AssignmentAuthoringPageV2']).items.forEach((item,index)=>{
+      try { parseLab(name.endsWith('V2')?'AssignmentAuthoringSummaryV2':'AssignmentAuthoringSummary',item,profile) }
       catch(error) { prefix(error,`/items/${index}`) }
     })
   }
-  if (name === 'AssignmentDefinition') {
-    const assignment = data as ContractMap['AssignmentDefinition']
+  if(name==='AnySupportedAssignmentDefinition') {
+    const assignment=data as ContractMap['AnySupportedAssignmentDefinition']
+    parseLab(assignment.schema_version==='2.0'?'AssignmentDefinitionV2':'AssignmentDefinition',assignment,profile)
+  }
+  if(name==='AssignmentViewV2' || name==='InstructorAssignmentDocumentV2') {
+    const view=data as ContractMap['AssignmentViewV2']
+    if(view.document_kind==='instructor') {
+      const definition=Object.fromEntries(Object.entries(view).filter(([key])=>!['document_kind','owner_id','published','feedback_policy'].includes(key)))
+      parseLab(view.schema_version==='2.0'?'AssignmentDefinitionV2':'AssignmentDefinition',definition,profile)
+    }
+  }
+  if (name === 'AssignmentDefinition' || name === 'AssignmentDefinitionV2') {
+    const assignment = data as ContractMap['AnySupportedAssignmentDefinition']
     unique(assignment.lab_endpoints, 'endpoint_id', '/lab_endpoints', profile)
     assignment.lab_endpoints.forEach((entry, index) => endpoint(entry, `/lab_endpoints/${index}`, profile))
     if (assignment.reference_topology_graph) {
@@ -133,7 +144,7 @@ export function parseLab<K extends keyof ContractMap>(name: K, value: unknown, p
     }
     if (assignment.reference_design_graph) {
       try {
-        const graph = parseStructural('CircuitGraph', assignment.reference_design_graph, 'editor')
+        const graph = parseStructural(name==='AssignmentDefinitionV2'?'AnySupportedCircuitGraph':'CircuitGraph', assignment.reference_design_graph, 'editor')
         validateCircuitDocument(normalizeCircuitDocument(graph))
       } catch (error) {
         if (error instanceof ContractValidationError) prefix(error, '/reference_design_graph')

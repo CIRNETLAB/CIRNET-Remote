@@ -2,6 +2,9 @@ import type { CircuitGraph, CircuitModule, MountBinding, Point3 } from '../types
 import { getPartForType, MM_TO_WORLD } from '../data/partCatalog'
 import { getBreadboardTopology, type BreadboardTopology, type BreadboardContact } from './BreadboardTopology'
 import { moduleLocalToWorld, moduleWorldPose, worldToModuleLocal } from './modulePose'
+import { bodiesOverlap, flexibleLeadsHitBody, isFlexibleMount, moduleBodyEnvelope, resolveFlexibleGeometry } from './flexibleGeometry'
+import { validateProperties } from '../data/editorCatalog'
+import { parseStructural } from '../contracts/structural'
 
 const EPS = 0.00001
 export interface MountCandidate {
@@ -37,28 +40,15 @@ function inspectMount(module: CircuitModule, board: CircuitModule, mount: MountB
     if (!valid && !reason) reason = contact ? 'A physical hole is already occupied.' : `Pin ${pin.number} does not fit a hole.`
     return { pinId: pin.id, position: moduleLocalToWorld(local, board), contactId: contact?.contactId ?? null, valid }
   })
-  // Only plastic envelopes collide; lead tips may enter the board's sockets.
-  const candidate = moduleWorldPose({ ...module, mount }, [board])
-  const body = part.package.bodyMm
-  const rect = (m: CircuitModule, width: number, depth: number) => {
-    const angle = (m.rotation ?? 0) * Math.PI / 180, c = Math.cos(angle), s = Math.sin(angle)
-    return { center: { x: m.position?.x ?? 0, z: m.position?.z ?? 0 }, axes: [{ x: c, z: -s }, { x: s, z: c }], half: [width / 2, depth / 2] }
-  }
-  const a = rect(candidate, body.x * MM_TO_WORLD, body.z * MM_TO_WORLD)
-  for (const other of modules) {
+  // Full three-dimensional envelopes are shared with flexible authoring.
+  const candidateModule: CircuitModule = { ...module, mount }
+  delete candidateModule.position; delete candidateModule.rotation
+  const context = modules.filter(item => item.id !== module.id).concat(candidateModule)
+  const candidateBody = moduleBodyEnvelope(candidateModule, context)
+  if (candidateBody) for (const other of modules) {
     if (other.id === module.id || other.id === board.id) continue
-    const otherPart = getPartForType(other.type)
-    if (!otherPart) continue
-    const poseOther = moduleWorldPose(other, modules)
-    const lowA = (candidate.position?.y ?? 0) + part.package.standoffMm * MM_TO_WORLD, lowB = (poseOther.position?.y ?? 0) + otherPart.package.standoffMm * MM_TO_WORLD
-    if (lowA + body.y * MM_TO_WORLD <= lowB + EPS || lowB + otherPart.package.bodyMm.y * MM_TO_WORLD <= lowA + EPS) continue
-    const b = rect(poseOther, otherPart.package.bodyMm.x * MM_TO_WORLD, otherPart.package.bodyMm.z * MM_TO_WORLD)
-    const delta = { x: b.center.x - a.center.x, z: b.center.z - a.center.z }
-    const overlap = [...a.axes, ...b.axes].every(axis => {
-      const radius = (r: typeof a) => r.half.reduce((sum, half, i) => sum + half * Math.abs(r.axes[i].x * axis.x + r.axes[i].z * axis.z), 0)
-      return Math.abs(delta.x * axis.x + delta.z * axis.z) < radius(a) + radius(b) - EPS
-    })
-    if (overlap) { reason ||= 'Component bodies would overlap.'; break }
+    const body = moduleBodyEnvelope(other, modules)
+    if (body && bodiesOverlap(candidateBody, body) || isFlexibleMount(other.mount) && flexibleLeadsHitBody(other, modules, candidateBody)) { reason ||= 'Component bodies or leads would overlap.'; break }
   }
   return { pins, reason }
 }
@@ -90,15 +80,22 @@ export function solveMounting(type: string, desired: Point3, rotation: number, m
 }
 
 export function validateMountBindings(graph: CircuitGraph): void {
+  const occupied = new Set<string>()
   for (const module of graph.modules) {
     const part = getPartForType(module.type), mount = module.mount
-    if (part && graph.schema_version !== '1.1') throw new Error('Physical parts require schema 1.1.')
-    for (const parameter of part?.editor.parameters ?? []) {
-      const value = module.properties && Object.hasOwn(module.properties, parameter.key) ? module.properties[parameter.key] : part!.editor.defaults[parameter.key]
-      if (parameter.kind === 'boolean' ? typeof value !== 'boolean' : typeof value !== 'number' || !Number.isFinite(value) || (parameter.kind === 'integer' && !Number.isInteger(value)) || value < (parameter.min ?? -Infinity) || value > (parameter.max ?? Infinity)) throw new Error(`Invalid physical part parameter ${parameter.label}.`)
-    }
+    if (part && graph.schema_version !== '1.1' && graph.schema_version !== '1.2') throw new Error('Physical parts require schema 1.1 or 1.2.')
+    if(part)validateProperties(module.type,{...part.editor.defaults,...module.properties})
     if (!mount) continue
-    if (!part || graph.schema_version !== '1.1') throw new Error('Mount requires a physical part and schema 1.1.')
+    if (!part || graph.schema_version !== '1.1' && graph.schema_version !== '1.2') throw new Error('Mount requires a physical part and schema 1.1 or 1.2.')
+    for(const binding of mount.contacts){const key=JSON.stringify([mount.boardId,binding.contactId]);if(occupied.has(key))throw Error('A physical hole is already occupied.');occupied.add(key)}
+    if(isFlexibleMount(mount)){
+      if(graph.schema_version!=='1.2')throw Error('Flexible assemblies require CircuitGraph 1.2.')
+      parseStructural('FlexibleMountV1',mount,'editor')
+      const board=graph.modules.find(b=>b.id===mount.boardId)
+      if(!board)throw Error('Mount references a missing breadboard.')
+      resolveFlexibleGeometry(module,part,board)
+      continue
+    }
     if (module.position !== undefined || module.rotation !== undefined) throw new Error('Mounted pose must only come from its mount binding.')
     const exactKeys = (obj: unknown, names: string[]) => !!obj && typeof obj === 'object' && !Array.isArray(obj) && Object.keys(obj).length === names.length && Object.keys(obj).every(k => names.includes(k))
     if (!exactKeys(mount, ['kind', 'version', 'boardId', 'partId', 'partRevision', 'packageId', 'packageRevision', 'pose', 'contacts']) || mount.kind !== 'breadboard' || mount.version !== 1 || mount.partId !== part.id || mount.partRevision !== part.revision || mount.packageId !== part.package.id || mount.packageRevision !== part.package.revision) throw new Error('Invalid mount definition/package revision.')
@@ -109,4 +106,7 @@ export function validateMountBindings(graph: CircuitGraph): void {
     if (result.reason) throw new Error(`Invalid mount: ${result.reason}`)
     if (mount.contacts.length !== part.package.pins.length || new Set(mount.contacts.map(c => c.pinId)).size !== mount.contacts.length || mount.contacts.some(c => !exactKeys(c, ['kind', 'version', 'pinId', 'contactId']) || c.kind !== 'pin-contact' || c.version !== 1 || !result.pins.some(p => p.pinId === c.pinId && p.contactId === c.contactId))) throw new Error('Mount pin/contact binding does not match the footprint.')
   }
+  const bodies=graph.modules.flatMap(module=>{const body=moduleBodyEnvelope(module,graph.modules);return body?[{module,body}]:[]})
+  for(let i=0;i<bodies.length;i++)for(let j=i+1;j<bodies.length;j++)if((bodies[i].module.mount||bodies[j].module.mount)&&bodiesOverlap(bodies[i].body,bodies[j].body))throw Error('Physical component bodies overlap.')
+  for(const module of graph.modules)if(isFlexibleMount(module.mount))for(const other of bodies)if(other.module.id!==module.id&&flexibleLeadsHitBody(module,graph.modules,other.body))throw Error('Flexible lead intersects another component body.')
 }

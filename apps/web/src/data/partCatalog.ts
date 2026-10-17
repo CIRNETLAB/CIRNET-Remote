@@ -1,5 +1,6 @@
 import registry from './editorParts.json'
 import type { SignalDomain } from '../contracts/generated/dto'
+import type { ComponentParameter } from './componentParameters'
 
 /** The existing board pitch is .13 world units for 2.54 mm. */
 export const MM_TO_WORLD = .13 / 2.54
@@ -66,7 +67,7 @@ export interface PartDefinition {
   package: PartPackage
   simulation?: SimulationModel
   internalConnections?: { pins: [string, string]; when?: { property: string; equals: boolean | number } }[]
-  editor: { family: string; visual: string; color: string; defaults: Record<string, unknown>; parameters: { key: string; label: string; kind: 'number' | 'integer' | 'boolean'; min?: number; max?: number }[] }
+  editor: { family: string; visual: string; color: string; defaults: Record<string, unknown>; parameters: ComponentParameter[]; componentKind?: string; displayName?: string; addType?: string; hidden?: boolean }
   notes?: string
 }
 export const partCatalog = registry.parts as PartDefinition[]
@@ -75,3 +76,12 @@ const byType = new Map(partCatalog.map(part => [part.editorType, part]))
 export const getPartDefinition = (id: string) => byId.get(id)
 export const getPartForType = (type: string) => byType.get(type)
 export const getPhysicalPin = (type: string, pinId: string) => getPartForType(type)?.package.pins.find(pin => pin.id === pinId)
+export const componentDisplayName = (type: string) => getPartForType(type)?.editor.displayName ?? getPartForType(type)?.name ?? type
+export const componentAddType = (type: string) => getPartForType(type)?.editor.addType ?? type
+/** Only new generic capacitor designs opt into a package/polarity change. */
+export function componentDesignTransition(type: string, patch: Record<string, unknown>): { type: string; pinMap?: Record<string, string> } {
+  if (!['GENERIC_CAPACITOR', 'GENERIC_CAPACITOR_ELECTROLYTIC'].includes(type) || patch.capacitorType === undefined) return { type }
+  if (patch.capacitorType === 'CERAMIC') return { type: 'GENERIC_CAPACITOR', ...(type !== 'GENERIC_CAPACITOR' ? { pinMap: { PLUS: 'A', MINUS: 'B' } } : {}) }
+  if (patch.capacitorType === 'ELECTROLYTIC') return { type: 'GENERIC_CAPACITOR_ELECTROLYTIC', ...(type !== 'GENERIC_CAPACITOR_ELECTROLYTIC' ? { pinMap: { A: 'PLUS', B: 'MINUS' } } : {}) }
+  throw new Error('Choose Ceramic or Electrolytic.')
+}

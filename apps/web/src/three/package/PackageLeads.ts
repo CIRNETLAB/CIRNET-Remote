@@ -3,6 +3,7 @@ import { readLeadProperties, type LeadProperties } from '../../data/leadProperti
 import { MM_TO_WORLD, type PartDefinition } from '../../data/partCatalog'
 import type { CircuitModule } from '../../types/circuit'
 import { createFormedLeadGeometry } from './LeadGeometry'
+import { isFlexibleMount } from '../../electrical/flexibleGeometry'
 
 interface EditableLead { surface: Mesh<BufferGeometry>; baseline: Vector3[] }
 interface LeadModelState { body: { object: Object3D; y: number }[]; leads: EditableLead[]; signature: string }
@@ -73,6 +74,7 @@ function refreshLeadModelBounds(group: Group): void {
 
 /** Replace only the two model-owned sweeps. Paint edits allocate no geometry. */
 export function updatePackageLeads(group: Group, module: CircuitModule, part: PartDefinition): void {
+  if (isFlexibleMount(module.mount)) return
   const state = editableModels.get(group)
   if (!state) return
   const properties = readLeadProperties(module.properties), signature = signatureOf(properties)

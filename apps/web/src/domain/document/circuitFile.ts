@@ -1,4 +1,4 @@
-import type { CircuitGraph } from '../../contracts/generated/dto'
+import type { CircuitGraph } from '../../types/circuit'
 import { contractIssue, ContractValidationError, parseStructural } from '../../contracts/structural'
 import { validateWireVisual } from '../../wires/wireVisual'
 import { parseEndpoint, resolveEndpoint } from '../../electrical/endpoints'
@@ -9,14 +9,15 @@ import { normalizeComponentProperties } from '../../data/componentProperties'
 import { validateMemoryImage } from './memoryImage'
 import { parseDocumentJson } from './json'
 import { validateSignalDomains } from '../../electrical/signalDomains'
+import {withCircuitModules} from './graphVersion'
 
 export const MAX_CIRCUIT_FILE_BYTES = 2_000_000
 
 /** Legacy property aliases are migrated explicitly after structural validation. */
 export function normalizeCircuitDocument(graph: CircuitGraph): CircuitGraph {
-  return { ...graph, modules: graph.modules.map(module => module.properties === undefined ? module : {
+  return withCircuitModules(graph,graph.modules.map(module => module.properties === undefined ? module : {
     ...module, properties: normalizeComponentProperties(module.type, module.properties),
-  }) }
+  }))
 }
 
 /** Editor safety is separate from structural acceptance and execution permission. */
@@ -50,7 +51,7 @@ export function parseCircuitFile(contents: string): CircuitGraph {
     if (error instanceof ContractValidationError) throw error
     throw new Error('Open a valid Circuit Graph JSON file.')
   }
-  const graph = normalizeCircuitDocument(parseStructural('CircuitGraph', value, 'editor'))
+  const graph = normalizeCircuitDocument(parseStructural('AnySupportedCircuitGraph', value, 'editor'))
   validateCircuitDocument(graph)
   return graph
 }

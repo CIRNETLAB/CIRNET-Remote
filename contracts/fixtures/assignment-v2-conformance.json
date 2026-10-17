@@ -1,0 +1,891 @@
+{
+  "schema_version": "1.0",
+  "cases": [
+    {
+      "id": "flexible-reference",
+      "contract": "AssignmentDefinitionV2",
+      "valid": true,
+      "value": {
+        "schema_version": "2.0",
+        "assignment_id": "reference",
+        "title": "Reference",
+        "lab_endpoints": [],
+        "assessment_policy": "FUNCTIONAL_ONLY",
+        "reference_design_graph": {
+          "schema_version": "1.2",
+          "circuit_id": "flexible",
+          "modules": [
+            {
+              "id": "BB",
+              "type": "BREADBOARD",
+              "position": {
+                "x": 4,
+                "y": 0,
+                "z": -3
+              },
+              "rotation": 37
+            },
+            {
+              "id": "R",
+              "type": "RESISTOR_AXIAL",
+              "properties": {
+                "resistanceOhms": 330,
+                "opaque": {
+                  "retain": true
+                }
+              },
+              "mount": {
+                "kind": "breadboard-flexible",
+                "version": 1,
+                "boardId": "BB",
+                "partId": "VISHAY-MRS25-330R",
+                "partRevision": 1,
+                "packageId": "MRS25-1016",
+                "packageRevision": 1,
+                "mechanicalProfileId": "flex-axial-resistor",
+                "mechanicalProfileRevision": 1,
+                "geometryRevision": 1,
+                "bodyPose": {
+                  "position": {
+                    "x": -2.6,
+                    "y": 0.565,
+                    "z": -0.715
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  }
+                },
+                "contacts": [
+                  {
+                    "kind": "pin-contact",
+                    "version": 1,
+                    "pinId": "A",
+                    "contactId": "terminal:A:10"
+                  },
+                  {
+                    "kind": "pin-contact",
+                    "version": 1,
+                    "pinId": "B",
+                    "contactId": "terminal:A:14"
+                  }
+                ],
+                "leads": [
+                  {
+                    "pinId": "A",
+                    "controlPoints": []
+                  },
+                  {
+                    "pinId": "B",
+                    "controlPoints": []
+                  }
+                ]
+              }
+            }
+          ],
+          "connections": []
+        }
+      }
+    },
+    {
+      "id": "legacy-reference-version-rejected",
+      "contract": "AssignmentDefinition",
+      "valid": false,
+      "value": {
+        "schema_version": "1.0",
+        "assignment_id": "reference",
+        "title": "Reference",
+        "lab_endpoints": [],
+        "assessment_policy": "FUNCTIONAL_ONLY",
+        "reference_design_graph": {
+          "schema_version": "1.2",
+          "circuit_id": "flexible",
+          "modules": [
+            {
+              "id": "BB",
+              "type": "BREADBOARD",
+              "position": {
+                "x": 4,
+                "y": 0,
+                "z": -3
+              },
+              "rotation": 37
+            },
+            {
+              "id": "R",
+              "type": "RESISTOR_AXIAL",
+              "properties": {
+                "resistanceOhms": 330,
+                "opaque": {
+                  "retain": true
+                }
+              },
+              "mount": {
+                "kind": "breadboard-flexible",
+                "version": 1,
+                "boardId": "BB",
+                "partId": "VISHAY-MRS25-330R",
+                "partRevision": 1,
+                "packageId": "MRS25-1016",
+                "packageRevision": 1,
+                "mechanicalProfileId": "flex-axial-resistor",
+                "mechanicalProfileRevision": 1,
+                "geometryRevision": 1,
+                "bodyPose": {
+                  "position": {
+                    "x": -2.6,
+                    "y": 0.565,
+                    "z": -0.715
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  }
+                },
+                "contacts": [
+                  {
+                    "kind": "pin-contact",
+                    "version": 1,
+                    "pinId": "A",
+                    "contactId": "terminal:A:10"
+                  },
+                  {
+                    "kind": "pin-contact",
+                    "version": 1,
+                    "pinId": "B",
+                    "contactId": "terminal:A:14"
+                  }
+                ],
+                "leads": [
+                  {
+                    "pinId": "A",
+                    "controlPoints": []
+                  },
+                  {
+                    "pinId": "B",
+                    "controlPoints": []
+                  }
+                ]
+              }
+            }
+          ],
+          "connections": []
+        }
+      }
+    },
+    {
+      "id": "legacy-definition-retained-in-v2",
+      "contract": "AssignmentAuthoringCreateV2",
+      "valid": true,
+      "value": {
+        "definition": {
+          "schema_version": "1.0",
+          "assignment_id": "reference",
+          "title": "Reference",
+          "lab_endpoints": [],
+          "assessment_policy": "FUNCTIONAL_ONLY",
+          "reference_design_graph": {
+            "schema_version": "1.0",
+            "circuit_id": "legacy",
+            "modules": [],
+            "connections": []
+          }
+        }
+      }
+    },
+    {
+      "id": "invalid-flexible-reference",
+      "contract": "AssignmentAuthoringCreateV2",
+      "valid": false,
+      "code": "INVALID_REFERENCE_DESIGN",
+      "path": "/definition/reference_design_graph",
+      "value": {
+        "definition": {
+          "schema_version": "2.0",
+          "assignment_id": "reference",
+          "title": "Reference",
+          "lab_endpoints": [],
+          "assessment_policy": "FUNCTIONAL_ONLY",
+          "reference_design_graph": {
+            "schema_version": "1.2",
+            "circuit_id": "flexible",
+            "modules": [
+              {
+                "id": "BB",
+                "type": "BREADBOARD",
+                "position": {
+                  "x": 4,
+                  "y": 0,
+                  "z": -3
+                },
+                "rotation": 37
+              },
+              {
+                "id": "R",
+                "type": "RESISTOR_AXIAL",
+                "properties": {
+                  "resistanceOhms": 330,
+                  "opaque": {
+                    "retain": true
+                  }
+                },
+                "mount": {
+                  "kind": "breadboard-flexible",
+                  "version": 1,
+                  "boardId": "BB",
+                  "partId": "VISHAY-MRS25-330R",
+                  "partRevision": 1,
+                  "packageId": "MRS25-1016",
+                  "packageRevision": 1,
+                  "mechanicalProfileId": "flex-axial-resistor",
+                  "mechanicalProfileRevision": 1,
+                  "geometryRevision": 1,
+                  "bodyPose": {
+                    "position": {
+                      "x": -2.6,
+                      "y": 0.565,
+                      "z": -0.715
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "contacts": [
+                    {
+                      "kind": "pin-contact",
+                      "version": 1,
+                      "pinId": "A",
+                      "contactId": "missing"
+                    },
+                    {
+                      "kind": "pin-contact",
+                      "version": 1,
+                      "pinId": "B",
+                      "contactId": "terminal:A:14"
+                    }
+                  ],
+                  "leads": [
+                    {
+                      "pinId": "A",
+                      "controlPoints": []
+                    },
+                    {
+                      "pinId": "B",
+                      "controlPoints": []
+                    }
+                  ]
+                }
+              }
+            ],
+            "connections": []
+          }
+        }
+      }
+    },
+    {
+      "id": "instructor-view-reference",
+      "contract": "AssignmentViewV2",
+      "valid": true,
+      "value": {
+        "schema_version": "2.0",
+        "assignment_id": "reference",
+        "title": "Reference",
+        "lab_endpoints": [],
+        "assessment_policy": "FUNCTIONAL_ONLY",
+        "reference_design_graph": {
+          "schema_version": "1.2",
+          "circuit_id": "flexible",
+          "modules": [
+            {
+              "id": "BB",
+              "type": "BREADBOARD",
+              "position": {
+                "x": 4,
+                "y": 0,
+                "z": -3
+              },
+              "rotation": 37
+            },
+            {
+              "id": "R",
+              "type": "RESISTOR_AXIAL",
+              "properties": {
+                "resistanceOhms": 330,
+                "opaque": {
+                  "retain": true
+                }
+              },
+              "mount": {
+                "kind": "breadboard-flexible",
+                "version": 1,
+                "boardId": "BB",
+                "partId": "VISHAY-MRS25-330R",
+                "partRevision": 1,
+                "packageId": "MRS25-1016",
+                "packageRevision": 1,
+                "mechanicalProfileId": "flex-axial-resistor",
+                "mechanicalProfileRevision": 1,
+                "geometryRevision": 1,
+                "bodyPose": {
+                  "position": {
+                    "x": -2.6,
+                    "y": 0.565,
+                    "z": -0.715
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  }
+                },
+                "contacts": [
+                  {
+                    "kind": "pin-contact",
+                    "version": 1,
+                    "pinId": "A",
+                    "contactId": "terminal:A:10"
+                  },
+                  {
+                    "kind": "pin-contact",
+                    "version": 1,
+                    "pinId": "B",
+                    "contactId": "terminal:A:14"
+                  }
+                ],
+                "leads": [
+                  {
+                    "pinId": "A",
+                    "controlPoints": []
+                  },
+                  {
+                    "pinId": "B",
+                    "controlPoints": []
+                  }
+                ]
+              }
+            }
+          ],
+          "connections": []
+        },
+        "document_kind": "instructor",
+        "owner_id": "teacher",
+        "published": true,
+        "feedback_policy": "observed_only"
+      }
+    },
+    {
+      "id": "invalid-instructor-view-reference",
+      "contract": "AssignmentViewV2",
+      "valid": false,
+      "code": "INVALID_REFERENCE_DESIGN",
+      "path": "/reference_design_graph",
+      "value": {
+        "schema_version": "2.0",
+        "assignment_id": "reference",
+        "title": "Reference",
+        "lab_endpoints": [],
+        "assessment_policy": "FUNCTIONAL_ONLY",
+        "reference_design_graph": {
+          "schema_version": "1.2",
+          "circuit_id": "flexible",
+          "modules": [
+            {
+              "id": "BB",
+              "type": "BREADBOARD",
+              "position": {
+                "x": 4,
+                "y": 0,
+                "z": -3
+              },
+              "rotation": 37
+            },
+            {
+              "id": "R",
+              "type": "RESISTOR_AXIAL",
+              "properties": {
+                "resistanceOhms": 330,
+                "opaque": {
+                  "retain": true
+                }
+              },
+              "mount": {
+                "kind": "breadboard-flexible",
+                "version": 1,
+                "boardId": "BB",
+                "partId": "VISHAY-MRS25-330R",
+                "partRevision": 1,
+                "packageId": "MRS25-1016",
+                "packageRevision": 1,
+                "mechanicalProfileId": "flex-axial-resistor",
+                "mechanicalProfileRevision": 1,
+                "geometryRevision": 1,
+                "bodyPose": {
+                  "position": {
+                    "x": -2.6,
+                    "y": 0.565,
+                    "z": -0.715
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  }
+                },
+                "contacts": [
+                  {
+                    "kind": "pin-contact",
+                    "version": 1,
+                    "pinId": "A",
+                    "contactId": "missing"
+                  },
+                  {
+                    "kind": "pin-contact",
+                    "version": 1,
+                    "pinId": "B",
+                    "contactId": "terminal:A:14"
+                  }
+                ],
+                "leads": [
+                  {
+                    "pinId": "A",
+                    "controlPoints": []
+                  },
+                  {
+                    "pinId": "B",
+                    "controlPoints": []
+                  }
+                ]
+              }
+            }
+          ],
+          "connections": []
+        },
+        "document_kind": "instructor",
+        "owner_id": "teacher",
+        "published": true,
+        "feedback_policy": "observed_only"
+      }
+    },
+    {
+      "id": "student-view-redacted",
+      "contract": "AssignmentViewV2",
+      "valid": true,
+      "value": {
+        "schema_version": "2.0",
+        "assignment_id": "reference",
+        "title": "Reference",
+        "lab_endpoints": [],
+        "assessment_policy": "FUNCTIONAL_ONLY",
+        "document_kind": "student",
+        "published": true,
+        "feedback_policy": "observed_only"
+      }
+    },
+    {
+      "id": "duplicate-endpoint-prefixed",
+      "contract": "AssignmentAuthoringSaveV2",
+      "valid": false,
+      "code": "DUPLICATE_ID",
+      "path": "/definition/lab_endpoints/1/endpoint_id",
+      "value": {
+        "base_revision": 1,
+        "definition": {
+          "schema_version": "2.0",
+          "assignment_id": "reference",
+          "title": "Reference",
+          "lab_endpoints": [
+            {
+              "endpoint_id": "same",
+              "role": "INPUT_SOURCE"
+            },
+            {
+              "endpoint_id": "same",
+              "role": "INPUT_SOURCE"
+            }
+          ],
+          "assessment_policy": "FUNCTIONAL_ONLY",
+          "reference_design_graph": {
+            "schema_version": "1.2",
+            "circuit_id": "flexible",
+            "modules": [
+              {
+                "id": "BB",
+                "type": "BREADBOARD",
+                "position": {
+                  "x": 4,
+                  "y": 0,
+                  "z": -3
+                },
+                "rotation": 37
+              },
+              {
+                "id": "R",
+                "type": "RESISTOR_AXIAL",
+                "properties": {
+                  "resistanceOhms": 330,
+                  "opaque": {
+                    "retain": true
+                  }
+                },
+                "mount": {
+                  "kind": "breadboard-flexible",
+                  "version": 1,
+                  "boardId": "BB",
+                  "partId": "VISHAY-MRS25-330R",
+                  "partRevision": 1,
+                  "packageId": "MRS25-1016",
+                  "packageRevision": 1,
+                  "mechanicalProfileId": "flex-axial-resistor",
+                  "mechanicalProfileRevision": 1,
+                  "geometryRevision": 1,
+                  "bodyPose": {
+                    "position": {
+                      "x": -2.6,
+                      "y": 0.565,
+                      "z": -0.715
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "contacts": [
+                    {
+                      "kind": "pin-contact",
+                      "version": 1,
+                      "pinId": "A",
+                      "contactId": "terminal:A:10"
+                    },
+                    {
+                      "kind": "pin-contact",
+                      "version": 1,
+                      "pinId": "B",
+                      "contactId": "terminal:A:14"
+                    }
+                  ],
+                  "leads": [
+                    {
+                      "pinId": "A",
+                      "controlPoints": []
+                    },
+                    {
+                      "pinId": "B",
+                      "controlPoints": []
+                    }
+                  ]
+                }
+              }
+            ],
+            "connections": []
+          }
+        }
+      }
+    },
+    {
+      "id": "coherent-document",
+      "contract": "AssignmentAuthoringDocumentV2",
+      "valid": true,
+      "value": {
+        "schema_version": "2.0",
+        "assignment_id": "reference",
+        "title": "Reference",
+        "owner_id": "teacher",
+        "revision": 2,
+        "published": true,
+        "published_revision": 2,
+        "feedback_policy": "observed_only",
+        "created_at": 1,
+        "updated_at": 2,
+        "definition": {
+          "schema_version": "2.0",
+          "assignment_id": "reference",
+          "title": "Reference",
+          "lab_endpoints": [],
+          "assessment_policy": "FUNCTIONAL_ONLY",
+          "reference_design_graph": {
+            "schema_version": "1.2",
+            "circuit_id": "flexible",
+            "modules": [
+              {
+                "id": "BB",
+                "type": "BREADBOARD",
+                "position": {
+                  "x": 4,
+                  "y": 0,
+                  "z": -3
+                },
+                "rotation": 37
+              },
+              {
+                "id": "R",
+                "type": "RESISTOR_AXIAL",
+                "properties": {
+                  "resistanceOhms": 330,
+                  "opaque": {
+                    "retain": true
+                  }
+                },
+                "mount": {
+                  "kind": "breadboard-flexible",
+                  "version": 1,
+                  "boardId": "BB",
+                  "partId": "VISHAY-MRS25-330R",
+                  "partRevision": 1,
+                  "packageId": "MRS25-1016",
+                  "packageRevision": 1,
+                  "mechanicalProfileId": "flex-axial-resistor",
+                  "mechanicalProfileRevision": 1,
+                  "geometryRevision": 1,
+                  "bodyPose": {
+                    "position": {
+                      "x": -2.6,
+                      "y": 0.565,
+                      "z": -0.715
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "contacts": [
+                    {
+                      "kind": "pin-contact",
+                      "version": 1,
+                      "pinId": "A",
+                      "contactId": "terminal:A:10"
+                    },
+                    {
+                      "kind": "pin-contact",
+                      "version": 1,
+                      "pinId": "B",
+                      "contactId": "terminal:A:14"
+                    }
+                  ],
+                  "leads": [
+                    {
+                      "pinId": "A",
+                      "controlPoints": []
+                    },
+                    {
+                      "pinId": "B",
+                      "controlPoints": []
+                    }
+                  ]
+                }
+              }
+            ],
+            "connections": []
+          }
+        }
+      }
+    },
+    {
+      "id": "publication-revision-mismatch",
+      "contract": "AssignmentAuthoringDocumentV2",
+      "valid": false,
+      "code": "ASSIGNMENT_PUBLICATION_MISMATCH",
+      "path": "/published_revision",
+      "value": {
+        "schema_version": "2.0",
+        "assignment_id": "reference",
+        "title": "Reference",
+        "owner_id": "teacher",
+        "revision": 2,
+        "published": true,
+        "published_revision": 3,
+        "feedback_policy": "observed_only",
+        "created_at": 1,
+        "updated_at": 2,
+        "definition": {
+          "schema_version": "2.0",
+          "assignment_id": "reference",
+          "title": "Reference",
+          "lab_endpoints": [],
+          "assessment_policy": "FUNCTIONAL_ONLY",
+          "reference_design_graph": {
+            "schema_version": "1.2",
+            "circuit_id": "flexible",
+            "modules": [
+              {
+                "id": "BB",
+                "type": "BREADBOARD",
+                "position": {
+                  "x": 4,
+                  "y": 0,
+                  "z": -3
+                },
+                "rotation": 37
+              },
+              {
+                "id": "R",
+                "type": "RESISTOR_AXIAL",
+                "properties": {
+                  "resistanceOhms": 330,
+                  "opaque": {
+                    "retain": true
+                  }
+                },
+                "mount": {
+                  "kind": "breadboard-flexible",
+                  "version": 1,
+                  "boardId": "BB",
+                  "partId": "VISHAY-MRS25-330R",
+                  "partRevision": 1,
+                  "packageId": "MRS25-1016",
+                  "packageRevision": 1,
+                  "mechanicalProfileId": "flex-axial-resistor",
+                  "mechanicalProfileRevision": 1,
+                  "geometryRevision": 1,
+                  "bodyPose": {
+                    "position": {
+                      "x": -2.6,
+                      "y": 0.565,
+                      "z": -0.715
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "contacts": [
+                    {
+                      "kind": "pin-contact",
+                      "version": 1,
+                      "pinId": "A",
+                      "contactId": "terminal:A:10"
+                    },
+                    {
+                      "kind": "pin-contact",
+                      "version": 1,
+                      "pinId": "B",
+                      "contactId": "terminal:A:14"
+                    }
+                  ],
+                  "leads": [
+                    {
+                      "pinId": "A",
+                      "controlPoints": []
+                    },
+                    {
+                      "pinId": "B",
+                      "controlPoints": []
+                    }
+                  ]
+                }
+              }
+            ],
+            "connections": []
+          }
+        }
+      }
+    },
+    {
+      "id": "document-title-mismatch",
+      "contract": "AssignmentAuthoringDocumentV2",
+      "valid": false,
+      "code": "ASSIGNMENT_TITLE_MISMATCH",
+      "path": "/definition/title",
+      "value": {
+        "schema_version": "2.0",
+        "assignment_id": "reference",
+        "title": "Mismatch",
+        "owner_id": "teacher",
+        "revision": 2,
+        "published": true,
+        "published_revision": 2,
+        "feedback_policy": "observed_only",
+        "created_at": 1,
+        "updated_at": 2,
+        "definition": {
+          "schema_version": "2.0",
+          "assignment_id": "reference",
+          "title": "Reference",
+          "lab_endpoints": [],
+          "assessment_policy": "FUNCTIONAL_ONLY",
+          "reference_design_graph": {
+            "schema_version": "1.2",
+            "circuit_id": "flexible",
+            "modules": [
+              {
+                "id": "BB",
+                "type": "BREADBOARD",
+                "position": {
+                  "x": 4,
+                  "y": 0,
+                  "z": -3
+                },
+                "rotation": 37
+              },
+              {
+                "id": "R",
+                "type": "RESISTOR_AXIAL",
+                "properties": {
+                  "resistanceOhms": 330,
+                  "opaque": {
+                    "retain": true
+                  }
+                },
+                "mount": {
+                  "kind": "breadboard-flexible",
+                  "version": 1,
+                  "boardId": "BB",
+                  "partId": "VISHAY-MRS25-330R",
+                  "partRevision": 1,
+                  "packageId": "MRS25-1016",
+                  "packageRevision": 1,
+                  "mechanicalProfileId": "flex-axial-resistor",
+                  "mechanicalProfileRevision": 1,
+                  "geometryRevision": 1,
+                  "bodyPose": {
+                    "position": {
+                      "x": -2.6,
+                      "y": 0.565,
+                      "z": -0.715
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "contacts": [
+                    {
+                      "kind": "pin-contact",
+                      "version": 1,
+                      "pinId": "A",
+                      "contactId": "terminal:A:10"
+                    },
+                    {
+                      "kind": "pin-contact",
+                      "version": 1,
+                      "pinId": "B",
+                      "contactId": "terminal:A:14"
+                    }
+                  ],
+                  "leads": [
+                    {
+                      "pinId": "A",
+                      "controlPoints": []
+                    },
+                    {
+                      "pinId": "B",
+                      "controlPoints": []
+                    }
+                  ]
+                }
+              }
+            ],
+            "connections": []
+          }
+        }
+      }
+    }
+  ]
+}

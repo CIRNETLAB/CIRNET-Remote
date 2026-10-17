@@ -2,11 +2,13 @@ import { defineStore } from 'pinia'
 import type { WireIdentity, WireRouteMode } from '../types/circuit'
 import { ZOOM_DEFAULT, clampZoom } from '../config/workbenchViewport'
 import { normalizeComponentProperties } from '../data/componentProperties'
+import { getDefinition, validateProperties } from '../data/editorCatalog'
+import { componentDesignTransition } from '../data/partCatalog'
 import { normalizeEditorSelection, toggleModuleSelection, toggleWireSelection, type EditorSelection } from '../editor/selection'
 export type WorkspaceTool = 'select' | 'wire' | 'move' | 'rotate'
 
 export const useWorkspaceStore = defineStore('workspace', {
-  state: () => ({ selectedModuleId: null as string | null, selectedWire: null as WireIdentity | null, selectedModuleIds: [] as string[], selectedWires: [] as WireIdentity[], marqueeActive: false, pendingPort: null as string | null, wireColor: '#d8493f', wireRouteMode: 'FREE' as WireRouteMode, selectedWireBend: null as number | null, previewType: null as string | null, placementType: null as string | null, placementProperties: null as Record<string, unknown> | null, showPins: false, snap: true, zoom: ZOOM_DEFAULT, fitRequest: 0, zoomAreaActive: false, tool: 'select' as WorkspaceTool, editError: '' }),
+  state: () => ({ selectedModuleId: null as string | null, selectedWire: null as WireIdentity | null, selectedModuleIds: [] as string[], selectedWires: [] as WireIdentity[], marqueeActive: false, pendingPort: null as string | null, wireColor: '#d8493f', wireRouteMode: 'FREE' as WireRouteMode, selectedWireBend: null as number | null, previewType: null as string | null, placementType: null as string | null, placementProperties: null as Record<string, unknown> | null, placementEpoch: 0, showPins: false, snap: true, zoom: ZOOM_DEFAULT, fitRequest: 0, zoomAreaActive: false, tool: 'select' as WorkspaceTool, editError: '' }),
   getters: {
     selection: (state): EditorSelection => normalizeEditorSelection({
       moduleIds: [...state.selectedModuleIds, ...(state.selectedModuleId ? [state.selectedModuleId] : [])],
@@ -18,7 +20,17 @@ export const useWorkspaceStore = defineStore('workspace', {
   actions: {
     setTool(tool: WorkspaceTool) { this.cancelMarquee(true); this.cancelZoomArea(); this.tool = tool; this.cancelPlacement() },
     preview(type: string) { this.cancelMarquee(true); this.cancelZoomArea(); this.previewType = type; this.selectedModuleId = null },
-    armPlacement(type: string, properties?: Record<string, unknown>) { const snapshot = properties ? normalizeComponentProperties(type, properties) : null; this.cancelMarquee(true); this.cancelZoomArea(); this.clearSelection(); this.previewType = type; this.placementType = type; this.placementProperties = snapshot; this.tool = 'select'; this.editError = '' },
+    armPlacement(type: string, properties?: Record<string, unknown>) { const snapshot = properties ? normalizeComponentProperties(type, properties) : null; this.cancelMarquee(true); this.cancelZoomArea(); this.clearSelection(); this.previewType = type; this.placementType = type; this.placementProperties = snapshot; this.placementEpoch++; this.tool = 'select'; this.editError = '' },
+    updatePlacementProperties(patch: Record<string, unknown>, nextType?: string) {
+      if (!this.placementType) throw new Error('Choose a component to place first.')
+      const type = nextType ?? this.placementType
+      if (type !== this.placementType && componentDesignTransition(this.placementType, patch).type !== type) throw new Error('Choose Add to place a different component.')
+      const definition = getDefinition(type)
+      if (!definition) throw new Error('This component cannot be placed.')
+      const properties = normalizeComponentProperties(type, { ...definition.defaults, ...this.placementProperties, ...patch })
+      validateProperties(type, properties)
+      this.placementProperties = properties; this.placementType = type; this.previewType = type; this.editError = ''
+    },
     selectModule(id: string | null) { this.cancelMarquee(true); this.selectedModuleId = id; this.selectedWire = null; this.selectedWireBend = null; this.placementType = null; this.editError = '' },
     selectWire(source: string, destination: string) { this.cancelMarquee(true); this.selectedModuleId = null; this.selectedWire = { source, destination }; this.selectedWireBend = null; this.placementType = null },
     cancelPlacement() { this.placementType = null; this.placementProperties = null; this.pendingPort = null },

@@ -16,6 +16,14 @@ PROPERTY_KEYS = {
 
 def validate_component_properties(module_type, properties):
     """Validate present properties; old instances may rely on descriptor defaults."""
+    if module_type in {'GENERIC_RESISTOR','GENERIC_CAPACITOR','GENERIC_CAPACITOR_ELECTROLYTIC','GENERIC_DIODE','GENERIC_ZENER_DIODE','GENERIC_LED','GENERIC_BUZZER','GENERIC_BJT'}:
+        from jsonschema import ValidationError
+        from .registry import validate_contract
+        try:validate_contract('ComponentDesignPropertiesV1',properties,profile='structural')
+        except ValidationError as error:raise ValueError(error.message) from error
+        capacitor={'GENERIC_CAPACITOR':'CERAMIC','GENERIC_CAPACITOR_ELECTROLYTIC':'ELECTROLYTIC'}.get(module_type)
+        if capacitor and 'capacitorType' in properties and properties['capacitorType']!=capacitor:
+            raise ValueError('Capacitor Type requires an atomic descriptor and pin mapping change')
     for key in PROPERTY_KEYS.get(module_type, ()):
         if key not in properties:
             continue

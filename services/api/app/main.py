@@ -224,6 +224,8 @@ def create_app(*,repository=None,gateway=None,submit=None,configuration=None,cap
     application.include_router(users_router)
     from app.api.projects import router as projects_router
     application.include_router(projects_router)
+    from app.api.placement import router as placement_router
+    application.include_router(placement_router)
     if config.trusted_origins:
         application.add_middleware(CORSMiddleware,allow_origins=list(config.trusted_origins),allow_credentials=True,
             allow_methods=['GET','POST','PUT','PATCH','DELETE','OPTIONS'],

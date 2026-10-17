@@ -2,14 +2,20 @@
 project: net-Circuit-Remote
 current_phase: web-contracts-W8
 status: verified-local
-last_updated: 2026-10-16
-next_task: user-review-and-git-metadata-permissions-no-push
-blocking_issue: git-worktree-metadata-read-only
+last_updated: 2026-10-18
+next_task: user-review-and-commit-component-placement
+blocking_issue: none-in-authorized-software-scope
 hardware_mode: simulation
 fpga_development_started: true
 ---
 
 # Development Log
+
+## Component placement — 2026-10-18
+
+Implemented the CRUMB-style two-contact authoring prompt on top of W0–W8: additive Graph 1.2/flexible profiles and API/Assignment V2, pure solver/controller/renderer adapter, atomic contact/body/assembly commands, generic draft-aware Component Info and exact SI values. Legacy schemas, IDs, rigid placement, observed physical identity and Safety != Correctness retain their authorities.
+
+Final local gates: 1070 Python PASS/1 Icarus SKIP, 1117 Web PASS, 18 actual Chromium E2E PASS, production build/typecheck, generation/OpenAPI/catalog/compatibility, AST boundaries and clean four-wheel probes. Independent review findings and native reanchor self-occlusion were fixed with regressions. The user requested only the report, so no screenshot/video bundle is included. See `verification/2026-10-18-component-placement.md` for exact commands, source inventory and remaining environment/model limits. Leave source uncommitted for the user; no push/merge/deploy.
 
 ## Web & Contracts W0–W8 — 2026-10-16
 
@@ -19,7 +25,7 @@ Final W8 evidence:1015 full Python PASS/1 Icarus SKIP (including355 Contracts),1
 
 ## AI Handoff — current Web/Contracts task
 
-Use the final `verification/2026-10-16-web-contracts-handoff.md` for review. Do not reinterpret historical Phase1/2/R/H handoffs below as missing current functionality. `scripts/check_release.py --show-plan` lists reproducible gates; required PostgreSQL, browser and external wheel probes fail explicitly when unavailable. Keep hardware/analog truth, the single API scheduler and principal-bound cancellation. Git metadata permissions require external correction before any commit can succeed; never bypass that permission or fabricate historical phase commits.
+Use `verification/2026-10-18-component-placement.md` for the latest change, together with the existing `verification/2026-10-16-web-contracts-handoff.md` for W0–W8. Do not reinterpret historical Phase1/2/R/H handoffs below as missing current functionality. `scripts/check_release.py --show-plan` lists reproducible gates; required PostgreSQL, browser and external wheel probes fail explicitly when unavailable. Keep hardware/analog truth, the single API scheduler and principal-bound cancellation. The user will commit this change; never bypass Git metadata permissions or fabricate historical phase commits.
 
 ## Breadboard mechanical docking — 2026-10-14
 

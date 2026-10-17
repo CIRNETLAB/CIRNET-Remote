@@ -4,6 +4,13 @@ All notable project changes will be documented in this file. The project follows
 
 ## [Unreleased]
 
+### Added and changed — 2026-10-18 Component placement
+
+- Two-contact flexible placement, draft properties, authored bends, direct pin/body handles and atomic assembly Move/Undo, retaining rigid and legacy behavior.
+- Additive Graph 1.2, versioned mechanical profiles, TS/Python geometry validation and explicit migration; API/Assignment V2 preserve save/recovery, immutable references, RBAC and grading.
+- Generic component names, compact Component Info, exact SI property edits, LED instance parameters/color and shared resolved geometry for targets, wires and thumbnails.
+- Full verification and source inventory: `verification/2026-10-18-component-placement.md`. Report-only handoff; no image/video bundle, automatic commit, push or deployment.
+
 ### Added and changed — 2026-10-16 Web & Contracts
 
 - Canonical offline manifest, deterministic staged Python/TypeScript/runtime/OpenAPI generation, explicit numeric/semantic profiles, retained legacy/wire/NCAP compatibility and clean installed-wheel verification.

@@ -2,7 +2,7 @@
 import { ref,watch } from 'vue'
 import { useProjectStore } from '../../stores/projects'
 import { useCircuitStore } from '../../stores/circuit'
-import type { CircuitSummary } from '../../contracts/generated/dto'
+import type { CircuitSummary } from '../../types/projects'
 const projects=useProjectStore(),circuit=useCircuitStore()
 const newName=ref(''),newDescription=ref(''),projectName=ref(''),projectDescription=ref('')
 type Confirmation={kind:'project';id:string}|{kind:'circuit';document:CircuitSummary}|{kind:'recover'|'recovery';id:string}|{kind:'reload';id:string}

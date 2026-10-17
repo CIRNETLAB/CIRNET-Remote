@@ -1,4 +1,5 @@
-import type { CircuitDocument, CircuitGraph } from '../../contracts/generated/dto'
+import type { CircuitGraph } from '../../types/circuit'
+import type { CircuitDocument } from '../../types/projects'
 import type { RecoveryBinding, RecoveryInput, RecoveryRepository, RecoverySummary } from './recovery'
 
 export interface DocumentSnapshot { draftId:string; name:string; revision:number; graph:CircuitGraph }
