@@ -18,10 +18,12 @@ export function createSelectionPreview() {
   root.add(wires.group)
   function tint(object: Group, valid: boolean) {
     object.traverse(child => {
+      child.castShadow = false; child.receiveShadow = false
       if (!(child instanceof Mesh) && !(child instanceof Sprite)) return
       const materials: Material[] = Array.isArray(child.material) ? child.material : [child.material]
       for (const material of materials) {
         material.transparent = true; material.opacity = .42; material.depthWrite = false
+        if ('transmission' in material) (material as any).transmission = 0
         if ('color' in material) (material.color as { set(value: string): void }).set(valid ? '#60e6b0' : '#ff5959')
       }
     })

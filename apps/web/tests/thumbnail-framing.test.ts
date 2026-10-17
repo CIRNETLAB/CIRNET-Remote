@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import { Box3, BoxGeometry, Group, Light, Mesh, MeshBasicMaterial, MeshStandardMaterial, OrthographicCamera, Vector3 } from 'three'
+import { Box3, BoxGeometry, Color, Group, Light, Mesh, MeshBasicMaterial, MeshStandardMaterial, OrthographicCamera, Vector3 } from 'three'
 import * as thumbnails from '../src/three/PackageThumbnails'
 import { buildComponent, disposeObject } from '../src/three/ComponentModel'
 import { updatePackageAppearance } from '../src/three/PackageModel'
@@ -90,13 +90,13 @@ test('thumbnail direct lighting matches the actual Workbench scene instead of in
   } finally { workspace.dispose() }
 })
 
-test('only the resistor coating becomes subdued blue and five bands keep updating in place', () => {
+test('resistor coating uses mandatory #4A90E2 albedo, diode uses charcoal epoxy and five bands keep updating in place', () => {
   const resistor = buildComponent({ id: 'R1', type: 'RESISTOR_AXIAL', properties: { resistanceOhms: 1000, tolerancePercent: 1 } })
   const diode = buildComponent({ id: 'D1', type: 'DIODE_1N4148' })
   try {
     const coating = (resistor.getObjectByName('package-body') as Mesh<any, MeshStandardMaterial>).material
-    assert.equal(coating.color.getHexString(), subduedBodyColor('#467697').getHexString())
-    assert.equal((diode.getObjectByName('package-body') as Mesh<any, MeshStandardMaterial>).material.color.getHexString(), subduedBodyColor('#ae613a').getHexString())
+    assert.equal(coating.color.getHexString(), new Color('#4A90E2').getHexString())
+    assert.equal((diode.getObjectByName('package-body') as Mesh<any, MeshStandardMaterial>).material.color.getHexString(), new Color('#1b1e22').getHexString())
     const bands = Array.from({ length: 5 }, (_, i) => resistor.getObjectByName(`package-resistor-band-${i}`) as Mesh<any, MeshStandardMaterial>)
     const before = bands.map(band => band.material.color.getHexString())
     updatePackageAppearance(resistor, { id: 'R1', type: 'RESISTOR_AXIAL', properties: { resistanceOhms: 4700, tolerancePercent: 2 } }, getPartForType('RESISTOR_AXIAL')!)

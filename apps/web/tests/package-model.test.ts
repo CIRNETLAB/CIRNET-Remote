@@ -314,15 +314,15 @@ test('formed round and rectangular leads have one continuous surface through the
   }
 })
 
-test('LED shell is one opaque diffuse surface whose light still comes from the result adapter', () => {
+test('LED shell is one continuous transmissive resin lens whose light still comes from the result adapter', () => {
   const model = buildComponent({ id: 'D1', type: 'LED_LTL307EE' })
   try {
     const shells: Mesh[] = []; model.traverse(object => { if (object instanceof Mesh && object.userData.ledLens) shells.push(object) })
     assert.equal(shells.length, 1, 'dome and barrel share a continuous molded shell')
     const shell = shells[0]!, material = shell.material as MeshStandardMaterial
-    assert.equal(material.transparent, false)
+    assert.equal(material.transparent, true)
     assert.equal(material.opacity, 1)
-    assert.ok(material.roughness >= .4, 'diffuse shell hides the board beneath it')
+    assert.ok(material.roughness <= .4, 'resin lens has smooth finish')
     applyPackageSimulation(model, { ledOn: true }); assert.ok(material.emissiveIntensity > 0)
     applyPackageSimulation(model, null); assert.equal(material.emissiveIntensity, 0)
   } finally { disposeObject(model) }

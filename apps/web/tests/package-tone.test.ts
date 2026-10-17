@@ -17,17 +17,31 @@ function assertSubdued(actual: Color, original: string) {
   }
 }
 
-test('only requested physical package body coatings receive the modest tone decrease', () => {
+test('only non-upgraded physical package body coatings receive the modest tone decrease', () => {
   const cases = [
-    ['RESISTOR_AXIAL', '#467697'], ['CAPACITOR_CERAMIC', '#cba05e'], ['CAPACITOR_ELECTROLYTIC', '#253d57'],
-    ['DIODE_1N4148', '#ae613a'], ['ZENER_1N4733A', '#ae613a'], ['TRANSISTOR_2N3904', '#24272b'],
-    ['LED_LTL307EE', '#ba3434'], ['BUZZER_PS1240', '#24272b'], ['TOGGLE_SWITCH_200MSP1', '#272c30'],
+    ['TRANSISTOR_2N3904', '#24272b'], ['BUZZER_PS1240', '#24272b'], ['TOGGLE_SWITCH_200MSP1', '#272c30'],
     ['PUSH_BUTTON_B3F1000', '#272c30'], ['DIP_SWITCH_A6D4100', '#a52e28'], ['SN74HC08N', '#24272b'], ['SN74LS266N', '#24272b'],
   ] as const
   for (const [type, original] of cases) {
     const model = buildComponent({ id: 'component', type })
     try { assertSubdued(materialOf(model, 'package-body').color, original) }
     finally { disposeObject(model) }
+  }
+
+  // Upgraded component models use dedicated PBR materials
+  const upgradedCases = [
+    ['RESISTOR_AXIAL', '#4A90E2'], ['CAPACITOR_CERAMIC', '#b87d32'], ['CAPACITOR_ELECTROLYTIC', '#2b6cb0'],
+    ['DIODE_1N4148', '#1b1e22'], ['ZENER_1N4733A', '#e86a3e'], ['LED_LTL307EE', '#ba3434'],
+  ] as const
+  for (const [type, exact] of upgradedCases) {
+    const model = buildComponent({ id: 'component', type })
+    try {
+      const mat = materialOf(model, 'package-body')
+      assert.equal(mat.color.getHexString(), new Color(exact).getHexString(), `${type} uses exact authored albedo`)
+      if (type === 'ZENER_1N4733A' || type === 'LED_LTL307EE') {
+        assert.ok((mat as any).transmission > .5, `${type} has transmissive finish`)
+      }
+    } finally { disposeObject(model) }
   }
 })
 
@@ -47,14 +61,14 @@ test('tone adjustment preserves silver leads, resistor bands, LED hue and polari
       })
     }
     assert.deepEqual([0, 1, 2, 3, 4].map(i => materialOf(resistor, `package-resistor-band-${i}`).color.getHexString()), ['704725', '1c1d20', '1c1d20', '704725', '704725'])
-    assert.equal(materialOf(capacitor, 'package-polarity-stripe').color.getHexString(), 'c9ccc1')
+    assert.equal(materialOf(capacitor, 'package-polarity-stripe').color.getHexString(), 'e4e7eb')
     assert.equal(materialOf(capacitor, 'package-capacitor-lid').color.getHexString(), 'd8dce0')
     assert.equal(materialOf(led, 'package-cathode-marker').color.getHexString(), 'c9ccc1')
     assert.equal(materialOf(logic, 'package-pin1-marker').color.getHexString(), 'c9ccc1')
     assert.equal(logic.getObjectByName('package-marking')?.userData.text, '74HC08')
     const lens = materialOf(led, 'package-body')
-    assertSubdued(lens.color, '#ba3434')
-    assert.equal(lens.transparent, false)
+    assert.equal(lens.color.getHexString(), new Color('#ba3434').getHexString())
+    assert.equal(lens.transparent, true)
     assert.equal(lens.emissiveIntensity, 0)
   } finally { for (const model of [resistor, capacitor, led, logic]) disposeObject(model) }
 })
@@ -86,7 +100,7 @@ test('Arithmetic changes only the abstraction body while saved legacy groups ret
   }
 })
 
-test('thumbnail and workspace use the same subdued package body materials', async () => {
+test('thumbnail and workspace use the same package body materials', async () => {
   const workspace = buildComponent({ id: 'workspace', type: 'RESISTOR_AXIAL' })
   let thumbnailColor: string | undefined
   const cache = createPackageThumbnailCache({ createRenderer: () => ({
@@ -96,6 +110,6 @@ test('thumbnail and workspace use the same subdued package body materials', asyn
   try {
     await lease.ready
     assert.equal(thumbnailColor, materialOf(workspace, 'package-body').color.getHexString())
-    assertSubdued(materialOf(workspace, 'package-body').color, '#467697')
+    assert.equal(materialOf(workspace, 'package-body').color.getHexString(), new Color('#4A90E2').getHexString())
   } finally { lease.release(); disposeObject(workspace) }
 })

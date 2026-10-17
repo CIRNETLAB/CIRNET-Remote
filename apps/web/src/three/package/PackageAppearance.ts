@@ -27,13 +27,17 @@ export function updatePackageAppearance(group: Group, module: CircuitModule, par
   const properties = { ...part.editor.defaults, ...module.properties }
   if (part.editorType === 'GENERIC_LED') {
     const raw = properties.color
-    const color = typeof raw === 'string' && raw.length === 7 && /^#[0-9a-fA-F]{6}$/.test(raw) ? raw : String(part.editor.defaults.color ?? '#ce3935')
+    const color = typeof raw === 'string' && raw.length === 7 && /^#[0-9a-fA-F]{6}$/.test(raw) ? raw : String(part.editor.defaults.color ?? '#ba3434')
     group.userData.ledColor = color
     group.traverse(object => {
       if (!(object instanceof Mesh) || !object.userData.ledLens || !(object.material instanceof MeshStandardMaterial)) return
-      object.material.color.copy(subduedBodyColor(color))
+      object.material.color.set(color)
+      if ('attenuationColor' in object.material) (object.material as any).attenuationColor.set(color)
       // A paint edit retains observed emission evidence; it never enables it.
-      if (group.userData.ledOn === true) object.material.emissive.set(color)
+      if (group.userData.ledOn === true) {
+        object.material.emissive.set(color)
+        object.material.emissiveIntensity = .8
+      }
     })
     return
   }

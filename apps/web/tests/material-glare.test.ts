@@ -64,12 +64,22 @@ test('paint and plastic have broad dielectric highlights while actual metal keep
 })
 
 test('package coating response is softened without changing silver lead finish or Display', () => {
-  for (const type of ['RESISTOR_AXIAL', 'CAPACITOR_CERAMIC', 'CAPACITOR_ELECTROLYTIC', 'DIODE_1N4148', 'TRANSISTOR_2N3904', 'LED_LTL307EE', 'SN74HC08N', 'BUZZER_PS1240', 'TOGGLE_SWITCH_200MSP1']) {
+  for (const type of ['TRANSISTOR_2N3904', 'SN74HC08N', 'BUZZER_PS1240', 'TOGGLE_SWITCH_200MSP1']) {
     const model = buildComponent({ id: type, type })
     try {
       const body = materialOf(model, 'package-body')
       assert.equal(body.metalness, 0, type)
       assert.ok(body.roughness >= .78 && body.envMapIntensity > 0 && body.envMapIntensity <= .35, type)
+      const lead = materialOf(model, 'lead-metal')
+      assert.equal(lead.metalness, .86); assert.equal(lead.roughness, .29); assert.equal(lead.envMapIntensity, .85)
+    } finally { disposeObject(model) }
+  }
+  for (const type of ['RESISTOR_AXIAL', 'CAPACITOR_CERAMIC', 'CAPACITOR_ELECTROLYTIC', 'DIODE_1N4148', 'ZENER_1N4733A', 'LED_LTL307EE']) {
+    const model = buildComponent({ id: type, type })
+    try {
+      const body = materialOf(model, 'package-body')
+      assert.equal(body.metalness, 0, type)
+      assert.ok(body.roughness >= .12 && body.roughness <= .5, `${type}: upgraded finish has controlled sheen`)
       const lead = materialOf(model, 'lead-metal')
       assert.equal(lead.metalness, .86); assert.equal(lead.roughness, .29); assert.equal(lead.envMapIntensity, .85)
     } finally { disposeObject(model) }

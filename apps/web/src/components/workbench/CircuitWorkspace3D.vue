@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue'
-import { WebGLRenderer } from 'three'
+import { PCFSoftShadowMap, WebGLRenderer } from 'three'
 import { createSceneManager, type OrientationAxis } from '../../three/SceneManager'
 import { useWorkspaceStore } from '../../stores/workspace'
 import { useCircuitStore } from '../../stores/circuit'
@@ -73,6 +73,8 @@ onMounted(() => {
   try {
     renderer = new WebGLRenderer({ canvas: canvas.value, antialias: true, alpha: false })
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    renderer.shadowMap.enabled = true
+    renderer.shadowMap.type = PCFSoftShadowMap
     manager = createSceneManager({ renderer, canvas: canvas.value, onBeforeRender: updateGizmoObstacles, onRender: rendered, onZoomChange: (percent) => workspace.setZoom(percent) })
     manager.setZoom(workspace.zoom)
     editor.sync(); visibility()

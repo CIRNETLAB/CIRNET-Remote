@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { Mesh, MeshStandardMaterial } from 'three'
+import { Color, Mesh, MeshStandardMaterial } from 'three'
 import { buildComponent, disposeObject } from '../src/three/ComponentModel'
 import { applyPackageSimulation, updatePackageAppearance } from '../src/three/PackageModel'
 import { getPartForType } from '../src/data/partCatalog'
@@ -12,11 +12,15 @@ test('generic LED color edits retain the physical assembly and never turn on an 
   try {
     const lens = model.getObjectByName('package-body') as Mesh
     const material = lens.material as MeshStandardMaterial, lead = model.getObjectByName('package-lead-A')
-    assert.equal(material.color.getHexString(), subduedBodyColor('#3a78dc').getHexString())
+    const anodePost = model.getObjectByName('package-led-anode-post')
+    const cathodeAnvil = model.getObjectByName('package-led-cathode-anvil')
+    assert.ok(anodePost, 'internal anode post exists')
+    assert.ok(cathodeAnvil, 'internal cathode anvil exists')
+    assert.equal(material.color.getHexString(), new Color('#3a78dc').getHexString())
     assert.equal(material.emissiveIntensity, 0)
     updatePackageAppearance(model, { ...module, properties: { color: '#42b567' } }, part)
     assert.equal(model.getObjectByName('package-body'), lens); assert.equal(model.getObjectByName('package-lead-A'), lead)
-    assert.equal(material.color.getHexString(), subduedBodyColor('#42b567').getHexString())
+    assert.equal(material.color.getHexString(), new Color('#42b567').getHexString())
     assert.equal(material.emissiveIntensity, 0)
     applyPackageSimulation(model, { ledOn: true })
     assert.equal(material.emissive.getHexString(), '42b567'); assert.ok(material.emissiveIntensity > 0)
@@ -33,7 +37,7 @@ test('legacy SKU LED opaque color metadata retains its original appearance and e
   const model = buildComponent({ id: 'legacy', type: 'LED_LTL307EE', properties: { color: '#3a78dc' } })
   try {
     const material = (model.getObjectByName('package-body') as Mesh).material as MeshStandardMaterial
-    assert.equal(material.color.getHexString(), subduedBodyColor('#ba3434').getHexString())
+    assert.equal(material.color.getHexString(), new Color('#ba3434').getHexString())
     applyPackageSimulation(model, { ledOn: true }); assert.equal(material.emissive.getHexString(), 'ed281e')
   } finally { disposeObject(model) }
 })

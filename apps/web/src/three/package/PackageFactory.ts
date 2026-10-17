@@ -2,10 +2,10 @@ import { BoxGeometry, CircleGeometry, CylinderGeometry, ExtrudeGeometry, Group, 
 import { MM_TO_WORLD, type PartDefinition } from '../../data/partCatalog'
 import type { CircuitModule } from '../../types/circuit'
 import { createFormedLeadGeometry } from './LeadGeometry'
-import { createPackageBodyMaterial, createPackageMaterials } from './PackageMaterials'
+import { createCeramicMaterial, createDiodeMaterial, createElectrolyticSleeveMaterial, createLedLensMaterial, createPackageBodyMaterial, createPackageMaterials, createResistorMaterial, createZenerGlassMaterial } from './PackageMaterials'
 import { createPackageMarking, shortPackageCode } from './PackageMarking'
 import { updatePackageAppearance } from './PackageAppearance'
-import { axialCoatingGeometry, ledShellGeometry, roundedPackageBox, segmentGlyphGeometry } from './PackageShapes'
+import { axialCoatingGeometry, ceramicDiscGeometry, electrolyticSleeveGeometry, ledShellGeometry, roundedPackageBox, segmentGlyphGeometry } from './PackageShapes'
 import { registerEditablePackageLeads } from './PackageLeads'
 
 export function addPackageModel(group: Group, module: CircuitModule, part: PartDefinition) {
@@ -14,23 +14,28 @@ export function addPackageModel(group: Group, module: CircuitModule, part: PartD
   const bottom = pkg.standoffMm * mm, top = bottom + h
   // Structure terminals and Display share the factory but retain their existing
   // appearance. Tone only the requested component body/coating families.
-  const subduedBody = ['dip', 'axial', 'radial-led', 'radial-capacitor', 'to92', 'switch', 'buzzer'].includes(pkg.family)
+  const subduedBody = ['dip', 'to92', 'switch', 'buzzer'].includes(pkg.family)
   const { metal, plastic, ink, dark } = createPackageMaterials(subduedBody)
   const usedMaterials = new Set<MeshStandardMaterial>()
-  const mesh = (name: string, geometry: BufferGeometry, material = plastic, parent: Group = group, surface = true) => {
+  const mesh = (name: string, geometry: BufferGeometry, material: MeshStandardMaterial = plastic, parent: Group = group, surface = true) => {
     usedMaterials.add(material)
-    const object = new Mesh(geometry, material); object.name = name; object.userData.selectionSurface = surface; parent.add(object); return object
+    const object = new Mesh(geometry, material); object.name = name; object.userData.selectionSurface = surface
+    if (!name.includes('target') && !name.includes('highlight') && !name.includes('marking')) {
+      object.castShadow = true
+      object.receiveShadow = true
+    }
+    parent.add(object); return object
   }
-  const box = (name: string, sx: number, sy: number, sz: number, x: number, y: number, z: number, material = plastic, parent: Group = group, surface = true) => {
+  const box = (name: string, sx: number, sy: number, sz: number, x: number, y: number, z: number, material: MeshStandardMaterial = plastic, parent: Group = group, surface = true) => {
     const object = mesh(name, new BoxGeometry(sx, sy, sz), material, parent, surface); object.position.set(x, y, z); return object
   }
-  const cylinder = (name: string, radius: number, height: number, x: number, y: number, z: number, material = plastic, parent: Group = group) => {
+  const cylinder = (name: string, radius: number, height: number, x: number, y: number, z: number, material: MeshStandardMaterial = plastic, parent: Group = group) => {
     const object = mesh(name, new CylinderGeometry(radius, radius, height, 24), material, parent); object.position.set(x, y, z); return object
   }
   const marking = (text: string, width = w * .7, depth = d * .6, x = 0, z = 0, y = top + .0012, name = 'package-marking', surface?: BufferGeometry) => {
-    const label = createPackageMarking(text, width, depth, name, surface); label.position.set(x, y, z); group.add(label); return label
+    const label = createPackageMarking(text, width, depth, name, surface); label.position.set(x, y, z); label.castShadow = false; label.receiveShadow = false; group.add(label); return label
   }
-  const roundedBox = (name: string, sx: number, sy: number, sz: number, x: number, y: number, z: number, material = plastic) => {
+  const roundedBox = (name: string, sx: number, sy: number, sz: number, x: number, y: number, z: number, material: MeshStandardMaterial = plastic) => {
     const radius = Math.min(.008, sy * .15)
     const object = mesh(name, roundedPackageBox(sx, sy, sz, radius), material); object.rotation.x = -Math.PI / 2; object.position.set(x, y - sy / 2 + radius / 2, z); return object
   }
@@ -45,46 +50,116 @@ export function addPackageModel(group: Group, module: CircuitModule, part: PartD
     cylinder('package-pin1-marker', Math.min(.018, d * .08), .0015, -w / 2 + .07, top + .001, d * .29, ink).userData.selectionSurface = false
     marking(shortPackageCode(part.shortName ?? pkg.marking ?? part.name), w * .56, d * .38)
   } else if (pkg.family === 'radial-led') {
-    const red = createPackageBodyMaterial({ color: '#ba3434', roughness: .47, metalness: 0, transparent: false, opacity: 1, emissiveIntensity: 0 })
+    const rawColor = part.editorType === 'GENERIC_LED' ? (module.properties?.color ?? part.editor.defaults.color) : '#ba3434'
+    const color = typeof rawColor === 'string' && rawColor.length === 7 && /^#[0-9a-fA-F]{6}$/.test(rawColor) ? rawColor : '#ba3434'
+    const lensMaterial = createLedLensMaterial(color)
     const radius = Math.min(w, d) / 2
-    const shell = mesh('package-body', ledShellGeometry(radius, h, .4 * mm), red); shell.position.y = bottom; shell.userData.ledLens = true
+    const shell = mesh('package-body', ledShellGeometry(radius, h, .4 * mm), lensMaterial)
+    shell.position.y = bottom; shell.userData.ledLens = true
+
+    // Internal minimalist leadframe: Anode post & Cathode anvil with die
     const cathode = pkg.pins.find(pin => pin.name === 'K' || pin.id === 'K')
     const sign = cathode && cathode.positionMm.x < 0 ? -1 : 1
+
+    const anodePost = mesh('package-led-anode-post', new CylinderGeometry(.11 * mm, .13 * mm, h * .44, 16), metal, group, false)
+    anodePost.position.set(-sign * radius * .42, bottom + h * .25, 0)
+
+    const cathodeStem = mesh('package-led-cathode-stem', new CylinderGeometry(.14 * mm, .16 * mm, h * .36, 16), metal, group, false)
+    cathodeStem.position.set(sign * radius * .42, bottom + h * .21, 0)
+    const cathodeAnvil = mesh('package-led-cathode-anvil', new BoxGeometry(.48 * mm, .38 * mm, .32 * mm), metal, group, false)
+    cathodeAnvil.position.set(sign * radius * .3, bottom + h * .42, 0); cathodeAnvil.rotation.z = -sign * .22
+    const die = mesh('package-led-die', new BoxGeometry(.12 * mm, .12 * mm, .12 * mm), dark, group, false)
+    die.position.set(sign * radius * .3, bottom + h * .44, 0)
+
     box('package-cathode-marker', .32 * mm, .3 * mm, radius * .8, sign * radius, bottom + .25 * mm, 0, ink, group, false)
   } else if (pkg.family === 'axial') {
     const resistor = pkg.visualVariant === 'resistor' || part.function === 'resistor'
-    const coating = createPackageBodyMaterial({ color: resistor ? '#467697' : '#ae613a', roughness: resistor ? .73 : .28, metalness: .02 })
-    const radius = Math.min(h, d) / 2, body = mesh('package-body', axialCoatingGeometry(w, radius, resistor), coating)
-    body.rotation.z = Math.PI / 2; body.position.y = bottom + h / 2
+    const zener = pkg.visualVariant === 'zener' || part.function === 'zener-diode'
+    const radius = Math.min(h, d) / 2
     if (resistor) {
+      const coating = createResistorMaterial()
+      const body = mesh('package-body', axialCoatingGeometry(w, radius, true), coating)
+      body.rotation.z = Math.PI / 2; body.position.y = bottom + h / 2
       for (const [i, fraction] of [-.28, -.15, -.02, .11, .3].entries()) {
-        const paint = new MeshStandardMaterial({ color: '#1c1d20', roughness: .62 })
-        const band = mesh(`package-resistor-band-${i}`, new CylinderGeometry(radius * .95 + .0002, radius * .95 + .0002, w * .055, 32, 1, true), paint)
+        const paint = new MeshStandardMaterial({ color: '#1c1d20', roughness: .58, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 })
+        const bandRadius = radius * .96 + .0001
+        const band = mesh(`package-resistor-band-${i}`, new CylinderGeometry(bandRadius, bandRadius, w * .055, 48, 1, true), paint)
         band.rotation.z = Math.PI / 2; band.position.set(fraction * w, bottom + h / 2, 0); band.userData.selectionSurface = false; band.userData.resistorBand = true
+        band.castShadow = false
       }
-      // The readout is kept in metadata even without a DOM, and only painted on
-      // the coating when a value cannot be encoded exactly with five bands.
       const readout = marking('', w * .8, d * .6, 0, 0, top + .0012, 'package-property-marking'); readout.userData.onlyWithoutBands = true
-    } else {
+    } else if (zener) {
+      const glass = createZenerGlassMaterial()
+      const body = mesh('package-body', axialCoatingGeometry(w, radius, false), glass)
+      body.rotation.z = Math.PI / 2; body.position.y = bottom + h / 2; body.renderOrder = 2
+
+      const slugMat = new MeshStandardMaterial({ color: '#c44f2b', roughness: .45, metalness: .05 })
+      const slug = mesh('package-zener-slug', new CylinderGeometry(radius * .72, radius * .72, w * .62, 32), slugMat)
+      slug.rotation.z = Math.PI / 2; slug.position.set(0, bottom + h / 2, 0); slug.userData.selectionSurface = false
+
       const side = Math.sign(pkg.pins.find(pin => pin.id === 'K' || pin.name === 'K')?.positionMm.x ?? 1)
-      const stripe = mesh('package-cathode-marker', new CylinderGeometry(radius + .0002, radius + .0002, w * .12, 32, 1, true), dark)
-      stripe.rotation.z = Math.PI / 2; stripe.position.set(side * .29 * w, bottom + h / 2, 0); stripe.userData.selectionSurface = false
+      const cathodeBandMat = new MeshStandardMaterial({ color: '#14171a', roughness: .5, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 })
+      const stripe = mesh('package-cathode-marker', new CylinderGeometry(radius * .73, radius * .73, w * .13, 32, 1, true), cathodeBandMat)
+      stripe.rotation.z = Math.PI / 2; stripe.position.set(side * .22 * w, bottom + h / 2, 0); stripe.userData.selectionSurface = false; stripe.castShadow = false
+
+      for (const s of [-1, 1]) {
+        const seal = mesh(`package-zener-seal-${s}`, new CylinderGeometry(radius * .48, radius * .48, .18 * mm, 24), metal)
+        seal.rotation.z = Math.PI / 2; seal.position.set(s * w * .4, bottom + h / 2, 0); seal.userData.selectionSurface = false
+      }
+    } else {
+      const coating = createDiodeMaterial()
+      const body = mesh('package-body', axialCoatingGeometry(w, radius, false), coating)
+      body.rotation.z = Math.PI / 2; body.position.y = bottom + h / 2
+
+      const side = Math.sign(pkg.pins.find(pin => pin.id === 'K' || pin.name === 'K')?.positionMm.x ?? 1)
+      const bandMat = new MeshStandardMaterial({ color: '#c8cbd0', roughness: .35, metalness: .15, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 })
+      const stripe = mesh('package-cathode-marker', new CylinderGeometry(radius + .0001, radius + .0001, w * .12, 48, 1, true), bandMat)
+      stripe.rotation.z = Math.PI / 2; stripe.position.set(side * .29 * w, bottom + h / 2, 0); stripe.userData.selectionSurface = false; stripe.castShadow = false
     }
   } else if (pkg.family === 'radial-capacitor') {
-    const coating = createPackageBodyMaterial({ color: pkg.polarized ? '#253d57' : '#cba05e', roughness: .5, metalness: .03 })
     if (pkg.polarized) {
       const radius = Math.min(w, d) / 2
-      const sleeve = mesh('package-body', new LatheGeometry([[0, 0], [.91, 0], [.99, .02], [1, .06], [1, .91], [.96, .96], [.91, 1]].map(([r, y]) => new Vector2(r! * radius, y! * h)), 32), coating); sleeve.position.y = bottom
-      cylinder('package-capacitor-lid', radius * .92, .15 * mm, 0, top + .05 * mm, 0, metal).userData.selectionSurface = false
-      box('package-polarity-stripe', .65 * mm, h * .83, .08 * mm, radius * .38, bottom + h * .5, radius * .94, ink, group, false)
-      for (let i = 0; i < 3; i++) box(`package-negative-sign-${i}`, .4 * mm, .07 * mm, .08 * mm, radius * .38, bottom + h * (.28 + i * .22), radius * .95 + .04 * mm, dark, group, false)
-      const ventSize = radius * 1.1
-      for (const turn of [-1, 1]) { const vent = box(`package-capacitor-vent-${turn}`, ventSize, .001, .0009, 0, top + .14 * mm, 0, dark, group, false); vent.rotation.y = turn * Math.PI / 4 }
-      const values = marking('', w * .72, h * .2, 0, 0, bottom + h * .64, 'package-property-marking', new CylinderGeometry(radius + .0006, radius + .0006, h * .2, 32, 1, true, -Math.PI * .45, Math.PI * .45)); values.rotation.x = 0
+      const sleeveMat = createElectrolyticSleeveMaterial('#2b6cb0')
+      const sleeve = mesh('package-body', electrolyticSleeveGeometry(radius, h), sleeveMat); sleeve.position.y = bottom
+
+      const lid = cylinder('package-capacitor-lid', radius * .88, .12 * mm, 0, top - .02 * mm, 0, metal)
+      lid.userData.selectionSurface = false
+
+      const ventSize = radius * .92
+      const ventMat = new MeshStandardMaterial({ color: '#7a828a', roughness: .4, metalness: .5 })
+      for (const turn of [-1, 1]) {
+        const vent = box(`package-capacitor-vent-${turn}`, ventSize, .0008, .0008, 0, top - .015 * mm, 0, ventMat, group, false)
+        vent.rotation.y = turn * Math.PI / 4; vent.castShadow = false
+      }
+
+      cylinder('package-capacitor-bung', radius * .82, .1 * mm, 0, bottom + .05 * mm, 0, dark).userData.selectionSurface = false
+
+      // Polarity stripe oriented towards MINUS pin
+      const minusPin = pkg.pins.find(pin => pin.id === 'MINUS' || pin.name === 'MINUS' || pin.id === 'B' || pin.id === 'K' || pin.name === 'K')
+      const minusAngle = minusPin ? Math.atan2(minusPin.positionMm.x, minusPin.positionMm.z) : 0
+
+      const polarityGroup = new Group(); polarityGroup.name = 'package-polarity-group'; polarityGroup.rotation.y = minusAngle; group.add(polarityGroup)
+      const stripeWidth = .65 * mm
+      const stripeMat = new MeshStandardMaterial({ color: '#e4e7eb', roughness: .5, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 })
+      const stripe = mesh('package-polarity-stripe', new CylinderGeometry(radius + .0001, radius + .0001, h * .82, 16, 1, true, -stripeWidth / (2 * radius), stripeWidth / radius), stripeMat, polarityGroup, false)
+      stripe.position.y = bottom + h * .5; stripe.castShadow = false
+
+      const signMat = new MeshStandardMaterial({ color: '#1c2d42', roughness: .6, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })
+      for (let i = 0; i < 3; i++) {
+        const signMesh = mesh(`package-negative-sign-${i}`, new PlaneGeometry(.35 * mm, .07 * mm), signMat, polarityGroup, false)
+        signMesh.position.set(0, bottom + h * (.28 + i * .22), radius + .0002); signMesh.castShadow = false
+      }
+
+      const markingAngle = minusAngle + Math.PI
+      const values = marking('', w * .75, h * .22, 0, 0, bottom + h * .62, 'package-property-marking', new CylinderGeometry(radius + .0005, radius + .0005, h * .22, 32, 1, true, markingAngle - Math.PI * .4, Math.PI * .8))
+      values.rotation.x = 0; values.castShadow = false
     } else {
       const disc = new Group(); disc.name = 'package-ceramic-disc'; group.add(disc)
-      const body = mesh('package-body', new SphereGeometry(1, 20, 14), coating, disc); body.scale.set(w / 2, h / 2, d / 2); body.position.y = bottom + h / 2
+      const coating = createCeramicMaterial()
+      const body = mesh('package-body', ceramicDiscGeometry(w, h, d), coating, disc)
+      body.position.y = bottom + h / 2
       const values = marking('', w * .84, h * .23, 0, d / 2 + .0008, bottom + h * .6, 'package-property-marking'); values.rotation.x = 0
+      values.castShadow = false
     }
   } else if (pkg.family === 'to92') {
     const shape = new Shape()

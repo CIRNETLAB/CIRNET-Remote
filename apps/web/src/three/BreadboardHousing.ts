@@ -39,11 +39,13 @@ export function addBreadboardHousing(group: Group, type: string, color: string, 
     const geometry = new ExtrudeGeometry(profile, { depth: height, bevelEnabled: true, bevelSize: matingInset, bevelOffset: -matingInset, bevelThickness: g.bevelThickness, bevelSegments: 1, curveSegments: 1 })
     geometry.rotateX(-Math.PI / 2)
     const mesh = new Mesh(geometry, new MeshStandardMaterial({ color: bodyColor, roughness: 0.82, metalness: 0 }))
+    mesh.receiveShadow = true
     mesh.position.y = y; group.add(mesh)
     return mesh
   }
   body(baseShape, g.baseHeight, g.baseY, '#c6cbd0')
   const deck = body(deckShape, h - g.baseHeight, g.deckY, color)
+  deck.receiveShadow = true
   deck.userData.breadboardDeck = true
   if (texture) {
     const geometry = new ShapeGeometry(deckShape)
@@ -51,6 +53,7 @@ export function addBreadboardHousing(group: Group, type: string, color: string, 
     const positions = geometry.getAttribute('position'), uv = geometry.getAttribute('uv')
     for (let i = 0; i < positions.count; i++) uv.setXY(i, (positions.getX(i) + w / 2) / w, 0.5 - positions.getZ(i) / d)
     const face = new Mesh(geometry, new MeshStandardMaterial({ map: texture, roughness: 0.86, metalness: 0 }))
+    face.receiveShadow = true
     face.position.y = h + g.artworkOffset; group.add(face)
   }
   group.userData.selectionProfile = points

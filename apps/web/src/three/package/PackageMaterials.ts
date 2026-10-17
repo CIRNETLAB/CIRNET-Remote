@@ -1,4 +1,4 @@
-import { Color, MeshStandardMaterial, type MeshStandardMaterialParameters } from 'three'
+import { Color, MeshPhysicalMaterial, MeshStandardMaterial, type MeshStandardMaterialParameters } from 'three'
 import { createCoatingMaterial } from '../StudioEnvironment'
 
 /** Body paint only: reduce display-space brightness by 10% while retaining hue.
@@ -9,6 +9,82 @@ export function subduedBodyColor(color: string): Color {
 
 export function createPackageBodyMaterial(parameters: MeshStandardMaterialParameters & { color: string }) {
   return createCoatingMaterial({ ...parameters, color: subduedBodyColor(parameters.color) })
+}
+
+/** Resistor body: mandatory sRGB #4A90E2 albedo, smooth slight-gloss coating. */
+export function createResistorMaterial() {
+  return new MeshStandardMaterial({
+    color: '#4A90E2',
+    roughness: .38,
+    metalness: 0,
+    envMapIntensity: .5,
+  })
+}
+
+/** Signal diode body: charcoal/black epoxy molding with soft satin sheen. */
+export function createDiodeMaterial() {
+  return new MeshStandardMaterial({
+    color: '#1b1e22',
+    roughness: .4,
+    metalness: 0,
+    envMapIntensity: .4,
+  })
+}
+
+/** Zener diode body: DO-35 transparent/translucent glass envelope with reflections. */
+export function createZenerGlassMaterial() {
+  return new MeshPhysicalMaterial({
+    color: '#e86a3e',
+    roughness: .14,
+    metalness: 0,
+    transmission: .72,
+    opacity: 1,
+    transparent: true,
+    ior: 1.52,
+    thickness: .025,
+    envMapIntensity: .95,
+    depthWrite: false,
+  })
+}
+
+/** Electrolytic capacitor: smooth blue PVC sleeve with subtle sheen. */
+export function createElectrolyticSleeveMaterial(color = '#2b6cb0') {
+  return new MeshStandardMaterial({
+    color,
+    roughness: .38,
+    metalness: 0,
+    envMapIntensity: .45,
+  })
+}
+
+/** Ceramic capacitor: golden-brown caramel lacquer/resin dipped finish. */
+export function createCeramicMaterial() {
+  return new MeshStandardMaterial({
+    color: '#b87d32',
+    roughness: .42,
+    metalness: 0,
+    envMapIntensity: .4,
+  })
+}
+
+/** Radial LED: colored translucent resin lens with soft highlight and internal depth. */
+export function createLedLensMaterial(color = '#ba3434') {
+  const c = new Color(color)
+  return new MeshPhysicalMaterial({
+    color: c,
+    roughness: .14,
+    metalness: 0,
+    transmission: .62,
+    opacity: 1,
+    transparent: true,
+    ior: 1.54,
+    thickness: .04,
+    attenuationColor: c,
+    attenuationDistance: .08,
+    envMapIntensity: .9,
+    emissive: '#000000',
+    emissiveIntensity: 0,
+  })
 }
 
 /** Materials belong to a single model; removing a model cannot invalidate a peer. */

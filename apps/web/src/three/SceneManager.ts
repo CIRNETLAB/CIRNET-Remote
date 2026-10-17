@@ -48,6 +48,17 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
   const grid = createTechnicalGrid()
   const ambient = new AmbientLight('#c9def4', 1.1)
   const light = new DirectionalLight('#fff5dc', 1.9); light.position.set(-5, 10, 5)
+  light.castShadow = true
+  light.shadow.mapSize.width = 1024
+  light.shadow.mapSize.height = 1024
+  light.shadow.camera.near = 1
+  light.shadow.camera.far = 30
+  light.shadow.camera.left = -12
+  light.shadow.camera.right = 12
+  light.shadow.camera.top = 12
+  light.shadow.camera.bottom = -12
+  light.shadow.bias = -0.0005
+  light.shadow.normalBias = 0.002
   const fillLight = new DirectionalLight('#a8c7e8', 0.75); fillLight.position.set(6, 8, -6)
   const content = new Group(), models = new Map<string, Group>(), modules = new Map<string, CircuitModule>()
   const mountPreview = new Group(); mountPreview.userData.ignorePick = true; scene.add(mountPreview)
@@ -343,7 +354,16 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       if(flexibleGhost&&flexibleGhost.userData.signature!==signature){flexibleGhost.removeFromParent();disposeObject(flexibleGhost);flexibleGhost=null}
       if(!flexibleGhost){flexibleGhost=buildComponent(module,context);flexibleGhost.userData.ignorePick=true;scene.add(flexibleGhost)}
       else{updateFlexiblePackageGeometry(flexibleGhost,module,context);applyPose(flexibleGhost,moduleWorldPose(module,context))}
-      flexibleGhost.traverse(object=>{if(object instanceof Mesh){const materials=Array.isArray(object.material)?object.material:[object.material];for(const material of materials){material.transparent=true;material.opacity=valid?.5:.25;material.depthWrite=false}}});schedule()
+      flexibleGhost.traverse(object => {
+        object.castShadow = false; object.receiveShadow = false
+        if (object instanceof Mesh) {
+          const materials = Array.isArray(object.material) ? object.material : [object.material]
+          for (const material of materials) {
+            material.transparent = true; material.opacity = valid ? .5 : .25; material.depthWrite = false
+            if ('transmission' in material) (material as any).transmission = 0
+          }
+        }
+      }); schedule()
     },
     setGizmoObstacles(areas: GizmoObstacle[]) { if (!disposed && JSON.stringify(areas) !== JSON.stringify(gizmoObstacles)) { gizmoObstacles = areas.map((area) => ({ ...area })); schedule() } },
     gizmoHandlePosition(handle: TransformHandle) { if (disposed) return null; updateGizmo(); return gizmo.position(handle) },

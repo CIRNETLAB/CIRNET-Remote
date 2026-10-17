@@ -20,7 +20,7 @@ export function createFlexibleLeadGeometry(points: Vector3[], diameter: number, 
   }
   const end = points.at(-1)!.clone()
   if (previous.distanceTo(end) > 1e-8) path.add(new LineCurve3(previous, end))
-  return new TubeGeometry(path, Math.max(64, points.length * 24), diameter / 2, 12, false)
+  return new TubeGeometry(path, Math.max(64, points.length * 24), diameter / 2, 16, false)
 }
 
 /** One sweep, with end caps only at the socket/body ends of a rectangular lead.
@@ -46,7 +46,7 @@ export function createFormedLeadGeometry(points: Vector3[], diameter: number, re
   const end = points[points.length - 1]!.clone()
   if (previous.distanceTo(end) > 1e-8) path.add(new LineCurve3(previous, end))
   const steps = Math.max(48, (points.length - 1) * 16)
-  if (!rectangular) return new TubeGeometry(path, steps, diameter / 2, 12, false)
+  if (!rectangular) return new TubeGeometry(path, steps, diameter / 2, 16, false)
   const section = new Shape(), width = diameter / 2, thickness = diameter * .19
   // At a vertical socket end Frenet's binormal points along X: put the
   // ribbon width on that axis and its narrow thickness in the bend plane.
