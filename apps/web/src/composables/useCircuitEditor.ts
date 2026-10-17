@@ -2,7 +2,7 @@ import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue'
 import type { Vector3 } from 'three'
 import type { createSceneManager } from '../three/SceneManager'
 import { getDefinition } from '../data/editorCatalog'
-import { getPartForType } from '../data/partCatalog'
+import { getPartForType, getPartForModule } from '../data/partCatalog'
 import { moduleWorldPose, moduleLocalToWorld, worldToModuleLocal } from '../electrical/modulePose'
 import { isFlexibleMount } from '../electrical/flexibleGeometry'
 import { buildFlexibleTransformCandidate } from '../electrical/flexibleTransforms'
@@ -57,7 +57,7 @@ export function snapPosition(
       if(snapEnabled){desired.x=current.x+Math.round((desired.x-current.x)/topology.pitch)*topology.pitch;desired.z=current.z+Math.round((desired.z-current.z)/topology.pitch)*topology.pitch}
       return moduleLocalToWorld({x:desired.x,y:current.y,z:desired.z},board)
     }
-    const candidate = solveMounting(activeType, { x: point.x, y: point.y ?? elevation, z: point.z }, rotation ?? pose?.rotation ?? 0, modules, activeId ?? 'PLACE')
+    const candidate = solveMounting(activeType, { x: point.x, y: point.y ?? elevation, z: point.z }, rotation ?? pose?.rotation ?? 0, modules, activeId ?? 'PLACE', module?.mount)
     if (candidate) return candidate.position
     if (module?.mount) elevation = 0
   }
@@ -373,7 +373,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
         }
         if (transform.target === 'module') {
           if (type && getPartForType(type) && !isFlexibleMount(circuit.graph?.modules.find(m=>m.id===transform.id)?.mount)) {
-            const candidate = solveMounting(type, transform.position, transform.rotation, circuit.graph?.modules ?? [], transform.id)
+            const candidate = solveMounting(type, transform.position, transform.rotation, circuit.graph?.modules ?? [], transform.id, circuit.graph?.modules.find(m => m.id === transform.id)?.mount)
             manager()?.setMountPreview?.(candidate)
             mountHint.value = candidate ? candidate.valid ? 'All pins fit. Release to mount.' : candidate.reason : ''
           }
@@ -385,7 +385,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     if (!gesture) {
       const endpoint = !workspace.placementType ? manager()!.pickEndpoint(x, y) : null
       const parsed = endpoint?.endpoint.split('.'), pinModule = parsed && circuit.graph?.modules.find(m => m.id === parsed[0])
-      const pin = pinModule && getPartForType(pinModule.type)?.package.pins.find(p => p.id === parsed![1])
+      const pin = pinModule && getPartForModule(pinModule)?.package.pins.find(p => p.id === parsed![1])
       pinHint.value = pin ? `${pinModule!.id} · pin ${pin.number} ${pin.name} · ${pin.role}${pin.outputType ? ' · ' + pin.outputType : ''}` : ''
       if (workspace.tool !== 'wire') manager()!.hoverEndpoint(pin ? endpoint!.endpoint : null)
       hoveredHandle.value = manager()!.hoverGizmo(x, y)
@@ -404,7 +404,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       const module = circuit.graph?.modules.find((m) => m.id === move.id)
       move.position = snap(point, module?.type, move.id, move.offset.y)
       if(previewFlexibleTransform(move.id,move.position)){updatePorts();return}
-      const candidate = module && solveMounting(module.type, move.position, selected.value?.rotation ?? 0, circuit.graph?.modules ?? [], move.id)
+      const candidate = module && solveMounting(module.type, move.position, selected.value?.rotation ?? 0, circuit.graph?.modules ?? [], move.id, module.mount)
       manager()?.setMountPreview?.(candidate || null)
       mountHint.value = candidate ? candidate.valid ? 'All pins fit. Release to mount.' : candidate.reason : ''
       manager()!.previewMove(move.id, move.position); updatePorts()
@@ -466,9 +466,9 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     else if (completed.kind === 'transform' && completed.dragged && completed.draft === circuit.activeId) attempt(() => {
       if (completed.handle === 'rotate-y') {
         const raw = completed.initialRotation + completed.angle * 180 / Math.PI
-        const type = circuit.graph?.modules.find((m) => m.id === completed.id)?.type
+        const module = circuit.graph?.modules.find((m) => m.id === completed.id), type = module?.type
         const step = rotationSnapStep(type)
-        const support = type && getPartForType(type) ? solveMounting(type, completed.initial, raw, circuit.graph?.modules ?? [], completed.id) : null
+        const support = type && getPartForType(type, module?.mount) ? solveMounting(type, completed.initial, raw, circuit.graph?.modules ?? [], completed.id, module?.mount) : null
         const boardRotation = support ? circuit.graph?.modules.find(m => m.id === support.boardId)?.rotation ?? 0 : 0
         const finalRotation = workspace.snap ? boardRotation + Math.round((raw - boardRotation) / step) * step : Math.round(raw * 100) / 100
         circuit.rotateModule(completed.id, finalRotation - completed.initialRotation)

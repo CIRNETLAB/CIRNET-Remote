@@ -14,11 +14,14 @@ DC_MODELS={'dc-source','hc08-powered','resistor-dc','led-dc','contact-switch'}
 def validate_parts(registry):
     if registry.get('schemaVersion') != 1 or registry.get('units') != 'mm':
         raise ValueError('Unsupported physical part registry version or units')
-    ids, types = set(), set()
-    for part in registry['parts']:
-        if part['id'] in ids or part['editorType'] in types:
+    if len({part['editorType'] for part in registry['parts']}) != len(registry['parts']):
+        raise ValueError('Duplicate physical default type')
+    ids = set()
+    for part in [*registry['parts'], *registry.get('historicalParts', [])]:
+        identity = (part['id'], part['revision'])
+        if identity in ids:
             raise ValueError('Duplicate physical part identity or type')
-        ids.add(part['id']); types.add(part['editorType'])
+        ids.add(identity)
         package = part['package']
         footprint = package['footprint']
         if any(type(value) is not int or value < 1 for value in (part['revision'], package['revision'], footprint['revision'])):
@@ -105,7 +108,8 @@ def generate_editor_parts(registry):
     validate_parts(registry)
     keys = {'id', 'revision', 'editorType', 'name', 'shortName', 'function', 'package', 'editor', 'internalConnections', 'aliases', 'logic', 'identityKind'}
     return {'schemaVersion': registry['schemaVersion'], 'units': registry['units'],
-            'parts': [{key: value for key, value in part.items() if key in keys} for part in registry['parts']]}
+            **{collection: [{key: value for key, value in part.items() if key in keys} for part in registry.get(collection, [])]
+               for collection in ('parts', 'historicalParts')}}
 
 
 def generate_catalog(catalog, registry):

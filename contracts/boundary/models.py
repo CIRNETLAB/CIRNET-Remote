@@ -1263,17 +1263,6 @@ class ComponentDesignPropertiesV1(ContractBoundary):
     maxCurrentAmps: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
     color: StrictStr | None = Field(None, max_length=7, pattern='^#[0-9a-fA-F]{6}$')
 
-class CircuitModuleV12(ContractBoundary):
-    __contract_id__: ClassVar[str] = 'CircuitModuleV12'
-    __validation_profile__: ClassVar[str] = 'structural'
-    model_config = ConfigDict(extra='allow')
-    id: StrictStr = Field(..., min_length=1)
-    type: StrictStr = Field(..., min_length=1)
-    position: Position | None = None
-    rotation: StrictInt | StrictFloat | None = None
-    properties: dict[str, Any] | None = None
-    mount: MountBinding | FlexibleMountV1 | None = None
-
 class CircuitSummaryV2(ContractBoundary):
     __contract_id__: ClassVar[str] = 'CircuitSummaryV2'
     __validation_profile__: ClassVar[str] = 'structural'
@@ -1325,6 +1314,43 @@ class AssignmentAuthoringPublicationV2(ContractBoundary):
     base_revision: StrictInt | StrictFloat = Field(..., ge=1, le=9007199254740991)
     published: StrictBool
     feedback_policy: Literal['observed_only', 'detailed'] | None = None
+
+class AutomaticRoutingIntentV1(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'AutomaticRoutingIntentV1'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    version: Annotated[Literal[1] | StrictFloat, WrapValidator(preserve_json_literal((1,)))]
+    mode: Literal['automatic']
+    template: Literal['axial-standing', 'axial-horizontal', 'radial-upright']
+
+class FlexibleMountV2(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'FlexibleMountV2'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    kind: Literal['breadboard-flexible']
+    version: Annotated[Literal[2] | StrictFloat, WrapValidator(preserve_json_literal((2,)))]
+    boardId: StrictStr = Field(..., min_length=1)
+    partId: StrictStr = Field(..., min_length=1)
+    partRevision: StrictInt | StrictFloat = Field(..., ge=1)
+    packageId: StrictStr = Field(..., min_length=1)
+    packageRevision: StrictInt | StrictFloat = Field(..., ge=1)
+    mechanicalProfileId: StrictStr = Field(..., min_length=1)
+    mechanicalProfileRevision: StrictInt | StrictFloat = Field(..., ge=1)
+    geometryRevision: Annotated[Literal[2] | StrictFloat, WrapValidator(preserve_json_literal((2,)))]
+    bodyPose: BodyPose3D
+    contacts: list[PinContactBinding] = Field(..., max_length=2, min_length=2)
+    leads: list[FlexibleLeadIntent] = Field(..., max_length=2, min_length=2)
+    routing: AutomaticRoutingIntentV1
+
+class PhysicalDescriptorV1(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'PhysicalDescriptorV1'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    version: Annotated[Literal[1] | StrictFloat, WrapValidator(preserve_json_literal((1,)))]
+    partId: StrictStr = Field(..., min_length=1)
+    partRevision: StrictInt | StrictFloat = Field(..., ge=1)
+    packageId: StrictStr = Field(..., min_length=1)
+    packageRevision: StrictInt | StrictFloat = Field(..., ge=1)
 
 class AssessmentPolicy(ContractRootBoundary[Literal['STRICT_TOPOLOGY', 'FUNCTIONAL_ONLY', 'TOPOLOGY_AND_FUNCTION']]):
     root: Literal['STRICT_TOPOLOGY', 'FUNCTIONAL_ONLY', 'TOPOLOGY_AND_FUNCTION']
@@ -1708,6 +1734,7 @@ class MechanicalAuthoringProfileV1(ContractBoundary):
     bodyClearanceMm: StrictInt | StrictFloat = Field(..., ge=0.0, le=10.0)
     maxBodyLiftMm: StrictInt | StrictFloat = Field(..., gt=0.0, le=100.0)
     maxControlsPerLead: Annotated[Literal[8] | StrictFloat, WrapValidator(preserve_json_literal((8,)))]
+    preferredBendRadiusMm: StrictInt | StrictFloat | None = Field(None, description='Preferred circular display radius; minimum remains the physical lower bound. Omitted historical profiles use minBendRadiusMm.', gt=0.0, le=10.0)
 
 class FlexibleMechanicsCatalog(ContractBoundary):
     __contract_id__: ClassVar[str] = 'FlexibleMechanicsCatalog'
@@ -1717,15 +1744,17 @@ class FlexibleMechanicsCatalog(ContractBoundary):
     units: Literal['mm']
     profiles: list[MechanicalAuthoringProfileV1]
 
-class CircuitGraphV12(ContractBoundary):
-    __contract_id__: ClassVar[str] = 'CircuitGraphV12'
+class CircuitModuleV12(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'CircuitModuleV12'
     __validation_profile__: ClassVar[str] = 'structural'
-    model_config = ConfigDict(extra='forbid')
-    schema_version: Literal['1.2']
-    circuit_id: StrictStr = Field(..., min_length=1)
-    modules: list[CircuitModuleV12] = Field(..., max_length=2000)
-    connections: list[CircuitConnection] = Field(..., max_length=10000)
-    metadata: dict[str, Any] | None = None
+    model_config = ConfigDict(extra='allow')
+    id: StrictStr = Field(..., min_length=1)
+    type: StrictStr = Field(..., min_length=1)
+    position: Position | None = None
+    rotation: StrictInt | StrictFloat | None = None
+    properties: dict[str, Any] | None = None
+    mount: MountBinding | FlexibleMountV1 | FlexibleMountV2 | None = None
+    physicalDescriptor: PhysicalDescriptorV1 | None = None
 
 class AssignmentAuthoringSummaryV2(ContractBoundary):
     __contract_id__: ClassVar[str] = 'AssignmentAuthoringSummaryV2'
@@ -1905,6 +1934,16 @@ class SimulationRequest(ContractBoundary):
     test_vectors: list[TestVector] | None = None
     clock_config: dict[str, Any] | ClockConfiguration | None = None
     inputs: dict[str, Annotated[Literal[0, 1] | StrictFloat, WrapValidator(preserve_json_literal((0, 1)))]] | None = None
+
+class CircuitGraphV12(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'CircuitGraphV12'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    schema_version: Literal['1.2']
+    circuit_id: StrictStr = Field(..., min_length=1)
+    modules: list[CircuitModuleV12] = Field(..., max_length=2000)
+    connections: list[CircuitConnection] = Field(..., max_length=10000)
+    metadata: dict[str, Any] | None = None
 
 class AnySupportedCircuitGraph(ContractRootBoundary[CircuitGraph | CircuitGraphV12]):
     __contract_id__: ClassVar[str] = 'AnySupportedCircuitGraph'

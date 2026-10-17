@@ -2,19 +2,20 @@ import { Box3, Group, Mesh, Vector3, type BufferGeometry } from 'three'
 import { getPartForType, MM_TO_WORLD } from '../../data/partCatalog'
 import { inverseTransformPoint, isFlexibleMount, resolveFlexibleGeometry, rotationMatrix, subtractPoint } from '../../electrical/flexibleGeometry'
 import type { CircuitModule } from '../../types/circuit'
-import { createFlexibleLeadGeometry } from './LeadGeometry'
+import { createFlexibleLeadPathGeometry } from './LeadGeometry'
 
 const signatures = new WeakMap<Group, string>()
 /** Renderer adapter: all coordinates are derived from the canonical board-local mount. */
 export function updateFlexiblePackageGeometry(group: Group, module: CircuitModule, modules: CircuitModule[]): void {
   if (!isFlexibleMount(module.mount)) return
-  const board = modules.find(item => item.id === module.mount!.boardId), part = getPartForType(module.type)
+  const board = modules.find(item => item.id === module.mount!.boardId), part = getPartForType(module.type,module.mount)
   if (!board || !part) throw Error('Flexible rendering requires its mounting breadboard.')
   const signature = JSON.stringify(module.mount)
   if (signatures.get(group) === signature) return
   const geometry = resolveFlexibleGeometry(module, part, board), pose = module.mount.bodyPose
   const yaw = rotationMatrix({ x: 0, y: pose.rotation.y, z: 0 })
   const local = (point: {x:number;y:number;z:number}) => { const p = inverseTransformPoint(yaw, subtractPoint(point, pose.position)); return new Vector3(p.x, p.y, p.z) }
+  const direction = (point:{x:number;y:number;z:number}) => { const p=inverseTransformPoint(yaw,point);return new Vector3(p.x,p.y,p.z) }
   // Construct replacements before mutating any live object.
   const replacements: {surface:Mesh<BufferGeometry>;geometry:BufferGeometry;points:Vector3[]}[] = []
   try {
@@ -22,7 +23,7 @@ export function updateFlexiblePackageGeometry(group: Group, module: CircuitModul
       const surface = group.getObjectByName(`package-lead-${lead.pinId}`)?.getObjectByName('lead-metal') as Mesh<BufferGeometry> | undefined
       if (!surface) throw Error('Flexible package is missing a stable lead mesh.')
       const points = lead.points.map(local)
-      replacements.push({surface, points, geometry:createFlexibleLeadGeometry(points, part.package.leadDiameterMm * MM_TO_WORLD, geometry.profile.minBendRadiusMm * MM_TO_WORLD)})
+      replacements.push({surface, points, geometry:createFlexibleLeadPathGeometry(lead.path,part.package.leadDiameterMm * MM_TO_WORLD,local,direction)})
     }
   } catch (error) { replacements.forEach(item => item.geometry.dispose()); throw error }
   let body = group.getObjectByName('flexible-rigid-body') as Group | undefined

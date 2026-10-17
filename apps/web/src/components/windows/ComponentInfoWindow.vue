@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { useWorkspaceStore } from '../../stores/workspace'
 import { useCircuitStore } from '../../stores/circuit'
 import { useUiStore } from '../../stores/ui'
 import { libraryComponents, iconUrl } from '../../data/ribbon'
 import { getDefinition } from '../../data/editorCatalog'
-import { componentAddType, componentDesignTransition, componentDisplayName, getPartForType } from '../../data/partCatalog'
+import { componentAddType, componentDesignTransition, componentDisplayName, getPartForType, getPartForModule } from '../../data/partCatalog'
 import domains from '../../data/signalPortCatalog.json'
 import WorkbenchIcon from '../workbench/WorkbenchIcon.vue'
 import ComponentPropertiesForm from './ComponentPropertiesForm.vue'
 import ComponentThumbnail from '../workbench/ComponentThumbnail.vue'
+import { supportsFlexiblePlacement } from '../../electrical/flexibleGeometry'
 const workspace = useWorkspaceStore(), circuit = useCircuitStore(), ui = useUiStore()
 const header = ref<HTMLElement>()
 const propertyForm = ref<InstanceType<typeof ComponentPropertiesForm>>()
@@ -20,7 +21,9 @@ const type = computed(() => workspace.placementType ?? selected.value?.type)
 const properties = computed(() => isDraft.value ? workspace.placementProperties ?? undefined : selected.value?.properties)
 const contextKey = computed(() => isDraft.value ? `draft:${workspace.placementEpoch}` : `module:${selected.value?.id}`)
 const definition = computed(() => type.value ? getDefinition(type.value) : undefined)
-const part = computed(() => type.value ? getPartForType(type.value) : undefined)
+const part = computed(() => isDraft.value && type.value ? getPartForType(type.value) : selected.value ? getPartForModule(selected.value) : undefined)
+const canRebuild = computed(() => !isDraft.value && !!selected.value?.mount && supportsFlexiblePlacement(selected.value.type))
+const rebuildPreview = computed(() => workspace.componentGeometryPreview?.id === selected.value?.id ? workspace.componentGeometryPreview : null)
 const simulationState = computed(() => !isDraft.value && selected.value && circuit.physicalStates?.[selected.value.id])
 const item = computed(() => libraryComponents.find(entry => entry.type === type.value))
 const name = computed(() => part.value ? componentDisplayName(part.value.editorType) : definition.value?.name ?? item.value?.name ?? type.value ?? 'Component')
@@ -51,7 +54,23 @@ function add() {
   } catch (cause) { workspace.editError = cause instanceof Error ? cause.message : 'Invalid design properties.' }
 }
 function remove() { if (!isDraft.value && selected.value) { circuit.removeModule(selected.value.id); ui.closeWindow('component-info') } }
-function close() { ui.closeWindow('component-info'); void nextTick(() => document.querySelector<HTMLCanvasElement>('canvas[aria-label="Three-dimensional circuit workspace"]')?.focus()) }
+function cancelRebuild() { workspace.componentGeometryPreview = null }
+function previewRebuild() {
+  if (!selected.value) return
+  cancelRebuild()
+  try { workspace.componentGeometryPreview = circuit.previewComponentGeometry(selected.value.id); workspace.editError = '' }
+  catch (cause) { workspace.editError = cause instanceof Error ? cause.message : 'Component geometry does not fit.' }
+}
+function applyRebuild() {
+  if (!selected.value || !rebuildPreview.value) return
+  const id = selected.value.id, preview = rebuildPreview.value
+  cancelRebuild()
+  try { circuit.rebuildComponentGeometry(id, preview); workspace.editError = '' }
+  catch (cause) { workspace.editError = cause instanceof Error ? cause.message : 'Component geometry does not fit.' }
+}
+function close() { cancelRebuild(); ui.closeWindow('component-info'); void nextTick(() => document.querySelector<HTMLCanvasElement>('canvas[aria-label="Three-dimensional circuit workspace"]')?.focus()) }
+watch(() => [circuit.graphRevision, circuit.activeId, workspace.selectedModuleId, workspace.tool, workspace.placementEpoch, window.value?.open], cancelRebuild, {flush:'sync'})
+onUnmounted(cancelRebuild)
 watch(() => window.value?.activation, activation => { if (activation) void nextTick(() => header.value?.focus()) })
 </script>
 <template>
@@ -65,6 +84,10 @@ watch(() => window.value?.activation, activation => { if (activation) void nextT
       <p v-else-if="simulationState && ['ERROR', 'UNSUPPORTED'].includes(simulationState.state)" class="component-information-status" role="status">{{ simulationState.reason || simulationState.state }}</p>
       <p v-else-if="unavailable" class="component-information-status">Execution model unavailable.</p>
       <p v-else-if="definition?.visualOnly" class="component-information-status">Visual component.</p>
+      <div v-if="canRebuild" class="component-geometry-rebuild">
+        <template v-if="rebuildPreview"><p role="status">Preview: body and leads have been recalculated for the same two contacts.</p><button aria-label="Apply rebuilt component geometry" @click="applyRebuild">Apply geometry</button><button aria-label="Cancel component geometry rebuild" @click="cancelRebuild">Cancel</button></template>
+        <button v-else aria-label="Rebuild component geometry" @click="previewRebuild">Rebuild component geometry</button>
+      </div>
       <template v-if="part"><details class="component-pinout"><summary>Pinout · {{ part.package.pins.length }} pins</summary><label class="show-pins-toggle"><input type="checkbox" :checked="workspace.showPins" @change="workspace.showPins = ($event.target as HTMLInputElement).checked" />Show pins</label><ol><li v-for="pin in part.package.pins" :key="pin.id"><b>{{ pin.number }}</b><span>{{ pin.name }}</span><small>{{ pin.role }}{{ pin.outputType ? ' · ' + pin.outputType : '' }}</small></li></ol></details></template>
     </div>
     <footer class="component-information-footer"><button class="delete-btn" :disabled="isDraft || !selected" :title="deleteHint" :aria-label="'Delete ' + name" @click="remove"><WorkbenchIcon name="delete" /> Delete</button><button :disabled="!definition" :aria-label="'Add ' + name" @click="add">Add <span aria-hidden="true">+</span></button></footer>

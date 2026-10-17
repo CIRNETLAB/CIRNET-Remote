@@ -71,11 +71,22 @@ export interface PartDefinition {
   notes?: string
 }
 export const partCatalog = registry.parts as PartDefinition[]
+export const historicalPartCatalog = (registry.historicalParts ?? []) as PartDefinition[]
+const allParts = [...partCatalog, ...historicalPartCatalog]
 const byId = new Map(partCatalog.map(part => [part.id, part]))
 const byType = new Map(partCatalog.map(part => [part.editorType, part]))
-export const getPartDefinition = (id: string) => byId.get(id)
-export const getPartForType = (type: string) => byType.get(type)
-export const getPhysicalPin = (type: string, pinId: string) => getPartForType(type)?.package.pins.find(pin => pin.id === pinId)
+export interface PinnedPartDescriptor { partId: string; partRevision: number; packageId: string; packageRevision: number }
+export interface PhysicalDescriptor extends PinnedPartDescriptor { version: 1 }
+export interface PhysicalPartModule { type: string; mount?: PinnedPartDescriptor; physicalDescriptor?: unknown }
+export const physicalDescriptorForPart = (part: PartDefinition): PhysicalDescriptor => ({ version: 1, partId: part.id, partRevision: part.revision, packageId: part.package.id, packageRevision: part.package.revision })
+export const getPartDefinition = (id: string, revision?: number) => revision === undefined ? byId.get(id) : allParts.find(part => part.id === id && part.revision === revision)
+/** Existing mounts must resolve their exact descriptor; new authoring uses the current default. */
+export const getPartForType = (type: string, mount?: PinnedPartDescriptor | null) => mount == null ? byType.get(type) : allParts.find(part => part.editorType === type && part.id === mount.partId && part.revision === mount.partRevision && part.package.id === mount.packageId && part.package.revision === mount.packageRevision)
+/** Unmarked free modules predate compact defaults and retain their historical package. */
+export const getPartForModule = (module: PhysicalPartModule) => module.mount ? getPartForType(module.type, module.mount)
+  : module.physicalDescriptor !== undefined ? typeof module.physicalDescriptor === 'object' && module.physicalDescriptor !== null && (module.physicalDescriptor as PhysicalDescriptor).version === 1 ? getPartForType(module.type, module.physicalDescriptor as PhysicalDescriptor) : undefined
+  : historicalPartCatalog.filter(part => part.editorType === module.type).sort((a, b) => a.revision - b.revision)[0] ?? getPartForType(module.type)
+export const getPhysicalPin = (type: string, pinId: string, mount?: PinnedPartDescriptor | null) => getPartForType(type, mount)?.package.pins.find(pin => pin.id === pinId)
 export const componentDisplayName = (type: string) => getPartForType(type)?.editor.displayName ?? getPartForType(type)?.name ?? type
 export const componentAddType = (type: string) => getPartForType(type)?.editor.addType ?? type
 /** Only new generic capacitor designs opt into a package/polarity change. */

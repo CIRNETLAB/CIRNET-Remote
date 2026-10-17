@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { WireIdentity, WireRouteMode } from '../types/circuit'
+import type { CircuitModule, WireIdentity, WireRouteMode } from '../types/circuit'
 import { ZOOM_DEFAULT, clampZoom } from '../config/workbenchViewport'
 import { normalizeComponentProperties } from '../data/componentProperties'
 import { getDefinition, validateProperties } from '../data/editorCatalog'
@@ -8,7 +8,7 @@ import { normalizeEditorSelection, toggleModuleSelection, toggleWireSelection, t
 export type WorkspaceTool = 'select' | 'wire' | 'move' | 'rotate'
 
 export const useWorkspaceStore = defineStore('workspace', {
-  state: () => ({ selectedModuleId: null as string | null, selectedWire: null as WireIdentity | null, selectedModuleIds: [] as string[], selectedWires: [] as WireIdentity[], marqueeActive: false, pendingPort: null as string | null, wireColor: '#d8493f', wireRouteMode: 'FREE' as WireRouteMode, selectedWireBend: null as number | null, previewType: null as string | null, placementType: null as string | null, placementProperties: null as Record<string, unknown> | null, placementEpoch: 0, showPins: false, snap: true, zoom: ZOOM_DEFAULT, fitRequest: 0, zoomAreaActive: false, tool: 'select' as WorkspaceTool, editError: '' }),
+  state: () => ({ componentGeometryPreview: null as CircuitModule | null, selectedModuleId: null as string | null, selectedWire: null as WireIdentity | null, selectedModuleIds: [] as string[], selectedWires: [] as WireIdentity[], marqueeActive: false, pendingPort: null as string | null, wireColor: '#d8493f', wireRouteMode: 'FREE' as WireRouteMode, selectedWireBend: null as number | null, previewType: null as string | null, placementType: null as string | null, placementProperties: null as Record<string, unknown> | null, placementEpoch: 0, showPins: false, snap: true, zoom: ZOOM_DEFAULT, fitRequest: 0, zoomAreaActive: false, tool: 'select' as WorkspaceTool, editError: '' }),
   getters: {
     selection: (state): EditorSelection => normalizeEditorSelection({
       moduleIds: [...state.selectedModuleIds, ...(state.selectedModuleId ? [state.selectedModuleId] : [])],

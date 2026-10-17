@@ -1,8 +1,8 @@
 import type { CircuitGraph, CircuitModule, MountBinding, Point3 } from '../types/circuit'
-import { getPartForType, MM_TO_WORLD } from '../data/partCatalog'
+import { getPartForType, getPartForModule, MM_TO_WORLD, type PinnedPartDescriptor } from '../data/partCatalog'
 import { getBreadboardTopology, type BreadboardTopology, type BreadboardContact } from './BreadboardTopology'
 import { moduleLocalToWorld, moduleWorldPose, worldToModuleLocal } from './modulePose'
-import { bodiesOverlap, flexibleLeadsHitBody, isFlexibleMount, moduleBodyEnvelope, resolveFlexibleGeometry } from './flexibleGeometry'
+import { bodiesOverlap, flexibleLeadsHitBody, flexibleLeadsIntersect, isFlexibleMount, moduleBodyEnvelope, resolveFlexibleGeometry } from './flexibleGeometry'
 import { validateProperties } from '../data/editorCatalog'
 import { parseStructural } from '../contracts/structural'
 
@@ -25,7 +25,7 @@ function contactAt(topology: BreadboardTopology, position: Point3) {
 }
 
 function inspectMount(module: CircuitModule, board: CircuitModule, mount: MountBinding, modules: CircuitModule[]): { pins: MountCandidate['pins']; reason: string } {
-  const part = getPartForType(module.type), topology = getBreadboardTopology(board.type)
+  const part = getPartForType(module.type, mount), topology = getBreadboardTopology(board.type)
   if (!part || !topology || !part.package.footprint.mountable) return { pins: [], reason: 'This part has no breadboard footprint.' }
   const pose = { position: mount.pose.position, rotation: mount.pose.rotation }
   let reason = ''
@@ -53,8 +53,9 @@ function inspectMount(module: CircuitModule, board: CircuitModule, mount: MountB
   return { pins, reason }
 }
 
-export function solveMounting(type: string, desired: Point3, rotation: number, modules: CircuitModule[], activeId = 'PLACE'): MountCandidate | null {
-  const part = getPartForType(type)
+export function solveMounting(type: string, desired: Point3, rotation: number, modules: CircuitModule[], activeId = 'PLACE', pinned?: PinnedPartDescriptor): MountCandidate | null {
+  const existing = pinned ? undefined : modules.find(module => module.id === activeId && module.type === type)
+  const part = existing ? getPartForModule(existing) : getPartForType(type, pinned)
   if (!part?.package.footprint.mountable || !part.package.pins.length) return null
   let best: MountCandidate | null = null, bestDistance = Infinity
   for (const board of modules) {
@@ -82,7 +83,8 @@ export function solveMounting(type: string, desired: Point3, rotation: number, m
 export function validateMountBindings(graph: CircuitGraph): void {
   const occupied = new Set<string>()
   for (const module of graph.modules) {
-    const part = getPartForType(module.type), mount = module.mount
+    const part = getPartForModule(module), mount = module.mount
+    if (module.physicalDescriptor !== undefined && (graph.schema_version !== '1.2' || !part)) throw Error('Free physical descriptors require CircuitGraph 1.2 and a canonical package.')
     if (part && graph.schema_version !== '1.1' && graph.schema_version !== '1.2') throw new Error('Physical parts require schema 1.1 or 1.2.')
     if(part)validateProperties(module.type,{...part.editor.defaults,...module.properties})
     if (!mount) continue
@@ -90,7 +92,7 @@ export function validateMountBindings(graph: CircuitGraph): void {
     for(const binding of mount.contacts){const key=JSON.stringify([mount.boardId,binding.contactId]);if(occupied.has(key))throw Error('A physical hole is already occupied.');occupied.add(key)}
     if(isFlexibleMount(mount)){
       if(graph.schema_version!=='1.2')throw Error('Flexible assemblies require CircuitGraph 1.2.')
-      parseStructural('FlexibleMountV1',mount,'editor')
+      parseStructural(mount.version === 2 ? 'FlexibleMountV2' : 'FlexibleMountV1',mount,'editor')
       const board=graph.modules.find(b=>b.id===mount.boardId)
       if(!board)throw Error('Mount references a missing breadboard.')
       resolveFlexibleGeometry(module,part,board)
@@ -109,4 +111,6 @@ export function validateMountBindings(graph: CircuitGraph): void {
   const bodies=graph.modules.flatMap(module=>{const body=moduleBodyEnvelope(module,graph.modules);return body?[{module,body}]:[]})
   for(let i=0;i<bodies.length;i++)for(let j=i+1;j<bodies.length;j++)if((bodies[i].module.mount||bodies[j].module.mount)&&bodiesOverlap(bodies[i].body,bodies[j].body))throw Error('Physical component bodies overlap.')
   for(const module of graph.modules)if(isFlexibleMount(module.mount))for(const other of bodies)if(other.module.id!==module.id&&flexibleLeadsHitBody(module,graph.modules,other.body))throw Error('Flexible lead intersects another component body.')
+  const flexible=graph.modules.filter(module=>isFlexibleMount(module.mount))
+  for(let i=0;i<flexible.length;i++)for(let j=i+1;j<flexible.length;j++)if(flexibleLeadsIntersect(flexible[i]!,flexible[j]!,graph.modules))throw Error('Flexible leads intersect another component lead.')
 }

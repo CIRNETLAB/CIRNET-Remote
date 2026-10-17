@@ -2,14 +2,12 @@ import {onUnmounted,ref,watch,type Ref} from 'vue'
 import {FlexiblePlacementController} from '../editor/FlexiblePlacementController'
 import {PointerGestureSession} from '../editor/PointerGestureSession'
 import {isFlexibleMount,supportsFlexiblePlacement} from '../electrical/flexibleGeometry'
-import {worldToModuleLocal} from '../electrical/modulePose'
-import {validateMountBindings} from '../electrical/mounting'
 import {getPartForType} from '../data/partCatalog'
 import {useCircuitStore} from '../stores/circuit'
 import {useWorkspaceStore} from '../stores/workspace'
 import {useAuthStore} from '../stores/auth'
 import type {createSceneManager,FlexibleHandle} from '../three/SceneManager'
-import type {CircuitModule,FlexibleMountV1} from '../types/circuit'
+import type {CircuitModule,FlexibleMount} from '../types/circuit'
 
 type Manager=ReturnType<typeof createSceneManager>
 /** Pointer adapter owns previews/capture, while controller owns draft state and solver owns geometry. */
@@ -17,7 +15,7 @@ export function useFlexibleAuthoring(canvas:Ref<HTMLCanvasElement|undefined>,man
  const circuit=useCircuitStore(),workspace=useWorkspaceStore(),auth=useAuthStore(),controller=new FlexiblePlacementController(),session=new PointerGestureSession()
  const hint=ref('');let frame:number|null=null,pending:{x:number;y:number}|null=null,last:{boardId:string;contactId:string}|null=null,lastPreview:CircuitModule|null=null
  let right:{pointer:number;x:number;y:number;dragged:boolean}|null=null
- let edit:{pointer:number;draft:string|null;module:CircuitModule;handle:FlexibleHandle['handle'];x:number;y:number;mount:FlexibleMountV1|null;dragged:boolean}|null=null
+ let edit:{pointer:number;draft:string|null;module:CircuitModule;handle:FlexibleHandle['handle'];x:number;y:number;mount:FlexibleMount|null;dragged:boolean}|null=null
  const clone=<T>(value:T):T=>JSON.parse(JSON.stringify(value)) as T
  const active=()=>!!workspace.placementType&&supportsFlexiblePlacement(workspace.placementType)
  const xy=(event:{clientX:number;clientY:number})=>{const rect=canvas.value!.getBoundingClientRect();return{x:event.clientX-rect.left,y:event.clientY-rect.top}}
@@ -56,6 +54,7 @@ export function useFlexibleAuthoring(canvas:Ref<HTMLCanvasElement|undefined>,man
  }
  function pointerDown(event:PointerEvent){
   if(!canvas.value||!manager())return false
+  if(workspace.componentGeometryPreview){workspace.componentGeometryPreview=null;manager()?.syncGraph(circuit.graph)}
   const point=xy(event)
   if(active()){
    if(event.button===2){right={pointer:event.pointerId,...point,dragged:false};return true}
@@ -70,21 +69,12 @@ export function useFlexibleAuthoring(canvas:Ref<HTMLCanvasElement|undefined>,man
  }
  function updateEdit(x:number,y:number){
   if(!edit||!circuit.graph||!isFlexibleMount(edit.module.mount))return
-  const original=edit.module.mount;let mount:FlexibleMountV1|null=null
-  if(edit.handle==='pin-0'||edit.handle==='pin-1'){
+  const original=edit.module.mount;let mount:FlexibleMount|null=null
    const hit=manager()?.pickEndpoint(x,y,edit.module.id),index=edit.handle==='pin-0'?0:1
    if(hit?.kind==='contact'&&hit.id===original.boardId&&hit.contactId){
-    const pinId=getPartForType(edit.module.type)!.package.pins[index].id
-    mount=clone(original);mount.contacts=mount.contacts.map(binding=>binding.pinId===pinId?{...binding,contactId:hit.contactId!}:binding)
-    try{const candidate={...edit.module,mount};validateMountBindings({...circuit.graph,schema_version:'1.2',modules:circuit.graph.modules.map(m=>m.id===candidate.id?candidate:m)});hint.value=''}catch(error){hint.value=error instanceof Error?error.message:'Invalid contact.';mount=null}
-   }else hint.value='Choose a hole on the same breadboard. The other pin remains fixed.'
-  }else{
-   mount=clone(original)
-   if(edit.handle==='lift')mount.bodyPose.position.y+= (edit.y-y)*.002
-   else mount.bodyPose.rotation.z+=(edit.x-x)*.4
-   // Contact bindings and manually authored controls are retained verbatim.
-   try{const candidate={...edit.module,mount};validateMountBindings({...circuit.graph,schema_version:'1.2',modules:circuit.graph.modules.map(m=>m.id===candidate.id?candidate:m)});hint.value=''}catch(error){hint.value=error instanceof Error?error.message:'Invalid body pose.';mount=null}
-  }
+    const pinId=getPartForType(edit.module.type,original)!.package.pins[index].id
+    try{const candidate=circuit.previewComponentGeometry(edit.module.id,pinId,hit.contactId);mount=isFlexibleMount(candidate.mount)?candidate.mount:null;hint.value='Release to re-anchor. Body and leads adjust automatically.'}catch(error){hint.value=error instanceof Error?error.message:'Invalid contact.';mount=null;manager()?.syncGraph(circuit.graph)}
+   }else{hint.value='Choose a hole on the same breadboard. The other pin remains fixed.';manager()?.syncGraph(circuit.graph)}
   edit.mount=mount
   if(mount)manager()?.previewFlexibleModule({...edit.module,mount})
  }
@@ -102,7 +92,6 @@ export function useFlexibleAuthoring(canvas:Ref<HTMLCanvasElement|undefined>,man
   if(right?.pointer===event.pointerId){const completed=right;right=null
    if(!completed.dragged&&active()&&canvas.value){const point=xy(event);if(Math.hypot(point.x-completed.x,point.y-completed.y)<4){
     if(!controller.first){workspace.cancelPlacement();cancel()}
-    else{const world=manager()?.placementPoint(point.x,point.y),board=circuit.graph?.modules.find(m=>m.id===controller.first!.boardId);if(world&&board){const local=worldToModuleLocal(world,board);local.y=controller.solution?.mount?.bodyPose.position.y??local.y+.15;controller.addBend(local);if(last)show(point.x,point.y);refreshHint()}}
    }}return true
   }
   if(!edit||edit.pointer!==event.pointerId)return false
@@ -111,10 +100,12 @@ export function useFlexibleAuthoring(canvas:Ref<HTMLCanvasElement|undefined>,man
   const completed=edit;edit=null;const admitted=session.complete(event.pointerId,circuit.activeId)
   manager()?.lockPointer(false);if(canvas.value?.hasPointerCapture(event.pointerId))canvas.value.releasePointerCapture(event.pointerId)
   if(admitted&&completed.dragged&&completed.mount)try{circuit.updateFlexibleMount(completed.module.id,completed.mount);workspace.editError=''}catch(error){workspace.editError=error instanceof Error?error.message:'Placement failed.'}
+  else if(admitted&&completed.dragged&&!completed.mount)workspace.editError=hint.value||'Component geometry does not fit this contact.'
   manager()?.syncGraph(circuit.graph);hint.value='';return true
  }
- function keydown(event:KeyboardEvent){if(!active())return false
-  if(event.key==='Backspace'){event.preventDefault();controller.removeBend();refreshHint();if(last){const s=controller.hover(last.boardId,last.contactId,circuit.graph?.modules??[]);if(s?.mount)manager()?.setFlexiblePreview({id:'PLACE',type:controller.type,mount:s.mount,properties:workspace.placementProperties??undefined},circuit.graph?.modules??[])}return true}
+ function keydown(event:KeyboardEvent){
+  if(event.key==='Escape'&&workspace.componentGeometryPreview){event.preventDefault();workspace.componentGeometryPreview=null;return true}
+  if(!active())return false
   if(event.key==='Escape'){event.preventDefault();workspace.cancelPlacement();cancel();return true}return false
  }
  watch(()=>[workspace.placementEpoch,workspace.tool],arm,{flush:'sync'})
@@ -122,6 +113,7 @@ export function useFlexibleAuthoring(canvas:Ref<HTMLCanvasElement|undefined>,man
  watch(()=>[circuit.activeId,auth.connectionEpoch],()=>{workspace.cancelPlacement();cancel()},{flush:'sync'})
  watch(()=>circuit.graph,()=>{if(edit)cancel();if(active())arm()})
  watch(()=>[workspace.selectedModuleId,workspace.tool,workspace.placementType],()=>{if(edit&&workspace.selectedModuleId!==edit.module.id)cancel();manager()?.setFlexibleEditing(workspace.tool==='select'&&!workspace.placementType)})
+ watch(()=>workspace.componentGeometryPreview,preview=>{if(circuit.graph)manager()?.syncGraph(preview?{...circuit.graph,schema_version:'1.2',modules:circuit.graph.modules.map(module=>module.id===preview.id?preview:module)}:circuit.graph)},{flush:'sync'})
  onUnmounted(cancel)
  return{active,hint,cancel,cancelEdit,pointerDown,pointerMove,pointerUp,keydown,
   contextMenu(event:MouseEvent){if(active()||right){event.preventDefault();return true}return false},

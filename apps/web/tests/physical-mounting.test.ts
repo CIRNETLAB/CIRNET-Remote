@@ -136,3 +136,30 @@ test('half-turn mounting around the zero coordinate does not shift a legal footp
   assert.ok(Math.abs(result.position.x) < 1e-8, `unexpected footprint shift ${result.position.x}`)
   assert.ok(Math.abs(result.position.z) < 1e-8)
 })
+
+test('moving and yawing a pinned revision one generic rigid part preserves its package and contact spacing', () => {
+  const b: CircuitModule = { id: 'BB', type: 'BREADBOARD' }
+  const legacy = solveMounting('RESISTOR_AXIAL', { x: -1.3, y: .309, z: -.715 }, 0, [b], 'R')!
+  assert.equal(legacy.valid, true, legacy.reason)
+  legacy.mount.partId = 'GENERIC-RESISTOR-AXIAL'
+  const original = structuredClone(legacy.mount)
+  const store = useCircuitStore()
+  store.importGraph({ schema_version: '1.1', circuit_id: 'legacy-rigid', modules: [b, { id: 'R', type: 'GENERIC_RESISTOR', mount: legacy.mount }], connections: [] })
+  store.past = []
+  const identity = (mount: typeof original) => [mount.partId, mount.partRevision, mount.packageId, mount.packageRevision]
+  const span = () => {
+    const mount = store.graph!.modules[1]!.mount!
+    const points = mount.contacts.map(binding => getBreadboardContact(b.type, binding.contactId)!.localPosition)
+    return Math.hypot(...points[0]!.map((value, i) => value - points[1]![i]!)) / MM_TO_WORLD
+  }
+  store.moveModule('R', { ...legacy.position, x: legacy.position.x + .26 })
+  assert.deepEqual(identity(store.graph!.modules[1]!.mount as typeof original), identity(original))
+  assert.ok(Math.abs(span() - 10.16) < 1e-8)
+  store.rotateModule('R', 180)
+  assert.deepEqual(identity(store.graph!.modules[1]!.mount as typeof original), identity(original))
+  assert.ok(Math.abs(span() - 10.16) < 1e-8)
+  assert.equal(getPartForType('GENERIC_RESISTOR', store.graph!.modules[1]!.mount)!.package.bodyMm.x, 6.5)
+  assert.equal(store.past.length, 2)
+  validateMountBindings(store.graph!)
+  assert.deepEqual(parseCircuitFile(JSON.stringify(store.graph)), JSON.parse(JSON.stringify(store.graph)))
+})

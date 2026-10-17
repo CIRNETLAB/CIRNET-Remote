@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://netcircuit.local/contracts/design/flexible-mount/1.1/schema.json",
+  "title": "Automatic component routing 1.1",
+  "$defs": {
+    "AutomaticRoutingIntentV1": {
+      "type": "object",
+      "required": [
+        "version",
+        "mode",
+        "template"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "mode": {
+          "const": "automatic"
+        },
+        "template": {
+          "enum": [
+            "axial-standing",
+            "axial-horizontal",
+            "radial-upright"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "FlexibleMountV2": {
+      "type": "object",
+      "required": [
+        "kind",
+        "version",
+        "boardId",
+        "partId",
+        "partRevision",
+        "packageId",
+        "packageRevision",
+        "mechanicalProfileId",
+        "mechanicalProfileRevision",
+        "geometryRevision",
+        "bodyPose",
+        "contacts",
+        "leads",
+        "routing"
+      ],
+      "properties": {
+        "kind": {
+          "const": "breadboard-flexible"
+        },
+        "version": {
+          "const": 2
+        },
+        "boardId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "partId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "partRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "packageId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "packageRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "mechanicalProfileId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mechanicalProfileRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "geometryRevision": {
+          "const": 2
+        },
+        "bodyPose": {
+          "$ref": "https://netcircuit.local/contracts/design/flexible-mount/1.0/schema.json#/$defs/BodyPose3D"
+        },
+        "contacts": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "https://netcircuit.local/contracts/circuit/1.x/module.schema.json#/$defs/pinContact"
+          }
+        },
+        "leads": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "https://netcircuit.local/contracts/design/flexible-mount/1.0/schema.json#/$defs/FlexibleLeadIntent"
+          }
+        },
+        "routing": {
+          "$ref": "#/$defs/AutomaticRoutingIntentV1"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Explicitly generated circular routing. Historical version 1 body poses and controls remain authoritative and are never inferred to be automatic."
+    },
+    "PhysicalDescriptorV1": {
+      "type": "object",
+      "required": [
+        "version",
+        "partId",
+        "partRevision",
+        "packageId",
+        "packageRevision"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "partId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "partRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "packageId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "packageRevision": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false,
+      "description": "Explicit descriptor identity for new unmounted physical parts; missing historical modules retain their original descriptor."
+    }
+  }
+}

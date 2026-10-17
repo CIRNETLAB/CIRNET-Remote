@@ -3770,6 +3770,93 @@
       "validator_profile": "specialized",
       "generated_artifacts": [],
       "compatibility_policy": "Shared positive and negative versioned reference/disclosure invariants; legacy definitions remain unchanged."
+    },
+    {
+      "id": "AutomaticRoutingIntentV1",
+      "kind": "schema",
+      "path": "contracts/design-models/flexible-mount-v1.1.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/flexible-mount/1.1/schema.json",
+      "pointer": "/$defs/AutomaticRoutingIntentV1",
+      "version": "1.1",
+      "visibility": "public",
+      "producer": "Versioned component placement contract",
+      "consumers": [
+        "api",
+        "web",
+        "simulator",
+        "hardware-service"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Keep version 1 frozen; version 2 circular automatic geometry is adopted only by explicit authoring actions."
+    },
+    {
+      "id": "FlexibleMountV2",
+      "kind": "schema",
+      "path": "contracts/design-models/flexible-mount-v1.1.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/flexible-mount/1.1/schema.json",
+      "pointer": "/$defs/FlexibleMountV2",
+      "version": "1.1",
+      "visibility": "public",
+      "producer": "Versioned component placement contract",
+      "consumers": [
+        "api",
+        "web",
+        "simulator",
+        "hardware-service"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Keep version 1 frozen; version 2 circular automatic geometry is adopted only by explicit authoring actions."
+    },
+    {
+      "id": "ComponentMechanicsLegacyFixture",
+      "kind": "data",
+      "path": "contracts/design-models/fixtures/component-mechanics-legacy.json",
+      "uri": "https://netcircuit.local/contracts/design/flexible-mount/1.1/legacy.json",
+      "pointer": "",
+      "version": "1.1",
+      "visibility": "public",
+      "producer": "Component placement authoring",
+      "consumers": [
+        "api",
+        "web",
+        "simulator"
+      ],
+      "validator_profile": "specialized",
+      "generated_artifacts": [],
+      "compatibility_policy": "Frozen version 1 manual pose and controls must round-trip exactly without migration."
+    },
+    {
+      "id": "PhysicalDescriptorV1",
+      "kind": "schema",
+      "path": "contracts/design-models/flexible-mount-v1.1.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/flexible-mount/1.1/schema.json",
+      "pointer": "/$defs/PhysicalDescriptorV1",
+      "version": "1.1",
+      "visibility": "public",
+      "producer": "Versioned component placement contract",
+      "consumers": [
+        "api",
+        "web",
+        "simulator",
+        "hardware-service"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Keep version 1 frozen; version 2 circular automatic geometry is adopted only by explicit authoring actions."
     }
   ]
 }

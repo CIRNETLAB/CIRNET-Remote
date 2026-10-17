@@ -25,6 +25,8 @@ export function axialCoatingGeometry(length: number, radius: number, resistor: b
 
 /** Translucent dome with cylindrical barrel, bottom flange and smooth normals. */
 export function ledShellGeometry(radius: number, height: number, flangeHeight: number) {
+  // The descriptor diameter includes the flange, not only the narrower barrel.
+  radius /= 1.08
   const barrelTop = height - radius
   const points = [
     new Vector2(0, 0),
@@ -45,9 +47,9 @@ export function ledShellGeometry(radius: number, height: number, flangeHeight: n
 
 /** Dipped ceramic disc with soft rounded rim and natural lead-exit taper. */
 export function ceramicDiscGeometry(w: number, h: number, d: number) {
-  const r = Math.min(w, h) / 2
   const shape = new Shape()
   const bevel = Math.min(d * .25, .008)
+  const r = (Math.min(w, h) / 2 - bevel) / 1.06
   const depth = Math.max(d - 2 * bevel, .001)
   const segments = 48
   for (let i = 0; i <= segments; i++) {

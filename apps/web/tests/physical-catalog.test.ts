@@ -1,12 +1,27 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { getDefinition } from '../src/data/editorCatalog'
-import { getPartForType, MM_TO_WORLD } from '../src/data/partCatalog'
+import { getPartForType, getPartDefinition, MM_TO_WORLD } from '../src/data/partCatalog'
 import { ribbonGroups } from '../src/data/ribbon'
 import executionRegistry from '../src/data/physicalParts.json'
 
 // Execution profiles are inspected at their own boundary; editor parts omit them.
 const executionPart = (type: string) => executionRegistry.parts.find(part => part.editorType === type)!
+
+test('compact generic defaults resolve separately from every pinned historical descriptor', () => {
+  const latest = getPartForType('GENERIC_RESISTOR')!
+  assert.equal(latest.revision, 2)
+  assert.deepEqual(latest.package.bodyMm, { x: 5, y: 2, z: 2 })
+  assert.equal(latest.editor.color, '#4A90E2')
+  const old = { partId: latest.id, partRevision: 1, packageId: 'MRS25-1016', packageRevision: 1 }
+  assert.equal(getPartForType('GENERIC_RESISTOR', old)!.package.bodyMm.x, 6.5)
+  assert.equal(getPartDefinition(latest.id, 1)!.package.id, old.packageId)
+  assert.equal(getPartDefinition(latest.id)!.revision, 2)
+  assert.equal(getPartForType('GENERIC_RESISTOR', { ...old, packageRevision: 99 }), undefined)
+  assert.equal(getPartForType('GENERIC_DIODE', old), undefined)
+  assert.deepEqual(getPartForType('GENERIC_CAPACITOR_ELECTROLYTIC')!.package.bodyMm, { x: 6.3, y: 11, z: 6.3 })
+  assert.deepEqual(getPartForType('CAPACITOR_ELECTROLYTIC')!.package.bodyMm, { x: 10, y: 12.5, z: 10 })
+})
 
 test('physical HC08 exposes every numbered package pin without changing the legacy logical definition', () => {
   const physical = getDefinition('SN74HC08N')

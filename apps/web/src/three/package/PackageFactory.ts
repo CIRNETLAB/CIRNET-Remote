@@ -71,7 +71,7 @@ export function addPackageModel(group: Group, module: CircuitModule, part: PartD
     const die = mesh('package-led-die', new BoxGeometry(.12 * mm, .12 * mm, .12 * mm), dark, group, false)
     die.position.set(sign * radius * .3, bottom + h * .44, 0)
 
-    box('package-cathode-marker', .32 * mm, .3 * mm, radius * .8, sign * radius, bottom + .25 * mm, 0, ink, group, false)
+    box('package-cathode-marker', .32 * mm, .3 * mm, radius * .8, sign * (radius - .16 * mm), bottom + .25 * mm, 0, ink, group, false)
   } else if (pkg.family === 'axial') {
     const resistor = pkg.visualVariant === 'resistor' || part.function === 'resistor'
     const zener = pkg.visualVariant === 'zener' || part.function === 'zener-diode'

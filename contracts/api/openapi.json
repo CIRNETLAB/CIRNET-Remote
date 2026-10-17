@@ -1223,6 +1223,35 @@
           "version": "2.0"
         }
       },
+      "AutomaticRoutingIntentV1": {
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "const": "automatic"
+          },
+          "template": {
+            "enum": [
+              "axial-standing",
+              "axial-horizontal",
+              "radial-upright"
+            ]
+          },
+          "version": {
+            "const": 1
+          }
+        },
+        "required": [
+          "version",
+          "mode",
+          "template"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/design/flexible-mount/1.1/schema.json#/$defs/AutomaticRoutingIntentV1",
+          "version": "1.1"
+        }
+      },
       "BodyPose3D": {
         "additionalProperties": false,
         "description": "Authoritative body-center pose in board-local world units; rotation is degrees in fixed Euler YXZ order (Ry * Rx * Rz). No scale.",
@@ -2060,8 +2089,14 @@
               },
               {
                 "$ref": "#/components/schemas/FlexibleMountV1"
+              },
+              {
+                "$ref": "#/components/schemas/FlexibleMountV2"
               }
             ]
+          },
+          "physicalDescriptor": {
+            "$ref": "#/components/schemas/PhysicalDescriptorV1"
           },
           "position": {
             "additionalProperties": false,
@@ -3994,6 +4029,93 @@
           "version": "1.0"
         }
       },
+      "FlexibleMountV2": {
+        "additionalProperties": false,
+        "description": "Explicitly generated circular routing. Historical version 1 body poses and controls remain authoritative and are never inferred to be automatic.",
+        "properties": {
+          "boardId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "bodyPose": {
+            "$ref": "#/components/schemas/BodyPose3D"
+          },
+          "contacts": {
+            "items": {
+              "$ref": "#/components/schemas/PinContactBinding"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "geometryRevision": {
+            "const": 2
+          },
+          "kind": {
+            "const": "breadboard-flexible"
+          },
+          "leads": {
+            "items": {
+              "$ref": "#/components/schemas/FlexibleLeadIntent"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "mechanicalProfileId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "mechanicalProfileRevision": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "packageId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "packageRevision": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "partId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "partRevision": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "routing": {
+            "$ref": "#/components/schemas/AutomaticRoutingIntentV1"
+          },
+          "version": {
+            "const": 2
+          }
+        },
+        "required": [
+          "kind",
+          "version",
+          "boardId",
+          "partId",
+          "partRevision",
+          "packageId",
+          "packageRevision",
+          "mechanicalProfileId",
+          "mechanicalProfileRevision",
+          "geometryRevision",
+          "bodyPose",
+          "contacts",
+          "leads",
+          "routing"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/design/flexible-mount/1.1/schema.json#/$defs/FlexibleMountV2",
+          "version": "1.1"
+        }
+      },
       "FunctionalVerificationResult": {
         "additionalProperties": false,
         "properties": {
@@ -5301,6 +5423,12 @@
             "minItems": 2,
             "type": "array"
           },
+          "preferredBendRadiusMm": {
+            "description": "Preferred circular display radius; minimum remains the physical lower bound. Omitted historical profiles use minBendRadiusMm.",
+            "exclusiveMinimum": 0,
+            "maximum": 10,
+            "type": "number"
+          },
           "revision": {
             "minimum": 1,
             "type": "integer"
@@ -6220,6 +6348,44 @@
         "minLength": 1,
         "title": "PayloadRef",
         "type": "string"
+      },
+      "PhysicalDescriptorV1": {
+        "additionalProperties": false,
+        "description": "Explicit descriptor identity for new unmounted physical parts; missing historical modules retain their original descriptor.",
+        "properties": {
+          "packageId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "packageRevision": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "partId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "partRevision": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "version": {
+            "const": 1
+          }
+        },
+        "required": [
+          "version",
+          "partId",
+          "partRevision",
+          "packageId",
+          "packageRevision"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/design/flexible-mount/1.1/schema.json#/$defs/PhysicalDescriptorV1",
+          "version": "1.1"
+        }
       },
       "PhysicalDeviceState": {
         "additionalProperties": false,

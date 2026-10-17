@@ -21,8 +21,31 @@ def physical_parts():
     return tuple(json.loads(path.read_text(encoding='utf-8'))['parts'])
 
 
-def get_physical_part(module_type):
-    return next((p for p in physical_parts() if p['editorType'] == module_type), None)
+@lru_cache(maxsize=1)
+def historical_physical_parts():
+    path = Path(__file__).resolve().parent / 'design-models' / 'physical-parts.v1.json'
+    return tuple(json.loads(path.read_text(encoding='utf-8')).get('historicalParts', []))
+
+
+def get_physical_part(module_type, mount=None):
+    """A mount pins all four descriptor coordinates; never fall back to a default."""
+    if mount is None:
+        return next((p for p in physical_parts() if p['editorType'] == module_type), None)
+    return next((p for p in (*physical_parts(), *historical_physical_parts())
+                 if p['editorType'] == module_type and
+                 (p['id'], p['revision'], p['package']['id'], p['package']['revision']) ==
+                 (mount.get('partId'), mount.get('partRevision'), mount.get('packageId'), mount.get('packageRevision'))), None)
+
+
+def get_physical_part_for_module(module):
+    """Unmarked free modules retain the oldest descriptor; new free parts pin one."""
+    if module.get('mount') is not None:
+        return get_physical_part(module['type'], module['mount'])
+    if 'physicalDescriptor' in module:
+        descriptor = module['physicalDescriptor']
+        return get_physical_part(module['type'], descriptor) if isinstance(descriptor, dict) and descriptor.get('version') == 1 else None
+    historical = sorted((part for part in historical_physical_parts() if part['editorType'] == module['type']), key=lambda part: part['revision'])
+    return historical[0] if historical else get_physical_part(module['type'])
 
 
 def _world_pose(module, by_id):
@@ -69,8 +92,8 @@ def validate_physical_design(graph):
     modules = graph['modules']
     for module in modules:
         normalize_component_properties(module['type'], module.get('properties', {}))
-    physical = [(m, get_physical_part(m['type'])) for m in modules]
-    if not any(p or 'mount' in m for m, p in physical):
+    physical = [(m, get_physical_part_for_module(m)) for m in modules]
+    if not any(p or 'mount' in m or 'physicalDescriptor' in m for m, p in physical):
         return
     if graph['schema_version'] not in ('1.1','1.2'):
         raise ValueError('Physical packages and mounting require CircuitGraph 1.1 or 1.2')
@@ -82,6 +105,9 @@ def validate_physical_design(graph):
     occupied = set()
     for module, part in physical:
         mount = module.get('mount')
+        if 'physicalDescriptor' in module:
+            if graph['schema_version'] != '1.2' or part is None:
+                raise ValueError('Free physical descriptors require CircuitGraph 1.2 and a canonical package')
         if mount is None:
             continue
         if part is None:
@@ -148,13 +174,21 @@ def validate_physical_design(graph):
         for other, other_body in bodies[index+1:]:
             if ('mount' in module or 'mount' in other) and _bodies_overlap(body, other_body):
                 raise ValueError('Physical component bodies overlap')
-    from .flexible_mounting import world_lead_paths,lead_hits_body
+    from .flexible_mounting import world_lead_paths,lead_hits_body,lead_paths_intersect,get_mechanical_profile
+    flexible_paths=[]
     for module,part in physical:
         if module.get('mount',{}).get('kind')!='breadboard-flexible':continue
         paths=world_lead_paths(module,part,by_id[module['mount']['boardId']])
         radius=part['package']['leadDiameterMm']*MM_TO_WORLD/2
+        profile = get_mechanical_profile(part['package']['id'], part['package']['revision'])
+        radius += min(profile['minBendRadiusMm'] * MM_TO_WORLD / 512, 1e-5)
+        flexible_paths.append((module,paths,radius))
         if any(lead_hits_body(path,body,radius) for other,body in bodies if other['id']!=module['id'] for path in paths):
             raise ValueError('Flexible lead intersects another component body')
+    for index,(module,paths,radius) in enumerate(flexible_paths):
+        for other,other_paths,other_radius in flexible_paths[index+1:]:
+            if module['mount']['version']==other['mount']['version']==1:continue
+            if lead_paths_intersect(paths,radius,other_paths,other_radius):raise ValueError('Flexible leads intersect another component lead')
     # Validate all physical pin endpoints even when a part is connected without mounting.
     for edge in graph['connections']:
         for endpoint in (edge['source'], edge['destination']):
@@ -162,7 +196,7 @@ def validate_physical_design(graph):
             module = by_id.get(mid)
             if module is None:
                 raise ValueError('Unknown endpoint module')
-            part = get_physical_part(module['type'])
+            part = get_physical_part_for_module(module)
             if part and token not in {p['id'] for p in part['package']['pins']}:
                 raise ValueError('Unknown physical package pin')
             if token.startswith('contact:') and get_breadboard_contact(module['type'], token[8:]) is None:

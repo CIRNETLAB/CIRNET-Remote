@@ -186,7 +186,8 @@ export type CircuitModuleV12 = {
   properties?: {
     [k: string]: unknown
   }
-  mount?: MountBinding | FlexibleMountV1
+  mount?: MountBinding | FlexibleMountV1 | FlexibleMountV2
+  physicalDescriptor?: PhysicalDescriptorV1
   [k: string]: unknown
 }
 /**
@@ -389,6 +390,9 @@ export interface ContractMap {
   InstructorAssignmentDocumentV2: InstructorAssignmentDocumentV2
   StudentAssignmentViewV2: StudentAssignmentViewV2
   AssignmentViewV2: AssignmentViewV2
+  AutomaticRoutingIntentV1: AutomaticRoutingIntentV1
+  FlexibleMountV2: FlexibleMountV2
+  PhysicalDescriptorV1: PhysicalDescriptorV1
 }
 /**
  * This interface was referenced by `ContractMap`'s JSON-Schema
@@ -1998,6 +2002,10 @@ export interface MechanicalAuthoringProfileV1 {
   bodyClearanceMm: number
   maxBodyLiftMm: number
   maxControlsPerLead: 8
+  /**
+   * Preferred circular display radius; minimum remains the physical lower bound. Omitted historical profiles use minBendRadiusMm.
+   */
+  preferredBendRadiusMm?: number
 }
 /**
  * This interface was referenced by `ContractMap`'s JSON-Schema
@@ -2054,6 +2062,58 @@ export interface CircuitGraphV12 {
   metadata?: {
     [k: string]: unknown
   }
+}
+/**
+ * Explicitly generated circular routing. Historical version 1 body poses and controls remain authoritative and are never inferred to be automatic.
+ *
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "FlexibleMountV2".
+ */
+export interface FlexibleMountV2 {
+  kind: 'breadboard-flexible'
+  version: 2
+  boardId: string
+  partId: string
+  partRevision: number
+  packageId: string
+  packageRevision: number
+  mechanicalProfileId: string
+  mechanicalProfileRevision: number
+  geometryRevision: 2
+  bodyPose: BodyPose3D
+  /**
+   * @minItems 2
+   * @maxItems 2
+   */
+  contacts: PinContactBinding[]
+  /**
+   * @minItems 2
+   * @maxItems 2
+   */
+  leads: FlexibleLeadIntent[]
+  routing: AutomaticRoutingIntentV1
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "AutomaticRoutingIntentV1".
+ */
+export interface AutomaticRoutingIntentV1 {
+  version: 1
+  mode: 'automatic'
+  template: 'axial-standing' | 'axial-horizontal' | 'radial-upright'
+}
+/**
+ * Explicit descriptor identity for new unmounted physical parts; missing historical modules retain their original descriptor.
+ *
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "PhysicalDescriptorV1".
+ */
+export interface PhysicalDescriptorV1 {
+  version: 1
+  partId: string
+  partRevision: number
+  packageId: string
+  packageRevision: number
 }
 /**
  * This interface was referenced by `ContractMap`'s JSON-Schema

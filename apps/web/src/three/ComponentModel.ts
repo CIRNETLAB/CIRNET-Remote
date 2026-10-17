@@ -6,7 +6,7 @@ import { getBreadboardGeometrySpec } from '../geometry/BreadboardGeometrySpec'
 import { addPowerSupplyModel, applyPowerSupplyControls, POWER_SUPPLY_VISUAL_SIZE, supplyTerminalAnchor } from './PowerSupplyModel'
 import { addOscilloscopeModel } from './OscilloscopeModel'
 import { addFunctionGeneratorModel } from './FunctionGeneratorModel'
-import { getPartForType } from '../data/partCatalog'
+import { getPartForModule, MM_TO_WORLD } from '../data/partCatalog'
 import { addPackageModel, packagePinAnchor } from './PackageModel'
 import { subduedBodyColor } from './package/PackageMaterials'
 import { preserveStructureLighting } from './StudioEnvironment'
@@ -304,10 +304,10 @@ export function portAnchor(type: string, port: LogicalPort, module?: CircuitModu
 
 export function buildComponent(module: CircuitModule, modules: CircuitModule[] = []): Group {
   const definition = getDefinition(module.type)
-  const part = getPartForType(module.type)
-  const [w, h, d] = definition?.visual === 'supply' ? POWER_SUPPLY_VISUAL_SIZE : definition?.size ?? [1.5, 0.5, 1]
+  const part = getPartForModule(module)
+  const [w, h, d] = definition?.visual === 'supply' ? POWER_SUPPLY_VISUAL_SIZE : part ? [part.package.bodyMm.x * MM_TO_WORLD, part.package.bodyMm.y * MM_TO_WORLD, part.package.bodyMm.z * MM_TO_WORLD] : definition?.size ?? [1.5, 0.5, 1]
   const group = new Group()
-  group.userData = { kind: 'module', id: module.id, type: module.type, size: [w, h, d], signature: JSON.stringify([module.type, module.properties]) }
+  group.userData = { kind: 'module', id: module.id, type: module.type, size: [w, h, d], signature: JSON.stringify([module.type, module.properties, module.mount?.partId, module.mount?.partRevision, module.mount?.packageId, module.mount?.packageRevision, module.physicalDescriptor]) }
   const material = (color: string) => new MeshStandardMaterial({ color, roughness: 0.65, metalness: 0.12 })
   const box = (x: number, y: number, z: number, sx: number, sy: number, sz: number, color: string) => {
     const mesh = new Mesh(new BoxGeometry(sx, sy, sz), material(color)); mesh.userData.selectionSurface = true; mesh.position.set(x, y, z); group.add(mesh); return mesh

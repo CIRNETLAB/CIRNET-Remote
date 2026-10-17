@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { effectScope,toRaw,watch,type WatchStopHandle } from 'vue'
 import { StoreScopeMap } from '../services/session/storeScope'
-import type { CircuitGraph,CircuitModule,FlexibleMountV1,Point3,WireIdentity,WireVisual } from '../types/circuit'
+import type { CircuitGraph,CircuitModule,FlexibleMount,Point3,WireIdentity,WireVisual } from '../types/circuit'
 import type { MemoryImage } from '../types/memory'
 import type { CircuitValidation } from '../types/api'
 import { circuitsApi,type PhysicalPreview } from '../services/api/circuits'
@@ -57,8 +57,10 @@ const useBaseCircuitStore=defineStore('circuit',{
     pasteSelection(snapshot:SelectionClipboard,options?:PasteOptions){return mutateDocument(this,()=>commands.pasteSelection(this,snapshot,options))},
     moveSelection(selection:EditorSelection,delta:Point3){return mutateDocument(this,()=>commands.moveSelection(this,selection,delta))},
     placeModule(type:string,position:Required<NonNullable<CircuitModule['position']>>,rotation=0,initialProperties?:Record<string,unknown>):string{return mutateDocument(this,()=>commands.placeModule(this,type,position,rotation,initialProperties))},
-    placeFlexibleModule(type:string,mount:FlexibleMountV1,properties?:Record<string,unknown>):string{return mutateDocument(this,()=>commands.placeFlexibleModule(this,type,mount,properties))},
-    updateFlexibleMount(id:string,mount:FlexibleMountV1){return mutateDocument(this,()=>commands.updateFlexibleMount(this,id,mount))},
+    placeFlexibleModule(type:string,mount:FlexibleMount,properties?:Record<string,unknown>):string{return mutateDocument(this,()=>commands.placeFlexibleModule(this,type,mount,properties))},
+    updateFlexibleMount(id:string,mount:FlexibleMount){return mutateDocument(this,()=>commands.updateFlexibleMount(this,id,mount))},
+    previewComponentGeometry(id:string,pinId?:string,contactId?:string){return commands.previewComponentGeometry(this,id,pinId,contactId)},
+    rebuildComponentGeometry(id:string,preview:CircuitModule){return mutateDocument(this,()=>commands.rebuildComponentGeometry(this,id,preview))},
     changeComponentDesign(id:string,nextType:string,patch:Record<string,unknown>,pinMap?:Record<string,string>){return mutateDocument(this,()=>commands.changeComponentDesign(this,id,nextType,patch,pinMap))},
     convertModuleToFlexible(id:string){return mutateDocument(this,()=>commands.convertModuleToFlexible(this,id))},
     moveModule(id:string,position:Required<NonNullable<CircuitModule['position']>>){return mutateDocument(this,()=>commands.moveModule(this,id,position))},

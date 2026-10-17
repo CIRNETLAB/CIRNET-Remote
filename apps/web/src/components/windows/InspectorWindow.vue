@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { useCircuitStore } from '../../stores/circuit'
 import { useWorkspaceStore } from '../../stores/workspace'
 import { componentCatalog, getDefinition } from '../../data/editorCatalog'
-import { componentAddType, componentDesignTransition, getPartForType } from '../../data/partCatalog'
+import { componentAddType, componentDesignTransition, getPartForModule } from '../../data/partCatalog'
 import { moduleWorldPose } from '../../electrical/modulePose'
 import { isNormallyAddable } from '../../data/ribbon'
 import { useStationStore } from '../../stores/station'
@@ -19,7 +19,7 @@ const workspace = useWorkspaceStore()
 const experiment=useExperimentStore()
 const selected = computed(() => { const module = circuit.graph?.modules.find(item => item.id === workspace.selectedModuleId); return module ? moduleWorldPose(module, circuit.graph!.modules) : undefined })
 const definition = computed(() => selected.value && getDefinition(selected.value.type))
-const part = computed(() => selected.value && getPartForType(selected.value.type))
+const part = computed(() => selected.value && getPartForModule(selected.value))
 const physicalState = computed(() => selected.value && circuit.physicalStates?.[selected.value.id])
 const addableComponents = componentCatalog.filter(item => isNormallyAddable(item.type))
 const source = ref(''), destination = ref(''), addType = ref('GENERIC_RESISTOR')

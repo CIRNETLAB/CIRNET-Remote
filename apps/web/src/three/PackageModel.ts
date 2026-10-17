@@ -1,19 +1,19 @@
 import { Group, Mesh, MeshStandardMaterial, Vector3 } from 'three'
-import { getPartForType, MM_TO_WORLD, type PartDefinition } from '../data/partCatalog'
+import { getPartForType, getPartForModule, MM_TO_WORLD, type PartDefinition } from '../data/partCatalog'
 import type { CircuitModule } from '../types/circuit'
 import { inverseTransformPoint, isFlexibleMount, resolveFlexibleGeometry, rotationMatrix, subtractPoint } from '../electrical/flexibleGeometry'
 
 /** Package-local origin is the lead contact plane, in the canonical footprint frame. */
 export function packagePinAnchor(type: string, pinId: string, module?: CircuitModule, modules: CircuitModule[] = []): Vector3 | null {
   if(module&&isFlexibleMount(module.mount)){
-    const part=getPartForType(type),board=modules.find(item=>item.id===module.mount!.boardId)
+    const part=getPartForModule(module),board=modules.find(item=>item.id===module.mount!.boardId)
     if(!part||!board)throw Error('Flexible pin resolution requires its supporting board.')
     const point=resolveFlexibleGeometry(module,part,board).leads.find(lead=>lead.pinId===pinId)?.points.at(-1)
     if(!point)return null
     const local=inverseTransformPoint(rotationMatrix({x:0,y:module.mount.bodyPose.rotation.y,z:0}),subtractPoint(point,module.mount.bodyPose.position))
     return new Vector3(local.x,local.y,local.z)
   }
-  const pin = getPartForType(type)?.package.pins.find(pin => pin.id === pinId)
+  const pin = (module ? getPartForModule(module) : getPartForType(type))?.package.pins.find(pin => pin.id === pinId)
   return pin ? new Vector3(pin.positionMm.x, pin.positionMm.y, pin.positionMm.z).multiplyScalar(MM_TO_WORLD) : null
 }
 

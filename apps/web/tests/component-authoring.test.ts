@@ -12,8 +12,28 @@ import { loadSfc, mountSfc, dispatch } from './helpers/vueSfc'
 import { resolveElectricalNets } from '../src/electrical/nets'
 import { parseCircuitFile } from '../src/services/files/circuitFile'
 import { getPartForType } from '../src/data/partCatalog'
+import flexibleFixtures from '../../../contracts/design-models/fixtures/flexible-mounting-parity.json'
+import type {CircuitGraph} from '../src/types/circuit'
 
 beforeEach(() => setActivePinia(createPinia()))
+
+test('Component Info previews and cancels a historical geometry rebuild, then applies once with exact undo',async()=>{
+ const store=useCircuitStore(),workspace=useWorkspaceStore(),ui=useUiStore()
+ const graph=structuredClone(flexibleFixtures.cases.find(f=>f.valid)!.graph) as CircuitGraph
+ store.importGraph(graph);store.past=[];const module=graph.modules.find(m=>m.mount)!
+ workspace.selectModule(module.id);ui.openWindow('component-info')
+ const before=store.snapshot(),view=mountSfc(await loadSfc('components/windows/ComponentInfoWindow.vue'),getActivePinia()!)
+ try{
+  const button=view.find('button','aria-label','Rebuild component geometry');assert.ok(button,'mounted components offer explicit rebuild')
+  dispatch(button,'onClick');await nextTick();assert.ok(workspace.componentGeometryPreview);assert.equal(store.snapshot(),before);assert.equal(store.past.length,0)
+  dispatch(view.find('button','aria-label','Cancel component geometry rebuild'),'onClick');await nextTick();assert.equal(workspace.componentGeometryPreview,null);assert.equal(store.snapshot(),before)
+  dispatch(view.find('button','aria-label','Rebuild component geometry'),'onClick');await nextTick()
+  const preview=JSON.parse(JSON.stringify(workspace.componentGeometryPreview));assert.ok(preview)
+  dispatch(view.find('button','aria-label','Apply rebuilt component geometry'),'onClick');await nextTick()
+  assert.equal(workspace.componentGeometryPreview,null);assert.equal(store.past.length,1);assert.deepEqual(store.graph!.modules.find(m=>m.id===module.id),preview)
+  store.undo();assert.equal(store.snapshot(),before);store.redo();assert.deepEqual(store.graph!.modules.find(m=>m.id===module.id),preview)
+ }finally{view.app.unmount()}
+})
 test('canonical resistance changes update five bands through the store and retain body and unrelated instances', () => {
   const store = useCircuitStore(); store.createDraft()
   const id = store.placeModule('RESISTOR_AXIAL', { x: 0, y: 0, z: 0 }), other = store.placeModule('RESISTOR_AXIAL', { x: 2, y: 0, z: 0 })

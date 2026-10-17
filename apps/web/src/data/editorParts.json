@@ -11101,21 +11101,21 @@
     },
     {
       "id": "GENERIC-RESISTOR-AXIAL",
-      "revision": 1,
+      "revision": 2,
       "editorType": "GENERIC_RESISTOR",
       "name": "Resistor",
       "function": "resistor",
       "package": {
-        "id": "MRS25-1016",
+        "id": "GENERIC-AXIAL-R50-762",
         "revision": 1,
         "family": "axial",
         "bodyMm": {
-          "x": 6.5,
-          "y": 2.5,
-          "z": 2.5
+          "x": 5,
+          "y": 2,
+          "z": 2
         },
         "leadDiameterMm": 0.5,
-        "standoffMm": 1.5,
+        "standoffMm": 0.8,
         "pins": [
           {
             "id": "A",
@@ -11123,7 +11123,7 @@
             "name": "A",
             "role": "passive",
             "positionMm": {
-              "x": -5.08,
+              "x": -3.81,
               "y": 0,
               "z": 0
             },
@@ -11135,7 +11135,7 @@
             "name": "B",
             "role": "passive",
             "positionMm": {
-              "x": 5.08,
+              "x": 3.81,
               "y": 0,
               "z": 0
             },
@@ -11143,18 +11143,18 @@
           }
         ],
         "footprint": {
-          "id": "MRS25-1016-footprint",
+          "id": "GENERIC-AXIAL-R50-762-footprint",
           "revision": 1,
-          "pitchMm": 10.16,
+          "pitchMm": 7.62,
           "mountable": true,
-          "leadForming": "Axial leads formed downward at 10.16 mm pitch; body dimensions unchanged; Vishay MRS25 minimum bend spacing 10 mm."
+          "leadForming": "Compact generic design preset; dimensions are authoring choices, not inferred hardware ratings."
         },
         "visualVariant": "resistor"
       },
       "editor": {
         "family": "passive",
         "visual": "resistor",
-        "color": "#b4c7c0",
+        "color": "#4A90E2",
         "defaults": {
           "resistanceOhms": 330,
           "powerWatts": 0.25,
@@ -11299,21 +11299,21 @@
     },
     {
       "id": "GENERIC-CAPACITOR-ELECTROLYTIC",
-      "revision": 1,
+      "revision": 2,
       "editorType": "GENERIC_CAPACITOR_ELECTROLYTIC",
       "name": "Capacitor",
       "function": "capacitor",
       "package": {
-        "id": "UVR-D10-508",
+        "id": "GENERIC-RADIAL-D63-H11-254",
         "revision": 1,
         "family": "radial-capacitor",
         "bodyMm": {
-          "x": 10,
-          "y": 12.5,
-          "z": 10
+          "x": 6.3,
+          "y": 11,
+          "z": 6.3
         },
         "leadDiameterMm": 0.5,
-        "standoffMm": 1.5,
+        "standoffMm": 1.2,
         "pins": [
           {
             "id": "PLUS",
@@ -11321,7 +11321,7 @@
             "name": "+",
             "role": "passive",
             "positionMm": {
-              "x": -2.54,
+              "x": -1.27,
               "y": 0,
               "z": 0
             },
@@ -11333,7 +11333,7 @@
             "name": "−",
             "role": "passive",
             "positionMm": {
-              "x": 2.54,
+              "x": 1.27,
               "y": 0,
               "z": 0
             },
@@ -11341,11 +11341,11 @@
           }
         ],
         "footprint": {
-          "id": "UVR-D10-508-footprint",
+          "id": "GENERIC-RADIAL-D63-H11-254-footprint",
           "revision": 1,
-          "pitchMm": 5.08,
+          "pitchMm": 2.54,
           "mountable": true,
-          "leadForming": "Native5.0mm lead pitch (±0.5mm) formed to5.08mm; negative stripe faces MINUS."
+          "leadForming": "Compact generic design preset; dimensions are authoring choices, not inferred hardware ratings."
         },
         "visualVariant": "polarized",
         "polarized": true
@@ -11489,21 +11489,21 @@
     },
     {
       "id": "GENERIC-ZENER-DIODE-AXIAL",
-      "revision": 1,
+      "revision": 2,
       "editorType": "GENERIC_ZENER_DIODE",
       "name": "Zener Diode",
       "function": "zener-diode",
       "package": {
-        "id": "DO41-1016",
+        "id": "GENERIC-AXIAL-Z42-762",
         "revision": 1,
         "family": "axial",
         "bodyMm": {
-          "x": 5.2,
-          "y": 2.7,
-          "z": 2.7
+          "x": 4.2,
+          "y": 2.2,
+          "z": 2.2
         },
         "leadDiameterMm": 0.5,
-        "standoffMm": 1.5,
+        "standoffMm": 0.8,
         "pins": [
           {
             "id": "A",
@@ -11511,7 +11511,7 @@
             "name": "A",
             "role": "passive",
             "positionMm": {
-              "x": -5.08,
+              "x": -3.81,
               "y": 0,
               "z": 0
             },
@@ -11523,7 +11523,7 @@
             "name": "K",
             "role": "passive",
             "positionMm": {
-              "x": 5.08,
+              "x": 3.81,
               "y": 0,
               "z": 0
             },
@@ -11531,11 +11531,11 @@
           }
         ],
         "footprint": {
-          "id": "DO41-1016-footprint",
+          "id": "GENERIC-AXIAL-Z42-762-footprint",
           "revision": 1,
-          "pitchMm": 10.16,
+          "pitchMm": 7.62,
           "mountable": true,
-          "leadForming": "Axial leads bent downward at10.16mm spacing; cathode band faces K, body retains datasheet dimensions."
+          "leadForming": "Compact generic design preset; dimensions are authoring choices, not inferred hardware ratings."
         },
         "visualVariant": "zener",
         "polarized": true
@@ -11875,6 +11875,303 @@
         "addType": "GENERIC_BJT"
       },
       "shortName": "Transistor",
+      "identityKind": "configurable-generic"
+    }
+  ],
+  "historicalParts": [
+    {
+      "id": "GENERIC-RESISTOR-AXIAL",
+      "revision": 1,
+      "editorType": "GENERIC_RESISTOR",
+      "name": "Resistor",
+      "function": "resistor",
+      "package": {
+        "id": "MRS25-1016",
+        "revision": 1,
+        "family": "axial",
+        "bodyMm": {
+          "x": 6.5,
+          "y": 2.5,
+          "z": 2.5
+        },
+        "leadDiameterMm": 0.5,
+        "standoffMm": 1.5,
+        "pins": [
+          {
+            "id": "A",
+            "number": "A",
+            "name": "A",
+            "role": "passive",
+            "positionMm": {
+              "x": -5.08,
+              "y": 0,
+              "z": 0
+            },
+            "domain": "ANALOG"
+          },
+          {
+            "id": "B",
+            "number": "B",
+            "name": "B",
+            "role": "passive",
+            "positionMm": {
+              "x": 5.08,
+              "y": 0,
+              "z": 0
+            },
+            "domain": "ANALOG"
+          }
+        ],
+        "footprint": {
+          "id": "MRS25-1016-footprint",
+          "revision": 1,
+          "pitchMm": 10.16,
+          "mountable": true,
+          "leadForming": "Axial leads formed downward at 10.16 mm pitch; body dimensions unchanged; Vishay MRS25 minimum bend spacing 10 mm."
+        },
+        "visualVariant": "resistor"
+      },
+      "editor": {
+        "family": "passive",
+        "visual": "resistor",
+        "color": "#b4c7c0",
+        "defaults": {
+          "resistanceOhms": 330,
+          "powerWatts": 0.25,
+          "tolerancePercent": 1
+        },
+        "parameters": [
+          {
+            "key": "resistanceOhms",
+            "label": "Resistance",
+            "kind": "number",
+            "unit": "ohm",
+            "min": 0.1,
+            "max": 1000000000.0
+          },
+          {
+            "key": "powerWatts",
+            "label": "Max power",
+            "kind": "number",
+            "unit": "W",
+            "min": 0.001,
+            "max": 100
+          },
+          {
+            "key": "tolerancePercent",
+            "label": "Tolerance",
+            "kind": "number",
+            "unit": "%",
+            "min": 0.001,
+            "max": 20,
+            "advanced": true
+          }
+        ],
+        "componentKind": "resistor",
+        "displayName": "Resistor",
+        "addType": "GENERIC_RESISTOR"
+      },
+      "identityKind": "configurable-generic",
+      "shortName": "Resistor"
+    },
+    {
+      "id": "GENERIC-CAPACITOR-ELECTROLYTIC",
+      "revision": 1,
+      "editorType": "GENERIC_CAPACITOR_ELECTROLYTIC",
+      "name": "Capacitor",
+      "function": "capacitor",
+      "package": {
+        "id": "UVR-D10-508",
+        "revision": 1,
+        "family": "radial-capacitor",
+        "bodyMm": {
+          "x": 10,
+          "y": 12.5,
+          "z": 10
+        },
+        "leadDiameterMm": 0.5,
+        "standoffMm": 1.5,
+        "pins": [
+          {
+            "id": "PLUS",
+            "number": "PLUS",
+            "name": "+",
+            "role": "passive",
+            "positionMm": {
+              "x": -2.54,
+              "y": 0,
+              "z": 0
+            },
+            "domain": "ANALOG"
+          },
+          {
+            "id": "MINUS",
+            "number": "MINUS",
+            "name": "−",
+            "role": "passive",
+            "positionMm": {
+              "x": 2.54,
+              "y": 0,
+              "z": 0
+            },
+            "domain": "ANALOG"
+          }
+        ],
+        "footprint": {
+          "id": "UVR-D10-508-footprint",
+          "revision": 1,
+          "pitchMm": 5.08,
+          "mountable": true,
+          "leadForming": "Native5.0mm lead pitch (±0.5mm) formed to5.08mm; negative stripe faces MINUS."
+        },
+        "visualVariant": "polarized",
+        "polarized": true
+      },
+      "editor": {
+        "family": "passive",
+        "visual": "capacitor",
+        "color": "#3e4249",
+        "defaults": {
+          "capacitanceFarads": 4.7e-05,
+          "voltageRatingVolts": 25,
+          "capacitorType": "ELECTROLYTIC"
+        },
+        "parameters": [
+          {
+            "key": "capacitanceFarads",
+            "label": "Capacitance",
+            "kind": "number",
+            "unit": "F",
+            "min": 1e-12,
+            "max": 1
+          },
+          {
+            "key": "capacitorType",
+            "label": "Type",
+            "kind": "enum",
+            "options": [
+              {
+                "value": "CERAMIC",
+                "label": "Ceramic"
+              },
+              {
+                "value": "ELECTROLYTIC",
+                "label": "Electrolytic"
+              }
+            ]
+          },
+          {
+            "key": "voltageRatingVolts",
+            "label": "Rated voltage",
+            "kind": "number",
+            "unit": "V",
+            "min": 0.1,
+            "max": 10000,
+            "advanced": true
+          }
+        ],
+        "componentKind": "capacitor",
+        "displayName": "Capacitor",
+        "addType": "GENERIC_CAPACITOR_ELECTROLYTIC",
+        "hidden": true
+      },
+      "identityKind": "configurable-generic",
+      "shortName": "Capacitor"
+    },
+    {
+      "id": "GENERIC-ZENER-DIODE-AXIAL",
+      "revision": 1,
+      "editorType": "GENERIC_ZENER_DIODE",
+      "name": "Zener Diode",
+      "function": "zener-diode",
+      "package": {
+        "id": "DO41-1016",
+        "revision": 1,
+        "family": "axial",
+        "bodyMm": {
+          "x": 5.2,
+          "y": 2.7,
+          "z": 2.7
+        },
+        "leadDiameterMm": 0.5,
+        "standoffMm": 1.5,
+        "pins": [
+          {
+            "id": "A",
+            "number": "A",
+            "name": "A",
+            "role": "passive",
+            "positionMm": {
+              "x": -5.08,
+              "y": 0,
+              "z": 0
+            },
+            "domain": "ANALOG"
+          },
+          {
+            "id": "K",
+            "number": "K",
+            "name": "K",
+            "role": "passive",
+            "positionMm": {
+              "x": 5.08,
+              "y": 0,
+              "z": 0
+            },
+            "domain": "ANALOG"
+          }
+        ],
+        "footprint": {
+          "id": "DO41-1016-footprint",
+          "revision": 1,
+          "pitchMm": 10.16,
+          "mountable": true,
+          "leadForming": "Axial leads bent downward at10.16mm spacing; cathode band faces K, body retains datasheet dimensions."
+        },
+        "visualVariant": "zener",
+        "polarized": true
+      },
+      "editor": {
+        "family": "active",
+        "visual": "zener",
+        "color": "#4b3831",
+        "defaults": {
+          "forwardVoltageVolts": 0.7,
+          "leakageCurrentAmps": 1e-09,
+          "zenerVoltageVolts": 5.1
+        },
+        "parameters": [
+          {
+            "key": "forwardVoltageVolts",
+            "label": "Forward voltage",
+            "kind": "number",
+            "unit": "V",
+            "min": 0,
+            "max": 1000
+          },
+          {
+            "key": "leakageCurrentAmps",
+            "label": "Leakage current",
+            "kind": "number",
+            "unit": "A",
+            "min": 0,
+            "max": 100
+          },
+          {
+            "key": "zenerVoltageVolts",
+            "label": "Zener voltage",
+            "kind": "number",
+            "unit": "V",
+            "min": 0,
+            "max": 10000,
+            "exclusiveMin": true
+          }
+        ],
+        "componentKind": "zener-diode",
+        "displayName": "Zener Diode",
+        "addType": "GENERIC_ZENER_DIODE"
+      },
+      "shortName": "Zener Diode",
       "identityKind": "configurable-generic"
     }
   ]

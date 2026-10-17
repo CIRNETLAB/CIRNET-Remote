@@ -1,10 +1,10 @@
 import { expect, type Page } from '@playwright/test'
-import type { Camera, Object3D, WebGLRenderer } from 'three'
+import type { Camera, Object3D, WebGLRenderer, Mesh } from 'three'
 import { readFileSync } from 'node:fs'
 import type { BreadboardTopology } from '../src/electrical/BreadboardTopology'
 import { parseStructural } from '../src/contracts/structural'
 
-interface NativeSceneProbe { scene: Object3D; camera: Camera; frames: number; trustedPointerDowns: number; trustedContextMenus: number }
+interface NativeSceneProbe { scene: Object3D; camera: Camera; frames: number; trustedPointerDowns: number; trustedContextMenus: number;memory:{geometries:number;textures:number} }
 type ProbedCanvas = HTMLCanvasElement & { nativeSceneProbe?: NativeSceneProbe }
 const topologies=JSON.parse(readFileSync(new URL('../src/data/breadboardTopologies.json',import.meta.url),'utf8')) as {profiles:BreadboardTopology[]}
 export const workspaceCanvas = (page: Page) => page.getByLabel('Three-dimensional circuit workspace', { exact: true })
@@ -28,7 +28,7 @@ export async function observeNativeScene(page: Page) {
       renderer.render = (scene, camera) => {
         original(scene, camera)
         if (!scene.getObjectByName('flexible-edit-handles')) return
-        canvas.nativeSceneProbe = { scene, camera, frames: (canvas.nativeSceneProbe?.frames ?? 0) + 1, trustedPointerDowns, trustedContextMenus }
+        canvas.nativeSceneProbe = { scene, camera, frames: (canvas.nativeSceneProbe?.frames ?? 0) + 1, trustedPointerDowns, trustedContextMenus,memory:{...renderer.info.memory} }
       }
     })
   })
@@ -54,7 +54,7 @@ export async function projectContact(page: Page, boardId: string, contactId: str
   }, { boardId, position: [...contact.localPosition] })
 }
 
-export async function projectFlexibleHandle(page: Page, name: 'pin-0' | 'pin-1' | 'lift' | 'tilt') {
+export async function projectFlexibleHandle(page: Page, name: 'pin-0' | 'pin-1') {
   return workspaceCanvas(page).evaluate((element, name) => {
     const canvas = element as ProbedCanvas, probe = canvas.nativeSceneProbe
     if (!probe) throw new Error('The actual scene probe is unavailable.')
@@ -63,6 +63,17 @@ export async function projectFlexibleHandle(page: Page, name: 'pin-0' | 'pin-1' 
     const point = marker.getWorldPosition(marker.position.clone()).project(probe.camera), rect = canvas.getBoundingClientRect()
     return { x: rect.left + (point.x + 1) * rect.width / 2, y: rect.top + (1 - point.y) * rect.height / 2 }
   }, name)
+}
+
+/** Coordinates previously occupied by body-pose handles; no live hit target is queried. */
+export async function projectFormerBodyHandle(page:Page,id:string,name:'lift'|'tilt'){
+ return workspaceCanvas(page).evaluate((element,{id,name})=>{
+  const canvas=element as ProbedCanvas,probe=canvas.nativeSceneProbe;if(!probe)throw Error('Missing native scene.')
+  let model:Object3D|undefined;probe.scene.traverse(object=>{if(object.userData.kind==='module'&&object.userData.id===id)model=object})
+  if(!model)throw Error('Missing module.')
+  const point=model.getWorldPosition(model.position.clone());point.y+=name==='lift'?.16:.08;if(name==='tilt')point.x+=.16;point.project(probe.camera)
+  const rect=canvas.getBoundingClientRect();return{x:rect.left+(point.x+1)*rect.width/2,y:rect.top+(1-point.y)*rect.height/2}
+ },{id,name})
 }
 
 export async function projectModuleCenter(page: Page, id: string) {
@@ -77,13 +88,23 @@ export async function projectModuleCenter(page: Page, id: string) {
   }, id)
 }
 
+export async function nativeComponentBody(page:Page,id:string){
+ return workspaceCanvas(page).evaluate((element,id)=>{
+  const probe=(element as ProbedCanvas).nativeSceneProbe;if(!probe)throw Error('Missing native renderer.')
+  let model:Object3D|undefined;probe.scene.traverse(object=>{if(object.userData.kind==='module'&&object.userData.id===id)model=object})
+  const body=model?.getObjectByName('package-body') as Mesh|undefined;if(!model||!body?.geometry)throw Error('Missing rendered component body geometry.')
+  body.geometry.computeBoundingBox();const bounds=body.geometry.boundingBox!
+  return{model:model.uuid,body:body.geometry.uuid,size:bounds.max.clone().sub(bounds.min).toArray()}
+ },id)
+}
+
 export async function nativeSceneEvidence(page: Page) {
   return workspaceCanvas(page).evaluate(element => {
     const probe = (element as ProbedCanvas).nativeSceneProbe
     if (!probe) throw new Error('Missing native renderer evidence.')
-    let preview = false, handles = false
-    probe.scene.traverse(object => { if (object.userData.id === 'PLACE') preview = true; if (object.name === 'flexible-edit-handles') handles = object.visible })
-    return { frames: probe.frames, trustedPointerDowns: probe.trustedPointerDowns, trustedContextMenus: probe.trustedContextMenus, camera: probe.camera.quaternion.toArray(), preview, handles }
+    let preview = false, handles = false;let handleNames:string[]=[]
+    probe.scene.traverse(object => { if (object.userData.id === 'PLACE') preview = true; if (object.name === 'flexible-edit-handles'){handles = object.visible;handleNames=object.children.map(marker=>String(marker.userData.flexibleHandle))} })
+    return { frames: probe.frames, trustedPointerDowns: probe.trustedPointerDowns, trustedContextMenus: probe.trustedContextMenus, camera: probe.camera.quaternion.toArray(), preview, handles, handleNames,memory:probe.memory }
   })
 }
 

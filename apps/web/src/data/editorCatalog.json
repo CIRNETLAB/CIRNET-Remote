@@ -5015,13 +5015,13 @@
       "family": "passive",
       "visual": "resistor",
       "size": [
-        0.33267716535433073,
-        0.1279527559055118,
-        0.1279527559055118
+        0.2559055118110236,
+        0.10236220472440945,
+        0.10236220472440945
       ],
-      "color": "#b4c7c0",
+      "color": "#4A90E2",
       "partDefinitionId": "GENERIC-RESISTOR-AXIAL",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "A",
@@ -5140,13 +5140,13 @@
       "family": "passive",
       "visual": "capacitor",
       "size": [
-        0.5118110236220472,
-        0.639763779527559,
-        0.5118110236220472
+        0.32244094488188974,
+        0.562992125984252,
+        0.32244094488188974
       ],
       "color": "#3e4249",
       "partDefinitionId": "GENERIC-CAPACITOR-ELECTROLYTIC",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "PLUS",
@@ -5255,13 +5255,13 @@
       "family": "active",
       "visual": "zener",
       "size": [
-        0.26614173228346455,
-        0.13818897637795277,
-        0.13818897637795277
+        0.21496062992125986,
+        0.1125984251968504,
+        0.1125984251968504
       ],
       "color": "#4b3831",
       "partDefinitionId": "GENERIC-ZENER-DIODE-AXIAL",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "A",

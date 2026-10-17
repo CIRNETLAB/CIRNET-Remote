@@ -1,11 +1,11 @@
-import type { CircuitGraph,CircuitModule,FlexibleMountV1, Point3, WireIdentity, WireVisual } from '../../types/circuit'
+import type { CircuitGraph,CircuitModule,FlexibleMount, Point3, WireIdentity, WireVisual } from '../../types/circuit'
 import type { MemoryImage } from '../../types/memory'
 import { getDefinition, validateProperties } from '../../data/editorCatalog'
 import { assertConnectionAllowed } from '../../electrical/nets'
 import { copyWireVisual, validateWireVisual } from '../../wires/wireVisual'
 import { moduleWorldPose } from '../../electrical/modulePose'
 import { solveMounting } from '../../electrical/mounting'
-import { getPartForType } from '../../data/partCatalog'
+import { getPartForType, getPartForModule, physicalDescriptorForPart } from '../../data/partCatalog'
 import {getMechanicalProfile,isFlexibleMount,solveFlexibleMount} from '../../electrical/flexibleGeometry'
 import {parseEndpoint,formatEndpoint} from '../../electrical/endpoints'
 import {parseCircuitFile} from './circuitFile'
@@ -29,27 +29,50 @@ function componentProperties(type:string,values?:Record<string,unknown>){
   validateProperties(type,properties);return properties
 }
 
-export function placeFlexibleModule(state:EditorDocumentState,type:string,mount:FlexibleMountV1,properties?:Record<string,unknown>):string{
+export function placeFlexibleModule(state:EditorDocumentState,type:string,mount:FlexibleMount,properties?:Record<string,unknown>):string{
   const graph=currentGraph(state);if(!graph)throw Error('Create a circuit first.')
   const ids=new Set(graph.modules.map(m=>m.id));let serial=1;while(ids.has(`${type}_${serial}`))serial++
   const id=`${type}_${serial}`,module:CircuitModule={id,type,mount:copyData(mount),properties:componentProperties(type,properties)}
   checkedCommit(state,{...graph,schema_version:'1.2',modules:[...graph.modules,module]});return id
 }
-export function updateFlexibleMount(state:EditorDocumentState,id:string,mount:FlexibleMountV1):void{
+export function updateFlexibleMount(state:EditorDocumentState,id:string,mount:FlexibleMount):void{
   const graph=currentGraph(state),module=graph?.modules.find(m=>m.id===id)
   if(!graph||!module||!isFlexibleMount(module.mount))throw Error('Select a flexible mounted component.')
   checkedCommit(state,withCircuitModules(graph,graph.modules.map(m=>m.id===id?{...m,mount:copyData(mount)}:m)))
+}
+/** An explicit rebuild/re-anchor adopts the current profile, never the old pose or knees. */
+export function previewComponentGeometry(state:EditorDocumentState,id:string,pinId?:string,contactId?:string):CircuitModule{
+  const graph=currentGraph(state),module=graph?.modules.find(m=>m.id===id),part=module&&getPartForType(module.type)
+  if(!graph||!module?.mount||!part||part.package.pins.length!==2)throw Error('Select a mounted two-pin component to rebuild.')
+  if(pinId!==undefined&&(!isFlexibleMount(module.mount)||!part.package.pins.some(pin=>pin.id===pinId)||!contactId))throw Error('Choose a stable component pin and an existing contact.')
+  const contacts=part.package.pins.map(pin=>{
+    const binding=module.mount!.contacts.find(binding=>binding.pinId===pin.id)
+    if(!binding)throw Error('The component does not bind every stable pin.')
+    return pin.id===pinId?contactId!:binding.contactId
+  })
+  const solution=solveFlexibleMount(module.type,module.mount.boardId,contacts[0],contacts[1],graph.modules,{activeId:id})
+  if(!solution.valid||!solution.mount)throw Error(solution.reason)
+  const candidate={...copyData(module),mount:copyData(solution.mount)}
+  const validated=parseCircuitFile(JSON.stringify(withCircuitModules(graph,graph.modules.map(m=>m.id===id?candidate:m))))
+  return validated.modules.find(m=>m.id===id)!
+}
+/** Commit only the previewed geometry; all unrelated source data remain authoritative. */
+export function rebuildComponentGeometry(state:EditorDocumentState,id:string,preview:CircuitModule):void{
+  const graph=currentGraph(state),module=graph?.modules.find(m=>m.id===id)
+  if(!graph||!module?.mount||preview.id!==id||preview.type!==module.type||!isFlexibleMount(preview.mount))throw Error('The geometry preview is no longer applicable.')
+  if(JSON.stringify(module.mount.contacts)!==JSON.stringify(preview.mount.contacts))throw Error('The component contacts changed; rebuild the preview again.')
+  checkedCommit(state,withCircuitModules(graph,graph.modules.map(m=>m.id===id?{...m,mount:copyData(preview.mount)}:m)))
 }
 export function changeComponentDesign(state:EditorDocumentState,id:string,nextType:string,patch:Record<string,unknown>,pinMap?:Record<string,string>):void{
   const graph=currentGraph(state),module=graph?.modules.find(m=>m.id===id)
   if(!graph||!module)throw Error('Select a component.')
   if(nextType===module.type){updateModuleProperties(state,id,patch);return}
-  const previous=getPartForType(module.type),next=getPartForType(nextType)
+  const previous=getPartForType(module.type,module.mount),next=getPartForType(nextType)
   if(!previous||!next)throw Error('An explicit compatible component design is required.')
   const oldPins=previous.package.pins.map(p=>p.id),newPins=next.package.pins.map(p=>p.id)
   const mapping=pinMap??(oldPins.length===newPins.length&&oldPins.every(p=>newPins.includes(p))?Object.fromEntries(oldPins.map(p=>[p,p])):null)
   if(!mapping||Object.keys(mapping).length!==oldPins.length||!oldPins.every(p=>Object.hasOwn(mapping,p))||new Set(Object.values(mapping)).size!==newPins.length||!Object.values(mapping).every(p=>newPins.includes(p)))throw Error('Changing Type requires a bijective stable pin mapping.')
-  const properties=componentProperties(nextType,{...module.properties,...patch}),changed:CircuitModule={...module,type:nextType,properties}
+  const properties=componentProperties(nextType,{...module.properties,...patch}),changed:CircuitModule={...module,type:nextType,properties,...(!module.mount ? { physicalDescriptor: physicalDescriptorForPart(next) } : {})}
   if(module.mount){
     const contacts=module.mount.contacts.map(binding=>({...binding,pinId:mapping[binding.pinId]}))
     if(isFlexibleMount(module.mount)){
@@ -119,7 +142,7 @@ export function placeModule(state:EditorDocumentState, type: string, position: R
   if (definition.memoryContract) properties.memory = createMemoryImage()
   const physical = getPartForType(type), candidate = physical ? solveMounting(type, position, rotation, graph.modules, id) : null
   if (candidate && !candidate.valid) throw new Error(candidate.reason)
-  const module: CircuitModule = { id, type, ...(candidate ? { mount: candidate.mount } : { position: { ...position }, rotation: ((rotation % 360) + 360) % 360 }), properties }
+  const module: CircuitModule = { id, type, ...(candidate ? { mount: candidate.mount } : { position: { ...position }, rotation: ((rotation % 360) + 360) % 360, ...(physical ? { physicalDescriptor: physicalDescriptorForPart(physical) } : {}) }), properties }
   const next=withCircuitModules(graph,[...graph.modules,module])
   if(physical&&next.schema_version==='1.0')next.schema_version='1.1'
   commitGraph(state,next)
@@ -134,10 +157,11 @@ export function moveModule(state:EditorDocumentState, id: string, position: Requ
     const candidate=buildFlexibleTransformCandidate(graph,id,position)
     checkedCommit(state,withCircuitModules(graph,graph.modules.map(m=>m.id===id?candidate:m)));return
   }
-  const candidate = getPartForType(module.type) ? solveMounting(module.type, position, world.rotation ?? 0, graph.modules, id) : null
+  const descriptor = getPartForModule(module)
+  const candidate = descriptor ? solveMounting(module.type, position, world.rotation ?? 0, graph.modules, id, physicalDescriptorForPart(descriptor)) : null
   if (candidate && !candidate.valid) throw new Error(candidate.reason)
   const { mount: _mount, ...free } = module
-  const next = candidate ? { ...free, position: undefined, rotation: undefined, mount: candidate.mount } : { ...free, position: { ...position }, rotation: world.rotation }
+  const next = candidate ? { ...free, position: undefined, rotation: undefined, mount: candidate.mount } : { ...free, position: { ...position }, rotation: world.rotation, ...(descriptor && module.mount ? { physicalDescriptor: physicalDescriptorForPart(descriptor) } : {}) }
   commitGraph(state, withCircuitModules(graph,graph.modules.map(item => item.id === id ? next : item)))
 }
 export function rotateModule(state:EditorDocumentState, id: string, degrees = 90) {
@@ -151,7 +175,7 @@ export function rotateModule(state:EditorDocumentState, id: string, degrees = 90
   }
   const rotation = (((world.rotation ?? 0) % 360 + degrees % 360) % 360 + 360) % 360
   if (module.mount) {
-    const candidate = solveMounting(module.type, world.position as Required<NonNullable<CircuitModule['position']>>, rotation, graph.modules, id)
+    const candidate = solveMounting(module.type, world.position as Required<NonNullable<CircuitModule['position']>>, rotation, graph.modules, id, module.mount)
     if (!candidate?.valid) throw new Error(candidate?.reason ?? 'This rotation does not fit the footprint.')
     commitGraph(state,withCircuitModules(graph,graph.modules.map(item => item.id === id ? { ...module, mount: candidate.mount } : item)))
   } else commitGraph(state,withCircuitModules(graph,graph.modules.map(item => item.id === id ? { ...item, rotation } : item)))
@@ -162,7 +186,8 @@ export function detachModule(state:EditorDocumentState, id: string) {
   if (!graph || !module?.mount) return
   if(isFlexibleMount(module.mount))throw Error('Flexible assemblies belong to their breadboard; move or delete the assembly instead.')
   const { mount: _mount, ...free } = moduleWorldPose(module, graph.modules)
-  commitGraph(state,withCircuitModules(graph,graph.modules.map(item => item.id === id ? free : item)))
+  const descriptor = getPartForModule(module)
+  commitGraph(state,withCircuitModules(graph,graph.modules.map(item => item.id === id ? { ...free, ...(descriptor ? { physicalDescriptor: physicalDescriptorForPart(descriptor) } : {}) } : item)))
 }
 export function removeModule(state:EditorDocumentState, id: string) {
   const graph=currentGraph(state)

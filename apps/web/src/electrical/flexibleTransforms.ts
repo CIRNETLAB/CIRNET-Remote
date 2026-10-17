@@ -1,5 +1,5 @@
 /** Rigid assembly transforms preserve authored lead shape and bind exact holes. */
-import type {CircuitGraph,CircuitModule,FlexibleMountV1,Point3} from '../types/circuit'
+import type {CircuitGraph,CircuitModule,FlexibleMount,Point3} from '../types/circuit'
 import {getBreadboardTopology,type BreadboardTopology,type BreadboardContact} from './BreadboardTopology'
 import {isFlexibleMount} from './flexibleGeometry'
 import {moduleLocalToWorld,moduleWorldPose,worldToModuleLocal} from './modulePose'
@@ -10,7 +10,7 @@ import {reframeFlexibleMount} from './reframeFlexibleMount'
 const indices=new WeakMap<BreadboardTopology,Map<string,BreadboardContact>>()
 const key=(p:Point3)=>[p.x,p.y,p.z].map(n=>Math.round(n*100000)).join(',')
 const point=(p:readonly number[]):Point3=>({x:p[0],y:p[1],z:p[2]})
-export function transformFlexibleMount(module:CircuitModule,sourceModules:CircuitModule[],targetBoard:CircuitModule,transformWorld:(point:Point3)=>Point3,yawDelta=0):FlexibleMountV1{
+export function transformFlexibleMount(module:CircuitModule,sourceModules:CircuitModule[],targetBoard:CircuitModule,transformWorld:(point:Point3)=>Point3,yawDelta=0):FlexibleMount{
  const mount=module.mount
  if(!isFlexibleMount(mount))throw Error('Select a flexible mounted assembly.')
  const source=sourceModules.find(m=>m.id===mount.boardId),topology=getBreadboardTopology(targetBoard.type)

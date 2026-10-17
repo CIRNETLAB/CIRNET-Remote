@@ -4,6 +4,7 @@ import { getBreadboardTopology } from '../electrical/BreadboardTopology'
 import { formatEndpoint, parseEndpoint } from '../electrical/endpoints'
 import { moduleLocalToWorld, moduleWorldPose, worldToModuleLocal } from '../electrical/modulePose'
 import { solveMounting, validateMountBindings } from '../electrical/mounting'
+import { getPartForModule, physicalDescriptorForPart } from '../data/partCatalog'
 import { assertConnectionAllowed, assertElectricalNetsAllowed } from '../electrical/nets'
 import { parseCircuitFile } from '../domain/document/circuitFile'
 import { shiftBreadboardContact, shiftedWireCopy, wireCopyAtContact } from '../wires/wireClipboard'
@@ -216,7 +217,8 @@ export function buildPasteCandidate(graph: CircuitGraph, snapshot: SelectionClip
       const id = idMap.get(original.id)!
       if (draft.modules.some(module => module.id === id)) continue
       const { mount: _mount, ...free } = clone(moduleWorldPose(original, snapshot.sourceModules))
-      draft=withCircuitModules(draft,[...draft.modules,{ ...free, id, position: transform(positionOf(free)), rotation: norm((free.rotation ?? 0) + rotate) }])
+      const part=getPartForModule(original)
+      draft=withCircuitModules(draft,[...draft.modules,{ ...free, id, position: transform(positionOf(free)), rotation: norm((free.rotation ?? 0) + rotate), ...(part ? { physicalDescriptor: physicalDescriptorForPart(part) } : {}) }])
     }
     if (!selection.wires.length && snapshot.connections.length) {
       selection.wires = snapshot.connections.map(wire => ({ source: wire.source, destination: wire.destination }))
@@ -234,7 +236,8 @@ export function buildDeleteCandidate(graph: CircuitGraph, selection: EditorSelec
   const modules = graph.modules.filter(module => !ids.has(module.id)).map(module => {
     if (!module.mount || !ids.has(module.mount.boardId)) return module
     const { mount: _mount, ...free } = moduleWorldPose(module, graph.modules)
-    return free
+    const part=getPartForModule(module)
+    return { ...free, ...(part ? { physicalDescriptor: physicalDescriptorForPart(part) } : {}) }
   })
   const connections = graph.connections.filter(wire => !wires.has(wireKey(wire)) && !ids.has(parseEndpoint(wire.source)?.moduleId ?? '') && !ids.has(parseEndpoint(wire.destination)?.moduleId ?? '')).map(wire => {
     const visual = readWireVisual(wire)
@@ -294,7 +297,8 @@ export function buildMoveSelectionCandidate(graph: CircuitGraph, selection: Edit
           z: currentPosition.z + delta.z,
         }
         const { mount: _m, ...rest } = clone(item)
-        previewModules.push({ ...rest, position: freePos, rotation: item.rotation ?? currentPose.rotation })
+        const part=getPartForModule(item)
+        previewModules.push({ ...rest, position: freePos, rotation: item.rotation ?? currentPose.rotation, ...(part ? { physicalDescriptor: physicalDescriptorForPart(part) } : {}) })
       }
     }
     return withCircuitModules(graph,previewModules,[...graph.connections])
@@ -323,7 +327,7 @@ export function buildMoveSelectionCandidate(graph: CircuitGraph, selection: Edit
         continue
       }catch(error){throw new MoveCandidateError(error instanceof Error?error.message:String(error),makePreviewDraft(),normalized,delta)}
     }
-    const candidate = solveMounting(module.type, desiredWorld, currentPose.rotation ?? 0, availableBoards, module.id)
+    const candidate = solveMounting(module.type, desiredWorld, currentPose.rotation ?? 0, availableBoards, module.id, module.mount)
 
     if (!candidate || !candidate.valid) {
       const reason = candidate?.reason || 'The component does not fit on any breadboard at this position.'

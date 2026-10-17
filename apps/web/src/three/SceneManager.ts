@@ -6,10 +6,10 @@ import { getDefinition } from '../data/editorCatalog'
 import { moduleWorldPose } from '../electrical/modulePose'
 import type { MountCandidate } from '../electrical/mounting'
 import { applyPackageSimulation, setPackagePinHighlight } from './PackageModel'
-import { getPartForType } from '../data/partCatalog'
+import { getPartForType, getPartForModule, physicalDescriptorForPart } from '../data/partCatalog'
 import { canUpdatePackageAppearance, updatePackageAppearance } from './PackageModel'
 import { updateFlexiblePackageGeometry } from './package/FlexiblePackageGeometry'
-import { MeshBasicMaterial, SphereGeometry, TorusGeometry } from 'three'
+import { MeshBasicMaterial, SphereGeometry } from 'three'
 import { isFlexibleMount } from '../electrical/flexibleGeometry'
 import { createStudioEnvironment } from './StudioEnvironment'
 import type { WebGLRenderer } from 'three'
@@ -37,7 +37,7 @@ export type PickResult = ({ kind: 'module'; id: string } | { kind: 'control'; id
 export interface EndpointPick { kind: 'port' | 'contact'; id: string; endpoint: string; point: Vector3; contactId?: string }
 export type WireEditPick = { kind: 'bend' | 'segment'; wire: WireIdentity; index: number; point: Vector3; basePoint?: Vector3 }
 export interface OrientationAxis { label: 'X' | 'Y' | 'Z'; x: number; y: number; depth: number; color: string }
-export type FlexibleHandle = {id:string;handle:'pin-0'|'pin-1'|'lift'|'tilt';point:Vector3}
+export type FlexibleHandle = {id:string;handle:'pin-0'|'pin-1';point:Vector3}
 
 // Geometry is a projection of graph IDs and named logical ports, never a source of nets.
 export function createSceneManager({ renderer, canvas, onBeforeRender, onRender, onZoomChange, requestFrame = requestAnimationFrame, cancelFrame = cancelAnimationFrame }: SceneOptions) {
@@ -104,9 +104,9 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
   scene.add(grid, ambient, light, fillLight, content, wires, wireLayer.tools, contactHover)
   const gizmo = createComponentTransformGizmo(); scene.add(gizmo.root)
   const flexibleHandles = new Group(); flexibleHandles.name = 'flexible-edit-handles'; scene.add(flexibleHandles)
-  const handleSphere = new SphereGeometry(.032,12,8), handleRing = new TorusGeometry(.055,.009,8,24)
-  for (const [handle,color] of [['pin-0','#ffd467'],['pin-1','#ffd467'],['lift','#6be6bc'],['tilt','#86baff']] as const) {
-    const marker=new Mesh(handle==='tilt'?handleRing:handleSphere,new MeshBasicMaterial({color,depthTest:false,transparent:true,opacity:.95}));marker.userData={flexibleHandle:handle,ignorePick:true};marker.renderOrder=40;flexibleHandles.add(marker)
+  const handleSphere = new SphereGeometry(.032,12,8)
+  for (const handle of ['pin-0','pin-1'] as const) {
+    const marker=new Mesh(handleSphere,new MeshBasicMaterial({color:'#ffd467',depthTest:false,transparent:true,opacity:.95}));marker.userData={flexibleHandle:handle,ignorePick:true};marker.renderOrder=40;flexibleHandles.add(marker)
   }
   let flexibleEditing=true, flexibleGhost:Group|null=null
   function updateFlexibleHandles(){
@@ -115,8 +115,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     if(!flexibleHandles.visible||!model||!module||!isFlexibleMount(module.mount))return
     const anchors=model.userData.resolvedPinAnchors as Record<string,[number,number,number]>
     flexibleHandles.children.forEach((marker,index)=>{
-      if(index<2){const pinId=getPartForType(module.type)!.package.pins[index].id,anchor=anchors[pinId];marker.position.copy(model.localToWorld(new Vector3(...anchor)));marker.position.y+=.018}
-      else {marker.position.copy(model.position);marker.position.y+=index===2?.16:.08;if(index===3)marker.position.x+=.16}
+      const pinId=getPartForModule(module)!.package.pins[index].id,anchor=anchors[pinId];marker.position.copy(model.localToWorld(new Vector3(...anchor)));marker.position.y+=.018
       marker.userData.id=module.id
     })
   }
@@ -344,13 +343,18 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       for(const marker of flexibleHandles.children){const p=screenPoint(marker.position),d=Math.hypot(x-p.x,y-p.y);if(p.visible&&d<distance){distance=d;best={id:marker.userData.id,handle:marker.userData.flexibleHandle,point:marker.position.clone()}}}return best
     },
     previewFlexibleModule(module:CircuitModule){
-      const model=models.get(module.id);if(!model||disposed)return
+      let model=models.get(module.id);if(!model||disposed)return
+      const signature=JSON.stringify([module.type,module.properties,module.mount?.partId,module.mount?.partRevision,module.mount?.packageId,module.mount?.packageRevision,module.physicalDescriptor])
+      if(model.userData.signature!==signature){
+        if(activeOutline?.id===module.id)removeActiveOutline();removeMultiOutline(module.id);disposeObject(model);content.remove(model)
+        model=buildComponent(module,[...modules.values()]);model.userData.onVisualChange=schedule;models.set(module.id,model);content.add(model);attachOutline();attachMultiOutlines()
+      }
       updateFlexiblePackageGeometry(model,module,[...modules.values()]);applyPose(model,moduleWorldPose(module,[...modules.values()]));wireLayer.updateModule(module.id);updateFlexibleHandles();schedule()
     },
     setFlexiblePreview(module:CircuitModule|null,context:CircuitModule[]=[],valid=true){
       if(disposed)return
       if(!module){if(flexibleGhost){flexibleGhost.removeFromParent();disposeObject(flexibleGhost);flexibleGhost=null}schedule();return}
-      const signature=JSON.stringify([module.type,module.properties])
+      const signature=JSON.stringify([module.type,module.properties,module.mount?.partId,module.mount?.partRevision,module.mount?.packageId,module.mount?.packageRevision,module.physicalDescriptor])
       if(flexibleGhost&&flexibleGhost.userData.signature!==signature){flexibleGhost.removeFromParent();disposeObject(flexibleGhost);flexibleGhost=null}
       if(!flexibleGhost){flexibleGhost=buildComponent(module,context);flexibleGhost.userData.ignorePick=true;scene.add(flexibleGhost)}
       else{updateFlexiblePackageGeometry(flexibleGhost,module,context);applyPose(flexibleGhost,moduleWorldPose(module,context))}
@@ -386,10 +390,11 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
         if(model&&!!model.userData.resolvedPinAnchors!==isFlexibleMount(module.mount)){
           if(activeOutline?.id===module.id)removeActiveOutline();removeMultiOutline(module.id);disposeObject(model);content.remove(model);models.delete(module.id);model=undefined
         }
-        const signature = JSON.stringify([module.type, module.properties])
+        const signature = JSON.stringify([module.type,module.properties,module.mount?.partId,module.mount?.partRevision,module.mount?.packageId,module.mount?.packageRevision,module.physicalDescriptor])
         if (model && model.userData.signature !== signature) {
-          const part = getPartForType(module.type)
-          if (model.userData.type === module.type && part && canUpdatePackageAppearance(part)) {
+          const part = getPartForModule(module)
+          const descriptorChanged=JSON.stringify(JSON.parse(model.userData.signature).slice(2))!==JSON.stringify(JSON.parse(signature).slice(2))
+          if (!descriptorChanged && model.userData.type === module.type && part && canUpdatePackageAppearance(part)) {
             const geometryRevision = model.userData.visualGeometryRevision
             updatePackageAppearance(model, module, part); model.userData.signature = signature
             if (activeOutline?.id === module.id && model.userData.visualGeometryRevision !== geometryRevision) removeActiveOutline()
@@ -404,7 +409,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
         updateFlexiblePackageGeometry(model, module, next!.modules)
         if (previousRevision !== model.userData.visualGeometryRevision) { if (activeOutline?.id === module.id) removeActiveOutline(); removeMultiOutline(module.id) }
         applyPose(model, moduleWorldPose(module, next!.modules))
-        if (showPins) { const part = getPartForType(module.type); if (part) setPackagePinLabels(model, part, null, true) }
+        if (showPins) { const part = getPartForModule(module); if (part) setPackagePinLabels(model, part, null, true) }
       }
       attachOutline()
       attachMultiOutlines()
@@ -448,11 +453,12 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     },
     setGhost(type: string | null, position?: Required<NonNullable<CircuitModule['position']>>, rotation = 0, properties?: Record<string, unknown>) {
       if (disposed || !Number.isFinite(rotation) || (position && ![position.x, position.y, position.z].every(Number.isFinite))) return
-      if (ghost && type && position && ghost.userData.signature === JSON.stringify([type, properties])) { applyPose(ghost, { id: 'PLACE', type, position, rotation, properties }); updateGizmo(); schedule(); return }
+      const part=type?getPartForType(type):undefined,physicalDescriptor=part?physicalDescriptorForPart(part):undefined
+      if (ghost && type && position && ghost.userData.signature === JSON.stringify([type, properties,undefined,undefined,undefined,undefined,physicalDescriptor])) { applyPose(ghost, { id: 'PLACE', type, position, rotation, properties,physicalDescriptor }); updateGizmo(); schedule(); return }
       if (ghost) { disposeObject(ghost); scene.remove(ghost); ghost = null }
       if (type && position && getDefinition(type)) {
         // PLACE is a render-only pick target, absent from models, ports and Circuit Graph.
-        ghost = buildComponent({ id: 'PLACE', type, position, rotation, properties }); ghost.userData.kind = 'placement'
+        ghost = buildComponent({ id: 'PLACE', type, position, rotation, properties,physicalDescriptor }); ghost.userData.kind = 'placement'
         ghost.traverse((object) => {
           if (object instanceof Mesh) {
             const mats = Array.isArray(object.material) ? object.material : [object.material]
@@ -534,7 +540,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       contactHover.visible = false
       if (highlightedPinModel) {
         setPackagePinHighlight(highlightedPinModel, null)
-        const part = getPartForType(highlightedPinModel.userData.type)
+        const highlightedModule=modules.get(highlightedPinModel.userData.id),part=highlightedModule?getPartForModule(highlightedModule):undefined
         if (part) setPackagePinLabels(highlightedPinModel, part, null, showPins)
       }
       highlightedPinModel = null
@@ -542,7 +548,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       if (parsed && module && model) {
         const anchor = endpointPosition(endpoint!)
         if (anchor) {
-          if (parsed.kind === 'port' && getPartForType(module.type)) { setPackagePinHighlight(model, parsed.portId); setPackagePinLabels(model, getPartForType(module.type)!, parsed.portId, showPins); highlightedPinModel = model; schedule(); return }
+          if (parsed.kind === 'port' && getPartForModule(module)) { setPackagePinHighlight(model, parsed.portId); setPackagePinLabels(model, getPartForModule(module)!, parsed.portId, showPins); highlightedPinModel = model; schedule(); return }
           contactHover.position.copy(anchor)
           if (parsed.kind === 'contact') contactHover.position.y = model.position.y + (getBreadboardTopology(module.type)?.deckHeight ?? .33) + .004
           contactHover.rotation.y = model.rotation.y; contactHover.visible = true
@@ -552,7 +558,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     },
     setShowPins(value: boolean) {
       showPins = value
-      for (const [id, model] of models) { const part = getPartForType(modules.get(id)!.type); if (part) setPackagePinLabels(model, part, null, value) }
+      for (const [id, model] of models) { const part = getPartForModule(modules.get(id)!); if (part) setPackagePinLabels(model, part, null, value) }
       schedule()
     },
     wireContext: routeContext,

@@ -2,29 +2,204 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://netcircuit.local/contracts/circuit/1.2/schema.json",
   "title": "CircuitGraph 1.2 with explicit flexible assemblies",
-  "type": "object", "required": ["schema_version", "circuit_id", "modules", "connections"],
+  "type": "object",
+  "required": [
+    "schema_version",
+    "circuit_id",
+    "modules",
+    "connections"
+  ],
   "properties": {
-    "schema_version": {"const": "1.2"}, "circuit_id": {"type": "string", "minLength": 1},
-    "modules": {"type": "array", "maxItems": 2000, "items": {"$ref": "#/$defs/CircuitModuleV12"}},
-    "connections": {"type": "array", "maxItems": 10000, "items": {"$ref": "https://netcircuit.local/contracts/circuit/1.x/connection.schema.json"}},
-    "metadata": {"type": "object"}
-  }, "additionalProperties": false,
+    "schema_version": {
+      "const": "1.2"
+    },
+    "circuit_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "modules": {
+      "type": "array",
+      "maxItems": 2000,
+      "items": {
+        "$ref": "#/$defs/CircuitModuleV12"
+      }
+    },
+    "connections": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": {
+        "$ref": "https://netcircuit.local/contracts/circuit/1.x/connection.schema.json"
+      }
+    },
+    "metadata": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
   "$defs": {
     "CircuitModuleV12": {
-      "type": "object", "required": ["id", "type"],
+      "type": "object",
+      "required": [
+        "id",
+        "type"
+      ],
       "properties": {
-        "id": {"type": "string", "minLength": 1}, "type": {"type": "string", "minLength": 1},
-        "position": {"type": "object", "properties": {"x": {"type": "number"}, "y": {"type": "number"}, "z": {"type": "number"}}, "additionalProperties": false},
-        "rotation": {"type": "number"}, "properties": {"type": "object"},
-        "mount": {"oneOf": [{"$ref": "https://netcircuit.local/contracts/circuit/1.x/module.schema.json#/$defs/mount"}, {"$ref": "https://netcircuit.local/contracts/design/flexible-mount/1.0/schema.json#/$defs/FlexibleMountV1"}]}
-      }, "additionalProperties": true,
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "position": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "z": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false
+        },
+        "rotation": {
+          "type": "number"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "mount": {
+          "oneOf": [
+            {
+              "$ref": "https://netcircuit.local/contracts/circuit/1.x/module.schema.json#/$defs/mount"
+            },
+            {
+              "$ref": "https://netcircuit.local/contracts/design/flexible-mount/1.0/schema.json#/$defs/FlexibleMountV1"
+            },
+            {
+              "$ref": "https://netcircuit.local/contracts/design/flexible-mount/1.1/schema.json#/$defs/FlexibleMountV2"
+            }
+          ]
+        },
+        "physicalDescriptor": {
+          "$ref": "https://netcircuit.local/contracts/design/flexible-mount/1.1/schema.json#/$defs/PhysicalDescriptorV1"
+        }
+      },
+      "additionalProperties": true,
       "allOf": [
-        {"if": {"required": ["mount"]}, "then": {"not": {"anyOf": [{"required": ["position"]}, {"required": ["rotation"]}]}}},
-        {"if": {"required": ["type"], "properties": {"type": {"enum": ["GENERIC_RESISTOR", "GENERIC_CAPACITOR", "GENERIC_CAPACITOR_ELECTROLYTIC", "GENERIC_DIODE", "GENERIC_ZENER_DIODE", "GENERIC_LED", "GENERIC_BUZZER", "GENERIC_BJT"]}}}, "then": {"properties": {"properties": {"$ref": "https://netcircuit.local/contracts/design/flexible-mount/1.0/schema.json#/$defs/ComponentDesignPropertiesV1"}}}},
-        {"if": {"required": ["type"], "properties": {"type": {"const": "GENERIC_CAPACITOR"}}}, "then": {"properties": {"properties": {"properties": {"capacitorType": {"const": "CERAMIC"}}}}}},
-        {"if": {"required": ["type"], "properties": {"type": {"const": "GENERIC_CAPACITOR_ELECTROLYTIC"}}}, "then": {"properties": {"properties": {"properties": {"capacitorType": {"const": "ELECTROLYTIC"}}}}}}
+        {
+          "if": {
+            "required": [
+              "mount"
+            ]
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "position"
+                  ]
+                },
+                {
+                  "required": [
+                    "rotation"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "enum": [
+                  "GENERIC_RESISTOR",
+                  "GENERIC_CAPACITOR",
+                  "GENERIC_CAPACITOR_ELECTROLYTIC",
+                  "GENERIC_DIODE",
+                  "GENERIC_ZENER_DIODE",
+                  "GENERIC_LED",
+                  "GENERIC_BUZZER",
+                  "GENERIC_BJT"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "https://netcircuit.local/contracts/design/flexible-mount/1.0/schema.json#/$defs/ComponentDesignPropertiesV1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "const": "GENERIC_CAPACITOR"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "properties": {
+                  "capacitorType": {
+                    "const": "CERAMIC"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "const": "GENERIC_CAPACITOR_ELECTROLYTIC"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "properties": {
+                  "capacitorType": {
+                    "const": "ELECTROLYTIC"
+                  }
+                }
+              }
+            }
+          }
+        }
       ]
     },
-    "AnySupportedCircuitGraph": {"oneOf": [{"$ref": "https://netcircuit.local/contracts/circuit/1.x/circuit.schema.json"}, {"$ref": "https://netcircuit.local/contracts/circuit/1.2/schema.json"}]}
+    "AnySupportedCircuitGraph": {
+      "oneOf": [
+        {
+          "$ref": "https://netcircuit.local/contracts/circuit/1.x/circuit.schema.json"
+        },
+        {
+          "$ref": "https://netcircuit.local/contracts/circuit/1.2/schema.json"
+        }
+      ]
+    }
   }
 }

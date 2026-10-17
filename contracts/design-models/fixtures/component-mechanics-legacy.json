@@ -1,0 +1,91 @@
+{
+  "schema_version": "1.2",
+  "circuit_id": "flexible",
+  "modules": [
+    {
+      "id": "BB",
+      "type": "BREADBOARD",
+      "position": {
+        "x": 4,
+        "y": 0,
+        "z": -3
+      },
+      "rotation": 37
+    },
+    {
+      "id": "R",
+      "type": "GENERIC_RESISTOR",
+      "properties": {
+        "resistanceOhms": 4700,
+        "opaque": {
+          "preserve": "legacy manual override"
+        },
+        "tolerancePercent": 1,
+        "legacyLiftMm": 1.5
+      },
+      "mount": {
+        "kind": "breadboard-flexible",
+        "version": 1,
+        "boardId": "BB",
+        "partId": "GENERIC-RESISTOR-AXIAL",
+        "partRevision": 1,
+        "packageId": "MRS25-1016",
+        "packageRevision": 1,
+        "mechanicalProfileId": "flex-axial-resistor",
+        "mechanicalProfileRevision": 1,
+        "geometryRevision": 1,
+        "bodyPose": {
+          "position": {
+            "x": -2.86,
+            "y": 0.7,
+            "z": -0.65
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 90
+          }
+        },
+        "contacts": [
+          {
+            "kind": "pin-contact",
+            "version": 1,
+            "pinId": "A",
+            "contactId": "terminal:A:10"
+          },
+          {
+            "kind": "pin-contact",
+            "version": 1,
+            "pinId": "B",
+            "contactId": "terminal:B:10"
+          }
+        ],
+        "leads": [
+          {
+            "pinId": "A",
+            "controlPoints": []
+          },
+          {
+            "pinId": "B",
+            "controlPoints": [
+              {
+                "x": -2.61,
+                "y": 0.887,
+                "z": -0.65
+              },
+              {
+                "x": -2.61,
+                "y": 0.45,
+                "z": -0.585
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "connections": [],
+  "metadata": {
+    "compatibility": "Pinned revision 1 manual lift/tilt bodyPose and controls; open/save must preserve exactly."
+  }
+}

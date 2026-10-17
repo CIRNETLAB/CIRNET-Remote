@@ -1291,6 +1291,2468 @@
         ],
         "connections": []
       }
+    },
+    {
+      "id": "automatic-v2-resistor-standing-1pitch",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "automatic-v2",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "position": {
+              "x": 4,
+              "y": 2,
+              "z": -3
+            },
+            "rotation": 137
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_RESISTOR",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-RESISTOR-AXIAL",
+              "partRevision": 2,
+              "packageId": "GENERIC-AXIAL-R50-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-axial-resistor-compact",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-standing"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.86,
+                  "y": 0.4958110236220472,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 90
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "B",
+                  "contactId": "terminal:C:11"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": []
+                },
+                {
+                  "pinId": "B",
+                  "controlPoints": [
+                    {
+                      "x": -2.86,
+                      "y": 0.7092362204724408,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.73,
+                      "y": 0.7092362204724408,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 1.1499999999999995,
+          "bendRadiiMm": [],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.3678582677165354,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "B",
+          "lengthMm": 10.939822670059032,
+          "bendRadiiMm": [
+            1.269999999999999,
+            1.269999999999999
+          ],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.623763779527559,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.7092362204724408,
+              "z": -0.455
+            },
+            {
+              "x": -2.73,
+              "y": 0.7092362204724408,
+              "z": -0.455
+            },
+            {
+              "x": -2.73,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "automatic-v2-resistor-standing-2pitch",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "automatic-v2",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "position": {
+              "x": 4,
+              "y": 2,
+              "z": -3
+            },
+            "rotation": 137
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_RESISTOR",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-RESISTOR-AXIAL",
+              "partRevision": 2,
+              "packageId": "GENERIC-AXIAL-R50-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-axial-resistor-compact",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-standing"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.86,
+                  "y": 0.4958110236220472,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 90
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "B",
+                  "contactId": "terminal:C:12"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": []
+                },
+                {
+                  "pinId": "B",
+                  "controlPoints": [
+                    {
+                      "x": -2.86,
+                      "y": 0.7742362204724408,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.6,
+                      "y": 0.7742362204724408,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 1.1499999999999995,
+          "bendRadiiMm": [],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.3678582677165354,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "B",
+          "lengthMm": 14.929645340118068,
+          "bendRadiiMm": [
+            2.539999999999998,
+            2.539999999999998
+          ],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.623763779527559,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.7742362204724408,
+              "z": -0.455
+            },
+            {
+              "x": -2.6,
+              "y": 0.7742362204724408,
+              "z": -0.455
+            },
+            {
+              "x": -2.6,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "automatic-v2-resistor-horizontal-3pitch",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "automatic-v2",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "position": {
+              "x": 4,
+              "y": 2,
+              "z": -3
+            },
+            "rotation": 137
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_RESISTOR",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-RESISTOR-AXIAL",
+              "partRevision": 2,
+              "packageId": "GENERIC-AXIAL-R50-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-axial-resistor-compact",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-horizontal"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.665,
+                  "y": 0.3704173228346457,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "B",
+                  "contactId": "terminal:C:13"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -2.86,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "B",
+                  "controlPoints": [
+                    {
+                      "x": -2.47,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 2.25247779607693,
+          "bendRadiiMm": [
+            0.6000000000000004
+          ],
+          "points": [
+            {
+              "x": -2.792952755905512,
+              "y": 0.3704173228346457,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.3704173228346457,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "B",
+          "lengthMm": 2.25247779607693,
+          "bendRadiiMm": [
+            0.6000000000000004
+          ],
+          "points": [
+            {
+              "x": -2.537047244094488,
+              "y": 0.3704173228346457,
+              "z": -0.455
+            },
+            {
+              "x": -2.47,
+              "y": 0.3704173228346457,
+              "z": -0.455
+            },
+            {
+              "x": -2.47,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "automatic-v2-resistor-horizontal-4pitch",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "automatic-v2",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "position": {
+              "x": 4,
+              "y": 2,
+              "z": -3
+            },
+            "rotation": 137
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_RESISTOR",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-RESISTOR-AXIAL",
+              "partRevision": 2,
+              "packageId": "GENERIC-AXIAL-R50-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-axial-resistor-compact",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-horizontal"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.5999999999999996,
+                  "y": 0.3704173228346457,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "B",
+                  "contactId": "terminal:C:14"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -2.86,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "B",
+                  "controlPoints": [
+                    {
+                      "x": -2.34,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 3.5224777960769376,
+          "bendRadiiMm": [
+            0.6000000000000004
+          ],
+          "points": [
+            {
+              "x": -2.7279527559055117,
+              "y": 0.3704173228346457,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.3704173228346457,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "B",
+          "lengthMm": 3.522477796076929,
+          "bendRadiiMm": [
+            0.6000000000000004
+          ],
+          "points": [
+            {
+              "x": -2.4720472440944876,
+              "y": 0.3704173228346457,
+              "z": -0.455
+            },
+            {
+              "x": -2.34,
+              "y": 0.3704173228346457,
+              "z": -0.455
+            },
+            {
+              "x": -2.34,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "automatic-v2-diode-reverse-standing",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "automatic-v2",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "position": {
+              "x": 4,
+              "y": 2,
+              "z": -3
+            },
+            "rotation": 137
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_DIODE",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-DIODE-AXIAL",
+              "partRevision": 1,
+              "packageId": "DO35-1016",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-axial-diode",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-standing"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.73,
+                  "y": 0.4676614173228346,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": -180,
+                  "z": 90
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:11"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "K",
+                  "contactId": "terminal:C:10"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": []
+                },
+                {
+                  "pinId": "K",
+                  "controlPoints": [
+                    {
+                      "x": -2.73,
+                      "y": 0.6529370078740157,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.86,
+                      "y": 0.6529370078740157,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 1.1499999999999995,
+          "bendRadiiMm": [],
+          "points": [
+            {
+              "x": -2.73,
+              "y": 0.3678582677165354,
+              "z": -0.455
+            },
+            {
+              "x": -2.73,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "K",
+          "lengthMm": 9.839822670059032,
+          "bendRadiiMm": [
+            1.269999999999999,
+            1.269999999999999
+          ],
+          "points": [
+            {
+              "x": -2.73,
+              "y": 0.5674645669291338,
+              "z": -0.455
+            },
+            {
+              "x": -2.73,
+              "y": 0.6529370078740157,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.6529370078740157,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "automatic-v2-zener-reverse-horizontal",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "automatic-v2",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "position": {
+              "x": 4,
+              "y": 2,
+              "z": -3
+            },
+            "rotation": 137
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_ZENER_DIODE",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-ZENER-DIODE-AXIAL",
+              "partRevision": 2,
+              "packageId": "GENERIC-AXIAL-Z42-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-axial-zener-compact",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-horizontal"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.665,
+                  "y": 0.3755354330708661,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": -180,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:13"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "K",
+                  "contactId": "terminal:C:10"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -2.47,
+                      "y": 0.3755354330708661,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "K",
+                  "controlPoints": [
+                    {
+                      "x": -2.86,
+                      "y": 0.3755354330708661,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 2.7095574287564235,
+          "bendRadiiMm": [
+            0.6999999999999998
+          ],
+          "points": [
+            {
+              "x": -2.55751968503937,
+              "y": 0.3755354330708661,
+              "z": -0.455
+            },
+            {
+              "x": -2.47,
+              "y": 0.3755354330708661,
+              "z": -0.455
+            },
+            {
+              "x": -2.47,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "K",
+          "lengthMm": 2.7095574287564235,
+          "bendRadiiMm": [
+            0.6999999999999998
+          ],
+          "points": [
+            {
+              "x": -2.77248031496063,
+              "y": 0.3755354330708661,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.3755354330708661,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "automatic-v2-resistor-diagonal",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "automatic-v2",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "position": {
+              "x": 4,
+              "y": 2,
+              "z": -3
+            },
+            "rotation": 137
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_RESISTOR",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-RESISTOR-AXIAL",
+              "partRevision": 2,
+              "packageId": "GENERIC-AXIAL-R50-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-axial-resistor-compact",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-standing"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.86,
+                  "y": 0.4958110236220472,
+                  "z": -0.715
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": -45.00000000000002,
+                  "z": 90
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:A:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "B",
+                  "contactId": "terminal:C:12"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": []
+                },
+                {
+                  "pinId": "B",
+                  "controlPoints": [
+                    {
+                      "x": -2.86,
+                      "y": 0.8280839835809432,
+                      "z": -0.715
+                    },
+                    {
+                      "x": -2.6,
+                      "y": 0.8280839835809432,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 1.1499999999999995,
+          "bendRadiiMm": [],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.3678582677165354,
+              "z": -0.715
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.715
+            }
+          ]
+        },
+        {
+          "pinId": "B",
+          "lengthMm": 18.23492266292224,
+          "bendRadiiMm": [
+            3.5921024484276596,
+            3.5921024484276596
+          ],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.623763779527559,
+              "z": -0.715
+            },
+            {
+              "x": -2.86,
+              "y": 0.8280839835809432,
+              "z": -0.715
+            },
+            {
+              "x": -2.6,
+              "y": 0.8280839835809432,
+              "z": -0.455
+            },
+            {
+              "x": -2.6,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "automatic-v2-resistor-row",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "automatic-v2",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "position": {
+              "x": 4,
+              "y": 2,
+              "z": -3
+            },
+            "rotation": 137
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_RESISTOR",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-RESISTOR-AXIAL",
+              "partRevision": 2,
+              "packageId": "GENERIC-AXIAL-R50-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-axial-resistor-compact",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-horizontal"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.86,
+                  "y": 0.3704173228346457,
+                  "z": -0.52
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": -90,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:A:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "B",
+                  "contactId": "terminal:D:10"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -2.86,
+                      "y": 0.3704173228346457,
+                      "z": -0.715
+                    }
+                  ]
+                },
+                {
+                  "pinId": "B",
+                  "controlPoints": [
+                    {
+                      "x": -2.86,
+                      "y": 0.3704173228346457,
+                      "z": -0.325
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 2.2524777960769367,
+          "bendRadiiMm": [
+            0.6000000000000004
+          ],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.3704173228346457,
+              "z": -0.6479527559055118
+            },
+            {
+              "x": -2.86,
+              "y": 0.3704173228346457,
+              "z": -0.715
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.715
+            }
+          ]
+        },
+        {
+          "pinId": "B",
+          "lengthMm": 2.2524777960769375,
+          "bendRadiiMm": [
+            0.6000000000000004
+          ],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.3704173228346457,
+              "z": -0.3920472440944882
+            },
+            {
+              "x": -2.86,
+              "y": 0.3704173228346457,
+              "z": -0.325
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.325
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "automatic-v2-led-exact-pitch",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "automatic-v2",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "position": {
+              "x": 4,
+              "y": 2,
+              "z": -3
+            },
+            "rotation": 137
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_LED",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-LED-5MM",
+              "partRevision": 1,
+              "packageId": "T1-5MM-254",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-radial-led",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "radial-upright"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.795,
+                  "y": 0.5930551181102361,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "K",
+                  "contactId": "terminal:C:11"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": []
+                },
+                {
+                  "pinId": "K",
+                  "controlPoints": []
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 1.249999999999999,
+          "bendRadiiMm": [],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.37297637795275584,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "K",
+          "lengthMm": 1.249999999999999,
+          "bendRadiiMm": [],
+          "points": [
+            {
+              "x": -2.73,
+              "y": 0.37297637795275584,
+              "z": -0.455
+            },
+            {
+              "x": -2.73,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "automatic-v2-ceramic-exact-pitch",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "automatic-v2",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "position": {
+              "x": 4,
+              "y": 2,
+              "z": -3
+            },
+            "rotation": 137
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_CAPACITOR",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-CAPACITOR-CERAMIC",
+              "partRevision": 1,
+              "packageId": "K15-H5-508",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-radial-ceramic",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "radial-upright"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.795,
+                  "y": 0.47533858267716533,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "B",
+                  "contactId": "terminal:C:11"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": []
+                },
+                {
+                  "pinId": "B",
+                  "controlPoints": []
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 1.25,
+          "bendRadiiMm": [],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.3729763779527559,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "B",
+          "lengthMm": 1.25,
+          "bendRadiiMm": [],
+          "points": [
+            {
+              "x": -2.73,
+              "y": 0.3729763779527559,
+              "z": -0.455
+            },
+            {
+              "x": -2.73,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "automatic-v2-electrolytic-exact-pitch",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "automatic-v2",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "position": {
+              "x": 4,
+              "y": 2,
+              "z": -3
+            },
+            "rotation": 137
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_CAPACITOR_ELECTROLYTIC",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-CAPACITOR-ELECTROLYTIC",
+              "partRevision": 2,
+              "packageId": "GENERIC-RADIAL-D63-H11-254",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-radial-electrolytic-compact",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "radial-upright"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.795,
+                  "y": 0.6544724409448819,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "PLUS",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "MINUS",
+                  "contactId": "terminal:C:11"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "PLUS",
+                  "controlPoints": []
+                },
+                {
+                  "pinId": "MINUS",
+                  "controlPoints": []
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "PLUS",
+          "lengthMm": 1.25,
+          "bendRadiiMm": [],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.3729763779527559,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "MINUS",
+          "lengthMm": 1.25,
+          "bendRadiiMm": [],
+          "points": [
+            {
+              "x": -2.73,
+              "y": 0.3729763779527559,
+              "z": -0.455
+            },
+            {
+              "x": -2.73,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "automatic-v2-electrolytic-splayed",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "automatic-v2",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "position": {
+              "x": 4,
+              "y": 2,
+              "z": -3
+            },
+            "rotation": 137
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_CAPACITOR_ELECTROLYTIC",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-CAPACITOR-ELECTROLYTIC",
+              "partRevision": 2,
+              "packageId": "GENERIC-RADIAL-D63-H11-254",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-radial-electrolytic-compact",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "radial-upright"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.5999999999999996,
+                  "y": 0.7615944881889763,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "PLUS",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "MINUS",
+                  "contactId": "terminal:C:14"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "PLUS",
+                  "controlPoints": [
+                    {
+                      "x": -2.6649999999999996,
+                      "y": 0.4289173228346456,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.86,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "MINUS",
+                  "controlPoints": [
+                    {
+                      "x": -2.5349999999999997,
+                      "y": 0.4289173228346456,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.34,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "PLUS",
+          "lengthMm": 5.927290656536823,
+          "bendRadiiMm": [
+            0.6,
+            0.6
+          ],
+          "points": [
+            {
+              "x": -2.6649999999999996,
+              "y": 0.48009842519685036,
+              "z": -0.455
+            },
+            {
+              "x": -2.6649999999999996,
+              "y": 0.4289173228346456,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.3704173228346457,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "MINUS",
+          "lengthMm": 5.9272906565368135,
+          "bendRadiiMm": [
+            0.6,
+            0.6
+          ],
+          "points": [
+            {
+              "x": -2.5349999999999997,
+              "y": 0.48009842519685036,
+              "z": -0.455
+            },
+            {
+              "x": -2.5349999999999997,
+              "y": 0.4289173228346456,
+              "z": -0.455
+            },
+            {
+              "x": -2.34,
+              "y": 0.3704173228346457,
+              "z": -0.455
+            },
+            {
+              "x": -2.34,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "automatic-v2-led-splayed-reverse",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "automatic-v2",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "position": {
+              "x": 4,
+              "y": 2,
+              "z": -3
+            },
+            "rotation": 137
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_LED",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-LED-5MM",
+              "partRevision": 1,
+              "packageId": "T1-5MM-254",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-radial-led",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "radial-upright"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.34,
+                  "y": 0.6723858267716536,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": -180,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:18"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "K",
+                  "contactId": "terminal:C:10"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -2.275,
+                      "y": 0.41648031496063,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -1.82,
+                      "y": 0.35506299212598424,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "K",
+                  "controlPoints": [
+                    {
+                      "x": -2.405,
+                      "y": 0.41648031496063,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.86,
+                      "y": 0.35506299212598424,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 10.383695618260594,
+          "bendRadiiMm": [
+            0.3,
+            0.3
+          ],
+          "points": [
+            {
+              "x": -2.275,
+              "y": 0.4523070866141733,
+              "z": -0.455
+            },
+            {
+              "x": -2.275,
+              "y": 0.41648031496063,
+              "z": -0.455
+            },
+            {
+              "x": -1.82,
+              "y": 0.35506299212598424,
+              "z": -0.455
+            },
+            {
+              "x": -1.82,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "K",
+          "lengthMm": 10.3836956182606,
+          "bendRadiiMm": [
+            0.3,
+            0.3
+          ],
+          "points": [
+            {
+              "x": -2.405,
+              "y": 0.4523070866141733,
+              "z": -0.455
+            },
+            {
+              "x": -2.405,
+              "y": 0.41648031496063,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.35506299212598424,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "automatic-v2-invalid-reversal",
+      "valid": false,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "invalid-v2",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD"
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_RESISTOR",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-RESISTOR-AXIAL",
+              "partRevision": 2,
+              "packageId": "GENERIC-AXIAL-R50-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-axial-resistor-compact",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-horizontal"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.5999999999999996,
+                  "y": 0.3704173228346457,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "B",
+                  "contactId": "terminal:C:14"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -2.8779527559055116,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.7779527559055115,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "B",
+                  "controlPoints": [
+                    {
+                      "x": -2.34,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      }
+    },
+    {
+      "id": "automatic-v2-invalid-crossing",
+      "valid": false,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "invalid-v2",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD"
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_RESISTOR",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-RESISTOR-AXIAL",
+              "partRevision": 2,
+              "packageId": "GENERIC-AXIAL-R50-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-axial-resistor-compact",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-horizontal"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.5999999999999996,
+                  "y": 0.3704173228346457,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "B",
+                  "contactId": "terminal:C:14"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -2.927952755905512,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.927952755905512,
+                      "y": 0.6204173228346457,
+                      "z": -0.20500000000000002
+                    },
+                    {
+                      "x": -2.927952755905512,
+                      "y": 0.6204173228346457,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.927952755905512,
+                      "y": 0.3704173228346457,
+                      "z": -0.20500000000000002
+                    },
+                    {
+                      "x": -2.86,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "B",
+                  "controlPoints": [
+                    {
+                      "x": -2.34,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      }
+    },
+    {
+      "id": "automatic-v2-invalid-board-tube",
+      "valid": false,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "invalid-v2",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD"
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_RESISTOR",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-RESISTOR-AXIAL",
+              "partRevision": 2,
+              "packageId": "GENERIC-AXIAL-R50-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-axial-resistor-compact",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-horizontal"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.5999999999999996,
+                  "y": 0.3704173228346457,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "B",
+                  "contactId": "terminal:C:14"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -2.927952755905512,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.927952755905512,
+                      "y": 0.315,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.927952755905512,
+                      "y": 0.315,
+                      "z": -0.355
+                    },
+                    {
+                      "x": -2.927952755905512,
+                      "y": 0.45,
+                      "z": -0.355
+                    },
+                    {
+                      "x": -2.86,
+                      "y": 0.45,
+                      "z": -0.355
+                    },
+                    {
+                      "x": -2.86,
+                      "y": 0.45,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "B",
+                  "controlPoints": [
+                    {
+                      "x": -2.34,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      }
+    },
+    {
+      "id": "automatic-v2-invalid-length",
+      "valid": false,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "invalid-v2",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD"
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_RESISTOR",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-RESISTOR-AXIAL",
+              "partRevision": 2,
+              "packageId": "GENERIC-AXIAL-R50-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-axial-resistor-compact",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-horizontal"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.5999999999999996,
+                  "y": 0.3704173228346457,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "B",
+                  "contactId": "terminal:C:14"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -6.727952755905512,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -6.727952755905512,
+                      "y": 0.6,
+                      "z": -0.05499999999999999
+                    },
+                    {
+                      "x": -2.86,
+                      "y": 0.6,
+                      "z": -0.05499999999999999
+                    },
+                    {
+                      "x": -2.86,
+                      "y": 0.6,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "B",
+                  "controlPoints": [
+                    {
+                      "x": -2.34,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      }
+    },
+    {
+      "id": "automatic-v2-invalid-body-tube",
+      "valid": false,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "invalid-v2",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD"
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_RESISTOR",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-RESISTOR-AXIAL",
+              "partRevision": 2,
+              "packageId": "GENERIC-AXIAL-R50-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-axial-resistor-compact",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-horizontal"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.5999999999999996,
+                  "y": 0.3704173228346457,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "B",
+                  "contactId": "terminal:C:14"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -2.8779527559055116,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.8779527559055116,
+                      "y": 0.42959842519685043,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.427952755905512,
+                      "y": 0.42959842519685043,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.427952755905512,
+                      "y": 0.5095984251968505,
+                      "z": -0.335
+                    },
+                    {
+                      "x": -2.86,
+                      "y": 0.5095984251968505,
+                      "z": -0.335
+                    },
+                    {
+                      "x": -2.86,
+                      "y": 0.5095984251968505,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "B",
+                  "controlPoints": [
+                    {
+                      "x": -2.34,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      }
+    },
+    {
+      "id": "automatic-v2-invalid-component-lead",
+      "valid": false,
+      "scope": "graph",
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "cross-component-lead",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD"
+          },
+          {
+            "id": "R",
+            "type": "GENERIC_RESISTOR",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-RESISTOR-AXIAL",
+              "partRevision": 2,
+              "packageId": "GENERIC-AXIAL-R50-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-axial-resistor-compact",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-horizontal"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.5999999999999996,
+                  "y": 0.47041732283464566,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "B",
+                  "contactId": "terminal:C:14"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -2.927952755905512,
+                      "y": 0.47041732283464566,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.927952755905512,
+                      "y": 0.6,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.927952755905512,
+                      "y": 0.6,
+                      "z": -0.095
+                    },
+                    {
+                      "x": -2.86,
+                      "y": 0.37,
+                      "z": -0.095
+                    },
+                    {
+                      "x": -2.86,
+                      "y": 0.36,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "B",
+                  "controlPoints": [
+                    {
+                      "x": -2.34,
+                      "y": 0.47041732283464566,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "id": "S",
+            "type": "GENERIC_RESISTOR",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-RESISTOR-AXIAL",
+              "partRevision": 2,
+              "packageId": "GENERIC-AXIAL-R50-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-axial-resistor-compact",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-horizontal"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.5999999999999996,
+                  "y": 0.3704173228346457,
+                  "z": -0.195
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:E:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "B",
+                  "contactId": "terminal:E:14"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -2.86,
+                      "y": 0.3704173228346457,
+                      "z": -0.195
+                    }
+                  ]
+                },
+                {
+                  "pinId": "B",
+                  "controlPoints": [
+                    {
+                      "x": -2.34,
+                      "y": 0.3704173228346457,
+                      "z": -0.195
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      }
     }
   ]
 }

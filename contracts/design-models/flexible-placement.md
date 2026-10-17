@@ -46,6 +46,39 @@ rebuild; the flexible mount is then the geometry authority. Failure leaves the
 input untouched. The editor's corresponding graph command is one undoable
 transaction, not an import-time conversion.
 
+New automatic authoring uses the separate `FlexibleMountV2` contract in
+`flexible-mount-v1.1.schema.json`: `version: 2`, `geometryRevision: 2` and
+`routing: {version: 1, mode: "automatic", template}`. The template is
+`axial-standing`, `axial-horizontal` or `radial-upright`. Revision 1 remains
+unchanged and keeps saved manual body poses and bend controls. Neither opening
+nor saving guesses intent from the number of controls. Circular paths and their
+radii are reconstructed deterministically from the pinned mechanical profile;
+`preferredBendRadiusMm` falls back to the physical minimum for old profiles.
+
+The canonical catalog separates current `parts` defaults from immutable
+`historicalParts`. A mount resolves by type plus all four part/package ID and
+revision fields. Missing historical revisions fail instead of falling back to
+the new default. Compact generic resistor, Zener and electrolytic descriptors
+use revision 2 with distinct package identities. Exact-part descriptors retain
+their original dimensions. Explicit re-anchor or **Rebuild component geometry**
+may adopt current defaults after a validated preview; passive read/write cannot.
+`fixtures/component-mechanics-legacy.json` captures a pinned revision 1 standing
+pose with saved controls and opaque properties for round-trip regression.
+
+Free physical modules also need a stable identity. New free authoring stores
+`physicalDescriptor: {version: 1, partId, partRevision, packageId,
+packageRevision}` in CircuitGraph 1.2. An unmarked free historical generic uses
+its earliest catalog descriptor, preserving its original body and pin spacing
+without writing a marker during open/save. `getPartForModule` and
+`get_physical_part_for_module` apply the same precedence: mount identity, explicit
+free descriptor, historical default. Palette ghosts and thumbnails explicitly
+pin the current default. Detach retains the selected descriptor; an explicit
+component Type change atomically replaces it.
+
+Span counts include both endpoints: two/three/four/five holes mean one/two/three/
+four pitches (2.54/5.08/7.62/10.16 mm on the standard board). Diagonal distances
+remain continuous and are never rounded to a column count.
+
 New generic design descriptors coexist with all old descriptor/type IDs.
 `ComponentDesignPropertiesV1` owns numeric SI values, hex color and enum fields.
 Only generic descriptors opt into these new fields; opaque old properties keep

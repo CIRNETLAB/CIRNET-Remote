@@ -11,6 +11,9 @@ import {parseCircuitFile} from '../src/domain/document/circuitFile'
 import {withCircuitModules} from '../src/domain/document/graphVersion'
 import {resolveElectricalNets} from '../src/electrical/nets'
 import type {CircuitModule} from '../src/types/circuit'
+import flexibleFixtures from '../../../contracts/design-models/fixtures/flexible-mounting-parity.json'
+import legacyOverride from '../../../contracts/design-models/fixtures/component-mechanics-legacy.json'
+import type {CircuitGraph} from '../src/types/circuit'
 
 const board={id:'BB',type:'BREADBOARD',position:{x:0,y:0,z:0}} satisfies CircuitModule
 function setup(){const state=document.createEditorDocumentState();document.importGraph(state,'local',{schema_version:'1.1',circuit_id:'stable',modules:[board],connections:[],metadata:{extension:{retain:true}}});state.past=[];return state}
@@ -36,6 +39,42 @@ test('reanchor keeps the untouched pin and malformed updates leave graph/history
  const before=document.snapshotDocument(state),history=state.past.length,bad=structuredClone(next);bad.contacts[1].contactId='terminal:A:99'
  assert.throws(()=>commands.updateFlexibleMount(state,id,bad))
  assert.equal(document.snapshotDocument(state),before);assert.equal(state.past.length,history)
+})
+
+test('explicit geometry rebuild previews without mutation, retains document data and commits one undo',()=>{
+ const state=setup();document.importGraph(state,'historical',structuredClone(flexibleFixtures.cases.find(f=>f.valid)!.graph) as CircuitGraph)
+ const id='R',graph=document.currentGraph(state)!
+ document.commitGraph(state,{...graph,connections:[{source:id+'.A',destination:'BB.contact:terminal:B:10',metadata:{retain:true}}]});state.past=[]
+ const before=document.snapshotDocument(state),original=document.currentGraph(state)!.modules[1]
+ const api=commands
+ assert.equal(typeof api.previewComponentGeometry,'function','rebuild exposes a pure validated preview')
+ const preview=api.previewComponentGeometry(state,id)
+ assert.equal(document.snapshotDocument(state),before);assert.equal(state.past.length,0)
+ assert.deepEqual(preview.properties,original.properties);assert.deepEqual(preview.mount!.contacts,original.mount!.contacts)
+ api.rebuildComponentGeometry(state,id,preview)
+ assert.equal(state.past.length,1);assert.deepEqual(document.currentGraph(state)!.connections,graph.connections.concat({source:id+'.A',destination:'BB.contact:terminal:B:10',metadata:{retain:true}}))
+ document.undoDocument(state);assert.equal(document.snapshotDocument(state),before);document.redoDocument(state)
+ assert.deepEqual(document.currentGraph(state)!.modules[1],preview)
+})
+
+test('reanchor preview solves fresh knees, preserves the other stable pin and rejects invalid contacts atomically',()=>{
+ const state=setup(),id=commands.placeFlexibleModule(state,'GENERIC_RESISTOR',mount('GENERIC_RESISTOR')),before=document.snapshotDocument(state)
+ const api=commands
+ assert.equal(typeof api.previewComponentGeometry,'function','reanchor uses the automatic geometry preview')
+ const preview=api.previewComponentGeometry(state,id,'B','terminal:A:15'),expected=mount('GENERIC_RESISTOR','terminal:A:10','terminal:A:15',document.currentGraph(state)!.modules,id)
+ assert.deepEqual(preview.mount,JSON.parse(JSON.stringify(expected)));assert.equal(document.snapshotDocument(state),before)
+ assert.throws(()=>api.previewComponentGeometry(state,id,'B','terminal:A:10'),/distinct/i)
+ assert.throws(()=>api.previewComponentGeometry(state,id,'K','terminal:A:15'),/pin/i)
+ assert.equal(document.snapshotDocument(state),before)
+})
+
+test('invalid rebuild confirmation rolls back graph, connections and history instead of discarding stored geometry',()=>{
+ const state=setup();document.importGraph(state,'historical',parseCircuitFile(JSON.stringify(legacyOverride)));state.past=[]
+ const before=document.snapshotDocument(state),preview=commands.previewComponentGeometry(state,'R')
+ if(preview.mount?.kind!=='breadboard-flexible')throw Error('fixture')
+ preview.mount.bodyPose.position.y=99
+ assert.throws(()=>commands.rebuildComponentGeometry(state,'R',preview),/bounds|clearance|geometry/i)
+ assert.equal(document.snapshotDocument(state),before);assert.equal(state.past.length,0)
 })
 
 test('a changed component design remaps only its own stable pin endpoints atomically',()=>{
@@ -86,16 +125,21 @@ test('pure rotated-board preview and180-degree commit keep stable pins and shape
  document.undoDocument(state);assert.equal(document.snapshotDocument(state),original)
 })
 
-test('body lift preserves contacts, connections and nets; invalid body edits are atomic',()=>{
- const state=setup(),id=commands.placeFlexibleModule(state,'RESISTOR_AXIAL',mount()),graph=document.currentGraph(state)!,old=graph.modules[1].mount!
+test('legacy body-pose snapshots preserve contacts, connections and nets; invalid stored poses are atomic',()=>{
+ const state=setup(),graph=parseCircuitFile(JSON.stringify(legacyOverride));document.importGraph(state,'manual-snapshot',graph);state.past=[]
+ const id='R',original=graph.modules.find(m=>m.id===id)!,old=original.mount!
  if(old.kind!=='breadboard-flexible')throw Error('fixture')
- const nets=resolveElectricalNets(graph).endpointNetIds,pose=structuredClone(old.bodyPose);pose.position.y+=.025
- const solution=solveFlexibleMount('RESISTOR_AXIAL','BB',old.contacts[0].contactId,old.contacts[1].contactId,graph.modules,{bodyPose:pose,activeId:id})
- assert.equal(solution.valid,true,solution.reason);commands.updateFlexibleMount(state,id,solution.mount!)
+ const saved=document.snapshotDocument(state),nets=resolveElectricalNets(graph).endpointNetIds
+ assert.equal(old.version,1);assert.equal(old.bodyPose.position.y,.7);assert.equal(old.bodyPose.rotation.z,90)
+ const roundTrip=parseCircuitFile(document.exportGraph(state));assert.deepEqual(roundTrip.modules,graph.modules);assert.deepEqual(roundTrip.connections,graph.connections);assert.equal(roundTrip.metadata?.compatibility,graph.metadata?.compatibility);assert.equal(document.snapshotDocument(state),saved)
+ const bad=structuredClone(old);bad.bodyPose.position.y=99
+ assert.throws(()=>commands.updateFlexibleMount(state,id,bad));assert.equal(document.snapshotDocument(state),saved);assert.equal(state.past.length,0)
+ const preview=commands.previewComponentGeometry(state,id);assert.equal(document.snapshotDocument(state),saved)
+ commands.rebuildComponentGeometry(state,id,preview)
  const updated=document.currentGraph(state)!
- assert.deepEqual(updated.modules[1].mount!.contacts,old.contacts);assert.deepEqual(updated.connections,graph.connections);assert.deepEqual(resolveElectricalNets(updated).endpointNetIds,nets)
- const saved=document.snapshotDocument(state),count=state.past.length,bad=structuredClone(solution.mount!);bad.bodyPose.position.y=99
- assert.throws(()=>commands.updateFlexibleMount(state,id,bad));assert.equal(document.snapshotDocument(state),saved);assert.equal(state.past.length,count)
+ assert.equal(updated.modules.find(m=>m.id===id)!.mount!.version,2);assert.deepEqual(updated.connections,graph.connections);assert.deepEqual(resolveElectricalNets(updated).endpointNetIds,nets)
+ document.undoDocument(state);assert.equal(document.snapshotDocument(state),saved);assert.deepEqual(document.currentGraph(state)!.modules.find(m=>m.id===id),original)
+ document.redoDocument(state);assert.deepEqual(document.currentGraph(state)!.modules.find(m=>m.id===id),preview)
 })
 
 test('legacy lead settings remain1.1 until explicit conversion retains IDs, properties and bonds',()=>{

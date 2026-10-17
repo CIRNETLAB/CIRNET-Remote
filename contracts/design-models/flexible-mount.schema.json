@@ -249,6 +249,12 @@
         },
         "maxControlsPerLead": {
           "const": 8
+        },
+        "preferredBendRadiusMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10,
+          "description": "Preferred circular display radius; minimum remains the physical lower bound. Omitted historical profiles use minBendRadiusMm."
         }
       },
       "additionalProperties": false,

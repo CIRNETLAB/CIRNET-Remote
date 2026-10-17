@@ -22,6 +22,7 @@ REQUIRED_RESOURCES=(
     'contracts/fixtures/capture/conformance.json','contracts/design-models/signal-port-catalog.json',
     'contracts/design-models/signal-domains.schema.json','contracts/signal_domains.py','contracts/capture_validation.py',
     'contracts/design-models/flexible-mount.schema.json','contracts/design-models/flexible-mechanics.json',
+    'contracts/design-models/flexible-mount-v1.1.schema.json','contracts/design-models/fixtures/component-mechanics-legacy.json',
     'contracts/design-models/fixtures/flexible-mounting-parity.json','contracts/circuit-schema/circuit-v1.2.schema.json',
     'contracts/public/placement.schema.json','contracts/flexible_mounting.py',
     'contracts/public/assignments-v2.schema.json','contracts/fixtures/assignment-v2-conformance.json',

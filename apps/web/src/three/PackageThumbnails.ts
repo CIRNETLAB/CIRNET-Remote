@@ -1,6 +1,6 @@
 import { AmbientLight, Box3, DirectionalLight, Group, InstancedMesh, Matrix4, Mesh, NoToneMapping, OrthographicCamera, Scene, SRGBColorSpace, Vector3, WebGLRenderer, type Object3D } from 'three'
 import { getDefinition } from '../data/editorCatalog'
-import { getPartForType } from '../data/partCatalog'
+import { getPartForType, getPartForModule, physicalDescriptorForPart } from '../data/partCatalog'
 import { normalizeComponentProperties } from '../data/componentProperties'
 import { isLeadEditableType, readLeadProperties } from '../data/leadProperties'
 import type { CircuitModule } from '../types/circuit'
@@ -250,7 +250,7 @@ export function createPackageThumbnailCache(options: PackageThumbnailCacheOption
 
   return {
     acquire(type, properties, request) {
-      const definition = getDefinition(type), descriptor = getPartForType(type)
+      const definition = getDefinition(type), descriptor = request?.module ? getPartForModule(request.module) : getPartForType(type)
       if (!definition || disposed) return { ready: Promise.resolve(null), release() {} }
       let module: CircuitModule, modules: CircuitModule[] = [], key: string
       try {
@@ -258,10 +258,11 @@ export function createPackageThumbnailCache(options: PackageThumbnailCacheOption
         // or the shared descriptor defaults. Legacy input normalizes at this boundary.
         const effective = normalizeComponentProperties(type, { ...(descriptor?.editor.defaults ?? definition.defaults), ...normalizeComponentProperties(type, properties ?? request?.module?.properties) })
         const snapshot = JSON.stringify(stableValue(visualProperties(type, effective)))
-        module = { id: 'thumbnail', type, properties: JSON.parse(snapshot) as Record<string, unknown> }
+        module = { id: 'thumbnail', type, properties: JSON.parse(snapshot) as Record<string, unknown>, ...(!request?.module && descriptor ? { physicalDescriptor: physicalDescriptorForPart(descriptor) } : {}) }
         if (request?.module) {
           const original = request.module
           if (original.type !== type) throw Error('Thumbnail type does not match its module.')
+          if (original.physicalDescriptor) module.physicalDescriptor = structuredClone(original.physicalDescriptor)
           if (original.mount) {
             const support = request.modules?.find(item => item.id === original.mount!.boardId)
             if (!support) throw Error('A mounted thumbnail requires its supporting board.')
@@ -273,7 +274,7 @@ export function createPackageThumbnailCache(options: PackageThumbnailCacheOption
             module.mount!.boardId = 'thumbnail-board'
           } else if (original.rotation !== undefined) module.rotation = original.rotation
         }
-        key = JSON.stringify([type, descriptor?.id ?? definition.partDefinitionId, descriptor?.revision ?? definition.partRevision, descriptor?.package.id, descriptor?.package.revision, snapshot, stableValue(module.mount ?? null), module.rotation ?? 0, modules])
+        key = JSON.stringify([type, descriptor?.id ?? definition.partDefinitionId, descriptor?.revision ?? definition.partRevision, descriptor?.package.id, descriptor?.package.revision, snapshot, stableValue(module.mount ?? null), stableValue(module.physicalDescriptor ?? null), module.rotation ?? 0, modules])
       } catch { return { ready: Promise.resolve(null), release() {} } }
       let entry = entries.get(key)
       if (!entry) {

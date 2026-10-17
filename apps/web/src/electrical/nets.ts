@@ -1,7 +1,7 @@
 import type { CircuitGraph, WireIdentity } from '../types/circuit'
 import { getDefinition } from '../data/editorCatalog'
 import { resolveEndpoint, type ResolvedEndpoint } from './endpoints'
-import { getPartForType } from '../data/partCatalog'
+import { getPartForModule } from '../data/partCatalog'
 import { validateMountBindings } from './mounting'
 
 export interface ResolvedNet { id: string; endpoints: string[]; drivers: string[]; inputs: string[]; width: number }
@@ -38,7 +38,7 @@ export function resolveElectricalNets(graph: CircuitGraph): ElectricalNetResolut
   const bonds: WireIdentity[] = []
   for (const module of graph.modules) {
     for (const contact of module.mount?.contacts ?? []) bonds.push({ source: `${module.id}.${contact.pinId}`, destination: `${module.mount!.boardId}.contact:${contact.contactId}` })
-    const part = getPartForType(module.type)
+    const part = getPartForModule(module)
     for (const internal of part?.internalConnections ?? []) {
       if (!internal.when || (module.properties?.[internal.when.property] ?? part?.editor.defaults[internal.when.property]) === internal.when.equals) bonds.push({ source: `${module.id}.${internal.pins[0]}`, destination: `${module.id}.${internal.pins[1]}` })
     }

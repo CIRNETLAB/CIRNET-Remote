@@ -154,3 +154,6 @@ export const AssignmentAuthoringPublicationV2: Validator<ContractMap['Assignment
 export const InstructorAssignmentDocumentV2: Validator<ContractMap['InstructorAssignmentDocumentV2']>
 export const StudentAssignmentViewV2: Validator<ContractMap['StudentAssignmentViewV2']>
 export const AssignmentViewV2: Validator<ContractMap['AssignmentViewV2']>
+export const AutomaticRoutingIntentV1: Validator<ContractMap['AutomaticRoutingIntentV1']>
+export const FlexibleMountV2: Validator<ContractMap['FlexibleMountV2']>
+export const PhysicalDescriptorV1: Validator<ContractMap['PhysicalDescriptorV1']>

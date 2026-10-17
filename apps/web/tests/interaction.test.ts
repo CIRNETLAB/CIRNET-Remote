@@ -72,14 +72,14 @@ test('common camera/resize cancellation rolls back a flexible edit and releases 
  try{
   const board=h.circuit.placeModule('BREADBOARD',{x:0,y:0,z:0}),mount=solveFlexibleMount('GENERIC_RESISTOR',board,'terminal:A:10','terminal:A:14',h.circuit.graph!.modules).mount!
   const id=h.circuit.placeFlexibleModule('GENERIC_RESISTOR',mount);h.workspace.selectModule(id);await nextTick();h.editor.sync();h.circuit.past=[]
-  const lift=h.manager.project(h.manager.flexibleHandlePosition('lift')!),event=(x:number,y:number)=>({...h.pointer(x,y),stopImmediatePropagation(){}})
-  const before=h.circuit.snapshot();h.editor.pointerDown(event(lift.x,lift.y));assert.equal(h.captured.size,1)
+  const pin=h.manager.project(h.manager.flexibleHandlePosition('pin-1')!),target=h.manager.project(h.manager.endpointPosition(`${board}.contact:terminal:A:15`)!),event=(x:number,y:number)=>({...h.pointer(x,y),stopImmediatePropagation(){}})
+  const before=h.circuit.snapshot();h.editor.pointerDown(event(pin.x,pin.y));assert.equal(h.captured.size,1)
   const surface=h.manager.models.get(id)!.getObjectByName('package-lead-A')!.getObjectByName('lead-metal') as import('three').Mesh,geometry=surface.geometry
-  for(let step=1;step<=10;step++)h.editor.pointerMove(event(lift.x,lift.y-step))
+  for(let step=1;step<=10;step++)h.editor.pointerMove(event(pin.x+(target.x-pin.x)*step/10,pin.y+(target.y-pin.y)*step/10))
   assert.equal(surface.geometry,geometry,'pointer events are coalesced before the next frame')
   const pendingFrame=queued as FrameRequestCallback|null;if(pendingFrame)pendingFrame(0);assert.notEqual(surface.geometry,geometry)
   h.editor.cancel();assert.equal(h.captured.size,0)
-  h.editor.pointerUp(event(lift.x,lift.y-10));await nextTick();assert.equal(h.circuit.snapshot(),before);assert.equal(h.circuit.past.length,0)
+  h.editor.pointerUp(event(target.x,target.y));await nextTick();assert.equal(h.circuit.snapshot(),before);assert.equal(h.circuit.past.length,0)
  }finally{h.dispose();if(oldRequest)Object.defineProperty(globalThis,'requestAnimationFrame',oldRequest);else Reflect.deleteProperty(globalThis,'requestAnimationFrame');if(oldCancel)Object.defineProperty(globalThis,'cancelAnimationFrame',oldCancel);else Reflect.deleteProperty(globalThis,'cancelAnimationFrame')}
 })
 

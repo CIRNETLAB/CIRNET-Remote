@@ -80,7 +80,11 @@ def test_generic_design_parts_keep_reference_package_pin_identities_and_typed_pr
     }
     for generic, legacy in pairs.items():
         assert generic in parts
-        assert parts[generic]['package'] == parts[legacy]['package']
+        # Revision 1 was a reference-package copy; compact defaults explicitly
+        # pin a new package while the original generic remains resolvable.
+        historical = next((part for part in registry().get('historicalParts', []) if part['editorType'] == generic), parts[generic])
+        assert historical['package'] == parts[legacy]['package']
+        assert [pin['id'] for pin in parts[generic]['package']['pins']] == [pin['id'] for pin in parts[legacy]['package']['pins']]
         assert parts[generic]['identityKind'] == 'configurable-generic'
         assert 'manufacturer' not in parts[generic] and 'partNumber' not in parts[generic]
         assert parts[legacy]['editor']['addType'] == generic
