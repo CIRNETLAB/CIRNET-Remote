@@ -10,6 +10,7 @@ import { worldToModuleLocal } from '../electrical/modulePose'
 import { parseEndpoint } from '../electrical/endpoints'
 import { readWireVisual, wireKey } from '../wires/wireVisual'
 import { buildSelectionGhostRoutes, type SelectionGhostRoute } from '../three/SelectionGhostRoutes'
+import { createSelectionMoveController, type SelectionMoveState } from '../editor/SelectionMoveController'
 
 type Manager = ReturnType<typeof createSceneManager>
 type ContextTarget = WireIdentity | { moduleId: string }
@@ -20,6 +21,7 @@ export interface SelectionDuplicatePreviewState {
   candidate: (PasteCandidate & { wire: WireIdentity }) | null
 }
 const inactive = (): SelectionDuplicatePreviewState => ({ active: false, valid: false, message: '', candidate: null })
+const inactiveMove = (): SelectionMoveState => ({ active: false, valid: false, message: '', candidate: null, delta: { x: 0, y: 0, z: 0 } })
 const consume = (event: { preventDefault?(): void; stopPropagation?(): void; stopImmediatePropagation?(): void }) => { event.preventDefault?.(); event.stopPropagation?.(); event.stopImmediatePropagation?.() }
 
 /** The only clipboard, duplicate-preview and batch-command owner for an editor. */
@@ -27,10 +29,34 @@ export function useSelectionCommands(canvas: Ref<HTMLCanvasElement | undefined>,
   const circuit = useCircuitStore(), workspace = useWorkspaceStore()
   const clipboard = shallowRef<ClipboardSession | null>(null), contextMenuState = shallowRef<SelectionContextMenuState | null>(null)
   const duplicatePreviewState = shallowRef<SelectionDuplicatePreviewState>(inactive())
+  const movePreviewState = shallowRef<SelectionMoveState>(inactiveMove())
   let committing = false, ownGraph: CircuitGraph | null = null, pressedPointer: number | null = null
   let previewOptions: PasteOptions = {}
+
+  const moveController = createSelectionMoveController({
+    graph: () => circuit.graph,
+    scene: () => manager(),
+    snap: () => workspace.snap,
+    onCommit: (candidate) => {
+      committing = true
+      try {
+        circuit.moveSelection(candidate.selection, candidate.delta)
+        ownGraph = circuit.graph
+        workspace.setSelection(candidate.selection)
+        workspace.editError = ''
+      } catch (error) {
+        workspace.editError = error instanceof Error ? error.message : String(error)
+      } finally {
+        committing = false
+      }
+    },
+    onError: (msg) => {
+      workspace.editError = msg
+    },
+  })
+
   const hasClipboard = () => !!clipboard.value && clipboard.value.circuitId === circuit.activeId && !!circuit.graph
-  const commandsAvailable = () => !busy() && !workspace.placementType && !workspace.zoomAreaActive && !workspace.marqueeActive
+  const commandsAvailable = () => !busy() && !workspace.placementType && !workspace.zoomAreaActive && !workspace.marqueeActive && !movePreviewState.value.active
   const canPaste = computed(() => {
     if (!hasClipboard()) return false
     try { buildPasteCandidate(circuit.graph!, clipboard.value!.snapshot); return true } catch { return false }
@@ -42,9 +68,28 @@ export function useSelectionCommands(canvas: Ref<HTMLCanvasElement | undefined>,
     duplicatePreviewState.value = inactive(); previewOptions = {}; pressedPointer = null; clearPreview()
     workspace.editError = ''
   }
+  function cancelMovePreview() {
+    moveController.cancel()
+    movePreviewState.value = moveController.getState()
+    pressedPointer = null
+    workspace.editError = ''
+  }
+  function commitMovePreview(): boolean {
+    if (!movePreviewState.value.active || !movePreviewState.value.valid) return false
+    const ok = moveController.confirm()
+    movePreviewState.value = moveController.getState()
+    return ok
+  }
+  function menuMove(): boolean {
+    if (!circuit.graph || !workspace.selectionCount || !commandsAvailable()) { closeContextMenu(); return false }
+    closeContextMenu(); cancelDuplicatePreview()
+    const ok = moveController.start(workspace.selection)
+    movePreviewState.value = moveController.getState()
+    return ok
+  }
   function openContextMenu(x: number, y: number, target?: ContextTarget): boolean {
     closeContextMenu()
-    if (busy() || duplicatePreviewState.value.active || workspace.placementType || workspace.zoomAreaActive || workspace.marqueeActive || !circuit.graph || !circuit.activeId || !Number.isFinite(x) || !Number.isFinite(y)) return false
+    if (busy() || duplicatePreviewState.value.active || movePreviewState.value.active || workspace.placementType || workspace.zoomAreaActive || workspace.marqueeActive || !circuit.graph || !circuit.activeId || !Number.isFinite(x) || !Number.isFinite(y)) return false
     if (target && 'moduleId' in target) {
       if (!circuit.graph.modules.some(module => module.id === target.moduleId)) return false
       if (!workspace.selection.moduleIds.includes(target.moduleId)) workspace.selectModule(target.moduleId)
@@ -52,6 +97,8 @@ export function useSelectionCommands(canvas: Ref<HTMLCanvasElement | undefined>,
       const wire = circuit.graph.connections.find(wire => wireKey(wire) === wireKey(target))
       if (!wire) return false
       if (!workspace.selection.wires.some(selected => wireKey(selected) === wireKey(wire))) workspace.selectWire(wire.source, wire.destination)
+    } else {
+      if (workspace.selectionCount) workspace.clearSelection()
     }
     if (!workspace.selectionCount && !canPaste.value) return false
     contextMenuState.value = { x, y, circuitId: circuit.activeId, ...(target && !('moduleId' in target) ? { wire: { source: target.source, destination: target.destination } } : {}) }
@@ -119,6 +166,14 @@ export function useSelectionCommands(canvas: Ref<HTMLCanvasElement | undefined>,
   function menuPaste(): boolean { closeContextMenu(); return canPaste.value && paste({}, false) }
   function commitDuplicatePreview(): boolean { return duplicatePreviewState.value.active && duplicatePreviewState.value.valid && paste(previewOptions, true) }
   function previewPointerMove(event: PointerEvent): boolean {
+    if (movePreviewState.value.active) {
+      const rect = canvas.value?.getBoundingClientRect()
+      if (!rect) return true
+      const x = event.clientX - rect.left, y = event.clientY - rect.top
+      moveController.pointerMove(x, y, event.altKey)
+      movePreviewState.value = moveController.getState()
+      return true
+    }
     if (!duplicatePreviewState.value.active) return false
     const scene = manager(), rect = canvas.value?.getBoundingClientRect(), snapshot = clipboard.value?.snapshot
     if (!scene || !rect || !snapshot) return true
@@ -158,6 +213,12 @@ export function useSelectionCommands(canvas: Ref<HTMLCanvasElement | undefined>,
     return true
   }
   function duplicatePointerDown(event: PointerEvent): boolean {
+    if (movePreviewState.value.active) {
+      consume(event); canvas.value?.focus()
+      if (event.button === 2) cancelMovePreview()
+      else if (event.button === 0 && pressedPointer === null) { pressedPointer = event.pointerId; commitMovePreview() }
+      return true
+    }
     if (!duplicatePreviewState.value.active) return false
     consume(event); canvas.value?.focus()
     if (event.button === 2) cancelDuplicatePreview()
@@ -169,8 +230,12 @@ export function useSelectionCommands(canvas: Ref<HTMLCanvasElement | undefined>,
     pressedPointer = null; consume(event); return true
   }
   function keydown(event: KeyboardEvent): boolean {
-    if (event.key === 'Escape' && (duplicatePreviewState.value.active || contextMenuState.value)) { consume(event); cancelDuplicatePreview(); closeContextMenu(); return true }
-    if (duplicatePreviewState.value.active && ['Delete', 'Backspace', 'r', 'R', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) { consume(event); return true }
+    if (event.key === 'Escape' && (duplicatePreviewState.value.active || movePreviewState.value.active || contextMenuState.value)) {
+      consume(event); cancelDuplicatePreview(); cancelMovePreview(); closeContextMenu(); return true
+    }
+    if ((duplicatePreviewState.value.active || movePreviewState.value.active) && ['Delete', 'Backspace', 'r', 'R', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
+      consume(event); return true
+    }
     if ((event.ctrlKey || event.metaKey) && !event.altKey && ['d', 'c', 'v'].includes(event.key.toLowerCase())) {
       consume(event)
       if (!commandsAvailable()) return true
@@ -181,11 +246,13 @@ export function useSelectionCommands(canvas: Ref<HTMLCanvasElement | undefined>,
     }
     return false
   }
-  watch(() => circuit.activeId, () => { clipboard.value = null; ownGraph = null; cancelDuplicatePreview(); closeContextMenu() }, { flush: 'sync' })
-  onUnmounted(() => { cancelDuplicatePreview(); closeContextMenu() })
+  watch(() => circuit.activeId, () => { clipboard.value = null; ownGraph = null; cancelDuplicatePreview(); cancelMovePreview(); closeContextMenu() }, { flush: 'sync' })
+  onUnmounted(() => { cancelDuplicatePreview(); cancelMovePreview(); closeContextMenu() })
   return {
-    contextMenuState, canPaste, duplicatePreviewState, openContextMenu, closeContextMenu, menuDelete, menuDuplicate, menuPaste,
-    cancelDuplicatePreview, commitDuplicatePreview, previewPointerMove, duplicatePointerDown, pointerUp, keydown,
+    contextMenuState, canPaste, duplicatePreviewState, movePreviewState, openContextMenu, closeContextMenu,
+    menuDelete, menuDuplicate, menuPaste, menuMove,
+    cancelDuplicatePreview, commitDuplicatePreview, cancelMovePreview, commitMovePreview,
+    previewPointerMove, duplicatePointerDown, pointerUp, keydown,
     isCommitting: () => committing,
     consumeDuplicateGraphChange(graph: CircuitGraph | null) { const own = !!graph && graph === ownGraph; ownGraph = null; return own },
   }

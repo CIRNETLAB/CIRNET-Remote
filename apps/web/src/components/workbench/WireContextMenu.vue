@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 const props = withDefaults(defineProps<{ x: number; y: number; viewportWidth: number; viewportHeight: number; canPaste: boolean; canEditSelection?: boolean }>(), { canEditSelection: true })
-const emit = defineEmits<{ action: [action: 'delete' | 'duplicate' | 'paste']; close: [restoreFocus: boolean] }>()
+const emit = defineEmits<{ action: [action: 'delete' | 'duplicate' | 'paste' | 'move']; close: [restoreFocus: boolean] }>()
 const menu = ref<HTMLElement>(), active = ref(0)
-const actions = ['delete', 'duplicate', 'paste'] as const
+const actions = ['move', 'duplicate', 'paste', 'delete'] as const
 const style = computed(() => {
-  const width = Math.max(0, Math.min(160, props.viewportWidth - 16)), height = Math.min(112, props.viewportHeight - 16)
+  const width = Math.max(0, Math.min(160, props.viewportWidth - 16)), height = Math.min(148, props.viewportHeight - 16)
   return { left: `${Math.max(8, Math.min(props.x, props.viewportWidth - width - 8))}px`, top: `${Math.max(8, Math.min(props.y, props.viewportHeight - height - 8))}px`, width: `${width}px`, maxHeight: `${Math.max(0, props.viewportHeight - 16)}px` }
 })
 function focus(index: number) { active.value = index; void nextTick(() => menu.value?.querySelector?.<HTMLButtonElement>(`[data-action="${actions[index]}"]`)?.focus?.()) }

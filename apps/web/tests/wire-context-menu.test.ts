@@ -17,12 +17,12 @@ test('selection context menu clamps to the viewport and exposes keyboard-accessi
     const style = menu.props.style as Record<string, string>
     assert.ok(parseFloat(style.left!) <= 832 && parseFloat(style.top!) <= 580)
     const items = view.all().filter(n => n.props.role === 'menuitem')
-    assert.deepEqual(items.map(n => n.props['aria-label']), ['Delete selection', 'Duplicate selection', 'Paste selection'])
+    assert.deepEqual(items.map(n => n.props['aria-label']), ['Move selection', 'Duplicate selection', 'Paste selection', 'Delete selection'])
     assert.equal(items[2]!.props.disabled, true)
     const key = async (key: string) => { (menu.props.onKeydown as (e: unknown) => void)({ key, preventDefault() {}, stopPropagation() {} }); await nextTick() }
-    await key('End'); assert.equal(items[1]!.props.tabindex, 0, 'End skips the disabled Paste item')
+    await key('End'); assert.equal(items[3]!.props.tabindex, 0, 'End skips the disabled Paste item')
     await key('ArrowDown'); assert.equal(items[0]!.props.tabindex, 0, 'arrows wrap across enabled actions')
-    await key('ArrowUp'); assert.equal(items[1]!.props.tabindex, 0)
+    await key('ArrowUp'); assert.equal(items[3]!.props.tabindex, 0)
     await key('Home'); assert.equal(items[0]!.props.tabindex, 0)
     dispatch(items[1]!, 'onClick'); assert.deepEqual(actions, ['duplicate'])
     ;(menu.props.onKeydown as (e: unknown) => void)({ key: 'Escape', preventDefault() {}, stopPropagation() {} })
@@ -49,11 +49,11 @@ test('a clipboard-only context menu keeps keyboard focus on Paste when selection
     await nextTick()
     const menu = view.find('div', 'role', 'menu')!
     const items = view.all().filter(node => node.props.role === 'menuitem')
-    assert.deepEqual(items.map(item => item.props.disabled), [true, true, false])
+    assert.deepEqual(items.map(item => item.props.disabled), [true, true, false, true])
     for (const key of ['Home', 'End', 'ArrowDown', 'ArrowUp']) {
       ;(menu.props.onKeydown as (event: unknown) => void)({ key, preventDefault() {}, stopPropagation() {} })
       await nextTick()
-      assert.deepEqual(items.map(item => item.props.tabindex), [-1, -1, 0], `${key} must skip disabled selection actions`)
+      assert.deepEqual(items.map(item => item.props.tabindex), [-1, -1, 0, -1], `${key} must skip disabled selection actions`)
     }
     dispatch(items[2], 'onClick'); assert.deepEqual(actions, ['paste'])
   } finally {

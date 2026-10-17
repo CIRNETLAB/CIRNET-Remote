@@ -23,7 +23,7 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
   const circuit = useCircuitStore(), workspace = useWorkspaceStore(), draft = shallowRef<DrawingDraft | null>(null)
   const edit = shallowRef<WireEditGesture | null>(null), lastSegment = shallowRef<WireEditPick | null>(null)
   const commands = useSelectionCommands(canvas, manager, () => editorBusy() || !!draft.value || !!edit.value)
-  const { contextMenuState, canPaste, duplicatePreviewState, openContextMenu, closeContextMenu, menuDelete, menuDuplicate, menuPaste, cancelDuplicatePreview, commitDuplicatePreview, previewPointerMove, duplicatePointerDown, consumeDuplicateGraphChange } = commands
+  const { contextMenuState, canPaste, duplicatePreviewState, movePreviewState, openContextMenu, closeContextMenu, menuDelete, menuDuplicate, menuPaste, menuMove, cancelDuplicatePreview, commitDuplicatePreview, cancelMovePreview, commitMovePreview, previewPointerMove, duplicatePointerDown, consumeDuplicateGraphChange } = commands
   const selectedConnection = computed(() => circuit.graph?.connections.find(c => workspace.selectedWire && wireKey(c) === wireKey(workspace.selectedWire)) ?? null)
   const coordinates = (event: { clientX: number; clientY: number }) => {
     const rect = canvas.value?.getBoundingClientRect()
@@ -49,6 +49,7 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     if (commands.isCommitting()) return
     closeContextMenu()
     cancelDuplicatePreview()
+    cancelMovePreview()
     cancelEdit(); lastSegment.value = null; workspace.selectedWireBend = null
     draft.value = null; workspace.pendingPort = null
     manager()?.clearWireDrawing(); manager()?.setWireDrawingActive(false); manager()?.hoverEndpoint(null)
@@ -282,7 +283,7 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     circuit.updateWireVisual(wire, insertWireBend(visual, route, hit.index, point))
   }
   function doubleClick(event: MouseEvent): boolean {
-    if (duplicatePreviewState.value.active) { consume(event); return true }
+    if (duplicatePreviewState.value.active || movePreviewState.value.active) { consume(event); return true }
     if (draft.value || workspace.placementType || workspace.zoomAreaActive || workspace.marqueeActive || !['select', 'wire'].includes(workspace.tool)) return false
     const p = coordinates(event), scene = manager()
     if (!p || !scene || !selectedConnection.value) return false
@@ -299,11 +300,11 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
   onUnmounted(cancel)
   return {
     commands,
-    contextMenuState, canPaste, openContextMenu, closeContextMenu, menuDelete, menuDuplicate, menuPaste,
-    duplicatePreviewState, previewPointerMove, commitDuplicatePreview, cancelDuplicatePreview, consumeDuplicateGraphChange,
+    contextMenuState, canPaste, openContextMenu, closeContextMenu, menuDelete, menuDuplicate, menuPaste, menuMove,
+    duplicatePreviewState, movePreviewState, previewPointerMove, commitDuplicatePreview, cancelDuplicatePreview, commitMovePreview, cancelMovePreview, consumeDuplicateGraphChange,
     connect, cancel, pointerDown, pointerMove, pointerUp, keydown, setColor, setRouteMode, setStackLayer, addBend, removeSelectedBend, doubleClick,
     lostPointerCapture(event: PointerEvent) { if (edit.value?.pointer !== event.pointerId) return false; cancelEdit(); return true },
-    contextMenu(event: MouseEvent) { if (!draft.value && !edit.value && !contextMenuState.value && !duplicatePreviewState.value.active) return false; consume(event); if (duplicatePreviewState.value.active) cancelDuplicatePreview(); if (!draft.value && edit.value) cancelEdit(); return true },
+    contextMenu(event: MouseEvent) { if (!draft.value && !edit.value && !contextMenuState.value && !duplicatePreviewState.value.active && !movePreviewState.value.active) return false; consume(event); if (duplicatePreviewState.value.active) cancelDuplicatePreview(); if (movePreviewState.value.active) cancelMovePreview(); if (!draft.value && edit.value) cancelEdit(); return true },
     pointerLeave() { manager()?.hoverEndpoint(null); if (!edit.value) manager()?.hoverWireEdit(null) },
     drawing: computed(() => !!draft.value), editing: computed(() => !!edit.value),
     controlPoints: computed(() => draft.value?.visual.controlPoints ?? []),
@@ -315,6 +316,6 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     canRaiseStack: computed(() => { const state = stackMove('up'); return state.target !== state.index }),
     canAdd: computed(() => !draft.value && !!selectedConnection.value && lastSegment.value?.kind === 'segment'),
     canRemove: computed(() => !draft.value && !!selectedConnection.value && workspace.selectedWireBend !== null),
-    hint: computed(() => duplicatePreviewState.value.active ? duplicatePreviewState.value.message || 'Selection preview · Move to position · Click to paste · Right click or Esc to cancel' : draft.value ? 'Right: add corner; repeat here to undo · Left: finish at hole/port · Backspace: undo corner · Alt: no snap · Esc: cancel' : selectedConnection.value ? 'Drag a user bend or segment · Double-click: add an anchor · Alt: no snap' : 'Left-click a hole or port · Free: draw your own path'),
+    hint: computed(() => movePreviewState.value.active ? movePreviewState.value.message || 'Selection move · Move to position · Click to place · Right click or Esc to cancel' : duplicatePreviewState.value.active ? duplicatePreviewState.value.message || 'Selection preview · Move to position · Click to paste · Right click or Esc to cancel' : draft.value ? 'Right: add corner; repeat here to undo · Left: finish at hole/port · Backspace: undo corner · Alt: no snap · Esc: cancel' : selectedConnection.value ? 'Drag a user bend or segment · Double-click: add an anchor · Alt: no snap' : 'Left-click a hole or port · Free: draw your own path'),
   }
 }

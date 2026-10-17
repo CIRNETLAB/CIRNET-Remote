@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { effectScope,toRaw,watch,type WatchStopHandle } from 'vue'
 import { StoreScopeMap } from '../services/session/storeScope'
-import type { CircuitGraph,CircuitModule,WireIdentity,WireVisual } from '../types/circuit'
+import type { CircuitGraph,CircuitModule,Point3,WireIdentity,WireVisual } from '../types/circuit'
 import type { MemoryImage } from '../types/memory'
 import type { CircuitValidation } from '../types/api'
 import { circuitsApi,type PhysicalPreview } from '../services/api/circuits'
@@ -55,6 +55,7 @@ const useBaseCircuitStore=defineStore('circuit',{
     captureSelection(selection:EditorSelection):SelectionClipboard|null{return commands.captureSelection(this,selection)},
     deleteSelection(selection:EditorSelection){return mutateDocument(this,()=>commands.deleteSelection(this,selection))},
     pasteSelection(snapshot:SelectionClipboard,options?:PasteOptions){return mutateDocument(this,()=>commands.pasteSelection(this,snapshot,options))},
+    moveSelection(selection:EditorSelection,delta:Point3){return mutateDocument(this,()=>commands.moveSelection(this,selection,delta))},
     placeModule(type:string,position:Required<NonNullable<CircuitModule['position']>>,rotation=0,initialProperties?:Record<string,unknown>):string{return mutateDocument(this,()=>commands.placeModule(this,type,position,rotation,initialProperties))},
     moveModule(id:string,position:Required<NonNullable<CircuitModule['position']>>){return mutateDocument(this,()=>commands.moveModule(this,id,position))},
     rotateModule(id:string,degrees=90){return mutateDocument(this,()=>commands.rotateModule(this,id,degrees))},

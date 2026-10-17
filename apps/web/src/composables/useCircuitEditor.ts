@@ -171,7 +171,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     return { x: Math.max(0, Math.min(rect.width, event.clientX - rect.left)), y: Math.max(0, Math.min(rect.height, event.clientY - rect.top)) }
   }
   function connect(endpoint: string) {
-    if (wireRouting.duplicatePreviewState.value.active) return
+    if (wireRouting.duplicatePreviewState.value.active || wireRouting.movePreviewState.value.active) return
     wireRouting.connect(endpoint)
   }
   function place(type: string, position: Position, rotation: number) { attempt(() => { const id = circuit.placeModule(type, position, rotation, workspace.placementProperties ?? undefined); workspace.selectModule(id); clearPlacement(); sync() }) }
@@ -199,7 +199,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       cancelPlacement()
       return
     }
-    if (!gesture && !workspace.placementType && (!(workspace.tool === 'select' && (event.ctrlKey || event.metaKey)) || wireRouting.duplicatePreviewState.value.active) && wireRouting.pointerDown(event)) return
+    if (!gesture && !workspace.placementType && (!(workspace.tool === 'select' && (event.ctrlKey || event.metaKey)) || wireRouting.duplicatePreviewState.value.active || wireRouting.movePreviewState.value.active) && wireRouting.pointerDown(event)) return
     if (event.button === 2 && !gesture && manager() && canvas.value) {
       const { x, y } = coordinates(event), hit = manager()!.pickGizmo(x, y) ? null : manager()!.pick(x, y)
       rightPress = { pointer: event.pointerId, start: { x, y }, dragged: false, target: hit?.kind === 'wire' ? { source: hit.source, destination: hit.destination } : hit ? { moduleId: hit.id } : undefined }

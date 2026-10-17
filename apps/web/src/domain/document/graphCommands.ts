@@ -1,4 +1,4 @@
-import type { CircuitModule, WireIdentity, WireVisual } from '../../types/circuit'
+import type { CircuitModule, Point3, WireIdentity, WireVisual } from '../../types/circuit'
 import type { MemoryImage } from '../../types/memory'
 import { getDefinition, validateProperties } from '../../data/editorCatalog'
 import { assertConnectionAllowed } from '../../electrical/nets'
@@ -9,7 +9,7 @@ import { getPartForType } from '../../data/partCatalog'
 import { createMemoryImage, parseMemoryImage } from './memoryImage'
 import { normalizeComponentProperties } from '../../data/componentProperties'
 import { isLeadEditableType } from '../../data/leadProperties'
-import { buildDeleteCandidate, buildPasteCandidate, type PasteOptions } from '../../editor/batchCommands'
+import { buildDeleteCandidate, buildMoveSelectionCandidate, buildPasteCandidate, type MoveCandidate, type PasteOptions } from '../../editor/batchCommands'
 import { captureSelectionClipboard, type SelectionClipboard } from '../../editor/selectionClipboard'
 import { emptyEditorSelection, type EditorSelection } from '../../editor/selection'
 
@@ -28,6 +28,13 @@ export function pasteSelection(state:EditorDocumentState, snapshot: SelectionCli
   const graph=currentGraph(state)
   if (!graph) throw new Error('Create a circuit first.')
   const candidate = buildPasteCandidate(graph, snapshot, options)
+  commitGraph(state, candidate.graph)
+  return candidate
+}
+export function moveSelection(state: EditorDocumentState, selection: EditorSelection, delta: Point3): MoveCandidate {
+  const graph = currentGraph(state)
+  if (!graph) throw new Error('Create a circuit first.')
+  const candidate = buildMoveSelectionCandidate(graph, selection, delta)
   commitGraph(state, candidate.graph)
   return candidate
 }

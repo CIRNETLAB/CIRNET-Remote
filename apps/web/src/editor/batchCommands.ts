@@ -3,7 +3,7 @@ import { getDefinition, validateProperties } from '../data/editorCatalog'
 import { getBreadboardTopology } from '../electrical/BreadboardTopology'
 import { formatEndpoint, parseEndpoint } from '../electrical/endpoints'
 import { moduleLocalToWorld, moduleWorldPose, worldToModuleLocal } from '../electrical/modulePose'
-import { validateMountBindings } from '../electrical/mounting'
+import { solveMounting, validateMountBindings } from '../electrical/mounting'
 import { assertConnectionAllowed, assertElectricalNetsAllowed } from '../electrical/nets'
 import { parseCircuitFile } from '../domain/document/circuitFile'
 import { shiftBreadboardContact, shiftedWireCopy, wireCopyAtContact } from '../wires/wireClipboard'
@@ -23,6 +23,11 @@ export interface PasteOptions { step?: number; delta?: Point3; targetContact?: s
 export interface PasteCandidate { graph: CircuitGraph; selection: EditorSelection; delta: Point3 }
 export class PasteCandidateError extends Error {
   constructor(message: string, public previewGraph: CircuitGraph, public selection: EditorSelection, public snapshot: SelectionClipboard, public transformPoint: (point: Point3) => Point3, public delta: Point3) { super(message); this.name = 'PasteCandidateError' }
+}
+
+export interface MoveCandidate { graph: CircuitGraph; selection: EditorSelection; delta: Point3 }
+export class MoveCandidateError extends Error {
+  constructor(message: string, public previewGraph: CircuitGraph, public selection: EditorSelection, public delta: Point3) { super(message); this.name = 'MoveCandidateError' }
 }
 
 function uniqueIds(graph: CircuitGraph, modules: CircuitModule[]) {
@@ -235,5 +240,140 @@ export function buildDeleteCandidate(graph: CircuitGraph, selection: EditorSelec
   const candidate = { ...graph, modules, connections }
   parseCircuitFile(JSON.stringify(candidate))
   return candidate
+}
+
+export function buildMoveSelectionCandidate(graph: CircuitGraph, selection: EditorSelection, delta: Point3): MoveCandidate {
+  if (!delta || !Object.values(delta).every(Number.isFinite)) throw new Error('Move displacement must be finite.')
+  const normalized = normalizeSelection(graph, selection), selectedIds = new Set(normalized.moduleIds), selectedWires = new Set(normalized.wires.map(wireKey))
+  if (!selectedIds.size && !selectedWires.size) throw new Error('Select at least one object to move.')
+
+  const selectedBoards = new Set(graph.modules.filter(m => selectedIds.has(m.id) && getBreadboardTopology(m.type) && !m.mount).map(m => m.id))
+  const draftModules: CircuitModule[] = []
+  const remountQueue: CircuitModule[] = []
+
+  for (const module of graph.modules) {
+    if (!selectedIds.has(module.id)) {
+      draftModules.push(clone(module))
+    } else {
+      if (!module.mount) {
+        const currentPose = moduleWorldPose(module, graph.modules)
+        const currentPosition = positionOf(currentPose)
+        const newPosition: Point3 = {
+          x: currentPosition.x + delta.x,
+          y: currentPosition.y,
+          z: currentPosition.z + delta.z,
+        }
+        draftModules.push({ ...clone(module), position: newPosition, rotation: module.rotation ?? currentPose.rotation })
+      } else if (selectedBoards.has(module.mount.boardId)) {
+        draftModules.push(clone(module))
+      } else {
+        remountQueue.push(module)
+      }
+    }
+  }
+
+  const makePreviewDraft = (extraModules: CircuitModule[] = []): CircuitGraph => {
+    const previewModules = [...draftModules, ...extraModules]
+    for (const item of remountQueue) {
+      if (!previewModules.some(m => m.id === item.id)) {
+        const currentPose = moduleWorldPose(item, graph.modules)
+        const currentPosition = positionOf(currentPose)
+        const freePos: Point3 = {
+          x: currentPosition.x + delta.x,
+          y: currentPosition.y,
+          z: currentPosition.z + delta.z,
+        }
+        const { mount: _m, ...rest } = clone(item)
+        previewModules.push({ ...rest, position: freePos, rotation: item.rotation ?? currentPose.rotation })
+      }
+    }
+    return { ...graph, modules: previewModules, connections: [...graph.connections] }
+  }
+
+  for (const module of remountQueue) {
+    const currentPose = moduleWorldPose(module, graph.modules)
+    const currentPosition = positionOf(currentPose)
+    const desiredWorld: Point3 = {
+      x: currentPosition.x + delta.x,
+      y: currentPosition.y,
+      z: currentPosition.z + delta.z,
+    }
+    const availableBoards = draftModules.filter(m => getBreadboardTopology(m.type) && !m.mount)
+    const candidate = solveMounting(module.type, desiredWorld, currentPose.rotation ?? 0, availableBoards, module.id)
+
+    if (!candidate || !candidate.valid) {
+      const reason = candidate?.reason || 'The component does not fit on any breadboard at this position.'
+      throw new MoveCandidateError(reason, makePreviewDraft(), normalized, delta)
+    }
+
+    const { position: _pos, rotation: _rot, ...rest } = clone(module)
+    draftModules.push({ ...rest, mount: candidate.mount })
+  }
+
+  const draft: CircuitGraph = { ...graph, modules: draftModules, connections: [] }
+
+  try {
+    validateMountBindings(draft)
+  } catch (error) {
+    throw new MoveCandidateError(error instanceof Error ? error.message : String(error), makePreviewDraft(), normalized, delta)
+  }
+
+  for (const module of draft.modules.filter(module => selectedIds.has(module.id))) {
+    const definition = getDefinition(module.type)
+    if (definition) validateProperties(module.type, { ...definition.defaults, ...module.properties })
+  }
+
+  const newConnections: CircuitConnection[] = []
+  for (const original of graph.connections) {
+    const sourceEndpoint = parseEndpoint(original.source)
+    const destEndpoint = parseEndpoint(original.destination)
+    const isWireSelected = selectedWires.has(wireKey(original))
+
+    const sourceModule = graph.modules.find(m => m.id === sourceEndpoint?.moduleId)
+    const destModule = graph.modules.find(m => m.id === destEndpoint?.moduleId)
+
+    const sourceMoved = !!sourceModule && (selectedIds.has(sourceModule.id) || (!!sourceModule.mount && selectedBoards.has(sourceModule.mount.boardId)))
+    const destMoved = !!destModule && (selectedIds.has(destModule.id) || (!!destModule.mount && selectedBoards.has(destModule.mount.boardId)))
+
+    const bothMoved = sourceMoved && destMoved
+    const shouldShiftWorldControls = isWireSelected || bothMoved
+
+    const wire = clone(original)
+    const visual = readWireVisual(wire)
+
+    visual.controlPoints = visual.controlPoints.map(control => {
+      if (control.space === 'world' && shouldShiftWorldControls) {
+        return { ...control, position: { x: control.position.x + delta.x, y: control.position.y + delta.y, z: control.position.z + delta.z } }
+      }
+      return { ...control }
+    })
+
+    if (wire.metadata) wire.metadata = { ...wire.metadata, wireVisual: visual }
+    else wire.metadata = { wireVisual: visual }
+
+    try {
+      validateWireVisual(visual, draft.modules)
+    } catch (error) {
+      throw new MoveCandidateError(error instanceof Error ? error.message : String(error), makePreviewDraft(), normalized, delta)
+    }
+
+    newConnections.push(wire)
+  }
+
+  draft.connections = newConnections
+
+  try {
+    assertElectricalNetsAllowed(draft)
+  } catch (error) {
+    throw new MoveCandidateError(error instanceof Error ? error.message : String(error), makePreviewDraft(), normalized, delta)
+  }
+
+  try {
+    parseCircuitFile(JSON.stringify(draft))
+  } catch (error) {
+    throw new MoveCandidateError(error instanceof Error ? error.message : String(error), makePreviewDraft(), normalized, delta)
+  }
+
+  return { graph: draft, selection: normalized, delta }
 }
 
