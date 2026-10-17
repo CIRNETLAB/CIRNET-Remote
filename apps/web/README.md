@@ -28,6 +28,8 @@ On Windows PowerShell, use `.audit-runtime\Scripts\python.exe` in place of `.aud
 
 `npm run dev` starts the frontend only. Vite proxies `/api` and `/ws` to `127.0.0.1:8000`; keep FastAPI running using the [API startup instructions](../../services/api/README.md#local-run). `ECONNREFUSED 127.0.0.1:8000` means that API target is unavailable. Local graph editing remains available; remote validation, discovery and execution require the backend. `VITE_API_BASE_URL` / `VITE_WS_URL` configure explicit deployed endpoints.
 
+On Windows, closing or reloading a page can interrupt a pending proxy write with `write ECONNABORTED`. The development-only diagnostics plugin reports this specific browser-side interruption as a short warning. It preserves Vite's socket cleanup and log-level settings; upstream errors, refused connections, read failures and unknown errors retain their original diagnostics. If the open page remains disconnected or the warning repeats without navigation, inspect the browser's Network → WS panel and API logs. `NETCIRCUIT_DEV_API_TARGET` overrides the development proxy target for both `/api` and `/ws`; restart Vite after changing its configuration.
+
 The complete real-browser release gate uses Playwright **1.64.1** from `package-lock.json` and the Chromium revision supplied by that exact runner. From `apps/web`:
 
 ```bash

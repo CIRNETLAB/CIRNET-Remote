@@ -1,10 +1,11 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath } from 'node:url'
+import { devProxyDiagnostics } from './scripts/dev-proxy-diagnostics'
 const apiTarget=process.env.NETCIRCUIT_DEV_API_TARGET || 'http://127.0.0.1:8000'
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [vue(), devProxyDiagnostics()],
   // Windows linked worktrees can allow normal reads while native realpath fails.
   // Keep module resolution in this checkout's declared path on that platform.
   resolve: { preserveSymlinks: process.platform === 'win32' },
