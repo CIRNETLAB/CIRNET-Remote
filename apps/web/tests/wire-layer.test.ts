@@ -6,6 +6,7 @@ import { defaultWireVisual, readWireVisual } from '../src/wires/wireVisual'
 import type { CircuitConnection } from '../src/types/circuit'
 import { deriveWireParts } from '../src/three/WireTerminals'
 import { solveWireRoute } from '../src/wires/wireRouting'
+import { assertHealthyWireGeometry } from './helpers/wireGeometryAssertions'
 
 test('wire layer renders explicit low routes and changes color without replacing geometry', () => {
   const positions: Record<string, Vector3> = { 'A.OUT': new Vector3(0, .36, 0), 'B.IN': new Vector3(2, .36, 2), 'C.OUT': new Vector3(0, .36, 4), 'D.IN': new Vector3(2, .36, 4) }
@@ -45,13 +46,14 @@ test('hundreds of wires retain unchanged buffers and preview bursts build only t
     for (let i = 0; i < 50; i++) layer.previewVisual(wires[0], { ...defaultWireVisual(), controlPoints: [{ space: 'world', position: { x: i / 10, y: .36, z: 1 } }] })
     assert.equal(meshes[0].geometry, buffers[0])
     layer.flush(); assert.notEqual(meshes[0].geometry, buffers[0]); assert.ok(meshes[20].geometry === buffers[20], 'wire at z=2 is outside the edited route crossing group')
-    layer.previewDrawing({ source: wires[0].source, destination: '' }, defaultWireVisual(), { x: 2, y: .36, z: 1 })
+    layer.previewVisual(wires[0],null);layer.flush()
+    layer.previewDrawing({ source: wires[0].source, destination: '' }, defaultWireVisual(), { x: 2, y: .36, z: -1 })
     layer.flush()
     const preview = layer.tools.getObjectByName('wire-drawing-preview') as Mesh, previewGeometry = preview.geometry
     let disposals = 0
     previewGeometry.addEventListener('dispose', () => disposals++)
     for (let i = 0; i < 30; i++) {
-      layer.previewDrawing({ source: wires[0].source, destination: '' }, { ...defaultWireVisual(), color: '#8656a8' }, { x: 2, y: .36, z: 1 })
+      layer.previewDrawing({ source: wires[0].source, destination: '' }, { ...defaultWireVisual(), color: '#8656a8' }, { x: 2, y: .36, z: -1 })
       layer.flush(); assert.equal(preview.geometry, previewGeometry)
     }
     assert.equal(disposals, 0, 'unchanged path and color-only preview never allocate another buffer')
@@ -102,14 +104,14 @@ test('completed and preview jumpers have real narrower copper pins and insulatio
   try {
     layer.sync([wire])
     const body = layer.group.children[0] as Mesh
-    for (const name of ['wire-terminal-source', 'wire-terminal-destination']) {
-      const core = body.getObjectByName(name) as Mesh
-      assert.ok(core instanceof Mesh, 'terminal must be actual metal geometry')
-      assert.equal(core.geometry.type, 'CylinderGeometry')
-      assert.ok(core.scale.x < .026 && core.scale.x > .008)
+    const core=body.getObjectByName('wire-conductor') as Mesh
+    assert.ok(core instanceof Mesh,'the complete core is one continuous metal sweep')
+    assertHealthyWireGeometry(core.geometry)
+    for (const [index,terminal] of (core.userData.terminals as import('../src/three/WireTerminals').WireTerminal[]).entries()) {
+      assert.ok(terminal.radius < .026 && terminal.radius > .008)
       assert.ok((core.material as import('three').MeshStandardMaterial).metalness > .5)
-      const tip = core.localToWorld(new Vector3(0, -.5, 0))
-      const endpoint = name.endsWith('source') ? positions[wire.source] : positions[wire.destination]
+      const tip = terminal.tip
+      const endpoint = index===0 ? positions[wire.source] : positions[wire.destination]
       assert.ok(Math.abs(tip.x - endpoint.x) < 1e-8 && Math.abs(tip.z - endpoint.z) < 1e-8)
       assert.ok(tip.y < endpoint.y - .04, 'metal is inserted below the unchanged electrical anchor')
     }
@@ -117,12 +119,13 @@ test('completed and preview jumpers have real narrower copper pins and insulatio
     assert.ok(Array.from({ length: vertices.count }, (_, i) => vertices.getY(i)).every(y => y > .3339), 'insulation clears the plastic deck, copper alone enters the hole')
     layer.previewDrawing({ source: wire.source, destination: '' }, visual, { x: .5, y: .37, z: -.5 }); layer.flush()
     const preview = layer.tools.getObjectByName('wire-drawing-preview') as Mesh
-    const free = preview.getObjectByName('wire-terminal-free') as Mesh
+    const free = preview.getObjectByName('wire-conductor-free') as Mesh
     assert.ok(free instanceof Mesh)
-    assert.ok(free.localToWorld(new Vector3(0, -.5, 0)).distanceTo(new Vector3(.5, .37, -.5)) < 1e-8)
+    assert.deepEqual(free.userData.terminals[1].tip,{x:.5,y:.37,z:-.5})
     layer.previewDrawing({ source: wire.source, destination: '' }, { ...visual, controlPoints: [{ space: 'world', position: { x: .5, y: .37, z: -.5 } }] }, { x: .9, y: .37, z: .3 }); layer.flush()
-    assert.equal(preview.getObjectByName('wire-terminal-free'), free, 'one moving free copper tip, no terminal at each bend')
-    assert.ok(free.localToWorld(new Vector3(0, -.5, 0)).distanceTo(new Vector3(.9, .37, .3)) < 1e-8)
+    assert.equal(preview.getObjectByName('wire-conductor-free'), free, 'one moving continuous core, no extra metal joint at each bend')
+    const tip=free.userData.terminals[1].tip
+    assert.ok(new Vector3(tip.x,tip.y,tip.z).distanceTo(new Vector3(.9,.37,.3))<1e-8)
     assert.equal(JSON.stringify(wire), saved)
   } finally { layer.dispose() }
 })
@@ -155,16 +158,17 @@ test('deleting a wire or preview does not dispose shared copper resources still 
   const first = { source: 'A.OUT', destination: 'B.IN' }, second = { source: 'C.OUT', destination: 'D.IN' }
   try {
     layer.sync([first, second])
-    const copper = layer.group.children[0].getObjectByName('wire-terminal-source') as Mesh, other = layer.group.children[1].getObjectByName('wire-terminal-source') as Mesh
-    assert.equal(copper.geometry, other.geometry); assert.equal(copper.material, other.material)
-    let geometryDisposals = 0, materialDisposals = 0
+    const copper = layer.group.children[0].getObjectByName('wire-conductor') as Mesh, other = layer.group.children[1].getObjectByName('wire-conductor') as Mesh
+    assert.notEqual(copper.geometry, other.geometry); assert.equal(copper.material, other.material)
+    let geometryDisposals = 0, otherDisposals=0, materialDisposals = 0
     copper.geometry.addEventListener('dispose', () => geometryDisposals++)
+    other.geometry.addEventListener('dispose',()=>otherDisposals++)
     ;(copper.material as import('three').Material).addEventListener('dispose', () => materialDisposals++)
-    layer.sync([second]); assert.equal(geometryDisposals, 0); assert.equal(materialDisposals, 0)
+    layer.sync([second]); assert.equal(geometryDisposals, 1); assert.equal(otherDisposals,0); assert.equal(materialDisposals, 0)
     layer.previewDrawing({ source: second.source, destination: '' }, defaultWireVisual(), { x: .5, y: .37, z: 1.5 }); layer.flush(); layer.clearDrawing()
-    assert.equal(geometryDisposals, 0); assert.equal(materialDisposals, 0)
+    assert.equal(geometryDisposals, 1); assert.equal(otherDisposals,0); assert.equal(materialDisposals, 0)
     layer.dispose(); layer.dispose()
-    assert.equal(geometryDisposals, 1); assert.equal(materialDisposals, 1)
+    assert.equal(geometryDisposals, 1); assert.equal(otherDisposals,1); assert.equal(materialDisposals, 1)
   } finally { layer.dispose() }
 })
 
@@ -176,9 +180,9 @@ test('opaque preview has silver deep-inserted contacts, longer free pin and only
   const wire = { source: 'A', destination: 'B', metadata: { wireVisual: visual } }
   try {
     layer.sync([wire]); layer.highlight(wire)
-    const body = layer.group.children[0] as Mesh, pin = body.getObjectByName('wire-terminal-source') as Mesh
+    const body = layer.group.children[0] as Mesh, pin = body.getObjectByName('wire-conductor') as Mesh
     const material = pin.material as import('three').MeshStandardMaterial
-    assert.ok(pin.localToWorld(new Vector3(0, -.5, 0)).y < .309 - .04, 'conductor extends deeply below the electrical contact')
+    assert.ok(pin.userData.terminals[0].tip.y < .309 - .04, 'conductor extends deeply below the electrical contact')
     assert.ok(material.color.r > .4 && material.color.g > .4 && material.color.b > .4 && Math.abs(material.color.r - material.color.b) < .12, 'light silver tinned copper')
     assert.ok(material.metalness >= .8 && material.roughness <= .4); assert.equal(material.emissive.getHex(), 0)
     layer.selectSegment(layer.route(wire)!.segments.find(segment => segment.editable)!.index)
@@ -188,8 +192,9 @@ test('opaque preview has silver deep-inserted contacts, longer free pin and only
     const preview = layer.tools.getObjectByName('wire-drawing-preview') as Mesh
     assert.equal((preview.material as import('three').Material).transparent, false)
     assert.equal((preview.material as import('three').Material).opacity, 1)
-    const free = preview.getObjectByName('wire-terminal-free') as Mesh
-    assert.ok(free.scale.y > .05, 'the free conductor is longer and legible')
+    const free = preview.getObjectByName('wire-conductor-free') as Mesh
+    const terminal=free.userData.terminals[1]
+    assert.ok(new Vector3(terminal.tip.x,terminal.tip.y,terminal.tip.z).distanceTo(new Vector3(terminal.junction.x,terminal.junction.y,terminal.junction.z))>.05,'the free conductor has a visible straight exposed end')
   } finally { layer.dispose() }
 })
 
@@ -210,12 +215,12 @@ test('silver-plated conductor is capped, opaque and metallic without emissive br
   const layer = createWireLayer(endpoint => new Vector3(endpoint === 'A' ? 0 : 2, .37, 0))
   try {
     layer.sync([{ source: 'A', destination: 'B' }])
-    const pin = layer.group.children[0].getObjectByName('wire-terminal-source') as Mesh
+    const pin = layer.group.children[0].getObjectByName('wire-conductor') as Mesh
     const material = pin.material as import('three').MeshStandardMaterial
     assert.ok(material.metalness >= .9 && material.metalness <= 1)
-    assert.ok(material.roughness >= .15 && material.roughness <= .25)
+    assert.ok(material.roughness >= .28 && material.roughness <= .40)
     assert.equal(material.transparent, false); assert.equal(material.emissive.getHex(), 0)
-    assert.equal((pin.geometry as import('three').CylinderGeometry).parameters.openEnded, false)
+    assertHealthyWireGeometry(pin.geometry)
   } finally { layer.dispose() }
 })
 

@@ -78,7 +78,7 @@ onMounted(() => {
     manager = createSceneManager({ renderer, canvas: canvas.value, onBeforeRender: updateGizmoObstacles, onRender: rendered, onZoomChange: (percent) => workspace.setZoom(percent) })
     manager.setZoom(workspace.zoom)
     editor.sync(); visibility()
-    manager.setShowPins(workspace.showPins); manager.setSimulationStates(circuit.physicalStates)
+    manager.setShowPins(workspace.showPins); manager.setSimulationStates(circuit.physicalStates, circuit.physicalStates ? circuit.physicalPreview?.pin_values : undefined)
   } catch { if (manager) manager.dispose(); else renderer?.dispose(); manager = undefined; graphicsError.value = '3D graphics unavailable. Edit graph coordinates and ports using Inspector.' }
   if (host.value) observer = observeElementSize(host.value, size)
   drawerObserver = new MutationObserver(invalidateObstacles)
@@ -89,7 +89,7 @@ onMounted(() => {
 })
 watch(() => workspace.zoom, (zoom) => { if (manager && Math.abs(manager.zoomPercent() - zoom) > 0.02) { editor.cancel(); manager.setZoom(zoom) } })
 watch(() => workspace.fitRequest, () => { editor.cancel(); manager?.fitCircuit() })
-watch(() => circuit.physicalStates, states => manager?.setSimulationStates(states), { deep: true })
+watch(() => [circuit.physicalStates, circuit.physicalPreview?.pin_values] as const, ([states, pins]) => manager?.setSimulationStates(states, states ? pins : undefined), { deep: true })
 watch(() => workspace.showPins, value => manager?.setShowPins(value))
 // Component Info can change height on selection without changing window state.
 watch([() => ui.windows, () => circuit.graph?.modules.find((module) => module.id === workspace.selectedModuleId)?.type], invalidateObstacles, { deep: true, flush: 'post' })
@@ -99,7 +99,7 @@ onUnmounted(() => { observer?.disconnect(); drawerObserver?.disconnect(); manage
 </script>
 <template>
   <div ref="host" :class="['circuit-workspace', { 'is-dragging': editor.dragging.value || editor.wireRouting.editing.value, 'is-zoom-area': workspace.zoomAreaActive, 'is-marquee': workspace.marqueeActive, 'is-wiring': workspace.tool === 'wire' && !workspace.placementType, 'can-grab': editor.hoveredHandle.value || editor.hoveredControl.value || editor.wireRouting.editing.value || (['select', 'move'].includes(workspace.tool) && !workspace.placementType) }]" @dragover.prevent @drop="editor.drop">
-    <canvas ref="canvas" tabindex="0" :title="editor.controlHint.value" aria-label="Three-dimensional circuit workspace" aria-describedby="editor-help" @pointerdown.capture="editor.pointerDown" @pointermove="editor.pointerMove" @pointerup="editor.pointerUp" @pointercancel="editor.pointerCancel" @lostpointercapture="editor.lostPointerCapture" @keydown="editor.keydown" @dblclick="editor.wireRouting.doubleClick" @contextmenu.capture="editor.contextMenu" @pointerleave="editor.pointerLeave" />
+    <canvas ref="canvas" tabindex="0" :title="editor.controlHint.value" aria-label="Three-dimensional circuit workspace" aria-describedby="editor-help" @pointerdown.capture="editor.pointerDown" @pointermove="editor.pointerMove" @pointerup="editor.pointerUp" @pointercancel="editor.pointerCancel" @lostpointercapture="editor.lostPointerCapture" @keydown="editor.keydown" @dblclick="editor.doubleClick" @contextmenu.capture="editor.contextMenu" @pointerleave="editor.pointerLeave" />
     <WireContextMenu v-if="editor.selectionCommands.contextMenuState.value" :x="editor.selectionCommands.contextMenuState.value.x" :y="editor.selectionCommands.contextMenuState.value.y" :viewport-width="ui.viewport.width" :viewport-height="ui.viewport.height" :can-paste="editor.selectionCommands.canPaste.value" :can-edit-selection="workspace.selectionCount > 0" @action="wireMenuAction" @close="closeWireMenu" />
     <WireOptions v-if="workspace.wireOptionsActive && !editor.selectionCommands.duplicatePreviewState.value.active && !editor.selectionCommands.movePreviewState.value.active" :color="editor.wireRouting.color.value" :route-mode="editor.wireRouting.routeMode.value" :can-add="editor.wireRouting.canAdd.value" :can-remove="editor.wireRouting.canRemove.value" :hint="editor.wireRouting.hint.value" :layer="editor.wireRouting.layer.value" :can-stack="editor.wireRouting.canStack.value" :can-lower-stack="editor.wireRouting.canLowerStack.value" :can-raise-stack="editor.wireRouting.canRaiseStack.value" @color="editor.wireRouting.setColor" @mode="editor.wireRouting.setRouteMode" @add="editor.wireRouting.addBend" @remove="editor.wireRouting.removeSelectedBend" @route-key="editor.wireRouting.keydown" @stack="editor.wireRouting.setStackLayer" />
     <div v-if="editor.zoomAreaRect.value" class="zoom-area-rectangle" :style="{ left: editor.zoomAreaRect.value.left + 'px', top: editor.zoomAreaRect.value.top + 'px', width: editor.zoomAreaRect.value.width + 'px', height: editor.zoomAreaRect.value.height + 'px' }" aria-hidden="true" />

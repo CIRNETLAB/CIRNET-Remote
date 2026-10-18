@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://netcircuit.local/contracts/design/breadboard-mechanics/1.0/schema.json",
+  "title": "BreadboardMechanicalProfileV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "version", "moduleTypes", "insertionDepthMm", "cavityDepthMm", "floorClearanceMm", "mouthHalfWidthWorld", "throatHalfWidthWorld", "throatDepthMm", "insulationClearanceMm"],
+  "properties": {
+    "id": {"const": "BREADBOARD_MECHANICS_V1"},
+    "version": {"const": 1},
+    "moduleTypes": {"type": "array", "minItems": 3, "maxItems": 3, "uniqueItems": true, "items": {"enum": ["BREADBOARD", "BREADBOARD_630", "BREADBOARD_100"]}},
+    "insertionDepthMm": {"const": 3.0},
+    "cavityDepthMm": {"const": 3.5},
+    "floorClearanceMm": {"const": 0.5},
+    "mouthHalfWidthWorld": {"const": 0.037},
+    "throatHalfWidthWorld": {"const": 0.024},
+    "throatDepthMm": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+    "insulationClearanceMm": {"const": 0.4}
+  }
+}

@@ -3,10 +3,11 @@ import assert from 'node:assert/strict'
 import { Vector3 } from 'three'
 import { buildWireGeometry, roundedWirePoints } from '../src/three/WireGeometry'
 import { assertHealthyWireGeometry } from './helpers/wireGeometryAssertions'
+import { WIRE_CORNER_RADIUS } from '../src/wires/wireAppearance'
 
 test('jumper corners are tangent circular fillets contained by the XZ route, with pinned endpoints', () => {
   const points = [{ x: 0, y: .37, z: 0 }, { x: 1, y: .37, z: 0 }, { x: 1, y: .37, z: 1 }]
-  const rounded = roundedWirePoints(points), center = new Vector3(.935, .37, .065)
+  const rounded = roundedWirePoints(points), center = new Vector3(1-WIRE_CORNER_RADIUS, .37, WIRE_CORNER_RADIUS)
   assert.ok(rounded[0].equals(new Vector3(0, .37, 0)))
   assert.ok(rounded.at(-1)!.equals(new Vector3(1, .37, 1)))
   for (const point of rounded) {
@@ -15,15 +16,16 @@ test('jumper corners are tangent circular fillets contained by the XZ route, wit
   }
   const arc = rounded.slice(1, -1)
   assert.ok(arc.length >= 9, 'short curves have smooth angular sampling; straight runs are not subdivided')
-  for (const point of arc) assert.ok(Math.abs(point.distanceTo(center) - .065) < 1e-8)
+  for (const point of arc) assert.ok(Math.abs(point.distanceTo(center) - WIRE_CORNER_RADIUS) < 1e-8)
   const start = arc[1].clone().sub(arc[0]).normalize(), end = arc.at(-1)!.clone().sub(arc.at(-2)!).normalize()
   assert.ok(start.dot(new Vector3(1, 0, 0)) > .99)
   assert.ok(end.dot(new Vector3(0, 0, 1)) > .99)
 })
 
 test('short and coincident jumper runs retain finite positions and unit normals', () => {
+  assert.throws(()=>buildWireGeometry({points:[{ x: 0, y: .309, z: 0 }, { x: 0, y: .37, z: 0 }, { x: .02, y: .37, z: 0 }, { x: .02, y: .309, z: 0 }]},.052),/radius/,'an unfit route must fail rather than folding a tube')
   for (const points of [
-    [{ x: 0, y: .309, z: 0 }, { x: 0, y: .37, z: 0 }, { x: .02, y: .37, z: 0 }, { x: .02, y: .309, z: 0 }],
+    [{ x: 0, y: .309, z: 0 }, { x: 0, y: .45, z: 0 }, { x: .13, y: .45, z: 0 }, { x: .13, y: .309, z: 0 }],
     [{ x: 0, y: .37, z: 0 }, { x: 0, y: .37, z: 0 }, { x: 1, y: .37, z: 0 }],
   ]) {
     const geometry = buildWireGeometry({ points, handles: [], segments: [], frameModuleId: null, materializedControlPoints: [] }, .052)
@@ -36,7 +38,7 @@ test('short and coincident jumper runs retain finite positions and unit normals'
 })
 
 test('legacy and new contact insertion elbows have no folded tube faces', () => {
-  for (const height of [.36, .37]) {
+  for (const height of [.40, .42]) {
     const geometry = buildWireGeometry({ points: [{ x: 0, y: .309, z: 0 }, { x: 0, y: height, z: 0 }, { x: 2, y: height, z: 0 }], handles: [], segments: [], frameModuleId: null, materializedControlPoints: [] }, .052)
     try {
       const positions = geometry.getAttribute('position'), normals = geometry.getAttribute('normal'), indices = geometry.index!
@@ -54,7 +56,7 @@ test('legacy and new contact insertion elbows have no folded tube faces', () => 
 test('straight diagonal insulation is sealed and short 3D corners do not produce degenerate or inverted faces', () => {
   const paths = [
     [{ x: 0, y: .37, z: 0 }, { x: 2, y: .37, z: 2 }],
-    [{ x: 0, y: .37, z: 0 }, { x: .03, y: .37, z: 0 }, { x: .03, y: .37, z: .03 }, { x: .03, y: .4, z: .03 }, { x: .4, y: .4, z: .4 }],
+    [{ x: 0, y: .37, z: 0 }, { x: .3, y: .37, z: 0 }, { x: .3, y: .37, z: .3 }, { x: .3, y: .7, z: .3 }, { x: .8, y: .7, z: .8 }],
   ]
   for (const [pathIndex, points] of paths.entries()) {
     const geometry = buildWireGeometry({ points, handles: [], segments: [], frameModuleId: null, materializedControlPoints: [] }, .052)
@@ -79,18 +81,18 @@ test('very short shallow FREE corners use bounded fillets rather than full-radiu
   for (const [length, degrees] of [[.001, 2.55], [.0001, 1], [.0001, 2.55], [.01, 1]]) {
     const angle = degrees * Math.PI / 180
     const points = [{ x: 0, y: .37, z: 0 }, { x: length, y: .37, z: 0 }, { x: length * (1 + Math.cos(angle)), y: .37, z: length * Math.sin(angle) }]
+    if(length<.002){assert.throws(()=>buildWireGeometry({points},.052),/radius/);continue}
     const geometry = buildWireGeometry({ points }, .052)
     try { assertHealthyWireGeometry(geometry) } finally { geometry.dispose() }
   }
 })
 
-test('an intentional antiparallel return stays finite in both the body and the unsplit picking polyline', () => {
+test('an intentional antiparallel return is rejected without erasing the saved turn', () => {
   const points = [{ x: 0, y: .37, z: 0 }, { x: 1, y: .37, z: 0 }, { x: 0, y: .37, z: 0 }]
-  const rounded = roundedWirePoints(points)
-  assert.ok(rounded.every(point => point.toArray().every(Number.isFinite)))
-  assert.ok(rounded.some(point => point.distanceTo(new Vector3(1, .37, 0)) < 1e-8), 'an intentional return cannot be erased')
-  const geometry = buildWireGeometry({ points }, .052)
-  try { assertHealthyWireGeometry(geometry) } finally { geometry.dispose() }
+  const saved=JSON.stringify(points)
+  assert.throws(()=>roundedWirePoints(points),/reverses/)
+  assert.throws(()=>buildWireGeometry({points},.052),/reverses/)
+  assert.equal(JSON.stringify(points),saved)
 })
 
 test('render-only nearly collinear cleanup avoids sub-Float32 fillet faces at board coordinates', () => {
@@ -102,8 +104,8 @@ test('render-only nearly collinear cleanup avoids sub-Float32 fillet faces at bo
 
 test('insulation keeps full diameter through tight flat corners and endpoint transitions', () => {
   for (const points of [
-    [{ x: 0, y: .37, z: 0 }, { x: .02, y: .37, z: 0 }, { x: .02, y: .37, z: .02 }, { x: .4, y: .37, z: .02 }],
-    [{ x: 0, y: .37, z: 0 }, { x: .03, y: .37, z: .01 }, { x: .01, y: .37, z: .04 }, { x: .4, y: .37, z: .3 }],
+    [{ x: 0, y: .37, z: 0 }, { x: .2, y: .37, z: 0 }, { x: .2, y: .37, z: .2 }, { x: .8, y: .37, z: .2 }],
+    [{ x: 0, y: .37, z: 0 }, { x: .3, y: .37, z: .1 }, { x: .1, y: .37, z: .4 }, { x: .8, y: .37, z: .9 }],
   ]) {
     const geometry = buildWireGeometry({ points }, .052)
     try {

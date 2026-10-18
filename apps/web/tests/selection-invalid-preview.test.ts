@@ -8,6 +8,7 @@ import { buildPasteCandidate, PasteCandidateError } from '../src/editor/batchCom
 import { captureSelectionClipboard } from '../src/editor/selectionClipboard'
 import { createSelectionPreview } from '../src/three/SelectionPreview'
 import { buildSelectionGhostRoutes } from '../src/three/SelectionGhostRoutes'
+import { defaultWireVisual } from '../src/wires/wireVisual'
 
 const near = (a: Point3, b: Point3) => Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z) < 1e-7
 const ghostMeshes = (h: ReturnType<typeof wireHarness>) => {
@@ -22,7 +23,7 @@ test('an invalid end-of-board wire ghost stays rigid at the chosen contact and f
   try {
     const board = h.circuit.placeModule('BREADBOARD_630', { x: 0, y: 0, z: 0 })
     const wire = { source: `${board}.contact:terminal:A:01`, destination: `${board}.contact:terminal:J:08` }
-    h.circuit.connectEndpoints(wire.source, wire.destination)
+    h.circuit.connectEndpoints(wire.source, wire.destination,{...defaultWireVisual(),routeMode:'FREE'})
     await nextTick(); h.flush(); h.circuit.past = []
     const api = h.editor.wireRouting
     api.openContextMenu(0, 0, wire); api.menuDuplicate()

@@ -1,5 +1,5 @@
 import type { Point3, WireIdentity, WireVisual } from '../types/circuit'
-import { CROSSING_CLEARANCE, FREE_COPPER_LENGTH, PARALLEL_LANE_GAP, renderWireDiameter } from './wireAppearance'
+import { CROSSING_CLEARANCE, FREE_COPPER_LENGTH, PARALLEL_LANE_GAP, renderWireDiameter, WIRE_CORNER_RADIUS } from './wireAppearance'
 import { pointDistance, type RouteSegment, type SolvedWireRoute } from './wireRouting'
 import { wireKey } from './wireVisual'
 
@@ -129,7 +129,10 @@ function lateralSamples(entry: Entry, offsets: Map<string, Lane>): Sample[] {
     if (Math.abs(determinant) < 1e-10) return scale(add(a, b), .5)
     const t = ((b.x - a.x) * vz - (b.z - a.z) * vx) / determinant
     const result = { x: a.x + ux * t, y: 0, z: a.z + uz * t }
-    const limit = Math.max(entry.diameter, Math.hypot(a.x, a.z), Math.hypot(b.x, b.z)) * 3
+    const cosine=(ux*vx+uz*vz)/Math.max(EPS,Math.hypot(ux,uz)*Math.hypot(vx,vz))
+    // A shallow join needs a longer miter to retain both corridor clearances.
+    // The span reversal limiter below still bounds adjacent short controls.
+    const limit = Math.max(entry.diameter, Math.hypot(a.x, a.z), Math.hypot(b.x, b.z)) * (cosine>.95?6:3)
     return Math.hypot(result.x, result.z) <= limit ? result : scale(add(a, b), .5)
   }
   const joins = [zero(), ...segments.slice(0, -1).map((segment, index) => join(segment, segments[index + 1])), zero()]
@@ -155,8 +158,19 @@ function lateralSamples(entry: Entry, offsets: Map<string, Lane>): Sample[] {
     const startError = { x: segment.start.x + start.x - laneStart.x, y: 0, z: segment.start.z + start.z - laneStart.z }
     const endError = { x: segment.end.x + end.x - laneEnd.x, y: 0, z: segment.end.z + end.z - laneEnd.z }
     const length = Math.max(EPS, pointDistance(laneStart, laneEnd))
-    const protectedStart = segment.index === 0 && !entry.route.terminalLeads.source ? Math.min(length * .15, FREE_COPPER_LENGTH * 2.3) : 0
-    const protectedEnd = segment.index === segments.length - 1 && !entry.route.terminalLeads.destination ? Math.min(length * .15, FREE_COPPER_LENGTH * 2.3) : 0
+    // Leave real straight run for each analytic fillet before a sampled lane
+    // fan begins. Starting its easing immediately at a 90 degree socket/corner
+    // leaves microscopic chords that cannot fit the insulation's bend radius.
+    const cornerRun=(before:RouteSegment|undefined,after:RouteSegment|undefined)=>{
+      if(!before||!after)return 0
+      const u={x:before.end.x-before.start.x,y:before.end.y-before.start.y,z:before.end.z-before.start.z},v={x:after.end.x-after.start.x,y:after.end.y-after.start.y,z:after.end.z-after.start.z}
+      const denominator=Math.hypot(u.x,u.y,u.z)*Math.hypot(v.x,v.y,v.z)
+      const cosine=denominator>EPS?Math.max(-1,Math.min(1,(u.x*v.x+u.y*v.y+u.z*v.z)/denominator)):1
+      return WIRE_CORNER_RADIUS*Math.tan(Math.acos(cosine)/2)*1.2
+    }
+    const protectedRun=Math.max(WIRE_CORNER_RADIUS*1.2,entry.diameter*.8)
+    const protectedStart = Math.min(length*.4,Math.max(protectedRun,cornerRun(segments[segment.index-1],segment),segment.index === 0 && !entry.route.terminalLeads.source ? FREE_COPPER_LENGTH*2.3 : 0))
+    const protectedEnd = Math.min(length*.4,Math.max(protectedRun,cornerRun(segment,segments[segment.index+1]),segment.index === segments.length-1 && !entry.route.terminalLeads.destination ? FREE_COPPER_LENGTH*2.3 : 0))
     const available = Math.max(EPS, length - protectedStart - protectedEnd)
     const up = Math.min(available * .4, Math.max(entry.diameter * 3, Math.hypot(startError.x, startError.z) * 3))
     const down = Math.min(available * .4, Math.max(entry.diameter * 3, Math.hypot(endError.x, endError.z) * 3))
@@ -200,7 +214,7 @@ function bridgeSamples(entry: Entry, samples: Sample[], lower: CompletedLayout[]
       if (!upper.editable) continue
       for (const bottom of under) {
         if (!bottom.editable) continue
-        if (parallelSpans.get(other.entry.key)?.has(JSON.stringify([upper.index, bottom.index]))) continue
+        if(parallelSpans.get(other.entry.key)?.has(JSON.stringify([upper.index,bottom.index])))continue
         const hit = intersection(upper.start, upper.end, bottom.start, bottom.end)
         if (!hit) continue
         const length = xzDistance(upper.start, upper.end), bottomLength = xzDistance(bottom.start, bottom.end)
@@ -217,8 +231,13 @@ function bridgeSamples(entry: Entry, samples: Sample[], lower: CompletedLayout[]
         const along = distances[index] + pointDistance(upper.start, upper.end) * hit[0]
         if (along <= startBound + EPS || along >= endBound - EPS) continue
         const half = Math.min(clearance / sine, (along - startBound) * .45, (endBound - along) * .45)
-        const ramp = Math.max(entry.diameter * 3, lift * 3)
-        bridges.push({ start: Math.max(startBound, along - half - ramp), up: along - half, down: along + half, end: Math.min(endBound, along + half + ramp), lift })
+        const ramp = Math.max(entry.diameter * 5, lift * 5, WIRE_CORNER_RADIUS * 3)
+        let start=Math.max(startBound,along-half-ramp),end=Math.min(endBound,along+half+ramp)
+        // A tiny straight before a ramp would require two fillet trims. Join
+        // that generated ramp directly to the normal terminal elbow instead.
+        if(start-startBound<WIRE_CORNER_RADIUS)start=startBound
+        if(endBound-end<WIRE_CORNER_RADIUS)end=endBound
+        bridges.push({ start, up: along - half, down: along + half, end, lift })
       }
     }
   }
@@ -230,9 +249,25 @@ function bridgeSamples(entry: Entry, samples: Sample[], lower: CompletedLayout[]
     if (previous && bridge.start <= previous.end) { previous.end = Math.max(previous.end, bridge.end); previous.up = Math.min(previous.up, bridge.up); previous.down = Math.max(previous.down, bridge.down); previous.lift = Math.max(previous.lift, bridge.lift) }
     else merged.push({ ...bridge })
   }
-  const times = new Set(distances)
+  const semanticTimes=distances.filter((_,index)=>entry.route.points.some(point=>pointDistance(samples[index].base,point)<EPS))
+  for(const bridge of merged){
+    const middle=(bridge.up+bridge.down)/2
+    const nearby=(value:number,low:number,high:number)=>semanticTimes.filter(distance=>distance>low+EPS&&distance<high-EPS&&Math.abs(distance-value)<WIRE_CORNER_RADIUS*1.2).sort((a,b)=>Math.abs(a-value)-Math.abs(b-value))[0]??value
+    // A generated ramp shoulder close to a saved knot uses that same station;
+    // it must not leave a microscopic extra span next to the preserved knot.
+    bridge.up=nearby(bridge.up,bridge.start,middle)
+    bridge.down=nearby(bridge.down,middle,bridge.end)
+  }
+  const times = new Set(distances.filter((distance,index)=>{
+    if(entry.route.points.some(point=>pointDistance(samples[index].base,point)<EPS))return true
+    return !merged.some(bridge=>[bridge.start,bridge.up,bridge.down,bridge.end].some(shoulder=>Math.abs(distance-shoulder)<WIRE_CORNER_RADIUS*1.2))
+  }))
   for (const bridge of merged) {
-    for (let index = 0; index <= 12; index++) { times.add(bridge.start + (bridge.up - bridge.start) * index / 12); times.add(bridge.down + (bridge.end - bridge.down) * index / 12) }
+    // These are route controls, not a second sampled spline. The shared
+    // centerline allocates tangent circular fillets at the ramp shoulders.
+    // Dense quintic chords can exceed minimum curvature when an endpoint clips
+    // a ramp, although a line/arc overpass still fits in the available span.
+    for(const distance of [bridge.start,bridge.up,bridge.down,bridge.end])times.add(distance)
     times.add((bridge.up + bridge.down) / 2)
   }
   const result: Sample[] = []
@@ -242,7 +277,7 @@ function bridgeSamples(entry: Entry, samples: Sample[], lower: CompletedLayout[]
     const span = spans[index], t = Math.max(0, Math.min(1, (distance - distances[index]) / Math.max(EPS, distances[index + 1] - distances[index])))
     const position = lerp(span.start, span.end, t), base = lerp(span.baseStart, span.baseEnd, t)
     const bridge = merged.find(value => distance >= value.start && distance <= value.end)
-    if (bridge) position.y += bridge.lift * (distance < bridge.up ? smooth((distance - bridge.start) / Math.max(EPS, bridge.up - bridge.start)) : distance > bridge.down ? smooth((bridge.end - distance) / Math.max(EPS, bridge.end - bridge.down)) : 1)
+    if (bridge) position.y += bridge.lift * (distance < bridge.up ? (distance - bridge.start) / Math.max(EPS, bridge.up - bridge.start) : distance > bridge.down ? (bridge.end - distance) / Math.max(EPS, bridge.end - bridge.down) : 1)
     if (result.length && pointDistance(result.at(-1)!.position, position) < EPS) continue
     result.push({ position, base, segment: span })
   }

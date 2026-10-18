@@ -7,7 +7,7 @@ import { Vector3 } from 'three'
 async function setupWire() {
   const h = wireHarness(), board = h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 })
   const wire = { source: `${board}.contact:terminal:A:01`, destination: `${board}.contact:terminal:J:08` }
-  h.circuit.connectEndpoints(wire.source, wire.destination, { version: 1, color: '#37aadd', routeMode: 'FREE', thickness: .04, height: .2, controlPoints: [{ space: 'world', position: { x: -2, y: .9, z: 0 } }] })
+  h.circuit.connectEndpoints(wire.source, wire.destination, { version: 1, color: '#37aadd', routeMode: 'FREE', thickness: .04, height: .2, controlPoints: [{ space: 'world', position: { x: -3.6, y: .9, z: 0 } }] })
   h.workspace.setTool('select'); await nextTick(); h.flush(); h.circuit.past = []
   const points = h.manager.wireRoute(wire)!.points
   const p = points.slice(1).map((point, index) => h.manager.project(new Vector3((point.x + points[index]!.x) / 2, (point.y + points[index]!.y) / 2, (point.z + points[index]!.z) / 2))).find(p => h.manager.pick(p.x, p.y)?.kind === 'wire')

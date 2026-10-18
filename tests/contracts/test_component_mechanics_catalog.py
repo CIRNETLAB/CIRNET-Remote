@@ -14,7 +14,8 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def test_compact_generic_defaults_have_real_dimensions_and_leave_exact_parts_unchanged():
     resistor = get_physical_part('GENERIC_RESISTOR')
-    assert resistor['revision'] == 6
+    assert resistor['revision'] == 7
+    assert resistor['package']['boardInsertion'] == dict(version=1, mechanicalProfileId='BREADBOARD_MECHANICS_V1', maxExternalLeadMm=35)
     assert resistor['package']['bodyMm'] == {'x': 4.9, 'y': 1.75, 'z': 1.75}
     assert resistor['editor']['color'].lower() == '#4a90e2'
     capacitor = get_physical_part('GENERIC_CAPACITOR_ELECTROLYTIC')
@@ -100,5 +101,8 @@ def test_observed_sealed_resistor_revisions_keep_their_earlier_shape_and_profile
     assert profile['id'] == profile_id
     assert [pin['bodyExitMm']['x'] for pin in profile['pins']] == [-exit_x, exit_x]
     current = get_physical_part('GENERIC_RESISTOR')
-    assert current['revision'] == 6
-    assert current['package']['id'] == 'GENERIC-AXIAL-R49-762'
+    assert current['revision'] == 7
+    assert current['package']['id'] == 'GENERIC-AXIAL-R49-762-BBI3'
+    compact = get_physical_part('GENERIC_RESISTOR', dict(partId=current['id'], partRevision=6, packageId='GENERIC-AXIAL-R49-762', packageRevision=1))
+    assert compact['package']['bodyMm'] == dict(x=4.9, y=1.75, z=1.75)
+    assert 'boardInsertion' not in compact['package']

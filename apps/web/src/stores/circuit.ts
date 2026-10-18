@@ -52,6 +52,8 @@ const useBaseCircuitStore=defineStore('circuit',{
       }finally{if(physicalControllers.get(this)===controller)physicalControllers.delete(this);if(version===this.physicalVersion)this.physicalPreviewBusy=false}
     },
     commitGraph(graph:CircuitGraph){return mutateDocument(this,()=>document.commitGraph(this,graph))},
+    setMomentaryModule(id:string,pressed:boolean){return mutateDocument(this,()=>document.setMomentaryModule(this,id,pressed))},
+    releaseMomentaryModule(draftId:string|null,id:string){return mutateDocument(this,()=>document.releaseMomentaryModule(this,draftId,id))},
     captureSelection(selection:EditorSelection):SelectionClipboard|null{return commands.captureSelection(this,selection)},
     deleteSelection(selection:EditorSelection){return mutateDocument(this,()=>commands.deleteSelection(this,selection))},
     pasteSelection(snapshot:SelectionClipboard,options?:PasteOptions){return mutateDocument(this,()=>commands.pasteSelection(this,snapshot,options))},

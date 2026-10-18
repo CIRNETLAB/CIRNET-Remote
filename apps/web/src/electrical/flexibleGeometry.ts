@@ -6,11 +6,12 @@ import {getPartForType,getPartForModule,MM_TO_WORLD,packageLeadCollisionRadiusMm
 import {getBreadboardContact,getBreadboardTopology} from './BreadboardTopology'
 import {buildLeadPath,closestSegmentApproach,leadPathIntersectsItself,type LeadPath} from './leadPath'
 import {hasShapedRigidLeads,rigidPackageLeadSegments,type RigidLeadSegment} from './rigidPackageLeads'
+import {insertionContinuation,validateBoardConductorSegment} from '../geometry/BreadboardMechanicalProfile'
 
 export type Matrix3=readonly [Point3,Point3,Point3]
 export interface BodyEnvelope {center:Point3;axes:Point3[];half:Point3}
 export type FlexibleMount=FlexibleMountV1|FlexibleMountV2
-export interface FlexibleGeometry {position:Point3;matrix:Matrix3;half:Point3;profile:MechanicalAuthoringProfileV1;leads:{pinId:string;points:Point3[];path:LeadPath}[]}
+export interface FlexibleGeometry {position:Point3;matrix:Matrix3;half:Point3;profile:MechanicalAuthoringProfileV1;leads:{pinId:string;points:Point3[];path:LeadPath;contact:Point3}[]}
 export interface FlexibleSolution {valid:boolean;reason:string;mount:FlexibleMount|null;geometry:FlexibleGeometry|null}
 const EPS=1e-5,axes=['x','y','z'] as const
 export const addPoint=(a:Point3,b:Point3):Point3=>({x:a.x+b.x,y:a.y+b.y,z:a.z+b.z})
@@ -69,7 +70,7 @@ export function resolveFlexibleGeometry(module:CircuitModule,part:PartDefinition
   const contact=tuple(contacts.find(p=>p.binding.pinId===pin.pinId)!.contact!.localPosition),stub=addPoint(contact,{x:0,y:profile.contactStubMm*MM_TO_WORLD,z:0})
   const raw=[exit,shoulder,...controls,stub,contact]
   if(raw.some(p=>!Object.values(p).every(n=>typeof n==='number'&&Number.isFinite(n))||p.y<plane-EPS))throw Error('Flexible lead intersects the breadboard or is nonfinite.')
-  const path=buildLeadPath(raw,profile.minBendRadiusMm*MM_TO_WORLD,preferredRadius,mount.version===1?{start:0,end:0}:{start:profile.exitStraightMm*MM_TO_WORLD,end:profile.contactStubMm*MM_TO_WORLD})
+  let path=buildLeadPath(raw,profile.minBendRadiusMm*MM_TO_WORLD,preferredRadius,mount.version===1?{start:0,end:0}:{start:profile.exitStraightMm*MM_TO_WORLD,end:profile.contactStubMm*MM_TO_WORLD})
   const {points,samples,sampleError}=path,length=path.length/MM_TO_WORLD
   if(length<profile.minLeadLengthMm||length>profile.maxLeadLengthMm)throw Error('Flexible lead length exceeds mechanical bounds.')
   if(samples.slice(1).some((p,i)=>entersBody(samples[i],p,position,matrix,half)))throw Error('Flexible lead intersects its rigid body.')
@@ -84,7 +85,15 @@ export function resolveFlexibleGeometry(module:CircuitModule,part:PartDefinition
    if(samples.slice(0,-1).some(p=>p.y-radius<plane-EPS))throw Error('Flexible lead tube intersects the breadboard.')
   }
   if(leadPathIntersectsItself(path,diameter))throw Error('Flexible lead intersects itself.')
-  return {pinId:pin.pinId,points,path}
+  if(pkg.boardInsertion){
+   const binding=contacts.find(p=>p.binding.pinId===pin.pinId)!.binding
+   const continuation=insertionContinuation(board.type,binding.contactId,packageLeadCollisionRadiusMm(pkg)*MM_TO_WORLD)
+   if(pkg.boardInsertion.mechanicalProfileId!=='BREADBOARD_MECHANICS_V1')throw Error('Unsupported board insertion profile.')
+   if((path.length+continuation.length)/MM_TO_WORLD>Math.min(profile.maxLeadLengthMm,pkg.boardInsertion.maxExternalLeadMm)+1e-6)throw Error('The declared metal lead is too short for this board insertion.')
+   path=buildLeadPath([...points,continuation.end],profile.minBendRadiusMm*MM_TO_WORLD,preferredRadius,mount.version===1?{start:0,end:0}:{start:profile.exitStraightMm*MM_TO_WORLD,end:profile.contactStubMm*MM_TO_WORLD+continuation.length})
+   for(let i=1;i<path.samples.length;i++)validateBoardConductorSegment(board.type,binding.contactId,path.samples[i-1]!,path.samples[i]!,diameter/2)
+  }
+  return {pinId:pin.pinId,points:path.points,path,contact}
  })
  const first=leads[0]!.path,second=leads[1]!.path
  for(let i=0;i<first.samples.length-1;i++)for(let j=0;j<second.samples.length-1;j++)if(segmentDistance(first.samples[i]!,first.samples[i+1]!,second.samples[j]!,second.samples[j+1]!)<2*packageLeadCollisionRadiusMm(pkg)*MM_TO_WORLD+first.sampleError+second.sampleError-EPS)throw Error('Flexible leads intersect each other.')
@@ -137,7 +146,18 @@ export function moduleRigidLeadSegments(module:CircuitModule,modules:CircuitModu
  const part=getPartForModule(module)
  if(!part||isFlexibleMount(module.mount)||!hasShapedRigidLeads(part))return[]
  const pose=rigidModulePose(module,modules),point=(p:Point3)=>addPoint(pose.position,transformPoint(pose.matrix,p))
- return rigidPackageLeadSegments(part).map(segment=>({...segment,start:point(segment.start),end:point(segment.end)}))
+ let insertion=0
+ if(module.mount&&part.package.boardInsertion){
+  const board=modules.find(item=>item.id===module.mount!.boardId)!
+  const section=part.package.shape!.leadSection,radius=(section.kind==='round'?section.widthMm:Math.hypot(section.widthMm,section.thicknessMm))*MM_TO_WORLD/2
+  for(const binding of module.mount.contacts){const continuation=insertionContinuation(board.type,binding.contactId,radius);insertion=continuation.length}
+ }
+ if(module.mount&&part.package.boardInsertion){
+  const board=modules.find(item=>item.id===module.mount!.boardId)!,mount=module.mount
+  const yaw=rotationMatrix({x:0,y:mount.pose.rotation,z:0}),toBoard=(p:Point3)=>addPoint(mount.pose.position,transformPoint(yaw,p))
+  for(const binding of mount.contacts){const pin=part.package.pins.find(p=>p.id===binding.pinId)!;for(const segment of rigidPackageLeadSegments({...part,package:{...part.package,pins:[pin]}},insertion))validateBoardConductorSegment(board.type,binding.contactId,toBoard(segment.start),toBoard(segment.end),segment.radius)}
+ }
+ return rigidPackageLeadSegments(part,insertion).map(segment=>({...segment,start:point(segment.start),end:point(segment.end)}))
 }
 function moduleLeadSegments(module:CircuitModule,modules:CircuitModule[]):RigidLeadSegment[]{
  if(!isFlexibleMount(module.mount))return moduleRigidLeadSegments(module,modules)

@@ -674,6 +674,53 @@
       "memoryContract": "memory-image/1.0"
     },
     {
+      "type": "LABEL",
+      "name": "Label",
+      "family": "notation",
+      "visual": "label",
+      "size": [
+        0.7,
+        0.005,
+        0.3
+      ],
+      "color": "#FAFAF7",
+      "ports": [],
+      "defaults": {
+        "version": 1,
+        "text": "Hello",
+        "fontSizeMm": 3,
+        "textColor": "#20252A",
+        "backgroundColor": "#FAFAF7",
+        "paddingMm": 1
+      },
+      "parameters": [
+        {
+          "key": "text",
+          "label": "Text",
+          "kind": "string",
+          "maxLength": 256
+        },
+        {
+          "key": "fontSizeMm",
+          "label": "Font size (mm)",
+          "kind": "number",
+          "min": 2,
+          "max": 6
+        },
+        {
+          "key": "textColor",
+          "label": "Text color",
+          "kind": "color"
+        },
+        {
+          "key": "backgroundColor",
+          "label": "Background color",
+          "kind": "color"
+        }
+      ],
+      "visualOnly": true
+    },
+    {
       "type": "SN74HC08N",
       "name": "SN74HC08N · powered quad AND",
       "mode": "physical",
@@ -686,7 +733,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN74HC08N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -775,7 +822,7 @@
       ],
       "color": "#ce3935",
       "partDefinitionId": "LITEON-LTL-307EE",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "A",
@@ -804,7 +851,7 @@
       ],
       "color": "#b4c7c0",
       "partDefinitionId": "VISHAY-MRS25-330R",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "A",
@@ -904,7 +951,7 @@
       ],
       "color": "#292b2b",
       "partDefinitionId": "ONSEMI-2N3904TA",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -938,7 +985,7 @@
       ],
       "color": "#4b3831",
       "partDefinitionId": "VISHAY-1N4148",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "A",
@@ -967,7 +1014,7 @@
       ],
       "color": "#4b3831",
       "partDefinitionId": "VISHAY-1N4733A",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "A",
@@ -996,7 +1043,7 @@
       ],
       "color": "#293136",
       "partDefinitionId": "VISHAY-K104K15X7RF53H5",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "A",
@@ -1043,7 +1090,7 @@
       ],
       "color": "#3e4249",
       "partDefinitionId": "NICHICON-UVR1E331MPD",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "PLUS",
@@ -1088,9 +1135,9 @@
         0.33267716535433073,
         0.6244094488188976
       ],
-      "color": "#24292b",
+      "color": "#252729",
       "partDefinitionId": "TDK-PS1240P02BT",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -1108,7 +1155,7 @@
     },
     {
       "type": "DIP_SWITCH_A6D4100",
-      "name": "A6D-4100 · four isolated contacts",
+      "name": "DIP Switch 4 · raised actuator",
       "mode": "physical",
       "family": "input",
       "visual": "dip",
@@ -1117,9 +1164,9 @@
         0.2251968503937008,
         0.33779527559055117
       ],
-      "color": "#9b3434",
-      "partDefinitionId": "OMRON-A6D-4100",
-      "partRevision": 1,
+      "color": "#983A38",
+      "partDefinitionId": "CAD-A6D4-RAISED-ADAPTED",
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -1202,9 +1249,9 @@
         0.2200787401574803,
         0.30708661417322836
       ],
-      "color": "#717475",
+      "color": "#202326",
       "partDefinitionId": "OMRON-B3F-1000",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -1249,9 +1296,9 @@
         0.4094488188976378,
         0.975
       ],
-      "color": "#2c333a",
+      "color": "#E8E7DD",
       "partDefinitionId": "KINGBRIGHT-SC56-11EWA",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -1318,9 +1365,9 @@
         0.4094488188976378,
         0.975
       ],
-      "color": "#2c333a",
+      "color": "#E8E7DD",
       "partDefinitionId": "KINGBRIGHT-DC56-11EWA",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -1427,9 +1474,9 @@
         0.41456692913385823,
         0.9724409448818897
       ],
-      "color": "#2c333a",
+      "color": "#E8E7DD",
       "partDefinitionId": "KINGBRIGHT-CC56-12EWA",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -1508,7 +1555,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN74HC02N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -1597,7 +1644,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN74HC04N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -1686,7 +1733,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN74LS266N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -1817,7 +1864,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7400N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -1906,7 +1953,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7401N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -1995,7 +2042,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7402N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -2084,7 +2131,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7403N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -2173,7 +2220,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7404N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -2262,7 +2309,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7405N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -2351,7 +2398,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7408N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -2440,7 +2487,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7409N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -2529,7 +2576,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7410N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -2618,7 +2665,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN74LS11N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -2707,7 +2754,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7412N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -2796,7 +2843,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7413N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -2885,7 +2932,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7414N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -2974,7 +3021,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN74LS15N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -3063,7 +3110,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7420N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -3152,7 +3199,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN74LS21N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -3241,7 +3288,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7427N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -3330,7 +3377,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7430N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -3419,7 +3466,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7432N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -3508,7 +3555,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7437N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -3597,7 +3644,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7438N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -3686,7 +3733,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7440N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -3775,7 +3822,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7486N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -3864,7 +3911,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN74LS136N",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -3953,7 +4000,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4001BE",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -4042,7 +4089,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4011BE",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -4131,7 +4178,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4012BE",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -4220,7 +4267,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4013BE",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -4309,7 +4356,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4030BE",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -4398,7 +4445,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4069UBE",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -4487,7 +4534,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4070BE",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -4576,7 +4623,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4071BE",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -4665,7 +4712,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4072BE",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -4754,7 +4801,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4077BE",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -4843,7 +4890,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4081BE",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -4932,7 +4979,7 @@
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4093BE",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -5021,7 +5068,7 @@
       ],
       "color": "#4A90E2",
       "partDefinitionId": "GENERIC-RESISTOR-AXIAL",
-      "partRevision": 6,
+      "partRevision": 7,
       "ports": [
         {
           "id": "A",
@@ -5069,7 +5116,7 @@
     },
     {
       "type": "GENERIC_CAPACITOR",
-      "name": "Capacitor",
+      "name": "Ceramic Capacitor",
       "mode": "physical",
       "family": "passive",
       "visual": "capacitor",
@@ -5080,7 +5127,7 @@
       ],
       "color": "#293136",
       "partDefinitionId": "GENERIC-CAPACITOR-CERAMIC",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "A",
@@ -5108,21 +5155,6 @@
           "max": 1
         },
         {
-          "key": "capacitorType",
-          "label": "Type",
-          "kind": "enum",
-          "options": [
-            {
-              "value": "CERAMIC",
-              "label": "Ceramic"
-            },
-            {
-              "value": "ELECTROLYTIC",
-              "label": "Electrolytic"
-            }
-          ]
-        },
-        {
           "key": "voltageRatingVolts",
           "label": "Rated voltage",
           "kind": "number",
@@ -5135,7 +5167,7 @@
     },
     {
       "type": "GENERIC_CAPACITOR_ELECTROLYTIC",
-      "name": "Capacitor",
+      "name": "Electrolytic Capacitor",
       "mode": "physical",
       "family": "passive",
       "visual": "capacitor",
@@ -5146,7 +5178,7 @@
       ],
       "color": "#3e4249",
       "partDefinitionId": "GENERIC-CAPACITOR-ELECTROLYTIC",
-      "partRevision": 3,
+      "partRevision": 4,
       "ports": [
         {
           "id": "PLUS",
@@ -5174,21 +5206,6 @@
           "max": 1
         },
         {
-          "key": "capacitorType",
-          "label": "Type",
-          "kind": "enum",
-          "options": [
-            {
-              "value": "CERAMIC",
-              "label": "Ceramic"
-            },
-            {
-              "value": "ELECTROLYTIC",
-              "label": "Electrolytic"
-            }
-          ]
-        },
-        {
           "key": "voltageRatingVolts",
           "label": "Rated voltage",
           "kind": "number",
@@ -5212,7 +5229,7 @@
       ],
       "color": "#4b3831",
       "partDefinitionId": "GENERIC-DIODE-AXIAL",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "A",
@@ -5261,7 +5278,7 @@
       ],
       "color": "#4b3831",
       "partDefinitionId": "GENERIC-ZENER-DIODE-AXIAL",
-      "partRevision": 3,
+      "partRevision": 4,
       "ports": [
         {
           "id": "A",
@@ -5320,7 +5337,7 @@
       ],
       "color": "#ce3935",
       "partDefinitionId": "GENERIC-LED-5MM",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "A",
@@ -5401,9 +5418,9 @@
         0.33267716535433073,
         0.6244094488188976
       ],
-      "color": "#24292b",
+      "color": "#252729",
       "partDefinitionId": "GENERIC-BUZZER-12MM",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -5450,7 +5467,7 @@
       ],
       "color": "#292b2b",
       "partDefinitionId": "GENERIC-BJT-TO92",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "1",
@@ -5486,6 +5503,48 @@
               "label": "PNP"
             }
           ]
+        }
+      ]
+    },
+    {
+      "type": "SLIDE_SWITCH_SS12D10",
+      "name": "Slide Switch · SS12D10",
+      "mode": "physical",
+      "family": "input",
+      "visual": "slide",
+      "size": [
+        0.6499999999999999,
+        0.5322834645669291,
+        0.3480314960629921
+      ],
+      "color": "#ADB4BA",
+      "partDefinitionId": "CAD-SS12D10-G4-DD1-ADAPTED",
+      "partRevision": 1,
+      "ports": [
+        {
+          "id": "1",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        }
+      ],
+      "defaults": {
+        "state": false
+      },
+      "parameters": [
+        {
+          "key": "state",
+          "label": "Position (false: 2–3; true: 2–1)",
+          "kind": "boolean"
         }
       ]
     }

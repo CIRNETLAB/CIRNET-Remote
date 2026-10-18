@@ -8,7 +8,7 @@ export function packagePinAnchor(type: string, pinId: string, module?: CircuitMo
   if(module&&isFlexibleMount(module.mount)){
     const part=getPartForModule(module),board=modules.find(item=>item.id===module.mount!.boardId)
     if(!part||!board)throw Error('Flexible pin resolution requires its supporting board.')
-    const point=resolveFlexibleGeometry(module,part,board).leads.find(lead=>lead.pinId===pinId)?.points.at(-1)
+    const point=resolveFlexibleGeometry(module,part,board).leads.find(lead=>lead.pinId===pinId)?.contact
     if(!point)return null
     const local=inverseTransformPoint(rotationMatrix({x:0,y:module.mount.bodyPose.rotation.y,z:0}),subtractPoint(point,module.mount.bodyPose.position))
     return new Vector3(local.x,local.y,local.z)
@@ -34,7 +34,8 @@ export function applyPackageSimulation(group: Group, state: PackageSimulationVis
       object.material.emissiveIntensity = state?.ledOn === true ? .8 : 0
     }
     if (object.userData.segment) {
-      const on = state?.segments?.includes(object.userData.segment) === true
+      const on = ['SUPPORTED', 'POWERED', 'ON'].includes(state?.status ?? '') && state?.segments?.includes(object.userData.segment) === true
+      if (object.userData.segmentOffColor) object.material.color.set(on ? object.userData.segmentOnColor : object.userData.segmentOffColor)
       object.material.emissive.set(on ? '#ef332c' : '#000000'); object.material.emissiveIntensity = on ? 1 : 0
     }
   })

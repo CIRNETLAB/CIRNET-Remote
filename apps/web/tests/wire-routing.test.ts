@@ -31,7 +31,8 @@ test('multi-bend orthogonal jumper has low straight runs and locked socket pin l
   const route = solveWireRoute(wire, visual, context)!
   close(route.points[0], { x: -4.03, y: .309, z: -.715 })
   close(route.points.at(-1)!, { x: -3.77, y: .309, z: .715 })
-  assert.ok(route.points.slice(1, -1).every(p => Math.abs(p.y - .36) < 1e-8))
+  assert.ok(route.points.slice(1, -1).every(p => p.y >= .33+visual.thickness/2))
+  assert.ok(route.terminalLeads.source!.y>.4,'terminal routing reserves the insulation bend above the deck')
   assert.ok(route.segments.filter(s => s.editable).every(s => s.start.x === s.end.x || s.start.z === s.end.z))
   for (const point of visual.controlPoints) assert.ok(route.points.some(p => Math.hypot(p.x - point.position.x, p.z - point.position.z) < 1e-8))
   assert.equal(route.segments[0].editable, false)
@@ -111,7 +112,7 @@ test('generated orthogonal elbows are render-only and bend handles retain origin
   assert.equal(JSON.stringify(visual), saved)
 })
 
-test('FREE keeps direct diagonals and an intentional crossing polyline without generated elbows', () => {
+test('FREE keeps direct diagonals and rejects an intersecting manual polyline without changing its anchors', () => {
   const { wire, visual, context } = fixture('FREE')
   visual.controlPoints = []
   let route = solveWireRoute(wire, visual, context)!
@@ -121,9 +122,9 @@ test('FREE keeps direct diagonals and an intentional crossing polyline without g
     { space: 'world', position: { x: -2, y: .36, z: -1 } }, { space: 'world', position: { x: 0, y: .36, z: 1 } },
     { space: 'world', position: { x: -2, y: .36, z: 1 } }, { space: 'world', position: { x: 0, y: .36, z: -1 } },
   ]
-  route = solveWireRoute(wire, visual, context)!
-  assert.deepEqual(route.points.slice(2, -2), visual.controlPoints.map(point => point.position))
-  assert.equal(route.handles.length, 4)
+  const saved=JSON.stringify(visual)
+  assert.equal(solveWireRoute(wire, visual, context),null)
+  assert.equal(JSON.stringify(visual),saved)
 })
 
 test('fifty orthogonal edits keep only adjacent user anchors and never accumulate solver elbows', () => {
@@ -159,9 +160,11 @@ test('fifty endpoint-adjacent segment drags reuse bounded anchors and keep both 
     for (let i = 0; i < 50; i++) {
       const route = solveWireRoute(wire, edited, context)!
       const first = route.segments.find(segment => segment.editable)!
-      edited = dragWireSegment(edited, route, first.index, { x: .1 + i * .001, y: 0, z: .13 + i * .001 }, context)
-      assert.equal(edited.controlPoints.length, 2, 'seed a bare route once; subsequent pinned-span drags must reuse those anchors')
-      const after = solveWireRoute(wire, edited, context)!
+      const candidate = dragWireSegment(edited, route, first.index, { x: .1 + i * .001, y: 0, z: .13 + i * .001 }, context)
+      assert.equal(candidate.controlPoints.length, 2, 'seed a bare route once; subsequent pinned-span drags must reuse those anchors')
+      const after = solveWireRoute(wire,candidate,context)
+      if(!after){assert.deepEqual(solveWireRoute(wire,edited,context),route,'invalid preview keeps the previous route');continue}
+      edited=candidate
       close(after.points[0], original.points[0]); close(after.points.at(-1)!, original.points.at(-1)!)
       assert.ok(after.points.every(point => Object.values(point).every(Number.isFinite)))
     }

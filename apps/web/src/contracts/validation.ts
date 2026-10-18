@@ -3,6 +3,7 @@ import { contractIssue, ContractValidationError, parseStructural, type Validatio
 import { normalizeCircuitDocument, validateCircuitDocument } from '../domain/document/circuitFile'
 import { validateSignalDomains } from '../electrical/signalDomains'
 import { validateAnalogCapture } from '../domain/capture/validation'
+import { validateLabelAnnotations } from './labelValidation'
 
 export { ContractValidationError, type ContractIssue, type ValidationProfile } from './structural'
 
@@ -49,6 +50,7 @@ export function parseLab<K extends keyof ContractMap>(name: K, value: unknown, p
   const data = parseStructural(name, value, profile)
   finite(data, '', profile)
   validateSignalDomains(name,data,profile)
+  validateLabelAnnotations(name,data,profile)
   if (name === 'PublicStationCapabilities') instruments((data as ContractMap['PublicStationCapabilities']).instrument_capabilities, '/instrument_capabilities', profile)
   if (name === 'StationDescriptor') {
     const descriptor=data as ContractMap['StationDescriptor']

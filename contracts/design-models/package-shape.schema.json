@@ -79,7 +79,12 @@
             "electrolytic",
             "led",
             "dip",
-            "to92"
+            "to92",
+            "tactile",
+            "slide-switch",
+            "dip-switch",
+            "seven-segment",
+            "buzzer"
           ]
         },
         "embeddedDepthMm": {
@@ -122,10 +127,255 @@
           "type": "number",
           "exclusiveMinimum": 0,
           "maximum": 100
+        },
+        "caseHeightMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "buttonDiameterMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "buttonTravelMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "coverThicknessMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "rivetDiameterMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "sheetThicknessMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "baseThicknessMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "knobLengthMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "knobWidthMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "knobHeightMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "slotLengthMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "slotWidthMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "travelMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "recessDepthMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "actuatorWidthMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "actuatorLengthMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "digitHeightMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "digitWidthMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "strokeWidthMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "decimalPointDiameterMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "slantDegrees": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "digitPitchMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "faceInsetMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "openingDiameterMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "openingDepthMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "shoulderRadiusMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
         }
       },
       "additionalProperties": false,
-      "description": "Versioned model geometry in centered body-local millimetres. Body envelope, contact tips, exits and the hidden interior embed remain distinct; no electrical or safety capability is implied."
+      "description": "Versioned model geometry in centered body-local millimetres. Body envelope, contact tips, exits and the hidden interior embed remain distinct; no electrical or safety capability is implied.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "family": {
+                "const": "tactile"
+              }
+            },
+            "required": [
+              "family"
+            ]
+          },
+          "then": {
+            "required": [
+              "caseHeightMm",
+              "buttonDiameterMm",
+              "buttonTravelMm",
+              "coverThicknessMm",
+              "rivetDiameterMm",
+              "bevelMm"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "family": {
+                "const": "slide-switch"
+              }
+            },
+            "required": [
+              "family"
+            ]
+          },
+          "then": {
+            "required": [
+              "caseHeightMm",
+              "sheetThicknessMm",
+              "baseThicknessMm",
+              "knobLengthMm",
+              "knobWidthMm",
+              "knobHeightMm",
+              "slotLengthMm",
+              "slotWidthMm",
+              "travelMm"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "family": {
+                "const": "dip-switch"
+              }
+            },
+            "required": [
+              "family"
+            ]
+          },
+          "then": {
+            "required": [
+              "caseHeightMm",
+              "slotWidthMm",
+              "slotLengthMm",
+              "recessDepthMm",
+              "actuatorWidthMm",
+              "actuatorLengthMm",
+              "travelMm"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "family": {
+                "const": "seven-segment"
+              }
+            },
+            "required": [
+              "family"
+            ]
+          },
+          "then": {
+            "required": [
+              "digitHeightMm",
+              "digitWidthMm",
+              "strokeWidthMm",
+              "decimalPointDiameterMm",
+              "slantDegrees",
+              "digitPitchMm",
+              "faceInsetMm",
+              "bevelMm"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "family": {
+                "const": "buzzer"
+              }
+            },
+            "required": [
+              "family"
+            ]
+          },
+          "then": {
+            "required": [
+              "openingDiameterMm",
+              "openingDepthMm",
+              "shoulderRadiusMm"
+            ]
+          }
+        }
+      ]
     }
   }
 }

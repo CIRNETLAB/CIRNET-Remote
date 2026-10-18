@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { Box3, Mesh, MeshStandardMaterial, TubeGeometry, Vector3 } from 'three'
 import { buildComponent, disposeObject, portAnchor } from '../src/three/ComponentModel'
 import { updatePackageAppearance } from '../src/three/PackageModel'
-import { getPartForType } from '../src/data/partCatalog'
+import { getPartForType, historicalPartCatalog, physicalDescriptorForPart } from '../src/data/partCatalog'
 import { defaultLeadProperties, isLeadEditableType, normalizeLeadProperties, parseLeadQuantity, readLeadProperties, validateLeadProperties } from '../src/data/leadProperties'
 import { createFormedLeadGeometry } from '../src/three/package/LeadGeometry'
 import { createSceneManager } from '../src/three/SceneManager'
@@ -103,7 +103,8 @@ test('lead replacement disposes each previous geometry once and final teardown r
 test('a mounted lead edit preserves contacts, electrical nets, picking objects and wire endpoint projections', () => {
   const board: CircuitModule = { id: 'BB', type: 'BREADBOARD_630', position: { x: 2, y: .2, z: 3 }, rotation: 37 }
   const target = moduleLocalToWorld({ x: 0, y: .309, z: -.715 }, board)
-  const solution = solveMounting('RESISTOR_AXIAL', target, 37, [board])!
+  const legacy=historicalPartCatalog.filter(part=>part.editorType==='RESISTOR_AXIAL').sort((a,b)=>a.revision-b.revision)[0]!
+  const solution = solveMounting('RESISTOR_AXIAL', target, 37, [board],'R1',physicalDescriptorForPart(legacy))!
   assert.equal(solution.valid, true, solution.reason)
   const resistor: CircuitModule = { id: 'R1', type: 'RESISTOR_AXIAL', mount: solution.mount }
   const graph: CircuitGraph = { schema_version: '1.1', circuit_id: 'lead-edit', modules: [board, resistor], connections: [] }

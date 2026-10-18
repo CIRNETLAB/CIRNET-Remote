@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { Color, Group, Mesh, MeshStandardMaterial } from 'three'
 import { buildComponent, disposeObject } from '../src/three/ComponentModel'
 import { addPackageModel } from '../src/three/PackageModel'
-import { getPartForType } from '../src/data/partCatalog'
+import { getPartForType, historicalPartCatalog } from '../src/data/partCatalog'
 import { getDefinition } from '../src/data/editorCatalog'
 import { createPackageThumbnailCache } from '../src/three/PackageThumbnails'
 
@@ -73,17 +73,20 @@ test('tone adjustment preserves silver leads, resistor bands, LED hue and polari
   } finally { for (const model of [resistor, capacitor, led, logic]) disposeObject(model) }
 })
 
-test('Display and terminal package colors stay outside the body tone adjustment', () => {
+test('versioned Display and terminal package colors stay outside the body tone adjustment', () => {
   for (const type of ['SEGMENT_SC5611EWA', 'SEGMENT_DC5611EWA', 'SEGMENT_CC5612EWA', 'DC_SUPPLY']) {
-    const part = getPartForType(type)!, model = new Group()
+    for (const part of [getPartForType(type)!, ...historicalPartCatalog.filter(part => part.editorType === type)]) {
+    const model = new Group(), refined = part.package.shape?.family === 'seven-segment'
     addPackageModel(model, { id: 'component', type }, part)
     try {
-      assert.equal(materialOf(model, 'package-body').color.getHexString(), type === 'DC_SUPPLY' ? '929ea7' : '24272b')
+      assert.equal(materialOf(model, 'package-body').color.getHexString(), type === 'DC_SUPPLY' ? '929ea7' : refined ? 'e8e7dd' : '24272b')
       if (type !== 'DC_SUPPLY') {
-        assert.equal(materialOf(model, 'package-display-face').color.getHexString(), '101317')
-        assert.equal(materialOf(model, 'package-digit-0-a').color.getHexString(), '482526')
+        assert.equal(materialOf(model, 'package-display-face').color.getHexString(), refined ? '25292b' : '101317')
+        assert.equal(materialOf(model, 'package-digit-0-a').color.getHexString(), refined ? 'd7d6c8' : '482526')
+        assert.equal(materialOf(model, 'package-digit-0-a').emissiveIntensity, 0)
       }
     } finally { disposeObject(model) }
+    }
   }
 })
 

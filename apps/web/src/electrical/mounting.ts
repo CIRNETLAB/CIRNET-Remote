@@ -2,7 +2,7 @@ import type { CircuitGraph, CircuitModule, MountBinding, Point3 } from '../types
 import { getPartForType, getPartForModule, MM_TO_WORLD, type PinnedPartDescriptor } from '../data/partCatalog'
 import { getBreadboardTopology, type BreadboardTopology, type BreadboardContact } from './BreadboardTopology'
 import { moduleLocalToWorld, moduleWorldPose, worldToModuleLocal } from './modulePose'
-import { bodiesOverlap, isFlexibleMount, moduleBodyEnvelope, moduleLeadsHitBody, moduleLeadsIntersect, resolveFlexibleGeometry } from './flexibleGeometry'
+import { bodiesOverlap, isFlexibleMount, moduleBodyEnvelope, moduleLeadsHitBody, moduleLeadsIntersect, moduleRigidLeadSegments, resolveFlexibleGeometry } from './flexibleGeometry'
 import { validateProperties } from '../data/editorCatalog'
 import { parseStructural } from '../contracts/structural'
 
@@ -44,6 +44,10 @@ function inspectMount(module: CircuitModule, board: CircuitModule, mount: MountB
   const candidateModule: CircuitModule = { ...module, mount }
   delete candidateModule.position; delete candidateModule.rotation
   const context = modules.filter(item => item.id !== module.id).concat(candidateModule)
+  if(!reason&&part.package.boardInsertion){
+    const conductorCandidate={...candidateModule,mount:{...mount,contacts:pins.map(pin=>({kind:'pin-contact' as const,version:1 as const,pinId:pin.pinId,contactId:pin.contactId!}))}}
+    try{moduleRigidLeadSegments(conductorCandidate,context)}catch(error){return{pins,reason:error instanceof Error?error.message:'Invalid mechanical conductor geometry.'}}
+  }
   const candidateBody = moduleBodyEnvelope(candidateModule, context)
   if (candidateBody) for (const other of modules) {
     if (other.id === module.id || other.id === board.id) continue

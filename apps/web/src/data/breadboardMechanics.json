@@ -1,0 +1,16 @@
+{
+  "id": "BREADBOARD_MECHANICS_V1",
+  "version": 1,
+  "moduleTypes": [
+    "BREADBOARD",
+    "BREADBOARD_630",
+    "BREADBOARD_100"
+  ],
+  "insertionDepthMm": 3.0,
+  "cavityDepthMm": 3.5,
+  "floorClearanceMm": 0.5,
+  "mouthHalfWidthWorld": 0.037,
+  "throatHalfWidthWorld": 0.024,
+  "throatDepthMm": 0.4103076923076923,
+  "insulationClearanceMm": 0.4
+}

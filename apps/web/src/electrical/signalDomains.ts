@@ -2,6 +2,7 @@ import catalog from '../data/signalPortCatalog.json'
 import type { SignalDomain, SignalPortDefinition, SimulationClassification } from '../contracts/generated/dto'
 import type { CircuitGraph,CircuitModule } from '../types/circuit'
 import { contractIssue, ContractValidationError, parseStructural, type ValidationProfile } from '../contracts/structural'
+import { validateLabelAnnotations } from '../contracts/labelValidation'
 
 interface DomainDescriptor { type:string;ports:SignalPortDefinition[];execution:'DIGITAL'|'DC_DIGITAL'|'VISUAL'|'UNAVAILABLE' }
 const descriptors=new Map((catalog.components as DomainDescriptor[]).map(item=>[item.type,item]))
@@ -52,6 +53,7 @@ export function portDomain(module:CircuitModule,port:string):SignalDomain|undefi
 /** Catalog selection describes local models; it never asserts hardware capability. */
 export function classifyGraph(graph:CircuitGraph):SimulationClassification {
   parseStructural('AnySupportedCircuitGraph',graph,'structural')
+  validateLabelAnnotations('AnySupportedCircuitGraph',graph,'structural')
   const domains=new Set<SignalDomain>(),unsupported:string[]=[]
   let digital=false,dc=false,analog=false,mixed=false,unknown=false
   graph.modules.forEach((module,index)=>{

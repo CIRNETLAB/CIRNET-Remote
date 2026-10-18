@@ -26,8 +26,8 @@ test('generic enum/color design values are validated without coercing or removin
   assert.deepEqual(normalizeComponentProperties('GENERIC_IMPORTED_CUSTOM', { color: 'opaque custom field' }), { color: 'opaque custom field' })
 })
 
-test('normal palette exposes one generic capacitor and generic discrete names while keeping logic search entries', () => {
-  assert.deepEqual(ribbonGroups.find(group => group.id === 'passive')!.items.map(item => [item.type, item.name]), [['GENERIC_RESISTOR', 'Resistor'], ['GENERIC_CAPACITOR', 'Capacitor']])
+test('normal palette exposes independent ceramic and electrolytic capacitors while keeping logic search entries', () => {
+  assert.deepEqual(ribbonGroups.find(group => group.id === 'passive')!.items.map(item => [item.type, item.name]), [['GENERIC_RESISTOR', 'Resistor'], ['GENERIC_CAPACITOR', 'Ceramic Capacitor'], ['GENERIC_CAPACITOR_ELECTROLYTIC', 'Electrolytic Capacitor']])
   assert.deepEqual(ribbonGroups.find(group => group.id === 'active')!.items.map(item => item.name), ['Transistor', 'Diode', 'Zener Diode'])
   assert.deepEqual(ribbonGroups.find(group => group.id === 'output')!.items.map(item => item.name), ['LED', 'Buzzer'])
   assert.ok(ribbonGroups.find(group => group.id === 'logic')!.items.some(item => item.type === 'SN74HC08N'))
@@ -51,22 +51,24 @@ test('Component Info exposes validated draft properties before creating any inst
   } finally { view.app.unmount() }
 })
 
-test('draft property and capacitor Type updates preserve the armed placement epoch and selection state', () => {
+test('capacitor value updates preserve the armed family, placement epoch and selected anchor', () => {
   setActivePinia(createPinia())
   const workspace = useWorkspaceStore()
   workspace.armPlacement('GENERIC_CAPACITOR')
   const epoch = workspace.placementEpoch
   workspace.pendingPort = 'board.a1'
-  workspace.updatePlacementProperties({ capacitanceFarads: 47e-6, capacitorType: 'ELECTROLYTIC' }, 'GENERIC_CAPACITOR_ELECTROLYTIC')
+  workspace.updatePlacementProperties({ capacitanceFarads: 47e-6 })
   assert.equal(workspace.placementEpoch, epoch)
-  assert.equal(workspace.placementType, 'GENERIC_CAPACITOR_ELECTROLYTIC')
+  assert.equal(workspace.placementType, 'GENERIC_CAPACITOR')
   assert.equal(workspace.pendingPort, 'board.a1')
   assert.equal(workspace.selectedModuleId, null)
   const before = JSON.stringify(workspace.placementProperties)
   assert.throws(() => workspace.updatePlacementProperties({ capacitanceFarads: '' }))
   assert.equal(JSON.stringify(workspace.placementProperties), before)
+  assert.throws(() => workspace.updatePlacementProperties({ capacitorType: 'ELECTROLYTIC' }, 'GENERIC_CAPACITOR_ELECTROLYTIC'), /Passive/)
+  assert.equal(JSON.stringify(workspace.placementProperties), before)
   assert.throws(() => workspace.updatePlacementProperties({ color: '#ffffff' }, 'GENERIC_LED'), 'unrelated design changes require a new Add session')
-  assert.equal(workspace.placementType, 'GENERIC_CAPACITOR_ELECTROLYTIC')
+  assert.equal(workspace.placementType, 'GENERIC_CAPACITOR')
   workspace.armPlacement('GENERIC_LED'); assert.equal(workspace.placementEpoch, epoch + 1)
 })
 
@@ -84,10 +86,11 @@ test('untouched long-precision resistor Update preserves the exact SI number', a
   } finally { view.app.unmount() }
 })
 
-test('all generic draft forms update SI values and subtype without creating an instance', async () => {
+test('all generic draft forms update SI values without converting capacitor families or creating an instance', async () => {
   const component = await loadSfc('components/windows/ComponentInfoWindow.vue')
   for (const scenario of [
-    { type: 'GENERIC_CAPACITOR', input: 'Capacitance', value: '22', unitLabel: 'Capacitance unit', unit: 'µF', select: 'Type', option: 'ELECTROLYTIC', expected: { capacitanceFarads: 22e-6, capacitorType: 'ELECTROLYTIC' }, nextType: 'GENERIC_CAPACITOR_ELECTROLYTIC' },
+    { type: 'GENERIC_CAPACITOR', input: 'Capacitance', value: '22', unitLabel: 'Capacitance unit', unit: 'µF', expected: { capacitanceFarads: 22e-6, capacitorType: 'CERAMIC' } },
+    { type: 'GENERIC_CAPACITOR_ELECTROLYTIC', input: 'Capacitance', value: '47', unitLabel: 'Capacitance unit', unit: 'µF', expected: { capacitanceFarads: 47e-6, capacitorType: 'ELECTROLYTIC' } },
     { type: 'GENERIC_DIODE', input: 'Forward voltage', value: '.65', expected: { forwardVoltageVolts: .65 } },
     { type: 'GENERIC_ZENER_DIODE', input: 'Zener voltage', value: '6.2', expected: { zenerVoltageVolts: 6.2 } },
     { type: 'GENERIC_LED', input: 'Max current', value: '15', unitLabel: 'Max current unit', unit: 'mA', swatch: 'Blue LED', expected: { maxCurrentAmps: .015, color: '#3a78dc' } },
@@ -103,10 +106,11 @@ test('all generic draft forms update SI values and subtype without creating an i
       if (scenario.unitLabel) dispatch(view.find('select', 'aria-label', scenario.unitLabel), 'onChange', scenario.unit)
       if (scenario.select) dispatch(view.find('select', 'aria-label', scenario.select), 'onChange', scenario.option)
       if (scenario.swatch) dispatch(view.find('button', 'aria-label', scenario.swatch), 'onClick')
+      if (scenario.type.startsWith('GENERIC_CAPACITOR')) assert.equal(view.find('select', 'aria-label', 'Type'), undefined)
       dispatch(view.find('button', 'aria-label', 'Update component properties'), 'onClick'); await nextTick()
       for (const [key, value] of Object.entries(scenario.expected)) assert.equal(workspace.placementProperties?.[key], value, `${scenario.type}.${key}`)
       assert.deepEqual(workspace.placementProperties?.custom, { retained: true })
-      assert.equal(workspace.placementType, scenario.nextType ?? scenario.type); assert.equal(workspace.placementEpoch, epoch)
+      assert.equal(workspace.placementType, scenario.type); assert.equal(workspace.placementEpoch, epoch)
       assert.equal(circuit.graph!.modules.length, 0); assert.equal(circuit.past.length, 0)
       assert.equal(view.text().includes('Mounted on'), false); assert.equal(view.text().includes('INFORMATION'), false)
       assert.equal(view.find('button', 'aria-label', 'Edit leads'), undefined)

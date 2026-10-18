@@ -16,6 +16,10 @@ PROPERTY_KEYS = {
 
 def validate_component_properties(module_type, properties):
     """Validate present properties; old instances may rely on descriptor defaults."""
+    if module_type == 'LABEL':
+        from .label_properties import normalize_label_properties
+        normalize_label_properties(properties)
+        return
     if module_type in {'GENERIC_RESISTOR','GENERIC_CAPACITOR','GENERIC_CAPACITOR_ELECTROLYTIC','GENERIC_DIODE','GENERIC_ZENER_DIODE','GENERIC_LED','GENERIC_BUZZER','GENERIC_BJT'}:
         from jsonschema import ValidationError
         from .registry import validate_contract
@@ -40,6 +44,9 @@ def validate_component_properties(module_type, properties):
 def normalize_component_properties(module_type, properties):
     """Migrate only the documented old resistor spelling, preserving custom data."""
     result = deepcopy(properties)
+    if module_type == 'LABEL':
+        from .label_properties import normalize_label_properties
+        return normalize_label_properties(result)
     if module_type == 'RESISTOR_AXIAL' and 'resistance_ohm' in result:
         if 'resistanceOhms' not in result:
             result['resistanceOhms'] = result['resistance_ohm']

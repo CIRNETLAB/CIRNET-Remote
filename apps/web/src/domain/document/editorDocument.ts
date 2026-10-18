@@ -1,6 +1,8 @@
-import type { CircuitGraph } from '../../types/circuit'
+import type { CircuitGraph, CircuitModule } from '../../types/circuit'
 import { MAX_CIRCUIT_FILE_BYTES,parseCircuitFile } from './circuitFile'
 import { validateMountBindings } from '../../electrical/mounting'
+import { synchronizeLabelBoardPoses } from '../../geometry/labelBoardPose'
+import { getPartForModule } from '../../data/partCatalog'
 
 export interface CircuitDraft {id:string;name:string;graph:CircuitGraph}
 /** Functions operate directly on this caller-owned state; no engine keeps a graph mirror. */
@@ -28,7 +30,27 @@ export function equalDocumentValue(left:unknown,right:unknown):boolean {
   const keys=Object.keys(a).filter(key=>a[key]!==undefined),other=Object.keys(b).filter(key=>b[key]!==undefined)
   return keys.length===other.length&&keys.every(key=>Object.hasOwn(b,key)&&equalDocumentValue(a[key],b[key]))
 }
-export function snapshotDocument(state:EditorDocumentState):string{return JSON.stringify({drafts:state.drafts,activeId:state.activeId})}
+interface CapturedMomentary {draftId:string;id:string;type:string;originalPressed:boolean|undefined;propertiesAbsent:boolean}
+// Input ownership is ephemeral metadata, never a second graph or saved field.
+const momentaryInputs=new WeakMap<EditorDocumentState,Map<string,CapturedMomentary>>()
+const momentaryKey=(draftId:string,id:string)=>JSON.stringify([draftId,id])
+function momentaryField(module:CircuitModule,pressed:boolean|undefined,propertiesAbsent:boolean):CircuitModule {
+  const properties={...module.properties}
+  if(pressed===undefined)delete properties.pressed;else properties.pressed=pressed
+  if(propertiesAbsent&&!Object.keys(properties).length){const {properties:_,...rest}=module;return rest}
+  return {...module,properties}
+}
+export function snapshotDocument(state:EditorDocumentState):string {
+  const captures=momentaryInputs.get(state)
+  if(!captures?.size)return JSON.stringify({drafts:state.drafts,activeId:state.activeId})
+  // An authored edit or tab switch while a pointer is held must not make the
+  // temporary press reachable through future Undo/Redo snapshots.
+  const drafts=state.drafts.map(draft=>({...draft,graph:{...draft.graph,modules:draft.graph.modules.map(module=>{
+    const held=captures.get(momentaryKey(draft.id,module.id))
+    return held?.type===module.type?momentaryField(module,held.originalPressed,held.propertiesAbsent):module
+  })}}))
+  return JSON.stringify({drafts,activeId:state.activeId})
+}
 export function pruneSaved(state:EditorDocumentState) {
   const reachable=new Set(state.drafts.map(draft=>draft.id)),candidates=Object.keys(state.saved).filter(id=>!reachable.has(id))
   if(!candidates.length)return
@@ -80,6 +102,37 @@ export function exportGraph(state:EditorDocumentState):string {
   return new TextEncoder().encode(pretty).length<=MAX_CIRCUIT_FILE_BYTES?pretty:compact
 }
 export function commitGraph(state:EditorDocumentState,graph:CircuitGraph) {
-  const draft=currentDocument(state);if(!draft||equalDocumentValue(graph,draft.graph))return
+  const draft=currentDocument(state);if(!draft)return
+  const modules=synchronizeLabelBoardPoses(draft.graph.modules,graph.modules)
+  if(modules!==graph.modules)graph={...graph,modules} as CircuitGraph
+  if(equalDocumentValue(graph,draft.graph))return
   validateMountBindings(graph);recordChange(state);draft.graph=graph;touchDocument(state)
+}
+/** Validated live input changes graph revision for execution/observation, but
+ * does not consume or invalidate authored Undo/Redo history. */
+export function setMomentaryModule(state:EditorDocumentState,id:string,pressed:boolean) {
+  if(typeof pressed!=='boolean')throw Error('Momentary input must be boolean.')
+  if(!pressed){releaseMomentaryModule(state,state.activeId,id);return}
+  const draft=currentDocument(state),module=draft?.graph.modules.find(item=>item.id===id),part=module&&getPartForModule(module)
+  if(!draft||!module)return
+  if(part?.package.family!=='switch'||!part.internalConnections?.some(connection=>connection.when?.property==='pressed'))throw Error('Select a supported momentary contact.')
+  if(module.properties?.pressed!==undefined&&typeof module.properties.pressed!=='boolean')throw Error('Momentary input must be boolean.')
+  const graph=parseCircuitFile(JSON.stringify({...draft.graph,modules:draft.graph.modules.map(item=>item===module?{...item,properties:{...item.properties,pressed:true}}:item)}))
+  const captures=momentaryInputs.get(state)??new Map<string,CapturedMomentary>(),key=momentaryKey(draft.id,id)
+  if(!captures.has(key))captures.set(key,{draftId:draft.id,id,type:module.type,originalPressed:module.properties?.pressed as boolean|undefined,propertiesAbsent:module.properties===undefined})
+  momentaryInputs.set(state,captures)
+  if(!equalDocumentValue(graph,draft.graph)){draft.graph=graph;touchDocument(state,draft.id)}
+}
+/** Release only an input captured through setMomentaryModule, in its original
+ * draft. Unrelated imported or explicitly authored persistent values survive. */
+export function releaseMomentaryModule(state:EditorDocumentState,draftId:string|null,id:string) {
+  if(!draftId)return
+  const captures=momentaryInputs.get(state),key=momentaryKey(draftId,id),held=captures?.get(key)
+  if(!held)return
+  const draft=state.drafts.find(item=>item.id===draftId),module=draft?.graph.modules.find(item=>item.id===id)
+  if(!draft||!module||module.type!==held.type){captures!.delete(key);return}
+  const graph=parseCircuitFile(JSON.stringify({...draft.graph,modules:draft.graph.modules.map(item=>item===module?momentaryField(item,held.originalPressed===undefined?undefined:false,held.propertiesAbsent):item)}))
+  captures!.delete(key)
+  if(!equalDocumentValue(graph,draft.graph)){draft.graph=graph;touchDocument(state,draft.id)}
+  if(state.saved[draft.id]===JSON.stringify(draft))state.savedRevisions[draft.id]=state.draftRevisions[draft.id]??0
 }

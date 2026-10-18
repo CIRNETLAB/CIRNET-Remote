@@ -1,10 +1,13 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { InstancedMesh, Mesh, MeshBasicMaterial, MeshStandardMaterial, PerspectiveCamera, SRGBColorSpace, Vector3 } from 'three'
+import { Group, InstancedMesh, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, PerspectiveCamera, SRGBColorSpace, Vector3 } from 'three'
 import { buildComponent, disposeObject } from '../src/three/ComponentModel'
 import { CAMERA_FAR, CAMERA_NEAR } from '../src/config/workbenchViewport'
 import { createSceneManager } from '../src/three/SceneManager'
+import { addBreadboardHousing, BREADBOARD_PLASTIC_COLOR } from '../src/three/BreadboardHousing'
+import { getBreadboardTopology } from '../src/electrical/BreadboardTopology'
+import { boardContactMechanics } from '../src/geometry/BreadboardMechanicalProfile'
 
 const materialOf = (model: ReturnType<typeof buildComponent>, name: string) => {
   const object = model.getObjectByName(name)
@@ -174,26 +177,35 @@ test('all Breadboards use neutral off-white artwork in sRGB and preserve rail an
   }
 })
 
-test('material adjustments keep every Breadboard vertex, normal, UV, index and contact transform unchanged', () => {
-  const expected = {
-    BREADBOARD: 'c4a3cf2ae7c3f97fc4d22c9553e2177cdd10fabb5d06619fa4d2e26194e0d88c',
-    BREADBOARD_630: '857a4f065e0639cea70da7676e42a5239dfc3b734ad171e5f5f37b5ec540a0cf',
-    BREADBOARD_100: '6c8ca6360e212963c8f0dad0e8d0f68707a3ba104b16a13f8b9f25f3ff3687b8',
-  }
-  for (const [type, digest] of Object.entries(expected)) {
-    const model = buildComponent({ id: 'B', type }), hash = createHash('sha256')
-    try {
-      model.traverse(object => {
-        if (!(object instanceof Mesh)) return
-        for (const key of Object.keys(object.geometry.attributes).sort()) {
-          const array = object.geometry.attributes[key]!.array
-          hash.update(key); hash.update(Buffer.from(array.buffer, array.byteOffset, array.byteLength))
-        }
-        if (object.geometry.index) { const array = object.geometry.index.array; hash.update(Buffer.from(array.buffer, array.byteOffset, array.byteLength)) }
-        hash.update(JSON.stringify(object.matrix.elements))
-        if (object instanceof InstancedMesh) { const array = object.instanceMatrix.array; hash.update(Buffer.from(array.buffer, array.byteOffset, array.byteLength)) }
-      })
-      assert.equal(hash.digest('hex'), digest, type)
-    } finally { disposeObject(model) }
+test('color variants preserve every new-mechanics Breadboard vertex, normal, UV, index and contact transform', () => {
+  for (const type of ['BREADBOARD', 'BREADBOARD_630', 'BREADBOARD_100']) {
+    let expected: string | undefined
+    for (const color of [BREADBOARD_PLASTIC_COLOR, '#ece8df', '#9ea5a9']) {
+      const model = new Group(), hash = createHash('sha256')
+      addBreadboardHousing(model, type, color, null); model.updateMatrixWorld(true)
+      try {
+        const deck = model.children.find(object => object.userData.breadboardDeck) as Mesh
+        assert.equal((deck.material as MeshStandardMaterial).color.getHexString(), color.slice(1))
+        const sockets = model.children.find(object => object.userData.breadboardSockets) as InstancedMesh
+        const contact = getBreadboardTopology(type)!.contacts[0]!, mechanics = boardContactMechanics(type, contact.contactId), matrix = new Matrix4()
+        sockets.getMatrixAt(0, matrix)
+        const position = sockets.geometry.getAttribute('position')
+        const floor = Math.min(...Array.from({ length: position.count }, (_, index) => new Vector3().fromBufferAttribute(position, index).applyMatrix4(matrix).y))
+        assert.ok(Math.abs(floor-mechanics.floor.y) < 1e-7, 'the color comparison uses the new 3.5 mm cavity')
+        model.traverse(object => {
+          if (!(object instanceof Mesh)) return
+          for (const key of Object.keys(object.geometry.attributes).sort()) {
+            const array = object.geometry.attributes[key]!.array
+            hash.update(key); hash.update(Buffer.from(array.buffer, array.byteOffset, array.byteLength))
+          }
+          if (object.geometry.index) { const array = object.geometry.index.array; hash.update(Buffer.from(array.buffer, array.byteOffset, array.byteLength)) }
+          hash.update(JSON.stringify(object.matrix.elements))
+          if (object instanceof InstancedMesh) { const array = object.instanceMatrix.array; hash.update(Buffer.from(array.buffer, array.byteOffset, array.byteLength)) }
+        })
+        const digest = hash.digest('hex')
+        if (expected === undefined) expected = digest
+        else assert.equal(digest, expected, `${type}/${color}`)
+      } finally { disposeObject(model) }
+    }
   }
 })

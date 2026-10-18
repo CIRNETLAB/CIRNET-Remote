@@ -190,6 +190,7 @@ test('multi-bend contact bundle and its fixed collars transform rigidly with boa
 test('ten identical short S bends never reverse along a semantic span or create incidental height towers', () => {
   for (const length of [.04, .065, .13, .26]) {
     const entries = Array.from({ length: 10 }, (_, index) => input(index, [point(-2, 0), point(0, 0), point(0, length), point(2, length)]))
+    if(length<2*.13/2.54){assert.ok(entries.every(entry=>entry.route===null),'short manual spans reject instead of folding or erasing the S bend');continue}
     const routes = createWireLayoutCache().sync(entries)
     for (const entry of entries) {
     const route = routes.get(wireKey(entry.wire))!

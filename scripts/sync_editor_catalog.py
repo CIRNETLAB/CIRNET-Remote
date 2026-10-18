@@ -25,7 +25,7 @@ def validate_package_shape(package):
     except ValidationError as error:
         raise ValueError('Invalid package shape specification') from error
     pins = {pin['id'] for pin in package['pins']}
-    compatible = {'axial': {'resistor', 'diode', 'zener'}, 'radial-capacitor': {'ceramic', 'electrolytic'}, 'radial-led': {'led'}, 'dip': {'dip'}, 'to92': {'to92'}}
+    compatible = {'axial': {'resistor', 'diode', 'zener'}, 'radial-capacitor': {'ceramic', 'electrolytic'}, 'radial-led': {'led'}, 'dip': {'dip'}, 'to92': {'to92'}, 'switch': {'tactile', 'slide-switch', 'dip-switch'}, 'seven-segment': {'seven-segment'}, 'buzzer': {'buzzer'}}
     if shape['family'] not in compatible.get(package['family'], set()):
         raise ValueError('Package shape family must match its mechanical package')
     exits = shape['leadExits']
@@ -46,6 +46,17 @@ def validate_package_shape(package):
             raise ValueError('LED requires its independently dimensioned lens and flange')
         if shape['lensDiameterMm'] > shape['flangeDiameterMm'] or shape['flangeDiameterMm'] != package['bodyMm']['x'] or shape['flangeDiameterMm'] != package['bodyMm']['z'] or shape['flangeHeightMm']+shape['domeRadiusMm'] > package['bodyMm']['y']:
             raise ValueError('LED lens/flange must fit the declared shell envelope')
+    if shape['family'] in {'tactile', 'dip-switch', 'slide-switch'}:
+        if shape['caseHeightMm'] > package['bodyMm']['y']:
+            raise ValueError('Switch case must fit the total actuator envelope')
+        if shape['family'] == 'slide-switch' and not math.isclose(shape['caseHeightMm']+shape['knobHeightMm'], package['bodyMm']['y'], abs_tol=1e-9):
+            raise ValueError('Slide switch envelope must include its case and raised knob exactly once')
+    if shape['family'] == 'seven-segment':
+        glyph_width = (package['digits']-1)*shape['digitPitchMm']+shape['digitWidthMm']+shape['decimalPointDiameterMm']
+        if glyph_width > package['bodyMm']['x']-2*shape['faceInsetMm'] or shape['digitHeightMm'] > package['bodyMm']['z']-2*shape['faceInsetMm']:
+            raise ValueError('Display glyph and circular DP must fit their package face')
+    if shape['family'] == 'buzzer' and (shape['openingDiameterMm'] >= min(package['bodyMm']['x'],package['bodyMm']['z']) or shape['openingDepthMm'] >= package['bodyMm']['y']):
+        raise ValueError('Buzzer mouth must retain an interior floor and side wall')
 
 
 def validate_mechanics(registry, mechanics):
@@ -56,8 +67,15 @@ def validate_mechanics(registry, mechanics):
         raise ValueError('Ambiguous mechanical package profile')
     for part in registry['parts']:
         package = part['package']
+        if 'boardInsertion' in package:
+            from contracts.registry import validate_contract
+            from jsonschema import ValidationError
+            try:
+                validate_contract('BoardInsertionV1', package['boardInsertion'])
+            except ValidationError as error:
+                raise ValueError('Invalid explicit board insertion profile or conductor budget') from error
         shape = package.get('shape')
-        if shape is None or len(package['pins']) != 2:
+        if shape is None or len(package['pins']) != 2 or package['family'] not in {'axial', 'radial-capacitor', 'radial-led'}:
             continue
         profile = next((profile for profile in profiles if (profile['packageId'], profile['packageRevision']) == (package['id'], package['revision'])), None)
         if profile is None or {pin['pinId']: pin['bodyExitMm'] for pin in profile['pins']} != {pin['pinId']: pin['positionMm'] for pin in shape['leadExits']}:
@@ -217,13 +235,17 @@ def main():
     domains=generate_domain_catalog(catalog,registry)
     mechanics=json.loads((ROOT / 'contracts/design-models/flexible-mechanics.json').read_text(encoding='utf-8'))
     validate_mechanics(registry, mechanics)
+    board_mechanics=json.loads((ROOT / 'contracts/design-models/breadboard-mechanics.json').read_text(encoding='utf-8'))
+    from contracts.registry import validate_contract
+    validate_contract('BreadboardMechanicalProfileV1', board_mechanics)
     outputs = [(ROOT / 'apps/web/src/data/editorCatalog.json', generated),
                (ROOT / 'apps/web/src/data/editorParts.json', generate_editor_parts(registry)),
                (ROOT / 'apps/web/src/data/physicalParts.json', registry),
                (ROOT / 'contracts/design-models/physical-parts.v1.json', registry),
                (ROOT / 'contracts/design-models/signal-port-catalog.json', domains),
                (ROOT / 'apps/web/src/data/signalPortCatalog.json', domains),
-               (ROOT / 'apps/web/src/data/flexibleMechanics.json', mechanics)]
+               (ROOT / 'apps/web/src/data/flexibleMechanics.json', mechanics),
+               (ROOT / 'apps/web/src/data/breadboardMechanics.json', board_mechanics)]
     for target, data in outputs:
         if args.check:
             if not target.exists() or json.loads(target.read_text(encoding='utf-8')) != data:

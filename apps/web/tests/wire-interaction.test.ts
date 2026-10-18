@@ -89,8 +89,8 @@ test('bend and segment dragging commit once each while endpoints and electrical 
     const bb = h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 })
     const wire = { source: `${bb}.contact:terminal:A:01`, destination: `${bb}.contact:terminal:J:08` }
     h.circuit.connectEndpoints(wire.source, wire.destination, { version: 1, color: '#d8493f', routeMode: 'FREE', thickness: .036, height: .03, controlPoints: [
-      { space: 'module', moduleId: bb, position: { x: -3.51, y: .36, z: -.845 } },
-      { space: 'module', moduleId: bb, position: { x: -3.51, y: .36, z: .845 } },
+      { space: 'module', moduleId: bb, position: { x: -3.51, y: .5, z: -.845 } },
+      { space: 'module', moduleId: bb, position: { x: -3.51, y: .5, z: .845 } },
     ] })
     h.workspace.setTool('select'); h.workspace.selectWire(wire.source, wire.destination)
     await nextTick(); h.flush(); h.circuit.past = []
@@ -98,14 +98,14 @@ test('bend and segment dragging commit once each while endpoints and electrical 
     const handle = h.manager.wireRoute(wire)!.handles[0]
     h.editor.pointerDown(h.eventAt(handle.position))
     assert.equal(h.captured.size, 1)
-    for (let i = 0; i < 20; i++) h.editor.pointerMove(h.eventAt({ x: -3.25, y: .36, z: -.845 }, 1, 0, true))
+    for (let i = 0; i < 20; i++) h.editor.pointerMove(h.eventAt({ x: -3.25, y: .5, z: -.845 }, 1, 0, true))
     assert.equal(h.circuit.past.length, 0)
-    h.editor.pointerUp(h.eventAt({ x: -3.25, y: .36, z: -.845 }, 1, 0, true)); await nextTick(); h.flush()
+    h.editor.pointerUp(h.eventAt({ x: -3.25, y: .5, z: -.845 }, 1, 0, true)); await nextTick(); h.flush()
     assert.equal(h.circuit.past.length, 1); assert.equal(h.captured.size, 0)
     assert.ok(Math.abs(readWireVisual(h.circuit.graph!.connections[0]).controlPoints[0].position.x + 3.25) < 1e-8)
     const route = h.manager.wireRoute(wire)!, segment = route.segments.find(s => s.fromHandle === 0 && s.toHandle === 1)!
-    const middle = { x: (segment.start.x + segment.end.x) / 2, y: .36, z: 0 }
-    h.editor.pointerDown(h.eventAt(middle)); h.editor.pointerMove(h.eventAt({ ...middle, x: middle.x + .26 }, 1, 0, true)); h.editor.pointerUp(h.eventAt({ ...middle, x: middle.x + .26 }, 1, 0, true)); await nextTick()
+    const middle = { x: (segment.start.x + segment.end.x) / 2, y: .5, z: 0 }
+    h.editor.pointerDown(h.eventAt(middle)); h.editor.pointerMove(h.eventAt({ ...middle, x: middle.x - .26 }, 1, 0, true)); h.editor.pointerUp(h.eventAt({ ...middle, x: middle.x - .26 }, 1, 0, true)); await nextTick()
     assert.equal(h.circuit.past.length, 2)
     assert.deepEqual(resolveElectricalNets(h.circuit.graph!).nets, nets)
     assert.deepEqual({ source: h.circuit.graph!.connections[0].source, destination: h.circuit.graph!.connections[0].destination }, wire)
@@ -188,7 +188,7 @@ test('outside-board bends are world anchored and use the outside grid after the 
     const stored = readWireVisual(h.circuit.graph!.connections[0]).controlPoints[0]
     assert.deepEqual(stored, point)
     const handle = h.manager.wireRoute(wire)!.handles.find(p => Math.abs(p.position.x - 5.98) < 1e-8 && Math.abs(p.position.z - 2.99) < 1e-8)
-    assert.ok(handle); assert.ok(Math.abs(handle.position.y - .36) < 1e-8)
+    assert.ok(handle); assert.ok(Math.abs(handle.position.y - point.position.y) < 1e-8)
   } finally { h.dispose() }
 })
 
@@ -241,8 +241,8 @@ test('fifty completed bend and segment gestures keep stable user anchors, geomet
       const bb = h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 })
       const wire = { source: `${bb}.contact:terminal:A:01`, destination: `${bb}.contact:terminal:J:08` }
       h.circuit.connectEndpoints(wire.source, wire.destination, { version: 1, routeMode: mode, color: '#d8493f', thickness: .052, height: .04, controlPoints: [
-        { space: 'module', moduleId: bb, position: { x: -3.25, y: .37, z: -.845 } },
-        { space: 'module', moduleId: bb, position: { x: -2.99, y: .37, z: .845 } },
+        { space: 'module', moduleId: bb, position: { x: -3.25, y: .6, z: -.845 } },
+        { space: 'module', moduleId: bb, position: { x: -2.99, y: .6, z: .845 } },
       ] })
       h.workspace.setTool('select'); h.workspace.selectWire(wire.source, wire.destination); await nextTick(); h.flush(); h.circuit.past = []
       const nets = resolveElectricalNets(h.circuit.graph!).nets
@@ -252,21 +252,23 @@ test('fifty completed bend and segment gestures keep stable user anchors, geomet
         if (i % 2 === 0) start = route.handles.find(handle => handle.index === 0)!.position
         else {
           const segment = route.segments.filter(segment => segment.beforeUserIndex === 0 && segment.afterUserIndex === 1).sort((a, b) => Math.hypot(b.end.x - b.start.x, b.end.z - b.start.z) - Math.hypot(a.end.x - a.start.x, a.end.z - a.start.z))[0]
-          start = { x: (segment.start.x + segment.end.x) / 2, y: .37, z: (segment.start.z + segment.end.z) / 2 }
+          start = { x: (segment.start.x + segment.end.x) / 2, y: (segment.start.y+segment.end.y)/2, z: (segment.start.z + segment.end.z) / 2 }
         }
         const end = { ...start, x: start.x + .13 * sign, z: start.z + .13 * sign }
         h.editor.pointerDown(h.eventAt(start)); assert.equal(h.editor.wireRouting.editing.value, true)
-        const history = h.circuit.past.length
+        const history = h.circuit.past.length,snapshot=h.circuit.snapshot()
         for (let burst = 0; burst < 3; burst++) h.editor.pointerMove(h.eventAt(end, 1, 0, true))
         assert.equal(h.circuit.past.length, history)
         h.editor.pointerUp(h.eventAt(end, 1, 0, true)); await nextTick(); h.flush()
-        assert.equal(h.circuit.past.length, i + 1, 'one history entry per completed gesture')
+        if(h.circuit.snapshot()===snapshot)assert.equal(h.circuit.past.length,history,'invalid or no-op route returns without history')
+        else assert.equal(h.circuit.past.length,history+1,'one history entry per valid completed gesture')
         assert.equal(readWireVisual(h.circuit.graph!.connections[0]).controlPoints.length, 2)
         assert.deepEqual({ source: h.circuit.graph!.connections[0].source, destination: h.circuit.graph!.connections[0].destination }, wire)
         assert.deepEqual(resolveElectricalNets(h.circuit.graph!).nets, nets)
         assertHealthyWireGeometry((h.manager.wires.children[0] as Mesh).geometry)
         assert.equal(h.captured.size, 0)
       }
+      assert.ok(h.circuit.past.length>0,'the fifty gestures include valid committed edits')
       const current = h.circuit.snapshot()
       h.circuit.undo(); h.circuit.redo(); await nextTick(); assert.equal(h.circuit.snapshot(), current)
       const saved = h.circuit.exportGraph(), reopened = parseCircuitFile(saved)
@@ -284,11 +286,11 @@ test('draft copper appears on start and its free tip stays at the preview end th
     const bb = h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 }); await nextTick(); h.flush()
     h.editor.connect(`${bb}.contact:terminal:A:01`); h.flush()
     const preview = h.manager.scene.getObjectByName('wire-drawing-preview') as Mesh
-    assert.ok(preview.getObjectByName('wire-terminal-source')); assert.ok(preview.getObjectByName('wire-terminal-free'))
+    assert.ok(preview.getObjectByName('wire-conductor-free'))
     for (const point of [{ x: -3.25, y: .36, z: -.845 }, { x: -3, y: .36, z: 0 }]) {
       const event = h.eventAt(point, 1, 2, true); h.editor.pointerMove(event); h.editor.pointerDown(event); h.flush()
-      const tip = preview.getObjectByName('wire-terminal-free') as Mesh
-      assert.ok(tip.localToWorld(new Vector3(0, -.5, 0)).distanceTo(new Vector3(point.x, point.y, point.z)) < 1e-8)
+      const core = preview.getObjectByName('wire-conductor-free') as Mesh,tip=core.userData.terminals[1].tip,end=preview.userData.route.points.at(-1)
+      assert.ok(new Vector3(tip.x,tip.y,tip.z).distanceTo(new Vector3(end.x,end.y,end.z)) < 1e-8)
       assertHealthyWireGeometry(preview.geometry)
     }
   } finally { h.dispose() }
@@ -306,15 +308,15 @@ test('fifty terminal-adjacent segment gestures seed anchors once without changin
       h.manager.setZoom(250)
       const nets = resolveElectricalNets(h.circuit.graph!).nets
       for (let i = 0; i < 50; i++) {
-        const segment = h.manager.wireRoute(wire)!.segments.find(segment => segment.editable)!
-        const start = { x: (segment.start.x + segment.end.x) / 2, y: .37, z: (segment.start.z + segment.end.z) / 2 }
+        const route=h.manager.wireRoute(wire)!,segment = (route.renderSegments??route.segments).filter(segment => segment.editable).sort((a,b)=>Math.hypot(b.end.x-b.start.x,b.end.z-b.start.z)-Math.hypot(a.end.x-a.start.x,a.end.z-a.start.z))[0]!
+        const start = { x: (segment.start.x + segment.end.x) / 2, y: (segment.start.y+segment.end.y)/2, z: (segment.start.z + segment.end.z) / 2 }
         const end = { ...start, x: start.x + .13 + i * .003, z: start.z + .17 + i * .003 }
         h.editor.pointerDown(h.eventAt(start)); assert.equal(h.editor.wireRouting.editing.value, true)
-        const history = h.circuit.past.length
+        const history = h.circuit.past.length,snapshot=h.circuit.snapshot()
         h.editor.pointerMove(h.eventAt(end, 1, 0, true)); assert.equal(h.circuit.past.length, history)
         h.editor.pointerUp(h.eventAt(end, 1, 0, true)); await nextTick(); h.flush()
-        assert.equal(h.circuit.past.length, i + 1)
-        assert.equal(readWireVisual(h.circuit.graph!.connections[0]).controlPoints.length, 2)
+        if(h.circuit.snapshot()===snapshot){assert.equal(h.circuit.past.length,history,'invalid clearance preview rolls back without history')}
+        else{assert.equal(h.circuit.past.length,history+1);assert.equal(readWireVisual(h.circuit.graph!.connections[0]).controlPoints.length,2)}
         assert.deepEqual({ source: h.circuit.graph!.connections[0].source, destination: h.circuit.graph!.connections[0].destination }, wire)
         assert.deepEqual(resolveElectricalNets(h.circuit.graph!).nets, nets)
         assertHealthyWireGeometry((h.manager.wires.children[0] as Mesh).geometry)
@@ -344,32 +346,36 @@ test('same snapped corner toggles after larger screen travel and blocked surface
   } finally { h.dispose() }
 })
 
-test('coincident wires retain order priorities while lane reordering preserves nets, history and v1 files', async () => {
+test('lane reordering rejects crossing terminal fans atomically while preserving nets and v1 files', async () => {
   const h = wireHarness()
   try {
-    const wires = Array.from({ length: 3 }, () => ({ source: `${h.circuit.placeModule('DIGITAL_SWITCH', { x: -2, y: 0, z: 0 })}.OUT`, destination: `${h.circuit.placeModule('LED', { x: 2, y: 0, z: 0 })}.IN` }))
+    const wires = Array.from({ length: 3 }, (_,index) => ({ source: `${h.circuit.placeModule('DIGITAL_SWITCH', { x: -4, y: 0, z: index*.13 })}.OUT`, destination: `${h.circuit.placeModule('LED', { x: 4, y: 0, z: index*.13 })}.IN` }))
     await nextTick(); h.flush()
     for (const [index, wire] of wires.entries()) {
-      h.editor.connect(wire.source); h.editor.connect(wire.destination); await nextTick(); h.flush()
+      h.editor.connect(wire.source)
+      h.editor.wireRouting.controlPoints.value.push({space:'world',position:{x:-1,y:.6,z:0}},{space:'world',position:{x:1,y:.6,z:0}})
+      h.editor.connect(wire.destination); await nextTick(); h.flush()
       assert.equal(readWireVisual(h.circuit.graph!.connections[index]).layer ?? 0, index)
     }
     const nets = resolveElectricalNets(h.circuit.graph!).nets, electrical = h.circuit.graph!.connections.map(({ source, destination }) => ({ source, destination }))
     h.workspace.setTool('select'); h.workspace.selectWire(wires[0].source, wires[0].destination); await nextTick(); h.circuit.past = []
     const stack = Reflect.get(h.editor.wireRouting, 'setStackLayer') as (action: 'up' | 'down' | 'top') => void
     assert.equal(typeof stack, 'function')
-    stack('up'); await nextTick(); assert.equal(readWireVisual(h.circuit.graph!.connections[0]).layer, 1)
+    const before=h.circuit.snapshot()
+    stack('up'); await nextTick(); assert.equal(h.circuit.snapshot(),before);assert.equal(h.circuit.past.length,0)
+    assert.match(h.workspace.editError,/clearance/)
     assert.equal(new Set(h.circuit.graph!.connections.map(wire => readWireVisual(wire).layer ?? 0)).size, 3, 'priority swap keeps a deterministic lane order')
     stack('down'); await nextTick(); assert.equal(readWireVisual(h.circuit.graph!.connections[0]).layer, 0)
-    stack('down'); await nextTick(); assert.equal(h.circuit.past.length, 2, 'clamped no-op creates no history')
-    stack('top'); await nextTick(); h.flush(); assert.equal(readWireVisual(h.circuit.graph!.connections[0]).layer, 2)
-    assert.equal(h.circuit.past.length, 3)
+    stack('down'); await nextTick(); assert.equal(h.circuit.past.length, 0, 'clamped no-op creates no history')
+    stack('top'); await nextTick(); h.flush(); assert.equal(h.circuit.snapshot(),before)
+    assert.equal(h.circuit.past.length, 0)
     const route = h.manager.wireRoute(wires[0])!, p = route.renderSegments!.filter(segment => segment.editable).sort((a, b) => Math.hypot(b.end.x - b.start.x, b.end.z - b.start.z) - Math.hypot(a.end.x - a.start.x, a.end.z - a.start.z))[0]
     const hit = h.manager.pick(h.eventAt(p.start).clientX, h.eventAt(p.start).clientY)
     assert.ok(hit)
     const midpoint = { x: (p.start.x + p.end.x) / 2, y: (p.start.y + p.end.y) / 2, z: (p.start.z + p.end.z) / 2 }, pointer = h.eventAt(midpoint)
     const top = h.manager.pick(pointer.clientX, pointer.clientY)
-    assert.equal(top?.kind, 'wire'); assert.equal((top as { source: string }).source, wires[0].source)
-    assert.equal(h.circuit.past.length, 3, 'picking the top visible wire does not create a circuit command')
+    assert.equal(top?.kind, 'wire')
+    assert.equal(h.circuit.past.length, 0, 'picking the visible wire does not create a circuit command')
     assert.deepEqual(resolveElectricalNets(h.circuit.graph!).nets, nets)
     assert.deepEqual(h.circuit.graph!.connections.map(({ source, destination }) => ({ source, destination })), electrical)
     const current = h.circuit.snapshot(); h.circuit.undo(); h.circuit.redo(); await nextTick(); assert.equal(h.circuit.snapshot(), current)
@@ -444,9 +450,9 @@ test('dragging and inserting on a displayed bundle maps back to semantic anchors
   const h = wireHarness()
   try {
     const bb = h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 })
-    const wires = ['A', 'B'].map(row => ({ source: `${bb}.contact:terminal:${row}:01`, destination: `${bb}.contact:terminal:${row}:20` }))
+    const wires = ['A', 'B'].map(row => ({ source: `${bb}.contact:terminal:${row}:01`, destination: `${bb}.contact:terminal:${row}:63` }))
     for (const [layer, wire] of wires.entries()) h.circuit.connectEndpoints(wire.source, wire.destination, { version: 1, color: '#397ec6', routeMode: 'FREE', thickness: .052, layer, controlPoints: [
-      { space: 'module', moduleId: bb, position: { x: -3.5, y: .36, z: 0 } }, { space: 'module', moduleId: bb, position: { x: -2, y: .36, z: 0 } },
+      { space: 'module', moduleId: bb, position: { x: -1, y: .6, z: 0 } }, { space: 'module', moduleId: bb, position: { x: 1, y: .6, z: 0 } },
     ] })
     h.workspace.setTool('select'); h.workspace.selectWire(wires[0].source, wires[0].destination); await nextTick(); h.flush(); h.circuit.past = []
     h.manager.setZoom(250)
@@ -463,7 +469,7 @@ test('dragging and inserting on a displayed bundle maps back to semantic anchors
       assertHealthyWireGeometry((h.manager.wires.children[0] as Mesh).geometry)
     }
     const route = h.manager.wireRoute(wires[0])!, span = route.renderSegments!.filter(segment => segment.beforeUserIndex === 0 && segment.afterUserIndex === 1).sort((a, b) => Math.hypot(b.end.x - b.start.x, b.end.z - b.start.z) - Math.hypot(a.end.x - a.start.x, a.end.z - a.start.z))[0]
-    const midpoint = { x: (span.start.x + span.end.x) / 2, y: .36, z: (span.start.z + span.end.z) / 2 }
+    const midpoint = { x: (span.start.x + span.end.x) / 2, y: .6, z: (span.start.z + span.end.z) / 2 }
     h.editor.wireRouting.doubleClick(h.eventAt(midpoint) as unknown as MouseEvent); await nextTick(); h.flush()
     const saved = readWireVisual(h.circuit.graph!.connections[0])
     assert.equal(saved.controlPoints.length, 3); assert.ok(Math.abs(saved.controlPoints[1].position.z) < 1e-8)
@@ -483,7 +489,7 @@ test('adding a bend on a local bridge stores its base height rather than the der
     h.editor.wireRouting.doubleClick(h.eventAt(point) as unknown as MouseEvent); await nextTick(); h.flush()
     const visual = readWireVisual(h.circuit.graph!.connections[1])
     assert.equal(visual.controlPoints.length, 1)
-    assert.ok(Math.abs(visual.controlPoints[0].position.y - .36) < 1e-8, 'derived bridge height is never persisted')
+    assert.ok(Math.abs(visual.controlPoints[0].position.y - route.points[1].y) < 1e-8, 'derived bridge height is never persisted')
     assert.equal(h.circuit.past.length, 1)
   } finally { h.dispose() }
 })

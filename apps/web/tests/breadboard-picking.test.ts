@@ -4,6 +4,8 @@ import { InstancedMesh, Vector3 } from 'three'
 import { createSceneManager } from '../src/three/SceneManager'
 import type { CircuitGraph } from '../src/types/circuit'
 import { defaultWireVisual } from '../src/wires/wireVisual'
+import { wireBaseClearance } from '../src/wires/wireRouting'
+import { getBreadboardTopology } from '../src/electrical/BreadboardTopology'
 
 function setup() {
   let callback: FrameRequestCallback | null = null
@@ -74,7 +76,8 @@ test('cross-board endpoints and support-only board bends update incident routes 
     const end = manager.wireRoute(jumper)!.points.at(-1)!
     assert.ok(new Vector3(end.x, end.y, end.z).distanceTo(manager.endpointPosition(jumper.destination)!) < 1e-8)
     const bend = manager.wireRoute(supported)!.handles[0].position
-    assert.ok(new Vector3(bend.x, bend.y, bend.z).distanceTo(manager.models.get('BB2')!.localToWorld(new Vector3(2, .36, 1))) < 1e-8)
+    const minimumHeight=getBreadboardTopology('BREADBOARD')!.deckHeight+wireBaseClearance(defaultWireVisual())
+    assert.ok(new Vector3(bend.x, bend.y, bend.z).distanceTo(manager.models.get('BB2')!.localToWorld(new Vector3(2, Math.max(.36,minimumHeight), 1))) < 1e-8)
     assert.equal(JSON.stringify(g), snapshot)
   } finally { manager.dispose() }
 })

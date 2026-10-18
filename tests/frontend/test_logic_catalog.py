@@ -77,19 +77,25 @@ def test_editor_descriptor_generates_without_manufacturer_or_execution_data():
 
 
 def test_generic_configurable_rc_retains_legacy_mount_identity_and_declares_properties():
-    by_type = {part['editorType']: part for part in registry()['parts']}
+    catalog = registry()
+    by_type = {part['editorType']: part for part in catalog['parts']}
     expected = {
         'RESISTOR_AXIAL': ('VISHAY-MRS25-330R', 'MRS25-1016', {'resistanceOhms': 330, 'powerWatts': .25, 'tolerancePercent': 1}),
         'CAPACITOR_CERAMIC': ('VISHAY-K104K15X7RF53H5', 'K15-H5-508', {'capacitanceFarads': 1e-7, 'voltageRatingVolts': 50}),
         'CAPACITOR_ELECTROLYTIC': ('NICHICON-UVR1E331MPD', 'UVR-D10-508', {'capacitanceFarads': 47e-6, 'voltageRatingVolts': 25}),
     }
     for type_, (id_, package, defaults) in expected.items():
-        part = by_type[type_]
-        assert (part['id'], part['revision'], part['package']['id'], part['package']['revision'], part['package']['footprint']['revision']) == (id_, 1, package, 1, 1)
-        assert part['provenance']['kind'] == 'configurable-generic'
-        assert part['editor']['defaults'] == defaults
-        assert {parameter['key'] for parameter in part['editor']['parameters']} == defaults.keys()
-        assert 'generic' in part['name'].lower()
+        frozen = next(part for part in catalog['historicalParts'] if (part['id'], part['revision'], part['package']['id'], part['package']['revision']) == (id_, 1, package, 1))
+        assert frozen['editorType'] == type_ and frozen['package']['footprint']['revision'] == 1
+        current = by_type[type_]
+        assert current['id'] == id_ and current['revision'] > frozen['revision']
+        assert current['package']['id'] != package
+        assert current['package']['boardInsertion']['mechanicalProfileId'] == 'BREADBOARD_MECHANICS_V1'
+        for part in [frozen, current]:
+            assert part['provenance']['kind'] == 'configurable-generic'
+            assert part['editor']['defaults'] == defaults
+            assert {parameter['key'] for parameter in part['editor']['parameters']} == defaults.keys()
+            assert 'generic' in part['name'].lower()
 
 
 def test_generator_rejects_ambiguous_signal_semantics_and_bad_default_values():

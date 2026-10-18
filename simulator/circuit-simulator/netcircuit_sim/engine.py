@@ -71,7 +71,7 @@ class DeviceRegistry:
         raise SimulationError('UNEXECUTABLE')
 
 class VirtualCompiler:
-    VISUAL={'BREADBOARD','BREADBOARD_830','BREADBOARD_630','BREADBOARD_100','BOARD','POWER_SUPPLY','GENERATOR','OSCILLOSCOPE','SIGNAL_MONITOR','ANNOTATION'}
+    VISUAL={'BREADBOARD','BREADBOARD_830','BREADBOARD_630','BREADBOARD_100','BOARD','POWER_SUPPLY','GENERATOR','OSCILLOSCOPE','SIGNAL_MONITOR','ANNOTATION','LABEL'}
     def compile(self,graph):
         try:
             validate_design_graph(graph)

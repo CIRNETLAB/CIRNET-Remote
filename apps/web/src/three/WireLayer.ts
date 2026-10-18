@@ -43,7 +43,7 @@ export function createWireLayer(endpointPosition: (endpoint: string) => Vector3 
       const diameter = renderWireDiameter(overrides.get(wireKey(record.connection)) ?? readWireVisual(record.connection)) + (name === 'wire-hover-outline' ? .013 : .02)
       const signature = JSON.stringify([record.parts.bodyPoints, diameter])
       if (!existing || existing.signature !== signature) {
-        const geometry = buildWireGeometry({ points: record.parts.bodyPoints }, diameter, { caps: false })
+        const geometry = buildWireGeometry({ points: record.parts.bodyPoints }, diameter, { caps: false, path: record.parts.bodyPath })
         if (existing) { existing.mesh.geometry.dispose(); existing.mesh.geometry = geometry; existing.signature = signature }
         else {
           const mesh = new Mesh(geometry, new MeshBasicMaterial({ color: '#e8c36c', side: BackSide, depthWrite: false }))
@@ -59,12 +59,23 @@ export function createWireLayer(endpointPosition: (endpoint: string) => Vector3 
   }
   const update = (connection: CircuitConnection, route: SolvedWireRoute | null) => {
     const key = wireKey(connection), visual = overrides.get(key) ?? readWireVisual(connection)
-    if (!route) { remove(key); return }
-    const diameter = renderWireDiameter(visual), parts = deriveWireParts(route, diameter), signature = JSON.stringify([parts, diameter])
+    if (!route) {
+      const previous=records.get(key)
+      if(previous&&overrides.has(key)){previous.mesh.material.color.set('#f16365');previous.mesh.userData.invalidGeometry=true;return}
+      remove(key);return
+    }
+    const diameter = renderWireDiameter(visual)
+    let parts:WireParts
+    try { parts=deriveWireParts(route,diameter) } catch {
+      const previous=records.get(key)
+      if(previous){previous.mesh.material.color.set('#f16365');previous.mesh.userData.invalidGeometry=true}
+      return
+    }
+    const signature = JSON.stringify([parts, diameter])
     let record = records.get(key)
     const geometryChanged = !record || record.signature !== signature
     if (geometryChanged) {
-      const geometry = buildWireGeometry({ points: parts.bodyPoints }, diameter, { capHoleRadius: parts.capHoleRadius })
+      const geometry = buildWireGeometry({ points: parts.bodyPoints }, diameter, { capHoleRadius: parts.capHoleRadius, path: parts.bodyPath })
       const pickGeometry = new BufferGeometry().setFromPoints(roundedWirePoints(parts.bodyPoints, diameter / 2))
       if (record) { record.mesh.geometry.dispose(); record.pick.geometry.dispose(); record.mesh.geometry = geometry; record.pick.geometry = pickGeometry }
       else {
@@ -75,7 +86,7 @@ export function createWireLayer(endpointPosition: (endpoint: string) => Vector3 
         record = { mesh, pick, connection, signature, route, parts }; records.set(key, record)
       }
     }
-    record!.connection = connection; record!.signature = signature; record!.route = route; record!.parts = parts; style(record!)
+    record!.connection = connection; record!.signature = signature; record!.route = route; record!.parts = parts; record!.mesh.userData.invalidGeometry=false; style(record!)
     if (geometryChanged) terminals.update(record!.mesh, parts)
   }
   const updateHandles = () => {
@@ -132,9 +143,12 @@ export function createWireLayer(endpointPosition: (endpoint: string) => Vector3 
       route = duplicateLayout.sync(inputs).get(wireKey(key)) ?? route
     }
     if (!route) { if (duplicateMesh) duplicateMesh.visible = false; return }
-    const diameter = renderWireDiameter(visual), parts = deriveWireParts(route, diameter), signature = JSON.stringify([parts, diameter])
+    const diameter = renderWireDiameter(visual)
+    let parts:WireParts
+    try{parts=deriveWireParts(route,diameter)}catch{if(duplicateMesh){duplicateMesh.material.color.set('#f16365');duplicateMesh.userData.valid=false}return}
+    const signature = JSON.stringify([parts, diameter])
     if (!duplicateMesh || duplicateSignature !== signature) {
-      const geometry = buildWireGeometry({ points: parts.bodyPoints }, diameter, { capHoleRadius: parts.capHoleRadius })
+      const geometry = buildWireGeometry({ points: parts.bodyPoints }, diameter, { capHoleRadius: parts.capHoleRadius, path: parts.bodyPath })
       if (duplicateMesh) { duplicateMesh.geometry.dispose(); duplicateMesh.geometry = geometry }
       else {
         duplicateMesh = new Mesh(geometry, new MeshStandardMaterial({ roughness: .62, metalness: 0, transparent: true, opacity: .56, depthWrite: false }))
@@ -149,14 +163,17 @@ export function createWireLayer(endpointPosition: (endpoint: string) => Vector3 
     if (!drawing) return
     const state = drawing, destination = state.wire.destination || '@cursor'
     if (!route) { if (drawingMesh) drawingMesh.visible = false; return }
-    const diameter = renderWireDiameter(state.visual), parts = deriveWireParts(route, diameter), signature = JSON.stringify([parts, diameter])
+    const diameter = renderWireDiameter(state.visual)
+    let parts:WireParts
+    try{parts=deriveWireParts(route,diameter)}catch{if(drawingMesh){drawingMesh.material.color.set('#f16365');drawingMesh.userData.valid=false}return}
+    const signature = JSON.stringify([parts, diameter])
     if (!drawingMesh || signature !== drawingSignature) {
-      const geometry = buildWireGeometry({ points: parts.bodyPoints }, diameter, { capHoleRadius: parts.capHoleRadius })
+      const geometry = buildWireGeometry({ points: parts.bodyPoints }, diameter, { capHoleRadius: parts.capHoleRadius, path: parts.bodyPath })
       if (drawingMesh) { drawingMesh.geometry.dispose(); drawingMesh.geometry = geometry }
       else { drawingMesh = new Mesh(geometry, new MeshStandardMaterial({ color: state.visual.color, roughness: .62, metalness: 0, transparent: false, opacity: 1 })); drawingMesh.name = 'wire-drawing-preview'; tools.add(drawingMesh) }
       drawingSignature = signature
     }
-    drawingMesh.material.color.set(state.visual.color); drawingMesh.visible = true
+    drawingMesh.material.color.set(state.visual.color); drawingMesh.visible = true; drawingMesh.userData.valid=true
     terminals.update(drawingMesh, parts, destination === '@cursor')
     drawingMesh.userData.route = route
   }

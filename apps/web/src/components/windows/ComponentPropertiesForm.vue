@@ -9,7 +9,7 @@ const props = defineProps<{ module?: CircuitModule; type?: string; properties?: 
 const emit = defineEmits<{ update: [properties: Record<string, unknown>] }>()
 const type = computed(() => props.type ?? props.module?.type ?? props.descriptor.editorType)
 const source = computed(() => props.properties ?? props.module?.properties)
-const parameters = computed(() => props.descriptor.editor.parameters)
+const parameters = computed(() => props.descriptor.editor.parameters.filter(parameter => parameter.key !== 'capacitorType'))
 const draft = reactive<Record<string, { text: string; unit: string; checked: boolean }>>({})
 const error = ref('')
 const unitFor = (parameter: ComponentParameter): EngineeringUnit | undefined => parameter.unit ?? ({ resistanceOhms: 'ohm', capacitanceFarads: 'F', powerWatts: 'W', tolerancePercent: '%', voltageRatingVolts: 'V' } as Record<string, EngineeringUnit>)[parameter.key]

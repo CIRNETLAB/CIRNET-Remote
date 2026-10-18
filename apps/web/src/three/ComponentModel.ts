@@ -12,6 +12,8 @@ import { subduedBodyColor } from './package/PackageMaterials'
 import { preserveStructureLighting } from './StudioEnvironment'
 import { updateFlexiblePackageGeometry } from './package/FlexiblePackageGeometry'
 import { moduleWorldPose } from '../electrical/modulePose'
+import { addLabelModel } from './LabelModel'
+import { updateMountedPackageInsertion } from './package/MountedPackageInsertion'
 
 export { disposeObject } from './ObjectResources'
 
@@ -317,7 +319,9 @@ export function buildComponent(module: CircuitModule, modules: CircuitModule[] =
 
   // Structure dispatch takes precedence over a physical electrical descriptor.
   // The electrical DC_SUPPLY remains a two-terminal source, not a legacy type.
-  if (definition?.visual === 'supply') {
+  if (module.type === 'LABEL') {
+    addLabelModel(group, module)
+  } else if (definition?.visual === 'supply') {
     addPowerSupplyModel(group, [w, h, d])
     if (part) { group.userData.packageId = part.package.id; group.userData.definitionId = part.id }
   } else if (part) {
@@ -360,7 +364,7 @@ export function buildComponent(module: CircuitModule, modules: CircuitModule[] =
     anchor.userData = { kind: 'port', id: module.id, endpoint: `${module.id}.${port.id}` }
     group.add(anchor)
   }
-  if (!part && typeof document !== 'undefined' && !definition?.visual?.startsWith('breadboard') && definition?.visual !== 'supply' && definition?.visual !== 'oscilloscope' && definition?.visual !== 'generator') {
+  if (!part && module.type !== 'LABEL' && typeof document !== 'undefined' && !definition?.visual?.startsWith('breadboard') && definition?.visual !== 'supply' && definition?.visual !== 'oscilloscope' && definition?.visual !== 'generator') {
     const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 80
     const context = canvas.getContext('2d')
     if (context) {
@@ -378,6 +382,7 @@ export function buildComponent(module: CircuitModule, modules: CircuitModule[] =
   const visualBounds = new Box3().setFromObject(group)
   group.userData.visualBounds = [visualBounds.min.toArray(), visualBounds.max.toArray()]
   updateFlexiblePackageGeometry(group, module, modules)
+  updateMountedPackageInsertion(group, module, modules)
   applyPose(group, modules.length ? moduleWorldPose(module, modules) : module)
   preserveStructureLighting(group)
   return group

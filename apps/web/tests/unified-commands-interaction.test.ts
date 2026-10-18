@@ -4,6 +4,7 @@ import { nextTick } from 'vue'
 import { Vector3 } from 'three'
 import type { WireIdentity } from '../src/types/circuit'
 import { wireHarness } from './helpers/wireHarness'
+import { defaultWireVisual } from '../src/wires/wireVisual'
 
 type Harness = ReturnType<typeof wireHarness>
 const key = (name: string) => ({ key: name, preventDefault() {}, stopPropagation() {}, stopImmediatePropagation() {} }) as KeyboardEvent
@@ -20,10 +21,11 @@ function wirePoint(h: Harness, wire: WireIdentity) {
 
 async function mixedGroup() {
   const h = wireHarness()
-  const a = h.circuit.placeModule('CLOCK', { x: -3, y: 0, z: 0 })
-  const b = h.circuit.placeModule('LED', { x: 3, y: 0, z: 0 })
+  // Each +X duplicate has room beside this Z corridor for full-diameter insulation.
+  const a = h.circuit.placeModule('CLOCK', { x: -3, y: 0, z: -3 })
+  const b = h.circuit.placeModule('LED', { x: -3, y: 0, z: 3 })
   const wire = { source: `${a}.OUT`, destination: `${b}.IN` }
-  h.circuit.connectEndpoints(wire.source, wire.destination, { version: 1, color: '#8656a8', routeMode: 'FREE', thickness: .052, controlPoints: [{ space: 'world', position: { x: 0, y: .9, z: 2 } }] })
+  h.circuit.connectEndpoints(wire.source, wire.destination, { version: 1, color: '#8656a8', routeMode: 'FREE', thickness: .052, controlPoints: [{ space: 'world', position: { x: -3, y: .9, z: 0 } }] })
   h.workspace.setTool('select'); await nextTick(); h.flush()
   h.workspace.setSelection({ moduleIds: [a, b], wires: [wire] })
   await nextTick(); h.flush(); h.circuit.past = []
@@ -144,7 +146,7 @@ test('an invalid mixed contact preview cannot commit, and right cancel retains t
     const board = h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 })
     const clock = h.circuit.placeModule('CLOCK', { x: 0, y: 0, z: 4 })
     const wire = { source: `${board}.contact:terminal:A:01`, destination: `${board}.contact:terminal:J:08` }
-    h.circuit.connectEndpoints(wire.source, wire.destination)
+    h.circuit.connectEndpoints(wire.source, wire.destination,{...defaultWireVisual(),routeMode:'FREE'})
     h.workspace.setTool('select'); await nextTick(); h.flush()
     h.workspace.setSelection({ moduleIds: [clock], wires: [wire] })
     await nextTick(); h.flush(); h.circuit.past = []
@@ -325,7 +327,7 @@ test('clipboard shortcuts during a gizmo drag preserve the gesture and previous 
     }
     h.editor.pointerUp(h.pointer(end.x, end.y)); await nextTick(); h.flush()
     assert.equal(h.editor.dragging.value, null); assert.equal(h.captured.size, 0)
-    assert.equal(h.circuit.graph!.modules.find(module => module.id === b)!.position!.x, 4)
+    assert.equal(h.circuit.graph!.modules.find(module => module.id === b)!.position!.x, -2)
     assert.equal(h.circuit.past.length, 1)
     assert.equal(h.workspace.selectedModuleId, b)
     assert.equal(h.editor.wireRouting.menuPaste(), true); await nextTick(); h.flush()

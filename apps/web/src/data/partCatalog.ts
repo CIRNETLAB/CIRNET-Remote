@@ -1,6 +1,6 @@
 import registry from './editorParts.json'
 import type { SignalDomain } from '../contracts/generated/dto'
-import type { PackageShapeV1 } from '../contracts/generated/dto'
+import type { PackageShapeV1, BoardInsertionV1 } from '../contracts/generated/dto'
 export type { PackageShapeV1, PackageLeadSectionV1, PackageLeadExitV1 } from '../contracts/generated/dto'
 import type { ComponentParameter } from './componentParameters'
 
@@ -42,6 +42,8 @@ export interface PartPackage {
   actuator?: { heightMm: number; diameterMm: number; bushingHeightMm: number; bushingDiameterMm: number; throwDegrees: number }
   /** Centered body-local solid, feedthrough and section dimensions; absent on historical packages. */
   shape?: PackageShapeV1
+  /** Explicit new-revision virtual-board insertion; absent on legacy readers. */
+  boardInsertion?: BoardInsertionV1
 }
 /** Enclose the actual square/stamped section, including its widest shoulder. */
 export function packageLeadCollisionRadiusMm(pkg: PartPackage): number {
@@ -100,10 +102,11 @@ export const getPartForModule = (module: PhysicalPartModule) => module.mount ? g
 export const getPhysicalPin = (type: string, pinId: string, mount?: PinnedPartDescriptor | null) => getPartForType(type, mount)?.package.pins.find(pin => pin.id === pinId)
 export const componentDisplayName = (type: string) => getPartForType(type)?.editor.displayName ?? getPartForType(type)?.name ?? type
 export const componentAddType = (type: string) => getPartForType(type)?.editor.addType ?? type
-/** Only new generic capacitor designs opt into a package/polarity change. */
+/** Capacitor families are separate palette entries. A value update cannot
+ * silently replace a package or remap its stable electrical pin IDs. */
 export function componentDesignTransition(type: string, patch: Record<string, unknown>): { type: string; pinMap?: Record<string, string> } {
   if (!['GENERIC_CAPACITOR', 'GENERIC_CAPACITOR_ELECTROLYTIC'].includes(type) || patch.capacitorType === undefined) return { type }
-  if (patch.capacitorType === 'CERAMIC') return { type: 'GENERIC_CAPACITOR', ...(type !== 'GENERIC_CAPACITOR' ? { pinMap: { PLUS: 'A', MINUS: 'B' } } : {}) }
-  if (patch.capacitorType === 'ELECTROLYTIC') return { type: 'GENERIC_CAPACITOR_ELECTROLYTIC', ...(type !== 'GENERIC_CAPACITOR_ELECTROLYTIC' ? { pinMap: { A: 'PLUS', B: 'MINUS' } } : {}) }
-  throw new Error('Choose Ceramic or Electrolytic.')
+  const expected = type === 'GENERIC_CAPACITOR' ? 'CERAMIC' : 'ELECTROLYTIC'
+  if (patch.capacitorType !== expected) throw new Error('Choose the capacitor family from the Passive menu.')
+  return { type }
 }

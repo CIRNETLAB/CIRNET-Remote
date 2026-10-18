@@ -212,7 +212,20 @@ def resolve_flexible_geometry(module,part,board):
             if any(point[1]-radius<plane-EPS for point in samples[:-1]):raise ValueError('Flexible lead tube intersects the breadboard')
         if lead_path_intersects_itself(path,diameter):
             raise ValueError('Flexible lead intersects itself')
-        leads.append({'pinId':pin_id,'points':points,'path':path})
+        if package.get('boardInsertion'):
+            from .breadboard_mechanics import board_contact_mechanics, conductor_fits_contact_cavity, validate_board_conductor_segment
+            binding = next(binding for binding in mount['contacts'] if binding['pinId'] == pin_id)
+            mechanics = board_contact_mechanics(board['type'], binding['contactId'])
+            radius = package_lead_collision_radius_mm(package)*MM_TO_WORLD
+            if not conductor_fits_contact_cavity(board['type'], binding['contactId'], contact, mechanics['tip'], radius):
+                raise ValueError('Conductor does not fit its contact cavity')
+            extra = contact[1]-mechanics['tip'][1]
+            if (path['length']+extra)/MM_TO_WORLD > min(profile['maxLeadLengthMm'], package['boardInsertion']['maxExternalLeadMm'])+1e-6:
+                raise ValueError('The declared metal lead is too short for this board insertion')
+            path = build_lead_path([*points, mechanics['tip']], profile['minBendRadiusMm']*MM_TO_WORLD, preferred, (0, 0) if mount['version'] == 1 else (profile['exitStraightMm']*MM_TO_WORLD, profile['contactStubMm']*MM_TO_WORLD+extra))
+            for a, b in zip(path['samples'], path['samples'][1:]):
+                validate_board_conductor_segment(board['type'], binding['contactId'], a, b, diameter/2)
+        leads.append({'pinId':pin_id,'points':path['points'],'path':path,'contact':contact})
     if any(_segment_distance(a,b,c,d)<2*package_lead_collision_radius_mm(package)*MM_TO_WORLD+leads[0]['path']['sampleError']+leads[1]['path']['sampleError']-EPS for a,b in zip(leads[0]['path']['samples'],leads[0]['path']['samples'][1:]) for c,d in zip(leads[1]['path']['samples'],leads[1]['path']['samples'][1:])):
         raise ValueError('Flexible leads intersect each other')
     return {'position':position,'matrix':matrix,'half':half,'leads':leads,'profile':profile}

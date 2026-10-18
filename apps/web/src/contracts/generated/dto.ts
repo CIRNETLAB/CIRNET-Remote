@@ -236,6 +236,67 @@ export type AnySupportedAssignmentDefinition = AssignmentDefinition | Assignment
  * via the `definition` "AssignmentViewV2".
  */
 export type AssignmentViewV2 = InstructorAssignmentDocumentV2 | StudentAssignmentViewV2
+/**
+ * Versioned model geometry in centered body-local millimetres. Body envelope, contact tips, exits and the hidden interior embed remain distinct; no electrical or safety capability is implied.
+ *
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "PackageShapeV1".
+ */
+export type PackageShapeV1 = {
+  version: 1
+  family:
+    | 'resistor'
+    | 'diode'
+    | 'zener'
+    | 'ceramic'
+    | 'electrolytic'
+    | 'led'
+    | 'dip'
+    | 'to92'
+    | 'tactile'
+    | 'slide-switch'
+    | 'dip-switch'
+    | 'seven-segment'
+    | 'buzzer'
+  embeddedDepthMm: number
+  leadSection: PackageLeadSectionV1
+  /**
+   * @minItems 2
+   * @maxItems 64
+   */
+  leadExits: PackageLeadExitV1[]
+  lensDiameterMm?: number
+  flangeDiameterMm?: number
+  flangeHeightMm?: number
+  domeRadiusMm?: number
+  bevelMm?: number
+  caseHeightMm?: number
+  buttonDiameterMm?: number
+  buttonTravelMm?: number
+  coverThicknessMm?: number
+  rivetDiameterMm?: number
+  sheetThicknessMm?: number
+  baseThicknessMm?: number
+  knobLengthMm?: number
+  knobWidthMm?: number
+  knobHeightMm?: number
+  slotLengthMm?: number
+  slotWidthMm?: number
+  travelMm?: number
+  recessDepthMm?: number
+  actuatorWidthMm?: number
+  actuatorLengthMm?: number
+  digitHeightMm?: number
+  digitWidthMm?: number
+  strokeWidthMm?: number
+  decimalPointDiameterMm?: number
+  slantDegrees?: number
+  digitPitchMm?: number
+  faceInsetMm?: number
+  openingDiameterMm?: number
+  openingDepthMm?: number
+  shoulderRadiusMm?: number
+}
 
 export interface ContractMap {
   CircuitGraph: CircuitGraph
@@ -396,6 +457,9 @@ export interface ContractMap {
   PackageLeadSectionV1: PackageLeadSectionV1
   PackageLeadExitV1: PackageLeadExitV1
   PackageShapeV1: PackageShapeV1
+  LabelPropertiesV1: LabelPropertiesV1
+  BoardInsertionV1: BoardInsertionV1
+  BreadboardMechanicalProfileV1: BreadboardMechanicalProfileV1
 }
 /**
  * This interface was referenced by `ContractMap`'s JSON-Schema
@@ -2339,24 +2403,48 @@ export interface PackageLeadExitV1 {
   normal: Point3
 }
 /**
- * Versioned model geometry in centered body-local millimetres. Body envelope, contact tips, exits and the hidden interior embed remain distinct; no electrical or safety capability is implied.
+ * Plain visual annotation properties. Position and rotation remain module fields; boardId is only a visual association, never an electrical mount.
  *
  * This interface was referenced by `ContractMap`'s JSON-Schema
- * via the `definition` "PackageShapeV1".
+ * via the `definition` "LabelPropertiesV1".
  */
-export interface PackageShapeV1 {
+export interface LabelPropertiesV1 {
   version: 1
-  family: 'resistor' | 'diode' | 'zener' | 'ceramic' | 'electrolytic' | 'led' | 'dip' | 'to92'
-  embeddedDepthMm: number
-  leadSection: PackageLeadSectionV1
+  text: string
+  fontSizeMm: number
+  textColor: string
+  backgroundColor: string
+  paddingMm: 1
+  boardId?: string
+}
+/**
+ * Explicit CAD formed-conductor budget for the virtual breadboard profile, not a claim about native manufacturer terminal length or physical fit.
+ *
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "BoardInsertionV1".
+ */
+export interface BoardInsertionV1 {
+  version: 1
+  mechanicalProfileId: 'BREADBOARD_MECHANICS_V1'
+  maxExternalLeadMm: number
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "BreadboardMechanicalProfileV1".
+ */
+export interface BreadboardMechanicalProfileV1 {
+  id: 'BREADBOARD_MECHANICS_V1'
+  version: 1
   /**
-   * @minItems 2
-   * @maxItems 64
+   * @minItems 3
+   * @maxItems 3
    */
-  leadExits: PackageLeadExitV1[]
-  lensDiameterMm?: number
-  flangeDiameterMm?: number
-  flangeHeightMm?: number
-  domeRadiusMm?: number
-  bevelMm?: number
+  moduleTypes: ('BREADBOARD' | 'BREADBOARD_630' | 'BREADBOARD_100')[]
+  insertionDepthMm: 3
+  cavityDepthMm: 3.5
+  floorClearanceMm: 0.5
+  mouthHalfWidthWorld: 0.037
+  throatHalfWidthWorld: 0.024
+  throatDepthMm: number
+  insulationClearanceMm: 0.4
 }

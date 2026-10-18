@@ -6,6 +6,7 @@ import { validateMountBindings } from '../src/electrical/mounting'
 import { getPartForType, MM_TO_WORLD, packageLeadCollisionRadiusMm } from '../src/data/partCatalog'
 import { getMechanicalProfile, resolveFlexibleGeometry, solveFlexibleMount, flexibleLeadsHitBody, rotationMatrix, transformPoint, addPoint } from '../src/electrical/flexibleGeometry'
 import { parseStructural } from '../src/contracts/structural'
+import { boardContactMechanics } from '../src/geometry/BreadboardMechanicalProfile'
 
 test('all shaped package profiles resolve through the generated contract and shared mm parity corpus', () => {
   assert.equal(corpus.cases.length, 24)
@@ -40,8 +41,9 @@ test('current generic package remains fixed while automatic axial poses and radi
   for (const type of ['GENERIC_CAPACITOR', 'GENERIC_CAPACITOR_ELECTROLYTIC', 'GENERIC_LED']) {
     const part = getPartForType(type)!, result = solveFlexibleMount(type, board.id, 'terminal:C:10', 'terminal:C:11', [board])
     assert.equal(result.valid, true, result.reason)
-    const geometry = result.geometry!, tip = geometry.leads[0]!.points.at(-1)!
-    assert.ok(Math.abs((geometry.position.y-tip.y)/MM_TO_WORLD-part.package.bodyMm.y/2-part.package.standoffMm) < 1e-10)
+    const geometry = result.geometry!, lead = geometry.leads[0]!, contact = lead.contact
+    assert.ok(Math.abs((geometry.position.y-contact.y)/MM_TO_WORLD-part.package.bodyMm.y/2-part.package.standoffMm) < 1e-10)
+    assert.deepEqual(lead.points.at(-1), boardContactMechanics(board.type, result.mount!.contacts[0]!.contactId).tip)
   }
 })
 

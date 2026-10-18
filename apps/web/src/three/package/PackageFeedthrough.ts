@@ -20,8 +20,8 @@ export function packageLeadSweepOptions(part:PartDefinition){
 
 /** Fixed packages use the same declared surface exit, circular fillets and
  * interior segment as flexible packages; only their contact frame differs. */
-export function createFixedPackageLead(part:PartDefinition,pinId:string){
- const definition=fixedPackageLeadPath(part,pinId),feed=packageFeedthrough(part,pinId),path=definition.path
+export function createFixedPackageLead(part:PartDefinition,pinId:string,insertion=0){
+ const definition=fixedPackageLeadPath(part,pinId,insertion),feed=packageFeedthrough(part,pinId),path=definition.path
  const points=definition.points.map(point=>new Vector3(point.x,point.y,point.z))
  const geometry=createFlexibleLeadPathGeometry(path,part.package.leadDiameterMm*MM_TO_WORLD,undefined,undefined,packageLeadSweepOptions(part))
  return{geometry,points,feed,path}

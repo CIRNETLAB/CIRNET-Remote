@@ -1374,7 +1374,7 @@ class PackageShapeV1(ContractBoundary):
     __validation_profile__: ClassVar[str] = 'structural'
     model_config = ConfigDict(extra='forbid')
     version: Annotated[Literal[1] | StrictFloat, WrapValidator(preserve_json_literal((1,)))]
-    family: Literal['resistor', 'diode', 'zener', 'ceramic', 'electrolytic', 'led', 'dip', 'to92']
+    family: Literal['resistor', 'diode', 'zener', 'ceramic', 'electrolytic', 'led', 'dip', 'to92', 'tactile', 'slide-switch', 'dip-switch', 'seven-segment', 'buzzer']
     embeddedDepthMm: StrictInt | StrictFloat = Field(..., gt=0.0, le=0.5)
     leadSection: PackageLeadSectionV1
     leadExits: list[PackageLeadExitV1] = Field(..., max_length=64, min_length=2)
@@ -1383,6 +1383,67 @@ class PackageShapeV1(ContractBoundary):
     flangeHeightMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
     domeRadiusMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
     bevelMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    caseHeightMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    buttonDiameterMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    buttonTravelMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    coverThicknessMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    rivetDiameterMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    sheetThicknessMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    baseThicknessMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    knobLengthMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    knobWidthMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    knobHeightMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    slotLengthMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    slotWidthMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    travelMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    recessDepthMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    actuatorWidthMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    actuatorLengthMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    digitHeightMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    digitWidthMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    strokeWidthMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    decimalPointDiameterMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    slantDegrees: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    digitPitchMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    faceInsetMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    openingDiameterMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    openingDepthMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    shoulderRadiusMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+
+class LabelPropertiesV1(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'LabelPropertiesV1'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid', regex_engine='python-re')
+    version: Annotated[Literal[1] | StrictFloat, WrapValidator(preserve_json_literal((1,)))]
+    text: StrictStr = Field(..., max_length=256, pattern='^[^\\u0000-\\u001F\\u007F]*(?:\\n[^\\u0000-\\u001F\\u007F]*){0,3}$(?![\\s\\S])')
+    fontSizeMm: StrictInt | StrictFloat = Field(..., ge=2.0, le=6.0)
+    textColor: StrictStr = Field(..., pattern='^#[0-9a-fA-F]{6}$')
+    backgroundColor: StrictStr = Field(..., pattern='^#[0-9a-fA-F]{6}$')
+    paddingMm: Annotated[Literal[1] | StrictFloat, WrapValidator(preserve_json_literal((1,)))]
+    boardId: StrictStr | None = Field(None, min_length=1)
+
+class BoardInsertionV1(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'BoardInsertionV1'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    version: Annotated[Literal[1] | StrictFloat, WrapValidator(preserve_json_literal((1,)))]
+    mechanicalProfileId: Literal['BREADBOARD_MECHANICS_V1']
+    maxExternalLeadMm: StrictInt | StrictFloat = Field(..., gt=0.0, le=100.0)
+
+class BreadboardMechanicalProfileV1(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'BreadboardMechanicalProfileV1'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    id: Literal['BREADBOARD_MECHANICS_V1']
+    version: Annotated[Literal[1] | StrictFloat, WrapValidator(preserve_json_literal((1,)))]
+    moduleTypes: list[Literal['BREADBOARD', 'BREADBOARD_630', 'BREADBOARD_100']] = Field(..., max_length=3, min_length=3)
+    insertionDepthMm: StrictInt | StrictFloat
+    cavityDepthMm: StrictInt | StrictFloat
+    floorClearanceMm: StrictInt | StrictFloat
+    mouthHalfWidthWorld: StrictInt | StrictFloat
+    throatHalfWidthWorld: StrictInt | StrictFloat
+    throatDepthMm: StrictInt | StrictFloat = Field(..., gt=0.0, le=1.0)
+    insulationClearanceMm: StrictInt | StrictFloat
 
 class AssessmentPolicy(ContractRootBoundary[Literal['STRICT_TOPOLOGY', 'FUNCTIONAL_ONLY', 'TOPOLOGY_AND_FUNCTION']]):
     root: Literal['STRICT_TOPOLOGY', 'FUNCTIONAL_ONLY', 'TOPOLOGY_AND_FUNCTION']

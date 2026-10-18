@@ -111,16 +111,22 @@ test('native two-pin placement preserves exact contacts, camera, automatic reanc
 })
 
 test('generic property drafts and native drag-drop produce compact forms and actual multiview visual evidence at both viewport sizes', async ({ page }, testInfo) => {
-  test.setTimeout(300_000) // Seventeen captures plus native video at two viewport sizes on software WebGL.
+  test.setTimeout(300_000) // Draft captures plus native video at two viewport sizes on software WebGL.
   await page.setViewportSize({ width: 1280, height: 720 })
   await openBoard(page)
-  for (const [group, type, label] of [['passive', 'GENERIC_RESISTOR', 'Resistor'], ['passive', 'GENERIC_CAPACITOR', 'Capacitor'], ['active', 'GENERIC_DIODE', 'Diode'], ['active', 'GENERIC_ZENER_DIODE', 'Zener Diode'], ['output', 'GENERIC_LED', 'LED'], ['output', 'GENERIC_BUZZER', 'Buzzer'], ['active', 'GENERIC_BJT', 'Transistor']] as const) {
+  for (const [group, type, label] of [['passive', 'GENERIC_RESISTOR', 'Resistor'], ['passive', 'GENERIC_CAPACITOR', 'Ceramic Capacitor'], ['passive', 'GENERIC_CAPACITOR_ELECTROLYTIC', 'Electrolytic Capacitor'], ['active', 'GENERIC_DIODE', 'Diode'], ['active', 'GENERIC_ZENER_DIODE', 'Zener Diode'], ['output', 'GENERIC_LED', 'LED'], ['output', 'GENERIC_BUZZER', 'Buzzer'], ['active', 'GENERIC_BJT', 'Transistor']] as const) {
     await choose(page, group, type)
     await expect(info(page).getByRole('heading', { name: label, exact: true })).toBeVisible()
     await expect(info(page).getByRole('button', { name: 'Update component properties', exact: true })).toHaveCount(1)
     await expect(info(page).getByRole('button', { name: 'Edit leads', exact: true })).toHaveCount(0)
     if (type === 'GENERIC_LED') { await info(page).getByRole('button', { name: 'Blue LED', exact: true }).click(); await info(page).getByRole('button', { name: 'Update component properties', exact: true }).click() }
-    if (type === 'GENERIC_CAPACITOR') { await info(page).getByLabel('Type', { exact: true }).selectOption('ELECTROLYTIC'); await info(page).getByRole('button', { name: 'Update component properties', exact: true }).click(); await expect(info(page).locator('[data-thumbnail-type]')).toHaveAttribute('data-thumbnail-type', 'GENERIC_CAPACITOR_ELECTROLYTIC') }
+    if (type === 'GENERIC_CAPACITOR' || type === 'GENERIC_CAPACITOR_ELECTROLYTIC') {
+      await expect(info(page).getByLabel('Type', { exact: true })).toHaveCount(0)
+      await info(page).getByLabel('Capacitance', { exact: true }).fill(type === 'GENERIC_CAPACITOR' ? '100' : '47')
+      await info(page).getByLabel('Capacitance unit', { exact: true }).selectOption(type === 'GENERIC_CAPACITOR' ? 'nF' : 'µF')
+      await info(page).getByRole('button', { name: 'Update component properties', exact: true }).click()
+      await expect(info(page).locator('[data-thumbnail-type]')).toHaveAttribute('data-thumbnail-type', type)
+    }
     await expect(info(page).locator('.component-thumbnail img')).toBeVisible()
     await screenshot(page, testInfo, `${type.toLowerCase()}-draft`)
     expect((await exportedNativeGraph(page)).modules).toHaveLength(1)
@@ -137,6 +143,8 @@ test('generic property drafts and native drag-drop produce compact forms and act
   const dropped = await exportedNativeGraph(page), capacitor = dropped.modules.find(module => module.type === 'GENERIC_CAPACITOR')
   if (capacitor?.mount?.kind !== 'breadboard-flexible') throw new Error('Native drop followed by a hole click did not create the capacitor.')
   expect(capacitor.mount.contacts.map(binding => binding.contactId)).toEqual(['terminal:C:20', 'terminal:C:24'])
+  expect(capacitor.mount.contacts.map(binding => binding.pinId)).toEqual(['A', 'B'])
+  expect(capacitor.properties?.capacitorType).toBe('CERAMIC')
   await choose(page, 'passive', 'GENERIC_RESISTOR'); await clickContact(page, 'terminal:E:30'); await clickContact(page, 'terminal:E:31')
   const standing = (await exportedNativeGraph(page)).modules.find(module => module.type === 'GENERIC_RESISTOR')
   if (standing?.mount?.kind !== 'breadboard-flexible') throw new Error('Native close-hole placement did not create a standing resistor.')
@@ -147,12 +155,15 @@ test('generic property drafts and native drag-drop produce compact forms and act
   const graph = await exportedNativeGraph(page), led = graph.modules.find(module => module.type === 'GENERIC_LED')
   if (led?.mount?.kind !== 'breadboard-flexible') throw new Error('Native two-pin placement did not create the blue LED.')
   expect(led.properties?.color).toBe('#3a78dc')
-  await choose(page,'passive','GENERIC_CAPACITOR')
-  await info(page).getByLabel('Type',{exact:true}).selectOption('ELECTROLYTIC');await info(page).getByRole('button',{name:'Update component properties',exact:true}).click()
+  await choose(page,'passive','GENERIC_CAPACITOR_ELECTROLYTIC')
+  await expect(info(page).getByLabel('Type',{exact:true})).toHaveCount(0)
+  await info(page).getByLabel('Capacitance',{exact:true}).fill('47');await info(page).getByLabel('Capacitance unit',{exact:true}).selectOption('µF')
+  await info(page).getByRole('button',{name:'Update component properties',exact:true}).click()
   await clickContact(page,'terminal:E:50');await clickContact(page,'terminal:E:51')
   const electro=(await exportedNativeGraph(page)).modules.find(module=>module.type==='GENERIC_CAPACITOR_ELECTROLYTIC')!
   if(electro?.mount?.kind!=='breadboard-flexible')throw Error('Compact electrolytic did not commit.')
   expect(electro.mount.bodyPose.rotation.x).toBe(0);expect(electro.mount.bodyPose.rotation.z).toBe(0)
+  expect(electro.mount.contacts.map(binding=>binding.pinId)).toEqual(['PLUS','MINUS']);expect(electro.properties?.capacitorType).toBe('ELECTROLYTIC');expect(electro.properties?.capacitanceFarads).toBe(47e-6)
   for (const viewport of [{ width: 1280, height: 720 }, { width: 1920, height: 1080 }]) {
     await page.setViewportSize(viewport)
     await page.getByRole('button', { name: 'Zoom To View Entire Circuit', exact: true }).click()
@@ -164,7 +175,7 @@ test('generic property drafts and native drag-drop produce compact forms and act
     }
     const center = await projectModuleCenter(page, capacitor.id)
     await page.mouse.click(center.x, center.y)
-    await expect(info(page).getByRole('heading', { name: 'Capacitor', exact: true })).toBeVisible()
+    await expect(info(page).getByRole('heading', { name: 'Ceramic Capacitor', exact: true })).toBeVisible()
     await expect(info(page).locator('.component-thumbnail img')).toBeVisible()
     await page.getByRole('button', { name: 'Zoom To Area', exact: true }).click()
     await page.mouse.move(center.x - 65, center.y - 65); await page.mouse.down(); await page.mouse.move(center.x + 65, center.y + 65, { steps: 10 }); await page.mouse.up()

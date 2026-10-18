@@ -1,10 +1,15 @@
-import { CylinderGeometry, Mesh, MeshStandardMaterial, Vector3, type Object3D } from 'three'
+import { Mesh, MeshStandardMaterial, Vector3, type Object3D } from 'three'
 import type { Point3 } from '../types/circuit'
 import type { SolvedWireRoute } from '../wires/wireRouting'
-import { CONTACT_COPPER_LENGTH, COPPER_COLOR, COPPER_EMBED_LENGTH, COPPER_RADIUS_RATIO, FREE_COPPER_LENGTH, TERMINAL_CLEARANCE, WIRE_RADIAL_SEGMENTS } from '../wires/wireAppearance'
+import { CONTACT_COPPER_LENGTH, COPPER_COLOR, COPPER_EMBED_LENGTH, COPPER_RADIUS_RATIO, FREE_COPPER_LENGTH } from '../wires/wireAppearance'
+import { BREADBOARD_MECHANICAL_PROFILE } from '../geometry/BreadboardMechanicalProfile'
+import { MM_TO_WORLD } from '../data/partCatalog'
+import { wireCenterline } from '../wires/wireCenterline'
+import { type LeadPath, type LeadPathSegment } from '../electrical/leadPath'
+import { buildWireGeometry } from './WireGeometry'
 
 export interface WireTerminal { tip: Point3; endpoint: Point3; junction: Point3; radius: number; overlap: number }
-export interface WireParts { bodyPoints: Point3[]; terminals: [WireTerminal, WireTerminal]; capHoleRadius: number }
+export interface WireParts { bodyPoints: Point3[]; bodyPath: LeadPath; corePath: LeadPath; terminals: [WireTerminal, WireTerminal]; capHoleRadius: number }
 
 export function deriveWireParts(route: SolvedWireRoute, diameter: number): WireParts {
   const path = route.renderPoints ?? route.points
@@ -16,8 +21,8 @@ export function deriveWireParts(route: SolvedWireRoute, diameter: number): WireP
     if (!contact) return Math.min(limit, segment.length() * .45)
     const endpoint = end === 'source' ? points[0] : points.at(-1)!
     const deck = route.contactDeckY?.[end]
-    const exposure = deck === null || deck === undefined ? limit : Math.max(0, deck + diameter * TERMINAL_CLEARANCE - endpoint.y)
-    return Math.min(limit, exposure, segment.length() * .9)
+    const exposure = deck === null || deck === undefined ? limit : Math.max(0, deck + BREADBOARD_MECHANICAL_PROFILE.insulationClearanceMm * MM_TO_WORLD - endpoint.y)
+    return Math.min(exposure, segment.length() * .9)
   }
   let sourceLength = length(first, sourceLimit, !!route.terminalLeads.source, 'source')
   let destinationLength = length(last, destinationLimit, !!route.terminalLeads.destination, 'destination')
@@ -33,39 +38,44 @@ export function deriveWireParts(route: SolvedWireRoute, diameter: number): WireP
   const terminal = (index: number, axis: Vector3, junction: Vector3, contact: boolean): WireTerminal => {
     // Insertion extends against the lead, below the unchanged electrical anchor.
     // Pitch bounds insertion to the breadboard scale; overlap seals the cap above.
-    const depth = contact ? Math.min(diameter * 1.2, (route.contactPitch?.[index === 0 ? 'source' : 'destination'] ?? .13) * .65) : 0
+    const deck=route.contactDeckY?.[index===0?'source':'destination']
+    const depth = contact && deck !== null && deck !== undefined ? points[index].y - (deck - BREADBOARD_MECHANICAL_PROFILE.insertionDepthMm * MM_TO_WORLD) : 0
     return { tip: plain(points[index].clone().addScaledVector(axis, -depth)), endpoint: plain(points[index]), junction: plain(junction), radius, overlap: Math.min(diameter * .12, COPPER_EMBED_LENGTH) }
   }
-  return { bodyPoints: [plain(start), ...path.slice(1, -1).map(point => ({ ...point })), plain(end)], capHoleRadius: radius * .9,
-    terminals: [terminal(0, first, start, !!route.terminalLeads.source), terminal(points.length - 1, last, end, !!route.terminalLeads.destination)] }
+  const bodyPoints=[plain(start), ...path.slice(1, -1).map(point => ({ ...point })), plain(end)]
+  const bodyPath=wireCenterline(bodyPoints,diameter)
+  const terminals:[WireTerminal,WireTerminal]=[terminal(0, first, start, !!route.terminalLeads.source), terminal(points.length - 1, last, end, !!route.terminalLeads.destination)]
+  const corePath=structuredClone(bodyPath),segments:LeadPathSegment[]=[]
+  const line=(a:Point3,b:Point3)=>{const length=Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z);if(length>1e-10)segments.push({kind:'line',start:a,end:b,length})}
+  line(terminals[0].tip,bodyPath.segments[0]!.start);segments.push(...corePath.segments);line(bodyPath.segments.at(-1)!.end,terminals[1].tip)
+  corePath.segments=segments;corePath.points=[terminals[0].tip,...bodyPath.points,terminals[1].tip]
+  corePath.length=segments.reduce((sum,segment)=>sum+segment.length,0)
+  // Preserve the exact body fillets while extending their sampled arclength
+  // domain through both metal-only tails. Re-fitting the longer core polyline
+  // would allocate different radii from the insulation around the same bend.
+  const extension=(a:Point3,b:Point3)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z)
+  const sourceExtension=extension(terminals[0].tip,bodyPath.samples[0]!),destinationExtension=extension(bodyPath.samples.at(-1)!,terminals[1].tip)
+  corePath.sampleDistances=bodyPath.sampleDistances.map(distance=>distance+sourceExtension)
+  if(sourceExtension>1e-10){corePath.samples.unshift({...terminals[0].tip});corePath.sampleDistances.unshift(0)}
+  if(destinationExtension>1e-10){corePath.samples.push({...terminals[1].tip});corePath.sampleDistances.push(corePath.length)}
+  return { bodyPoints, bodyPath, corePath, capHoleRadius: radius, terminals }
 }
 
 // One capped cylinder and copper material per layer, shared by all terminal meshes.
 // Ownership stays here so deleting one wire cannot dispose another wire's pins.
 export function createWireTerminals() {
-  const geometry = new CylinderGeometry(1, 1, 1, WIRE_RADIAL_SEGMENTS, 1, false)
-  const material = new MeshStandardMaterial({ color: COPPER_COLOR, roughness: .2, metalness: .95 })
-  const up = new Vector3(0, 1, 0)
+  const material = new MeshStandardMaterial({ color: COPPER_COLOR, roughness: .32, metalness: .9 })
   let disposed = false
-  const detach = (root: Object3D) => { for (const child of [...root.children]) if (child.userData.wireTerminal) root.remove(child) }
+  const detach = (root: Object3D) => { for (const child of [...root.children]) if (child.userData.wireTerminal) { root.remove(child); (child as Mesh).geometry.dispose() } }
   return {
     update(root: Object3D, parts: WireParts, free = false) {
-      let meshes = root.children.filter(child => child.userData.wireTerminal) as Mesh[]
-      if (!meshes.length) { meshes = [new Mesh(geometry, material), new Mesh(geometry, material)]; root.add(...meshes) }
-      parts.terminals.forEach((terminal, index) => {
-        const mesh = meshes[index], tip = new Vector3(terminal.tip.x, terminal.tip.y, terminal.tip.z), axis = new Vector3(terminal.junction.x, terminal.junction.y, terminal.junction.z).sub(tip)
-        const length = axis.length()
-        mesh.name = index === 0 ? 'wire-terminal-source' : free ? 'wire-terminal-free' : 'wire-terminal-destination'
-        mesh.userData = { kind: 'wire', source: root.userData.source, destination: root.userData.destination, wireTerminal: true }
-        mesh.visible = length > 1e-8
-        if (!mesh.visible) return
-        axis.normalize()
-        const end = tip.clone().addScaledVector(axis, length + terminal.overlap)
-        mesh.position.copy(tip).add(end).multiplyScalar(.5)
-        mesh.quaternion.setFromUnitVectors(up, axis); mesh.scale.set(terminal.radius, length + terminal.overlap, terminal.radius); mesh.updateMatrix()
-      })
+      let mesh = root.children.find(child => child.userData.wireTerminal) as Mesh | undefined
+      const geometry=buildWireGeometry({points:parts.corePath.points},parts.terminals[0].radius*2,{path:parts.corePath})
+      if(mesh){mesh.geometry.dispose();mesh.geometry=geometry}else{mesh=new Mesh(geometry,material);root.add(mesh)}
+      mesh.name=free?'wire-conductor-free':'wire-conductor'
+      mesh.userData={kind:'wire',source:root.userData.source,destination:root.userData.destination,wireTerminal:true,terminals:parts.terminals}
     },
     detach,
-    dispose() { if (disposed) return; disposed = true; geometry.dispose(); material.dispose() },
+    dispose() { if (disposed) return; disposed = true; material.dispose() },
   }
 }

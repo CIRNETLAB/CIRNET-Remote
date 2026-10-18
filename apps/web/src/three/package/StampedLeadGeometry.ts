@@ -32,8 +32,8 @@ function stampedSweep(stations: Station[], thickness: number, stampingAxis: Vect
 /** Package-frame geometry, including exactly the declared hidden feedthrough.
  * The exposed path ends at the original contact plane; contact coordinates and
  * electrical identities are never inferred from the new sectioned mesh. */
-export function createMoldedPackageLead(part: PartDefinition, pin: PhysicalPin): BufferGeometry {
-  const lead = rigidPackageLeadStations(part, pin), vector = (p: { x: number; y: number; z: number }) => new Vector3(p.x, p.y, p.z)
+export function createMoldedPackageLead(part: PartDefinition, pin: PhysicalPin, insertion = 0): BufferGeometry {
+  const lead = rigidPackageLeadStations(part, pin, insertion), vector = (p: { x: number; y: number; z: number }) => new Vector3(p.x, p.y, p.z)
   const stations: Station[] = lead.stations.map(station => ({ ...station, point: vector(station.point), tangent: vector(station.tangent) }))
   stations.unshift({ point: vector(lead.feedthrough.embeddedStart), tangent: stations[0]!.tangent.clone(), width: stations[0]!.width })
   return stampedSweep(stations, lead.thickness, vector(lead.stampingAxis), lead.widthAxisFixed)

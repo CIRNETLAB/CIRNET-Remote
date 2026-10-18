@@ -1252,6 +1252,34 @@
           "version": "1.1"
         }
       },
+      "BoardInsertionV1": {
+        "additionalProperties": false,
+        "description": "Explicit CAD formed-conductor budget for the virtual breadboard profile, not a claim about native manufacturer terminal length or physical fit.",
+        "properties": {
+          "maxExternalLeadMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "mechanicalProfileId": {
+            "const": "BREADBOARD_MECHANICS_V1"
+          },
+          "version": {
+            "const": 1
+          }
+        },
+        "required": [
+          "version",
+          "mechanicalProfileId",
+          "maxExternalLeadMm"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/design/board-insertion/1.0/schema.json",
+          "version": "1.0"
+        }
+      },
       "BodyPose3D": {
         "additionalProperties": false,
         "description": "Authoritative body-center pose in board-local world units; rotation is degrees in fixed Euler YXZ order (Ry * Rx * Rz). No scale.",
@@ -1317,6 +1345,71 @@
         ],
         "title": "Breadboard",
         "type": "object"
+      },
+      "BreadboardMechanicalProfileV1": {
+        "additionalProperties": false,
+        "properties": {
+          "cavityDepthMm": {
+            "const": 3.5
+          },
+          "floorClearanceMm": {
+            "const": 0.5
+          },
+          "id": {
+            "const": "BREADBOARD_MECHANICS_V1"
+          },
+          "insertionDepthMm": {
+            "const": 3.0
+          },
+          "insulationClearanceMm": {
+            "const": 0.4
+          },
+          "moduleTypes": {
+            "items": {
+              "enum": [
+                "BREADBOARD",
+                "BREADBOARD_630",
+                "BREADBOARD_100"
+              ]
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "mouthHalfWidthWorld": {
+            "const": 0.037
+          },
+          "throatDepthMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 1,
+            "type": "number"
+          },
+          "throatHalfWidthWorld": {
+            "const": 0.024
+          },
+          "version": {
+            "const": 1
+          }
+        },
+        "required": [
+          "id",
+          "version",
+          "moduleTypes",
+          "insertionDepthMm",
+          "cavityDepthMm",
+          "floorClearanceMm",
+          "mouthHalfWidthWorld",
+          "throatHalfWidthWorld",
+          "throatDepthMm",
+          "insulationClearanceMm"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/design/breadboard-mechanics/1.0/schema.json",
+          "version": "1.0"
+        }
       },
       "CaptureConfiguration": {
         "additionalProperties": false,
@@ -5132,6 +5225,57 @@
         "title": "LabEndpoints",
         "type": "array"
       },
+      "LabelPropertiesV1": {
+        "additionalProperties": false,
+        "description": "Plain visual annotation properties. Position and rotation remain module fields; boardId is only a visual association, never an electrical mount.",
+        "properties": {
+          "backgroundColor": {
+            "default": "#FAFAF7",
+            "pattern": "^#[0-9a-fA-F]{6}$",
+            "type": "string"
+          },
+          "boardId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "fontSizeMm": {
+            "default": 3,
+            "maximum": 6,
+            "minimum": 2,
+            "type": "number"
+          },
+          "paddingMm": {
+            "const": 1
+          },
+          "text": {
+            "maxLength": 256,
+            "pattern": "^[^\\u0000-\\u001F\\u007F]*(?:\\n[^\\u0000-\\u001F\\u007F]*){0,3}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "textColor": {
+            "default": "#20252A",
+            "pattern": "^#[0-9a-fA-F]{6}$",
+            "type": "string"
+          },
+          "version": {
+            "const": 1
+          }
+        },
+        "required": [
+          "version",
+          "text",
+          "fontSizeMm",
+          "textColor",
+          "backgroundColor",
+          "paddingMm"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/design/label-properties/1.0/schema.json",
+          "version": "1.0"
+        }
+      },
       "LeadSettings": {
         "additionalProperties": true,
         "allOf": [
@@ -6410,9 +6554,179 @@
       },
       "PackageShapeV1": {
         "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "family": {
+                  "const": "tactile"
+                }
+              },
+              "required": [
+                "family"
+              ]
+            },
+            "then": {
+              "required": [
+                "caseHeightMm",
+                "buttonDiameterMm",
+                "buttonTravelMm",
+                "coverThicknessMm",
+                "rivetDiameterMm",
+                "bevelMm"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "family": {
+                  "const": "slide-switch"
+                }
+              },
+              "required": [
+                "family"
+              ]
+            },
+            "then": {
+              "required": [
+                "caseHeightMm",
+                "sheetThicknessMm",
+                "baseThicknessMm",
+                "knobLengthMm",
+                "knobWidthMm",
+                "knobHeightMm",
+                "slotLengthMm",
+                "slotWidthMm",
+                "travelMm"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "family": {
+                  "const": "dip-switch"
+                }
+              },
+              "required": [
+                "family"
+              ]
+            },
+            "then": {
+              "required": [
+                "caseHeightMm",
+                "slotWidthMm",
+                "slotLengthMm",
+                "recessDepthMm",
+                "actuatorWidthMm",
+                "actuatorLengthMm",
+                "travelMm"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "family": {
+                  "const": "seven-segment"
+                }
+              },
+              "required": [
+                "family"
+              ]
+            },
+            "then": {
+              "required": [
+                "digitHeightMm",
+                "digitWidthMm",
+                "strokeWidthMm",
+                "decimalPointDiameterMm",
+                "slantDegrees",
+                "digitPitchMm",
+                "faceInsetMm",
+                "bevelMm"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "family": {
+                  "const": "buzzer"
+                }
+              },
+              "required": [
+                "family"
+              ]
+            },
+            "then": {
+              "required": [
+                "openingDiameterMm",
+                "openingDepthMm",
+                "shoulderRadiusMm"
+              ]
+            }
+          }
+        ],
         "description": "Versioned model geometry in centered body-local millimetres. Body envelope, contact tips, exits and the hidden interior embed remain distinct; no electrical or safety capability is implied.",
         "properties": {
+          "actuatorLengthMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "actuatorWidthMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "baseThicknessMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
           "bevelMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "buttonDiameterMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "buttonTravelMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "caseHeightMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "coverThicknessMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "decimalPointDiameterMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "digitHeightMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "digitPitchMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "digitWidthMm": {
             "exclusiveMinimum": 0,
             "maximum": 100,
             "type": "number"
@@ -6427,6 +6741,11 @@
             "maximum": 0.5,
             "type": "number"
           },
+          "faceInsetMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
           "family": {
             "enum": [
               "resistor",
@@ -6436,7 +6755,12 @@
               "electrolytic",
               "led",
               "dip",
-              "to92"
+              "to92",
+              "tactile",
+              "slide-switch",
+              "dip-switch",
+              "seven-segment",
+              "buzzer"
             ]
           },
           "flangeDiameterMm": {
@@ -6445,6 +6769,21 @@
             "type": "number"
           },
           "flangeHeightMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "knobHeightMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "knobLengthMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "knobWidthMm": {
             "exclusiveMinimum": 0,
             "maximum": 100,
             "type": "number"
@@ -6461,6 +6800,61 @@
             "$ref": "#/components/schemas/PackageLeadSectionV1"
           },
           "lensDiameterMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "openingDepthMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "openingDiameterMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "recessDepthMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "rivetDiameterMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "sheetThicknessMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "shoulderRadiusMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "slantDegrees": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "slotLengthMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "slotWidthMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "strokeWidthMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "travelMm": {
             "exclusiveMinimum": 0,
             "maximum": 100,
             "type": "number"

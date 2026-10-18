@@ -24,20 +24,39 @@ export function packageFeedthroughPoints(part: PartDefinition, pinId: string) {
 export function hasShapedRigidLeads(part: PartDefinition) { return !!part.package.shape }
 
 /** Canonical external line/arc path for fixed two-pin shape revisions. */
-export function fixedPackageLeadPath(part: PartDefinition, pinId: string) {
+export function fixedPackageLeadPath(part: PartDefinition, pinId: string, insertion = 0) {
   const feed = packageFeedthroughPoints(part, pinId), pin = part.package.pins.find(pin => pin.id === pinId)
   if (!pin || !Object.values(pin.positionMm).every(Number.isFinite)) throw Error('A fixed lead requires a finite canonical pin.')
-  const anchor = scale(pin.positionMm, MM_TO_WORLD), mm = MM_TO_WORLD, straight = .4 * mm
-  const stub = { ...anchor, y: anchor.y + straight }, shoulder = { x: feed.exit.x + feed.outward.x * straight, y: feed.exit.y + feed.outward.y * straight, z: feed.exit.z + feed.outward.z * straight }
-  const points = [feed.exit, shoulder]
-  if (Math.hypot(feed.exit.x - anchor.x, feed.exit.z - anchor.z) > 1e-8) points.push({ x: anchor.x, y: feed.exit.y, z: anchor.z })
-  points.push(stub, anchor)
+  const anchor = scale(pin.positionMm, MM_TO_WORLD), mm = MM_TO_WORLD
+  const offset = Math.hypot(feed.exit.x - anchor.x, feed.exit.z - anchor.z)
+  const radialOffset=feed.outward.y<-.999&&offset>1e-8
+  const straight = (feed.section.kind === 'stamped'||radialOffset ? .15 : .4) * mm
   const section = feed.section, minimum = (section.kind === 'round' && section.widthMm <= .5 ? .3 : .4) * mm
-  return { points, feed, path: buildLeadPath(points, minimum, .7 * mm, { start: straight, end: straight }) }
+  const radius = section.kind === 'stamped' ? .15 * mm : minimum
+  const stub = { ...anchor, y: anchor.y + straight }, shoulder = { x: feed.exit.x + feed.outward.x * straight, y: feed.exit.y + feed.outward.y * straight, z: feed.exit.z + feed.outward.z * straight }
+  const points = [feed.exit]
+  if (radialOffset) {
+    const midY = feed.exit.y - straight - radius
+    points.push({x:feed.exit.x,y:midY,z:feed.exit.z},{x:anchor.x,y:midY,z:anchor.z},anchor)
+  } else {
+    points.push(sectionIsStamped(feed.section.kind) ? {x:feed.exit.x+feed.outward.x*straight*2,y:feed.exit.y+feed.outward.y*straight*2,z:feed.exit.z+feed.outward.z*straight*2} : shoulder)
+    if (offset > 1e-8) points.push({ x: anchor.x, y: feed.exit.y, z: anchor.z })
+    points.push(stub, anchor)
+  }
+  if (insertion > 0) points.push({ ...anchor, y: anchor.y - insertion })
+  const path = buildLeadPath(points, radius, section.kind === 'stamped'||radialOffset ? radius : .7 * mm, { start: straight, end: straight })
+  validatePackageLeadBudget(part, path.length)
+  return { points, feed, path }
+}
+const sectionIsStamped=(kind:string)=>kind==='stamped'
+
+export function validatePackageLeadBudget(part: PartDefinition, externalLength: number) {
+  const mechanics = part.package.boardInsertion
+  if (mechanics && externalLength / MM_TO_WORLD > mechanics.maxExternalLeadMm + 1e-6) throw Error('The declared metal lead is too short for this board insertion.')
 }
 
 /** All coordinates and widths are world units in the package frame. */
-export function rigidPackageLeadStations(part: PartDefinition, pin: PhysicalPin) {
+export function rigidPackageLeadStations(part: PartDefinition, pin: PhysicalPin, insertion = 0) {
   const pkg = part.package, shape = pkg.shape
   if (!shape || (shape.family !== 'dip' && shape.family !== 'to92')) throw Error('A molded lead requires a DIP or TO-92 shape specification.')
   const feedthrough = packageFeedthroughPoints(part, pin.id), mm = MM_TO_WORLD, { exit } = feedthrough
@@ -56,33 +75,39 @@ export function rigidPackageLeadStations(part: PartDefinition, pin: PhysicalPin)
       stations.push({ point: { x: exit.x, y: exit.y - radius * (1 - Math.cos(angle)), z: bendStart.z + sign * radius * Math.sin(angle) }, tangent: { x: 0, y: -Math.sin(angle), z: sign * Math.cos(angle) }, width: shoulder })
     }
     const bendEnd = stations[stations.length - 1]!.point
-    const narrowStart = Math.max(tip.y + .6 * mm, bendEnd.y - .35 * mm), narrowEnd = Math.max(tip.y + .35 * mm, narrowStart - .65 * mm)
+    const narrowStart = Math.max(tip.y + (pkg.boardInsertion ? 1.05 : .6) * mm, bendEnd.y - .35 * mm), narrowEnd = Math.max(tip.y + (pkg.boardInsertion ? .8 : .35) * mm, narrowStart - .65 * mm)
     if (narrowStart < bendEnd.y - 1e-9) stations.push({ point: { x: tip.x, y: narrowStart, z: tip.z }, tangent: down, width: shoulder })
     stations.push({ point: { x: tip.x, y: narrowEnd, z: tip.z }, tangent: down, width }, { point: tip, tangent: down, width })
   } else {
-    const down = { x: 0, y: -1, z: 0 }, delta = tip.x - exit.x, height = exit.y - tip.y
+    // The adapted revision completes its fan-out above the deck. Only the
+    // normal tail enters a cavity; the canonical contact remains at Y=0.
+    const tailY = tip.y + (pkg.boardInsertion ? 1 : 0) * mm
+    const down = { x: 0, y: -1, z: 0 }, delta = tip.x - exit.x, height = exit.y - tailY
     stations.push({ point: exit, tangent: down, width })
     for (let i = 1; i <= 24; i++) {
       const t = i / 24, blend = t * t * (3 - 2 * t), slope = 6 * t * (1 - t)
       stations.push({ point: { x: exit.x + delta * blend, y: exit.y - height * t, z: exit.z + (tip.z - exit.z) * blend }, tangent: { x: delta * slope, y: -height, z: (tip.z - exit.z) * slope }, width })
     }
+    if (pkg.boardInsertion) stations.push({ point: tip, tangent: down, width })
   }
+  if (insertion > 0) stations.push({ point: { ...tip, y: tip.y - insertion }, tangent: { x: 0, y: -1, z: 0 }, width })
+  validatePackageLeadBudget(part, stations.slice(1).reduce((sum, station, i) => sum + distance(stations[i]!.point, station.point), 0))
   return { stations, thickness, feedthrough, stampingAxis: shape.family === 'dip' ? { x: 1, y: 0, z: 0 } : { x: 0, y: 0, z: 1 }, widthAxisFixed: shape.family === 'dip' }
 }
 
 /** Every swept quad lies within the convex hull of its endpoint rectangles.
  * A capsule using the larger endpoint half-diagonal encloses that hull,
  * including the variable-width stamped shoulder and all four corners. */
-export function rigidPackageLeadSegments(part: PartDefinition): RigidLeadSegment[] {
+export function rigidPackageLeadSegments(part: PartDefinition, insertion = 0): RigidLeadSegment[] {
   if (!hasShapedRigidLeads(part)) return []
   const shape = part.package.shape!
   if (shape.family !== 'dip' && shape.family !== 'to92') return part.package.pins.flatMap(pin => {
-    const { path, feed } = fixedPackageLeadPath(part, pin.id), section = feed.section
+    const { path, feed } = fixedPackageLeadPath(part, pin.id, insertion), section = feed.section
     const radius = (section.kind === 'round' ? section.widthMm / 2 : Math.hypot(section.widthMm, section.thicknessMm) / 2) * MM_TO_WORLD + path.sampleError
     return path.samples.slice(1).map((point, i) => ({ start: path.samples[i]!, end: point, radius }))
   })
   return part.package.pins.flatMap(pin => {
-    const { stations, thickness } = rigidPackageLeadStations(part, pin)
+    const { stations, thickness } = rigidPackageLeadStations(part, pin, insertion)
     return stations.slice(1).map((station, index) => ({ start: stations[index]!.point, end: station.point, radius: Math.hypot(Math.max(station.width, stations[index]!.width), thickness) / 2 }))
   })
 }

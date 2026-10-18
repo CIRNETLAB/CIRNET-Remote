@@ -1,8 +1,10 @@
 import { BufferGeometry, Color, Float32BufferAttribute, Group, InstancedMesh, Matrix4, MeshStandardMaterial } from 'three'
 import { getBreadboardTopology } from '../electrical/BreadboardTopology'
+import { BREADBOARD_MECHANICAL_PROFILE as mechanics } from '../geometry/BreadboardMechanicalProfile'
+import { MM_TO_WORLD } from '../data/partCatalog'
 
 export type SocketPosition = [number, number]
-export const SOCKET_HALF_OPENING = 0.037
+export const SOCKET_HALF_OPENING = mechanics.mouthHalfWidthWorld
 
 // Compatibility view over the declared topology; coordinates never define conductivity.
 export function breadboardSocketPositions(terminal: boolean, rails: boolean): SocketPosition[] {
@@ -12,7 +14,10 @@ export function breadboardSocketPositions(terminal: boolean, rails: boolean): So
 export function addBreadboardSockets(group: Group, positions: SocketPosition[], height: number, type?: string) {
   const vertices: number[] = [], colors: number[] = []
   const corners = (radius: number, y: number) => [[-radius, y, -radius], [radius, y, -radius], [radius, y, radius], [-radius, y, radius]]
-  const mouth = corners(SOCKET_HALF_OPENING, 0.030), throat = corners(0.024, 0.009), floor = corners(0.024, -0.070)
+  const deckY = type ? getBreadboardTopology(type)!.deckHeight : height + .030
+  const mouth = corners(SOCKET_HALF_OPENING, deckY - height)
+  const throat = corners(mechanics.throatHalfWidthWorld, deckY - height - mechanics.throatDepthMm * MM_TO_WORLD)
+  const floor = corners(mechanics.throatHalfWidthWorld, deckY - height - mechanics.cavityDepthMm * MM_TO_WORLD)
   const quad = (a: number[], b: number[], c: number[], d: number[], color: string) => {
     const rgb = new Color(color).toArray()
     for (const point of [a, d, b, b, d, c]) { vertices.push(...point); colors.push(...rgb) }
@@ -30,6 +35,7 @@ export function addBreadboardSockets(group: Group, positions: SocketPosition[], 
   const matrix = new Matrix4()
   positions.forEach(([x, z], index) => sockets.setMatrixAt(index, matrix.makeTranslation(x, height, z)))
   sockets.instanceMatrix.needsUpdate = true; sockets.userData.breadboardSockets = true
+  sockets.userData.mechanicalProfileId = mechanics.id; sockets.userData.mechanicalProfileVersion = mechanics.version
   if (type) {
     const topology = getBreadboardTopology(type)!
     sockets.userData.topologyId = topology.id

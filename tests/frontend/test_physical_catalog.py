@@ -72,7 +72,9 @@ def test_generation_adds_physical_pin_ports_without_mutating_legacy_metadata():
 
 
 def test_generic_design_parts_keep_reference_package_pin_identities_and_typed_properties():
-    parts = {part['editorType']: part for part in registry()['parts']}
+    catalog = registry()
+    parts = {part['editorType']: part for part in catalog['parts']}
+    all_parts = [*catalog['parts'], *catalog['historicalParts']]
     pairs = {
         'GENERIC_RESISTOR': 'RESISTOR_AXIAL', 'GENERIC_CAPACITOR': 'CAPACITOR_CERAMIC',
         'GENERIC_CAPACITOR_ELECTROLYTIC': 'CAPACITOR_ELECTROLYTIC', 'GENERIC_DIODE': 'DIODE_1N4148',
@@ -83,15 +85,18 @@ def test_generic_design_parts_keep_reference_package_pin_identities_and_typed_pr
         assert generic in parts
         # Revision 1 was a reference-package copy; compact defaults explicitly
         # pin a new package while the original generic remains resolvable.
-        historical = next((part for part in registry().get('historicalParts', []) if part['editorType'] == generic), parts[generic])
-        assert historical['package'] == parts[legacy]['package']
+        historical = next(part for part in all_parts if part['editorType'] == generic and part['revision'] == 1)
+        original_reference = next(part for part in all_parts if part['editorType'] == legacy and part['package']['id'] == historical['package']['id'] and part['package']['revision'] == historical['package']['revision'])
+        assert historical['package'] == original_reference['package']
         assert [pin['id'] for pin in parts[generic]['package']['pins']] == [pin['id'] for pin in parts[legacy]['package']['pins']]
         assert parts[generic]['identityKind'] == 'configurable-generic'
         assert 'manufacturer' not in parts[generic] and 'partNumber' not in parts[generic]
         assert parts[legacy]['editor']['addType'] == generic
     assert parts['GENERIC_CAPACITOR']['editor']['defaults']['capacitorType'] == 'CERAMIC'
     assert parts['GENERIC_CAPACITOR_ELECTROLYTIC']['editor']['defaults']['capacitorType'] == 'ELECTROLYTIC'
-    assert parts['GENERIC_CAPACITOR_ELECTROLYTIC']['editor']['hidden'] is True
+    original_electrolytic=next(part for part in all_parts if part['editorType']=='GENERIC_CAPACITOR_ELECTROLYTIC' and part['revision']==1)
+    assert original_electrolytic['editor']['hidden'] is True
+    assert parts['GENERIC_CAPACITOR_ELECTROLYTIC']['editor'].get('hidden',False) is False
     assert parts['GENERIC_LED']['editor']['defaults']['color'] == '#ce3935'
     for kind in ['GENERIC_DIODE', 'GENERIC_ZENER_DIODE', 'GENERIC_CAPACITOR', 'GENERIC_BUZZER', 'GENERIC_BJT']:
         assert parts[kind]['simulation']['status'] == 'unsupported'
@@ -172,8 +177,12 @@ def test_all_previously_current_descriptors_remain_frozen_and_resolvable():
         assert previous['package']['id'] == package_id
         assert previous['package']['revision'] == 1
         assert 'shape' not in previous['package']
-    exact = next(part for part in catalog['parts'] if part['editorType'] == 'DIODE_1N4148')
-    assert exact['revision'] == 1 and exact['package']['bodyMm'] == dict(x=3.9, y=1.9, z=1.9)
+    exact = next(part for part in all_parts if (part['id'],part['revision'],part['package']['id'],part['package']['revision']) == ('VISHAY-1N4148',1,'DO35-1016',1))
+    assert exact['editorType'] == 'DIODE_1N4148' and exact['package']['bodyMm'] == dict(x=3.9, y=1.9, z=1.9)
+    current = next(part for part in catalog['parts'] if part['editorType'] == 'DIODE_1N4148')
+    assert current['revision'] > exact['revision'] and current['package']['id'] != exact['package']['id']
+    assert current['package']['bodyMm'] == exact['package']['bodyMm']
+    assert current['package']['boardInsertion']['mechanicalProfileId'] == 'BREADBOARD_MECHANICS_V1'
 
 
 @pytest.mark.parametrize('mutation', ['unknown_family', 'unknown_pin', 'nonunit_normal', 'oversized_exit', 'invalid_section', 'oversized_embed'])
@@ -193,12 +202,25 @@ def test_generator_rejects_invalid_sealed_shape_specs(mutation):
 
 def test_generator_rejects_shape_profile_exit_drift_and_degenerate_new_wire_bends():
     mechanics = json.loads((ROOT / 'contracts/design-models/flexible-mechanics.json').read_text())
-    sync.validate_mechanics(registry(), mechanics)
+    catalog=registry()
+    sync.validate_mechanics(catalog, mechanics)
+    frozen_catalog=copy.deepcopy(catalog)
+    for kind in ['GENERIC_CAPACITOR','GENERIC_DIODE']:
+        frozen=next(part for part in catalog['historicalParts'] if part['editorType']==kind and part['package'].get('shape'))
+        index=next(i for i,part in enumerate(frozen_catalog['parts']) if part['editorType']==kind)
+        frozen_catalog['parts'][index]=copy.deepcopy(frozen)
     drift = copy.deepcopy(mechanics)
     next(profile for profile in drift['profiles'] if profile['id'] == 'flex-sealed-ceramic')['pins'][0]['bodyExitMm']['y'] += .1
     with pytest.raises(ValueError, match='shape exits'):
-        sync.validate_mechanics(registry(), drift)
+        sync.validate_mechanics(frozen_catalog, drift)
     tiny = copy.deepcopy(mechanics)
     next(profile for profile in tiny['profiles'] if profile['id'] == 'flex-sealed-diode')['minBendRadiusMm'] = .3
     with pytest.raises(ValueError, match='bend radius'):
-        sync.validate_mechanics(registry(), tiny)
+        sync.validate_mechanics(frozen_catalog, tiny)
+    for kind,mutation,message in [('GENERIC_CAPACITOR','exit','shape exits'),('GENERIC_DIODE','radius','bend radius')]:
+        package=next(part['package'] for part in catalog['parts'] if part['editorType']==kind)
+        invalid=copy.deepcopy(mechanics)
+        profile=next(profile for profile in invalid['profiles'] if (profile['packageId'],profile['packageRevision'])==(package['id'],package['revision']))
+        if mutation=='exit':profile['pins'][0]['bodyExitMm']['y']+=.1
+        else:profile['minBendRadiusMm']=.3
+        with pytest.raises(ValueError,match=message):sync.validate_mechanics(catalog,invalid)

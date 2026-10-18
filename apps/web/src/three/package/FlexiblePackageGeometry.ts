@@ -42,7 +42,7 @@ export function updateFlexiblePackageGeometry(group: Group, module: CircuitModul
   for (let i = 0; i < replacements.length; i++) {
     const replacement = replacements[i]!, lead = geometry.leads[i]!, old = replacement.surface.geometry
     replacement.surface.geometry = replacement.geometry; replacement.surface.userData.leadPoints = replacement.points.map(p => p.toArray()); old.dispose()
-    const anchor = replacement.points.at(-1)!
+    const anchor = local(lead.contact)
     anchors[lead.pinId] = anchor.toArray()
     const target = group.getObjectByName(`package-pin-target-${lead.pinId}`), highlight = group.getObjectByName(`package-pin-highlight-${lead.pinId}`)
     if (target) target.position.copy(anchor)

@@ -672,6 +672,53 @@
       "defaults": {},
       "parameters": [],
       "memoryContract": "memory-image/1.0"
+    },
+    {
+      "type": "LABEL",
+      "name": "Label",
+      "family": "notation",
+      "visual": "label",
+      "size": [
+        0.7,
+        0.005,
+        0.3
+      ],
+      "color": "#FAFAF7",
+      "ports": [],
+      "defaults": {
+        "version": 1,
+        "text": "Hello",
+        "fontSizeMm": 3,
+        "textColor": "#20252A",
+        "backgroundColor": "#FAFAF7",
+        "paddingMm": 1
+      },
+      "parameters": [
+        {
+          "key": "text",
+          "label": "Text",
+          "kind": "string",
+          "maxLength": 256
+        },
+        {
+          "key": "fontSizeMm",
+          "label": "Font size (mm)",
+          "kind": "number",
+          "min": 2,
+          "max": 6
+        },
+        {
+          "key": "textColor",
+          "label": "Text color",
+          "kind": "color"
+        },
+        {
+          "key": "backgroundColor",
+          "label": "Background color",
+          "kind": "color"
+        }
+      ],
+      "visualOnly": true
     }
   ],
   "legacyPorts": {

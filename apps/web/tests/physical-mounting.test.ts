@@ -7,7 +7,7 @@ import { solveMounting, validateMountBindings } from '../src/electrical/mounting
 import { moduleLocalToWorld, moduleWorldPose } from '../src/electrical/modulePose'
 import { resolveElectricalNets } from '../src/electrical/nets'
 import type { CircuitModule, CircuitGraph } from '../src/contracts/generated/dto'
-import { getPartForType, MM_TO_WORLD } from '../src/data/partCatalog'
+import { getPartForType, historicalPartCatalog, physicalDescriptorForPart, MM_TO_WORLD } from '../src/data/partCatalog'
 import { getBreadboardContact } from '../src/electrical/BreadboardTopology'
 import parity from '../../../contracts/design-models/fixtures/physical-mounting-parity.json'
 import { createSceneManager } from '../src/three/SceneManager'
@@ -139,9 +139,9 @@ test('half-turn mounting around the zero coordinate does not shift a legal footp
 
 test('moving and yawing a pinned revision one generic rigid part preserves its package and contact spacing', () => {
   const b: CircuitModule = { id: 'BB', type: 'BREADBOARD' }
-  const legacy = solveMounting('RESISTOR_AXIAL', { x: -1.3, y: .309, z: -.715 }, 0, [b], 'R')!
+  const historical=historicalPartCatalog.filter(part=>part.editorType==='GENERIC_RESISTOR').sort((a,b)=>a.revision-b.revision)[0]!
+  const legacy = solveMounting('GENERIC_RESISTOR', { x: -1.3, y: .309, z: -.715 }, 0, [b], 'R',physicalDescriptorForPart(historical))!
   assert.equal(legacy.valid, true, legacy.reason)
-  legacy.mount.partId = 'GENERIC-RESISTOR-AXIAL'
   const original = structuredClone(legacy.mount)
   const store = useCircuitStore()
   store.importGraph({ schema_version: '1.1', circuit_id: 'legacy-rigid', modules: [b, { id: 'R', type: 'GENERIC_RESISTOR', mount: legacy.mount }], connections: [] })

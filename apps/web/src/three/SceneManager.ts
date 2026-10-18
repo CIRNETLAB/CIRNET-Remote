@@ -9,6 +9,12 @@ import { applyPackageSimulation, setPackagePinHighlight } from './PackageModel'
 import { getPartForType, getPartForModule, physicalDescriptorForPart } from '../data/partCatalog'
 import { canUpdatePackageAppearance, updatePackageAppearance } from './PackageModel'
 import { updateFlexiblePackageGeometry } from './package/FlexiblePackageGeometry'
+import { updateMountedPackageInsertion } from './package/MountedPackageInsertion'
+import { updateLabelModel } from './LabelModel'
+import { synchronizeLabelBoardPoses } from '../geometry/labelBoardPose'
+import { displaySegmentsFromPinEvidence, type ObservedPinLevels } from './package/DisplayPinEvidence'
+import type { ContactControlHit } from '../editor/contactInteraction'
+import { MM_TO_WORLD } from '../data/partCatalog'
 import { MeshBasicMaterial, SphereGeometry } from 'three'
 import { isFlexibleMount } from '../electrical/flexibleGeometry'
 import { createStudioEnvironment } from './StudioEnvironment'
@@ -88,7 +94,8 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     const board = modulePose(boardId)
     if (!board) return
     const poses = [...modules.values()].map(m => m.id === boardId ? board : m)
-    for (const child of poses.filter(m => m.mount?.boardId === boardId)) {
+    const associated = synchronizeLabelBoardPoses([...modules.values()], poses)
+    for (const child of associated.filter(m => m.mount?.boardId === boardId || m.type === 'LABEL' && m.properties?.boardId === boardId)) {
       const model = models.get(child.id)
       if (model) { applyPose(model, moduleWorldPose(child, poses)); wireLayer.updateModule(child.id) }
     }
@@ -122,12 +129,13 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
   const selectionPreview = createSelectionPreview(); scene.add(selectionPreview.root)
   let gizmoObstacles: GizmoObstacle[] = []
   let gizmoLayoutRevision = 0
-  const gizmoModel = () => ghost ?? (highlightedId ? models.get(highlightedId) : undefined)
+  const gizmoModel = () => ghost ? ghostModule?.type === 'LABEL' ? undefined : ghost : highlightedId ? models.get(highlightedId) : undefined
   const updateGizmo = () => {gizmo.update(gizmoModel(), models.values(), camera, width, height, gizmoObstacles, gizmoLayoutRevision);updateFlexibleHandles()}
   const raycaster = new Raycaster()
   let width = 1, height = 1, sized = false, frame: number | null = null, disposed = false, visible = false, suspended = false, pointerLocked = false
   let bufferWidth = 0, bufferHeight = 0
   let ghost: Group | null = null
+  let ghostModule: CircuitModule | null = null
   let highlightedPinModel: Group | null = null
   let showPins = false
   let transition: {
@@ -394,7 +402,11 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
         if (model && model.userData.signature !== signature) {
           const part = getPartForModule(module)
           const descriptorChanged=JSON.stringify(JSON.parse(model.userData.signature).slice(2))!==JSON.stringify(JSON.parse(signature).slice(2))
-          if (!descriptorChanged && model.userData.type === module.type && part && canUpdatePackageAppearance(part)) {
+          if (!descriptorChanged && model.userData.type === 'LABEL' && module.type === 'LABEL') {
+            if (updateLabelModel(model, module)) { if (activeOutline?.id === module.id) removeActiveOutline(); removeMultiOutline(module.id) }
+            model.userData.signature = signature
+          }
+          else if (!descriptorChanged && model.userData.type === module.type && part && canUpdatePackageAppearance(part)) {
             const geometryRevision = model.userData.visualGeometryRevision
             updatePackageAppearance(model, module, part); model.userData.signature = signature
             if (activeOutline?.id === module.id && model.userData.visualGeometryRevision !== geometryRevision) removeActiveOutline()
@@ -407,6 +419,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
         if (!model) { model = buildComponent(module, next!.modules); model.userData.onVisualChange = schedule; models.set(module.id, model); content.add(model) }
         const previousRevision = model.userData.visualGeometryRevision
         updateFlexiblePackageGeometry(model, module, next!.modules)
+        updateMountedPackageInsertion(model, module, next!.modules)
         if (previousRevision !== model.userData.visualGeometryRevision) { if (activeOutline?.id === module.id) removeActiveOutline(); removeMultiOutline(module.id) }
         applyPose(model, moduleWorldPose(module, next!.modules))
         if (showPins) { const part = getPartForModule(module); if (part) setPackagePinLabels(model, part, null, true) }
@@ -419,16 +432,18 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     previewRotation(id: string, degrees: number) { const model = models.get(id); if (model && !disposed && Number.isFinite(degrees)) { model.rotation.y = (degrees % 360) * Math.PI / 180; model.updateMatrixWorld(true); previewMountedChildren(id); wireLayer.updateModule(id); schedule() } },
     setMountPreview(candidate: MountCandidate | null) {
       clearMountPreview()
+      if (ghost && ghostModule) updateMountedPackageInsertion(ghost, { ...ghostModule, ...(candidate?.valid && candidate.mount ? { mount: candidate.mount } : { mount: undefined }) }, [...modules.values()])
       for (const pin of candidate?.pins ?? []) {
         const marker = new LineLoop(mountMarkerGeometry, pin.valid ? mountMarkerValid : mountMarkerInvalid)
         marker.position.set(pin.position.x, pin.position.y + .03, pin.position.z); marker.renderOrder = 20; mountPreview.add(marker)
       }
       schedule()
     },
-    setSimulationStates(states: Record<string, { state?: string; reason?: string }> | null) {
+    setSimulationStates(states: Record<string, { state?: string; reason?: string }> | null, pinValues: ObservedPinLevels = {}) {
       for (const [id, model] of models) {
-        const state = states?.[id]
-        applyPackageSimulation(model, state ? { status: state.state, ledOn: state.state === 'ON' } : null)
+        const state = states?.[id], module = modules.get(id), part = module && getPartForModule(module)
+        const segments = part ? displaySegmentsFromPinEvidence(part, id, pinValues, state?.state) : []
+        applyPackageSimulation(model, state ? { status: state.state, ledOn: state.state === 'ON', segments } : null)
       }
       schedule()
     },
@@ -445,6 +460,29 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       }
       return raycaster.ray.intersectPlane(new Plane(new Vector3(0, 1, 0), 0), new Vector3())
     },
+    labelPlacementPoint(x: number, y: number): { boardId: string; position: Point3; rotation: number } | null {
+      if (!validPointer(x, y)) return null
+      ray(x, y); scene.updateMatrixWorld(true)
+      const boards = [...models].filter(([id]) => getBreadboardTopology(modules.get(id)!.type)).map(([, model]) => model)
+      const hit = raycaster.intersectObjects(boards, true)[0]
+      if (!hit) return null
+      const owner = pickOwner(hit.object), module = modules.get(owner.userData.id), topology = module && getBreadboardTopology(module.type)
+      if (!module || !topology) return null
+      const point = raycaster.ray.intersectPlane(new Plane(new Vector3(0, 1, 0), -(owner.position.y + topology.deckHeight + .15 * MM_TO_WORLD)), new Vector3())
+      return point ? { boardId: module.id, position: { x: point.x, y: point.y, z: point.z }, rotation: owner.rotation.y * 180 / Math.PI } : null
+    },
+    pickContactControl(x: number, y: number): ContactControlHit | null {
+      if (!validPointer(x, y)) return null
+      scene.updateMatrixWorld(true)
+      const hit = contentHit(x, y)
+      if (!hit) return null
+      const owner = pickOwner(hit.object)
+      for (let object: Object3D | null = hit.object; object; object = object.parent) {
+        if (object.userData.contactControl) return { id: owner.userData.id, property: object.userData.contactControl }
+        if (object === owner) break
+      }
+      return null
+    },
     previewSupplyControl(id: string, control: SupplyControl, value: number | boolean) {
       const model = models.get(id), module = modules.get(id)
       if (model && module && getDefinition(module.type)?.visual === 'supply' && !disposed) {
@@ -454,6 +492,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     setGhost(type: string | null, position?: Required<NonNullable<CircuitModule['position']>>, rotation = 0, properties?: Record<string, unknown>) {
       if (disposed || !Number.isFinite(rotation) || (position && ![position.x, position.y, position.z].every(Number.isFinite))) return
       const part=type?getPartForType(type):undefined,physicalDescriptor=part?physicalDescriptorForPart(part):undefined
+      ghostModule = type && position ? { id: 'PLACE', type, position, rotation, properties, physicalDescriptor } : null
       if (ghost && type && position && ghost.userData.signature === JSON.stringify([type, properties,undefined,undefined,undefined,undefined,physicalDescriptor])) { applyPose(ghost, { id: 'PLACE', type, position, rotation, properties,physicalDescriptor }); updateGizmo(); schedule(); return }
       if (ghost) { disposeObject(ghost); scene.remove(ghost); ghost = null }
       if (type && position && getDefinition(type)) {
@@ -509,6 +548,8 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       // Close-up tubes can occupy many pixels: their visible surface is a hit
       // even when the forgiving centerline margin is outside the cursor.
       const tube = raycaster.intersectObjects(wireMeshes(), false)[0]
+      const owner = body && pickOwner(body.object)
+      if (body && owner?.userData.type === 'LABEL' && (!tube || tube.distance >= body.distance - 1e-7)) return { kind: 'module', id: owner.userData.id, point: body.point.clone() }
       if (tube && (!body || tube.distance <= body.distance + .015)) return { kind: 'wire', ...tube.object.userData as WireIdentity, point: tube.point.clone() }
       let best: { wire: WireIdentity; point: Vector3; distance: number; pixels: number } | null = null
       for (const mesh of wires.children) {
@@ -519,13 +560,12 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
         }
       }
       if (best) return { kind: 'wire', ...best.wire, point: best.point }
-      const owner = body && pickOwner(body.object)
       return owner?.userData.kind ? { ...owner.userData, point: body!.point.clone() } as PickResult : null
     },
     pickEndpoint(x: number, y: number, excludeModuleId?:string): EndpointPick | null {
       if (!validPointer(x, y)) return null
       scene.updateMatrixWorld(true)
-      const hit = contentHit(x, y, excludeModuleId)
+      const hit = contentHit(x, y, excludeModuleId, true)
       if (!hit) return null
       const owner = pickOwner(hit.object)
       if (owner.userData.kind === 'port') return { kind: 'port', id: owner.userData.id, endpoint: owner.userData.endpoint, point: hit.point.clone() }

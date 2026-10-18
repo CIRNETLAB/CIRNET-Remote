@@ -13,6 +13,7 @@ import {withCircuitModules} from './graphVersion'
 import {buildFlexibleTransformCandidate} from '../../electrical/flexibleTransforms'
 import { createMemoryImage, parseMemoryImage } from './memoryImage'
 import { normalizeComponentProperties } from '../../data/componentProperties'
+import { normalizeLabelProperties } from '../../data/labelProperties'
 import { isLeadEditableType } from '../../data/leadProperties'
 import { buildDeleteCandidate, buildMoveSelectionCandidate, buildPasteCandidate, type MoveCandidate, type PasteOptions } from '../../editor/batchCommands'
 import { captureSelectionClipboard, type SelectionClipboard } from '../../editor/selectionClipboard'
@@ -239,6 +240,11 @@ export function updateModuleProperties(state:EditorDocumentState, id: string, pa
   const graph=currentGraph(state)
   const module = graph?.modules.find((module) => module.id === id)
   if (!module || !graph) return
+  if (module.type === 'LABEL') {
+    const properties = { ...normalizeLabelProperties({ ...module.properties, ...patch }) }
+    checkedCommit(state,withCircuitModules(graph,graph.modules.map(item=>item.id===id?{...item,properties}:item)))
+    return
+  }
   const definition = getDefinition(module.type)
   const normalizedPatch = normalizeComponentProperties(module.type, patch)
   if (Object.keys(normalizedPatch).some((key) => !definition?.parameters.some((parameter) => parameter.key === key) && !(isLeadEditableType(module.type) && ['leadForm', 'leadLengthMm', 'bodyLiftMm'].includes(key)))) throw new Error('Unsupported component parameter.')

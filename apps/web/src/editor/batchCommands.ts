@@ -15,6 +15,7 @@ import { clipboardContactWorld as contactWorld, selectionModulePosition as posit
 import {isFlexibleMount} from '../electrical/flexibleGeometry'
 import {reframeFlexibleMount} from '../electrical/reframeFlexibleMount'
 import {withCircuitModules} from '../domain/document/graphVersion'
+import { remapLabelBoardReference, synchronizeLabelBoardPoses } from '../geometry/labelBoardPose'
 
 export const WORLD_PASTE_STEP = .5
 const EPS = 1e-7
@@ -122,7 +123,7 @@ export function buildPasteCandidate(graph: CircuitGraph, snapshot: SelectionClip
     const owners = new Map([...idMap, ...boardMap])
 
     // Boards precede their copied mounted parts so their poses can be resolved immediately.
-    const copies = snapshot.modules.filter(module => !module.mount).map(module => ({ ...clone(module), id: idMap.get(module.id)!, position: transform(positionOf(moduleWorldPose(module, snapshot.sourceModules))), rotation: norm((module.rotation ?? 0) + rotate) }))
+    const copies = snapshot.modules.filter(module => !module.mount).map(module => remapLabelBoardReference({ ...clone(module), id: idMap.get(module.id)!, position: transform(positionOf(moduleWorldPose(module, snapshot.sourceModules))), rotation: norm((module.rotation ?? 0) + rotate) }, owners))
     draft = withCircuitModules(draft, [...graph.modules, ...copies])
     for (const original of snapshot.modules.filter(module => module.mount)) {
       const module = clone(original), mount = module.mount!
@@ -250,7 +251,7 @@ export function buildDeleteCandidate(graph: CircuitGraph, selection: EditorSelec
     })
     return { ...wire, metadata: { ...wire.metadata, wireVisual: visual } }
   })
-  const candidate = withCircuitModules(graph, modules, connections)
+  const candidate = withCircuitModules(graph, synchronizeLabelBoardPoses(graph.modules, modules), connections)
   parseCircuitFile(JSON.stringify(candidate))
   return candidate
 }
@@ -301,7 +302,7 @@ export function buildMoveSelectionCandidate(graph: CircuitGraph, selection: Edit
         previewModules.push({ ...rest, position: freePos, rotation: item.rotation ?? currentPose.rotation, ...(part ? { physicalDescriptor: physicalDescriptorForPart(part) } : {}) })
       }
     }
-    return withCircuitModules(graph,previewModules,[...graph.connections])
+    return withCircuitModules(graph,synchronizeLabelBoardPoses(graph.modules,previewModules),[...graph.connections])
   }
 
   for (const module of remountQueue) {
@@ -338,7 +339,7 @@ export function buildMoveSelectionCandidate(graph: CircuitGraph, selection: Edit
     draftModules.push({ ...rest, mount: candidate.mount })
   }
 
-  const draft: CircuitGraph = withCircuitModules(graph,draftModules,[])
+  const draft: CircuitGraph = withCircuitModules(graph,synchronizeLabelBoardPoses(graph.modules,draftModules),[])
 
   try {
     validateMountBindings(draft)

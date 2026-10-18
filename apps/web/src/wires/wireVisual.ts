@@ -1,5 +1,6 @@
 import type { CircuitConnection, CircuitModule, WireControlPoint, WireIdentity, WireVisual } from '../types/circuit'
 import { parseStructural } from '../contracts/structural'
+import { NEW_WIRE_DIAMETER } from './wireAppearance'
 
 export const JUMPER_COLORS = [
   { name: 'Black', value: '#24272a' }, { name: 'Gray', value: '#858b91' }, { name: 'White', value: '#e6e6de' },
@@ -8,7 +9,8 @@ export const JUMPER_COLORS = [
   { name: 'Blue', value: '#397ec6' }, { name: 'Purple', value: '#8656a8' },
 ] as const
 export const wireKey = (wire: WireIdentity): string => JSON.stringify([wire.source, wire.destination])
-export const defaultWireVisual = (): WireVisual => ({ version: 1, color: '#71b3ce', routeMode: 'AUTO', controlPoints: [], thickness: .036, height: .03 })
+export const defaultWireVisual = (): WireVisual => ({ version: 1, color: '#71b3ce', routeMode: 'AUTO', controlPoints: [], thickness: NEW_WIRE_DIAMETER, height: .03 })
+const legacyWireVisual = (): WireVisual => ({ ...defaultWireVisual(), thickness: .036 })
 const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v)
 
 function validate(value: unknown, modules?: CircuitModule[]): void {
@@ -30,5 +32,5 @@ export function readWireVisual(connection: CircuitConnection): WireVisual {
     validate(value)
     if ((value as WireVisual).version === 1) return copyWireVisual(value as WireVisual)
   } catch { /* Legacy/unknown visual metadata must never change electrical endpoints. */ }
-  return defaultWireVisual()
+  return legacyWireVisual()
 }

@@ -371,6 +371,11 @@
       "execution": "UNAVAILABLE"
     },
     {
+      "type": "LABEL",
+      "ports": [],
+      "execution": "VISUAL"
+    },
+    {
       "type": "SN74HC08N",
       "ports": [
         {
@@ -4002,6 +4007,27 @@
         }
       ],
       "execution": "UNAVAILABLE"
+    },
+    {
+      "type": "SLIDE_SWITCH_SS12D10",
+      "ports": [
+        {
+          "id": "1",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "2",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        },
+        {
+          "id": "3",
+          "direction": "inout",
+          "domain": "DIGITAL"
+        }
+      ],
+      "execution": "DC_DIGITAL"
     },
     {
       "type": "AND",

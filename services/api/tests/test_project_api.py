@@ -70,3 +70,28 @@ def test_http_storage_preserves_legacy_structural_integer_representation(project
         stored=response.json()
         assert stored['graph']==original and type(stored['graph']['modules'][0]['position']['x']) is int
         assert client.get('/api/circuits/'+stored['document_id']).json()['graph']==original
+
+
+def test_label_unicode_pose_and_visual_board_association_survive_api_save_reopen_and_revisions(project_app):
+    from contracts.label_properties import DEFAULT_LABEL_PROPERTIES
+    original = dict(schema_version='1.2', circuit_id='visual-annotation', modules=[
+        dict(id='B', type='BREADBOARD', position=dict(x=2,y=0,z=3), rotation=37),
+        dict(id='L', type='LABEL', position=dict(x=2.5,y=.348,z=3.2), rotation=127,
+             properties={**DEFAULT_LABEL_PROPERTIES,'text':'Điện trở < 1 kΩ\nNguồn 5 V','boardId':'B'}),
+    ], connections=[], metadata={'note':'ordinary document history'})
+    with TestClient(project_app) as client:
+        project = client.post('/api/projects',json={'name':'Notes'},headers=headers(client)).json()
+        response = client.post('/api/v2/projects/'+project['project_id']+'/circuits',json={'name':'Annotated','graph':original},headers=headers(client))
+        assert response.status_code == 201, response.text
+        saved = response.json(); assert saved['graph'] == original
+        assert client.get('/api/v2/circuits/'+saved['document_id']).json()['graph'] == original
+        edited = deepcopy(original)
+        edited['modules'][1]['properties']['text'] = '<script>alert("plain text")</script>\nĐổi nhãn'
+        edited['modules'][1]['rotation'] = 217
+        response = client.put('/api/v2/circuits/'+saved['document_id'],json={'base_revision':1,'name':'Edited','graph':edited},headers=headers(client))
+        assert response.status_code == 200 and response.json()['revision'] == 2, response.text
+        assert client.get('/api/v2/circuits/'+saved['document_id']).json()['graph'] == edited
+        invalid = deepcopy(edited); invalid['modules'][1]['properties']['fontSizeMm'] = 100
+        response = client.put('/api/v2/circuits/'+saved['document_id'],json={'base_revision':2,'name':'Bad','graph':invalid},headers=headers(client))
+        assert response.status_code == 422, response.text
+        assert client.get('/api/v2/circuits/'+saved['document_id']).json()['graph'] == edited

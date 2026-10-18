@@ -3,9 +3,16 @@ import assert from 'node:assert/strict'
 import { nextTick, type Ref } from 'vue'
 import { wireHarness } from './helpers/wireHarness'
 import type { CircuitConnection, WireIdentity, WireVisual } from '../src/types/circuit'
-import { readWireVisual } from '../src/wires/wireVisual'
+import { defaultWireVisual, readWireVisual, wireKey } from '../src/wires/wireVisual'
 import { parseCircuitFile } from '../src/services/files/circuitFile'
 import { shiftedWireCopy } from '../src/wires/wireClipboard'
+import { solveFeasibleWireRoute } from '../src/wires/wireFeasibility'
+import { closestSegmentApproach } from '../src/electrical/leadPath'
+import { graphWireRouteContext } from '../src/three/SelectionGhostRoutes'
+import { solveWireRoute } from '../src/wires/wireRouting'
+import { createWireLayoutCache } from '../src/wires/wireLayout'
+import { renderWireDiameter, WIRE_MIN_BEND_RADIUS } from '../src/wires/wireAppearance'
+import { deriveWireParts } from '../src/three/WireTerminals'
 
 interface MenuApi {
   contextMenuState: Ref<{ x: number; y: number; wire: WireIdentity } | null>
@@ -23,11 +30,12 @@ function menu(h: ReturnType<typeof wireHarness>): MenuApi {
   assert.equal(typeof Reflect.get(h.editor.wireRouting, 'openContextMenu'), 'function', 'existing wires need a context menu command API')
   return h.editor.wireRouting as unknown as MenuApi
 }
-function setupWire(h: ReturnType<typeof wireHarness>, rotation = 0, first = '01', last = '08') {
+function setupWire(h: ReturnType<typeof wireHarness>, rotation = 0, first = '01', last = '08', sharpReturn = false) {
   const board = h.circuit.placeModule('BREADBOARD', { x: 2, y: .1, z: 3 }, rotation)
+  const angle=rotation*Math.PI/180
   const visual: WireVisual = { version: 1, color: '#8656a8', routeMode: 'FREE', thickness: .052, height: .07, layer: 2, frameModuleId: board, controlPoints: [
-    { space: 'module', moduleId: board, position: { x: -3.5, y: .6, z: -.4 } },
-    { space: 'world', position: { x: 2, y: .75, z: 3 } },
+    { space: 'module', moduleId: board, position: { x: sharpReturn?-3.5:-3.8, y: .6, z: -.4 } },
+    { space: 'world', position: sharpReturn?{ x: 2, y: .75, z: 3 }:{ x: 2-3.5*Math.cos(angle)+.2*Math.sin(angle), y: .75, z: 3+3.5*Math.sin(angle)+.2*Math.cos(angle) } },
   ] }
   const wire = { source: `${board}.contact:terminal:A:${first}`, destination: `${board}.contact:terminal:J:${last}` }
   h.circuit.connectEndpoints(wire.source, wire.destination, visual)
@@ -35,6 +43,40 @@ function setupWire(h: ReturnType<typeof wireHarness>, rotation = 0, first = '01'
   h.circuit.past = []
   return { board, wire, visual }
 }
+
+test('a copied sharp return whose rounded insulation overlaps is rejected atomically', () => {
+  const h=wireHarness()
+  try {
+    const {wire}=setupWire(h,0,'01','08',true),api=menu(h)
+    api.openContextMenu(0,0,wire);assert.equal(api.menuDuplicate(),true)
+    const before=h.circuit.snapshot()
+    assert.equal(api.duplicatePreviewState.value.valid,false)
+    assert.equal(api.commitDuplicatePreview(),false)
+    assert.equal(h.circuit.snapshot(),before);assert.equal(h.circuit.past.length,0)
+    assert.match(h.workspace.editError,/geometry|clearance|bend|overlap/i)
+  } finally {h.dispose()}
+})
+
+test('shared endpoint convergence stays local and cannot exempt a long insulation overlap', () => {
+  const visual={...defaultWireVisual(),thickness:.052,routeMode:'FREE' as const},first={source:'S.OUT',destination:'A.IN'},second={source:'S.OUT',destination:'B.IN'}
+  const peer={...first,metadata:{wireVisual:visual}}
+  const context=(spread:number)=>({modulePose:()=>null,endpoint:(endpoint:string)=>({endpoint,position:endpoint==='S.OUT'?{x:0,y:1,z:0}:{x:4,y:1,z:endpoint==='A.IN'?0:spread}})})
+  assert.ok(solveFeasibleWireRoute(second,visual,[peer],context(1)),'diverging bodies may share their local terminal convergence')
+  assert.equal(solveFeasibleWireRoute(second,visual,[peer],context(.2)),null,'a common endpoint cannot exempt overlap farther along the bodies')
+})
+
+test('route-mode toolbar changes reject a legacy overlapping bundle atomically', async () => {
+  const h=wireHarness()
+  try {
+    const {wire,visual}=setupWire(h,0,'01','08',true),copy=shiftedWireCopy(h.circuit.graph!,wire,visual,1)
+    h.circuit.connectEndpoints(copy.wire.source,copy.wire.destination,copy.visual)
+    h.workspace.setTool('select');h.workspace.selectWire(wire.source,wire.destination);await nextTick();h.flush();h.circuit.past=[]
+    const before=h.circuit.snapshot()
+    h.editor.wireRouting.setRouteMode('ORTHOGONAL')
+    assert.equal(h.circuit.snapshot(),before);assert.equal(h.circuit.past.length,0)
+    assert.match(h.workspace.editError,/clearance|geometry|overlap/i)
+  } finally {h.dispose()}
+})
 
 test('Duplicate snapshots one wire without a graph command; consecutive menu pastes shift contacts with one Undo each', async () => {
   const h = wireHarness()
@@ -58,12 +100,19 @@ test('Duplicate snapshots one wire without a graph command; consecutive menu pas
       assert.equal(pasted.destination, `${wire.destination.slice(0, -2)}${expected[1]}`)
       assert.equal(copy.color, '#8656a8'); assert.equal(copy.routeMode, 'FREE'); assert.equal(copy.height, .07)
       assert.equal(copy.thickness, .052); assert.ok((copy.layer ?? 0) >= 2); assert.equal(copy.frameModuleId, visual.frameModuleId)
-      assert.ok(Math.abs(copy.controlPoints[0].position.x - (-3.5 + .13 * step)) < 1e-10)
-      assert.ok(Math.abs(copy.controlPoints[1].position.x - (2 + .13 * step)) < 1e-10)
-      assert.equal(copy.controlPoints[0].position.y, .6); assert.equal(copy.controlPoints[1].position.z, 3)
+      assert.ok(Math.abs(copy.controlPoints[0].position.x - (-3.8 + .13 * step)) < 1e-10)
+      assert.ok(Math.abs(copy.controlPoints[1].position.x - (-1.5 + .13 * step)) < 1e-10)
+      assert.equal(copy.controlPoints[0].position.y, .6); assert.equal(copy.controlPoints[1].position.z, 3.2)
       assert.equal(h.circuit.past.length, step)
     }
     const exported = h.circuit.exportGraph()
+    const context=graphWireRouteContext(()=>h.circuit.graph),inputs=h.circuit.graph!.connections.map(wire=>{const visual=readWireVisual(wire);return{wire,visual,route:solveWireRoute(wire,visual,context)!}}),layouts=createWireLayoutCache().sync(inputs)
+    const bodies=inputs.map(input=>{const diameter=renderWireDiameter(input.visual),path=deriveWireParts(layouts.get(wireKey(input.wire))!,diameter).bodyPath;assert.ok(path.bendRadii.every(radius=>radius>=WIRE_MIN_BEND_RADIUS-1e-8));return{diameter,path}})
+    for(let a=0;a<bodies.length;a++)for(let b=a+1;b<bodies.length;b++){
+      let minimum=Infinity
+      for(let i=1;i<bodies[a].path.samples.length;i++)for(let j=1;j<bodies[b].path.samples.length;j++)minimum=Math.min(minimum,closestSegmentApproach(bodies[a].path.samples[i-1],bodies[a].path.samples[i],bodies[b].path.samples[j-1],bodies[b].path.samples[j]).distance)
+      assert.ok(minimum>=(bodies[a].diameter+bodies[b].diameter)/2+bodies[a].path.sampleError+bodies[b].path.sampleError-1e-8,'committed copies clear their actual rounded insulation envelopes')
+    }
     assert.deepEqual(parseCircuitFile(exported).connections, h.circuit.graph!.connections)
     assert.equal(exported.includes('clipboard'), false)
     h.circuit.undo(); assert.equal(h.circuit.graph!.connections.length, 2)
@@ -78,10 +127,10 @@ test('rotated breadboard Paste advances local X and transforms world anchors wit
     api.openContextMenu(0, 0, wire); api.menuDuplicate()
     assert.equal(api.commitDuplicatePreview(), true)
     const copy = readWireVisual(h.circuit.graph!.connections[1])
-    assert.ok(Math.abs(copy.controlPoints[0].position.x + 3.37) < 1e-10)
+    assert.ok(Math.abs(copy.controlPoints[0].position.x + 3.67) < 1e-10)
     assert.equal(copy.controlPoints[0].space, 'module')
-    assert.ok(Math.abs(copy.controlPoints[1].position.x - 2) < 1e-10)
-    assert.ok(Math.abs(copy.controlPoints[1].position.z - 2.87) < 1e-10)
+    assert.ok(Math.abs(copy.controlPoints[1].position.x - 2.2) < 1e-10)
+    assert.ok(Math.abs(copy.controlPoints[1].position.z - 6.37) < 1e-10)
     assert.equal(copy.controlPoints[1].position.y, .75)
   } finally { h.dispose() }
 })
@@ -156,15 +205,15 @@ test('wire drawing, placement and zoom retain priority over the existing-wire me
 test('same-orientation boards support a shared rigid Paste; unequal local-X directions reject without deforming the route', () => {
   const h = wireHarness()
   try {
-    const a = h.circuit.placeModule('BREADBOARD_630', { x: 0, y: 0, z: -4 }, 90)
-    const b = h.circuit.placeModule('BREADBOARD_630', { x: 0, y: 0, z: 4 }, 90)
-    const wire: CircuitConnection = { source: `${a}.contact:terminal:A:01`, destination: `${b}.contact:terminal:J:08` }
-    h.circuit.connectEndpoints(wire.source, wire.destination, { version: 1, color: '#397ec6', routeMode: 'ORTHOGONAL', thickness: .04, controlPoints: [{ space: 'module', moduleId: b, position: { x: 0, y: .5, z: 0 } }] })
+    const a = h.circuit.placeModule('BREADBOARD_630', { x: -4, y: 0, z: 0 }, 90)
+    const b = h.circuit.placeModule('BREADBOARD_630', { x: 4, y: 0, z: 0 }, 90)
+    const wire: CircuitConnection = { source: `${a}.contact:terminal:A:01`, destination: `${b}.contact:terminal:J:01` }
+    h.circuit.connectEndpoints(wire.source, wire.destination, { version: 1, color: '#397ec6', routeMode: 'ORTHOGONAL', thickness: .04, controlPoints: [{ space: 'module', moduleId: b, position: { x: -4.03, y: .5, z: 0 } }] })
     h.editor.sync()
     const api = menu(h)
     api.openContextMenu(0, 0, wire); api.menuDuplicate()
     assert.equal(api.commitDuplicatePreview(), true)
-    assert.ok(Math.abs(readWireVisual(h.circuit.graph!.connections[1]).controlPoints[0].position.x - .13) < 1e-10)
+    assert.ok(Math.abs(readWireVisual(h.circuit.graph!.connections[1]).controlPoints[0].position.x + 3.9) < 1e-10)
     h.circuit.rotateModule(b, 90); h.circuit.past = []; api.openContextMenu(0, 0, wire)
     const before = h.circuit.snapshot()
     assert.equal(api.canPaste.value, false); assert.equal(api.menuPaste(), false)

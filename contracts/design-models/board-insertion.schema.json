@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://netcircuit.local/contracts/design/board-insertion/1.0/schema.json",
+  "title": "BoardInsertionV1",
+  "description": "Explicit CAD formed-conductor budget for the virtual breadboard profile, not a claim about native manufacturer terminal length or physical fit.",
+  "type": "object",
+  "required": ["version", "mechanicalProfileId", "maxExternalLeadMm"],
+  "properties": {
+    "version": {"const": 1},
+    "mechanicalProfileId": {"const": "BREADBOARD_MECHANICS_V1"},
+    "maxExternalLeadMm": {"type": "number", "exclusiveMinimum": 0, "maximum": 100}
+  },
+  "additionalProperties": false
+}

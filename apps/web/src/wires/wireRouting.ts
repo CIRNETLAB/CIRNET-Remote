@@ -1,8 +1,11 @@
 import type { CircuitModule, Point3, WireControlPoint, WireIdentity, WireVisual } from '../types/circuit'
-import { getBreadboardTopology } from '../electrical/BreadboardTopology'
+import { getBreadboardContact, getBreadboardTopology } from '../electrical/BreadboardTopology'
 import { moduleLocalToWorld, worldToModuleLocal } from '../electrical/modulePose'
 import { copyControlPoint } from './wireVisual'
-import { renderWireDiameter, WIRE_SURFACE_CLEARANCE } from './wireAppearance'
+import { renderWireDiameter, WIRE_SURFACE_CLEARANCE, WIRE_CORNER_RADIUS, COPPER_RADIUS_RATIO } from './wireAppearance'
+import { BREADBOARD_MECHANICAL_PROFILE, insertionContinuation } from '../geometry/BreadboardMechanicalProfile'
+import { MM_TO_WORLD } from '../data/partCatalog'
+import { wireCenterline } from './wireCenterline'
 
 export interface WireRouteEndpoint { endpoint: string; position: Point3; contactModuleId?: string }
 export interface WireRouteContext { endpoint(value: string): WireRouteEndpoint | null; modulePose(id: string): CircuitModule | null }
@@ -52,7 +55,7 @@ export function snapWirePoint(point: Point3, module: CircuitModule | null, snap:
 export function endpointLeadPosition(endpoint: WireRouteEndpoint, visual: WireVisual, context: WireRouteContext): Point3 {
   const module = endpoint.contactModuleId && context.modulePose(endpoint.contactModuleId)
   const board = module && getBreadboardTopology(module.type)
-  return board && module ? { ...endpoint.position, y: (module.position?.y ?? 0) + board.deckHeight + wireClearance(visual) } : { ...endpoint.position }
+  return board && module ? { ...endpoint.position, y: (module.position?.y ?? 0) + board.deckHeight + BREADBOARD_MECHANICAL_PROFILE.insulationClearanceMm * MM_TO_WORLD + Math.max(WIRE_CORNER_RADIUS, renderWireDiameter(visual)/2 + .1*MM_TO_WORLD) } : { ...endpoint.position }
 }
 
 export function solveWireRoute(wire: WireIdentity, visual: WireVisual, context: WireRouteContext): SolvedWireRoute | null {
@@ -64,6 +67,10 @@ export function solveWireRoute(wire: WireIdentity, visual: WireVisual, context: 
   const toLocal = (p: Point3) => frame ? worldToModuleLocal(p, frame) : { ...p }
   const toWorld = (p: Point3) => frame ? moduleLocalToWorld(p, frame) : { ...p }
   const start = endpointLeadPosition(a, visual, context), end = endpointLeadPosition(b, visual, context)
+  // Reserve the fillets before producing a sweep. A short automatic span uses
+  // one raised diagonal bridge instead of two elbows with overlapping budgets.
+  const shortAutomatic = visual.controlPoints.length === 0 && !!a.contactModuleId && !!b.contactModuleId && Math.hypot(start.x-end.x,start.z-end.z) < WIRE_CORNER_RADIUS*4
+  if (shortAutomatic) { const height=Math.max(start.y,end.y);start.y=height;end.y=height }
   const anchors: SemanticRoutePoint[] = [{ position: start, kind: a.contactModuleId ? 'TERMINAL_LEAD' : 'ENDPOINT', userIndex: null }]
   const handles: RouteHandle[] = []
   for (const [index, raw] of visual.controlPoints.entries()) {
@@ -99,7 +106,7 @@ export function solveWireRoute(wire: WireIdentity, visual: WireVisual, context: 
     const previous = anchors[i - 1], next = anchors[i], from = toLocal(previous.position), to = toLocal(next.position)
     const insertIndex = next.userIndex ?? visual.controlPoints.length
     const derived: Point3[] = []
-    if (orthogonal) {
+    if (orthogonal && !shortAutomatic) {
       // Derive each span in a canonical geometric direction, then reverse it
       // if needed. Reversing electrical endpoints cannot flip the preview shape.
       // Match the axis-equality tolerance below: module/world round trips must
@@ -107,10 +114,23 @@ export function solveWireRoute(wire: WireIdentity, visual: WireVisual, context: 
       const order = [from.x - to.x, from.z - to.z, from.y - to.y].find(delta => Math.abs(delta) > 1e-8) ?? 0
       const reversed = order > 0
       const first = reversed ? to : from, last = reversed ? from : to
+      const terminalApproach = previous.kind === 'TERMINAL_LEAD' || next.kind === 'TERMINAL_LEAD'
       const step = { ...first, y: last.y }
-      if (Math.abs(first.y - last.y) > 1e-8) derived.push(step)
+      // A socket approach may slope towards a lower manual knot. A generated
+      // vertical step directly after its normal lead would reverse through the
+      // incoming stem; it has no valid circular fillet at any radius.
+      if (!terminalApproach && Math.abs(first.y - last.y) > 1e-8) derived.push(step)
       if (Math.abs(first.x - last.x) > 1e-8 && Math.abs(first.z - last.z) > 1e-8) {
-        derived.push({ x: last.x, y: last.y, z: first.z })
+        const preferred={x:last.x,y:last.y,z:first.z},alternative={x:first.x,y:first.y,z:last.z}
+        const before=toLocal(i>1?anchors[i-2].position:a.position),after=toLocal(i+1<anchors.length?anchors[i+1].position:b.position)
+        const delta=(a:Point3,b:Point3)=>({x:b.x-a.x,y:b.y-a.y,z:b.z-a.z})
+        const score=(corner:Point3)=>{
+          const vectors=[delta(before,from),delta(from,corner),delta(corner,to),delta(to,after)].filter(vector=>Math.hypot(vector.x,vector.y,vector.z)>1e-8)
+          return Math.min(...vectors.slice(1).map((v,index)=>{const u=vectors[index];return(u.x*v.x+u.y*v.y+u.z*v.z)/(Math.hypot(u.x,u.y,u.z)*Math.hypot(v.x,v.y,v.z))}))
+        }
+        // Generated L orientation may change to avoid reversing into the next
+        // real user knot. Both saved knots retain their original identities.
+        derived.push(score(alternative)>score(preferred)+1e-8?alternative:preferred)
       }
       if (reversed) derived.reverse()
     }
@@ -122,6 +142,17 @@ export function solveWireRoute(wire: WireIdentity, visual: WireVisual, context: 
   if (points.length < 2 || !points.every(finitePoint)) return null
   const pitch = (endpoint: WireRouteEndpoint) => endpoint.contactModuleId ? getBreadboardTopology(context.modulePose(endpoint.contactModuleId)?.type ?? '')?.pitch ?? null : null
   const deck = (endpoint: WireRouteEndpoint) => { const module = endpoint.contactModuleId && context.modulePose(endpoint.contactModuleId); return module ? (module.position?.y ?? 0) + getBreadboardTopology(module.type)!.deckHeight : null }
+  const exposure = (endpoint: WireRouteEndpoint) => { const height = deck(endpoint); return height === null ? 0 : height + BREADBOARD_MECHANICAL_PROFILE.insulationClearanceMm * MM_TO_WORLD - endpoint.position.y }
+  try {
+    wireCenterline(points, renderWireDiameter(visual), { start: Math.max(0,exposure(a)), end: Math.max(0,exposure(b)) })
+    for(const endpoint of [a,b]){
+      const board=endpoint.contactModuleId&&context.modulePose(endpoint.contactModuleId),topology=board&&getBreadboardTopology(board.type)
+      if(!board||!topology)continue
+      const local=worldToModuleLocal(endpoint.position,board)
+      const contact=getBreadboardContact(board.type,endpoint.endpoint.split('.contact:')[1]??'')??topology.contacts.find(contact=>Math.hypot(local.x-contact.localPosition[0],local.y-contact.localPosition[1],local.z-contact.localPosition[2])<1e-7)
+      if(contact)insertionContinuation(board.type,contact.contactId,renderWireDiameter(visual)*COPPER_RADIUS_RATIO)
+    }
+  } catch { return null }
   const localStart = toLocal(start), localEnd = toLocal(end)
   const canonicalForward = ([localEnd.x - localStart.x, localEnd.z - localStart.z, localEnd.y - localStart.y].find(value => Math.abs(value) > 1e-8) ?? 0) >= 0
   return { points, semanticPoints, handles, segments, frameModuleId, orthogonal, canonicalForward, terminalLeads: { source: a.contactModuleId ? start : null, destination: b.contactModuleId ? end : null }, contactPitch: { source: pitch(a), destination: pitch(b) }, contactDeckY: { source: deck(a), destination: deck(b) } }

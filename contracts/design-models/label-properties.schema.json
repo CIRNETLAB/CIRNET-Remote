@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://netcircuit.local/contracts/design/label-properties/1.0/schema.json",
+  "title": "LabelPropertiesV1",
+  "description": "Plain visual annotation properties. Position and rotation remain module fields; boardId is only a visual association, never an electrical mount.",
+  "type": "object",
+  "required": ["version", "text", "fontSizeMm", "textColor", "backgroundColor", "paddingMm"],
+  "properties": {
+    "version": {"const": 1},
+    "text": {"type": "string", "maxLength": 256, "pattern": "^[^\\u0000-\\u001F\\u007F]*(?:\\n[^\\u0000-\\u001F\\u007F]*){0,3}$(?![\\s\\S])"},
+    "fontSizeMm": {"type": "number", "minimum": 2, "maximum": 6, "default": 3},
+    "textColor": {"type": "string", "pattern": "^#[0-9a-fA-F]{6}$", "default": "#20252A"},
+    "backgroundColor": {"type": "string", "pattern": "^#[0-9a-fA-F]{6}$", "default": "#FAFAF7"},
+    "paddingMm": {"const": 1},
+    "boardId": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

@@ -160,3 +160,6 @@ export const PhysicalDescriptorV1: Validator<ContractMap['PhysicalDescriptorV1']
 export const PackageLeadSectionV1: Validator<ContractMap['PackageLeadSectionV1']>
 export const PackageLeadExitV1: Validator<ContractMap['PackageLeadExitV1']>
 export const PackageShapeV1: Validator<ContractMap['PackageShapeV1']>
+export const LabelPropertiesV1: Validator<ContractMap['LabelPropertiesV1']>
+export const BoardInsertionV1: Validator<ContractMap['BoardInsertionV1']>
+export const BreadboardMechanicalProfileV1: Validator<ContractMap['BreadboardMechanicalProfileV1']>

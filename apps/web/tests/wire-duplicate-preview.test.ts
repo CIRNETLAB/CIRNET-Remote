@@ -13,7 +13,7 @@ test('Duplicate starts an uncommitted ghost; valid clicks continue with one Undo
   try {
     const board = h.circuit.placeModule('BREADBOARD_630', { x: 0, y: 0, z: 0 })
     const wire = { source: `${board}.contact:terminal:A:01`, destination: `${board}.contact:terminal:J:08` }
-    h.circuit.connectEndpoints(wire.source, wire.destination)
+    h.circuit.connectEndpoints(wire.source, wire.destination,{...defaultWireVisual(),routeMode:'FREE'})
     await nextTick(); h.flush(); h.circuit.past = []
     const api = h.editor.wireRouting as unknown as {
       duplicatePreviewState: { value: { active: boolean; valid: boolean; candidate: { wire: typeof wire } | null } }
@@ -66,7 +66,8 @@ test('pointer movement snaps a rotated board contact, rejects invalid/duplicate 
   try {
     const board = h.circuit.placeModule('BREADBOARD_630', { x: 2, y: 0, z: 1 }, 90)
     const wire = { source: `${board}.contact:terminal:A:01`, destination: `${board}.contact:terminal:J:08` }
-    h.circuit.connectEndpoints(wire.source, wire.destination, { ...defaultWireVisual(), color: '#8656a8', controlPoints: [{ space: 'module', moduleId: board, position: { x: -3, y: .7, z: 0 } }] })
+    // A diagonal manual span leaves clearance for adjacent rigid copies; AUTO elbows overlap here.
+    h.circuit.connectEndpoints(wire.source, wire.destination, { ...defaultWireVisual(), routeMode: 'FREE', thickness:.052, color: '#8656a8', controlPoints: [{ space: 'module', moduleId: board, position: { x: -3, y: .7, z: 0 } }] })
     await nextTick(); h.flush(); h.circuit.past = []
     const api = h.editor.wireRouting
     api.openContextMenu(0, 0, wire); api.menuDuplicate()
@@ -84,6 +85,7 @@ test('pointer movement snaps a rotated board contact, rejects invalid/duplicate 
     api.previewPointerMove(h.endpointEvent(`${board}.contact:terminal:A:05`)); assert.equal(api.commitDuplicatePreview(), true)
     await nextTick(); h.flush()
     assert.equal(api.duplicatePreviewState.value.active, true); assert.equal(h.circuit.past.length, 1)
+    assert.equal(api.duplicatePreviewState.value.valid, true)
     assert.equal(api.duplicatePreviewState.value.candidate!.wire.source, `${board}.contact:terminal:A:06`)
     api.cancelDuplicatePreview(); assert.equal(api.canPaste.value, true)
     assert.equal(h.manager.scene.getObjectByName('wire-duplicate-preview'), undefined)

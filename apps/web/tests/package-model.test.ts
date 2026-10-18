@@ -277,13 +277,13 @@ test('mounted DIP pin hit volumes remain pickable above real sockets in top and 
 
 test('every declared lab package builds its exact pin set and a package-specific body', () => {
   for (const part of partCatalog) {
-    const model = buildComponent({ id: 'P1', type: part.editorType, properties: { ...part.editor.defaults } })
+    const model = buildComponent({ id: 'P1', type: part.editorType, physicalDescriptor: physicalDescriptorForPart(part), properties: { ...part.editor.defaults } })
     try {
       assert.ok(model.getObjectByName(part.editor.visual === 'supply' ? 'supply-enclosure' : 'package-body'), part.editorType)
       if (part.editor.visual !== 'supply') assert.deepEqual(model.children.filter(child => child.userData.physicalLead).map(child => child.userData.pinId), part.package.pins.map(pin => pin.id), part.editorType)
       assert.equal(model.children.filter(child => child.userData.pinTarget).length, part.package.pins.length)
       assert.equal(model.userData.definitionId, part.id)
-      if (part.package.family === 'buzzer') assert.ok(model.getObjectByName('package-buzzer-opening'))
+      if (part.package.family === 'buzzer') assert.ok(model.getObjectByName(part.package.shape?.family === 'buzzer' ? 'package-buzzer-diaphragm' : 'package-buzzer-opening'))
     } finally { disposeObject(model) }
   }
 })

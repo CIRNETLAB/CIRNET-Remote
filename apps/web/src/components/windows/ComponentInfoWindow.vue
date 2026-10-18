@@ -9,11 +9,13 @@ import { componentAddType, componentDesignTransition, componentDisplayName, getP
 import domains from '../../data/signalPortCatalog.json'
 import WorkbenchIcon from '../workbench/WorkbenchIcon.vue'
 import ComponentPropertiesForm from './ComponentPropertiesForm.vue'
+import LabelPropertiesForm from './LabelPropertiesForm.vue'
 import ComponentThumbnail from '../workbench/ComponentThumbnail.vue'
 import { supportsFlexiblePlacement } from '../../electrical/flexibleGeometry'
 const workspace = useWorkspaceStore(), circuit = useCircuitStore(), ui = useUiStore()
 const header = ref<HTMLElement>()
 const propertyForm = ref<InstanceType<typeof ComponentPropertiesForm>>()
+const labelForm = ref<InstanceType<typeof LabelPropertiesForm>>()
 const window = computed(() => ui.windows.find(entry => entry.kind === 'component-info'))
 const selected = computed(() => circuit.graph?.modules.find(module => module.id === workspace.selectedModuleId))
 const isDraft = computed(() => !!workspace.placementType)
@@ -36,7 +38,10 @@ function updateProperties(patch: Record<string, unknown>) {
   if (!type.value) return
   try {
     const target = componentDesignTransition(type.value, patch)
-    if (isDraft.value) workspace.updatePlacementProperties(patch, target.type)
+    if (isDraft.value) {
+      workspace.updatePlacementProperties(patch, target.type)
+      if (type.value === 'LABEL') void nextTick(() => document.querySelector<HTMLCanvasElement>('canvas[aria-label="Three-dimensional circuit workspace"]')?.focus())
+    }
     else if (selected.value) {
       if (target.type !== type.value) circuit.changeComponentDesign(selected.value.id, target.type, patch, target.pinMap)
       else circuit.updateModuleProperties(selected.value.id, patch)
@@ -47,7 +52,7 @@ function updateProperties(patch: Record<string, unknown>) {
 function add() {
   if (!definition.value || !type.value) return
   try {
-    const patch = propertyForm.value?.readDraft() ?? {}
+    const patch = type.value === 'LABEL' ? labelForm.value?.readDraft() ?? {} : propertyForm.value?.readDraft() ?? {}
     const target = componentDesignTransition(componentAddType(type.value), patch)
     const next = { ...getDefinition(target.type)?.defaults, ...properties.value, ...patch }
     workspace.armPlacement(target.type, next); ui.activeRibbonGroup = null
@@ -69,9 +74,14 @@ function applyRebuild() {
   catch (cause) { workspace.editError = cause instanceof Error ? cause.message : 'Component geometry does not fit.' }
 }
 function close() { cancelRebuild(); ui.closeWindow('component-info'); void nextTick(() => document.querySelector<HTMLCanvasElement>('canvas[aria-label="Three-dimensional circuit workspace"]')?.focus()) }
+function cancelLabelPlacement() {
+  if (workspace.placementType !== 'LABEL') return
+  workspace.cancelPlacement(); workspace.previewType = null; workspace.editError = ''
+  close()
+}
 watch(() => [circuit.graphRevision, circuit.activeId, workspace.selectedModuleId, workspace.tool, workspace.placementEpoch, window.value?.open], cancelRebuild, {flush:'sync'})
 onUnmounted(cancelRebuild)
-watch(() => window.value?.activation, activation => { if (activation) void nextTick(() => header.value?.focus()) })
+watch(() => window.value?.activation, activation => { if (activation) void nextTick(() => type.value === 'LABEL' ? labelForm.value?.focusText() : header.value?.focus()) })
 </script>
 <template>
   <aside v-if="window?.open && type && !workspace.wireOptionsActive" class="component-information contextual-panel" aria-labelledby="component-information-title" :style="{ zIndex: window.z }" @pointerdown="ui.focusWindow('component-info')" @focusin="ui.focusWindow('component-info')" @keydown.esc.stop.prevent="close">
@@ -80,6 +90,7 @@ watch(() => window.value?.activation, activation => { if (activation) void nextT
       <div class="component-information-art"><ComponentThumbnail v-if="part" :type="type" :properties="properties" :module="isDraft ? undefined : selected" :modules="circuit.graph?.modules" :alt="name + ' preview'" :lazy="false" priority="high" /><img v-else-if="item?.icon" :src="iconUrl(item.icon)" :alt="name + ' preview'" width="250" height="110" /><WorkbenchIcon v-else :name="item?.glyph || 'chip'" /></div>
       <div class="component-information-heading"><h2>{{ name }}</h2></div>
       <ComponentPropertiesForm v-if="part && part.editor.parameters.length" ref="propertyForm" :type="type" :properties="properties" :context-key="contextKey" :descriptor="part" @update="updateProperties" />
+      <LabelPropertiesForm v-else-if="type === 'LABEL'" ref="labelForm" :properties="properties" :context-key="contextKey" :placing="isDraft" @update="updateProperties" @cancel="cancelLabelPlacement" />
       <p v-if="workspace.editError" role="alert" class="property-error">{{ workspace.editError }}</p>
       <p v-else-if="simulationState && ['ERROR', 'UNSUPPORTED'].includes(simulationState.state)" class="component-information-status" role="status">{{ simulationState.reason || simulationState.state }}</p>
       <p v-else-if="unavailable" class="component-information-status">Execution model unavailable.</p>

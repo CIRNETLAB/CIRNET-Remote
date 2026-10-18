@@ -24,10 +24,10 @@ export const ribbonGroups: RibbonGroup[] = [
     physical('DC_SUPPLY', 'power_supply_upright'),
     { ...artwork('JUMPER', 'Wire tool', 'Wire'), description: 'Connect holes or ports and route colored jumper wires.' },
   ] },
-  { id: 'passive', label: 'Passive', icon: 'resistor', items: [physical('GENERIC_RESISTOR', 'resistor'), physical('GENERIC_CAPACITOR', 'capacitor')] },
+  { id: 'passive', label: 'Passive', icon: 'resistor', items: [physical('GENERIC_RESISTOR', 'resistor'), physical('GENERIC_CAPACITOR', 'capacitor'), physical('GENERIC_CAPACITOR_ELECTROLYTIC', 'capacitor')] },
   { id: 'active', label: 'Active', icon: 'transistor', items: [physical('GENERIC_BJT', 'transistor'), physical('GENERIC_DIODE', 'diode'), physical('GENERIC_ZENER_DIODE', 'diode_zener')] },
   { id: 'output', label: 'Output', icon: 'led', items: [physical('GENERIC_LED', 'led'), physical('GENERIC_BUZZER', 'buzzer_chip')] },
-  { id: 'input', label: 'Contacts', icon: 'Input', items: [physical('TOGGLE_SWITCH_200MSP1', 'Input'), physical('PUSH_BUTTON_B3F1000', 'Input'), physical('DIP_SWITCH_A6D4100', 'Input')] },
+  { id: 'input', label: 'Contacts', icon: 'Input', items: [physical('SLIDE_SWITCH_SS12D10', 'Input'), physical('PUSH_BUTTON_B3F1000', 'Input'), physical('DIP_SWITCH_A6D4100', 'Input')] },
   { id: 'logic', label: 'Logic ICs', icon: 'ic_logic', items: [
     ...partCatalog.filter(part => part.package.family === 'dip').map(part => physical(part.editorType, 'ic_logic')),
   ] },
@@ -38,7 +38,7 @@ export const ribbonGroups: RibbonGroup[] = [
     { type: 'GENERATOR', name: 'Function Generator · 2 channels', icon: 'function_generator_2ch', description: 'L1571979 bench generator visual with two channel displays, encoder pivot and three BNC connectors.' },
     { type: 'SIGNAL_MONITOR', name: 'Signal Monitor', icon: 'signal_monitor', description: 'Digital acquisition window shell.', window: 'monitor' },
   ] },
-  { id: 'notation', label: 'Notation', glyph: 'tag', items: [future('LABEL', 'Label', 'tag'), future('PROBE', 'Probe annotation', 'probe')] },
+  { id: 'notation', label: 'Notation', glyph: 'tag', items: [{ type: 'LABEL', name: 'Label', glyph: 'tag', description: 'Place a plain-text note on a breadboard.' }, future('PROBE', 'Probe annotation', 'probe')] },
 ]
 export const libraryComponents = ribbonGroups.flatMap((group) => group.items)
 const normalTypes = new Set(libraryComponents.map(item => item.type))

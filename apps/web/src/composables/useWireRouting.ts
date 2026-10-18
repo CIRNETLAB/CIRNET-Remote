@@ -8,7 +8,7 @@ import { copyWireVisual, defaultWireVisual, readWireVisual, wireKey } from '../w
 import { controlPointWorld, endpointLeadPosition, pointDistance, snapWirePoint, solveWireRoute, type SolvedWireRoute } from '../wires/wireRouting'
 import { dragWireSegment, insertWireBend, materializeWireRoute, moveWireBend, normalizeWireVisual, removeWireBend } from '../wires/wireRouteEditing'
 import { automaticWireLayer } from '../wires/wireStacking'
-import { MIN_WIRE_DIAMETER } from '../wires/wireAppearance'
+import { solveFeasibleWireRoute } from '../wires/wireFeasibility'
 import { useSelectionCommands } from './useSelectionCommands'
 
 type Manager = ReturnType<typeof createSceneManager>
@@ -63,7 +63,7 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
       workspace.selectModule(null); workspace.selectedWireBend = null
       workspace.pendingPort = endpoint; workspace.editError = ''
       draft.value = { source: endpoint, frameModuleId: resolved.endpoint.kind === 'contact' ? resolved.module.id : null,
-        visual: { ...defaultWireVisual(), thickness: MIN_WIRE_DIAMETER, color: workspace.wireColor, routeMode: workspace.wireRouteMode }, cursor: null, hovered: null, corner: { kind: 'none' } }
+        visual: { ...defaultWireVisual(), color: workspace.wireColor, routeMode: workspace.wireRouteMode }, cursor: null, hovered: null, corner: { kind: 'none' } }
       manager()?.setWireDrawingActive(true); manager()?.highlight(null); manager()?.hoverEndpoint(endpoint)
       const scene = manager(), source = scene?.wireContext.endpoint(endpoint)
       if (scene && source) {
@@ -77,6 +77,7 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
         const state = draft.value, route = manager() ? solveWireRoute({ source: state.source, destination: endpoint }, state.visual, manager()!.wireContext) : null
         const wire = { source: state.source, destination: endpoint }, visual = normalizeWireVisual(route ? materializeWireRoute(state.visual, route) : state.visual)
         if (manager() && circuit.graph) visual.layer = automaticWireLayer(wire, visual, circuit.graph.connections, manager()!.wireContext)
+        if(manager()&&circuit.graph&&!solveFeasibleWireRoute(wire,visual,circuit.graph.connections,manager()!.wireContext))throw Error('This wire route has insufficient bend clearance. Move a bend or use a longer route.')
         circuit.connectEndpoints(state.source, endpoint, visual)
         cancel(); workspace.editError = ''
       }
@@ -222,9 +223,9 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     if (canvas.value?.hasPointerCapture(state.pointer)) canvas.value.releasePointerCapture(state.pointer)
     manager()?.previewWireVisual(state.wire, null)
     if (state.dragged && state.circuitId === circuit.activeId && circuit.graph === state.graph && selectedConnection.value === state.connection) {
-      const route = manager() && solveWireRoute(state.wire, state.visual, manager()!.wireContext)
+      const route = manager() && solveFeasibleWireRoute(state.wire, state.visual, circuit.graph.connections, manager()!.wireContext)
       const unchanged = route && route.points.length === state.route.points.length && route.points.every((point, index) => pointDistance(point, state.route.points[index]) < 1e-7)
-      try { if (route && !unchanged) circuit.updateWireVisual(state.wire, normalizeWireVisual(state.visual)); workspace.editError = '' }
+      try { if(!route)throw Error('This wire route has insufficient bend clearance.'); if (!unchanged) circuit.updateWireVisual(state.wire, normalizeWireVisual(state.visual)); workspace.editError = '' }
       catch (error) { workspace.editError = error instanceof Error ? error.message : 'Wire route edit failed.' }
     }
     return true
@@ -234,10 +235,18 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     cancelEdit(); workspace.wireColor = color
     if (!draft.value && selectedConnection.value) circuit.updateWireVisual(selectedConnection.value, { ...readWireVisual(selectedConnection.value), color })
   }
+  function commitWireVisual(wire:WireIdentity,visual:WireVisual):boolean {
+    const scene=manager()
+    if(scene&&circuit.graph&&!solveFeasibleWireRoute(wire,visual,circuit.graph.connections,scene.wireContext)){
+      workspace.editError='This wire route has insufficient bend or insulation clearance.'
+      return false
+    }
+    circuit.updateWireVisual(wire,visual);workspace.editError='';return true
+  }
   function setRouteMode(routeMode: WireRouteMode) {
     if (!['FREE', 'ORTHOGONAL', 'AUTO'].includes(routeMode)) return
     cancelEdit(); workspace.wireRouteMode = routeMode
-    if (!draft.value && selectedConnection.value) circuit.updateWireVisual(selectedConnection.value, { ...readWireVisual(selectedConnection.value), routeMode })
+    if (!draft.value && selectedConnection.value) commitWireVisual(selectedConnection.value, { ...readWireVisual(selectedConnection.value), routeMode })
   }
   function setStackLayer(action: 'up' | 'down' | 'top') {
     cancelEdit()
@@ -249,10 +258,13 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     stack.splice(index, 1); stack.splice(target, 0, wire)
     const changes = new Map(stack.map((connection, layer) => [wireKey(connection), layer]))
     // One atomic visual-only command; ties elsewhere use stable creation order.
-    circuit.commitGraph({ ...graph, connections: graph.connections.map(connection => {
+    const candidate={ ...graph, connections: graph.connections.map(connection => {
       const layer = changes.get(wireKey(connection))
       return layer === undefined ? connection : { ...connection, metadata: { ...connection.metadata, wireVisual: { ...readWireVisual(connection), layer } } }
-    }) })
+    }) }
+    const selected=candidate.connections.find(connection=>wireKey(connection)===wireKey(wire))!
+    if(!solveFeasibleWireRoute(wire,readWireVisual(selected),candidate.connections,scene.wireContext)){workspace.editError='This wire order has insufficient bend or insulation clearance.';return}
+    circuit.commitGraph(candidate);workspace.editError=''
   }
   function orderedPeers() {
     const wire = selectedConnection.value, scene = manager(), graph = circuit.graph
@@ -270,7 +282,7 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
   function removeSelectedBend() {
     cancelEdit()
     const wire = selectedConnection.value, index = workspace.selectedWireBend, route = wire && manager()?.wireRoute(wire)
-    if (wire && route && index !== null) circuit.updateWireVisual(wire, removeWireBend(materializeWireRoute(readWireVisual(wire), route), index))
+    if (wire && route && index !== null) commitWireVisual(wire, removeWireBend(materializeWireRoute(readWireVisual(wire), route), index))
     workspace.selectedWireBend = null
   }
   function addBend() {
@@ -280,7 +292,7 @@ export function useWireRouting(canvas: Ref<HTMLCanvasElement | undefined>, manag
     const pose = route.frameModuleId ? scene.wireContext.modulePose(route.frameModuleId) : null
     const point = snapWirePoint(hit.basePoint ?? hit.point, pose, workspace.snap, false)
     const visual = readWireVisual(wire)
-    circuit.updateWireVisual(wire, insertWireBend(visual, route, hit.index, point))
+    commitWireVisual(wire, insertWireBend(visual, route, hit.index, point))
   }
   function doubleClick(event: MouseEvent): boolean {
     if (duplicatePreviewState.value.active || movePreviewState.value.active) { consume(event); return true }

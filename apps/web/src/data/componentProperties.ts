@@ -2,6 +2,7 @@ import { validateLeadProperties } from './leadProperties'
 import { ComponentDesignPropertiesV1 } from '../contracts/generated/validators.structural'
 import { getPartForType } from './partCatalog'
 import { validParameterValue } from './componentParameters'
+import { normalizeLabelProperties, validateLabelProperties } from './labelProperties'
 /** Design properties are SI numbers. This module has no execution/profile dependency. */
 export type EngineeringUnit = 'ohm' | 'F' | 'W' | 'V' | 'A' | '%'
 export interface QuantityBounds { min?: number; max?: number; exclusiveMin?: boolean }
@@ -44,6 +45,7 @@ const propertyKeys = (type: string): (keyof typeof componentPropertyBounds)[] =>
 
 /** Validate present canonical fields; omitted legacy fields resolve from the descriptor defaults. */
 export function validateComponentProperties(type: string, properties: Record<string, unknown>): string[] {
+  if (type === 'LABEL') return validateLabelProperties({ ...normalizeLabelProperties(), ...properties })
   if (type.startsWith('GENERIC_') && getPartForType(type)) {
     const errors = ComponentDesignPropertiesV1(properties) ? [] : ['Invalid component design properties. Use finite SI values and the declared Type and color options.']
     const part = getPartForType(type)
@@ -75,6 +77,7 @@ export function normalizeComponentProperties(type: string, properties: Record<st
   const clone = (value: unknown): unknown => Array.isArray(value) ? value.map(clone)
     : value !== null && typeof value === 'object' ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, clone(item)])) : value
   const result = properties ? clone(properties) as Record<string, unknown> : {}
+  if (type === 'LABEL') return { ...normalizeLabelProperties(result) }
   if (type === 'RESISTOR_AXIAL' && 'resistance_ohm' in result) {
     if (!('resistanceOhms' in result)) result.resistanceOhms = result.resistance_ohm
     delete result.resistance_ohm

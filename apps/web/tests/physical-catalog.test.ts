@@ -10,13 +10,15 @@ const executionPart = (type: string) => executionRegistry.parts.find(part => par
 
 test('compact generic defaults resolve separately from every pinned historical descriptor', () => {
   const latest = getPartForType('GENERIC_RESISTOR')!
-  assert.equal(latest.revision, 6)
+  assert.equal(latest.revision, 7)
+  assert.deepEqual(latest.package.boardInsertion, { version: 1, mechanicalProfileId: 'BREADBOARD_MECHANICS_V1', maxExternalLeadMm: 35 })
   assert.deepEqual(latest.package.bodyMm, { x: 4.9, y: 1.75, z: 1.75 })
   assert.equal(latest.editor.color, '#4A90E2')
   const old = { partId: latest.id, partRevision: 1, packageId: 'MRS25-1016', packageRevision: 1 }
   assert.equal(getPartForType('GENERIC_RESISTOR', old)!.package.bodyMm.x, 6.5)
   assert.equal(getPartDefinition(latest.id, 1)!.package.id, old.packageId)
-  assert.equal(getPartDefinition(latest.id)!.revision, 6)
+  assert.equal(getPartDefinition(latest.id)!.revision, 7)
+  assert.equal(getPartDefinition(latest.id, 6)!.package.boardInsertion, undefined)
   assert.equal(getPartForType('GENERIC_RESISTOR', { ...old, packageRevision: 99 }), undefined)
   assert.equal(getPartForType('GENERIC_DIODE', old), undefined)
   assert.deepEqual(getPartForType('GENERIC_CAPACITOR_ELECTROLYTIC')!.package.bodyMm, { x: 6.3, y: 11, z: 6.3 })
@@ -58,7 +60,8 @@ test('sealed shapes preserve every previous descriptor and enclose actual rectan
   assert.deepEqual(latestObserved.package.bodyMm, { x:4.3, y:1.75, z:1.75 })
   assert.equal(getPartForModule({ type:'GENERIC_RESISTOR', physicalDescriptor:physicalDescriptorForPart(latestObserved) }), latestObserved)
   assert.equal(getPartForModule({ type: 'GENERIC_RESISTOR' })!.revision, 1)
-  assert.equal(getPartForType('DIODE_1N4148')!.package.id, 'DO35-1016')
+  assert.equal(getPartForType('DIODE_1N4148')!.package.id, 'DO35-1016-BBI3')
+  assert.equal(getPartForType('DIODE_1N4148', { partId: 'VISHAY-1N4148', partRevision: 1, packageId: 'DO35-1016', packageRevision: 1 })?.package.id, 'DO35-1016')
   const dipOld = getPartForType('SN74HC08N', { partId:'TI-SN74HC08N', partRevision:1, packageId:'PDIP-14-300', packageRevision:1 })!
   assert.deepEqual(dipOld.package.bodyMm, { x:19.3, y:5.08, z:6.4 })
   assert.deepEqual(getPartForType('SN74HC08N')!.package.pins, dipOld.package.pins)
@@ -109,12 +112,14 @@ test('physical switches describe independent contacts and the button permanent i
   assert.deepEqual(getDefinition('DIP_SWITCH')!.ports.map(pin => pin.id), ['Q0', 'Q1', 'Q2', 'Q3'])
 })
 
-test('physical toggle switches its common terminal between two contacts without generating a level', () => {
+test('historical toggle retains its contact model while new authoring selects the SS12D10', () => {
   const toggle = getPartForType('TOGGLE_SWITCH_200MSP1')
   assert.ok(toggle, 'the SPDT toggle has a separately selectable package')
   assert.deepEqual(toggle.package.pins.map(pin => [pin.id, pin.name, pin.role]), [['1', '1', 'passive'], ['2', 'COM', 'passive'], ['3', '3', 'passive']])
   assert.deepEqual(toggle.internalConnections, [{ pins: ['2', '3'], when: { property: 'state', equals: false } }, { pins: ['2', '1'], when: { property: 'state', equals: true } }])
-  assert.ok(ribbonGroups.find(group => group.id === 'input')!.items.some(item => item.type === 'TOGGLE_SWITCH_200MSP1'))
+  const inputs = ribbonGroups.find(group => group.id === 'input')!.items
+  assert.ok(inputs.some(item => item.type === 'SLIDE_SWITCH_SS12D10'))
+  assert.ok(!inputs.some(item => item.type === 'TOGGLE_SWITCH_200MSP1'))
 })
 
 test('display packages retain real common pins and multiplex pinouts', () => {
@@ -157,6 +162,7 @@ test('palette exposes physical parts and hides legacy-only families without dele
   assert.ok(getDefinition('LED')); assert.ok(getDefinition('DIP_SWITCH')); assert.ok(getDefinition('MEMORY'))
   assert.ok(!ribbonGroups.some(group => ['memory', 'embedded'].includes(group.id)))
   assert.equal(items.find(item => item.type === 'GENERIC_BJT')!.support, 'Place / wire')
-  assert.equal(items.some(item => item.type === 'GENERIC_CAPACITOR_ELECTROLYTIC'), false, 'Type selects the second capacitor package')
+  assert.equal(items.filter(item => item.type === 'GENERIC_CAPACITOR').length, 1)
+  assert.equal(items.filter(item => item.type === 'GENERIC_CAPACITOR_ELECTROLYTIC').length, 1)
   for (const type of ['LED_LTL307EE', 'RESISTOR_AXIAL', 'CAPACITOR_CERAMIC', 'CAPACITOR_ELECTROLYTIC', 'DIODE_1N4148', 'ZENER_1N4733A', 'BUZZER_PS1240', 'TRANSISTOR_2N3904']) assert.ok(getDefinition(type), `${type} legacy files retain their original definition`)
 })

@@ -2,8 +2,9 @@ import {test} from 'node:test'
 import assert from 'node:assert/strict'
 import fixtures from '../../../contracts/design-models/fixtures/flexible-mounting-parity.json'
 import {getPartForType,MM_TO_WORLD} from '../src/data/partCatalog'
-import {resolveFlexibleGeometry,solveFlexibleMount,rotationMatrix,transformPoint,pointDistance} from '../src/electrical/flexibleGeometry'
+import {resolveFlexibleGeometry,solveFlexibleMount,rotationMatrix,transformPoint,pointDistance,addPoint,scalePoint} from '../src/electrical/flexibleGeometry'
 import {getBreadboardContact} from '../src/electrical/BreadboardTopology'
+import {boardContactMechanics} from '../src/geometry/BreadboardMechanicalProfile'
 import type {CircuitModule} from '../src/types/circuit'
 import type {CircuitGraph} from '../src/types/circuit'
 import {validateMountBindings} from '../src/electrical/mounting'
@@ -57,9 +58,10 @@ test('every generic family stops at its mechanical maximum without changing eith
   let last=11,rejected=false
   for(let column=11;column<=63;column++){
    const second=`terminal:C:${column}`,solution=solveFlexibleMount(type,'BB','terminal:C:10',second,[board])
-   if(!solution.valid){assert.match(solution.reason,/length|mechanical bounds/);assert.ok(last>14&&last<63);rejected=true;break}
-   last=column;assert.equal(solution.mount!.contacts[1]!.contactId,second)
-   for(const lead of solution.geometry!.leads)assert.ok(lead.path.length/MM_TO_WORLD<=solution.geometry!.profile.maxLeadLengthMm)
+   if(!solution.valid){assert.match(solution.reason,/length|mechanical bounds|declared metal lead is too short/);assert.ok(last>14&&last<63);rejected=true;break}
+   last=column;assert.deepEqual(solution.mount!.contacts.map(binding=>binding.contactId),['terminal:C:10',second])
+   const budget=getPartForType(type,solution.mount)!.package.boardInsertion!.maxExternalLeadMm
+   for(const lead of solution.geometry!.leads){assert.ok(lead.path.length/MM_TO_WORLD<=solution.geometry!.profile.maxLeadLengthMm);assert.ok(lead.path.length/MM_TO_WORLD<=budget)}
   }
   assert.ok(rejected,`${type} must reject a span beyond the finite lead length`)
  }
@@ -117,15 +119,20 @@ test('all templates preserve exact pin endpoints and rigid exits for reverse, ro
  const supports=[board,{...board,position:{x:9,y:3,z:-5},rotation:137}]
  for(const support of supports)for(const pair of [['terminal:C:10','terminal:C:11'],['terminal:C:11','terminal:C:10'],['terminal:C:10','terminal:C:13'],['terminal:C:13','terminal:C:10'],['terminal:A:10','terminal:D:10'],['terminal:A:10','terminal:C:12']])for(const type of ['GENERIC_RESISTOR','GENERIC_DIODE','GENERIC_ZENER_DIODE','GENERIC_CAPACITOR','GENERIC_CAPACITOR_ELECTROLYTIC','GENERIC_LED']){
   const result=solveFlexibleMount(type,'BB',pair[0]!,pair[1]!,[support]);assert.equal(result.valid,true,`${type} ${pair}: ${result.reason}`)
-  const geometry=result.geometry!,mount=result.mount!,profile=geometry.profile
+  const geometry=result.geometry!,mount=result.mount!,profile=geometry.profile,part=getPartForType(type,mount)!
   assert.equal(mount.version,2);assert.equal(mount.geometryRevision,2)
   for(const lead of geometry.leads){
    const binding=mount.contacts.find(p=>p.pinId===lead.pinId)!,contact=getBreadboardContact(support.type,binding.contactId)!,expected={x:contact.localPosition[0],y:contact.localPosition[1],z:contact.localPosition[2]}
-   assert.ok(pointDistance(lead.path.samples.at(-1)!,expected)<1e-12)
+   const tip=part.package.boardInsertion?boardContactMechanics(support.type,binding.contactId).tip:expected
+   const continuation=expected.y-tip.y,pin=profile.pins.find(pin=>pin.pinId===lead.pinId)!
+   assert.ok(pointDistance(lead.contact,expected)<1e-12,'electrical anchor stays at its canonical contact')
+   assert.ok(pointDistance(lead.path.samples.at(-1)!,tip)<1e-12,'conductor ends at its declared insertion tip')
+   assert.ok(pointDistance(lead.path.samples[0]!,addPoint(geometry.position,transformPoint(geometry.matrix,scalePoint(pin.bodyExitMm,MM_TO_WORLD))))<1e-12,'rigid body exit does not move')
    assert.ok(lead.path.segments[0]!.length>=profile.exitStraightMm*MM_TO_WORLD-1e-10)
-   assert.ok(lead.path.segments.at(-1)!.length>=profile.contactStubMm*MM_TO_WORLD-1e-10)
+   assert.ok(lead.path.segments.at(-1)!.length>=profile.contactStubMm*MM_TO_WORLD+continuation-1e-10)
    assert.ok(lead.path.bendRadii.every(r=>r>=profile.minBendRadiusMm*MM_TO_WORLD-1e-10))
    assert.ok(lead.path.length<=profile.maxLeadLengthMm*MM_TO_WORLD)
+   assert.ok(lead.path.length<=part.package.boardInsertion!.maxExternalLeadMm*MM_TO_WORLD)
   }
   if(profile.strategy==='radial'){assert.equal(mount.bodyPose.rotation.x,0);assert.equal(mount.bodyPose.rotation.z,0);const first=getBreadboardContact(support.type,pair[0]!)!,second=getBreadboardContact(support.type,pair[1]!)!;assert.ok(Math.abs(mount.bodyPose.position.x-(first.localPosition[0]+second.localPosition[0])/2)<1e-12);assert.ok(Math.abs(mount.bodyPose.position.z-(first.localPosition[2]+second.localPosition[2])/2)<1e-12)}
  }

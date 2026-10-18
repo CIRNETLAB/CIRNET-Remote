@@ -3926,6 +3926,75 @@
         "apps/web/src/contracts/generated/validators.js"
       ],
       "compatibility_policy": "Optional package-revision shape; historical unshaped package descriptors and V1/V2 mounts remain unchanged. Geometry changes require a new package/part revision and explicit rebuild."
+    },
+    {
+      "id": "LabelPropertiesV1",
+      "kind": "schema",
+      "path": "contracts/design-models/label-properties.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/label-properties/1.0/schema.json",
+      "pointer": "",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Versioned visual/mechanical authoring contract",
+      "consumers": [
+        "api",
+        "web",
+        "simulator",
+        "hardware-service"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Additive opt-in annotation or mechanical profile; historical graph/package identities and topology remain unchanged."
+    },
+    {
+      "id": "BoardInsertionV1",
+      "kind": "schema",
+      "path": "contracts/design-models/board-insertion.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/board-insertion/1.0/schema.json",
+      "pointer": "",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Versioned visual/mechanical authoring contract",
+      "consumers": [
+        "api",
+        "web",
+        "simulator",
+        "hardware-service"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Additive opt-in annotation or mechanical profile; historical graph/package identities and topology remain unchanged."
+    },
+    {
+      "id": "BreadboardMechanicalProfileV1",
+      "kind": "schema",
+      "path": "contracts/design-models/breadboard-mechanics.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/breadboard-mechanics/1.0/schema.json",
+      "pointer": "",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "Versioned visual/mechanical authoring contract",
+      "consumers": [
+        "api",
+        "web",
+        "simulator",
+        "hardware-service"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Additive opt-in annotation or mechanical profile; historical graph/package identities and topology remain unchanged."
     }
   ]
 }

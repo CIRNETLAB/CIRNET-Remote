@@ -11,6 +11,9 @@ import {addMoldedPackageModel} from './MoldedPackageModels'
 import {createMoldedPackageLead} from './StampedLeadGeometry'
 import {createFixedPackageLead} from './PackageFeedthrough'
 import {addSealedDiscreteModel} from './DiscretePackageModels'
+import { addSwitchPackageModel } from './SwitchPackageModels'
+import { addDisplayPackageModel } from './DisplayPackageModels'
+import { addBuzzerPackageModel } from './BuzzerPackageModels'
 
 export function addPackageModel(group: Group, module: CircuitModule, part: PartDefinition) {
   const pkg = part.package, mm = MM_TO_WORLD
@@ -44,7 +47,7 @@ export function addPackageModel(group: Group, module: CircuitModule, part: PartD
     const object = mesh(name, roundedPackageBox(sx, sy, sz, radius), material); object.rotation.x = -Math.PI / 2; object.position.set(x, y - sy / 2 + radius / 2, z); return object
   }
 
-  if(addSealedDiscreteModel(group,module,part)||addMoldedPackageModel(group,module,part)) {
+  if(addSealedDiscreteModel(group,module,part)||addMoldedPackageModel(group,module,part)||addSwitchPackageModel(group,module,part)||addDisplayPackageModel(group,part)||addBuzzerPackageModel(group,part)) {
     // Versioned body/markings are produced from the same shape as its leads.
   } else if (pkg.family === 'dip') {
     // The notch is cut into the body outline, on the pin-1 (-X) end.

@@ -8,7 +8,7 @@ import pytest
 
 from contracts.breadboard_topology import get_breadboard_topology
 from contracts.design_validation import validate_design_graph
-from contracts.physical_mounting import MM_TO_WORLD, get_physical_part
+from contracts.physical_mounting import MM_TO_WORLD, get_physical_part, historical_physical_parts
 
 
 def descriptor(part):
@@ -40,7 +40,8 @@ def test_shaped_rigid_dip_shoulder_rejects_body_intersection_outside_both_plasti
 def test_unshaped_legacy_dip_preserves_its_historical_validation_semantics():
     graph = rigid_dip_graph()
     module = graph['modules'][1]
-    module['mount'].update(partRevision=1, packageRevision=1)
+    original = min((part for part in historical_physical_parts() if part['editorType'] == module['type']), key=lambda part: part['revision'])
+    module['mount'].update({key: value for key, value in descriptor(original).items() if key != 'version'})
     graph['modules'].append(dict(id='R', type='GENERIC_RESISTOR', physicalDescriptor=descriptor(get_physical_part('GENERIC_RESISTOR')), position=dict(x=-.39, y=.3490748031496063, z=.2200787401574803)))
     validate_design_graph(graph)
 

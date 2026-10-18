@@ -1,4 +1,4 @@
-import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch, type Ref } from 'vue'
 import type { Vector3 } from 'three'
 import type { createSceneManager } from '../three/SceneManager'
 import { getDefinition } from '../data/editorCatalog'
@@ -21,9 +21,10 @@ import { useWireRouting } from './useWireRouting'
 import { normalizeSelection } from '../editor/selection'
 import { PointerGestureSession } from '../editor/PointerGestureSession'
 import { useFlexibleAuthoring } from './useFlexibleAuthoring'
+import { createContactInteraction } from '../editor/contactInteraction'
 type Manager = ReturnType<typeof createSceneManager>
 export type Position = { x: number; y: number; z: number }
-interface PlacementDraft { type: string; position: Position; rotation: number }
+interface PlacementDraft { type: string; position: Position; rotation: number; boardId?: string }
 interface DragGesture { pointer: number; start: { x: number; y: number }; dragged: boolean }
 interface MoveGesture extends DragGesture { kind: 'move'; id: string; draft: string | null; planeHeight: number; offset: Position; position: Position }
 interface PanGesture extends DragGesture { kind: 'pan'; anchor: Vector3; selection?: { moduleId: string; graph: CircuitGraph; draft: string | null } }
@@ -49,6 +50,7 @@ export function snapPosition(
   rotation?: number,
   axis?: 'x' | 'z'
 ): Position {
+  if (activeType === 'LABEL') return { x: point.x, y: elevation, z: point.z }
   if (activeType && getPartForType(activeType)) {
     const module = activeId ? modules.find(m => m.id === activeId) : undefined
     const pose = module ? moduleWorldPose(module, modules) : undefined
@@ -87,8 +89,24 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     return true
   }
   const wireRouting = useWireRouting(canvas, manager, () => !!gesture)
+  let contactPointer: number | null = null, contactExpectedGraph: CircuitGraph | null = null
+  const contacts = createContactInteraction({
+    module: id => circuit.graph?.modules.find(module => module.id === id),
+    documentId: () => circuit.activeId,
+    commit(id, patch) { circuit.updateModuleProperties(id, patch); contactExpectedGraph = circuit.graph },
+    momentary(id, pressed) { circuit.setMomentaryModule(id, pressed); contactExpectedGraph = circuit.graph },
+    releaseMomentary(id, draft) { circuit.releaseMomentaryModule(draft, id); contactExpectedGraph = circuit.graph },
+  })
+  function releaseContact(pointer?: number, complete = false, same = false) {
+    if (contactPointer === null || pointer !== undefined && pointer !== contactPointer) return false
+    const held = contactPointer; contactPointer = null
+    try { if (complete) contacts.end(held, same); else contacts.cancel(held) }
+    finally { manager()?.lockPointer(false); if (canvas.value?.hasPointerCapture(held)) canvas.value.releasePointerCapture(held) }
+    return true
+  }
   // A pose only: never a graph module, electrical identity or history entry.
   let placementDraft: PlacementDraft | null = null
+  let labelTarget: ReturnType<Manager['labelPlacementPoint']> = null
   // A right drag that starts on empty space belongs to Orbit, even if it ends
   // over a wire. The native contextmenu may arrive after that drag completes.
   let suppressWireContext = false
@@ -117,15 +135,16 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
   const snap = (point: { x: number; y?: number; z: number } | Vector3, activeType?: string | null, activeId?: string | null, elevation = 0, rotation?: number, axis?: 'x' | 'z'): Position =>
     snapPosition(point, workspace.snap, circuit.graph?.modules ?? [], activeType, activeId, elevation, rotation, axis)
   function createPlacementDraft(type: string, point: Position): PlacementDraft {
-    const rotation = placementInitialRotation(type)
-    return { type, position: snap(point, type, null, 0, rotation), rotation }
+    const rotation = type === 'LABEL' ? labelTarget?.rotation ?? 0 : placementInitialRotation(type)
+    return { type, position: snap(point, type, null, type === 'LABEL' ? point.y : 0, rotation), rotation, ...(type === 'LABEL' && labelTarget ? { boardId: labelTarget.boardId } : {}) }
   }
   function showPlacement() {
     if (!placementDraft) return
     const candidate = solveMounting(placementDraft.type, placementDraft.position, placementDraft.rotation, circuit.graph?.modules ?? [])
     if (candidate) placementDraft.position = candidate.position
     mountHint.value = candidate ? candidate.valid ? 'All pins fit. Click to mount.' : candidate.reason : ''
-    manager()?.setGhost(placementDraft.type, placementDraft.position, placementDraft.rotation, workspace.placementProperties ?? undefined)
+    const properties = { ...workspace.placementProperties, ...(placementDraft.boardId ? { boardId: placementDraft.boardId } : {}) }
+    manager()?.setGhost(placementDraft.type, placementDraft.position, placementDraft.rotation, properties)
     manager()?.setMountPreview?.(candidate)
   }
   function previewFlexibleTransform(id:string, position?:Position, degrees=0):boolean {
@@ -136,7 +155,10 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     return true
   }
   function clearPlacement() { placementDraft = null; mountHint.value = ''; manager()?.setGhost(null); manager()?.setMountPreview?.(null) }
-  const placementPoint = (x: number, y: number, type?: string) => getPartForType(type ?? '') ? manager()?.placementPoint?.(x, y) ?? manager()?.groundPoint(x, y) : manager()?.groundPoint(x, y)
+  const placementPoint = (x: number, y: number, type?: string) => {
+    if (type === 'LABEL') { labelTarget = manager()?.labelPlacementPoint(x, y) ?? null; return labelTarget?.position ?? null }
+    return getPartForType(type ?? '') ? manager()?.placementPoint?.(x, y) ?? manager()?.groundPoint(x, y) : manager()?.groundPoint(x, y)
+  }
   function updatePorts() {
     if (workspace.zoomAreaActive || workspace.marqueeActive || wireRouting.duplicatePreviewState.value.active) { ports.value = []; return }
     const next: typeof ports.value = []
@@ -168,9 +190,9 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     hoveredHandle.value = null; hoveredControl.value = null; manager()?.clearGizmoHover()
     showPlacement()
   }
-  function cancel(clearSelection = true) { flexible.cancelEdit(); workspace.cancelZoomArea(); workspace.cancelMarquee(clearSelection); wireRouting.cancel(); cancelGesture() }
+  function cancel(clearSelection = true) { releaseContact(); flexible.cancelEdit(); workspace.cancelZoomArea(); workspace.cancelMarquee(clearSelection); wireRouting.cancel(); cancelGesture() }
   function cancelPlacement() { flexible.cancel(); cancel(); workspace.cancelPlacement(); clearPlacement(); workspace.editError = '' }
-  function lostPointerCapture(event: PointerEvent) { if(flexible.pointerCancel(event))return; if (rightPress?.pointer === event.pointerId) { rightPress = null; suppressWireContext = true }; if (wireRouting.lostPointerCapture(event)) return; if (gesture?.pointer === event.pointerId) { cancel(); clearPlacement() } }
+  function lostPointerCapture(event: PointerEvent) { if(releaseContact(event.pointerId))return; if (workspace.placementType === 'LABEL') { cancelPlacement(); return }; if(flexible.pointerCancel(event))return; if (rightPress?.pointer === event.pointerId) { rightPress = null; suppressWireContext = true }; if (wireRouting.lostPointerCapture(event)) return; if (gesture?.pointer === event.pointerId) { cancel(); clearPlacement() } }
   function contextMenu(event: MouseEvent) {
     if (flexible.contextMenu(event)) return
     if (rightPress) { event.preventDefault(); return }
@@ -193,7 +215,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     if (wireRouting.duplicatePreviewState.value.active || wireRouting.movePreviewState.value.active) return
     wireRouting.connect(endpoint)
   }
-  function place(type: string, position: Position, rotation: number) { attempt(() => { const id = circuit.placeModule(type, position, rotation, workspace.placementProperties ?? undefined); workspace.selectModule(id); clearPlacement(); sync() }) }
+  function place(type: string, position: Position, rotation: number, boardId?: string) { attempt(() => { const id = circuit.placeModule(type, position, rotation, { ...workspace.placementProperties, ...(boardId ? { boardId } : {}) }); workspace.selectModule(id); clearPlacement(); sync() }) }
   function pointerDown(event: PointerEvent) {
     if (event.button === 2) suppressWireContext = true
     wireRouting.closeContextMenu()
@@ -219,7 +241,19 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       cancelPlacement()
       return
     }
-    if (!gesture && !workspace.placementType && (!(workspace.tool === 'select' && (event.ctrlKey || event.metaKey)) || wireRouting.duplicatePreviewState.value.active || wireRouting.movePreviewState.value.active) && wireRouting.pointerDown(event)) return
+    let labelHit = false
+    if (!gesture && !workspace.placementType && workspace.tool !== 'wire' && manager() && canvas.value) {
+      const { x, y } = coordinates(event), hit = manager()!.pick(x, y)
+      labelHit = !!hit && hit.kind !== 'wire' && circuit.graph?.modules.find(module => module.id === hit.id)?.type === 'LABEL'
+      const handle = manager()!.pickGizmo(x, y)
+      const contact = workspace.tool === 'select' && hit?.kind !== 'wire' && event.button === 0 && !event.ctrlKey && !event.metaKey && (!handle || handle.handle === 'xz') ? manager()!.pickContactControl(x, y) : null
+      if (contact && contacts.begin(event.pointerId, contact)) {
+        contactPointer = event.pointerId; workspace.selectModule(contact.id); canvas.value.focus()
+        manager()!.lockPointer(true); canvas.value.setPointerCapture(event.pointerId)
+        event.preventDefault?.(); event.stopImmediatePropagation?.(); return
+      }
+    }
+    if (!labelHit && !gesture && !workspace.placementType && (!(workspace.tool === 'select' && (event.ctrlKey || event.metaKey)) || wireRouting.duplicatePreviewState.value.active || wireRouting.movePreviewState.value.active) && wireRouting.pointerDown(event)) return
     if (event.button === 2 && !gesture && manager() && canvas.value) {
       const { x, y } = coordinates(event), hit = manager()!.pickGizmo(x, y) ? null : manager()!.pick(x, y)
       rightPress = { pointer: event.pointerId, start: { x, y }, dragged: false, target: hit?.kind === 'wire' ? { source: hit.source, destination: hit.destination } : hit ? { moduleId: hit.id } : undefined }
@@ -251,10 +285,14 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       manager()!.activateGizmo(transform.handle); manager()!.lockPointer(true); canvas.value.setPointerCapture(event.pointerId); event.preventDefault?.(); return
     }
     if (workspace.placementType) {
-      if (placementDraft) place(placementDraft.type, placementDraft.position, placementDraft.rotation)
+      if (workspace.placementType === 'LABEL') {
+        const point = placementPoint(x, y, 'LABEL')
+        if (point && labelTarget) place('LABEL', point, placementDraft?.rotation ?? labelTarget.rotation, labelTarget.boardId)
+      }
+      else if (placementDraft) place(placementDraft.type, placementDraft.position, placementDraft.rotation, placementDraft.boardId)
       else {
         const point = placementPoint(x, y, workspace.placementType)
-        if (point) { const draft = createPlacementDraft(workspace.placementType, point); place(draft.type, draft.position, draft.rotation) }
+        if (point) { const draft = createPlacementDraft(workspace.placementType, point); place(draft.type, draft.position, draft.rotation, draft.boardId) }
       }
       return
     }
@@ -297,6 +335,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
   }
   function pointerMove(event: PointerEvent) {
     if (!manager() || !canvas.value) return
+    if (contactPointer !== null) return
     if (flexible.pointerMove(event)) return
     if (rightPress?.pointer === event.pointerId) {
       const point = coordinates(event)
@@ -396,8 +435,8 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       if (workspace.placementType && (hoveredHandle.value || manager()!.placementFollowBlocked())) return
     }
     const activeType = gesture?.kind === 'move' ? selected.value?.type : workspace.placementType ?? undefined
-    const point = getPartForType(activeType ?? '') ? placementPoint(x, y, activeType) : manager()!.groundPoint(x, y, gesture?.kind === 'move' ? gesture.planeHeight : 0)
-    if (!point) return
+    const point = (getPartForType(activeType ?? '') || activeType === 'LABEL' && !gesture) ? placementPoint(x, y, activeType) : manager()!.groundPoint(x, y, gesture?.kind === 'move' ? gesture.planeHeight : 0)
+    if (!point) { if (workspace.placementType === 'LABEL') { clearPlacement(); mountHint.value = 'Point at a breadboard to place the Label.' }; return }
     if (gesture?.kind === 'move') {
       const move = gesture
       point.x += move.offset.x; point.z += move.offset.z
@@ -410,11 +449,15 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       manager()!.previewMove(move.id, move.position); updatePorts()
     } else if (workspace.placementType) {
       if (!placementDraft) placementDraft = createPlacementDraft(workspace.placementType, point)
-      else placementDraft.position = snap(point, placementDraft.type, null, placementDraft.position.y, placementDraft.rotation)
+      else { placementDraft.position = snap(point, placementDraft.type, null, placementDraft.type === 'LABEL' ? point.y : placementDraft.position.y, placementDraft.rotation); if (placementDraft.type === 'LABEL') placementDraft.boardId = labelTarget?.boardId }
       showPlacement()
     }
   }
   function pointerUp(event: PointerEvent) {
+    if (contactPointer === event.pointerId) {
+      const point = coordinates(event), hit = manager()?.pickContactControl(point.x, point.y), active = contacts.active()
+      releaseContact(event.pointerId, true, hit?.id === active?.id && hit?.property === active?.property); return
+    }
     if (flexible.pointerUp(event)) return
     if (rightPress?.pointer === event.pointerId) {
       const completed = rightPress; rightPress = null; suppressWireContext = completed.dragged
@@ -492,7 +535,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     const { x, y } = coordinates(event), point = placementPoint(x, y, type)
     if (point) {
       const draft = createPlacementDraft(type, point)
-      ui.activeRibbonGroup = null; place(draft.type, draft.position, draft.rotation); canvas.value.focus()
+      ui.activeRibbonGroup = null; place(draft.type, draft.position, draft.rotation, draft.boardId); canvas.value.focus()
     }
   }
   function keydown(event: KeyboardEvent) {
@@ -505,6 +548,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
       return
     }
     if (event.ctrlKey || event.metaKey || event.altKey) return
+    if (placementDraft?.type === 'LABEL' && event.key.toLowerCase() === 'r') { event.preventDefault(); placementDraft.rotation += 90; showPlacement(); return }
     if (gesture && ['Delete', 'Backspace', 'r', 'R', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) cancel(false)
     const id = workspace.selectedModuleId
     if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); wireRouting.menuDelete() }
@@ -520,11 +564,13 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     }
   }
   const escape = (event: KeyboardEvent) => { if (event.key === 'Escape' && !(event.target as HTMLElement | null)?.closest?.('[data-workspace-text-input]')) keydown(event) }
-  onMounted(() => document.addEventListener('keydown', escape, true))
-  onUnmounted(() => document.removeEventListener('keydown', escape, true))
+  const blur = () => releaseContact()
+  onMounted(() => { document.addEventListener('keydown', escape, true); if (typeof window !== 'undefined') window.addEventListener('blur', blur); canvas.value?.addEventListener?.('webglcontextlost', blur) })
+  onUnmounted(() => { document.removeEventListener('keydown', escape, true); if (typeof window !== 'undefined') window.removeEventListener('blur', blur); canvas.value?.removeEventListener?.('webglcontextlost', blur) })
   function selectModule(id: string) { cancel(); workspace.selectModule(id); sync() }
   watch(() => circuit.graph, () => {
-    if (!wireRouting.consumeDuplicateGraphChange(circuit.graph)) cancel(false)
+    const ownContact = contactExpectedGraph === circuit.graph; contactExpectedGraph = null
+    if (!ownContact && !wireRouting.consumeDuplicateGraphChange(circuit.graph)) cancel(false)
     clearPlacement()
     const selection = workspace.selection
     if (circuit.graph) {
@@ -536,6 +582,7 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
     sync()
   }, { deep: true })
   watch(() => [workspace.tool, workspace.placementType], () => { cancelGesture(); clearPlacement(); manager()?.lockPointer(workspace.zoomAreaActive || workspace.marqueeActive); updatePorts() }, { flush: 'sync' })
+  watch(() => workspace.placementProperties, () => { if (placementDraft?.type === 'LABEL') showPlacement() }, { deep: true })
   watch(() => workspace.zoomAreaActive, (active) => { cancelGesture(); manager()?.lockPointer(active); updatePorts() })
   watch(() => workspace.marqueeActive, (active) => { cancelGesture(); if (active) wireRouting.cancel(); manager()?.lockPointer(active); updatePorts() })
   watch(() => [workspace.selectedModuleId, workspace.selectedWire, workspace.selectedModuleIds, workspace.selectedWires], () => {
@@ -548,5 +595,16 @@ export function useCircuitEditor(canvas: Ref<HTMLCanvasElement | undefined>, man
   }, { immediate: true })
   onUnmounted(() => { cancel(); clearPlacement() })
   function pointerLeave() { wireRouting.pointerLeave(); pinHint.value = ''; if (!gesture) { hoveredHandle.value = null; hoveredControl.value = null; manager()?.clearGizmoHover(); manager()?.hoverWire(null) } }
-  return { ports, selected, dragging, hoveredHandle, hoveredControl, controlHint, zoomAreaRect, marqueeRect, updatePorts, sync, cancel, connect, pointerDown, pointerMove, pointerUp, pointerLeave, pointerCancel: lostPointerCapture, lostPointerCapture, contextMenu, drop, keydown, selectModule, wireRouting, selectionCommands: wireRouting.commands }
+  function doubleClick(event: MouseEvent) {
+    if (workspace.tool === 'select' && !workspace.placementType && manager() && canvas.value) {
+      const { x, y } = coordinates(event), hit = manager()!.pick(x, y)
+      if (hit && hit.kind !== 'wire' && circuit.graph?.modules.find(module => module.id === hit.id)?.type === 'LABEL') {
+        cancel(false); workspace.selectModule(hit.id); ui.openWindow('component-info')
+        void nextTick(() => document.querySelector<HTMLTextAreaElement>('[aria-label="Label text"]')?.focus())
+        event.preventDefault(); event.stopImmediatePropagation(); return
+      }
+    }
+    wireRouting.doubleClick(event)
+  }
+  return { ports, selected, dragging, hoveredHandle, hoveredControl, controlHint, zoomAreaRect, marqueeRect, updatePorts, sync, cancel, connect, pointerDown, pointerMove, pointerUp, pointerLeave, pointerCancel: lostPointerCapture, lostPointerCapture, contextMenu, drop, keydown, doubleClick, selectModule, wireRouting, selectionCommands: wireRouting.commands }
 }

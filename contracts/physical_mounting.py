@@ -97,8 +97,35 @@ def rigid_world_lead_paths(module, part, by_id):
                 position['y']+point[1]*MM_TO_WORLD,
                 position['z']+(-point[0]*sin+point[2]*cos)*MM_TO_WORLD)
 
-    return [dict(pinId=pin['id'], segments=[dict(start=world(segment['start']), end=world(segment['end']), radius=segment['radiusMm']*MM_TO_WORLD) for segment in rigid_lead_segments_mm(part['package'], pin)])
-            for pin in part['package']['pins']] if part['package'].get('shape') else []
+    insertion = 0
+    if module.get('mount') and part['package'].get('boardInsertion'):
+        from .breadboard_mechanics import board_contact_mechanics, conductor_fits_contact_cavity
+        board = by_id[module['mount']['boardId']]
+        section = part['package']['shape']['leadSection']
+        radius = (section['widthMm'] if section['kind'] == 'round' else math.hypot(section['widthMm'], section['thicknessMm']))/2*MM_TO_WORLD
+        for binding in module['mount']['contacts']:
+            mechanics = board_contact_mechanics(board['type'], binding['contactId'])
+            if not conductor_fits_contact_cavity(board['type'], binding['contactId'], mechanics['contact'], mechanics['tip'], radius):
+                raise ValueError('Conductor does not fit its contact cavity')
+            insertion = (mechanics['contact'][1]-mechanics['tip'][1])/MM_TO_WORLD
+    result = []
+    if not part['package'].get('shape'):
+        return result
+    for pin in part['package']['pins']:
+        segments = rigid_lead_segments_mm(part['package'], pin, insertion)
+        if insertion:
+            from .breadboard_mechanics import validate_board_conductor_segment
+            binding = next(binding for binding in module['mount']['contacts'] if binding['pinId'] == pin['id'])
+            pose = module['mount']['pose']; angle = math.radians(pose['rotation'])
+            c, s = math.cos(angle), math.sin(angle)
+            def board_local(p):
+                return (pose['position']['x']+(p[0]*c+p[2]*s)*MM_TO_WORLD,
+                        pose['position']['y']+p[1]*MM_TO_WORLD,
+                        pose['position']['z']+(-p[0]*s+p[2]*c)*MM_TO_WORLD)
+            for segment in segments:
+                validate_board_conductor_segment(board['type'], binding['contactId'], board_local(segment['start']), board_local(segment['end']), segment['radiusMm']*MM_TO_WORLD)
+        result.append(dict(pinId=pin['id'], segments=[dict(start=world(segment['start']), end=world(segment['end']), radius=segment['radiusMm']*MM_TO_WORLD) for segment in segments]))
+    return result
 
 
 def _lead_segments_bounds(segments):

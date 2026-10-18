@@ -625,6 +625,420 @@
       "maxBodyLiftMm": 30,
       "maxControlsPerLead": 8,
       "preferredBendRadiusMm": 0.6
+    },
+    {
+      "id": "flex-radial-led-bbi3",
+      "revision": 1,
+      "packageId": "T1-5MM-254-BBI3",
+      "packageRevision": 2,
+      "strategy": "radial",
+      "bodyOrigin": "center",
+      "pins": [
+        {
+          "pinId": "A",
+          "bodyExitMm": {
+            "x": -1.27,
+            "y": -4.3,
+            "z": 0
+          }
+        },
+        {
+          "pinId": "K",
+          "bodyExitMm": {
+            "x": 1.27,
+            "y": -4.3,
+            "z": 0
+          }
+        }
+      ],
+      "minLeadLengthMm": 0.5,
+      "maxLeadLengthMm": 35,
+      "contactStubMm": 0.6,
+      "exitStraightMm": 0.4,
+      "minBendRadiusMm": 0.3,
+      "bodyClearanceMm": 0.2,
+      "maxBodyLiftMm": 30,
+      "maxControlsPerLead": 8
+    },
+    {
+      "id": "flex-axial-resistor-bbi3",
+      "revision": 1,
+      "packageId": "MRS25-1016-BBI3",
+      "packageRevision": 2,
+      "strategy": "axial",
+      "bodyOrigin": "center",
+      "pins": [
+        {
+          "pinId": "A",
+          "bodyExitMm": {
+            "x": -3.25,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "pinId": "B",
+          "bodyExitMm": {
+            "x": 3.25,
+            "y": 0,
+            "z": 0
+          }
+        }
+      ],
+      "minLeadLengthMm": 0.5,
+      "maxLeadLengthMm": 35,
+      "contactStubMm": 0.6,
+      "exitStraightMm": 0.4,
+      "minBendRadiusMm": 0.3,
+      "bodyClearanceMm": 0.2,
+      "maxBodyLiftMm": 30,
+      "maxControlsPerLead": 8
+    },
+    {
+      "id": "flex-axial-diode-bbi3",
+      "revision": 1,
+      "packageId": "DO35-1016-BBI3",
+      "packageRevision": 2,
+      "strategy": "axial",
+      "bodyOrigin": "center",
+      "pins": [
+        {
+          "pinId": "A",
+          "bodyExitMm": {
+            "x": -1.95,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "pinId": "K",
+          "bodyExitMm": {
+            "x": 1.95,
+            "y": 0,
+            "z": 0
+          }
+        }
+      ],
+      "minLeadLengthMm": 0.5,
+      "maxLeadLengthMm": 35,
+      "contactStubMm": 0.6,
+      "exitStraightMm": 0.4,
+      "minBendRadiusMm": 0.3,
+      "bodyClearanceMm": 0.2,
+      "maxBodyLiftMm": 30,
+      "maxControlsPerLead": 8
+    },
+    {
+      "id": "flex-axial-zener-bbi3",
+      "revision": 1,
+      "packageId": "DO41-1016-BBI3",
+      "packageRevision": 2,
+      "strategy": "axial",
+      "bodyOrigin": "center",
+      "pins": [
+        {
+          "pinId": "A",
+          "bodyExitMm": {
+            "x": -2.6,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "pinId": "K",
+          "bodyExitMm": {
+            "x": 2.6,
+            "y": 0,
+            "z": 0
+          }
+        }
+      ],
+      "minLeadLengthMm": 0.5,
+      "maxLeadLengthMm": 35,
+      "contactStubMm": 0.6,
+      "exitStraightMm": 0.4,
+      "minBendRadiusMm": 0.3,
+      "bodyClearanceMm": 0.2,
+      "maxBodyLiftMm": 30,
+      "maxControlsPerLead": 8
+    },
+    {
+      "id": "flex-radial-ceramic-bbi3",
+      "revision": 1,
+      "packageId": "K15-H5-508-BBI3",
+      "packageRevision": 2,
+      "strategy": "radial",
+      "bodyOrigin": "center",
+      "pins": [
+        {
+          "pinId": "A",
+          "bodyExitMm": {
+            "x": -1.27,
+            "y": -2.0,
+            "z": 0
+          }
+        },
+        {
+          "pinId": "B",
+          "bodyExitMm": {
+            "x": 1.27,
+            "y": -2.0,
+            "z": 0
+          }
+        }
+      ],
+      "minLeadLengthMm": 0.5,
+      "maxLeadLengthMm": 35,
+      "contactStubMm": 0.6,
+      "exitStraightMm": 0.4,
+      "minBendRadiusMm": 0.3,
+      "bodyClearanceMm": 0.2,
+      "maxBodyLiftMm": 30,
+      "maxControlsPerLead": 8
+    },
+    {
+      "id": "flex-radial-electrolytic-bbi3",
+      "revision": 1,
+      "packageId": "UVR-D10-508-BBI3",
+      "packageRevision": 2,
+      "strategy": "radial",
+      "bodyOrigin": "center",
+      "pins": [
+        {
+          "pinId": "PLUS",
+          "bodyExitMm": {
+            "x": -2.54,
+            "y": -6.25,
+            "z": 0
+          }
+        },
+        {
+          "pinId": "MINUS",
+          "bodyExitMm": {
+            "x": 2.54,
+            "y": -6.25,
+            "z": 0
+          }
+        }
+      ],
+      "minLeadLengthMm": 0.5,
+      "maxLeadLengthMm": 35,
+      "contactStubMm": 0.6,
+      "exitStraightMm": 0.4,
+      "minBendRadiusMm": 0.3,
+      "bodyClearanceMm": 0.2,
+      "maxBodyLiftMm": 30,
+      "maxControlsPerLead": 8
+    },
+    {
+      "id": "flex-sealed-resistor-r49-bbi3",
+      "revision": 1,
+      "packageId": "GENERIC-AXIAL-R49-762-BBI3",
+      "packageRevision": 2,
+      "strategy": "axial",
+      "bodyOrigin": "center",
+      "pins": [
+        {
+          "pinId": "A",
+          "bodyExitMm": {
+            "x": -2.45,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "pinId": "B",
+          "bodyExitMm": {
+            "x": 2.45,
+            "y": 0,
+            "z": 0
+          }
+        }
+      ],
+      "minLeadLengthMm": 0.5,
+      "maxLeadLengthMm": 35,
+      "contactStubMm": 0.6,
+      "exitStraightMm": 0.4,
+      "minBendRadiusMm": 0.3,
+      "bodyClearanceMm": 0.8,
+      "maxBodyLiftMm": 30,
+      "maxControlsPerLead": 8,
+      "preferredBendRadiusMm": 0.6
+    },
+    {
+      "id": "flex-sealed-ceramic-bbi3",
+      "revision": 1,
+      "packageId": "GENERIC-CERAMIC-D5-T22-254-BBI3",
+      "packageRevision": 2,
+      "strategy": "radial",
+      "bodyOrigin": "center",
+      "pins": [
+        {
+          "pinId": "A",
+          "bodyExitMm": {
+            "x": -1.27,
+            "y": -2.5,
+            "z": 0
+          }
+        },
+        {
+          "pinId": "B",
+          "bodyExitMm": {
+            "x": 1.27,
+            "y": -2.5,
+            "z": 0
+          }
+        }
+      ],
+      "minLeadLengthMm": 0.5,
+      "maxLeadLengthMm": 35,
+      "contactStubMm": 0.6,
+      "exitStraightMm": 0.4,
+      "minBendRadiusMm": 0.4,
+      "bodyClearanceMm": 1.2,
+      "maxBodyLiftMm": 30,
+      "maxControlsPerLead": 8,
+      "preferredBendRadiusMm": 0.7
+    },
+    {
+      "id": "flex-sealed-electrolytic-bbi3",
+      "revision": 1,
+      "packageId": "GENERIC-RADIAL-D63-H11-254-BBI3",
+      "packageRevision": 3,
+      "strategy": "radial",
+      "bodyOrigin": "center",
+      "pins": [
+        {
+          "pinId": "PLUS",
+          "bodyExitMm": {
+            "x": -1.27,
+            "y": -5.5,
+            "z": 0
+          }
+        },
+        {
+          "pinId": "MINUS",
+          "bodyExitMm": {
+            "x": 1.27,
+            "y": -5.5,
+            "z": 0
+          }
+        }
+      ],
+      "minLeadLengthMm": 0.5,
+      "maxLeadLengthMm": 35,
+      "contactStubMm": 0.6,
+      "exitStraightMm": 0.4,
+      "minBendRadiusMm": 0.4,
+      "bodyClearanceMm": 1.2,
+      "maxBodyLiftMm": 30,
+      "maxControlsPerLead": 8,
+      "preferredBendRadiusMm": 0.7
+    },
+    {
+      "id": "flex-sealed-diode-bbi3",
+      "revision": 1,
+      "packageId": "GENERIC-EPOXY-D45-762-BBI3",
+      "packageRevision": 2,
+      "strategy": "axial",
+      "bodyOrigin": "center",
+      "pins": [
+        {
+          "pinId": "A",
+          "bodyExitMm": {
+            "x": -2.25,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "pinId": "K",
+          "bodyExitMm": {
+            "x": 2.25,
+            "y": 0,
+            "z": 0
+          }
+        }
+      ],
+      "minLeadLengthMm": 0.5,
+      "maxLeadLengthMm": 35,
+      "contactStubMm": 0.6,
+      "exitStraightMm": 0.4,
+      "minBendRadiusMm": 0.4,
+      "bodyClearanceMm": 0.8,
+      "maxBodyLiftMm": 30,
+      "maxControlsPerLead": 8,
+      "preferredBendRadiusMm": 0.7
+    },
+    {
+      "id": "flex-sealed-zener-bbi3",
+      "revision": 1,
+      "packageId": "GENERIC-GLASS-Z35-762-BBI3",
+      "packageRevision": 2,
+      "strategy": "axial",
+      "bodyOrigin": "center",
+      "pins": [
+        {
+          "pinId": "A",
+          "bodyExitMm": {
+            "x": -1.75,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "pinId": "K",
+          "bodyExitMm": {
+            "x": 1.75,
+            "y": 0,
+            "z": 0
+          }
+        }
+      ],
+      "minLeadLengthMm": 0.5,
+      "maxLeadLengthMm": 35,
+      "contactStubMm": 0.6,
+      "exitStraightMm": 0.4,
+      "minBendRadiusMm": 0.3,
+      "bodyClearanceMm": 0.8,
+      "maxBodyLiftMm": 30,
+      "maxControlsPerLead": 8,
+      "preferredBendRadiusMm": 0.6
+    },
+    {
+      "id": "flex-sealed-led-bbi3",
+      "revision": 1,
+      "packageId": "GENERIC-LED-D5-F58-H87-254-BBI3",
+      "packageRevision": 2,
+      "strategy": "radial",
+      "bodyOrigin": "center",
+      "pins": [
+        {
+          "pinId": "A",
+          "bodyExitMm": {
+            "x": -1.27,
+            "y": -4.35,
+            "z": 0
+          }
+        },
+        {
+          "pinId": "K",
+          "bodyExitMm": {
+            "x": 1.27,
+            "y": -4.35,
+            "z": 0
+          }
+        }
+      ],
+      "minLeadLengthMm": 0.5,
+      "maxLeadLengthMm": 35,
+      "contactStubMm": 0.6,
+      "exitStraightMm": 0.4,
+      "minBendRadiusMm": 0.4,
+      "bodyClearanceMm": 1.5,
+      "maxBodyLiftMm": 30,
+      "maxControlsPerLead": 8,
+      "preferredBendRadiusMm": 0.6
     }
   ]
 }

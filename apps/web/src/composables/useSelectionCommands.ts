@@ -9,8 +9,9 @@ import { getBreadboardTopology } from '../electrical/BreadboardTopology'
 import { worldToModuleLocal } from '../electrical/modulePose'
 import { parseEndpoint } from '../electrical/endpoints'
 import { readWireVisual, wireKey } from '../wires/wireVisual'
-import { buildSelectionGhostRoutes, type SelectionGhostRoute } from '../three/SelectionGhostRoutes'
+import { buildSelectionGhostRoutes, graphWireRouteContext, type SelectionGhostRoute } from '../three/SelectionGhostRoutes'
 import { createSelectionMoveController, type SelectionMoveState } from '../editor/SelectionMoveController'
+import { solveFeasibleWireRoute } from '../wires/wireFeasibility'
 
 type Manager = ReturnType<typeof createSceneManager>
 type ContextTarget = WireIdentity | { moduleId: string }
@@ -32,6 +33,13 @@ export function useSelectionCommands(canvas: Ref<HTMLCanvasElement | undefined>,
   const movePreviewState = shallowRef<SelectionMoveState>(inactiveMove())
   let committing = false, ownGraph: CircuitGraph | null = null, pressedPointer: number | null = null
   let previewOptions: PasteOptions = {}
+  const assertWireGeometry=(candidate:PasteCandidate)=>{
+    const context=graphWireRouteContext(()=>candidate.graph),keys=new Set(candidate.selection.wires.map(wireKey))
+    for(const connection of candidate.graph.connections){
+      if(!candidate.selection.moduleIds.length&&!keys.has(wireKey(connection)))continue
+      if(!solveFeasibleWireRoute(connection,readWireVisual(connection),candidate.graph.connections,context))throw Error('The selected wire route has insufficient bend clearance.')
+    }
+  }
 
   const moveController = createSelectionMoveController({
     graph: () => circuit.graph,
@@ -40,6 +48,7 @@ export function useSelectionCommands(canvas: Ref<HTMLCanvasElement | undefined>,
     onCommit: (candidate) => {
       committing = true
       try {
+        assertWireGeometry(candidate)
         circuit.moveSelection(candidate.selection, candidate.delta)
         ownGraph = circuit.graph
         workspace.setSelection(candidate.selection)
@@ -76,6 +85,7 @@ export function useSelectionCommands(canvas: Ref<HTMLCanvasElement | undefined>,
   }
   function commitMovePreview(): boolean {
     if (!movePreviewState.value.active || !movePreviewState.value.valid) return false
+    try{if(movePreviewState.value.candidate)assertWireGeometry(movePreviewState.value.candidate)}catch(error){workspace.editError=report(error);return false}
     const ok = moveController.confirm()
     movePreviewState.value = moveController.getState()
     return ok
@@ -120,6 +130,7 @@ export function useSelectionCommands(canvas: Ref<HTMLCanvasElement | undefined>,
     previewOptions = options
     try {
       const candidate = buildPasteCandidate(circuit.graph!, clipboard.value!.snapshot, options)
+      assertWireGeometry(candidate)
       const wire = candidate.selection.wires[0] ?? { source: '', destination: '' }
       duplicatePreviewState.value = { active: true, candidate: { ...candidate, wire }, valid: true, message: '' }
       workspace.editError = ''; renderCandidate(candidate, true); return true
@@ -153,6 +164,7 @@ export function useSelectionCommands(canvas: Ref<HTMLCanvasElement | undefined>,
     if (!hasClipboard() || committing || !commandsAvailable()) return false
     try {
       committing = true
+      assertWireGeometry(buildPasteCandidate(circuit.graph!,clipboard.value!.snapshot,options))
       const result = circuit.pasteSelection(clipboard.value!.snapshot, options)
       ownGraph = circuit.graph
       const snapshot = captureSelectionClipboard(circuit.graph!, result.selection)!
@@ -172,6 +184,8 @@ export function useSelectionCommands(canvas: Ref<HTMLCanvasElement | undefined>,
       const x = event.clientX - rect.left, y = event.clientY - rect.top
       moveController.pointerMove(x, y, event.altKey)
       movePreviewState.value = moveController.getState()
+      const candidate=movePreviewState.value.candidate
+      if(movePreviewState.value.valid&&candidate)try{assertWireGeometry(candidate)}catch(error){const message=report(error);movePreviewState.value={...movePreviewState.value,valid:false,message};workspace.editError=message;manager()?.setSelectionPreview(candidate.graph,candidate.selection,false)}
       return true
     }
     if (!duplicatePreviewState.value.active) return false

@@ -4,6 +4,8 @@ export function disposeObject(root: Object3D) {
   const geometries = new Set<BufferGeometry>(), materials = new Set<Material>(), textures = new Set<Texture>()
   root.traverse((object) => {
     delete object.userData.onVisualChange
+    const release = object.userData.releaseSharedResources
+    if (typeof release === 'function') { delete object.userData.releaseSharedResources; release() }
     if (object instanceof InstancedMesh) object.dispose()
     const renderable = object as Mesh
     if (renderable.geometry) geometries.add(renderable.geometry)

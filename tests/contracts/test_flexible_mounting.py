@@ -7,7 +7,7 @@ import pytest
 from jsonschema import ValidationError
 
 from contracts.design_validation import validate_design_graph
-from contracts.physical_mounting import get_physical_part
+from contracts.physical_mounting import get_physical_part, historical_physical_parts
 from contracts.registry import validate_contract
 
 
@@ -22,7 +22,7 @@ def test_short_270_degree_return_does_not_hide_crossing_long_straight_runs():
 
 
 def flexible_graph():
-    part=get_physical_part('RESISTOR_AXIAL');package=part['package']
+    part=min((part for part in historical_physical_parts() if part['editorType']=='RESISTOR_AXIAL'),key=lambda part:part['revision']);package=part['package']
     return {'schema_version':'1.2','circuit_id':'flexible','modules':[
         {'id':'BB','type':'BREADBOARD','position':{'x':4,'y':0,'z':-3},'rotation':37},
         {'id':'R','type':'RESISTOR_AXIAL','properties':{'resistanceOhms':330,'opaque':{'retain':True}},
@@ -173,7 +173,7 @@ def test_new_geometry_rejects_separate_component_lead_crossing_away_from_both_bo
 @pytest.mark.parametrize('module_type,column,x',[('LED_LTL307EE',11,-2.795),('CAPACITOR_ELECTROLYTIC',12,-2.73)])
 def test_explicit_radial_migration_does_not_create_a_duplicate_straight_control(module_type,column,x):
     from contracts.flexible_mounting import migrate_legacy_mount
-    part=get_physical_part(module_type);package=part['package']
+    part=min((part for part in historical_physical_parts() if part['editorType']==module_type),key=lambda part:part['revision']);package=part['package']
     graph={'schema_version':'1.1','circuit_id':'radial-legacy','modules':[{'id':'BB','type':'BREADBOARD'},
         {'id':'C','type':module_type,'mount':{'kind':'breadboard','version':1,'boardId':'BB','partId':part['id'],'partRevision':part['revision'],
             'packageId':package['id'],'packageRevision':package['revision'],'pose':{'position':{'x':x,'y':.309,'z':-.715},'rotation':0},

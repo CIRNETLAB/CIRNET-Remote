@@ -114,6 +114,9 @@ def validate_semantics(name, value, profile="transport", *, _path=()):
     path = list(_path)
     _finite(value, path, profile)
     if name in ('CircuitGraph','CircuitGraphV12','AnySupportedCircuitGraph','CircuitModule','CircuitModuleV12','SimulationRequest','SimulationRequestV2'):
+        from .label_properties import validate_label_annotations
+        validate_label_annotations(name, value, profile, path=_path)
+    if name in ('CircuitGraph','CircuitGraphV12','AnySupportedCircuitGraph','CircuitModule','CircuitModuleV12','SimulationRequest','SimulationRequestV2'):
         from .signal_domains import validate_signal_domains
         signal_name='CircuitGraph' if name in ('CircuitGraphV12','AnySupportedCircuitGraph') else 'CircuitModule' if name=='CircuitModuleV12' else 'SimulationRequest' if name=='SimulationRequestV2' else name
         validate_signal_domains(signal_name,value,profile,_path=_path)

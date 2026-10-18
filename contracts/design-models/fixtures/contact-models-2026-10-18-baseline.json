@@ -1,0 +1,677 @@
+{
+  "sourceHead": "e41c260",
+  "parts": [
+    {
+      "id": "TI-SN74HC08N",
+      "revision": 2,
+      "sha256": "9bbdf8dda9d8be7fdef327a688dbdfeffe1460945064ccd377b5fdf6d9880ccf"
+    },
+    {
+      "id": "LITEON-LTL-307EE",
+      "revision": 1,
+      "sha256": "70cebd7cceb672c0df04963f929d37860123402cb0c3de80b7bf3b83e99f5173"
+    },
+    {
+      "id": "VISHAY-MRS25-330R",
+      "revision": 1,
+      "sha256": "a7baf25c3ef6f32ad65b40d5de7ce797666f781dbd1c88ade14fd8872cff85d0"
+    },
+    {
+      "id": "NETCIRCUIT-DC-SUPPLY",
+      "revision": 1,
+      "sha256": "058b2534ce5347c90d4a2d857717e01bbf799753bb7798f500f328156fbcfb60"
+    },
+    {
+      "id": "ONSEMI-2N3904TA",
+      "revision": 1,
+      "sha256": "276c0c5e0e60506e861e56b18d88e0717267c1cac3f5f7f58bd688a0d8cd76a3"
+    },
+    {
+      "id": "VISHAY-1N4148",
+      "revision": 1,
+      "sha256": "74c3713220de8c2aeda71bfa6542581cc5023bec7b3008f61df8ff32e932ab66"
+    },
+    {
+      "id": "VISHAY-1N4733A",
+      "revision": 1,
+      "sha256": "7977b7ffc055f1aa9f91ffef8bb6fc3b27b609d18ace4619a64f5e2a5def1055"
+    },
+    {
+      "id": "VISHAY-K104K15X7RF53H5",
+      "revision": 1,
+      "sha256": "f6223d1ee9fd674ba0905eda3e87ed4c13fec4d33a03bab569c86c6f9e90f306"
+    },
+    {
+      "id": "NICHICON-UVR1E331MPD",
+      "revision": 1,
+      "sha256": "589c1b6e8135fed90783c91dd9ab89481bb2ebf0daf965e12140236c6d59c020"
+    },
+    {
+      "id": "TDK-PS1240P02BT",
+      "revision": 1,
+      "sha256": "ea04f3691d479ede3f2fc1de63eab70d123da937b2d8de336c31142081c6ca88"
+    },
+    {
+      "id": "OMRON-A6D-4100",
+      "revision": 1,
+      "sha256": "b1bd24f9c6ba47803a903db8a0f1d9f01f21b48dcf336dd5ad19aa7a03908356"
+    },
+    {
+      "id": "OMRON-B3F-1000",
+      "revision": 1,
+      "sha256": "89ea61de6a5be6e9aab4caf2a9808e99213365375218f898b8953b024da34a0c"
+    },
+    {
+      "id": "KINGBRIGHT-SC56-11EWA",
+      "revision": 1,
+      "sha256": "9f29af34e82c5a04a5373d9cb064624103aa435533b06419d731ddc49984fec7"
+    },
+    {
+      "id": "KINGBRIGHT-DC56-11EWA",
+      "revision": 1,
+      "sha256": "8a244c7fc19b58bf5c6e15628430797647f42e4a29b4706bf198561300fdbf67"
+    },
+    {
+      "id": "KINGBRIGHT-CC56-12EWA",
+      "revision": 1,
+      "sha256": "45f04db060c85a871ce77700fef5edacf7a3a03aba4a72d58888b8eca08c751f"
+    },
+    {
+      "id": "TI-SN74HC02N",
+      "revision": 2,
+      "sha256": "121aafef8773814bc2136de0fdce8adbe9617e70c59f8beee78423af7ac26119"
+    },
+    {
+      "id": "TI-SN74HC04N",
+      "revision": 2,
+      "sha256": "e381b613833cebc99a395ba8c31a00d5bf820f1a9d42592317ffd1403341b40b"
+    },
+    {
+      "id": "TI-SN74LS266N",
+      "revision": 2,
+      "sha256": "e4594aba30135585127c99f829a88a747cd8a49dc1b9f92cece6b7b94b499f7d"
+    },
+    {
+      "id": "E-SWITCH-200MSP1T1B1M2QE",
+      "revision": 1,
+      "sha256": "bf09ae33ecf4d78068d58d193b7e3ddd20a524c867bf9723fcf3ad34d2ea8a01"
+    },
+    {
+      "id": "TI-SN7400N",
+      "revision": 2,
+      "sha256": "a1bfa331ef828a7a0e60c1eac5b78743cb2be90d79ccff9d32bc5c1fc1d63fb2"
+    },
+    {
+      "id": "TI-SN7401N",
+      "revision": 2,
+      "sha256": "374179e8b4cefc5baada8a52723b175061264f6a394c0df013ef243e4bd3669b"
+    },
+    {
+      "id": "TI-SN7402N",
+      "revision": 2,
+      "sha256": "3129853b2e7b3fe77b180326063752d6f8a306fcc4973de86d4d3098a224c481"
+    },
+    {
+      "id": "TI-SN7403N",
+      "revision": 2,
+      "sha256": "eddccc36c778e2e04ec59bad1a9c62fc5f7eaa1bd224974529686957cc3e85b9"
+    },
+    {
+      "id": "TI-SN7404N",
+      "revision": 2,
+      "sha256": "01b3c70819ffdf1db6c4db52be1c368b6695d96e119f9787f96c3edacc735e74"
+    },
+    {
+      "id": "TI-SN7405N",
+      "revision": 2,
+      "sha256": "965a1550c5f53e104e686d766ef45ca793a3575bb75a3889efcacf9d573e112f"
+    },
+    {
+      "id": "TI-SN7408N",
+      "revision": 2,
+      "sha256": "ff9b2cccb056d0e5b022802cf408ae745d02871c721cc21ec9ae6189e104136b"
+    },
+    {
+      "id": "TI-SN7409N",
+      "revision": 2,
+      "sha256": "068c990c66bb1dbf69a5bd533333bca6b46750c646db00de1b9c8a0ecd359fd4"
+    },
+    {
+      "id": "TI-SN7410N",
+      "revision": 2,
+      "sha256": "e77eb2756ff3055ac65d07cefe6ad7ae580739f771d9c212415449db84b57c3a"
+    },
+    {
+      "id": "TI-SN74LS11N",
+      "revision": 2,
+      "sha256": "2b35123b39a8a07a9c8940d585ca943b73769856a92c0a9a5429424db3e82208"
+    },
+    {
+      "id": "TI-SN7412N",
+      "revision": 2,
+      "sha256": "a1cf26cee41faf263179045cb3b465f1294699961f519bbc5b4b7a879b300eca"
+    },
+    {
+      "id": "TI-SN7413N",
+      "revision": 2,
+      "sha256": "7689a7d0e29b757b2b929d9dcc31197f649b490509b7c909876129222caa0542"
+    },
+    {
+      "id": "TI-SN7414N",
+      "revision": 2,
+      "sha256": "18299649d4fdd65edd0763d3cc20c28200d0d551c6841b9b40b1809ad047719a"
+    },
+    {
+      "id": "TI-SN74LS15N",
+      "revision": 2,
+      "sha256": "caf54449602f1f707bb7666d68bbb3da0105ab940c04799dabc8deb0a8760cfb"
+    },
+    {
+      "id": "TI-SN7420N",
+      "revision": 2,
+      "sha256": "c12f3e1b734ec855da47f0870ba6e7e0798080921d7ee6853c49d468c9f75292"
+    },
+    {
+      "id": "TI-SN74LS21N",
+      "revision": 2,
+      "sha256": "26da34ae5839f01073aacd44f90caead1abd052c32afe83b689fb2dd656d3af3"
+    },
+    {
+      "id": "TI-SN7427N",
+      "revision": 2,
+      "sha256": "5e9352d0cff61f5c88e844f2053572741bbeebd8178eaec57ed395a76c5255f5"
+    },
+    {
+      "id": "TI-SN7430N",
+      "revision": 2,
+      "sha256": "5b41f16829a4d69b45b5516b2b3c191e4e78b10a85e96935ba53fe956d8aa39e"
+    },
+    {
+      "id": "TI-SN7432N",
+      "revision": 2,
+      "sha256": "7c8d99355a552497356b9bfa8a1ec9163f5da82c40437cd639deafd56952b549"
+    },
+    {
+      "id": "TI-SN7437N",
+      "revision": 2,
+      "sha256": "3a1f6ee7ea0ab41b439197072500755b7d1e3d95a8ad3d30eed5909c30853046"
+    },
+    {
+      "id": "TI-SN7438N",
+      "revision": 2,
+      "sha256": "26f88b49c94975f50aaf711d523c62b17cf48fa1f4f39fa09fce3756d7bccc50"
+    },
+    {
+      "id": "TI-SN7440N",
+      "revision": 2,
+      "sha256": "1014f257cb157b8f3a1ae9e1bbc1270c953de03036aeaa1e9df42f28c59674eb"
+    },
+    {
+      "id": "TI-SN7486N",
+      "revision": 2,
+      "sha256": "17e5bab1a66a55218e3e63186b107cd4359aa2a0b5b361583a2cf2ef6d3871d6"
+    },
+    {
+      "id": "TI-SN74LS136N",
+      "revision": 2,
+      "sha256": "210900d8f2daa620c53da9346153e6537e40392594170afe57d33dc7a93fdd01"
+    },
+    {
+      "id": "TI-CD4001BE",
+      "revision": 2,
+      "sha256": "7901ffbeb75c6c18e8f450939b11b229b418f1acade45438a6b5bb652c5b9b8f"
+    },
+    {
+      "id": "TI-CD4011BE",
+      "revision": 2,
+      "sha256": "706fabdefc0dc977f58f1a514f81cc5efdbc2164a282c4bf712919b3f21b4e54"
+    },
+    {
+      "id": "TI-CD4012BE",
+      "revision": 2,
+      "sha256": "804335a3889efe7a1c0f3aad9e74d821a3508567059a5c60af9e207706483930"
+    },
+    {
+      "id": "TI-CD4013BE",
+      "revision": 2,
+      "sha256": "0e7ce0ae6f601087979ab1c49354f8b08f766604311f69acc128140e4442afd0"
+    },
+    {
+      "id": "TI-CD4030BE",
+      "revision": 2,
+      "sha256": "035538764af0d6e31ab2f280e6c091968f4a138f6c5b6da2460affb1046d46b6"
+    },
+    {
+      "id": "TI-CD4069UBE",
+      "revision": 2,
+      "sha256": "a13c71f8c58b863094b28f1c83ec433f817bd194b25fef2f3bcb8f264b1cab59"
+    },
+    {
+      "id": "TI-CD4070BE",
+      "revision": 2,
+      "sha256": "62527aad3b552f9f04003b330c94245065bc65e8be1edaa0c3754b79cc10dece"
+    },
+    {
+      "id": "TI-CD4071BE",
+      "revision": 2,
+      "sha256": "2c33ab6ae96db0fc1d62cfd12768d0fdbc8bbdf94ba255091ebc223f8c276763"
+    },
+    {
+      "id": "TI-CD4072BE",
+      "revision": 2,
+      "sha256": "93f61212c946af344e2305d54054d0817f594fc9df65cd82c7fbf023c9e36801"
+    },
+    {
+      "id": "TI-CD4077BE",
+      "revision": 2,
+      "sha256": "4bb6f786e6f902661568035d07b9c87a92746e1f5d6e5788dd102649986036d5"
+    },
+    {
+      "id": "TI-CD4081BE",
+      "revision": 2,
+      "sha256": "a30bbf300c9de85accd40b2b3dec4cf392261643257cd4ea8f5833b543e02703"
+    },
+    {
+      "id": "TI-CD4093BE",
+      "revision": 2,
+      "sha256": "2747bfdea42701c4d82d6b30b3960ba52478e437896057004e22cc7595a3273a"
+    },
+    {
+      "id": "GENERIC-RESISTOR-AXIAL",
+      "revision": 6,
+      "sha256": "03694b917494ae678ab0ed4ca16f7d583e98e1a40966ffb9be7e615d645ad63c"
+    },
+    {
+      "id": "GENERIC-CAPACITOR-CERAMIC",
+      "revision": 2,
+      "sha256": "86a5e42be0c53458c26f9e70e1fd4f6cfd19b06d8eb39a1b9045b235a33c5abe"
+    },
+    {
+      "id": "GENERIC-CAPACITOR-ELECTROLYTIC",
+      "revision": 3,
+      "sha256": "ac6318da9d89a5381af838f5b2adc5e6bee899947a8e7ac325a0b62ae7416788"
+    },
+    {
+      "id": "GENERIC-DIODE-AXIAL",
+      "revision": 2,
+      "sha256": "4a2b136fb534d798c51a29098c3f96b41898f903a2056606e5f35bd45f18a095"
+    },
+    {
+      "id": "GENERIC-ZENER-DIODE-AXIAL",
+      "revision": 3,
+      "sha256": "296dc4567894499e3f909a6909d6eec6732e51442932e190fc30573e399eecb2"
+    },
+    {
+      "id": "GENERIC-LED-5MM",
+      "revision": 2,
+      "sha256": "ba5fee4481056c23a6a688b457b22221db1dc6c7d7fc8c8faf8e949ed4b1ef44"
+    },
+    {
+      "id": "GENERIC-BUZZER-12MM",
+      "revision": 1,
+      "sha256": "dbe2def67c5eaa3e72c27561ec4f06cf07ffa116ef4d2591a80481f67feeb3bc"
+    },
+    {
+      "id": "GENERIC-BJT-TO92",
+      "revision": 2,
+      "sha256": "8b58acdf7bcf6bc61441d634a1642325d995b8ed8b6bf7d1f64065962eaa3cb6"
+    },
+    {
+      "id": "GENERIC-RESISTOR-AXIAL",
+      "revision": 1,
+      "sha256": "15f43587544fbe53b1824d885be52ed553da728d7487b8eaf3d9ce3c45425948"
+    },
+    {
+      "id": "GENERIC-CAPACITOR-ELECTROLYTIC",
+      "revision": 1,
+      "sha256": "aa076852ec9737c394281f7a11d5c247686663443f4806f4bcaf140c9d8ba24c"
+    },
+    {
+      "id": "GENERIC-ZENER-DIODE-AXIAL",
+      "revision": 1,
+      "sha256": "fa8266dca3508a5844ad59bdbaea98cd15a9741edf7d14d3da2b08fa4857a97f"
+    },
+    {
+      "id": "TI-SN74HC08N",
+      "revision": 1,
+      "sha256": "2577a6730cf5b7b3d86bfd98f6972a16d288c57e00f5f804ae72b70dd4d97b93"
+    },
+    {
+      "id": "TI-SN74HC02N",
+      "revision": 1,
+      "sha256": "18520169818e4818e0fbca3e13ae7c13545bb46a8e32ea17bc53a7084e1c7fa9"
+    },
+    {
+      "id": "TI-SN74HC04N",
+      "revision": 1,
+      "sha256": "007555690d984e104ef55edef60727a78fbcce3d06ca429702aaeed9759d8b07"
+    },
+    {
+      "id": "TI-SN74LS266N",
+      "revision": 1,
+      "sha256": "f29a80b4a11d900a5100bd7c27b1ce6c86658587bfc14964c95536b69bf352ea"
+    },
+    {
+      "id": "TI-SN7400N",
+      "revision": 1,
+      "sha256": "a13fb36c50b9c3e227677c5da4b89730a8d4bf4b0b990fb3b8e5b39884a345e2"
+    },
+    {
+      "id": "TI-SN7401N",
+      "revision": 1,
+      "sha256": "13dbd94e82d6297c146d31de6b15a1de34dfb4e2e668cb25d45693829472b92a"
+    },
+    {
+      "id": "TI-SN7402N",
+      "revision": 1,
+      "sha256": "500d9fc62acbdf0a1e9ec1b69828e5d83cdf6c1edd16982da9a176ee4de283af"
+    },
+    {
+      "id": "TI-SN7403N",
+      "revision": 1,
+      "sha256": "75cca634ac0ea4b023aff26696eb6f7bc587720f310aba71ceb0be18c6ac142f"
+    },
+    {
+      "id": "TI-SN7404N",
+      "revision": 1,
+      "sha256": "5669520fdf48f6c07f1b7cad6891bf1a9b146dfd7bf7d3e1e5587380fa39db37"
+    },
+    {
+      "id": "TI-SN7405N",
+      "revision": 1,
+      "sha256": "bb5258142e66a98f5c9ac35fd93f20e76e6899bb23ccaf2fefc3badc7ff0ca0c"
+    },
+    {
+      "id": "TI-SN7408N",
+      "revision": 1,
+      "sha256": "854e41472090ffc1ee75e1c748e25b974d991178f922bf96e189d73591964873"
+    },
+    {
+      "id": "TI-SN7409N",
+      "revision": 1,
+      "sha256": "b849f71c3a132bb2406381692960e0830d1ff9a6259a783944f05d6314113631"
+    },
+    {
+      "id": "TI-SN7410N",
+      "revision": 1,
+      "sha256": "d1c87e8aeaf4509b09547d122ee0ac3f090602af8b5fd6f025add19126c60698"
+    },
+    {
+      "id": "TI-SN74LS11N",
+      "revision": 1,
+      "sha256": "4ccbee9ef529f18eec5e975ca7ff4ea74d0509853d6b185eda074d83e068380f"
+    },
+    {
+      "id": "TI-SN7412N",
+      "revision": 1,
+      "sha256": "5fc30988caabb860ec6c601df3bbc1476ed4605258c5760600c962efafa00315"
+    },
+    {
+      "id": "TI-SN7413N",
+      "revision": 1,
+      "sha256": "b67277c8ae157ffa6d9a992a56b4b0c81a312e21fb4a4543b7508bafb55f583a"
+    },
+    {
+      "id": "TI-SN7414N",
+      "revision": 1,
+      "sha256": "d7b122a938f11c1bedbceab41df39b98e081cd8c30b8ed98741b5775b20826dc"
+    },
+    {
+      "id": "TI-SN74LS15N",
+      "revision": 1,
+      "sha256": "883fb3fd5e9646dc10a5b0cfb1e07f631e77d10d8a0561c25b08b526f768282b"
+    },
+    {
+      "id": "TI-SN7420N",
+      "revision": 1,
+      "sha256": "6baca1d8db38244a2e938be48aa5a12a0ff7c377045c0eb5158b599784f1f537"
+    },
+    {
+      "id": "TI-SN74LS21N",
+      "revision": 1,
+      "sha256": "e629d3339b02af46fffcdfd96053801a54fa593db7bf9c2ced459ff93d66c621"
+    },
+    {
+      "id": "TI-SN7427N",
+      "revision": 1,
+      "sha256": "c759dcc973437c7d9b72d3fd89eb5a9ee39740c00b430586b8e54d616fbbccdc"
+    },
+    {
+      "id": "TI-SN7430N",
+      "revision": 1,
+      "sha256": "4ccb7096854dc03b4b2763f797d58c536ac0c8fba18b5f6c2791e93d87691efc"
+    },
+    {
+      "id": "TI-SN7432N",
+      "revision": 1,
+      "sha256": "82efa78c5211e1e6ef7fe54dfc0086163de96ee8991678f5e2a004c5e93a2141"
+    },
+    {
+      "id": "TI-SN7437N",
+      "revision": 1,
+      "sha256": "185f6114c1dfe30828e53dd0f9cb9f54267d5b6aa5e437eb3edd165891fef1c6"
+    },
+    {
+      "id": "TI-SN7438N",
+      "revision": 1,
+      "sha256": "4671cabd93fda0074e0286c58f204408af12bfad5cbe36dd98151e4b069b3c2f"
+    },
+    {
+      "id": "TI-SN7440N",
+      "revision": 1,
+      "sha256": "2c9bbd8c7d71fda24c311c6e45b857ee0f3d27d4a70cda3da85792dfbc7302c1"
+    },
+    {
+      "id": "TI-SN7486N",
+      "revision": 1,
+      "sha256": "c7a46755aa7b5c0c856019b3b7d6e482ec2072997fa6b36011933fcdcab6545e"
+    },
+    {
+      "id": "TI-SN74LS136N",
+      "revision": 1,
+      "sha256": "856e9d2a2edc77f06b85b880075c9c4f1bac4391322e2066ccb943e443dbd6ed"
+    },
+    {
+      "id": "TI-CD4001BE",
+      "revision": 1,
+      "sha256": "804b45e85a84d3f1eac0cacadbb41deac1aa12ab8918b0f48edcd735a33298d1"
+    },
+    {
+      "id": "TI-CD4011BE",
+      "revision": 1,
+      "sha256": "d43a6b0bb085ce4534fe3b9d9df246dfe3d730dacbf10572457b916ba883edee"
+    },
+    {
+      "id": "TI-CD4012BE",
+      "revision": 1,
+      "sha256": "2af50c1081f87a59493f76c3aa18ab460e0578ca3e2f13263050e92763de07ed"
+    },
+    {
+      "id": "TI-CD4013BE",
+      "revision": 1,
+      "sha256": "e54e6057cb65d5e0cfec4ac64798219f1d78917ecc0e45ab8730018dc71a7318"
+    },
+    {
+      "id": "TI-CD4030BE",
+      "revision": 1,
+      "sha256": "93ff9d0324fc7dfeacff46d1385501097b45ed1796e92e136d421dd296fa6b90"
+    },
+    {
+      "id": "TI-CD4069UBE",
+      "revision": 1,
+      "sha256": "044f97eb59e5d9e59248207003dc876c55680188cb8e8c4b1d772d57b707cf94"
+    },
+    {
+      "id": "TI-CD4070BE",
+      "revision": 1,
+      "sha256": "ecdb60a5c1604a2c9ed567dd4f61a8c164f5a67c2ba8d855586ca92f99bf875a"
+    },
+    {
+      "id": "TI-CD4071BE",
+      "revision": 1,
+      "sha256": "1050b8a5008d4074a952c5bef5370b39123782c5fd751adedbd71ef33d84984b"
+    },
+    {
+      "id": "TI-CD4072BE",
+      "revision": 1,
+      "sha256": "01ed3232ce31752df810905f2301fc7119f3ed1a741761f054ea30d6683b3b34"
+    },
+    {
+      "id": "TI-CD4077BE",
+      "revision": 1,
+      "sha256": "19d28c37468582b3d6f834765170111899fbeadcffdfe7dc2bd3af2e8ca4b123"
+    },
+    {
+      "id": "TI-CD4081BE",
+      "revision": 1,
+      "sha256": "a17592e0051c25ce34f544ceab6bc4fbf155327f83a6d8017b94a4e8df264e5b"
+    },
+    {
+      "id": "TI-CD4093BE",
+      "revision": 1,
+      "sha256": "006ee4bfe99ae78417b8416fb654466a2d3cc8453d90249f2f9d0fda55947c23"
+    },
+    {
+      "id": "GENERIC-RESISTOR-AXIAL",
+      "revision": 2,
+      "sha256": "a554947484ecbd95e06c3a79ee5ed559c899cec354123aec6c17cb5b2e60de37"
+    },
+    {
+      "id": "GENERIC-CAPACITOR-CERAMIC",
+      "revision": 1,
+      "sha256": "114928f357c91fa986c8a9afd2f3a58c7f363609ec208f4a16d7d939ee54d4ef"
+    },
+    {
+      "id": "GENERIC-CAPACITOR-ELECTROLYTIC",
+      "revision": 2,
+      "sha256": "115e3d7195a72f4a4cd8a08ddeca7c820b51448088895a5fb0c01c0f09557d20"
+    },
+    {
+      "id": "GENERIC-DIODE-AXIAL",
+      "revision": 1,
+      "sha256": "08bf5c96b8c1587cbba6c1b1f321513cac75838a8b5fc456d999a853420831e3"
+    },
+    {
+      "id": "GENERIC-ZENER-DIODE-AXIAL",
+      "revision": 2,
+      "sha256": "bd7382abc358e0f7401e6b52cd3ad80788d9d2f591c6a6af87a991c66514b44d"
+    },
+    {
+      "id": "GENERIC-LED-5MM",
+      "revision": 1,
+      "sha256": "8b7b8a03fa552434bd0a6c8b765b27dcd311123a60b49b296ecc3e7f051f7f5b"
+    },
+    {
+      "id": "GENERIC-BJT-TO92",
+      "revision": 1,
+      "sha256": "4adef6d6c75aa5d9f86f02fab79ec71b327de7a8cbbde67b0df9f0f53060ba07"
+    },
+    {
+      "id": "GENERIC-RESISTOR-AXIAL",
+      "revision": 3,
+      "sha256": "1a2e8c09d859a603a60a30327c7327d7481b1ea1e98dc171826eb86364204ae6"
+    },
+    {
+      "id": "GENERIC-RESISTOR-AXIAL",
+      "revision": 4,
+      "sha256": "69e78329b3d7b6e68bf609c464f71106ba3c286e17d5b83d89e98a0d464d826a"
+    },
+    {
+      "id": "GENERIC-RESISTOR-AXIAL",
+      "revision": 5,
+      "sha256": "fde7ecca0a493e7942c93d44ebcc4ec71918dfa8829143caae0a684a208aa5b8"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "flex-axial-resistor",
+      "revision": 1,
+      "sha256": "423223780180a8b6f1ca6687ad61b63b4e046c2aa14abe8030366073d1dbd15a"
+    },
+    {
+      "id": "flex-axial-diode",
+      "revision": 1,
+      "sha256": "1a6c183373980b82063d01ccba60fefed60cc3f720559339901889c507e22ab4"
+    },
+    {
+      "id": "flex-axial-zener",
+      "revision": 1,
+      "sha256": "7464af4c7a4465cf7a053de3412a11584e69f3e98c4ac24140a68ed66aec46b1"
+    },
+    {
+      "id": "flex-radial-ceramic",
+      "revision": 1,
+      "sha256": "614b8d8b2a699548457b276bd89fea8b85b3868bdc859aaf58c7d6c8e54d3c67"
+    },
+    {
+      "id": "flex-radial-electrolytic",
+      "revision": 1,
+      "sha256": "367538b0168690ae4c50c3a7134b943b19221cb6a494836ce944a89f413f2b6d"
+    },
+    {
+      "id": "flex-radial-led",
+      "revision": 1,
+      "sha256": "fb2c04d9fe337bae752869a2917c247d2d01f5ac6ba5de7b16d8f0450dbb6f65"
+    },
+    {
+      "id": "flex-axial-resistor-compact",
+      "revision": 1,
+      "sha256": "842b7e7e0a958f90e6ee16c951758246935135198359d25983f6bbe12b689055"
+    },
+    {
+      "id": "flex-radial-electrolytic-compact",
+      "revision": 1,
+      "sha256": "45d76de082bc85834eab1617ee1b3e92d1cbd827e66254a61173a3b19ff11ef5"
+    },
+    {
+      "id": "flex-axial-zener-compact",
+      "revision": 1,
+      "sha256": "867d84f4f749821802dc3f598a997716b0d38ea5543a4372b2d840094f15ea3b"
+    },
+    {
+      "id": "flex-sealed-resistor",
+      "revision": 1,
+      "sha256": "2fb9a9d31456411b4e5d4d6519f6a46550de6bb36d16d74cac9eb3f503555968"
+    },
+    {
+      "id": "flex-sealed-ceramic",
+      "revision": 1,
+      "sha256": "cd5254ac52d266e46089010d364a6ed2c2147d406ef2c34d66cade343bb715d1"
+    },
+    {
+      "id": "flex-sealed-electrolytic",
+      "revision": 1,
+      "sha256": "b62bb70e8766d1a538281d421b6b5e18793e1ff87559ece1514d7bc38cc8aabf"
+    },
+    {
+      "id": "flex-sealed-diode",
+      "revision": 1,
+      "sha256": "1ce9db7ef8da6248145a128e082c8a09631bce241d48cd8472dfc5b04949b135"
+    },
+    {
+      "id": "flex-sealed-zener",
+      "revision": 1,
+      "sha256": "8b5417ca1636d1db6cb177676403471ce8a6fda993331ca219919d562db383aa"
+    },
+    {
+      "id": "flex-sealed-led",
+      "revision": 1,
+      "sha256": "1fc149b9e03fe10d084b2ecff68001241c81028dc96788bb30474039689bf2eb"
+    },
+    {
+      "id": "flex-sealed-resistor-r39",
+      "revision": 1,
+      "sha256": "e72c273fcd3e949a3a9603ffcc30bcb0e70a3f24d6d510876eb9d85899886802"
+    },
+    {
+      "id": "flex-sealed-resistor-r43",
+      "revision": 1,
+      "sha256": "67fa7769fc87937a40a0fcbf14301f9bf0626788b48b9e8e550d66910ac564e5"
+    },
+    {
+      "id": "flex-sealed-resistor-r49",
+      "revision": 1,
+      "sha256": "f3e2f570778dc2b6627d9b2486b9eec774a06889c087e248a42d3640e2fa21d6"
+    }
+  ]
+}
