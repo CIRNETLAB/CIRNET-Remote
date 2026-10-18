@@ -1,5 +1,6 @@
-import { Color, MeshPhysicalMaterial, MeshStandardMaterial, type MeshStandardMaterialParameters } from 'three'
+import { Color, MeshPhysicalMaterial, MeshStandardMaterial, SRGBColorSpace, type MeshStandardMaterialParameters } from 'three'
 import { createCoatingMaterial } from '../StudioEnvironment'
+import { MM_TO_WORLD } from '../../data/partCatalog'
 
 /** Body paint only: reduce display-space brightness by 10% while retaining hue.
  * Keep metal, coded bands and printed polarity/IC markings on their exact colors. */
@@ -22,9 +23,9 @@ export function createResistorMaterial() {
 }
 
 /** Signal diode body: charcoal/black epoxy molding with soft satin sheen. */
-export function createDiodeMaterial() {
+export function createDiodeMaterial(sealed = false) {
   return new MeshStandardMaterial({
-    color: '#1b1e22',
+    color: sealed ? '#1D2023' : '#1b1e22',
     roughness: .4,
     metalness: 0,
     envMapIntensity: .4,
@@ -32,18 +33,21 @@ export function createDiodeMaterial() {
 }
 
 /** Zener diode body: DO-35 transparent/translucent glass envelope with reflections. */
-export function createZenerGlassMaterial() {
+export function createZenerGlassMaterial(sealedDiameterMm?: number) {
+  const sealed = sealedDiameterMm !== undefined
   return new MeshPhysicalMaterial({
-    color: '#e86a3e',
-    roughness: .14,
+    color: sealed ? '#C9654B' : '#e86a3e',
+    roughness: sealed ? .26 : .14,
     metalness: 0,
-    transmission: .72,
+    transmission: sealed ? .28 : .72,
     opacity: 1,
     transparent: true,
     ior: 1.52,
-    thickness: .025,
-    envMapIntensity: .95,
-    depthWrite: false,
+    thickness: sealed ? sealedDiameterMm * MM_TO_WORLD : .025,
+    attenuationColor: sealed ? new Color('#C9654B') : new Color('#ffffff'),
+    attenuationDistance: sealed ? sealedDiameterMm * 1.5 * MM_TO_WORLD : Infinity,
+    envMapIntensity: sealed ? .65 : .95,
+    depthWrite: sealed,
   })
 }
 
@@ -58,9 +62,9 @@ export function createElectrolyticSleeveMaterial(color = '#2b6cb0') {
 }
 
 /** Ceramic capacitor: golden-brown caramel lacquer/resin dipped finish. */
-export function createCeramicMaterial() {
+export function createCeramicMaterial(sealed = false) {
   return new MeshStandardMaterial({
-    color: '#b87d32',
+    color: sealed ? '#B87832' : '#b87d32',
     roughness: .42,
     metalness: 0,
     envMapIntensity: .4,
@@ -68,20 +72,40 @@ export function createCeramicMaterial() {
 }
 
 /** Radial LED: colored translucent resin lens with soft highlight and internal depth. */
-export function createLedLensMaterial(color = '#ba3434') {
-  const c = new Color(color)
+/** Dark resin preserves the chosen hue without changing document properties or emitted hue. */
+export function darkLedResinColor(color: string): Color {
+  const hue = new Color(color), hsl = { h: 0, s: 0, l: 0 }; hue.getHSL(hsl, SRGBColorSpace)
+  const wine = new Color('#781521'), wineHsl = { h: 0, s: 0, l: 0 }; wine.getHSL(wineHsl, SRGBColorSpace)
+  // Red's subtle wine tint is intentional; other hues follow the user's selection.
+  const redDistance = Math.min(hsl.h, 1 - hsl.h)
+  return redDistance < .045 && hsl.s > .25 ? wine : new Color().setHSL(hsl.h, hsl.s * .74, wineHsl.l, SRGBColorSpace)
+}
+
+/** Three already tints transmitted light by the surface diffuse color. Keep
+ * the separate volume absorption mild so dark wine pigment is not applied a
+ * second time and the enclosed leadframe can remain faintly visible. */
+export function ledResinAbsorptionColor(color: string): Color {
+  return darkLedResinColor(color).lerp(new Color('#ffffff'), .8)
+}
+
+export function createLedLensMaterial(color = '#ba3434', sealedDiameterMm?: number) {
+  const sealed = sealedDiameterMm !== undefined, c = sealed ? darkLedResinColor(color) : new Color(color)
   return new MeshPhysicalMaterial({
     color: c,
-    roughness: .14,
+    roughness: sealed ? .25 : .14,
     metalness: 0,
-    transmission: .62,
-    opacity: 1,
+    transmission: sealed ? .28 : .62,
+    // A faint direct interior signal complements screen-space refraction,
+    // which can miss enclosed opaque geometry at a full-volume exit sample.
+    // A small direct signal reveals the enclosed frame without the strong
+    // background ghosting seen at lower opacity over a bright breadboard.
+    opacity: sealed ? .98 : 1,
     transparent: true,
     ior: 1.54,
-    thickness: .04,
-    attenuationColor: c,
-    attenuationDistance: .08,
-    envMapIntensity: .9,
+    thickness: sealed ? sealedDiameterMm * MM_TO_WORLD : .04,
+    attenuationColor: sealed ? ledResinAbsorptionColor(color) : c,
+    attenuationDistance: sealed ? sealedDiameterMm * 1.5 * MM_TO_WORLD : .08,
+    envMapIntensity: sealed ? .65 : .9,
     emissive: '#000000',
     emissiveIntensity: 0,
   })

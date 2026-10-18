@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://netcircuit.local/contracts/design/package-shape/1.0/schema.json",
+  "title": "Sealed procedural package shape 1.0",
+  "$defs": {
+    "PackageLeadSectionV1": {
+      "type": "object",
+      "required": [
+        "kind",
+        "widthMm",
+        "thicknessMm"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "round",
+            "rectangular",
+            "stamped"
+          ]
+        },
+        "widthMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "thicknessMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "shoulderWidthMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        }
+      },
+      "additionalProperties": false
+    },
+    "PackageLeadExitV1": {
+      "type": "object",
+      "required": [
+        "pinId",
+        "positionMm",
+        "normal"
+      ],
+      "properties": {
+        "pinId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "positionMm": {
+          "$ref": "https://netcircuit.local/contracts/circuit/1.x/module.schema.json#/$defs/point"
+        },
+        "normal": {
+          "$ref": "https://netcircuit.local/contracts/circuit/1.x/module.schema.json#/$defs/point"
+        }
+      },
+      "additionalProperties": false
+    },
+    "PackageShapeV1": {
+      "type": "object",
+      "required": [
+        "version",
+        "family",
+        "embeddedDepthMm",
+        "leadSection",
+        "leadExits"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "family": {
+          "enum": [
+            "resistor",
+            "diode",
+            "zener",
+            "ceramic",
+            "electrolytic",
+            "led",
+            "dip",
+            "to92"
+          ]
+        },
+        "embeddedDepthMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 0.5
+        },
+        "leadSection": {
+          "$ref": "#/$defs/PackageLeadSectionV1"
+        },
+        "leadExits": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/PackageLeadExitV1"
+          }
+        },
+        "lensDiameterMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "flangeDiameterMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "flangeHeightMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "domeRadiusMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "bevelMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        }
+      },
+      "additionalProperties": false,
+      "description": "Versioned model geometry in centered body-local millimetres. Body envelope, contact tips, exits and the hidden interior embed remain distinct; no electrical or safety capability is implied."
+    }
+  }
+}

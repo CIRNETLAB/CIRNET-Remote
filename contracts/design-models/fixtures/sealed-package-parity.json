@@ -1,0 +1,3473 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "sealed-generic_resistor-11",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_RESISTOR",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-RESISTOR-AXIAL",
+              "partRevision": 6,
+              "packageId": "GENERIC-AXIAL-R49-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-sealed-resistor-r49",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-standing"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.86,
+                  "y": 0.493251968503937,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 90
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "B",
+                  "contactId": "terminal:C:11"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": []
+                },
+                {
+                  "pinId": "B",
+                  "controlPoints": [
+                    {
+                      "x": -2.86,
+                      "y": 0.7041181102362204,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.73,
+                      "y": 0.7041181102362204,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 1.1499999999999995,
+          "bendRadiiMm": [],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.3678582677165354,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "B",
+          "lengthMm": 10.839822670059036,
+          "bendRadiiMm": [
+            1.269999999999999,
+            1.269999999999999
+          ],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.6186456692913386,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.7041181102362204,
+              "z": -0.455
+            },
+            {
+              "x": -2.73,
+              "y": 0.7041181102362204,
+              "z": -0.455
+            },
+            {
+              "x": -2.73,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sealed-generic_resistor-12",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_RESISTOR",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-RESISTOR-AXIAL",
+              "partRevision": 6,
+              "packageId": "GENERIC-AXIAL-R49-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-sealed-resistor-r49",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-standing"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.86,
+                  "y": 0.493251968503937,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 90
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "B",
+                  "contactId": "terminal:C:12"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": []
+                },
+                {
+                  "pinId": "B",
+                  "controlPoints": [
+                    {
+                      "x": -2.86,
+                      "y": 0.7691181102362203,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.6,
+                      "y": 0.7691181102362203,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 1.1499999999999995,
+          "bendRadiiMm": [],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.3678582677165354,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "B",
+          "lengthMm": 14.829645340118066,
+          "bendRadiiMm": [
+            2.539999999999998,
+            2.539999999999998
+          ],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.6186456692913386,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.7691181102362203,
+              "z": -0.455
+            },
+            {
+              "x": -2.6,
+              "y": 0.7691181102362203,
+              "z": -0.455
+            },
+            {
+              "x": -2.6,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sealed-generic_resistor-13",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_RESISTOR",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-RESISTOR-AXIAL",
+              "partRevision": 6,
+              "packageId": "GENERIC-AXIAL-R49-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-sealed-resistor-r49",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-horizontal"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.665,
+                  "y": 0.3947283464566929,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "B",
+                  "contactId": "terminal:C:13"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -2.86,
+                      "y": 0.3947283464566929,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "B",
+                  "controlPoints": [
+                    {
+                      "x": -2.47,
+                      "y": 0.3947283464566929,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 2.7774777960769312,
+          "bendRadiiMm": [
+            0.6
+          ],
+          "points": [
+            {
+              "x": -2.790393700787402,
+              "y": 0.3947283464566929,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.3947283464566929,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "B",
+          "lengthMm": 2.7774777960769312,
+          "bendRadiiMm": [
+            0.6
+          ],
+          "points": [
+            {
+              "x": -2.5396062992125983,
+              "y": 0.3947283464566929,
+              "z": -0.455
+            },
+            {
+              "x": -2.47,
+              "y": 0.3947283464566929,
+              "z": -0.455
+            },
+            {
+              "x": -2.47,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sealed-generic_resistor-14",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_RESISTOR",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-RESISTOR-AXIAL",
+              "partRevision": 6,
+              "packageId": "GENERIC-AXIAL-R49-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-sealed-resistor-r49",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-horizontal"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.5999999999999996,
+                  "y": 0.3947283464566929,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "B",
+                  "contactId": "terminal:C:14"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -2.86,
+                      "y": 0.3947283464566929,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "B",
+                  "controlPoints": [
+                    {
+                      "x": -2.34,
+                      "y": 0.3947283464566929,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 4.047477796076939,
+          "bendRadiiMm": [
+            0.6
+          ],
+          "points": [
+            {
+              "x": -2.7253937007874014,
+              "y": 0.3947283464566929,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.3947283464566929,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "B",
+          "lengthMm": 4.04747779607693,
+          "bendRadiiMm": [
+            0.6
+          ],
+          "points": [
+            {
+              "x": -2.474606299212598,
+              "y": 0.3947283464566929,
+              "z": -0.455
+            },
+            {
+              "x": -2.34,
+              "y": 0.3947283464566929,
+              "z": -0.455
+            },
+            {
+              "x": -2.34,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sealed-generic_diode-11",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_DIODE",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-DIODE-AXIAL",
+              "partRevision": 2,
+              "packageId": "GENERIC-EPOXY-D45-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-sealed-diode",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-standing"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.86,
+                  "y": 0.48301574803149605,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 90
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "K",
+                  "contactId": "terminal:C:11"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": []
+                },
+                {
+                  "pinId": "K",
+                  "controlPoints": [
+                    {
+                      "x": -2.86,
+                      "y": 0.6836456692913385,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.73,
+                      "y": 0.6836456692913385,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 1.1499999999999995,
+          "bendRadiiMm": [],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.3678582677165354,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "K",
+          "lengthMm": 10.439822670059034,
+          "bendRadiiMm": [
+            1.269999999999999,
+            1.269999999999999
+          ],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.5981732283464567,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.6836456692913385,
+              "z": -0.455
+            },
+            {
+              "x": -2.73,
+              "y": 0.6836456692913385,
+              "z": -0.455
+            },
+            {
+              "x": -2.73,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sealed-generic_diode-12",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_DIODE",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-DIODE-AXIAL",
+              "partRevision": 2,
+              "packageId": "GENERIC-EPOXY-D45-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-sealed-diode",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-standing"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.86,
+                  "y": 0.48301574803149605,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 90
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "K",
+                  "contactId": "terminal:C:12"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": []
+                },
+                {
+                  "pinId": "K",
+                  "controlPoints": [
+                    {
+                      "x": -2.86,
+                      "y": 0.7486456692913385,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.6,
+                      "y": 0.7486456692913385,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 1.1499999999999995,
+          "bendRadiiMm": [],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.3678582677165354,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "K",
+          "lengthMm": 14.42964534011807,
+          "bendRadiiMm": [
+            2.539999999999998,
+            2.539999999999998
+          ],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.5981732283464567,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.7486456692913385,
+              "z": -0.455
+            },
+            {
+              "x": -2.6,
+              "y": 0.7486456692913385,
+              "z": -0.455
+            },
+            {
+              "x": -2.6,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sealed-generic_diode-13",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_DIODE",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-DIODE-AXIAL",
+              "partRevision": 2,
+              "packageId": "GENERIC-EPOXY-D45-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-sealed-diode",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-horizontal"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.665,
+                  "y": 0.4088031496062992,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "K",
+                  "contactId": "terminal:C:13"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -2.86,
+                      "y": 0.4088031496062992,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "K",
+                  "controlPoints": [
+                    {
+                      "x": -2.47,
+                      "y": 0.4088031496062992,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 3.2095574287564217,
+          "bendRadiiMm": [
+            0.7
+          ],
+          "points": [
+            {
+              "x": -2.7801574803149607,
+              "y": 0.4088031496062992,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.4088031496062992,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "K",
+          "lengthMm": 3.2095574287564217,
+          "bendRadiiMm": [
+            0.7
+          ],
+          "points": [
+            {
+              "x": -2.5498425196850394,
+              "y": 0.4088031496062992,
+              "z": -0.455
+            },
+            {
+              "x": -2.47,
+              "y": 0.4088031496062992,
+              "z": -0.455
+            },
+            {
+              "x": -2.47,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sealed-generic_diode-14",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_DIODE",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-DIODE-AXIAL",
+              "partRevision": 2,
+              "packageId": "GENERIC-EPOXY-D45-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-sealed-diode",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-horizontal"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.5999999999999996,
+                  "y": 0.4088031496062992,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "K",
+                  "contactId": "terminal:C:14"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -2.86,
+                      "y": 0.4088031496062992,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "K",
+                  "controlPoints": [
+                    {
+                      "x": -2.34,
+                      "y": 0.4088031496062992,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 4.479557428756429,
+          "bendRadiiMm": [
+            0.7
+          ],
+          "points": [
+            {
+              "x": -2.7151574803149603,
+              "y": 0.4088031496062992,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.4088031496062992,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "K",
+          "lengthMm": 4.47955742875642,
+          "bendRadiiMm": [
+            0.7
+          ],
+          "points": [
+            {
+              "x": -2.484842519685039,
+              "y": 0.4088031496062992,
+              "z": -0.455
+            },
+            {
+              "x": -2.34,
+              "y": 0.4088031496062992,
+              "z": -0.455
+            },
+            {
+              "x": -2.34,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sealed-generic_zener_diode-11",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_ZENER_DIODE",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-ZENER-DIODE-AXIAL",
+              "partRevision": 3,
+              "packageId": "GENERIC-GLASS-Z35-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-sealed-zener",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-standing"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.86,
+                  "y": 0.4574251968503937,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 90
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "K",
+                  "contactId": "terminal:C:11"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": []
+                },
+                {
+                  "pinId": "K",
+                  "controlPoints": [
+                    {
+                      "x": -2.86,
+                      "y": 0.6324645669291338,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.73,
+                      "y": 0.6324645669291338,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 1.1499999999999995,
+          "bendRadiiMm": [],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.3678582677165354,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "K",
+          "lengthMm": 9.439822670059034,
+          "bendRadiiMm": [
+            1.269999999999999,
+            1.269999999999999
+          ],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.546992125984252,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.6324645669291338,
+              "z": -0.455
+            },
+            {
+              "x": -2.73,
+              "y": 0.6324645669291338,
+              "z": -0.455
+            },
+            {
+              "x": -2.73,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sealed-generic_zener_diode-12",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_ZENER_DIODE",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-ZENER-DIODE-AXIAL",
+              "partRevision": 3,
+              "packageId": "GENERIC-GLASS-Z35-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-sealed-zener",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-standing"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.86,
+                  "y": 0.4574251968503937,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 90
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "K",
+                  "contactId": "terminal:C:12"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": []
+                },
+                {
+                  "pinId": "K",
+                  "controlPoints": [
+                    {
+                      "x": -2.86,
+                      "y": 0.6974645669291337,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.6,
+                      "y": 0.6974645669291337,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 1.1499999999999995,
+          "bendRadiiMm": [],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.3678582677165354,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "K",
+          "lengthMm": 13.429645340118066,
+          "bendRadiiMm": [
+            2.539999999999998,
+            2.539999999999998
+          ],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.546992125984252,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.6974645669291337,
+              "z": -0.455
+            },
+            {
+              "x": -2.6,
+              "y": 0.6974645669291337,
+              "z": -0.455
+            },
+            {
+              "x": -2.6,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sealed-generic_zener_diode-13",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_ZENER_DIODE",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-ZENER-DIODE-AXIAL",
+              "partRevision": 3,
+              "packageId": "GENERIC-GLASS-Z35-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-sealed-zener",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-horizontal"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.665,
+                  "y": 0.39088976377952755,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "K",
+                  "contactId": "terminal:C:13"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -2.86,
+                      "y": 0.39088976377952755,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "K",
+                  "controlPoints": [
+                    {
+                      "x": -2.47,
+                      "y": 0.39088976377952755,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 3.4024777960769335,
+          "bendRadiiMm": [
+            0.6
+          ],
+          "points": [
+            {
+              "x": -2.7545669291338584,
+              "y": 0.39088976377952755,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.39088976377952755,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "K",
+          "lengthMm": 3.4024777960769335,
+          "bendRadiiMm": [
+            0.6
+          ],
+          "points": [
+            {
+              "x": -2.5754330708661417,
+              "y": 0.39088976377952755,
+              "z": -0.455
+            },
+            {
+              "x": -2.47,
+              "y": 0.39088976377952755,
+              "z": -0.455
+            },
+            {
+              "x": -2.47,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sealed-generic_zener_diode-14",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_ZENER_DIODE",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-ZENER-DIODE-AXIAL",
+              "partRevision": 3,
+              "packageId": "GENERIC-GLASS-Z35-762",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-sealed-zener",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "axial-horizontal"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.5999999999999996,
+                  "y": 0.39088976377952755,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "K",
+                  "contactId": "terminal:C:14"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -2.86,
+                      "y": 0.39088976377952755,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "K",
+                  "controlPoints": [
+                    {
+                      "x": -2.34,
+                      "y": 0.39088976377952755,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 4.672477796076941,
+          "bendRadiiMm": [
+            0.6
+          ],
+          "points": [
+            {
+              "x": -2.689566929133858,
+              "y": 0.39088976377952755,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.39088976377952755,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "K",
+          "lengthMm": 4.672477796076932,
+          "bendRadiiMm": [
+            0.6
+          ],
+          "points": [
+            {
+              "x": -2.5104330708661413,
+              "y": 0.39088976377952755,
+              "z": -0.455
+            },
+            {
+              "x": -2.34,
+              "y": 0.39088976377952755,
+              "z": -0.455
+            },
+            {
+              "x": -2.34,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sealed-generic_capacitor-11",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_CAPACITOR",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-CAPACITOR-CERAMIC",
+              "partRevision": 2,
+              "packageId": "GENERIC-CERAMIC-D5-T22-254",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-sealed-ceramic",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "radial-upright"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.795,
+                  "y": 0.4983700787401575,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "B",
+                  "contactId": "terminal:C:11"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": []
+                },
+                {
+                  "pinId": "B",
+                  "controlPoints": []
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 1.2000000000000002,
+          "bendRadiiMm": [],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.3704173228346457,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "B",
+          "lengthMm": 1.2000000000000002,
+          "bendRadiiMm": [],
+          "points": [
+            {
+              "x": -2.73,
+              "y": 0.3704173228346457,
+              "z": -0.455
+            },
+            {
+              "x": -2.73,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sealed-generic_capacitor-12",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_CAPACITOR",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-CAPACITOR-CERAMIC",
+              "partRevision": 2,
+              "packageId": "GENERIC-CERAMIC-D5-T22-254",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-sealed-ceramic",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "radial-upright"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.73,
+                  "y": 0.590496062992126,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "B",
+                  "contactId": "terminal:C:12"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -2.795,
+                      "y": 0.406244094488189,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.86,
+                      "y": 0.3755354330708661,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "B",
+                  "controlPoints": [
+                    {
+                      "x": -2.665,
+                      "y": 0.406244094488189,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.6,
+                      "y": 0.3755354330708661,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 3.61189246490389,
+          "bendRadiiMm": [
+            0.7,
+            0.7
+          ],
+          "points": [
+            {
+              "x": -2.795,
+              "y": 0.4625433070866142,
+              "z": -0.455
+            },
+            {
+              "x": -2.795,
+              "y": 0.406244094488189,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.3755354330708661,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "B",
+          "lengthMm": 3.61189246490389,
+          "bendRadiiMm": [
+            0.7,
+            0.7
+          ],
+          "points": [
+            {
+              "x": -2.665,
+              "y": 0.4625433070866142,
+              "z": -0.455
+            },
+            {
+              "x": -2.665,
+              "y": 0.406244094488189,
+              "z": -0.455
+            },
+            {
+              "x": -2.6,
+              "y": 0.3755354330708661,
+              "z": -0.455
+            },
+            {
+              "x": -2.6,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sealed-generic_capacitor-13",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_CAPACITOR",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-CAPACITOR-CERAMIC",
+              "partRevision": 2,
+              "packageId": "GENERIC-CERAMIC-D5-T22-254",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-sealed-ceramic",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "radial-upright"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.665,
+                  "y": 0.5987874015748031,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "B",
+                  "contactId": "terminal:C:13"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -2.73,
+                      "y": 0.41453543307086615,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.86,
+                      "y": 0.3755354330708661,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "B",
+                  "controlPoints": [
+                    {
+                      "x": -2.6,
+                      "y": 0.41453543307086615,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.47,
+                      "y": 0.3755354330708661,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 4.759627376012167,
+          "bendRadiiMm": [
+            0.7,
+            0.7
+          ],
+          "points": [
+            {
+              "x": -2.73,
+              "y": 0.47083464566929134,
+              "z": -0.455
+            },
+            {
+              "x": -2.73,
+              "y": 0.41453543307086615,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.3755354330708661,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "B",
+          "lengthMm": 4.759627376012167,
+          "bendRadiiMm": [
+            0.7,
+            0.7
+          ],
+          "points": [
+            {
+              "x": -2.6,
+              "y": 0.47083464566929134,
+              "z": -0.455
+            },
+            {
+              "x": -2.6,
+              "y": 0.41453543307086615,
+              "z": -0.455
+            },
+            {
+              "x": -2.47,
+              "y": 0.3755354330708661,
+              "z": -0.455
+            },
+            {
+              "x": -2.47,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sealed-generic_capacitor-14",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_CAPACITOR",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-CAPACITOR-CERAMIC",
+              "partRevision": 2,
+              "packageId": "GENERIC-CERAMIC-D5-T22-254",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-sealed-ceramic",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "radial-upright"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.5999999999999996,
+                  "y": 0.6182874015748032,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "B",
+                  "contactId": "terminal:C:14"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -2.6649999999999996,
+                      "y": 0.43403543307086623,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.86,
+                      "y": 0.3755354330708661,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "B",
+                  "controlPoints": [
+                    {
+                      "x": -2.5349999999999997,
+                      "y": 0.43403543307086623,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.34,
+                      "y": 0.3755354330708661,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 6.085546302643815,
+          "bendRadiiMm": [
+            0.7,
+            0.7
+          ],
+          "points": [
+            {
+              "x": -2.6649999999999996,
+              "y": 0.4903346456692914,
+              "z": -0.455
+            },
+            {
+              "x": -2.6649999999999996,
+              "y": 0.43403543307086623,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.3755354330708661,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "B",
+          "lengthMm": 6.085546302643809,
+          "bendRadiiMm": [
+            0.7,
+            0.7
+          ],
+          "points": [
+            {
+              "x": -2.5349999999999997,
+              "y": 0.4903346456692914,
+              "z": -0.455
+            },
+            {
+              "x": -2.5349999999999997,
+              "y": 0.43403543307086623,
+              "z": -0.455
+            },
+            {
+              "x": -2.34,
+              "y": 0.3755354330708661,
+              "z": -0.455
+            },
+            {
+              "x": -2.34,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sealed-generic_capacitor_electrolytic-11",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_CAPACITOR_ELECTROLYTIC",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-CAPACITOR-ELECTROLYTIC",
+              "partRevision": 3,
+              "packageId": "GENERIC-RADIAL-D63-H11-254",
+              "packageRevision": 2,
+              "mechanicalProfileId": "flex-sealed-electrolytic",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "radial-upright"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.795,
+                  "y": 0.6519133858267716,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "PLUS",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "MINUS",
+                  "contactId": "terminal:C:11"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "PLUS",
+                  "controlPoints": []
+                },
+                {
+                  "pinId": "MINUS",
+                  "controlPoints": []
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "PLUS",
+          "lengthMm": 1.1999999999999993,
+          "bendRadiiMm": [],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.3704173228346456,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "MINUS",
+          "lengthMm": 1.1999999999999993,
+          "bendRadiiMm": [],
+          "points": [
+            {
+              "x": -2.73,
+              "y": 0.3704173228346456,
+              "z": -0.455
+            },
+            {
+              "x": -2.73,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sealed-generic_capacitor_electrolytic-12",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_CAPACITOR_ELECTROLYTIC",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-CAPACITOR-ELECTROLYTIC",
+              "partRevision": 3,
+              "packageId": "GENERIC-RADIAL-D63-H11-254",
+              "packageRevision": 2,
+              "mechanicalProfileId": "flex-sealed-electrolytic",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "radial-upright"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.73,
+                  "y": 0.7440393700787402,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "PLUS",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "MINUS",
+                  "contactId": "terminal:C:12"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "PLUS",
+                  "controlPoints": [
+                    {
+                      "x": -2.795,
+                      "y": 0.40624409448818904,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.86,
+                      "y": 0.3755354330708661,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "MINUS",
+                  "controlPoints": [
+                    {
+                      "x": -2.665,
+                      "y": 0.40624409448818904,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.6,
+                      "y": 0.3755354330708661,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "PLUS",
+          "lengthMm": 3.6118924649038893,
+          "bendRadiiMm": [
+            0.7,
+            0.7
+          ],
+          "points": [
+            {
+              "x": -2.795,
+              "y": 0.46254330708661423,
+              "z": -0.455
+            },
+            {
+              "x": -2.795,
+              "y": 0.40624409448818904,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.3755354330708661,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "MINUS",
+          "lengthMm": 3.6118924649038893,
+          "bendRadiiMm": [
+            0.7,
+            0.7
+          ],
+          "points": [
+            {
+              "x": -2.665,
+              "y": 0.46254330708661423,
+              "z": -0.455
+            },
+            {
+              "x": -2.665,
+              "y": 0.40624409448818904,
+              "z": -0.455
+            },
+            {
+              "x": -2.6,
+              "y": 0.3755354330708661,
+              "z": -0.455
+            },
+            {
+              "x": -2.6,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sealed-generic_capacitor_electrolytic-13",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_CAPACITOR_ELECTROLYTIC",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-CAPACITOR-ELECTROLYTIC",
+              "partRevision": 3,
+              "packageId": "GENERIC-RADIAL-D63-H11-254",
+              "packageRevision": 2,
+              "mechanicalProfileId": "flex-sealed-electrolytic",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "radial-upright"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.665,
+                  "y": 0.7523307086614173,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "PLUS",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "MINUS",
+                  "contactId": "terminal:C:13"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "PLUS",
+                  "controlPoints": [
+                    {
+                      "x": -2.73,
+                      "y": 0.4145354330708661,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.86,
+                      "y": 0.3755354330708661,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "MINUS",
+                  "controlPoints": [
+                    {
+                      "x": -2.6,
+                      "y": 0.4145354330708661,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.47,
+                      "y": 0.3755354330708661,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "PLUS",
+          "lengthMm": 4.759627376012168,
+          "bendRadiiMm": [
+            0.7,
+            0.7
+          ],
+          "points": [
+            {
+              "x": -2.73,
+              "y": 0.4708346456692913,
+              "z": -0.455
+            },
+            {
+              "x": -2.73,
+              "y": 0.4145354330708661,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.3755354330708661,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "MINUS",
+          "lengthMm": 4.759627376012168,
+          "bendRadiiMm": [
+            0.7,
+            0.7
+          ],
+          "points": [
+            {
+              "x": -2.6,
+              "y": 0.4708346456692913,
+              "z": -0.455
+            },
+            {
+              "x": -2.6,
+              "y": 0.4145354330708661,
+              "z": -0.455
+            },
+            {
+              "x": -2.47,
+              "y": 0.3755354330708661,
+              "z": -0.455
+            },
+            {
+              "x": -2.47,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sealed-generic_capacitor_electrolytic-14",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_CAPACITOR_ELECTROLYTIC",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-CAPACITOR-ELECTROLYTIC",
+              "partRevision": 3,
+              "packageId": "GENERIC-RADIAL-D63-H11-254",
+              "packageRevision": 2,
+              "mechanicalProfileId": "flex-sealed-electrolytic",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "radial-upright"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.5999999999999996,
+                  "y": 0.7718307086614173,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "PLUS",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "MINUS",
+                  "contactId": "terminal:C:14"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "PLUS",
+                  "controlPoints": [
+                    {
+                      "x": -2.6649999999999996,
+                      "y": 0.4340354330708662,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.86,
+                      "y": 0.3755354330708661,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "MINUS",
+                  "controlPoints": [
+                    {
+                      "x": -2.5349999999999997,
+                      "y": 0.4340354330708662,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.34,
+                      "y": 0.3755354330708661,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "PLUS",
+          "lengthMm": 6.085546302643817,
+          "bendRadiiMm": [
+            0.7,
+            0.7
+          ],
+          "points": [
+            {
+              "x": -2.6649999999999996,
+              "y": 0.49033464566929136,
+              "z": -0.455
+            },
+            {
+              "x": -2.6649999999999996,
+              "y": 0.4340354330708662,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.3755354330708661,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "MINUS",
+          "lengthMm": 6.085546302643807,
+          "bendRadiiMm": [
+            0.7,
+            0.7
+          ],
+          "points": [
+            {
+              "x": -2.5349999999999997,
+              "y": 0.49033464566929136,
+              "z": -0.455
+            },
+            {
+              "x": -2.5349999999999997,
+              "y": 0.4340354330708662,
+              "z": -0.455
+            },
+            {
+              "x": -2.34,
+              "y": 0.3755354330708661,
+              "z": -0.455
+            },
+            {
+              "x": -2.34,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sealed-generic_led-11",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_LED",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-LED-5MM",
+              "partRevision": 2,
+              "packageId": "GENERIC-LED-D5-F58-H87-254",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-sealed-led",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "radial-upright"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.795,
+                  "y": 0.6084094488188976,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "K",
+                  "contactId": "terminal:C:11"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": []
+                },
+                {
+                  "pinId": "K",
+                  "controlPoints": []
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 1.4999999999999996,
+          "bendRadiiMm": [],
+          "points": [
+            {
+              "x": -2.86,
+              "y": 0.38577165354330706,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "K",
+          "lengthMm": 1.4999999999999996,
+          "bendRadiiMm": [],
+          "points": [
+            {
+              "x": -2.73,
+              "y": 0.38577165354330706,
+              "z": -0.455
+            },
+            {
+              "x": -2.73,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sealed-generic_led-12",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_LED",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-LED-5MM",
+              "partRevision": 2,
+              "packageId": "GENERIC-LED-D5-F58-H87-254",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-sealed-led",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "radial-upright"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.73,
+                  "y": 0.6749448818897639,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "K",
+                  "contactId": "terminal:C:12"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -2.795,
+                      "y": 0.4011259842519686,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.86,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "K",
+                  "controlPoints": [
+                    {
+                      "x": -2.665,
+                      "y": 0.4011259842519686,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.6,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 3.439422053784917,
+          "bendRadiiMm": [
+            0.6,
+            0.6
+          ],
+          "points": [
+            {
+              "x": -2.795,
+              "y": 0.45230708661417335,
+              "z": -0.455
+            },
+            {
+              "x": -2.795,
+              "y": 0.4011259842519686,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.3704173228346457,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "K",
+          "lengthMm": 3.439422053784917,
+          "bendRadiiMm": [
+            0.6,
+            0.6
+          ],
+          "points": [
+            {
+              "x": -2.665,
+              "y": 0.45230708661417335,
+              "z": -0.455
+            },
+            {
+              "x": -2.665,
+              "y": 0.4011259842519686,
+              "z": -0.455
+            },
+            {
+              "x": -2.6,
+              "y": 0.3704173228346457,
+              "z": -0.455
+            },
+            {
+              "x": -2.6,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sealed-generic_led-13",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_LED",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-LED-5MM",
+              "partRevision": 2,
+              "packageId": "GENERIC-LED-D5-F58-H87-254",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-sealed-led",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "radial-upright"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.665,
+                  "y": 0.6832362204724409,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "K",
+                  "contactId": "terminal:C:13"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -2.73,
+                      "y": 0.40941732283464566,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.86,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "K",
+                  "controlPoints": [
+                    {
+                      "x": -2.6,
+                      "y": 0.40941732283464566,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.47,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 4.601371729905175,
+          "bendRadiiMm": [
+            0.6,
+            0.6
+          ],
+          "points": [
+            {
+              "x": -2.73,
+              "y": 0.4605984251968504,
+              "z": -0.455
+            },
+            {
+              "x": -2.73,
+              "y": 0.40941732283464566,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.3704173228346457,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "K",
+          "lengthMm": 4.601371729905175,
+          "bendRadiiMm": [
+            0.6,
+            0.6
+          ],
+          "points": [
+            {
+              "x": -2.6,
+              "y": 0.4605984251968504,
+              "z": -0.455
+            },
+            {
+              "x": -2.6,
+              "y": 0.40941732283464566,
+              "z": -0.455
+            },
+            {
+              "x": -2.47,
+              "y": 0.3704173228346457,
+              "z": -0.455
+            },
+            {
+              "x": -2.47,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sealed-generic_led-14",
+      "valid": true,
+      "graph": {
+        "schema_version": "1.2",
+        "circuit_id": "sealed-package-parity",
+        "modules": [
+          {
+            "id": "BB",
+            "type": "BREADBOARD",
+            "rotation": 31,
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": -2
+            }
+          },
+          {
+            "id": "P",
+            "type": "GENERIC_LED",
+            "mount": {
+              "kind": "breadboard-flexible",
+              "version": 2,
+              "boardId": "BB",
+              "partId": "GENERIC-LED-5MM",
+              "partRevision": 2,
+              "packageId": "GENERIC-LED-D5-F58-H87-254",
+              "packageRevision": 1,
+              "mechanicalProfileId": "flex-sealed-led",
+              "mechanicalProfileRevision": 1,
+              "geometryRevision": 2,
+              "routing": {
+                "version": 1,
+                "mode": "automatic",
+                "template": "radial-upright"
+              },
+              "bodyPose": {
+                "position": {
+                  "x": -2.5999999999999996,
+                  "y": 0.702736220472441,
+                  "z": -0.455
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                }
+              },
+              "contacts": [
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "A",
+                  "contactId": "terminal:C:10"
+                },
+                {
+                  "kind": "pin-contact",
+                  "version": 1,
+                  "pinId": "K",
+                  "contactId": "terminal:C:14"
+                }
+              ],
+              "leads": [
+                {
+                  "pinId": "A",
+                  "controlPoints": [
+                    {
+                      "x": -2.6649999999999996,
+                      "y": 0.42891732283464573,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.86,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    }
+                  ]
+                },
+                {
+                  "pinId": "K",
+                  "controlPoints": [
+                    {
+                      "x": -2.5349999999999997,
+                      "y": 0.42891732283464573,
+                      "z": -0.455
+                    },
+                    {
+                      "x": -2.34,
+                      "y": 0.3704173228346457,
+                      "z": -0.455
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "connections": []
+      },
+      "expectedGeometry": [
+        {
+          "pinId": "A",
+          "lengthMm": 5.927290656536823,
+          "bendRadiiMm": [
+            0.6,
+            0.6
+          ],
+          "points": [
+            {
+              "x": -2.6649999999999996,
+              "y": 0.4800984251968505,
+              "z": -0.455
+            },
+            {
+              "x": -2.6649999999999996,
+              "y": 0.42891732283464573,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.3704173228346457,
+              "z": -0.455
+            },
+            {
+              "x": -2.86,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        },
+        {
+          "pinId": "K",
+          "lengthMm": 5.9272906565368135,
+          "bendRadiiMm": [
+            0.6,
+            0.6
+          ],
+          "points": [
+            {
+              "x": -2.5349999999999997,
+              "y": 0.4800984251968505,
+              "z": -0.455
+            },
+            {
+              "x": -2.5349999999999997,
+              "y": 0.42891732283464573,
+              "z": -0.455
+            },
+            {
+              "x": -2.34,
+              "y": 0.3704173228346457,
+              "z": -0.455
+            },
+            {
+              "x": -2.34,
+              "y": 0.309,
+              "z": -0.455
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

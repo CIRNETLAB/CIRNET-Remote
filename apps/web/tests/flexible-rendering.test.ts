@@ -9,7 +9,7 @@ import {createSceneManager} from '../src/three/SceneManager'
 import type {CircuitGraph} from '../src/types/circuit'
 import {updateFlexiblePackageGeometry} from '../src/three/package/FlexiblePackageGeometry'
 import {isFlexibleMount,solveFlexibleMount} from '../src/electrical/flexibleGeometry'
-import {getPartForType} from '../src/data/partCatalog'
+import {getPartForType,MM_TO_WORLD} from '../src/data/partCatalog'
 import {packagePinAnchor} from '../src/three/PackageModel'
 import {solveMounting} from '../src/electrical/mounting'
 
@@ -66,12 +66,15 @@ test('automatic templates sweep the validated analytic centerline in the correct
    for(const lead of solution.geometry!.leads){
     const surface=model.getObjectByName(`package-lead-${lead.pinId}`)!.getObjectByName('lead-metal') as Mesh<TubeGeometry>
     const path=surface.geometry.parameters.path as CurvePath<Vector3>
-    for(const [t,expected] of [[0,lead.path.samples[0]!],[1,lead.path.samples.at(-1)!]] as const){
+    const first=lead.path.samples[0]!,next=lead.path.samples[1]!,depth=getPartForType(type,module.mount)!.package.shape!.embeddedDepthMm*MM_TO_WORLD
+    const outward=new Vector3(next.x-first.x,next.y-first.y,next.z-first.z).normalize()
+    const embedded=new Vector3(first.x,first.y,first.z).addScaledVector(outward,-depth)
+    for(const [t,expected] of [[0,embedded],[1,lead.path.samples.at(-1)!]] as const){
      const actual=surface.localToWorld(path.getPoint(t)),world=moduleLocalToWorld(expected,board)
      assert.ok(actual.distanceTo(new Vector3(world.x,world.y,world.z))<1e-8,`${type} rigid frame endpoint`)
     }
-    assert.equal(path.curves.length,lead.path.segments.length,'renderer uses every validated straight and circular arc')
-    assert.ok(Math.abs(path.getLength()-lead.path.length)<1e-5,'rendered and validated physical lengths agree')
+    assert.equal(path.curves.length,lead.path.segments.length+1,'renderer keeps every external segment and adds only the declared hidden feedthrough')
+    assert.ok(Math.abs(path.getLength()-lead.path.length-depth)<1e-5,'only the declared embed extends the validated external physical length')
    }
    assert.equal(getPartForType(type,module.mount)!.package.id,module.mount.packageId)
   }finally{disposeObject(model)}

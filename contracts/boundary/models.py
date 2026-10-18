@@ -1352,6 +1352,38 @@ class PhysicalDescriptorV1(ContractBoundary):
     packageId: StrictStr = Field(..., min_length=1)
     packageRevision: StrictInt | StrictFloat = Field(..., ge=1)
 
+class PackageLeadSectionV1(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'PackageLeadSectionV1'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    kind: Literal['round', 'rectangular', 'stamped']
+    widthMm: StrictInt | StrictFloat = Field(..., gt=0.0, le=100.0)
+    thicknessMm: StrictInt | StrictFloat = Field(..., gt=0.0, le=100.0)
+    shoulderWidthMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+
+class PackageLeadExitV1(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'PackageLeadExitV1'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    pinId: StrictStr = Field(..., min_length=1)
+    positionMm: Point3
+    normal: Point3
+
+class PackageShapeV1(ContractBoundary):
+    __contract_id__: ClassVar[str] = 'PackageShapeV1'
+    __validation_profile__: ClassVar[str] = 'structural'
+    model_config = ConfigDict(extra='forbid')
+    version: Annotated[Literal[1] | StrictFloat, WrapValidator(preserve_json_literal((1,)))]
+    family: Literal['resistor', 'diode', 'zener', 'ceramic', 'electrolytic', 'led', 'dip', 'to92']
+    embeddedDepthMm: StrictInt | StrictFloat = Field(..., gt=0.0, le=0.5)
+    leadSection: PackageLeadSectionV1
+    leadExits: list[PackageLeadExitV1] = Field(..., max_length=64, min_length=2)
+    lensDiameterMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    flangeDiameterMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    flangeHeightMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    domeRadiusMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+    bevelMm: StrictInt | StrictFloat | None = Field(None, gt=0.0, le=100.0)
+
 class AssessmentPolicy(ContractRootBoundary[Literal['STRICT_TOPOLOGY', 'FUNCTIONAL_ONLY', 'TOPOLOGY_AND_FUNCTION']]):
     root: Literal['STRICT_TOPOLOGY', 'FUNCTIONAL_ONLY', 'TOPOLOGY_AND_FUNCTION']
 

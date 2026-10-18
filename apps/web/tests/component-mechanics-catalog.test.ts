@@ -28,9 +28,9 @@ test('new free generic placement explicitly pins the compact descriptor and sche
   const id = store.placeModule('GENERIC_RESISTOR', { x: 20, y: 0, z: 20 })
   const module = store.graph!.modules.find(module => module.id === id)!
   assert.equal(store.graph!.schema_version, '1.2')
-  assert.deepEqual(module.physicalDescriptor, { version: 1, partId: 'GENERIC-RESISTOR-AXIAL', partRevision: 2, packageId: 'GENERIC-AXIAL-R50-762', packageRevision: 1 })
+  assert.deepEqual(module.physicalDescriptor, { version: 1, partId: 'GENERIC-RESISTOR-AXIAL', partRevision: 6, packageId: 'GENERIC-AXIAL-R49-762', packageRevision: 1 })
   const model = buildComponent(module, store.graph!.modules)
-  try { assert.deepEqual(model.userData.size, [5, 2, 2].map(mm => mm * MM_TO_WORLD)) }
+  try { assert.deepEqual(model.userData.size, [4.9, 1.75, 1.75].map(mm => mm * MM_TO_WORLD)) }
   finally { disposeObject(model) }
 })
 
@@ -40,7 +40,7 @@ test('explicit free capacitor design changes replace the pinned descriptor atomi
   const id = store.placeModule('GENERIC_CAPACITOR', { x: 20, y: 0, z: 20 })
   store.changeComponentDesign(id, 'GENERIC_CAPACITOR_ELECTROLYTIC', { capacitorType: 'ELECTROLYTIC' }, { A: 'PLUS', B: 'MINUS' })
   const module = store.graph!.modules.find(module => module.id === id)!
-  assert.deepEqual(module.physicalDescriptor, { version: 1, partId: 'GENERIC-CAPACITOR-ELECTROLYTIC', partRevision: 2, packageId: 'GENERIC-RADIAL-D63-H11-254', packageRevision: 1 })
+  assert.deepEqual(module.physicalDescriptor, { version: 1, partId: 'GENERIC-CAPACITOR-ELECTROLYTIC', partRevision: 3, packageId: 'GENERIC-RADIAL-D63-H11-254', packageRevision: 2 })
   assert.deepEqual(parseCircuitFile(JSON.stringify(store.graph)), store.graph)
 })
 

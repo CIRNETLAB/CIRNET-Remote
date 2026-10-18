@@ -1,5 +1,7 @@
 import registry from './editorParts.json'
 import type { SignalDomain } from '../contracts/generated/dto'
+import type { PackageShapeV1 } from '../contracts/generated/dto'
+export type { PackageShapeV1, PackageLeadSectionV1, PackageLeadExitV1 } from '../contracts/generated/dto'
 import type { ComponentParameter } from './componentParameters'
 
 /** The existing board pitch is .13 world units for 2.54 mm. */
@@ -38,6 +40,15 @@ export interface PartPackage {
   marking?: string
   visualVariant?: 'resistor' | 'diode' | 'zener' | 'polarized' | 'ceramic' | 'push-button' | 'dip-switch' | 'toggle'
   actuator?: { heightMm: number; diameterMm: number; bushingHeightMm: number; bushingDiameterMm: number; throwDegrees: number }
+  /** Centered body-local solid, feedthrough and section dimensions; absent on historical packages. */
+  shape?: PackageShapeV1
+}
+/** Enclose the actual square/stamped section, including its widest shoulder. */
+export function packageLeadCollisionRadiusMm(pkg: PartPackage): number {
+  const section = pkg.shape?.leadSection
+  if (!section) return pkg.leadDiameterMm / 2
+  return section.kind === 'round' ? section.widthMm / 2
+    : Math.hypot(Math.max(section.widthMm, section.shoulderWidthMm ?? 0), section.thicknessMm) / 2
 }
 export interface SimulationModel {
   model: string

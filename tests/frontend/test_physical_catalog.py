@@ -1,6 +1,7 @@
 """Physical registry validation prevents malformed source reaching either runtime."""
 import copy
 import importlib.util
+import hashlib
 import json
 from pathlib import Path
 
@@ -112,3 +113,92 @@ def test_generator_validates_enum_string_and_color_defaults_without_numeric_coer
         invalid['parts'][0]['editor']['defaults'][key] = value
         with pytest.raises(ValueError):
             sync.validate_parts(invalid)
+
+
+def test_sealed_current_packages_have_exact_envelopes_sections_and_centered_exits():
+    parts = {part['editorType']: part for part in registry()['parts']}
+    expected = {
+        'GENERIC_RESISTOR': (4.9, 1.75, 1.75, .8, 'resistor', .5),
+        'GENERIC_DIODE': (4.5, 2.3, 2.3, .8, 'diode', .6),
+        'GENERIC_ZENER_DIODE': (3.5, 1.6, 1.6, .8, 'zener', .5),
+        'GENERIC_CAPACITOR': (5, 5, 2.2, 1.2, 'ceramic', .6),
+        'GENERIC_CAPACITOR_ELECTROLYTIC': (6.3, 11, 6.3, 1.2, 'electrolytic', .6),
+        'GENERIC_LED': (5.8, 8.7, 5.8, 1.5, 'led', .5),
+        'GENERIC_BJT': (4.6, 5.1, 3.9, 2.5, 'to92', .44),
+        'SN74HC08N': (19, 3.04, 6.35, 1, 'dip', .46),
+    }
+    mechanics = json.loads((ROOT / 'contracts/design-models/flexible-mechanics.json').read_text())['profiles']
+    for kind, (x, y, z, standoff, family, width) in expected.items():
+        pkg = parts[kind]['package']
+        assert pkg['bodyMm'] == dict(x=x, y=y, z=z), kind
+        assert pkg['standoffMm'] == standoff
+        shape = pkg['shape']
+        assert shape['version'] == 1 and shape['family'] == family
+        assert shape['embeddedDepthMm'] == .15
+        assert shape['leadSection']['widthMm'] == width
+        assert {p['pinId'] for p in shape['leadExits']} == {p['id'] for p in pkg['pins']}
+        if family in {'resistor', 'diode', 'zener'}:
+            assert [p['positionMm'] for p in shape['leadExits']] == [dict(x=-x/2, y=0, z=0), dict(x=x/2, y=0, z=0)]
+        elif family != 'dip':
+            assert all(exit['positionMm']['y'] == -y/2 for exit in shape['leadExits'])
+        if len(pkg['pins']) == 2:
+            profile = next(profile for profile in mechanics if (profile['packageId'], profile['packageRevision']) == (pkg['id'], pkg['revision']))
+            assert [pin['bodyExitMm'] for pin in profile['pins']] == [pin['positionMm'] for pin in shape['leadExits']]
+            if width == .6:
+                assert profile['minBendRadiusMm'] >= .4
+                assert .6 <= profile['preferredBendRadiusMm'] <= .8
+    led = parts['GENERIC_LED']['package']['shape']
+    assert [led[key] for key in ('lensDiameterMm', 'flangeDiameterMm', 'flangeHeightMm', 'domeRadiusMm')] == [5, 5.8, 1, 2.49]
+    assert led['leadSection'] == dict(kind='rectangular', widthMm=.5, thicknessMm=.5)
+    assert parts['GENERIC_BJT']['package']['shape']['leadSection'] == dict(kind='rectangular', widthMm=.44, thicknessMm=.42)
+
+
+def test_all_previously_current_descriptors_remain_frozen_and_resolvable():
+    # The prior task's fixtures pin every old generic default; retain those exact
+    # physical descriptors, including the compact revision created by that task.
+    catalog = registry()
+    all_parts = [*catalog['parts'], *catalog['historicalParts']]
+    frozen = json.loads((ROOT / 'contracts/design-models/fixtures/sealed-package-legacy.json').read_text())
+    digest = lambda value: hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()).hexdigest()
+    for saved in frozen['parts']:
+        previous = next(part for part in all_parts if (part['id'], part['revision']) == (saved['id'], saved['revision']))
+        assert digest(previous) == saved['sha256']
+    profiles = json.loads((ROOT / 'contracts/design-models/flexible-mechanics.json').read_text())['profiles']
+    for saved in frozen['profiles']:
+        previous = next(profile for profile in profiles if (profile['id'], profile['revision']) == (saved['id'], saved['revision']))
+        assert digest(previous) == saved['sha256']
+    for kind, revision, package_id in [('GENERIC_RESISTOR', 2, 'GENERIC-AXIAL-R50-762'), ('GENERIC_ZENER_DIODE', 2, 'GENERIC-AXIAL-Z42-762'), ('GENERIC_CAPACITOR_ELECTROLYTIC', 2, 'GENERIC-RADIAL-D63-H11-254')]:
+        previous = next(part for part in all_parts if part['editorType'] == kind and part['revision'] == revision)
+        assert previous['package']['id'] == package_id
+        assert previous['package']['revision'] == 1
+        assert 'shape' not in previous['package']
+    exact = next(part for part in catalog['parts'] if part['editorType'] == 'DIODE_1N4148')
+    assert exact['revision'] == 1 and exact['package']['bodyMm'] == dict(x=3.9, y=1.9, z=1.9)
+
+
+@pytest.mark.parametrize('mutation', ['unknown_family', 'unknown_pin', 'nonunit_normal', 'oversized_exit', 'invalid_section', 'oversized_embed'])
+def test_generator_rejects_invalid_sealed_shape_specs(mutation):
+    invalid = registry()
+    package = next(part['package'] for part in invalid['parts'] if part['editorType'] == 'GENERIC_RESISTOR')
+    shape = package['shape']
+    if mutation == 'unknown_family': shape['family'] = 'guessed-hardware'
+    if mutation == 'unknown_pin': shape['leadExits'][0]['pinId'] = 'missing'
+    if mutation == 'nonunit_normal': shape['leadExits'][0]['normal']['x'] = 2
+    if mutation == 'oversized_exit': shape['leadExits'][0]['positionMm']['x'] = -99
+    if mutation == 'invalid_section': shape['leadSection']['thicknessMm'] = 0
+    if mutation == 'oversized_embed': shape['embeddedDepthMm'] = 20
+    with pytest.raises(ValueError):
+        sync.validate_parts(invalid)
+
+
+def test_generator_rejects_shape_profile_exit_drift_and_degenerate_new_wire_bends():
+    mechanics = json.loads((ROOT / 'contracts/design-models/flexible-mechanics.json').read_text())
+    sync.validate_mechanics(registry(), mechanics)
+    drift = copy.deepcopy(mechanics)
+    next(profile for profile in drift['profiles'] if profile['id'] == 'flex-sealed-ceramic')['pins'][0]['bodyExitMm']['y'] += .1
+    with pytest.raises(ValueError, match='shape exits'):
+        sync.validate_mechanics(registry(), drift)
+    tiny = copy.deepcopy(mechanics)
+    next(profile for profile in tiny['profiles'] if profile['id'] == 'flex-sealed-diode')['minBendRadiusMm'] = .3
+    with pytest.raises(ValueError, match='bend radius'):
+        sync.validate_mechanics(registry(), tiny)

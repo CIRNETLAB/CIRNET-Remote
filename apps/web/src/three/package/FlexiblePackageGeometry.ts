@@ -1,8 +1,9 @@
 import { Box3, Group, Mesh, Vector3, type BufferGeometry } from 'three'
-import { getPartForType, MM_TO_WORLD } from '../../data/partCatalog'
+import { getPartForType, MM_TO_WORLD,packageLeadCollisionRadiusMm } from '../../data/partCatalog'
 import { inverseTransformPoint, isFlexibleMount, resolveFlexibleGeometry, rotationMatrix, subtractPoint } from '../../electrical/flexibleGeometry'
 import type { CircuitModule } from '../../types/circuit'
 import { createFlexibleLeadPathGeometry } from './LeadGeometry'
+import {packageLeadSweepOptions} from './PackageFeedthrough'
 
 const signatures = new WeakMap<Group, string>()
 /** Renderer adapter: all coordinates are derived from the canonical board-local mount. */
@@ -23,7 +24,7 @@ export function updateFlexiblePackageGeometry(group: Group, module: CircuitModul
       const surface = group.getObjectByName(`package-lead-${lead.pinId}`)?.getObjectByName('lead-metal') as Mesh<BufferGeometry> | undefined
       if (!surface) throw Error('Flexible package is missing a stable lead mesh.')
       const points = lead.points.map(local)
-      replacements.push({surface, points, geometry:createFlexibleLeadPathGeometry(lead.path,part.package.leadDiameterMm * MM_TO_WORLD,local,direction)})
+      replacements.push({surface, points, geometry:createFlexibleLeadPathGeometry(lead.path,part.package.leadDiameterMm * MM_TO_WORLD,local,direction,packageLeadSweepOptions(part))})
     }
   } catch (error) { replacements.forEach(item => item.geometry.dispose()); throw error }
   let body = group.getObjectByName('flexible-rigid-body') as Group | undefined
@@ -52,7 +53,7 @@ export function updateFlexiblePackageGeometry(group: Group, module: CircuitModul
   // All points and body corners are in the unposed local frame. No world-AABB inflation.
   for (const replacement of replacements) replacement.points.forEach(point => bounds.expandByPoint(point))
   for (const x of [-1,1]) for (const y of [-1,1]) for (const z of [-1,1]) bounds.expandByPoint(new Vector3(x*geometry.half.x,y*geometry.half.y,z*geometry.half.z).applyEuler(body.rotation))
-  bounds.expandByScalar(part.package.leadDiameterMm * MM_TO_WORLD / 2)
+  bounds.expandByScalar(packageLeadCollisionRadiusMm(part.package) * MM_TO_WORLD)
   group.userData.visualBounds = [bounds.min.toArray(),bounds.max.toArray()]
   group.userData.visualGeometryRevision = Number(group.userData.visualGeometryRevision ?? 0) + 1
   signatures.set(group, signature)

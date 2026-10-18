@@ -3,12 +3,67 @@ import argparse
 import json
 import math
 import re
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 SIGNAL_DOMAINS={'DIGITAL','ANALOG','POWER','GROUND','CLOCK','MIXED'}
 DIGITAL_TYPES={'DIGITAL_SWITCH','DIGITAL_INPUT','INPUT','CLOCK','LED','PROBE','OUTPUT','74HC08','AND','OR','XOR','NOT'}
 DC_MODELS={'dc-source','hc08-powered','resistor-dc','led-dc','contact-switch'}
+
+
+def validate_package_shape(package):
+    """Check the optional versioned solid/section contract and package semantics."""
+    shape = package.get('shape')
+    if shape is None:
+        return
+    from contracts.registry import validate_contract
+    from jsonschema import ValidationError
+    try:
+        validate_contract('PackageShapeV1', shape)
+    except ValidationError as error:
+        raise ValueError('Invalid package shape specification') from error
+    pins = {pin['id'] for pin in package['pins']}
+    compatible = {'axial': {'resistor', 'diode', 'zener'}, 'radial-capacitor': {'ceramic', 'electrolytic'}, 'radial-led': {'led'}, 'dip': {'dip'}, 'to92': {'to92'}}
+    if shape['family'] not in compatible.get(package['family'], set()):
+        raise ValueError('Package shape family must match its mechanical package')
+    exits = shape['leadExits']
+    if len(exits) != len(pins) or {exit['pinId'] for exit in exits} != pins:
+        raise ValueError('Package shape must seal each declared pin exactly once')
+    for exit in exits:
+        if not math.isclose(math.hypot(*(exit['normal'][axis] for axis in ('x', 'y', 'z'))), 1, abs_tol=1e-9):
+            raise ValueError('Package shape exit normal must be a unit vector')
+        if any(abs(exit['positionMm'][axis]) > package['bodyMm'][axis]/2+1e-9 for axis in ('x', 'y', 'z')):
+            raise ValueError('Package shape exit must be within its declared envelope')
+    section = shape['leadSection']
+    if section['kind'] == 'round' and (section['widthMm'] != section['thicknessMm'] or section['widthMm'] != package['leadDiameterMm']):
+        raise ValueError('Round package section must agree with its wire diameter')
+    if section['kind'] == 'stamped' and section.get('shoulderWidthMm', 0) < section['widthMm']:
+        raise ValueError('Stamped section requires a shoulder at least as wide as its tail')
+    if shape['family'] == 'led':
+        if not all(key in shape for key in ('lensDiameterMm', 'flangeDiameterMm', 'flangeHeightMm', 'domeRadiusMm')):
+            raise ValueError('LED requires its independently dimensioned lens and flange')
+        if shape['lensDiameterMm'] > shape['flangeDiameterMm'] or shape['flangeDiameterMm'] != package['bodyMm']['x'] or shape['flangeDiameterMm'] != package['bodyMm']['z'] or shape['flangeHeightMm']+shape['domeRadiusMm'] > package['bodyMm']['y']:
+            raise ValueError('LED lens/flange must fit the declared shell envelope')
+
+
+def validate_mechanics(registry, mechanics):
+    """The declared shape and validated external lead profiles share one exit."""
+    profiles = mechanics['profiles']
+    identities = {(profile['packageId'], profile['packageRevision']) for profile in profiles}
+    if len(identities) != len(profiles):
+        raise ValueError('Ambiguous mechanical package profile')
+    for part in registry['parts']:
+        package = part['package']
+        shape = package.get('shape')
+        if shape is None or len(package['pins']) != 2:
+            continue
+        profile = next((profile for profile in profiles if (profile['packageId'], profile['packageRevision']) == (package['id'], package['revision'])), None)
+        if profile is None or {pin['pinId']: pin['bodyExitMm'] for pin in profile['pins']} != {pin['pinId']: pin['positionMm'] for pin in shape['leadExits']}:
+            raise ValueError('Mechanical profile must use the declared shape exits')
+        if shape['leadSection']['kind'] == 'round' and package['leadDiameterMm'] == .6 and (profile['minBendRadiusMm'] < .4 or not .6 <= profile['preferredBendRadiusMm'] <= .8):
+            raise ValueError('0.6 mm round leads require a nondegenerate design bend radius')
 
 
 def validate_parts(registry):
@@ -68,6 +123,7 @@ def validate_parts(registry):
         for connection in part.get('internalConnections', []):
             if len(connection['pins']) != 2 or not set(connection['pins']) <= pin_ids:
                 raise ValueError('Internal connection references unknown pins')
+        validate_package_shape(package)
         for parameter in part['editor']['parameters']:
             value = part['editor']['defaults'].get(parameter['key'])
             if parameter['kind'] == 'boolean':
@@ -160,6 +216,7 @@ def main():
     generated = generate_catalog(catalog, registry)
     domains=generate_domain_catalog(catalog,registry)
     mechanics=json.loads((ROOT / 'contracts/design-models/flexible-mechanics.json').read_text(encoding='utf-8'))
+    validate_mechanics(registry, mechanics)
     outputs = [(ROOT / 'apps/web/src/data/editorCatalog.json', generated),
                (ROOT / 'apps/web/src/data/editorParts.json', generate_editor_parts(registry)),
                (ROOT / 'apps/web/src/data/physicalParts.json', registry),

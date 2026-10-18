@@ -21,6 +21,16 @@ and property parameters/defaults. Development provenance and optional execution
 profiles remain in the full registry snapshots. Rendering, placement, mounting
 and property editing do not require an execution profile.
 
+Optional `package.shape` is the versioned procedural-solid definition:
+`PackageShapeV1`, `PackageLeadExitV1` and `PackageLeadSectionV1` generate browser
+DTOs/validators and Python models from `package-shape.schema.json`. Body-local
+exits, finite interior embed and actual round/rectangular/stamped sections drive
+all render paths. `bodyMm` remains the package envelope, not seated height.
+Geometry changes create new descriptor revisions while `historicalParts` and
+old mechanical profiles remain resolvable; opening a file never selects a newer
+shape. Generic capacitor source pitch 2.50 mm and chosen model pitch 2.54 mm are
+recorded separately; this is not a universal package rounding rule.
+
 R/C instances describe configurable generic components. Historical definition
 and package IDs remain stable for saved mounting bindings; editing a value does
 not assert that a particular manufacturer's fixed SKU has changed its ratings.

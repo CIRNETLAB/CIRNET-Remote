@@ -15,6 +15,16 @@ MM_TO_WORLD = .13 / 2.54
 MOUNT_TOLERANCE = .00001
 
 
+def package_lead_collision_radius_mm(package):
+    """Conservative capsule radius for the real round, square or stamped lead."""
+    section = package.get('shape', {}).get('leadSection')
+    if section is None:
+        return package['leadDiameterMm'] / 2
+    if section['kind'] == 'round':
+        return section['widthMm'] / 2
+    return math.hypot(max(section['widthMm'], section.get('shoulderWidthMm', 0)), section['thicknessMm']) / 2
+
+
 @lru_cache(maxsize=1)
 def physical_parts():
     path = Path(__file__).resolve().parent / 'design-models' / 'physical-parts.v1.json'
@@ -71,6 +81,38 @@ def _body_envelope(module, part, by_id):
     return {'center': (position['x'],low+body['y']*MM_TO_WORLD/2,position['z']),
             'axes': ((cos,0,-sin),(0,1,0),(sin,0,cos)),
             'half': tuple(body[axis]*MM_TO_WORLD/2 for axis in ('x','y','z'))}
+
+
+def rigid_world_lead_paths(module, part, by_id):
+    """Variable-width external metal paths; no interior feedthrough stations."""
+    if module.get('mount', {}).get('kind') == 'breadboard-flexible':
+        return []
+    from .rigid_leads import rigid_lead_segments_mm
+    position, rotation = _world_pose(module, by_id)
+    angle = math.radians(rotation % 360)
+    cos, sin = math.cos(angle), math.sin(angle)
+
+    def world(point):
+        return (position['x']+(point[0]*cos+point[2]*sin)*MM_TO_WORLD,
+                position['y']+point[1]*MM_TO_WORLD,
+                position['z']+(-point[0]*sin+point[2]*cos)*MM_TO_WORLD)
+
+    return [dict(pinId=pin['id'], segments=[dict(start=world(segment['start']), end=world(segment['end']), radius=segment['radiusMm']*MM_TO_WORLD) for segment in rigid_lead_segments_mm(part['package'], pin)])
+            for pin in part['package']['pins']] if part['package'].get('shape') else []
+
+
+def _lead_segments_bounds(segments):
+    return tuple((min(min(segment['start'][axis], segment['end'][axis])-segment['radius'] for segment in segments),
+                  max(max(segment['start'][axis], segment['end'][axis])+segment['radius'] for segment in segments)) for axis in range(3))
+
+
+def _body_bounds(body):
+    extents = [sum(abs(body['axes'][column][axis])*body['half'][column] for column in range(3)) for axis in range(3)]
+    return tuple((center-extent, center+extent) for center, extent in zip(body['center'], extents))
+
+
+def _bounds_overlap(first, second):
+    return all(a[0] < b[1]-MOUNT_TOLERANCE and b[0] < a[1]-MOUNT_TOLERANCE for a, b in zip(first, second))
 
 
 def _bodies_overlap(a, b):
@@ -179,7 +221,7 @@ def validate_physical_design(graph):
     for module,part in physical:
         if module.get('mount',{}).get('kind')!='breadboard-flexible':continue
         paths=world_lead_paths(module,part,by_id[module['mount']['boardId']])
-        radius=part['package']['leadDiameterMm']*MM_TO_WORLD/2
+        radius=package_lead_collision_radius_mm(part['package'])*MM_TO_WORLD
         profile = get_mechanical_profile(part['package']['id'], part['package']['revision'])
         radius += min(profile['minBendRadiusMm'] * MM_TO_WORLD / 512, 1e-5)
         flexible_paths.append((module,paths,radius))
@@ -189,6 +231,28 @@ def validate_physical_design(graph):
         for other,other_paths,other_radius in flexible_paths[index+1:]:
             if module['mount']['version']==other['mount']['version']==1:continue
             if lead_paths_intersect(paths,radius,other_paths,other_radius):raise ValueError('Flexible leads intersect another component lead')
+    rigid_paths = []
+    for module, part in physical:
+        if not part:
+            continue
+        paths = rigid_world_lead_paths(module, part, by_id)
+        if paths:
+            segments = [segment for path in paths for segment in path['segments']]
+            rigid_paths.append((module, segments, _lead_segments_bounds(segments)))
+    body_bounds = [(module, body, _body_bounds(body)) for module, body in bodies]
+    flexible_bounds = [(module, paths, radius, _lead_segments_bounds([dict(start=start, end=end, radius=radius) for path in paths for start, end in zip(path, path[1:])])) for module, paths, radius in flexible_paths]
+    for module, segments, bounds in rigid_paths:
+        if any(lead_hits_body([segment['start'], segment['end']], body, segment['radius']) for other, body, other_bounds in body_bounds if other['id'] != module['id'] and _bounds_overlap(bounds, other_bounds) for segment in segments):
+            raise ValueError('Rigid lead intersects another component body')
+        for other, other_paths, other_radius, other_bounds in flexible_bounds:
+            if other['id'] == module['id'] or not _bounds_overlap(bounds, other_bounds):
+                continue
+            if any(lead_paths_intersect([[segment['start'], segment['end']]], segment['radius'], other_paths, other_radius) for segment in segments):
+                raise ValueError('Rigid lead intersects another component lead')
+    for index, (module, segments, bounds) in enumerate(rigid_paths):
+        for other, other_segments, other_bounds in rigid_paths[index+1:]:
+            if _bounds_overlap(bounds, other_bounds) and any(lead_paths_intersect([[first['start'], first['end']]], first['radius'], [[second['start'], second['end']]], second['radius']) for first in segments for second in other_segments):
+                raise ValueError('Rigid leads intersect another component lead')
     # Validate all physical pin endpoints even when a part is connected without mounting.
     for edge in graph['connections']:
         for endpoint in (edge['source'], edge['destination']):

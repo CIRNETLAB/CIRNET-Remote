@@ -6344,6 +6344,145 @@
         "title": "OwnPosition",
         "type": "object"
       },
+      "PackageLeadExitV1": {
+        "additionalProperties": false,
+        "properties": {
+          "normal": {
+            "$ref": "#/components/schemas/Point3"
+          },
+          "pinId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "positionMm": {
+            "$ref": "#/components/schemas/Point3"
+          }
+        },
+        "required": [
+          "pinId",
+          "positionMm",
+          "normal"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/design/package-shape/1.0/schema.json#/$defs/PackageLeadExitV1",
+          "version": "1.0"
+        }
+      },
+      "PackageLeadSectionV1": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "round",
+              "rectangular",
+              "stamped"
+            ]
+          },
+          "shoulderWidthMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "thicknessMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "widthMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          }
+        },
+        "required": [
+          "kind",
+          "widthMm",
+          "thicknessMm"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/design/package-shape/1.0/schema.json#/$defs/PackageLeadSectionV1",
+          "version": "1.0"
+        }
+      },
+      "PackageShapeV1": {
+        "additionalProperties": false,
+        "description": "Versioned model geometry in centered body-local millimetres. Body envelope, contact tips, exits and the hidden interior embed remain distinct; no electrical or safety capability is implied.",
+        "properties": {
+          "bevelMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "domeRadiusMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "embeddedDepthMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 0.5,
+            "type": "number"
+          },
+          "family": {
+            "enum": [
+              "resistor",
+              "diode",
+              "zener",
+              "ceramic",
+              "electrolytic",
+              "led",
+              "dip",
+              "to92"
+            ]
+          },
+          "flangeDiameterMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "flangeHeightMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "leadExits": {
+            "items": {
+              "$ref": "#/components/schemas/PackageLeadExitV1"
+            },
+            "maxItems": 64,
+            "minItems": 2,
+            "type": "array"
+          },
+          "leadSection": {
+            "$ref": "#/components/schemas/PackageLeadSectionV1"
+          },
+          "lensDiameterMm": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          },
+          "version": {
+            "const": 1
+          }
+        },
+        "required": [
+          "version",
+          "family",
+          "embeddedDepthMm",
+          "leadSection",
+          "leadExits"
+        ],
+        "type": "object",
+        "x-netcircuit-contract": {
+          "profile": "structural",
+          "uri": "https://netcircuit.local/contracts/design/package-shape/1.0/schema.json#/$defs/PackageShapeV1",
+          "version": "1.0"
+        }
+      },
       "PayloadRef": {
         "minLength": 1,
         "title": "PayloadRef",

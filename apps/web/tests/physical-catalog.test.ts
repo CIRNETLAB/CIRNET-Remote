@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { getDefinition } from '../src/data/editorCatalog'
-import { getPartForType, getPartDefinition, MM_TO_WORLD } from '../src/data/partCatalog'
+import { getPartForType, getPartDefinition, packageLeadCollisionRadiusMm, physicalDescriptorForPart, getPartForModule, MM_TO_WORLD } from '../src/data/partCatalog'
 import { ribbonGroups } from '../src/data/ribbon'
 import executionRegistry from '../src/data/physicalParts.json'
 
@@ -10,17 +10,58 @@ const executionPart = (type: string) => executionRegistry.parts.find(part => par
 
 test('compact generic defaults resolve separately from every pinned historical descriptor', () => {
   const latest = getPartForType('GENERIC_RESISTOR')!
-  assert.equal(latest.revision, 2)
-  assert.deepEqual(latest.package.bodyMm, { x: 5, y: 2, z: 2 })
+  assert.equal(latest.revision, 6)
+  assert.deepEqual(latest.package.bodyMm, { x: 4.9, y: 1.75, z: 1.75 })
   assert.equal(latest.editor.color, '#4A90E2')
   const old = { partId: latest.id, partRevision: 1, packageId: 'MRS25-1016', packageRevision: 1 }
   assert.equal(getPartForType('GENERIC_RESISTOR', old)!.package.bodyMm.x, 6.5)
   assert.equal(getPartDefinition(latest.id, 1)!.package.id, old.packageId)
-  assert.equal(getPartDefinition(latest.id)!.revision, 2)
+  assert.equal(getPartDefinition(latest.id)!.revision, 6)
   assert.equal(getPartForType('GENERIC_RESISTOR', { ...old, packageRevision: 99 }), undefined)
   assert.equal(getPartForType('GENERIC_DIODE', old), undefined)
   assert.deepEqual(getPartForType('GENERIC_CAPACITOR_ELECTROLYTIC')!.package.bodyMm, { x: 6.3, y: 11, z: 6.3 })
   assert.deepEqual(getPartForType('CAPACITOR_ELECTROLYTIC')!.package.bodyMm, { x: 10, y: 12.5, z: 10 })
+})
+
+test('sealed shapes preserve every previous descriptor and enclose actual rectangular lead sections', () => {
+  const sizes: Record<string, number[]> = {
+    GENERIC_RESISTOR: [4.9, 1.75, 1.75], GENERIC_DIODE: [4.5, 2.3, 2.3], GENERIC_ZENER_DIODE: [3.5, 1.6, 1.6],
+    GENERIC_CAPACITOR: [5, 5, 2.2], GENERIC_CAPACITOR_ELECTROLYTIC: [6.3, 11, 6.3], GENERIC_LED: [5.8, 8.7, 5.8],
+    GENERIC_BJT: [4.6, 5.1, 3.9], SN74HC08N: [19, 3.04, 6.35],
+  }
+  for (const [type, dimensions] of Object.entries(sizes)) {
+    const part = getPartForType(type)!, { shape, bodyMm } = part.package
+    assert.deepEqual([bodyMm.x, bodyMm.y, bodyMm.z], dimensions)
+    assert.equal(shape!.embeddedDepthMm, .15)
+    assert.deepEqual(shape!.leadExits.map(exit => exit.pinId), part.package.pins.map(pin => pin.id))
+    for (const exit of shape!.leadExits) assert.ok(Math.abs(Math.hypot(exit.normal.x, exit.normal.y, exit.normal.z)-1) < 1e-12)
+    assert.equal(getPartForModule({ type, physicalDescriptor: physicalDescriptorForPart(part) }), part)
+  }
+  assert.equal(packageLeadCollisionRadiusMm(getPartForType('GENERIC_DIODE')!.package), .3)
+  assert.equal(packageLeadCollisionRadiusMm(getPartForType('GENERIC_LED')!.package), Math.hypot(.5, .5)/2)
+  assert.equal(packageLeadCollisionRadiusMm(getPartForType('GENERIC_BJT')!.package), Math.hypot(.44, .42)/2)
+  assert.equal(packageLeadCollisionRadiusMm(getPartForType('SN74HC08N')!.package), Math.hypot(1.4, .28)/2)
+  const old = getPartDefinition('GENERIC-RESISTOR-AXIAL', 2)!
+  assert.deepEqual(old.package.bodyMm, { x: 5, y: 2, z: 2 })
+  assert.equal(old.package.shape, undefined)
+  const observed = getPartDefinition('GENERIC-RESISTOR-AXIAL', 3)!
+  assert.equal(observed.package.id, 'GENERIC-AXIAL-R36-762')
+  assert.deepEqual(observed.package.bodyMm, { x:3.6, y:1.6, z:1.6 })
+  assert.equal(observed.package.shape?.version, 1)
+  assert.equal(getPartForModule({ type:'GENERIC_RESISTOR', physicalDescriptor:physicalDescriptorForPart(observed) }), observed)
+  const longerObserved = getPartDefinition('GENERIC-RESISTOR-AXIAL', 4)!
+  assert.equal(longerObserved.package.id, 'GENERIC-AXIAL-R39-762')
+  assert.deepEqual(longerObserved.package.bodyMm, { x:3.9, y:1.75, z:1.75 })
+  assert.equal(getPartForModule({ type:'GENERIC_RESISTOR', physicalDescriptor:physicalDescriptorForPart(longerObserved) }), longerObserved)
+  const latestObserved = getPartDefinition('GENERIC-RESISTOR-AXIAL', 5)!
+  assert.equal(latestObserved.package.id, 'GENERIC-AXIAL-R43-762')
+  assert.deepEqual(latestObserved.package.bodyMm, { x:4.3, y:1.75, z:1.75 })
+  assert.equal(getPartForModule({ type:'GENERIC_RESISTOR', physicalDescriptor:physicalDescriptorForPart(latestObserved) }), latestObserved)
+  assert.equal(getPartForModule({ type: 'GENERIC_RESISTOR' })!.revision, 1)
+  assert.equal(getPartForType('DIODE_1N4148')!.package.id, 'DO35-1016')
+  const dipOld = getPartForType('SN74HC08N', { partId:'TI-SN74HC08N', partRevision:1, packageId:'PDIP-14-300', packageRevision:1 })!
+  assert.deepEqual(dipOld.package.bodyMm, { x:19.3, y:5.08, z:6.4 })
+  assert.deepEqual(getPartForType('SN74HC08N')!.package.pins, dipOld.package.pins)
 })
 
 test('physical HC08 exposes every numbered package pin without changing the legacy logical definition', () => {

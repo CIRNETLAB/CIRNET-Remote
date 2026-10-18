@@ -1,8 +1,8 @@
-import { Group, Mesh, MeshStandardMaterial } from 'three'
+import { Group, Mesh, MeshPhysicalMaterial, MeshStandardMaterial } from 'three'
 import { engineeringInput, fiveBandResistorCode } from '../../data/componentProperties'
 import type { PartDefinition } from '../../data/partCatalog'
 import type { CircuitModule } from '../../types/circuit'
-import { RESISTOR_BAND_COLORS, subduedBodyColor } from './PackageMaterials'
+import { darkLedResinColor, ledResinAbsorptionColor, RESISTOR_BAND_COLORS } from './PackageMaterials'
 import { updatePackageMarking } from './PackageMarking'
 import { updatePackageLeads } from './PackageLeads'
 
@@ -31,8 +31,9 @@ export function updatePackageAppearance(group: Group, module: CircuitModule, par
     group.userData.ledColor = color
     group.traverse(object => {
       if (!(object instanceof Mesh) || !object.userData.ledLens || !(object.material instanceof MeshStandardMaterial)) return
-      object.material.color.set(color)
-      if ('attenuationColor' in object.material) (object.material as any).attenuationColor.set(color)
+      const resinColor = object.userData.sealedPackage ? darkLedResinColor(color) : color
+      object.material.color.set(resinColor)
+      if (object.material instanceof MeshPhysicalMaterial) object.material.attenuationColor.set(object.userData.sealedPackage ? ledResinAbsorptionColor(color) : resinColor)
       // A paint edit retains observed emission evidence; it never enables it.
       if (group.userData.ledOn === true) {
         object.material.emissive.set(color)

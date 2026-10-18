@@ -6,6 +6,7 @@ import math
 from pathlib import Path
 
 from .breadboard_topology import get_breadboard_contact
+from .physical_mounting import package_lead_collision_radius_mm
 
 MM_TO_WORLD=.13/2.54
 EPS=1e-5
@@ -202,7 +203,7 @@ def resolve_flexible_geometry(module,part,board):
         if not profile['minLeadLengthMm']<=length<=profile['maxLeadLengthMm']:raise ValueError('Flexible lead length exceeds mechanical bounds')
         if any(_segment_enters_body(a,b,position,matrix,half) for a,b in zip(samples,samples[1:])):
             raise ValueError('Flexible lead intersects its rigid body')
-        segments=list(zip(samples,samples[1:]));diameter=package['leadDiameterMm']*MM_TO_WORLD
+        segments=list(zip(samples,samples[1:]));diameter=2*package_lead_collision_radius_mm(package)*MM_TO_WORLD
         if mount['version']==2:
             radius=diameter/2+path['sampleError'];expanded=tuple(value+radius for value in half)
             # First outward straight and final normal socket insertion are the
@@ -212,7 +213,7 @@ def resolve_flexible_geometry(module,part,board):
         if lead_path_intersects_itself(path,diameter):
             raise ValueError('Flexible lead intersects itself')
         leads.append({'pinId':pin_id,'points':points,'path':path})
-    if any(_segment_distance(a,b,c,d)<package['leadDiameterMm']*MM_TO_WORLD+leads[0]['path']['sampleError']+leads[1]['path']['sampleError']-EPS for a,b in zip(leads[0]['path']['samples'],leads[0]['path']['samples'][1:]) for c,d in zip(leads[1]['path']['samples'],leads[1]['path']['samples'][1:])):
+    if any(_segment_distance(a,b,c,d)<2*package_lead_collision_radius_mm(package)*MM_TO_WORLD+leads[0]['path']['sampleError']+leads[1]['path']['sampleError']-EPS for a,b in zip(leads[0]['path']['samples'],leads[0]['path']['samples'][1:]) for c,d in zip(leads[1]['path']['samples'],leads[1]['path']['samples'][1:])):
         raise ValueError('Flexible leads intersect each other')
     return {'position':position,'matrix':matrix,'half':half,'leads':leads,'profile':profile}
 

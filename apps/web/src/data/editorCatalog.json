@@ -680,13 +680,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
-        0.32755905511811023
+        0.9724409448818897,
+        0.15559055118110235,
+        0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN74HC08N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -1502,13 +1502,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
-        0.32755905511811023
+        0.9724409448818897,
+        0.15559055118110235,
+        0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN74HC02N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -1591,13 +1591,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
-        0.32755905511811023
+        0.9724409448818897,
+        0.15559055118110235,
+        0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN74HC04N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -1680,13 +1680,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
-        0.32755905511811023
+        0.9724409448818897,
+        0.15559055118110235,
+        0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN74LS266N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -1811,13 +1811,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7400N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -1900,13 +1900,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7401N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -1989,13 +1989,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7402N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -2078,13 +2078,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7403N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -2167,13 +2167,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7404N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -2256,13 +2256,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7405N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -2345,13 +2345,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7408N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -2434,13 +2434,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7409N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -2523,13 +2523,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7410N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -2612,13 +2612,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN74LS11N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -2701,13 +2701,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7412N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -2790,13 +2790,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7413N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -2879,13 +2879,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7414N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -2968,13 +2968,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN74LS15N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -3057,13 +3057,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7420N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -3146,13 +3146,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN74LS21N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -3235,13 +3235,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7427N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -3324,13 +3324,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7430N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -3413,13 +3413,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7432N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -3502,13 +3502,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7437N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -3591,13 +3591,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7438N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -3680,13 +3680,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7440N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -3769,13 +3769,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN7486N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -3858,13 +3858,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-SN74LS136N",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -3947,13 +3947,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4001BE",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -4036,13 +4036,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4011BE",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -4125,13 +4125,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4012BE",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -4214,13 +4214,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4013BE",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -4303,13 +4303,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4030BE",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -4392,13 +4392,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4069UBE",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -4481,13 +4481,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4070BE",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -4570,13 +4570,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4071BE",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -4659,13 +4659,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4072BE",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -4748,13 +4748,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4077BE",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -4837,13 +4837,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4081BE",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -4926,13 +4926,13 @@
       "family": "logic",
       "visual": "ic",
       "size": [
-        0.9877952755905512,
-        0.26,
+        0.9724409448818897,
+        0.15559055118110235,
         0.32499999999999996
       ],
       "color": "#30333a",
       "partDefinitionId": "TI-CD4093BE",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",
@@ -5015,13 +5015,13 @@
       "family": "passive",
       "visual": "resistor",
       "size": [
-        0.2559055118110236,
-        0.10236220472440945,
-        0.10236220472440945
+        0.25078740157480317,
+        0.08956692913385826,
+        0.08956692913385826
       ],
       "color": "#4A90E2",
       "partDefinitionId": "GENERIC-RESISTOR-AXIAL",
-      "partRevision": 2,
+      "partRevision": 6,
       "ports": [
         {
           "id": "A",
@@ -5074,13 +5074,13 @@
       "family": "passive",
       "visual": "capacitor",
       "size": [
-        0.2047244094488189,
-        0.2047244094488189,
-        0.13307086614173227
+        0.2559055118110236,
+        0.2559055118110236,
+        0.1125984251968504
       ],
       "color": "#293136",
       "partDefinitionId": "GENERIC-CAPACITOR-CERAMIC",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "A",
@@ -5146,7 +5146,7 @@
       ],
       "color": "#3e4249",
       "partDefinitionId": "GENERIC-CAPACITOR-ELECTROLYTIC",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "PLUS",
@@ -5206,13 +5206,13 @@
       "family": "active",
       "visual": "diode",
       "size": [
-        0.19960629921259843,
-        0.09724409448818896,
-        0.09724409448818896
+        0.23031496062992127,
+        0.11771653543307085,
+        0.11771653543307085
       ],
       "color": "#4b3831",
       "partDefinitionId": "GENERIC-DIODE-AXIAL",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "A",
@@ -5255,13 +5255,13 @@
       "family": "active",
       "visual": "zener",
       "size": [
-        0.21496062992125986,
-        0.1125984251968504,
-        0.1125984251968504
+        0.17913385826771652,
+        0.08188976377952756,
+        0.08188976377952756
       ],
       "color": "#4b3831",
       "partDefinitionId": "GENERIC-ZENER-DIODE-AXIAL",
-      "partRevision": 2,
+      "partRevision": 3,
       "ports": [
         {
           "id": "A",
@@ -5314,13 +5314,13 @@
       "family": "output",
       "visual": "led",
       "size": [
-        0.2559055118110236,
-        0.4401574803149606,
-        0.2559055118110236
+        0.29685039370078736,
+        0.44527559055118104,
+        0.29685039370078736
       ],
       "color": "#ce3935",
       "partDefinitionId": "GENERIC-LED-5MM",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "A",
@@ -5444,13 +5444,13 @@
       "family": "active",
       "visual": "transistor",
       "size": [
-        0.24720472440944882,
-        0.24362204724409448,
-        0.2016535433070866
+        0.2354330708661417,
+        0.26102362204724405,
+        0.19960629921259843
       ],
       "color": "#292b2b",
       "partDefinitionId": "GENERIC-BJT-TO92",
-      "partRevision": 1,
+      "partRevision": 2,
       "ports": [
         {
           "id": "1",

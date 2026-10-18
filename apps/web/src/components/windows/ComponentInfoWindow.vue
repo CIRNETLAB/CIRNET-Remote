@@ -22,7 +22,7 @@ const properties = computed(() => isDraft.value ? workspace.placementProperties 
 const contextKey = computed(() => isDraft.value ? `draft:${workspace.placementEpoch}` : `module:${selected.value?.id}`)
 const definition = computed(() => type.value ? getDefinition(type.value) : undefined)
 const part = computed(() => isDraft.value && type.value ? getPartForType(type.value) : selected.value ? getPartForModule(selected.value) : undefined)
-const canRebuild = computed(() => !isDraft.value && !!selected.value?.mount && supportsFlexiblePlacement(selected.value.type))
+const canRebuild = computed(() => !isDraft.value && !!selected.value && (!!getPartForType(selected.value.type)?.package.shape || supportsFlexiblePlacement(selected.value.type)))
 const rebuildPreview = computed(() => workspace.componentGeometryPreview?.id === selected.value?.id ? workspace.componentGeometryPreview : null)
 const simulationState = computed(() => !isDraft.value && selected.value && circuit.physicalStates?.[selected.value.id])
 const item = computed(() => libraryComponents.find(entry => entry.type === type.value))
@@ -85,7 +85,7 @@ watch(() => window.value?.activation, activation => { if (activation) void nextT
       <p v-else-if="unavailable" class="component-information-status">Execution model unavailable.</p>
       <p v-else-if="definition?.visualOnly" class="component-information-status">Visual component.</p>
       <div v-if="canRebuild" class="component-geometry-rebuild">
-        <template v-if="rebuildPreview"><p role="status">Preview: body and leads have been recalculated for the same two contacts.</p><button aria-label="Apply rebuilt component geometry" @click="applyRebuild">Apply geometry</button><button aria-label="Cancel component geometry rebuild" @click="cancelRebuild">Cancel</button></template>
+        <template v-if="rebuildPreview"><p role="status">Preview: updated body and leads. Placement and pin bindings are preserved.</p><button aria-label="Apply rebuilt component geometry" @click="applyRebuild">Apply geometry</button><button aria-label="Cancel component geometry rebuild" @click="cancelRebuild">Cancel</button></template>
         <button v-else aria-label="Rebuild component geometry" @click="previewRebuild">Rebuild component geometry</button>
       </div>
       <template v-if="part"><details class="component-pinout"><summary>Pinout · {{ part.package.pins.length }} pins</summary><label class="show-pins-toggle"><input type="checkbox" :checked="workspace.showPins" @change="workspace.showPins = ($event.target as HTMLInputElement).checked" />Show pins</label><ol><li v-for="pin in part.package.pins" :key="pin.id"><b>{{ pin.number }}</b><span>{{ pin.name }}</span><small>{{ pin.role }}{{ pin.outputType ? ' · ' + pin.outputType : '' }}</small></li></ol></details></template>

@@ -157,3 +157,6 @@ export const AssignmentViewV2: Validator<ContractMap['AssignmentViewV2']>
 export const AutomaticRoutingIntentV1: Validator<ContractMap['AutomaticRoutingIntentV1']>
 export const FlexibleMountV2: Validator<ContractMap['FlexibleMountV2']>
 export const PhysicalDescriptorV1: Validator<ContractMap['PhysicalDescriptorV1']>
+export const PackageLeadSectionV1: Validator<ContractMap['PackageLeadSectionV1']>
+export const PackageLeadExitV1: Validator<ContractMap['PackageLeadExitV1']>
+export const PackageShapeV1: Validator<ContractMap['PackageShapeV1']>

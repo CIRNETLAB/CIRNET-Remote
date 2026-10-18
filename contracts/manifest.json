@@ -3857,6 +3857,75 @@
         "apps/web/src/contracts/generated/validators.js"
       ],
       "compatibility_policy": "Keep version 1 frozen; version 2 circular automatic geometry is adopted only by explicit authoring actions."
+    },
+    {
+      "id": "PackageLeadSectionV1",
+      "kind": "schema",
+      "path": "contracts/design-models/package-shape.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/package-shape/1.0/schema.json",
+      "pointer": "/$defs/PackageLeadSectionV1",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "web",
+        "api",
+        "hardware-service",
+        "simulator"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Optional package-revision shape; historical unshaped package descriptors and V1/V2 mounts remain unchanged. Geometry changes require a new package/part revision and explicit rebuild."
+    },
+    {
+      "id": "PackageLeadExitV1",
+      "kind": "schema",
+      "path": "contracts/design-models/package-shape.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/package-shape/1.0/schema.json",
+      "pointer": "/$defs/PackageLeadExitV1",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "web",
+        "api",
+        "hardware-service",
+        "simulator"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Optional package-revision shape; historical unshaped package descriptors and V1/V2 mounts remain unchanged. Geometry changes require a new package/part revision and explicit rebuild."
+    },
+    {
+      "id": "PackageShapeV1",
+      "kind": "schema",
+      "path": "contracts/design-models/package-shape.schema.json",
+      "uri": "https://netcircuit.local/contracts/design/package-shape/1.0/schema.json",
+      "pointer": "/$defs/PackageShapeV1",
+      "version": "1.0",
+      "visibility": "public",
+      "producer": "canonical JSON Schema",
+      "consumers": [
+        "web",
+        "api",
+        "hardware-service",
+        "simulator"
+      ],
+      "validator_profile": "structural",
+      "generated_artifacts": [
+        "contracts/boundary/models.py",
+        "apps/web/src/contracts/generated/dto.ts",
+        "apps/web/src/contracts/generated/validators.js"
+      ],
+      "compatibility_policy": "Optional package-revision shape; historical unshaped package descriptors and V1/V2 mounts remain unchanged. Geometry changes require a new package/part revision and explicit rebuild."
     }
   ]
 }

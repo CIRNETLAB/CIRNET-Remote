@@ -14,8 +14,8 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def test_compact_generic_defaults_have_real_dimensions_and_leave_exact_parts_unchanged():
     resistor = get_physical_part('GENERIC_RESISTOR')
-    assert resistor['revision'] == 2
-    assert resistor['package']['bodyMm'] == {'x': 5, 'y': 2, 'z': 2}
+    assert resistor['revision'] == 6
+    assert resistor['package']['bodyMm'] == {'x': 4.9, 'y': 1.75, 'z': 1.75}
     assert resistor['editor']['color'].lower() == '#4a90e2'
     capacitor = get_physical_part('GENERIC_CAPACITOR_ELECTROLYTIC')
     assert capacitor['package']['bodyMm'] == {'x': 6.3, 'y': 11, 'z': 6.3}
@@ -72,7 +72,7 @@ def test_old_free_parts_use_original_dimensions_and_new_free_parts_explicitly_pi
     assert get_physical_part_for_module(old)['package']['bodyMm']['x'] == 6.5
     latest = get_physical_part(old['type'])
     new = {**deepcopy(old), 'physicalDescriptor': {'version': 1, 'partId': latest['id'], 'partRevision': latest['revision'], 'packageId': latest['package']['id'], 'packageRevision': latest['package']['revision']}}
-    assert get_physical_part_for_module(new)['package']['bodyMm']['x'] == 5
+    assert get_physical_part_for_module(new)['package']['bodyMm']['x'] == 4.9
     for version, module in [('1.1', old), ('1.2', new)]:
         graph = {'schema_version': version, 'circuit_id': 'free', 'modules': [module], 'connections': []}
         original = deepcopy(graph)
@@ -82,3 +82,23 @@ def test_old_free_parts_use_original_dimensions_and_new_free_parts_explicitly_pi
     assert get_physical_part_for_module(bad) is None
     with pytest.raises(ValueError):
         validate_design_graph({'schema_version': '1.2', 'circuit_id': 'bad', 'modules': [bad], 'connections': []})
+
+
+@pytest.mark.parametrize('revision,package_id,dimensions,exit_x,profile_id', [
+    (3, 'GENERIC-AXIAL-R36-762', dict(x=3.6, y=1.6, z=1.6), 1.8, 'flex-sealed-resistor'),
+    (4, 'GENERIC-AXIAL-R39-762', dict(x=3.9, y=1.75, z=1.75), 1.95, 'flex-sealed-resistor-r39'),
+    (5, 'GENERIC-AXIAL-R43-762', dict(x=4.3, y=1.75, z=1.75), 2.15, 'flex-sealed-resistor-r43'),
+])
+def test_observed_sealed_resistor_revisions_keep_their_earlier_shape_and_profile(revision, package_id, dimensions, exit_x, profile_id):
+    from contracts.flexible_mounting import get_mechanical_profile
+    pinned = dict(partId='GENERIC-RESISTOR-AXIAL', partRevision=revision, packageId=package_id, packageRevision=1)
+    previous = get_physical_part('GENERIC_RESISTOR', pinned)
+    assert previous['package']['bodyMm'] == dimensions
+    assert previous['package']['shape']['version'] == 1
+    assert [exit['positionMm']['x'] for exit in previous['package']['shape']['leadExits']] == [-exit_x, exit_x]
+    profile = get_mechanical_profile(pinned['packageId'], pinned['packageRevision'])
+    assert profile['id'] == profile_id
+    assert [pin['bodyExitMm']['x'] for pin in profile['pins']] == [-exit_x, exit_x]
+    current = get_physical_part('GENERIC_RESISTOR')
+    assert current['revision'] == 6
+    assert current['package']['id'] == 'GENERIC-AXIAL-R49-762'

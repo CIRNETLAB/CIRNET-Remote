@@ -40,28 +40,44 @@ export function updateFlexibleMount(state:EditorDocumentState,id:string,mount:Fl
   if(!graph||!module||!isFlexibleMount(module.mount))throw Error('Select a flexible mounted component.')
   checkedCommit(state,withCircuitModules(graph,graph.modules.map(m=>m.id===id?{...m,mount:copyData(mount)}:m)))
 }
-/** An explicit rebuild/re-anchor adopts the current profile, never the old pose or knees. */
+/** Explicit rebuild adopts the current preset; re-anchor retains its pinned package.
+ * Both regenerate the automatic pose and exterior lead paths from exact contacts. */
 export function previewComponentGeometry(state:EditorDocumentState,id:string,pinId?:string,contactId?:string):CircuitModule{
-  const graph=currentGraph(state),module=graph?.modules.find(m=>m.id===id),part=module&&getPartForType(module.type)
-  if(!graph||!module?.mount||!part||part.package.pins.length!==2)throw Error('Select a mounted two-pin component to rebuild.')
-  if(pinId!==undefined&&(!isFlexibleMount(module.mount)||!part.package.pins.some(pin=>pin.id===pinId)||!contactId))throw Error('Choose a stable component pin and an existing contact.')
-  const contacts=part.package.pins.map(pin=>{
-    const binding=module.mount!.contacts.find(binding=>binding.pinId===pin.id)
-    if(!binding)throw Error('The component does not bind every stable pin.')
-    return pin.id===pinId?contactId!:binding.contactId
-  })
-  const solution=solveFlexibleMount(module.type,module.mount.boardId,contacts[0],contacts[1],graph.modules,{activeId:id})
-  if(!solution.valid||!solution.mount)throw Error(solution.reason)
-  const candidate={...copyData(module),mount:copyData(solution.mount)}
+  const graph=currentGraph(state),module=graph?.modules.find(m=>m.id===id),part=module&&(pinId!==undefined?getPartForModule(module):getPartForType(module.type))
+  if(!graph||!module||!part)throw Error('Select a physical component to rebuild.')
+  if(pinId!==undefined&&(!isFlexibleMount(module.mount)||part.package.pins.length!==2||!part.package.pins.some(pin=>pin.id===pinId)||!contactId))throw Error('Choose a stable component pin and an existing contact.')
+  const candidate=copyData(module)
+  if(!module.mount){
+    candidate.physicalDescriptor=physicalDescriptorForPart(part)
+  }else if(part.package.pins.length===2&&getMechanicalProfile(module.type)){
+    const contacts=part.package.pins.map(pin=>{
+      const binding=module.mount!.contacts.find(binding=>binding.pinId===pin.id)
+      if(!binding)throw Error('The component does not bind every stable pin.')
+      return pin.id===pinId?contactId!:binding.contactId
+    })
+    const solution=solveFlexibleMount(module.type,module.mount.boardId,contacts[0],contacts[1],graph.modules,{activeId:id,...(pinId!==undefined?{descriptor:module.mount}:{})})
+    if(!solution.valid||!solution.mount)throw Error(solution.reason)
+    candidate.mount=copyData(solution.mount)
+  }else{
+    if(module.mount.kind!=='breadboard')throw Error('This component has no compatible rebuild strategy.')
+    candidate.mount={...copyData(module.mount),partId:part.id,partRevision:part.revision,packageId:part.package.id,packageRevision:part.package.revision}
+  }
   const validated=parseCircuitFile(JSON.stringify(withCircuitModules(graph,graph.modules.map(m=>m.id===id?candidate:m))))
   return validated.modules.find(m=>m.id===id)!
 }
 /** Commit only the previewed geometry; all unrelated source data remain authoritative. */
 export function rebuildComponentGeometry(state:EditorDocumentState,id:string,preview:CircuitModule):void{
   const graph=currentGraph(state),module=graph?.modules.find(m=>m.id===id)
-  if(!graph||!module?.mount||preview.id!==id||preview.type!==module.type||!isFlexibleMount(preview.mount))throw Error('The geometry preview is no longer applicable.')
-  if(JSON.stringify(module.mount.contacts)!==JSON.stringify(preview.mount.contacts))throw Error('The component contacts changed; rebuild the preview again.')
-  checkedCommit(state,withCircuitModules(graph,graph.modules.map(m=>m.id===id?{...m,mount:copyData(preview.mount)}:m)))
+  if(!graph||!module||preview.id!==id||preview.type!==module.type||!getPartForModule(preview))throw Error('The geometry preview is no longer applicable.')
+  let candidate:CircuitModule
+  if(module.mount){
+    if(!preview.mount||JSON.stringify(module.mount.contacts)!==JSON.stringify(preview.mount.contacts))throw Error('The component contacts changed; rebuild the preview again.')
+    candidate={...module,mount:copyData(preview.mount)}
+  }else{
+    if(preview.mount||JSON.stringify(module.position)!==JSON.stringify(preview.position)||module.rotation!==preview.rotation||!preview.physicalDescriptor)throw Error('The component position changed; rebuild the preview again.')
+    candidate={...module,physicalDescriptor:copyData(preview.physicalDescriptor)}
+  }
+  checkedCommit(state,withCircuitModules(graph,graph.modules.map(m=>m.id===id?candidate:m)))
 }
 export function changeComponentDesign(state:EditorDocumentState,id:string,nextType:string,patch:Record<string,unknown>,pinMap?:Record<string,string>):void{
   const graph=currentGraph(state),module=graph?.modules.find(m=>m.id===id)

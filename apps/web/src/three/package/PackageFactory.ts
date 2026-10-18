@@ -7,6 +7,10 @@ import { createPackageMarking, shortPackageCode } from './PackageMarking'
 import { updatePackageAppearance } from './PackageAppearance'
 import { axialCoatingGeometry, ceramicDiscGeometry, electrolyticSleeveGeometry, ledShellGeometry, roundedPackageBox, segmentGlyphGeometry } from './PackageShapes'
 import { registerEditablePackageLeads } from './PackageLeads'
+import {addMoldedPackageModel} from './MoldedPackageModels'
+import {createMoldedPackageLead} from './StampedLeadGeometry'
+import {createFixedPackageLead} from './PackageFeedthrough'
+import {addSealedDiscreteModel} from './DiscretePackageModels'
 
 export function addPackageModel(group: Group, module: CircuitModule, part: PartDefinition) {
   const pkg = part.package, mm = MM_TO_WORLD
@@ -40,7 +44,9 @@ export function addPackageModel(group: Group, module: CircuitModule, part: PartD
     const object = mesh(name, roundedPackageBox(sx, sy, sz, radius), material); object.rotation.x = -Math.PI / 2; object.position.set(x, y - sy / 2 + radius / 2, z); return object
   }
 
-  if (pkg.family === 'dip') {
+  if(addSealedDiscreteModel(group,module,part)||addMoldedPackageModel(group,module,part)) {
+    // Versioned body/markings are produced from the same shape as its leads.
+  } else if (pkg.family === 'dip') {
     // The notch is cut into the body outline, on the pin-1 (-X) end.
     const shape = new Shape(), radius = Math.min(d * .22, .055), bevel = Math.min(.012, h * .09), x = w / 2 - bevel, z = d / 2 - bevel
     shape.moveTo(-x, -z); shape.lineTo(x, -z); shape.lineTo(x, z); shape.lineTo(-x, z)
@@ -262,18 +268,27 @@ export function addPackageModel(group: Group, module: CircuitModule, part: PartD
     }
     const width = pkg.leadDiameterMm * mm
     if (pkg.family !== 'terminal') {
+      if(pkg.shape){
+        const molded=pkg.shape.family==='dip'||pkg.shape.family==='to92'
+        const fixed=molded?null:createFixedPackageLead(part,pin.id)
+        const surface=mesh('lead-metal',fixed?.geometry??createMoldedPackageLead(part,pin),metal,lead)
+        surface.userData.continuousLead=true
+        surface.userData.sealedFeedthrough=true
+        if(fixed)surface.userData.leadPoints=fixed.points.map(point=>point.toArray())
+      }else{
       // End the lead inside the body so no body/metal join is exposed.
       const direction = shoulder.clone().sub(knee).normalize(); shoulder.addScaledVector(direction, width * .6)
       if (pkg.family === 'dip') knee.y = shoulder.y
       const surface = mesh('lead-metal', createFormedLeadGeometry([anchor, knee, shoulder], width, pkg.family === 'dip'), metal, lead)
       surface.userData.continuousLead = true
       surface.userData.leadBaseline = [anchor, knee, shoulder].map(point => point.toArray())
+      }
     }
     const target = mesh(`package-pin-target-${pin.id}`, pickGeometry, pickMaterial, group, false); target.position.copy(anchor).y += tipRadius * .5
     target.userData = { ...endpoint, pinTarget: true }
     const highlight = mesh(`package-pin-highlight-${pin.id}`, highlightGeometry, highlightMaterial, group, false); highlight.position.copy(anchor).y += .028; highlight.visible = false; highlight.userData = { pinHighlight: true, pinId: pin.id, ignorePick: true }
   }
-  registerEditablePackageLeads(group, part, bodyObjects)
+  if(!pkg.shape)registerEditablePackageLeads(group, part, bodyObjects)
   updatePackageAppearance(group, module, part)
   group.userData.packageId = pkg.id
   group.userData.definitionId = part.id

@@ -393,6 +393,9 @@ export interface ContractMap {
   AutomaticRoutingIntentV1: AutomaticRoutingIntentV1
   FlexibleMountV2: FlexibleMountV2
   PhysicalDescriptorV1: PhysicalDescriptorV1
+  PackageLeadSectionV1: PackageLeadSectionV1
+  PackageLeadExitV1: PackageLeadExitV1
+  PackageShapeV1: PackageShapeV1
 }
 /**
  * This interface was referenced by `ContractMap`'s JSON-Schema
@@ -2315,4 +2318,45 @@ export interface StudentAssignmentViewV2 {
   document_kind: 'student'
   published: true
   feedback_policy: 'observed_only' | 'detailed'
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "PackageLeadSectionV1".
+ */
+export interface PackageLeadSectionV1 {
+  kind: 'round' | 'rectangular' | 'stamped'
+  widthMm: number
+  thicknessMm: number
+  shoulderWidthMm?: number
+}
+/**
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "PackageLeadExitV1".
+ */
+export interface PackageLeadExitV1 {
+  pinId: string
+  positionMm: Point3
+  normal: Point3
+}
+/**
+ * Versioned model geometry in centered body-local millimetres. Body envelope, contact tips, exits and the hidden interior embed remain distinct; no electrical or safety capability is implied.
+ *
+ * This interface was referenced by `ContractMap`'s JSON-Schema
+ * via the `definition` "PackageShapeV1".
+ */
+export interface PackageShapeV1 {
+  version: 1
+  family: 'resistor' | 'diode' | 'zener' | 'ceramic' | 'electrolytic' | 'led' | 'dip' | 'to92'
+  embeddedDepthMm: number
+  leadSection: PackageLeadSectionV1
+  /**
+   * @minItems 2
+   * @maxItems 64
+   */
+  leadExits: PackageLeadExitV1[]
+  lensDiameterMm?: number
+  flangeDiameterMm?: number
+  flangeHeightMm?: number
+  domeRadiusMm?: number
+  bevelMm?: number
 }

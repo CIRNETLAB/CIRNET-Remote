@@ -2,7 +2,7 @@ import type { CircuitGraph, CircuitModule, MountBinding, Point3 } from '../types
 import { getPartForType, getPartForModule, MM_TO_WORLD, type PinnedPartDescriptor } from '../data/partCatalog'
 import { getBreadboardTopology, type BreadboardTopology, type BreadboardContact } from './BreadboardTopology'
 import { moduleLocalToWorld, moduleWorldPose, worldToModuleLocal } from './modulePose'
-import { bodiesOverlap, flexibleLeadsHitBody, flexibleLeadsIntersect, isFlexibleMount, moduleBodyEnvelope, resolveFlexibleGeometry } from './flexibleGeometry'
+import { bodiesOverlap, isFlexibleMount, moduleBodyEnvelope, moduleLeadsHitBody, moduleLeadsIntersect, resolveFlexibleGeometry } from './flexibleGeometry'
 import { validateProperties } from '../data/editorCatalog'
 import { parseStructural } from '../contracts/structural'
 
@@ -48,7 +48,7 @@ function inspectMount(module: CircuitModule, board: CircuitModule, mount: MountB
   if (candidateBody) for (const other of modules) {
     if (other.id === module.id || other.id === board.id) continue
     const body = moduleBodyEnvelope(other, modules)
-    if (body && bodiesOverlap(candidateBody, body) || isFlexibleMount(other.mount) && flexibleLeadsHitBody(other, modules, candidateBody)) { reason ||= 'Component bodies or leads would overlap.'; break }
+    if (body && (bodiesOverlap(candidateBody, body) || moduleLeadsHitBody(candidateModule, context, body)) || moduleLeadsHitBody(other, context, candidateBody) || moduleLeadsIntersect(candidateModule, other, context)) { reason ||= 'Component bodies or leads would overlap.'; break }
   }
   return { pins, reason }
 }
@@ -110,7 +110,9 @@ export function validateMountBindings(graph: CircuitGraph): void {
   }
   const bodies=graph.modules.flatMap(module=>{const body=moduleBodyEnvelope(module,graph.modules);return body?[{module,body}]:[]})
   for(let i=0;i<bodies.length;i++)for(let j=i+1;j<bodies.length;j++)if((bodies[i].module.mount||bodies[j].module.mount)&&bodiesOverlap(bodies[i].body,bodies[j].body))throw Error('Physical component bodies overlap.')
-  for(const module of graph.modules)if(isFlexibleMount(module.mount))for(const other of bodies)if(other.module.id!==module.id&&flexibleLeadsHitBody(module,graph.modules,other.body))throw Error('Flexible lead intersects another component body.')
-  const flexible=graph.modules.filter(module=>isFlexibleMount(module.mount))
-  for(let i=0;i<flexible.length;i++)for(let j=i+1;j<flexible.length;j++)if(flexibleLeadsIntersect(flexible[i]!,flexible[j]!,graph.modules))throw Error('Flexible leads intersect another component lead.')
+  // Legacy logical modules have no physical lead geometry. Resolve eligibility
+  // once so large logical-only imports never enter a quadratic metal scan.
+  const leadModules=graph.modules.filter(module=>isFlexibleMount(module.mount)||!!getPartForModule(module)?.package.shape)
+  for(const module of leadModules)for(const other of bodies)if(other.module.id!==module.id&&moduleLeadsHitBody(module,graph.modules,other.body))throw Error('Physical lead intersects another component body.')
+  for(let i=0;i<leadModules.length;i++)for(let j=i+1;j<leadModules.length;j++)if(moduleLeadsIntersect(leadModules[i]!,leadModules[j]!,graph.modules))throw Error('Physical leads intersect another component lead.')
 }

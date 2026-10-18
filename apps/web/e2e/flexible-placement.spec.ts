@@ -111,7 +111,7 @@ test('native two-pin placement preserves exact contacts, camera, automatic reanc
 })
 
 test('generic property drafts and native drag-drop produce compact forms and actual multiview visual evidence at both viewport sizes', async ({ page }, testInfo) => {
-  test.setTimeout(180_000)
+  test.setTimeout(300_000) // Seventeen captures plus native video at two viewport sizes on software WebGL.
   await page.setViewportSize({ width: 1280, height: 720 })
   await openBoard(page)
   for (const [group, type, label] of [['passive', 'GENERIC_RESISTOR', 'Resistor'], ['passive', 'GENERIC_CAPACITOR', 'Capacitor'], ['active', 'GENERIC_DIODE', 'Diode'], ['active', 'GENERIC_ZENER_DIODE', 'Zener Diode'], ['output', 'GENERIC_LED', 'LED'], ['output', 'GENERIC_BUZZER', 'Buzzer'], ['active', 'GENERIC_BJT', 'Transistor']] as const) {
@@ -222,7 +222,8 @@ test('native explicit rebuild previews historical geometry, cancels and applies 
  await info(page).getByRole('button',{name:'Cancel component geometry rebuild',exact:true}).click();expect(await exportedNativeGraph(page)).toEqual(before);expect((await nativeComponentBody(page,module.id)).size).toEqual(originalBody.size)
  await info(page).getByRole('button',{name:'Rebuild component geometry',exact:true}).click();await info(page).getByRole('button',{name:'Apply rebuilt component geometry',exact:true}).click()
  const rebuilt=await exportedNativeGraph(page),changed=rebuilt.modules.find(candidate=>candidate.id===module.id)!
- expect(changed.mount?.version).toBe(2);expect(changed.mount?.partRevision).toBe(2);expect(changed.mount?.contacts).toEqual(module.mount?.contacts);expect(changed.properties).toEqual(module.properties);expect(rebuilt.connections).toEqual(before.connections);expect((await nativeComponentBody(page,module.id)).size).toEqual(compactBody.size)
+ const current=JSON.parse(readFileSync(new URL('../src/data/editorParts.json',import.meta.url),'utf8')).parts.find((part:{editorType:string})=>part.editorType===module.type)
+ expect(changed.mount?.version).toBe(2);expect(changed.mount?.partRevision).toBe(current.revision);expect(changed.mount?.packageRevision).toBe(current.package.revision);expect(changed.mount?.contacts).toEqual(module.mount?.contacts);expect(changed.properties).toEqual(module.properties);expect(rebuilt.connections).toEqual(before.connections);expect((await nativeComponentBody(page,module.id)).size).toEqual(compactBody.size)
  await page.getByRole('button',{name:'Undo',exact:true}).click();expect(await exportedNativeGraph(page)).toEqual(before);expect((await nativeComponentBody(page,module.id)).size).toEqual(originalBody.size)
  await page.getByRole('button',{name:'Redo',exact:true}).click();expect(await exportedNativeGraph(page)).toEqual(rebuilt);expect((await nativeComponentBody(page,module.id)).size).toEqual(compactBody.size)
  await screenshot(page,testInfo,'historical-rebuilt-geometry')

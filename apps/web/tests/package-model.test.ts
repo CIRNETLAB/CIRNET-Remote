@@ -4,7 +4,7 @@ import { Box3, ExtrudeGeometry, Group, Mesh, MeshStandardMaterial, Raycaster, Sp
 import { buildComponent, disposeObject, portAnchor } from '../src/three/ComponentModel'
 import { addPackageModel, applyPackageSimulation, setPackagePinHighlight } from '../src/three/PackageModel'
 import * as packageModel from '../src/three/PackageModel'
-import { partCatalog, type PartDefinition } from '../src/data/partCatalog'
+import { partCatalog, physicalDescriptorForPart, type PartDefinition } from '../src/data/partCatalog'
 import { createSceneManager } from '../src/three/SceneManager'
 import { solveMounting } from '../src/electrical/mounting'
 import { moduleLocalToWorld } from '../src/electrical/modulePose'
@@ -329,7 +329,7 @@ test('LED shell is one continuous transmissive resin lens whose light still come
 })
 
 test('DIP ribbon is wide along the pin row and its softened body stays inside the verified envelope', () => {
-  const descriptor = partCatalog.find(part => part.editorType === 'SN74HC08N')!, model = buildComponent({ id: 'U1', type: 'SN74HC08N' })
+  const descriptor = partCatalog.find(part => part.editorType === 'SN74HC08N')!, model = buildComponent({ id: 'U1', type: 'SN74HC08N', physicalDescriptor: physicalDescriptorForPart(descriptor) })
   try {
     const body = new Box3().setFromObject(model.getObjectByName('package-body')!)
     assert.ok(body.max.x <= descriptor.package.bodyMm.x * .13 / 2.54 / 2 + 1e-6)
@@ -337,7 +337,8 @@ test('DIP ribbon is wide along the pin row and its softened body stays inside th
     const lead = model.getObjectByName('package-lead-1')!, surface = lead.children[0] as Mesh, positions = surface.geometry.getAttribute('position'), tip = new Box3()
     for (let i = 0; i < positions.count; i++) if (Math.abs(positions.getY(i)) < 1e-7) tip.expandByPoint(new Vector3().fromBufferAttribute(positions, i))
     const section = tip.getSize(new Vector3())
-    assert.ok(section.x > section.z * 2, 'ribbon has its wide face along the X pin row, rather than edge-on')
+    assert.ok(Math.abs(section.x/(.13/2.54)-.46)<1e-5,'the narrowed tail is 0.46 mm wide along the X pin row')
+    assert.ok(Math.abs(section.z/(.13/2.54)-.28)<1e-5,'the stamped section keeps its 0.28 mm thickness')
   } finally { disposeObject(model) }
 })
 

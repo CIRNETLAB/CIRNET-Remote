@@ -2,9 +2,10 @@
 import catalog from '../data/flexibleMechanics.json'
 import type {FlexibleMountV1,FlexibleMountV2,MechanicalAuthoringProfileV1} from '../contracts/generated/dto'
 import type {CircuitModule,Point3} from '../types/circuit'
-import {getPartForType,getPartForModule,MM_TO_WORLD,type PartDefinition} from '../data/partCatalog'
+import {getPartForType,getPartForModule,MM_TO_WORLD,packageLeadCollisionRadiusMm,type PartDefinition,type PinnedPartDescriptor} from '../data/partCatalog'
 import {getBreadboardContact,getBreadboardTopology} from './BreadboardTopology'
 import {buildLeadPath,closestSegmentApproach,leadPathIntersectsItself,type LeadPath} from './leadPath'
+import {hasShapedRigidLeads,rigidPackageLeadSegments,type RigidLeadSegment} from './rigidPackageLeads'
 
 export type Matrix3=readonly [Point3,Point3,Point3]
 export interface BodyEnvelope {center:Point3;axes:Point3[];half:Point3}
@@ -26,7 +27,7 @@ export function rotationMatrix(rotation:Point3):Matrix3 {
 export const transformPoint=(m:Matrix3,p:Point3):Point3=>({x:dotPoint(m[0],p),y:dotPoint(m[1],p),z:dotPoint(m[2],p)})
 export const inverseTransformPoint=(m:Matrix3,p:Point3):Point3=>({x:m[0].x*p.x+m[1].x*p.y+m[2].x*p.z,y:m[0].y*p.x+m[1].y*p.y+m[2].y*p.z,z:m[0].z*p.x+m[1].z*p.y+m[2].z*p.z})
 const profiles=catalog.profiles as MechanicalAuthoringProfileV1[]
-export const getMechanicalProfile=(type:string,mount?:CircuitModule['mount'])=>{const part=getPartForType(type,mount);return part?profiles.find(p=>p.packageId===part.package.id&&p.packageRevision===part.package.revision)??null:null}
+export const getMechanicalProfile=(type:string,mount?:PinnedPartDescriptor|null)=>{const part=getPartForType(type,mount);return part?profiles.find(p=>p.packageId===part.package.id&&p.packageRevision===part.package.revision)??null:null}
 export const isFlexibleMount=(mount: CircuitModule['mount']):mount is FlexibleMount=>mount?.kind==='breadboard-flexible'
 export const supportsFlexiblePlacement=(type:string)=>!!getMechanicalProfile(type)&&getPartForType(type)?.package.pins.length===2
 
@@ -72,7 +73,7 @@ export function resolveFlexibleGeometry(module:CircuitModule,part:PartDefinition
   const {points,samples,sampleError}=path,length=path.length/MM_TO_WORLD
   if(length<profile.minLeadLengthMm||length>profile.maxLeadLengthMm)throw Error('Flexible lead length exceeds mechanical bounds.')
   if(samples.slice(1).some((p,i)=>entersBody(samples[i],p,position,matrix,half)))throw Error('Flexible lead intersects its rigid body.')
-  const diameter=pkg.leadDiameterMm*MM_TO_WORLD
+  const diameter=2*packageLeadCollisionRadiusMm(pkg)*MM_TO_WORLD
   if(mount.version===2){
    const radius=diameter/2+sampleError,expanded={x:half.x+radius,y:half.y+radius,z:half.z+radius}
    // The first straight exits the body at its declared port. Every following
@@ -86,7 +87,7 @@ export function resolveFlexibleGeometry(module:CircuitModule,part:PartDefinition
   return {pinId:pin.pinId,points,path}
  })
  const first=leads[0]!.path,second=leads[1]!.path
- for(let i=0;i<first.samples.length-1;i++)for(let j=0;j<second.samples.length-1;j++)if(segmentDistance(first.samples[i]!,first.samples[i+1]!,second.samples[j]!,second.samples[j+1]!)<pkg.leadDiameterMm*MM_TO_WORLD+first.sampleError+second.sampleError-EPS)throw Error('Flexible leads intersect each other.')
+ for(let i=0;i<first.samples.length-1;i++)for(let j=0;j<second.samples.length-1;j++)if(segmentDistance(first.samples[i]!,first.samples[i+1]!,second.samples[j]!,second.samples[j+1]!)<2*packageLeadCollisionRadiusMm(pkg)*MM_TO_WORLD+first.sampleError+second.sampleError-EPS)throw Error('Flexible leads intersect each other.')
  return {position,matrix,half,profile,leads}
 }
 
@@ -112,7 +113,7 @@ export function flexibleLeadsHitBody(module:CircuitModule,modules:CircuitModule[
  return leadPathsHitBody(leads.paths,leads.radius,other)
 }
 function leadPathsIntersect(first:{paths:Point3[][];radius:number},second:{paths:Point3[][];radius:number}):boolean {
- return first.paths.some(a=>second.paths.some(b=>a.slice(1).some((p,i)=>b.slice(1).some((q,j)=>segmentDistance(a[i]!,p,b[j]!,q)<first.radius+second.radius-EPS))))
+ return leadSegmentsIntersect(pathSegments(first.paths,first.radius),pathSegments(second.paths,second.radius))
 }
 /** Preserve historical all-V1 scenes while new geometry respects existing wire obstacles. */
 export function flexibleLeadsIntersect(first:CircuitModule,second:CircuitModule,modules:CircuitModule[]):boolean {
@@ -122,7 +123,52 @@ export function flexibleLeadsIntersect(first:CircuitModule,second:CircuitModule,
 function worldLeadPaths(module:CircuitModule,modules:CircuitModule[]):{radius:number;paths:Point3[][]}{
  const part=getPartForType(module.type,module.mount)!,board=modules.find(item=>item.id===module.mount!.boardId)!,geometry=resolveFlexibleGeometry(module,part,board)
  const yaw=rotationMatrix({x:0,y:board.rotation??0,z:0}),origin={x:board.position?.x??0,y:board.position?.y??0,z:board.position?.z??0}
- return{radius:part.package.leadDiameterMm*MM_TO_WORLD/2+Math.max(...geometry.leads.map(lead=>lead.path.sampleError)),paths:geometry.leads.map(lead=>lead.path.samples.map(p=>addPoint(origin,transformPoint(yaw,p))))}
+ return{radius:packageLeadCollisionRadiusMm(part.package)*MM_TO_WORLD+Math.max(...geometry.leads.map(lead=>lead.path.sampleError)),paths:geometry.leads.map(lead=>lead.path.samples.map(p=>addPoint(origin,transformPoint(yaw,p))))}
+}
+const pathSegments=(paths:Point3[][],radius:number):RigidLeadSegment[]=>paths.flatMap(points=>points.slice(1).map((point,i)=>({start:points[i]!,end:point,radius})))
+function rigidModulePose(module:CircuitModule,modules:CircuitModule[]){
+ if(isFlexibleMount(module.mount))throw Error('A rigid lead pose cannot use a flexible body frame.')
+ let position:Point3={x:module.position?.x??0,y:module.position?.y??0,z:module.position?.z??0},yaw=module.rotation??0
+ if(module.mount){const board=modules.find(item=>item.id===module.mount!.boardId);if(!board||board.mount)throw Error('Mount references a missing breadboard.');const rotation=rotationMatrix({x:0,y:board.rotation??0,z:0});position=addPoint({x:board.position?.x??0,y:board.position?.y??0,z:board.position?.z??0},transformPoint(rotation,module.mount.pose.position));yaw=(board.rotation??0)+module.mount.pose.rotation}
+ return{position,matrix:rotationMatrix({x:0,y:yaw,z:0})}
+}
+/** The hidden body embed is absent from these canonical external segments. */
+export function moduleRigidLeadSegments(module:CircuitModule,modules:CircuitModule[]):RigidLeadSegment[]{
+ const part=getPartForModule(module)
+ if(!part||isFlexibleMount(module.mount)||!hasShapedRigidLeads(part))return[]
+ const pose=rigidModulePose(module,modules),point=(p:Point3)=>addPoint(pose.position,transformPoint(pose.matrix,p))
+ return rigidPackageLeadSegments(part).map(segment=>({...segment,start:point(segment.start),end:point(segment.end)}))
+}
+function moduleLeadSegments(module:CircuitModule,modules:CircuitModule[]):RigidLeadSegment[]{
+ if(!isFlexibleMount(module.mount))return moduleRigidLeadSegments(module,modules)
+ const lead=worldLeadPaths(module,modules);return pathSegments(lead.paths,lead.radius)
+}
+function segmentsBounds(segments:RigidLeadSegment[]){
+ const min={x:Infinity,y:Infinity,z:Infinity},max={x:-Infinity,y:-Infinity,z:-Infinity}
+ for(const segment of segments)for(const axis of axes){min[axis]=Math.min(min[axis],segment.start[axis]-segment.radius,segment.end[axis]-segment.radius);max[axis]=Math.max(max[axis],segment.start[axis]+segment.radius,segment.end[axis]+segment.radius)}
+ return{min,max}
+}
+function leadSegmentsIntersect(first:RigidLeadSegment[],second:RigidLeadSegment[]):boolean{
+ if(!first.length||!second.length)return false
+ const a=segmentsBounds(first),b=segmentsBounds(second)
+ if(axes.some(axis=>a.max[axis]<=b.min[axis]+EPS||b.max[axis]<=a.min[axis]+EPS))return false
+ return first.some(p=>second.some(q=>{
+  const radius=p.radius+q.radius-EPS
+  if(axes.some(axis=>Math.min(p.start[axis],p.end[axis])-Math.max(q.start[axis],q.end[axis])>=radius||Math.min(q.start[axis],q.end[axis])-Math.max(p.start[axis],p.end[axis])>=radius))return false
+  return segmentDistance(p.start,p.end,q.start,q.end)<radius
+ }))
+}
+function leadSegmentsHitBody(segments:RigidLeadSegment[],other:BodyEnvelope):boolean{
+ const matrix:Matrix3=[{x:other.axes[0].x,y:other.axes[1].x,z:other.axes[2].x},{x:other.axes[0].y,y:other.axes[1].y,z:other.axes[2].y},{x:other.axes[0].z,y:other.axes[1].z,z:other.axes[2].z}]
+ return segments.some(segment=>entersBody(segment.start,segment.end,other.center,matrix,{x:other.half.x+segment.radius,y:other.half.y+segment.radius,z:other.half.z+segment.radius}))
+}
+export function moduleLeadsHitBody(module:CircuitModule,modules:CircuitModule[],other:BodyEnvelope):boolean{
+ return leadSegmentsHitBody(moduleLeadSegments(module,modules),other)
+}
+/** Historical all-V1 flexible and unshaped rigid scenes retain their rules. */
+export function moduleLeadsIntersect(first:CircuitModule,second:CircuitModule,modules:CircuitModule[]):boolean{
+ if(isFlexibleMount(first.mount)&&isFlexibleMount(second.mount))return flexibleLeadsIntersect(first,second,modules)
+ return leadSegmentsIntersect(moduleLeadSegments(first,modules),moduleLeadSegments(second,modules))
 }
 function leadPathsHitBody(paths:Point3[][],radius:number,other:BodyEnvelope):boolean{
  const half={x:other.half.x+radius,y:other.half.y+radius,z:other.half.z+radius}
@@ -135,22 +181,21 @@ export function moduleBodyEnvelope(module:CircuitModule,modules:CircuitModule[])
  if(!part)return null
  const board=module.mount?modules.find(item=>item.id===module.mount!.boardId):undefined
  if(isFlexibleMount(module.mount)){if(!board)throw Error('Mount references a missing breadboard.');return flexibleBodyEnvelope(module,part,board)}
- let position:Point3={x:module.position?.x??0,y:module.position?.y??0,z:module.position?.z??0},yaw=module.rotation??0
- if(module.mount){if(!board||board.mount)throw Error('Mount references a missing breadboard.');const rotation=rotationMatrix({x:0,y:board.rotation??0,z:0});position=addPoint({x:board.position?.x??0,y:board.position?.y??0,z:board.position?.z??0},transformPoint(rotation,module.mount.pose.position));yaw=(board.rotation??0)+module.mount.pose.rotation}
- const half={x:part.package.bodyMm.x*MM_TO_WORLD/2,y:part.package.bodyMm.y*MM_TO_WORLD/2,z:part.package.bodyMm.z*MM_TO_WORLD/2},matrix=rotationMatrix({x:0,y:yaw,z:0})
+ const {position,matrix}=rigidModulePose(module,modules)
+ const half={x:part.package.bodyMm.x*MM_TO_WORLD/2,y:part.package.bodyMm.y*MM_TO_WORLD/2,z:part.package.bodyMm.z*MM_TO_WORLD/2}
  return {center:{...position,y:position.y+part.package.standoffMm*MM_TO_WORLD+half.y},half,axes:axes.map(axis=>({x:matrix[0][axis],y:matrix[1][axis],z:matrix[2][axis]}))}
 }
 // Document commands replace the modules array. One scan per immutable revision,
 // independent of the number of pointer events or candidate poses in a frame.
-const sceneIndices=new WeakMap<CircuitModule[],{occupied:Map<string,Map<string,string>>;bodies:{id:string;body:BodyEnvelope}[];leads:({id:string;radius:number;paths:Point3[][]})[]}>()
-function sceneIndex(modules:CircuitModule[]){let index=sceneIndices.get(modules);if(!index){const occupied=new Map<string,Map<string,string>>(),bodies:{id:string;body:BodyEnvelope}[]=[],leads:{id:string;radius:number;paths:Point3[][]}[]=[];for(const module of modules){if(module.mount){let board=occupied.get(module.mount.boardId);if(!board){board=new Map();occupied.set(module.mount.boardId,board)}for(const binding of module.mount.contacts)board.set(binding.contactId,module.id)}const body=moduleBodyEnvelope(module,modules);if(body)bodies.push({id:module.id,body});if(isFlexibleMount(module.mount))leads.push({id:module.id,...worldLeadPaths(module,modules)})}index={occupied,bodies,leads};sceneIndices.set(modules,index)}return index}
+const sceneIndices=new WeakMap<CircuitModule[],{occupied:Map<string,Map<string,string>>;bodies:{id:string;body:BodyEnvelope}[];leads:{id:string;segments:RigidLeadSegment[]}[]}>()
+function sceneIndex(modules:CircuitModule[]){let index=sceneIndices.get(modules);if(!index){const occupied=new Map<string,Map<string,string>>(),bodies:{id:string;body:BodyEnvelope}[]=[],leads:{id:string;segments:RigidLeadSegment[]}[]=[];for(const module of modules){if(module.mount){let board=occupied.get(module.mount.boardId);if(!board){board=new Map();occupied.set(module.mount.boardId,board)}for(const binding of module.mount.contacts)board.set(binding.contactId,module.id)}const body=moduleBodyEnvelope(module,modules);if(body)bodies.push({id:module.id,body});const segments=moduleLeadSegments(module,modules);if(segments.length)leads.push({id:module.id,segments})}index={occupied,bodies,leads};sceneIndices.set(modules,index)}return index}
 export function contactOccupied(modules:CircuitModule[],boardId:string,contactId:string,activeId?:string):boolean {const owner=sceneIndex(modules).occupied.get(boardId)?.get(contactId);return owner!==undefined&&owner!==activeId}
 
-export interface FlexibleIntent {previous?:FlexibleMount;activeId?:string}
+export interface FlexibleIntent {previous?:FlexibleMount;descriptor?:PinnedPartDescriptor;activeId?:string}
 /** New authoring always recomputes automatic geometry; legacy overrides remain
  * authoritative only when resolving stored V1 mounts, never as a pose candidate. */
 export function solveFlexibleMount(type:string,boardId:string,first:string,second:string,modules:CircuitModule[],intent:FlexibleIntent={}):FlexibleSolution {
- const fail=(reason:string):FlexibleSolution=>({valid:false,reason,mount:null,geometry:null}),part=getPartForType(type),profile=getMechanicalProfile(type),board=modules.find(m=>m.id===boardId)
+ const fail=(reason:string):FlexibleSolution=>({valid:false,reason,mount:null,geometry:null}),part=getPartForType(type,intent.descriptor),profile=getMechanicalProfile(type,intent.descriptor),board=modules.find(m=>m.id===boardId)
  if(!part||!profile||part.package.pins.length!==2)return fail('This part has no flexible two-lead strategy.')
  if(!board||board.mount)return fail('Choose two holes on one breadboard.')
  const firstContact=getBreadboardContact(board.type,first),secondContact=getBreadboardContact(board.type,second)
@@ -176,7 +221,7 @@ export function solveFlexibleMount(type:string,boardId:string,first:string,secon
  }else{
   const pitch=Math.abs(profile.pins[1]!.bodyExitMm.x-profile.pins[0]!.bodyExitMm.x),offset=Math.abs(span/mm-pitch)/2
   const preferred=profile.preferredBendRadiusMm??r
-  const height=offset<1e-7?Math.max(1.25,exitStraight+stub+.1):exitStraight+stub+2*preferred+Math.max(.6,Math.min(offset,4)*.3)
+  const height=offset<1e-7?Math.max(pkg.shape?pkg.standoffMm:1.25,exitStraight+stub+.1):exitStraight+stub+2*preferred+Math.max(.6,Math.min(offset,4)*.3)
   const lowestExit=Math.min(...profile.pins.map(pin=>pin.bodyExitMm.y))
   position={x:center.x,y:plane+(Math.max(pkg.bodyMm.y/2+profile.bodyClearanceMm,height-lowestExit))*mm,z:center.z}
  }
@@ -198,8 +243,8 @@ export function solveFlexibleMount(type:string,boardId:string,first:string,secon
  const mount:FlexibleMountV2={kind:'breadboard-flexible',version:2,boardId,partId:part.id,partRevision:part.revision,packageId:pkg.id,packageRevision:pkg.revision,mechanicalProfileId:profile.id,mechanicalProfileRevision:profile.revision,geometryRevision:2,routing:{version:1,mode:'automatic',template},bodyPose:{position,rotation},contacts,leads}
  try{
   const module={id:intent.activeId??'PLACE',type,mount},geometry=resolveFlexibleGeometry(module,part,board),body=flexibleBodyEnvelope(module,part,board),index=sceneIndex(modules)
-  const candidatePaths=worldLeadPaths(module,modules)
-  if(index.bodies.some(other=>other.id!==intent.activeId&&(bodiesOverlap(body,other.body)||flexibleLeadsHitBody(module,modules,other.body)))||index.leads.some(other=>other.id!==intent.activeId&&(leadPathsHitBody(other.paths,other.radius,body)||leadPathsIntersect(candidatePaths,other))))throw Error('Component bodies or leads would intersect.')
+  const candidateSegments=moduleLeadSegments(module,modules)
+  if(index.bodies.some(other=>other.id!==intent.activeId&&(bodiesOverlap(body,other.body)||leadSegmentsHitBody(candidateSegments,other.body)))||index.leads.some(other=>other.id!==intent.activeId&&(leadSegmentsHitBody(other.segments,body)||leadSegmentsIntersect(candidateSegments,other.segments))))throw Error('Component bodies or leads would intersect.')
   return {valid:true,reason:'',mount,geometry}
  }catch(error){return fail(error instanceof Error?error.message:'Invalid flexible geometry.')}
 }
