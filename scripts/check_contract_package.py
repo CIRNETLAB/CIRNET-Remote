@@ -5,6 +5,8 @@ explicit writable external base. Build artifacts may stay in .build.
 """
 import argparse
 from contextlib import contextmanager
+import hashlib
+import json
 import os
 from pathlib import Path
 import shutil
@@ -23,6 +25,7 @@ REQUIRED_RESOURCES=(
     'contracts/design-models/signal-domains.schema.json','contracts/signal_domains.py','contracts/capture_validation.py',
     'contracts/design-models/flexible-mount.schema.json','contracts/design-models/flexible-mechanics.json',
     'contracts/design-models/flexible-mount-v1.1.schema.json','contracts/design-models/fixtures/component-mechanics-legacy.json',
+    'contracts/design-models/physical-parts.v1.json',
     'contracts/design-models/fixtures/flexible-mounting-parity.json','contracts/circuit-schema/circuit-v1.2.schema.json',
     'contracts/public/placement.schema.json','contracts/flexible_mounting.py',
     'contracts/public/assignments-v2.schema.json','contracts/fixtures/assignment-v2-conformance.json',
@@ -71,6 +74,16 @@ def external_workspace(base=None):
         owned.cleanup()
 
 
+CATALOG_PROBE=r'''
+import hashlib
+import json
+from contracts.physical_mounting import physical_parts
+installed_parts=physical_parts()
+catalog_fingerprint=hashlib.sha256(json.dumps(installed_parts,sort_keys=True,separators=(',',':')).encode('utf-8')).hexdigest()
+assert catalog_fingerprint==sys.argv[2], 'Installed physical catalog differs from the source inventory.'
+'''
+
+
 RUNTIME_PROBE=r'''
 import importlib
 from importlib.resources import files
@@ -93,7 +106,6 @@ from contracts.registry import check_manifest,validate_contract
 from contracts.boundary.models import CircuitGraph,SimulationRequest,AnySupportedCircuitGraph
 from contracts.design_validation import validate_design_graph
 from contracts.generated import rpc_v2_pb2,rpc_v2_pb2_grpc
-from contracts.physical_mounting import physical_parts
 from contracts.capture_layout import CAPTURE_LAYOUT
 from contracts.boundary.capture_layout import CAPTURE_LAYOUT as GENERATED_LAYOUT
 from contracts.capture_codec import decode_digital,decode_sampled
@@ -108,7 +120,8 @@ check_compatibility(json.loads(resource.joinpath('api/openapi.json').read_text(e
 graph={'schema_version':'1.1','circuit_id':'wheel','modules':[{'id':'D','type':'DIGITAL_SWITCH','properties':{'state':True}}],'connections':[],'metadata':{'retain':[None,True,10**50]}}
 assert CircuitGraph.model_validate(graph).model_dump(exclude_unset=True)==graph
 assert validate_contract('MemoryImage',{'version':'1.0','word_bits':8,'depth':1,'data':[0]})['data']==[0]
-assert len(physical_parts())==63 and CAPTURE_LAYOUT==GENERATED_LAYOUT
+assert CAPTURE_LAYOUT==GENERATED_LAYOUT
+''' + CATALOG_PROBE + r'''
 assert {'SN74HC08N','RESISTOR_AXIAL','LED_LTL307EE','GENERIC_RESISTOR','GENERIC_LED'}<={part['editorType'] for part in physical_parts()}
 placement=json.loads(resource.joinpath('design-models/fixtures/flexible-mounting-parity.json').read_text(encoding='utf-8'))
 for case in placement['cases']:
@@ -210,7 +223,9 @@ def main(argv=None):
         checked([str(python),'-I','-m','pip','--isolated','install','--disable-pip-version-check','--cache-dir',str(workspace/'pip-cache'),
                         *(str(wheel)+'[rpc]' if wheel==contracts else str(wheel) for wheel in wheels)],cwd=target)
         probe=target/'installed_probe.py';probe.write_text(RUNTIME_PROBE,encoding='utf-8')
-        checked([str(python),'-I',str(probe),str(ROOT)],cwd=target)
+        source_parts=json.loads((ROOT/'contracts/design-models/physical-parts.v1.json').read_text(encoding='utf-8'))['parts']
+        expected_catalog=hashlib.sha256(json.dumps(source_parts,sort_keys=True,separators=(',',':')).encode('utf-8')).hexdigest()
+        checked([str(python),'-I',str(probe),str(ROOT),expected_catalog],cwd=target)
         environment['NETCIRCUIT_DATABASE_URL']='sqlite:///'+(target/'installed-cli.sqlite').as_posix()
         environment['NETCIRCUIT_CAPTURE_DIR']=str(target/'cli-captures')
         for arguments in (['app.migrate'],['app.migrate','--check'],['app.bootstrap_admin','--help'],['app.capture_maintenance','--dry-run','--limit','1']):

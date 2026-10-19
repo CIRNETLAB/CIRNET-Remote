@@ -1,5 +1,8 @@
 """Package verification must physically leave the source checkout."""
 import importlib.util
+import copy
+import hashlib
+import json
 from contextlib import nullcontext
 import subprocess
 import sys
@@ -7,6 +10,7 @@ from pathlib import Path
 import pytest
 import yaml
 from zipfile import ZipFile
+from types import SimpleNamespace
 
 ROOT=Path(__file__).resolve().parents[2]
 spec=importlib.util.spec_from_file_location('check_contract_package',ROOT/'scripts/check_contract_package.py')
@@ -24,6 +28,36 @@ def test_package_workspace_rejects_checkout_and_descendants(tmp_path):
 def test_all_four_package_wheels_are_verified():
     assert hasattr(checker,'WHEEL_PROJECTS'),'API/simulator/hardware wheels are not verified.'
     assert set(checker.WHEEL_PROJECTS)=={'.','services/api','services/hardware-service','simulator/circuit-simulator'}
+
+
+def catalog_fingerprint(parts):
+    return hashlib.sha256(json.dumps(parts,sort_keys=True,separators=(',',':')).encode('utf-8')).hexdigest()
+
+
+@pytest.mark.parametrize('extended',[False,True],ids=['current-catalog','extended-catalog'])
+def test_installed_catalog_probe_accepts_complete_source_inventory_without_a_fixed_count(monkeypatch,extended):
+    from contracts import physical_mounting
+    parts=json.loads((ROOT/'contracts/design-models/physical-parts.v1.json').read_text(encoding='utf-8'))['parts']
+    if extended:
+        added=copy.deepcopy(parts[-1]);added['id']='ADDITIONAL-PART';added['editorType']='ADDITIONAL_PART'
+        parts.append(added)
+    monkeypatch.setattr(physical_mounting,'physical_parts',lambda:tuple(parts))
+    assert hasattr(checker,'CATALOG_PROBE'),'Installed catalog verification still depends on a fixed part count.'
+    exec(checker.CATALOG_PROBE,{'sys':SimpleNamespace(argv=['probe','checkout',catalog_fingerprint(parts)])})
+
+
+@pytest.mark.parametrize('corruption',['missing','extra','changed'])
+def test_installed_catalog_probe_rejects_truncated_extra_or_altered_parts(monkeypatch,corruption):
+    from contracts import physical_mounting
+    source=json.loads((ROOT/'contracts/design-models/physical-parts.v1.json').read_text(encoding='utf-8'))['parts']
+    installed=copy.deepcopy(source)
+    if corruption=='missing':installed.pop()
+    elif corruption=='extra':installed.append(copy.deepcopy(installed[-1]))
+    else:installed[0]['package']['revision']+=1
+    monkeypatch.setattr(physical_mounting,'physical_parts',lambda:tuple(installed))
+    assert hasattr(checker,'CATALOG_PROBE'),'Installed catalog verification still depends on a fixed part count.'
+    with pytest.raises(AssertionError,match='physical catalog'):
+        exec(checker.CATALOG_PROBE,{'sys':SimpleNamespace(argv=['probe','checkout',catalog_fingerprint(source)])})
 
 
 def test_all_new_contract_resources_are_checked_in_the_built_archive():
