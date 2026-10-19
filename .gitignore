@@ -21,6 +21,11 @@ dist/
 .vite/
 .test-build/
 
+# Verification runners must write outside the checkout; secondary protection only.
+/apps/web/playwright-report/
+/apps/web/test-results/
+/apps/web/blob-report/
+
 # Runtime
 .runtime/
 .env

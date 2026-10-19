@@ -1,5 +1,7 @@
 # Supply / Generator launchers and GUI — 2026-10-12
 
+> Audit status — 2026-10-19: this is historical evidence. The image files named below were already absent from the supplied repository at baseline `0cc66f8`; this audit did not inspect or recreate them. Recorded measurements and results are preserved. New verification outputs follow [the shared guide](../VERIFICATION.md) and stay outside the repository.
+
 Baseline: `a9b7656`. Local verification; hardware output/acquisition remains unavailable.
 
 ## Source analysis and implementation
@@ -66,8 +68,8 @@ Documentation: CONTEXT, ARCHITECTURE, ROADMAP, DEV_LOG, CHANGELOG, web README, t
 
 Selected source displaying local setpoints and unknown W; Move remains active:
 
-![Power Supply](2026-10-12-power-supply-window.jpg)
+Power Supply (historical image reference: `2026-10-12-power-supply-window.jpg`; absent at audit baseline).
 
 Two-channel Generator configuration preview with unavailable output; Move remains active:
 
-![Function Generator](2026-10-12-generator-window.jpg)
+Function Generator (historical image reference: `2026-10-12-generator-window.jpg`; absent at audit baseline).

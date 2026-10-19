@@ -7,6 +7,7 @@ import path from 'node:path'
 import { performance } from 'node:perf_hooks'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { build, version as esbuildVersion } from 'esbuild'
+import { getArtifactDirectory } from '../../../scripts/artifact-paths.mjs'
 
 // Run from any directory: node apps/web/scripts/benchmark-component-palette.mjs
 // Historical implementation comes from Git, not a rewritten baseline formula.
@@ -274,9 +275,9 @@ async function benchmarkShortReopen(implementation, real) {
 }
 function markdown(report) {
   const lines = [
-    '# Component palette benchmark — 2026-10-16', '',
-    `Baseline: \`${report.baselineRef}\`. Runtime: ${report.environment.node}, ${report.environment.os}, ${report.environment.cpu}.`, '',
-    'Reproduce from the repository root with `node apps/web/scripts/benchmark-component-palette.mjs`. The command rewrites the accompanying JSON and this report. No new dependency is required. Historical search/cache source is loaded with `git show` through esbuild; both versions use the same current catalog, Three.js, and ComponentModel dependencies.', '',
+    `# Component palette benchmark — ${report.capturedAtUtc.slice(0, 10)}`, '',
+    `Captured at: ${report.capturedAtUtc}. Baseline: \`${report.baselineRef}\`. Runtime: ${report.environment.node}, ${report.environment.os}, ${report.environment.cpu}.`, '',
+    'Reproduce from the repository root with `node apps/web/scripts/benchmark-component-palette.mjs`. The command creates a Markdown summary and raw JSON in the external artifact session selected by `NETCIRCUIT_ARTIFACTS_DIR` (an OS temporary directory by default). Review the summary before curating evidence into repository Markdown; existing historical reports are preserved. No new dependency is required. Historical search/cache source is loaded with `git show` through esbuild; both versions use the same current catalog, Three.js, and ComponentModel dependencies.', '',
     savedBaseline ? `This saved report reused unchanged historical search timings from \`${config.reuseBaselineSearch}\`, captured at ${savedBaseline.capturedAtUtc}, and freshly measured the final indexed search and all thumbnail phases. Baseline/current search timings therefore come from separate processes on the same CPU/OS/Node runtime. Ref, source hashes, queries, warmups, sample count and shared dependency hashes are validated before reuse. Reproduce this exact mode by adding \`--reuse-baseline-search ${config.reuseBaselineSearch}\`; omit the flag to rerun both search implementations in one process.` : 'Both search implementations were measured in the same process, baseline first and current second.', '',
     `Search uses ${config.warmups} full-query warmup passes and ${config.searchSamples} measured batches per fixture, with ${queries.length} fixed queries rotated in order. Each batch runs every query once. Nearest-rank p50/p95/max are wall-clock milliseconds from performance.now(); there are no timing assertions. Synthetic entries repeat the real Logic parts, preserving real part lookups while adding unique name and description suffixes. Index construction is measured separately; steady query timings reuse a constructed index.`, '',
     '| Items | Old batch p50 / p95 / max (ms) | Indexed batch p50 / p95 / max (ms) | Index build p50 / p95 (ms) | Median batch speedup |',
@@ -293,7 +294,7 @@ function markdown(report) {
   for (const row of report.thumbnails.cold) lines.push(`| ${row.label} | ${row.runs[0].captures} | ${row.firstCaptureBoundary.p50Ms} / ${row.firstCaptureBoundary.p95Ms} | ${row.allReady.p50Ms} / ${row.allReady.p95Ms} | ${row.revisit.p50Ms} |`)
   lines.push('', 'The injected renderer receives real production models, runs the production camera-fitting function, and observes their actual disposal. It returns a marker string. It does not create a WebGL context, render pixels, or encode PNG. “Renderer attempts” in the JSON count the injected factory boundary; they are not successful GPU contexts. No document/canvas is present, so browser 2D label/texture work is also absent. These are CPU/model/scheduling measurements, not real GPU capture latency.', '',
     `Direct model construction p50/p95: ${report.thumbnails.models.construction.p50Ms}/${report.thumbnails.models.construction.p95Ms} ms; camera framing: ${report.thumbnails.models.cameraFraming.p50Ms}/${report.thumbnails.models.cameraFraming.p95Ms} ms; disposal: ${report.thumbnails.models.disposal.p50Ms}/${report.thumbnails.models.disposal.p95Ms} ms. The JSON includes geometry/material/texture creation and disposal counts, cached revisits, cancellation before work, cancellation after the first capture, injected renderer failure/unavailability, and a short-close/reopen probe using default renderer retention.`, '',
-    'Actual browser WebGL first-image latency, PNG encoding latency, screenshot quality, GPU memory, and successful physical GPU context counts were not measured. Browser localhost access was denied in this session; this harness does not bypass that denial. The controlled Vue/IntersectionObserver integration checks are separate evidence for how many of the 40 cards request models when the menu opens.', '',
+    'Browser verification: NOT_RUN by this CPU-only harness. Actual browser WebGL first-image latency, PNG encoding latency, screenshot quality, GPU memory, and successful physical GPU context counts were not measured. Run the real browser suite separately; controlled Vue/IntersectionObserver integration checks provide separate evidence for how many of the 40 cards request models when the menu opens.', '',
     'Machine and process load are uncontrolled. Short operations, timer granularity, JIT, garbage collection, and shared machine activity can vary these results. The benchmark is reproducible evidence from this environment, not a browser frame-time or cross-machine performance guarantee.', '',
   )
   return lines.join('\n')
@@ -314,7 +315,7 @@ try {
   if (savedBaseline) assert.deepEqual(savedBaseline.sharedDependencyHashes, sharedDependencyHashes, 'reused baseline shared dependencies must be unchanged')
   const report = {
     schemaVersion: 1, capturedAtUtc: new Date().toISOString(), config, baselineRef: git('rev-parse', config.baselineRef), currentHead: git('rev-parse', 'HEAD'),
-    environment: { node: process.version, v8: process.versions.v8, esbuild: esbuildVersion, threeRevision: three.REVISION, os: `${os.type()} ${os.release()} ${os.arch()}`, cpu: os.cpus()[0]?.model ?? 'unknown', logicalCpus: os.cpus().length, totalMemoryBytes: os.totalmem(), execArgv: process.execArgv, browser: 'unavailable: localhost browser access was denied; no browser automation workaround attempted', webgl: 'not measured; injected CPU renderer boundary only' },
+    environment: { node: process.version, v8: process.versions.v8, esbuild: esbuildVersion, threeRevision: three.REVISION, os: `${os.type()} ${os.release()} ${os.arch()}`, cpu: os.cpus()[0]?.model ?? 'unknown', logicalCpus: os.cpus().length, totalMemoryBytes: os.totalmem(), execArgv: process.execArgv, browser: 'NOT_RUN by this CPU-only harness', webgl: 'not measured; injected CPU renderer boundary only' },
     sourceHashes: { baseline: Object.fromEntries([...baselineSource].map(([file, source]) => [file, sha256(source)])), current: Object.fromEntries(await Promise.all(sourcePaths.map(async file => [file, sha256((await readFile(path.join(repoRoot, file), 'utf8')).trimEnd())]))), sharedComponentModel: sha256((await readFile(path.join(repoRoot, sharedModelPath), 'utf8')).trimEnd()) },
     sharedDependencyHashes,
     baselineSearchOrigin: savedBaseline ? { mode: 'reused unchanged earlier process', report: config.reuseBaselineSearch, capturedAtUtc: savedBaseline.capturedAtUtc, finishedAtUtc: savedBaseline.finishedAtUtc, environment: savedBaseline.environment } : { mode: 'fresh same process' },
@@ -342,11 +343,15 @@ try {
     assert.deepEqual(finalHashes, report.sourceHashes.current, 'current source changed during the benchmark; rerun after source edits settle')
   }
   const suffix = config.baselineOnly ? '-baseline' : ''
-  const destination = path.join(repoRoot, 'docs/verification', `2026-10-16-component-palette-benchmark${suffix}`)
-  await mkdir(path.dirname(destination), { recursive: true })
-  await writeFile(`${destination}.json`, `${JSON.stringify(report, null, 2)}\n`)
-  if (!config.baselineOnly) await writeFile(`${destination}.md`, markdown(report))
-  process.stdout.write(`Wrote ${path.relative(repoRoot, destination)}.json${config.baselineOnly ? '' : ' and .md'}\n`)
+  const filename = `2026-10-16-component-palette-benchmark${suffix}`
+  const directory = getArtifactDirectory('component-palette-benchmark')
+  const rawOutput = path.join(directory, `${filename}.json`)
+  await writeFile(rawOutput, `${JSON.stringify(report, null, 2)}\n`)
+  if (!config.baselineOnly) {
+    const reportOutput = path.join(directory, `${filename}.md`)
+    await writeFile(reportOutput, markdown(report))
+  }
+  process.stdout.write(`Wrote raw JSON to ${rawOutput}${config.baselineOnly ? '' : ' and a Markdown summary in the same external session'}\n`)
 } finally {
   for (const filename of buildFiles) await unlink(filename).catch(error => { if (error.code !== 'ENOENT') throw error })
   await rmdir(buildDirectory).catch(error => { if (!['ENOENT', 'ENOTEMPTY'].includes(error.code)) throw error })

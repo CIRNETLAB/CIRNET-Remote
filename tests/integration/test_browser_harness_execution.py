@@ -9,6 +9,7 @@ import tempfile
 import time
 import httpx
 from contracts.capture_codec import decode_digital
+from scripts.artifact_paths import artifact_directory, cleanup_artifact_session
 
 ROOT=Path(__file__).resolve().parents[2]
 
@@ -23,17 +24,18 @@ def available_port():
             return port
     raise AssertionError('No isolated loopback port was available.')
 
-def test_actual_browser_harness_first_worker_capture_and_eof_shutdown(tmp_path):
-    parent=(ROOT/'.runtime/e2e').resolve();parent.mkdir(parents=True,exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix='worker-regression-',dir=parent) as owned:
-        directory=Path(owned).resolve()
-        assert directory.is_relative_to(parent) and directory.name.startswith('worker-regression-')
+def test_actual_browser_harness_first_worker_capture_and_eof_shutdown(monkeypatch):
+    artifact_session=artifact_directory(directory=os.environ.get('NETCIRCUIT_ARTIFACTS_DIR',tempfile.gettempdir()))
+    monkeypatch.setenv('NETCIRCUIT_ARTIFACTS_SESSION',str(artifact_session))
+    try:
+        directory=artifact_directory('browser-harness-runtime')
+        assert directory.is_relative_to(artifact_session) and not directory.is_relative_to(ROOT)
         http_port,rpc_port=available_port(),available_port()
         while rpc_port==http_port:rpc_port=available_port()
         password=secrets.token_urlsafe(32)
         environment={**os.environ,'NETCIRCUIT_E2E_DATA_DIR':str(directory),
             'NETCIRCUIT_E2E_ADMIN_PASSWORD':password,'NETCIRCUIT_E2E_HTTP_PORT':str(http_port),'NETCIRCUIT_E2E_RPC_PORT':str(rpc_port)}
-        with (tmp_path/'owned-harness.log').open('w',encoding='utf-8') as output:
+        with (directory/'owned-harness.log').open('w',encoding='utf-8') as output:
             process=subprocess.Popen([sys.executable,str(ROOT/'scripts/e2e_web_server.py')],cwd=ROOT,env=environment,
                 stdin=subprocess.PIPE,stdout=output,stderr=subprocess.STDOUT,
                 creationflags=subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0)
@@ -45,7 +47,7 @@ def test_actual_browser_harness_first_worker_capture_and_eof_shutdown(tmp_path):
                         try:
                             if client.get('/api/health').status_code==200:break
                         except httpx.TransportError:pass
-                        assert time.monotonic()<deadline,'The owned harness did not become ready.'
+                        assert time.monotonic()<deadline,('The owned harness did not become ready.\n'+(directory/'owned-harness.log').read_text(encoding='utf-8'))
                         time.sleep(.1)
                     session=client.get('/api/auth/session').json()
                     def headers():return {'Origin':'http://127.0.0.1:14173','X-CSRF-Token':session['csrf_token'],'X-Control-Client':'worker-regression'}
@@ -79,5 +81,7 @@ def test_actual_browser_harness_first_worker_capture_and_eof_shutdown(tmp_path):
                 try:code=process.wait(timeout=10)
                 except subprocess.TimeoutExpired:
                     process.terminate();process.wait(timeout=5)
-                    raise AssertionError('The owned harness did not shut down after its parent pipe closed.') from None
+                    raise AssertionError('The owned harness did not shut down after its parent pipe closed.\n'+(directory/'owned-harness.log').read_text(encoding='utf-8')) from None
                 assert code==0,'The owned harness failed during orderly worker shutdown.'
+    finally:
+        cleanup_artifact_session(artifact_session)

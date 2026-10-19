@@ -1,5 +1,7 @@
 # Báo cáo triển khai Component Placement / Component Info
 
+> Historical evidence status — 2026-10-19 audit: command outputs, Git state and local artifact locations below describe the original session. They do not report this audit’s results or authorize new output under `.build`, `.superpowers`, `.test-build` or `docs/verification`. For reruns use [VERIFICATION.md](../VERIFICATION.md); generated visual and raw diagnostic artifacts must start outside the repository. Existing outputs await separate owner review and have not been deleted or moved.
+
 Ngày nghiệm thu: **2026-10-18**. Branch: `refactor`; baseline bắt đầu: `bb0ceb1`.
 Thay đổi được để **chưa commit**, theo yêu cầu người dùng tự commit. Không push,
 merge, deploy hoặc reset repository. Bàn giao **chỉ file báo cáo**, không đóng gói ảnh/clip.

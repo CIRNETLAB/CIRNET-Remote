@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { mkdir, writeFile } from 'node:fs/promises'
+import { getArtifactDirectory } from '../../../scripts/artifact-paths.mjs'
 import { resolve } from 'node:path'
 import sharp from 'sharp'
 import { REVISION, type InstancedMesh, type Mesh, type Object3D, type PerspectiveCamera } from 'three'
@@ -7,7 +8,7 @@ import type { CircuitGraph } from '../src/types/circuit'
 import { exportedNativeGraph, nativeSceneEvidence, observeNativeScene, projectContact, sceneReady, workspaceCanvas } from './native-scene'
 
 type Canvas = HTMLCanvasElement & { nativeSceneProbe?: { scene: Object3D; camera: PerspectiveCamera; frames: number; memory: { geometries: number; textures: number } } }
-const directory = resolve('.test-build/depth-workspace-acceptance')
+const directory = getArtifactDirectory('depth-workspace-acceptance')
 
 async function settled(page: Page) {
   let previous = '', stable = 0

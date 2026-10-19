@@ -1,5 +1,7 @@
 # Lab-First R0–R7 migration ledger
 
+> Historical migration ledger — 2026-10-19 audit: phase instructions, Git states, counts and hashes below record the original R/H/W sessions; they are not instructions to repeat phases, stage or commit now. [ARCHITECTURE.md](ARCHITECTURE.md) remains current authority and [VERIFICATION.md](VERIFICATION.md) governs new evidence. The archived R0–R7 prompt is hash-locked and remains byte-for-byte unchanged.
+
 ## Post-R7 architecture hardening H0–H6
 
 Approved plan: [archived Post-R7 prompt](archive/PROMPT_CODEX_net-Circuit-Remote_Post-R7_Architecture_Hardening.md), exact SHA256 `D1C5608E508E9F1BB313136A08158C349D0A54A5994E33E3AEE2C7D191984CA0`, copied from the user document. Baseline `f5df5ac`, clean branch `refactor`, existing linked worktree. Execute one commit per phase; no merge or push. Authority remains canonical Lab-First v3.1.

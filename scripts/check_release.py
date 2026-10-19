@@ -12,6 +12,10 @@ import shutil
 import subprocess
 import sys
 import time
+try:
+    from scripts.artifact_paths import artifact_directory
+except ModuleNotFoundError:
+    from artifact_paths import artifact_directory
 
 ROOT=Path(__file__).resolve().parents[1]
 MANDATORY=('contracts','python','web','postgres','browser','package')
@@ -26,9 +30,7 @@ def release_plan(groups,package_temporary_root=None):
         steps.append({'group':group,'command':[str(part) for part in command],'cwd':cwd})
     def python(group,*arguments):add(group,[sys.executable,*arguments])
     def pytest(group,*paths):
-        target=(ROOT/'.build'/f'pytest-release-{group}').resolve()
-        if not target.is_relative_to(ROOT) or target.parent!=ROOT/'.build':
-            raise ValueError('Release pytest scratch must stay inside the checkout .build directory.')
+        target=artifact_directory(f'pytest-release-{group}')
         python(group,'-m','pytest','-q',*paths,'--basetemp',target)
     if 'contracts' in selected:
         python('contracts','scripts/check_context.py')
@@ -53,7 +55,7 @@ def release_plan(groups,package_temporary_root=None):
         add('package',command)
     if 'load' in selected:
         python('load','scripts/benchmark_web_sessions.py','--sessions','50','--concurrency','10','--runs','8',
-               '--read-rounds','3','--output','docs/verification/2026-10-16-w8-load.json')
+               '--read-rounds','3')
     return steps
 
 

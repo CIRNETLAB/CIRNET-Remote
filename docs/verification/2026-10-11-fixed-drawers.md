@@ -1,5 +1,7 @@
 # Fixed drawer dimensions — 2026-10-11
 
+> Audit status — 2026-10-19: this is historical evidence. The image files named below were already absent from the supplied repository at baseline `0cc66f8`; this audit did not inspect or recreate them. Recorded measurements and results are preserved. New verification outputs follow [the shared guide](../VERIFICATION.md) and stay outside the repository.
+
 Base: `262ba84` (`update`); clean checkout at task start. Manual drawer sizing is removed per the latest request. Earlier resizable-panel/performance/overlay reports describe historical revisions.
 
 ## Source and behavior
@@ -30,9 +32,9 @@ Reduced-motion nine reversals sampled57 frames with only two endpoint transforms
 
 Evidence images retain the same model/wire scale and position with drawers visible and hidden:
 
-![Fixed drawers expanded](2026-10-11-fixed-drawers-expanded.jpg)
+Fixed drawers expanded (historical image reference: `2026-10-11-fixed-drawers-expanded.jpg`; absent at audit baseline).
 
-![Fixed drawers collapsed](2026-10-11-fixed-drawers-collapsed.jpg)
+Fixed drawers collapsed (historical image reference: `2026-10-11-fixed-drawers-collapsed.jpg`; absent at audit baseline).
 
 This verifies the exercised local fixture and browser sizes; it is not a benchmark for every GPU or circuit. Simulation controls retain their existing unavailable/pending execution state.
 

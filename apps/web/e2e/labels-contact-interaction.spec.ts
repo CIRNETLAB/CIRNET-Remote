@@ -5,6 +5,7 @@ import { copyFile, mkdir, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { build } from 'esbuild'
+import { getArtifactDirectory } from '../../../scripts/artifact-paths.mjs'
 import type { Camera, Mesh, Object3D } from 'three'
 import type { CircuitGraph, CircuitModule } from '../src/types/circuit'
 import type * as Catalog from '../src/data/partCatalog'
@@ -109,7 +110,7 @@ async function attachEvidence(page: Page, testInfo: TestInfo, name: string, grap
   const path = testInfo.outputPath(`${name}.png`)
   await page.screenshot({ path })
   const evidence = JSON.stringify({ graph, scene: await nativeSceneEvidence(page) }, null, 2) + '\n'
-  const directory = resolve('.test-build', 'labels-contact-evidence')
+  const directory = getArtifactDirectory('labels-contact-evidence')
   await mkdir(directory, { recursive: true })
   await copyFile(path, resolve(directory, `${name}.png`))
   await writeFile(resolve(directory, `${name}.json`), evidence, 'utf8')

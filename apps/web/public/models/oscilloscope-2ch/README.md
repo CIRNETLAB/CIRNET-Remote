@@ -81,6 +81,11 @@ the normal Three.js `flipY = true` convention. Neither requires geometry rebuild
 
 ## Regenerate and inspect
 
+The exported GLB/glTF, decals and palette previews are product assets. Screenshots,
+traces or rendered diagnostic comparisons from an inspection follow the repository
+[verification policy](../../../../../docs/VERIFICATION.md) and are created outside
+the checkout; keep only the Markdown inspection result in the repository.
+
 From `apps/web`, after `npm ci` (`sharp` is a development dependency):
 
 ```text

@@ -1,10 +1,11 @@
 import { expect, test, type Page } from '@playwright/test'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { getArtifactDirectory } from '../../../scripts/artifact-paths.mjs'
 import { resolve } from 'node:path'
 import { exportedNativeGraph, nativeShellEvidence, observeNativeScene, sceneReady, workspaceCanvas } from './native-scene'
 import { fileCommand } from './workbench-ui'
 
-const directory = resolve('.test-build/ribbon-shell')
+const directory = getArtifactDirectory('ribbon-shell')
 const fileItems = ['New', 'Open Project', 'Save', 'Save As', 'Import', 'Export', 'History', 'Assignment']
 const tab = (page: Page, name: 'Component' | 'Run') => page.getByRole('tab', { name, exact: true })
 const file = (page: Page) => page.getByRole('button', { name: 'File', exact: true })

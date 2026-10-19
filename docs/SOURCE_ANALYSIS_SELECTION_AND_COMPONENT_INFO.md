@@ -1,5 +1,7 @@
 # Phân tích selection, breadboard và Component Info — 2026-10-09
 
+> Historical source snapshot — 2026-10-19 audit: implementation and results below belong to the dated change, including statements labelled “current” or “latest”. Current boundaries are maintained in [ARCHITECTURE.md](ARCHITECTURE.md); use [VERIFICATION.md](VERIFICATION.md) for new checks and external artifact output. This audit does not rerun or re-certify historical results.
+
 Historical refinement: phần LineSegments 1px, socket trang trí và Info theo preview bên dưới đã được thay thế bởi [Technical Workbench](SOURCE_ANALYSIS_TECHNICAL_WORKBENCH.md): viền 2px Medium Gold, cavity thật, selection-only Info và adaptive grid. Giữ bản này để đối chiếu nguyên nhân và quá trình kiểm chứng.
 
 ## Yêu cầu hiện hành

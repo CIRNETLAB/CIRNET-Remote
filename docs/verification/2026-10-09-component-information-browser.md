@@ -1,5 +1,7 @@
 # Selection and Component Info verification — 2026-10-09
 
+> Audit status — 2026-10-19: this is historical evidence. The image files named below were already absent from the supplied repository at baseline `0cc66f8`; this audit did not inspect or recreate them. Recorded measurements and results are preserved. New verification outputs follow [the shared guide](../VERIFICATION.md) and stay outside the repository.
+
 ## Automated regression
 
 `cd apps/web && npm test`: **62/62 PASS** on the final source, zero failures, including vue-tsc. New tests were RED before their respective corrections: mesh cage, absent recessed channels, reuse of a disposed selection outline, missing passive Info opening, static curved contour and resistor bands hiding the body outline. The last raycast regression measured 44 hidden contour samples before correction and zero afterward. Flush paint bands use a material depth offset to prevent coplanar flicker. Production picking/editor/camera/history behavior remains active in the tests. Full tests ran outside the Windows sandbox because loopback API tests otherwise receive EACCES.
@@ -33,4 +35,4 @@ Codex in-app browser, `http://localhost:5173/`, actual WebGL and session-local t
 
 The 1280×720 bounds were re-read after the asynchronous viewport resize settled. Smaller windows allow the panel body to scroll while the Add footer remains accessible. Existing native right-drag automation limitation remains; right-button OrbitControls integration tests pass. No hosted CI, deployment, simulation execution or physical acquisition is claimed.
 
-![Thin selection contour and upper-right introduction/Add panel](2026-10-09-component-information.jpg)
+Thin selection contour and upper-right introduction/Add panel (historical image reference: `2026-10-09-component-information.jpg`; absent at audit baseline).

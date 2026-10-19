@@ -1,5 +1,7 @@
 # Phân tích source và triển khai Phase 2 — 2026-10-09
 
+> Historical source snapshot — 2026-10-19 audit: implementation and results below belong to the dated change, including statements labelled “current” or “latest”. Current boundaries are maintained in [ARCHITECTURE.md](ARCHITECTURE.md); use [VERIFICATION.md](VERIFICATION.md) for new checks and external artifact output. This audit does not rerun or re-certify historical results.
+
 ## Kết luận kiến trúc
 
 **Bổ sung UX hiện hành:** lỗi chuột trái pan/kéo model và XYZ tĩnh đã được phân tích riêng trong [SOURCE_ANALYSIS_WORKSPACE_NAVIGATION.md](SOURCE_ANALYSIS_WORKSPACE_NAVIGATION.md). Báo cáo Phase 2 dưới đây giữ nội dung lịch sử; theo yêu cầu mới nhất, chỉ Move kéo model trực tiếp, Select chỉ chọn. Kéo nền pan XZ, chuột phải orbit và gizmo theo camera, với các nút điều hướng cạnh XYZ.

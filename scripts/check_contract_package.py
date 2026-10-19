@@ -193,7 +193,11 @@ def main(argv=None):
     workspace=ROOT/'.build';workspace.mkdir(exist_ok=True)
     with TemporaryDirectory(prefix='package-build-',dir=workspace) as build,external_workspace(arguments.temporary_root) as target:
         build=Path(build);dist=build/'dist';dist.mkdir()
-        log_path=workspace/f'package-check-{os.getpid()}.log'
+        try:
+            from scripts.artifact_paths import artifact_directory
+        except ModuleNotFoundError:
+            from artifact_paths import artifact_directory
+        log_path=artifact_directory('package-check')/f'package-check-{os.getpid()}.log'
         def checked(command,*,cwd):
             with log_path.open('ab+') as log:
                 log.write((f'\nCommand: {command!r}\nWorking directory: {cwd}\n').encode('utf-8'))

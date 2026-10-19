@@ -8,6 +8,8 @@ Physical pins have stable IDs, explicit numbers/names/roles, optional output dri
 
 All entries below can be placed and wired. All except `DC_SUPPLY` declare a breadboard footprint. Fixed packages retain one rigid footprint; discrete lead-forming profiles are declared in `package.footprint.leadForming`. The B3F variant is explicitly formed from its native 6.5 x 4.5 mm pattern to 7.62 x 5.08 mm; it is not a claim that an unformed B3F has a 2.54 mm native pitch. Mechanical mounting remains subject to the solver's contact, occupancy and body collision checks.
 
+The following source matrix preserves the original exact-part selection. It is not an exhaustive current catalog inventory. Current defaults, generic design descriptors and the additional slide switch are in `physical-parts.json`; pinned old revisions remain in `historicalParts`. [Flexible placement](../../contracts/design-models/flexible-placement.md) is authoritative for automatic V2 geometry, sealed shapes, current defaults and explicit rebuild behavior. Counts come from `python scripts/sync_editor_catalog.py --check`; historical verification totals below retain their dated meaning.
+
 | Editor type / exact part | Package / pins | Virtual simulation | Pinout and geometry source |
 | --- | --- | --- | --- |
 | `SN74HC08N` / TI SN74HC08N | PDIP-14, 2.54 mm pitch, 7.62 mm rows | Power-aware four-gate AND subset; requires explicit VCC/GND and known inputs | [TI SCLS081J](https://www.ti.com/lit/ds/symlink/sn74hc08.pdf), pin table p.3 and N package drawing |
@@ -40,7 +42,7 @@ For the A6D, canonical pad IDs use top-view perimeter numbering 1..8; actuator n
 
 ## Compatibility and verification
 
-The generated editor catalog contains the 21 legacy definitions followed by 55 physical types, including all 37 requested logic codes and the three preserved HC variants. No implicit conversion adds missing power, ground or wires. Legacy arithmetic and memory abstractions retain no physical part/package identity and cannot mount. Physical instance bindings use the circuit 1.1 contract; migration and runtime mounting validation are implemented at the circuit boundary, not in mesh metadata.
+The generated editor catalog combines retained functional/visual definitions with the current physical registry, including all 37 requested logic codes and the three preserved HC variants. No implicit conversion adds missing power, ground or wires. Legacy arithmetic and memory abstractions retain no physical part/package identity and cannot mount. Rigid physical bindings use CircuitGraph 1.1/1.2; flexible mounting and explicit free descriptor identity use additive 1.2. Migration and runtime mounting validation are implemented at the circuit boundary, not in mesh metadata.
 
 R/C values are configurable design properties. Their legacy definition, package, footprint and pin IDs remain stable so saved mounts and wires retain their identity. `identityKind: configurable-generic` and development `provenance.referencePartNumber` distinguish that compatibility identity from a claim that every edited value is the original manufacturer's SKU. Changing R/C/W/V/tolerance does not change body dimensions or mounting geometry. Resistance, power and tolerance use `resistanceOhms`, `powerWatts`, `tolerancePercent`; capacitance and rating use `capacitanceFarads`, `voltageRatingVolts`.
 

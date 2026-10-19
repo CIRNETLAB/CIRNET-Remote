@@ -1,5 +1,7 @@
 # GitHub Actions repair on refactor — 2026-10-16
 
+> Historical evidence status — 2026-10-19 audit: command outputs, Git state and local artifact locations below describe the original session. They do not report this audit’s results or authorize new output under `.build`, `.superpowers`, `.test-build` or `docs/verification`. For reruns use [VERIFICATION.md](../VERIFICATION.md); generated visual and raw diagnostic artifacts must start outside the repository. Existing outputs await separate owner review and have not been deleted or moved.
+
 ## Remote evidence
 
 Read the actual completed GitHub Actions jobs for branch `refactor`, commit

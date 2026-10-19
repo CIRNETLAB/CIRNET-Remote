@@ -43,6 +43,10 @@ def test_browser_ci_installs_pinned_runner_and_all_real_services_then_runs_every
     assert 'npx tsc --noEmit -p tsconfig.e2e.json' in steps
     assert '--forbid-only' in steps
     assert job['env']['NETCIRCUIT_E2E_PYTHON'] == 'python'
+    assert job['env']['NETCIRCUIT_ARTIFACTS_DIR'] == '${{ runner.temp }}/netcircuit-artifacts/${{ github.run_id }}-${{ github.run_attempt }}'
+    assert 'node scripts/artifact-paths.mjs' in steps
+    assert 'NETCIRCUIT_ARTIFACTS_SESSION=$artifact_session' in steps
+    assert 'tee "$artifact_session/e2e.log"' in steps
     assert not any(step.get('continue-on-error', False) for step in job['steps'])
     assert '--grep' not in steps and '--retries' not in steps
     package = json.loads((WEB / 'package.json').read_text(encoding='utf-8'))
@@ -52,11 +56,18 @@ def test_browser_ci_installs_pinned_runner_and_all_real_services_then_runs_every
     assert 'workers:1,retries:0' in (WEB / 'playwright.config.ts').read_text(encoding='utf-8')
     upload = next(step for step in job['steps'] if step.get('uses', '').startswith('actions/upload-artifact@'))
     assert upload['if'] == 'always()'
-    assert '.test-build/playwright' in upload['with']['path']
-    assert '.test-build/e2e.log' in upload['with']['path']
     assert upload['with']['retention-days'] == 7
     assert upload['with']['include-hidden-files'] is True
-    assert set(upload['with']['path'].splitlines()) == {'apps/web/.test-build/playwright','apps/web/.test-build/e2e.log'}
+    assert set(upload['with']['path'].splitlines()) == {
+        '${{ env.NETCIRCUIT_ARTIFACTS_SESSION }}/playwright',
+        '${{ env.NETCIRCUIT_ARTIFACTS_SESSION }}/playwright-reporters',
+        '${{ env.NETCIRCUIT_ARTIFACTS_SESSION }}/e2e.log',
+    }
+    cleanup = next(step for step in job['steps'] if '--cleanup' in step.get('run', ''))
+    assert cleanup['if'] == 'always()'
+    assert job['steps'].index(cleanup) > job['steps'].index(upload)
+    assert '--cleanup "$NETCIRCUIT_ARTIFACTS_SESSION"' in cleanup['run']
+    assert '.test-build' not in steps
     events = document.get('on', document.get(True))
     for event in ('push', 'pull_request'):
         assert {'contracts/**', 'scripts/**', 'services/api/**', 'services/hardware-service/**',

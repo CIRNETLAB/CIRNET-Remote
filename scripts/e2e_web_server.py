@@ -2,10 +2,8 @@
 import os
 import sys
 from threading import Event, Thread
-from pathlib import Path
 import uvicorn
-
-ROOT=Path(__file__).resolve().parents[1]
+from artifact_paths import artifact_directory, validate_artifact_directory
 
 def wait_for_pipe_eof(descriptor):
     """Wait for our parent's pipe without holding a blocking stdin read.
@@ -31,8 +29,9 @@ def wait_for_pipe_eof(descriptor):
             if readable and not os.read(descriptor,4096):return
 
 def main():
-    data=Path(os.environ['NETCIRCUIT_E2E_DATA_DIR']).resolve()
-    if not data.is_relative_to(ROOT/'.runtime'/'e2e'): raise ValueError('E2E data must stay under .runtime/e2e')
+    session=artifact_directory()
+    data=validate_artifact_directory(os.environ['NETCIRCUIT_E2E_DATA_DIR'])
+    if data==session or not data.is_relative_to(session): raise ValueError('E2E data must stay inside its owned external artifact session')
     data.mkdir(parents=True,exist_ok=True)
     os.environ['NETCIRCUIT_DATABASE_URL']='sqlite:///'+(data/'application.db').as_posix()
     os.environ['NETCIRCUIT_CAPTURE_DIR']=str(data/'captures')

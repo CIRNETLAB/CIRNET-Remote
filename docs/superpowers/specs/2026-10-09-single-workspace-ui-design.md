@@ -3,7 +3,7 @@
 **Project:** net*CIRCUIT Remote  
 **Date:** 2026-10-09  
 **Status:** APPROVED  
-**Replaces:** `docs/superpowers/specs/2026-10-08-web-foundation-design.md` for user-facing UI architecture
+**Replaces:** [the archived Web Foundation design](../../archive/legacy-v1/2026-10-08-web-foundation-design.md) for user-facing UI architecture (originally `docs/superpowers/specs/2026-10-08-web-foundation-design.md`)
 
 **Phase 1 implementation:** shell migration implemented on 2026-10-09. See `docs/DEV_LOG.md` and `docs/verification/2026-10-09-single-workspace-browser.md` for current verification evidence. The broader editor/simulator vision below remains the roadmap.
 

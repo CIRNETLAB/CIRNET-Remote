@@ -18,6 +18,13 @@ Typed `/instruments/access`, `/instruments/generator` and `/instruments/commands
 
 Projects/circuits use saved revisions and database CAS, with session fences against revoke/guest claim. Create pins the owned document revision and assignment publication. History/active endpoints are bounded and read-only; connection recovery cannot grant Run authority. Students receive only published redacted assignment views. See the architecture guides for [projects](../../docs/architecture/projects-and-revisions.md), [assignments](../../docs/architecture/assignments-and-publication.md), [capture catalog](../../docs/architecture/capture-catalog.md) and [domains](../../docs/architecture/signal-domains-and-simulation.md).
 
+Additive `/api/v2` placement/document/experiment and assignment routes accept Graph
+1.2 while legacy public shapes stay frozen. They share the existing ownership, CAS,
+publication and immutable admission authority; see [versioned placement](../../contracts/design-models/flexible-placement.md).
+New verification follows [VERIFICATION.md](../../docs/VERIFICATION.md), with raw/visual
+diagnostics created outside the checkout and retained reports in Markdown. Earlier
+test/deployment claims describe their dated evidence, not a rerun during a doc edit.
+
 Final review corrections: observed terminal aliases and resource allocations are solved jointly, without changing student wiring. Unscoped/zero-confidence pin/net evidence cannot infer required physical endpoints; fixed terminals still work. ReadCapture RPC data uses bounded NCAP binary rather than repeating sample signal names in result_json; gateway rejects inconsistent descriptors. Regenerate RPC bindings and restart both local services together before use.
 
 Full supported verification environment from root:

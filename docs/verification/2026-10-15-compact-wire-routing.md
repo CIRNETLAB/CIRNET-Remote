@@ -1,5 +1,7 @@
 # Compact wire routing and fixed silver terminals
 
+> Audit status — 2026-10-19: this is historical evidence. The image files named below were already absent from the supplied repository at baseline `0cc66f8`; this audit did not inspect or recreate them. Recorded measurements and results are preserved. New verification outputs follow [the shared guide](../VERIFICATION.md) and stay outside the repository.
+
 Frontend wire implementation against the supplied `83cc5372-147c-4950-9cb2-c77c68f32d74/Pasted text.txt`, starting at `3ec9879`. The previous global vertical stacking implementation is replaced. CircuitGraph, endpoint identity, electrical nets, file schema, backend, contracts, simulator and hardware are unchanged.
 
 ## Root causes
@@ -97,11 +99,11 @@ Both probes preserve serialized input graph data. These are local CPU flush timi
 
 The images below rasterize the actual production housing/socket/insulation/conductor triangles on the CPU: ten lateral lanes and one local crossing wire. The final source re-export produced the same mesh SHA-256 as the images (`622382FDB26E3DEE880742EE8FC0F26285BD16A0261786DAC4CC771019A136CA`). Top, oblique and side views were inspected. The side geometry has a compact base instead of ten stacked elevations.
 
-![CPU top mesh inspection](2026-10-15-compact-wire-top-cpu.png)
+CPU top mesh inspection (historical image reference: `2026-10-15-compact-wire-top-cpu.png`; absent at audit baseline).
 
-![CPU oblique mesh inspection](2026-10-15-compact-wire-oblique-cpu.png)
+CPU oblique mesh inspection (historical image reference: `2026-10-15-compact-wire-oblique-cpu.png`; absent at audit baseline).
 
-![CPU side mesh inspection](2026-10-15-compact-wire-side-cpu.png)
+CPU side mesh inspection (historical image reference: `2026-10-15-compact-wire-side-cpu.png`; absent at audit baseline).
 
 CPU images omit textures, PBR/environment reflections, GPU antialiasing and shadows. They are geometry evidence, not browser screenshots.
 

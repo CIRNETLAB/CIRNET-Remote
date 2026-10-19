@@ -1,5 +1,7 @@
 # Phân tích source và thuật toán Zoom To Area — 2026-10-11
 
+> Historical source snapshot — 2026-10-19 audit: implementation and results below belong to the dated change, including statements labelled “current” or “latest”. Current boundaries are maintained in [ARCHITECTURE.md](ARCHITECTURE.md); use [VERIFICATION.md](VERIFICATION.md) for new checks and external artifact output. This audit does not rerun or re-certify historical results.
+
 ## Kiến trúc và trạng thái thực tế
 
 Project chia thành frontend Vue/TypeScript/Pinia/Three.js, API FastAPI, Hardware Service, simulator số, contracts, metadata linh kiện và FPGA scaffold. Phân tích này đối chiếu source điều hướng/editor hiện hành với các ranh giới toàn project và báo cáo `SOURCE_ANALYSIS_STABILITY_AUDIT.md`; tập trung sâu vào luồng bị thay đổi, không thay thế kiểm toán từng thuật toán phần cứng tương lai.

@@ -1,5 +1,7 @@
 # net*CIRCUIT Remote — Kiến trúc Hardware FPGA Lab-First
 
+> Trạng thái audit 2026-10-19: giữ tài liệu này như **PROPOSED / NEEDS_REVIEW**, không phải chứng nhận implementation. Những câu “không được cung cấp” mô tả bộ tài liệu đầu vào của lần soạn gốc; repository hiện có [authority v3.1](../ARCHITECTURE.md), [FPGA scaffold contract](../../contracts/fpga-protocol/versions.md) và RTL/testbench dưới `fpga/`. Chưa có đối chiếu đầy đủ revision 2.1 với schema/ABI, synthesis, timing và phần cứng thật trong lần audit này. Không nâng mục tiêu ADC/DAC/SDRAM thành capability đã có; xem [quy trình kiểm chứng](../VERIFICATION.md).
+
 ## Revision 2.1 — Bản soạn lại đầy đủ của FPGA Architecture v2
 
 | Thuộc tính | Giá trị |

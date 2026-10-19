@@ -1,5 +1,7 @@
 # Ribbon, transform gizmo and upright supply — 2026-10-09
 
+> Historical source snapshot — 2026-10-19 audit: implementation and results below belong to the dated change, including statements labelled “current” or “latest”. Current boundaries are maintained in [ARCHITECTURE.md](ARCHITECTURE.md); use [VERIFICATION.md](VERIFICATION.md) for new checks and external artifact output. This audit does not rerun or re-certify historical results.
+
 ## Source paths and boundaries
 
 `App.vue` → `SingleWorkspaceShell` composes the ribbon, tool rail, canvas, status bar and windows. `ComponentRibbon.vue` uses `data/ribbon.ts` for artwork/families and `editorCatalog` to decide whether an item can be placed. The canonical model contracts remain in `device-library/editor/components.json`; `scripts/sync_editor_catalog.py` generates the browser copy. UI selection/tool state is owned by the workspace/UI stores; the circuit store owns schema 1.0 graph commands and history.

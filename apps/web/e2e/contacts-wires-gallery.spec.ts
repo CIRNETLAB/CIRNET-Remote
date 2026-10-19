@@ -1,6 +1,7 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test'
 import { build } from 'esbuild'
 import { mkdir, writeFile } from 'node:fs/promises'
+import { getArtifactDirectory } from '../../../scripts/artifact-paths.mjs'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import type { Camera, Mesh, MeshStandardMaterial, Object3D, WebGLRenderer, BufferGeometry } from 'three'
@@ -14,7 +15,7 @@ import { exportedNativeGraph, nativeSceneEvidence, sceneReady, workspaceCanvas }
 type Runtime = typeof Catalog & { solveMounting: typeof Solver; boardContactMechanics: typeof Mechanics; defaultWireVisual: typeof WireVisual; WIRE_RADIAL_SEGMENTS: number }
 interface GalleryProbe { scene: Object3D; camera: Camera; frames: number; memory: { geometries: number; textures: number }; render: { calls: number; triangles: number; lines: number; points: number } }
 type GalleryCanvas = HTMLCanvasElement & { nativeSceneProbe?: GalleryProbe; galleryCutaway?: { object: Object3D; visible: boolean; mesh?: Mesh; geometry?: BufferGeometry; cut?: BufferGeometry }[] }
-const directory = resolve('.test-build/contacts-wires-gallery')
+const directory = getArtifactDirectory('contacts-wires-gallery')
 const cases = [
   ['SLIDE', 'SLIDE_SWITCH_SS12D10', 0, -2.8], ['TACTILE', 'PUSH_BUTTON_B3F1000', 0, -1.1],
   ['DIP', 'DIP_SWITCH_A6D4100', 0, .4], ['SINGLE', 'SEGMENT_SC5611EWA', 0, 2.5],

@@ -2,8 +2,20 @@ import { spawn } from 'node:child_process'
 import { resolve } from 'node:path'
 import { randomBytes } from 'node:crypto'
 import { readdir,readFile,writeFile } from 'node:fs/promises'
+import { getArtifactDirectory } from '../../../scripts/artifact-paths.mjs'
 import { stopOwnedBackend } from './e2e-lifecycle.mjs'
 const root=resolve('../..'),args=process.argv.slice(2)
+for(let index=0;index<args.length;index++) {
+  const output=/^(--output|-o)(?:=(.*))?$/.exec(args[index])
+  if(!output) continue
+  const directory=output[2]??args[index+1]
+  if(!directory||directory.startsWith('-')) throw new Error(`${output[1]} requires an external artifact parent directory.`)
+  process.env.NETCIRCUIT_ARTIFACTS_SESSION=getArtifactDirectory('',{directory:resolve(directory)})
+  const ownedOutput=getArtifactDirectory('playwright')
+  if(output[2]!==undefined) args[index]=`${output[1]}=${ownedOutput}`
+  else args[++index]=ownedOutput
+}
+getArtifactDirectory()
 const environment={...process.env,PLAYWRIGHT_BROWSERS_PATH:resolve(root,'.runtime/playwright')}
 function execute(command,arguments_,options={}) {
   const child=spawn(command,arguments_,{stdio:'inherit',windowsHide:true,...options})
@@ -53,7 +65,7 @@ async function restartCommands() {
 try {
   if(args[0]==='test') {
     environment.NETCIRCUIT_E2E_ADMIN_PASSWORD??=randomBytes(24).toString('base64url')
-    environment.NETCIRCUIT_E2E_DATA_DIR=resolve(root,'.runtime/e2e',`run-${Date.now()}`)
+    environment.NETCIRCUIT_E2E_DATA_DIR=getArtifactDirectory('e2e-runtime')
     python=environment.NETCIRCUIT_E2E_PYTHON??resolve(root,'.audit-runtime',process.platform==='win32'?'Scripts/python.exe':'bin/python')
     await startBackend()
     poll=setInterval(()=>{if(pollBusy)return;pollBusy=true;processing=restartCommands().catch(error=>{console.error(error.message);lifecycleFailed=true}).finally(()=>{pollBusy=false})},200)

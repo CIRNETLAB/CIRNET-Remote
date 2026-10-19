@@ -1,5 +1,7 @@
 # Web & Contracts handoff — 2026-10-16
 
+> Historical handoff status — 2026-10-19 audit: software results, versions and Git delivery limits below belong to the 2026-10-16 session. They are preserved, not rerun assertions for current HEAD. Current architecture is [ARCHITECTURE.md](../ARCHITECTURE.md); new checks follow [VERIFICATION.md](../VERIFICATION.md). Reproduction commands below use the current external artifact policy.
+
 Authority remains [Lab-First v3.1](../ARCHITECTURE.md). This handoff describes the implemented software boundary; the [execution ledger](2026-10-16-web-contracts.md), [acceptance matrix](2026-10-16-acceptance-matrix.md), [W8 evidence](2026-10-16-w8-release.md) and [source inventory](2026-10-16-source-inventory.md) contain the completed local phase results and452 changed/new files. Final evidence is1015 Python PASS/1 Icarus SKIP,1054 Web PASS,14 native Chromium PASS,16 PostgreSQL PASS, four installed wheels outside checkout and50 principals/1195 requests/0 unexpected or transport errors. Git delivery and unexecuted external gates remain explicit limits.
 
 ## Working system
@@ -37,10 +39,10 @@ python scripts/check_release.py --group all
 The optional load group is separate:
 
 ```sh
-python scripts/benchmark_web_sessions.py --sessions 50 --concurrency 10 --runs 8 --read-rounds 3 --output docs/verification/2026-10-16-w8-load.json
+python scripts/benchmark_web_sessions.py --sessions 50 --concurrency 10 --runs 8 --read-rounds 3
 ```
 
-The report at that path contains actual measured results in this workspace. A rerun intentionally replaces it and takes over five minutes because the unchanged address-level login limit is respected. The workload proves50 authenticated sessions, at most10 in-flight HTTP requests and4 virtual jobs, eight exact real NCAP captures and expected conflict/denial isolation. It does not prove50 simultaneous simulations or physical executions, sustained load, target Mini PC capacity or production PostgreSQL/TLS latency.
+The checked-in [2026-10-16 raw report](2026-10-16-w8-load.json) preserves the original measurements. A new run writes `report.json` under an external `web-sessions` artifact directory; it does not replace historical evidence. An explicit `--output` must also point outside the repository. The original run took over five minutes because the address-level login limit was respected. The workload proves50 authenticated sessions, at most10 in-flight HTTP requests and4 virtual jobs, eight exact real NCAP captures and expected conflict/denial isolation. It does not prove50 simultaneous simulations or physical executions, sustained load, target Mini PC capacity or production PostgreSQL/TLS latency.
 
 The final run took324.689s (301.704s paced bootstrap,17.848s active work) with1195 requests/0 unexpected statuses/0 transport failures and backend exit0. Each HTTP session has one connection/retained connection,1-second client idle expiry and zero automatic retries. A prior failed transport run and its live-socket regression are disclosed in the W8 evidence; mutation replay, server timeout changes and weakened authentication limits were not used to obtain a pass.
 

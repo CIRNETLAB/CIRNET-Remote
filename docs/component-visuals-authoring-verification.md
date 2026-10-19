@@ -1,5 +1,7 @@
 # Component visuals and authoring verification
 
+**Historical snapshot — 2026-10-15.** Counts, commands, environment restrictions and results below belong to that implementation run; they are not rerun by the current documentation audit. Current authoring/geometry is described in [component placement](COMPONENT_PLACEMENT.md) and the [flexible contract](../contracts/design-models/flexible-placement.md). New verification follows [VERIFICATION.md](VERIFICATION.md), including external diagnostic storage; retained historical command paths below are not current output instructions.
+
 Date: 15 October 2026. Work was implemented in the existing `refactor` worktree and left uncommitted. The user's adopted Pasted text.txt supplied the requirements; the component visual audit supplied evidence to investigate.
 
 ## Implemented behavior

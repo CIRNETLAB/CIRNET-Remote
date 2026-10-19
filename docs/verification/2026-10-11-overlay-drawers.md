@@ -1,5 +1,7 @@
 # Overlay drawers verification — 2026-10-11
 
+> Audit status — 2026-10-19: this is historical evidence. The image files named below were already absent from the supplied repository at baseline `0cc66f8`; this audit did not inspect or recreate them. Recorded measurements and results are preserved. New verification outputs follow [the shared guide](../VERIFICATION.md) and stay outside the repository.
+
 ## Scope and diagnosis
 
 Analyzed ToolRail.vue, ComponentRibbon.vue, CircuitWorkspace3D.vue, frameTasks.ts, SceneManager.ts, ui.ts, style.css and related shell/editor/windows/tests before editing. The supplied recording is1916×908,19.866633 seconds; inspected samples at0,2,…18 seconds using the browser's native video decoder. It shows model display size changing with Ribbon visibility. A separate authored local frame probe reproduced the remaining CSS/drawing-buffer timing gap before the fix.
@@ -39,7 +41,7 @@ Real pointer drags set Tools150 px and Components180 px without any canvas resiz
 
 Clean `/` imports the same fixture through the native Open/file chooser.3 components/1 wire/100% zoom, model appearance, graph counts and simulation shell retain their state through all four combinations. Scope opens outside the drawer; closing it with Escape after Tools collapses returns focus to Expand Tools. Clean warning/error console log is empty. Native keyboard Enter/Space support and captured resize lifecycle remain covered by existing tests. Viewport override is reset after QA.
 
-Expanded/collapsed screenshots were inspected and show the same model/wire positions and dimensions: [expanded](2026-10-11-drawers-expanded.png), [collapsed](2026-10-11-drawers-collapsed.png). Sampling validates the tested browser/session and fixed geometry, rather than promising a universal frame rate on every GPU.
+Expanded/collapsed screenshots were inspected and show the same model/wire positions and dimensions: expanded (historical image reference: `2026-10-11-drawers-expanded.png`; absent at audit baseline)., collapsed (historical image reference: `2026-10-11-drawers-collapsed.png`; absent at audit baseline).. Sampling validates the tested browser/session and fixed geometry, rather than promising a universal frame rate on every GPU.
 
 ## Files changed
 

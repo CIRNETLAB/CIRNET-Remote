@@ -1,9 +1,10 @@
 import { build } from 'esbuild'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { Box3, Group, Mesh } from 'three'
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js'
+import { getArtifactDirectory } from '../../../scripts/artifact-paths.mjs'
 
 // Offline authoring tool. sharp is only a PNG rasterizer here, never a browser
 // dependency. npm ci supplies it, or use --sharp-module /absolute/path/to/sharp.
@@ -12,9 +13,9 @@ const argument = process.argv.indexOf('--sharp-module')
 const sharp = require(argument >= 0 ? process.argv[argument + 1] : 'sharp')
 const web = new URL('../', import.meta.url)
 const source = (name) => fileURLToPath(new URL(`src/three/${name}.ts`, web))
-const temp = new URL('.test-build/generator-export/', web)
-await mkdir(temp, { recursive: true })
-await build({ entryPoints: [source('FunctionGeneratorModel'), source('FunctionGeneratorArtwork')], outdir: fileURLToPath(temp), outExtension: { '.js': '.mjs' }, bundle: true, packages: 'external', platform: 'node', format: 'esm' })
+const temp = pathToFileURL(getArtifactDirectory('generator-export') + '/')
+await build({ entryPoints: [source('FunctionGeneratorModel'), source('FunctionGeneratorArtwork')], outdir: fileURLToPath(temp), outExtension: { '.js': '.mjs' }, bundle: true, packages: 'external', platform: 'node', format: 'esm',
+  plugins: [{ name: 'external-three-from-authoring-tool', setup(context) { context.onResolve({ filter: /^three(?:\/|$)/ }, ({ path }) => ({ path: import.meta.resolve(path), external: true })) } }] })
 const { addFunctionGeneratorModel, FUNCTION_GENERATOR_SIZE } = await import(new URL('FunctionGeneratorModel.mjs', temp).href)
 const { GENERATOR_LAYOUT, instrumentArtworkSvg, generatorScreenArtwork, generatorLegendsArtwork } = await import(new URL('FunctionGeneratorArtwork.mjs', temp).href)
 

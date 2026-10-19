@@ -1,5 +1,7 @@
 # Component Transform Gizmo verification — 2026-10-09
 
+> Audit status — 2026-10-19: this is historical evidence. The image files named below were already absent from the supplied repository at baseline `0cc66f8`; this audit did not inspect or recreate them. Recorded measurements and results are preserved. New verification outputs follow [the shared guide](../VERIFICATION.md) and stay outside the repository.
+
 ## Automated evidence
 
 - Final `cd apps/web && npm test`: **79/79 PASS**, including Vue/TypeScript checks. Eleven new regressions cover fit bounds, gizmo ray picking/hover/scale/following/disposal, X/Z/free gestures, live named endpoints, rotation, cancellation/selection changes, arbitrary-angle snap and window avoidance.
@@ -29,9 +31,9 @@ Codex in-app browser, localhost:5173, session-local test draft, real WebGL:
 | 1024×768 | None | Yes | 12 px | 0 |
 | 662×622 (661 requested; browser rounding) | None | Yes | 12 px | 0 |
 
-![Breadboard gizmo, defined status tools and selected introduction](2026-10-09-component-transform-gizmo.jpg)
+Breadboard gizmo, defined status tools and selected introduction (historical image reference: `2026-10-09-component-transform-gizmo.jpg`; absent at audit baseline).
 
-![Original bench supply visual and adjacent gizmo](2026-10-09-power-supply-gizmo.jpg)
+Original bench supply visual and adjacent gizmo (historical image reference: `2026-10-09-power-supply-gizmo.jpg`; absent at audit baseline).
 
 ## Practical limits
 

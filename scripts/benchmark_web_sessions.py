@@ -23,6 +23,10 @@ from threading import Event,Lock,Thread
 import time
 import uuid
 import httpx
+try:
+    from scripts.artifact_paths import artifact_directory, validate_artifact_directory
+except ModuleNotFoundError:
+    from artifact_paths import artifact_directory, validate_artifact_directory
 
 ROOT=Path(__file__).resolve().parents[1]
 ORIGIN='http://127.0.0.1:14173'
@@ -289,7 +293,7 @@ def workload(url,metrics,options,password):
 def run(options):
     import psutil
     validate_options(options.sessions,options.concurrency,options.runs,options.read_rounds)
-    run_id=uuid.uuid4().hex;directory=ROOT/'.runtime/e2e'/('benchmark-'+run_id);directory.mkdir(parents=True)
+    run_id=uuid.uuid4().hex;directory=artifact_directory('web-sessions/benchmark-'+run_id)
     http_port,rpc_port=free_port(),free_port()
     while rpc_port==http_port:rpc_port=free_port()
     url=f'http://127.0.0.1:{http_port}';password=secrets.token_urlsafe(32)
@@ -307,7 +311,7 @@ def run(options):
         'http_transport':{'protocol':'HTTP/1.1','max_connections_per_session':HTTP_CONNECTIONS_PER_SESSION,
             'max_keepalive_connections_per_session':HTTP_CONNECTIONS_PER_SESSION,'keepalive_expiry_seconds':HTTP_KEEPALIVE_EXPIRY_SECONDS,
             'automatic_retries':0},
-        'artifacts':{'data_directory':directory.relative_to(ROOT).as_posix(),'backend_log':(directory/'backend.log').relative_to(ROOT).as_posix()}}
+        'artifacts':{'data_directory':str(directory),'backend_log':str(directory/'backend.log')}}
     try:
         with (directory/'backend.log').open('wb') as log:
             child=subprocess.Popen([sys.executable,str(ROOT/'scripts/e2e_web_server.py')],cwd=ROOT,env=environment,
@@ -351,11 +355,16 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--sessions',type=int,default=50);parser.add_argument('--concurrency',type=int,default=10)
     parser.add_argument('--runs',type=int,default=8);parser.add_argument('--read-rounds',type=int,default=3)
-    parser.add_argument('--output',type=Path,required=True)
+    parser.add_argument('--output',type=Path,help='Optional absolute external JSON destination; repository paths are rejected before running.')
     options=parser.parse_args()
     try:validate_options(options.sessions,options.concurrency,options.runs,options.read_rounds)
     except ValueError as error:parser.error(str(error))
-    report=run(options);options.output.parent.mkdir(parents=True,exist_ok=True)
+    if options.output:
+        options.output=validate_artifact_directory(options.output)
+        options.output.parent.mkdir(parents=True,exist_ok=True)
+    else:
+        options.output=artifact_directory('web-sessions')/'report.json'
+    report=run(options)
     options.output.write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
     print(json.dumps({'status':report['status'],'duration_seconds':report['duration_seconds'],'report':str(options.output)}))
     return 0 if report['status']=='PASS' else 1

@@ -7,6 +7,14 @@ models, runtime parsers, OpenAPI and operation bindings share those definitions.
 The wrapper carries owner, timestamps, current revision, publication status and
 published revision. Assignment identity cannot change during a save.
 
+Additive `contracts/public/assignments-v2.schema.json` defines
+`AssignmentDefinitionV2` 2.0 with Graph 1.2 references. `/api/v2/assignment-documents`
+and `/api/v2/assignments` reuse the same ownership, immutable revisions,
+publication CAS and redaction authority. The Web explicitly opts into this
+version when attaching a 1.2 reference; opening/saving an old definition does not
+retag it. Legacy reads/mutations reject a selected V2 definition with
+`UNSUPPORTED_DOCUMENT_VERSION` before changing it. See the [flexible contract](../../contracts/design-models/flexible-placement.md).
+
 Instructors author their own assignments. Admin access to another author's
 assignment is explicit and audited on reads, edits, publication and execution
 admission. Students cannot access authoring endpoints. Session, current role and

@@ -1,5 +1,7 @@
 # Kiểm chứng package 3D kín chỗ ra chân — 2026-10-18
 
+> Historical evidence status — 2026-10-19 audit: command outputs, Git state and local artifact locations below describe the original session. They do not report this audit’s results or authorize new output under `.build`, `.superpowers`, `.test-build` or `docs/verification`. For reruns use [VERIFICATION.md](../VERIFICATION.md); generated visual and raw diagnostic artifacts must start outside the repository. Existing outputs await separate owner review and have not been deleted or moved.
+
 Phạm vi: tám family trong `PROMPT_CODEX_Model_3D_Dung_Kich_Thuoc_Kin_Chan_netCircuit.md`; đối chiếu thay đổi chưa commit với HEAD `be44651`. Tài liệu ghi các phép đo mesh thật, kiểm tra solid/collision, bảo toàn descriptor và gate tích hợp đã thực chạy.
 
 ## Nguồn hình học và bảo toàn dữ liệu

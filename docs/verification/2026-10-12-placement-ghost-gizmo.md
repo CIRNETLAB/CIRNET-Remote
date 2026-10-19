@@ -1,5 +1,7 @@
 # Placement ghost Gizmo — 2026-10-12
 
+> Audit status — 2026-10-19: this is historical evidence. The image files named below were already absent from the supplied repository at baseline `0cc66f8`; this audit did not inspect or recreate them. Recorded measurements and results are preserved. New verification outputs follow [the shared guide](../VERIFICATION.md) and stay outside the repository.
+
 Baseline: `8c4b80d` (`update`). No dependency, schema, Circuit Graph architecture, instrument/window manager, drawer animation or gizmo geometry changes.
 
 ## Source analysis and ownership
@@ -35,7 +37,7 @@ No extra gizmo, timer, event listener, render loop, canvas, renderer resizing or
 - Native cancellation checks: ghost Delete, Escape and right click each remove the preview with Components0, Undo disabled and the existing Redo branch still available. Collapse/reopen both drawers preserves the ghost pose and canvas dimensions. Placement help clears the Tools drawer. Runtime warn/error logs are empty. Temporary browser tab and Vite session are closed after verification.
 - Final `context-check` and `git diff --check` pass. Existing Vite bundle advisory and three Python deprecations are retained; no new runtime warning/error is observed.
 
-![Ghost before commit, with graph count0 and disabled Undo](2026-10-12-placement-ghost-gizmo.jpg)
+Ghost before commit, with graph count0 and disabled Undo (historical image reference: `2026-10-12-placement-ghost-gizmo.jpg`; absent at audit baseline).
 
 ## Files changed
 

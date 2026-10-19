@@ -1,8 +1,9 @@
 import {test,expect,type Page} from '@playwright/test'
 import {mkdir,writeFile} from 'node:fs/promises'
 import {resolve} from 'node:path'
+import {getArtifactDirectory} from '../../../scripts/artifact-paths.mjs'
 test.setTimeout(360000)
-const directory=resolve(process.env.NETCIRCUIT_DEPTH_OUTPUT??'.test-build/depth-artifacts/final'),matrixSubject=process.env.NETCIRCUIT_DEPTH_SUBJECT
+const directory=process.env.NETCIRCUIT_DEPTH_OUTPUT?getArtifactDirectory('',{directory:process.env.NETCIRCUIT_DEPTH_OUTPUT}):getArtifactDirectory('depth-artifacts/final'),matrixSubject=process.env.NETCIRCUIT_DEPTH_SUBJECT
 async function open(page:Page,before=false){await mkdir(directory,{recursive:true});await page.route('**/@vite/client',async route=>{const response=await route.fetch();await route.fulfill({response,body:(await response.text()).replace('transport.connect(createHMRHandler(handleMessage));','')})});const errors:string[]=[];page.on('pageerror',e=>{errors.push(e.message);console.log(e.message)});await page.goto(`/e2e/depth-harness.html${before?'?before':''}`);await expect(page.locator('body')).toHaveAttribute('data-ready','true',{timeout:45000});expect(errors).toEqual([])}
 async function measure(page:Page,id:string,distance:number,azimuth=20,elevation=35){return page.evaluate(async({id,distance,azimuth,elevation})=>{const h=(window as any).depthHarness;h.pose(id,distance,azimuth,elevation);await h.frame();return{metadata:h.metadata(),leaks:await h.leaks(id)}},{id,distance,azimuth,elevation})}
 test('retained pre-fix native WebGL evidence',async({page})=>{

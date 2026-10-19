@@ -1,5 +1,7 @@
 # Physical components implementation and verification
 
+**Historical snapshot — 2026-10-15.** The 19-part count, rigid mounting behavior, commands, test counts and browser restriction below describe that run. Later catalog/Graph 1.2 implementations are documented in [component placement](COMPONENT_PLACEMENT.md) and the [registry](../device-library/parts/README.md); they do not rewrite this evidence. New verification follows [VERIFICATION.md](VERIFICATION.md), with diagnostic artifacts created outside the repository.
+
 Implemented on 15 October 2026 in the existing refactor worktree. Source changes remain uncommitted for the user to review and commit.
 
 ## Behavior and compatibility

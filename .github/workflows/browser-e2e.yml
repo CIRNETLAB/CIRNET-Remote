@@ -18,7 +18,7 @@ jobs:
       # The harness owns a real SQLite database, API and virtual Hardware Service.
       # Its temporary accounts and opaque cookies are created locally for this run.
       NETCIRCUIT_E2E_PYTHON: python
-      PLAYWRIGHT_JUNIT_OUTPUT_FILE: .test-build/playwright/junit.xml
+      NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-artifacts/${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,6 +26,11 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
+      - name: Allocate an external verification artifact session
+        shell: bash
+        run: |
+          artifact_session="$(node scripts/artifact-paths.mjs)"
+          echo "NETCIRCUIT_ARTIFACTS_SESSION=$artifact_session" >> "$GITHUB_ENV"
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -65,17 +70,22 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          mkdir -p .test-build
-          npm run test:e2e -- --reporter=line,junit --forbid-only 2>&1 | tee .test-build/e2e.log
+          artifact_session="$(node ../../scripts/artifact-paths.mjs)"
+          npm run test:e2e -- --reporter=line,junit --forbid-only 2>&1 | tee "$artifact_session/e2e.log"
       - name: Browser failure evidence and JUnit results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: real-browser-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            apps/web/.test-build/playwright
-            apps/web/.test-build/e2e.log
+            ${{ env.NETCIRCUIT_ARTIFACTS_SESSION }}/playwright
+            ${{ env.NETCIRCUIT_ARTIFACTS_SESSION }}/playwright-reporters
+            ${{ env.NETCIRCUIT_ARTIFACTS_SESSION }}/e2e.log
           if-no-files-found: warn
           retention-days: 7
-          # Evidence lives under the explicitly selected .test-build directory.
+          # Generated evidence is created outside the checkout and retained by CI.
           include-hidden-files: true
+      - name: Clean the owned external artifact session after upload
+        if: always()
+        shell: bash
+        run: node scripts/artifact-paths.mjs --cleanup "$NETCIRCUIT_ARTIFACTS_SESSION"

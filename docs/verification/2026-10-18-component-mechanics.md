@@ -1,5 +1,7 @@
 # Automatic component mechanics — 2026-10-18
 
+> Historical evidence status — 2026-10-19 audit: command outputs, Git state and local artifact locations below describe the original session. They do not report this audit’s results or authorize new output under `.build`, `.superpowers`, `.test-build` or `docs/verification`. For reruns use [VERIFICATION.md](../VERIFICATION.md); generated visual and raw diagnostic artifacts must start outside the repository. Existing outputs await separate owner review and have not been deleted or moved.
+
 Implements the user-supplied `PROMPT_CODEX_Sua_Chan_Linh_Kien_Ty_Le_3D_netCircuit_v2.md`, using images 1–11 as the reported defects and 12–18 as shape references. These images do not specify measured hardware dimensions.
 
 ## Behavior and compatibility

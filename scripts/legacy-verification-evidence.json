@@ -1,0 +1,21 @@
+{
+  "policy": "Exact pre-policy evidence retained from 0cc66f8 pending user relocation/deletion approval. Never add new captures to this baseline.",
+  "sha256": {
+    "docs/verification/ribbon-shell/after-480-dpr1.png": "197bcd149cf2a90617deeb5c1f1999dd1881a87f5420edfca80b3fbb83b30bc4",
+    "docs/verification/ribbon-shell/after-component.png": "5d07926ecd32e8eda059e639dbe5e24ed64ee9ac146d4cdd6551f9f06cc46552",
+    "docs/verification/ribbon-shell/after-error-message.png": "948dff6dc9fbc4487b64809f04e430a1dddadb188fa80dc8a48d9dee73ac7217",
+    "docs/verification/ribbon-shell/after-file.png": "95ab7c7acb145b19f1fc3e4a803efb1d4caec111b0b77cac18664fa687bf693f",
+    "docs/verification/ribbon-shell/after-long-message.png": "ea5ab184af2fd31233cdd17534470bced4757f0a491322b3307f84973652f8eb",
+    "docs/verification/ribbon-shell/after-run.png": "2a1e9bf2f82b81953ba4e28d9c85db2275b87057c326a31e7cf145bb5751dd53",
+    "docs/verification/ribbon-shell/before.png": "ebfd4c541c37b4d6647087259c79185809c826a390b7f6987ed296501ba4bf36",
+    "docs/verification/ribbon-shell/depth-evidence-summary.json": "438637ca4f085a891ecb912314c0a7928854dba951f61b630e1bd6ffb38ad9fb",
+    "docs/verification/ribbon-shell/layout-evidence.json": "4f69a1dfc62bfe04ac8969d374c96bef819a23d574a9b24639a6c207b503b8d3",
+    "docs/verification/ribbon-shell/navigation-evidence.json": "f8fa8acd6fc506496e0aa1efc6b52fedf9ac2835c8b9a94ea2d52454fa2d695f",
+    "docs/verification/ribbon-shell/source-hashes.json": "965777d171ea5bf8d5ffc7e1f0ef9c7f13940a76d6fd7da80555b2a5ac66f18a",
+    "docs/verification/2026-10-09-interactive-workspace.json": "6feb6243dc0fae8f0812021105717b92f4d72ffacde9bbc547be77d18d71e9e8",
+    "docs/verification/2026-10-09-ribbon-gizmo-layouts.json": "811bebe4c4dacd116b6774759e959c0ac9ca32979a4f50ca881bd0238295f16e",
+    "docs/verification/2026-10-16-component-palette-benchmark-baseline.json": "34be1d26bedd988780bf42de5b025754906faca6a1f5d3f3065904f4244e8b5a",
+    "docs/verification/2026-10-16-component-palette-benchmark.json": "b9a5ccfea87847352564cc30a6c9772eb4b676f5d2106a9a3f774ccfe31bb766",
+    "docs/verification/2026-10-16-w8-load.json": "b4a81a381a6ccc7de09978ffaee6e96858a20559f37bc8efda2173dad73b4887"
+  }
+}

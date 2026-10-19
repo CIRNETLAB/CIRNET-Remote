@@ -1,5 +1,7 @@
 # File / Component / Run Ribbon verification
 
+> Historical evidence status — 2026-10-19 audit: command outputs, Git state and local artifact locations below describe the original session. They do not report this audit’s results or authorize new output under `.build`, `.superpowers`, `.test-build` or `docs/verification`. For reruns use [VERIFICATION.md](../VERIFICATION.md); generated visual and raw diagnostic artifacts must start outside the repository. Existing outputs await separate owner review and have not been deleted or moved.
+
 Date: 2026-10-19. Branch: `refactor`. Base: `71433e2`.
 
 Specification: `Prompt_Codex_Ribbon_File_Component_Run.md`, supplied by the user. Implementation stays in the current worktree; no dependency, lockfile, Contracts, backend, FPGA, camera engine or model geometry changes.

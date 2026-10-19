@@ -1,5 +1,7 @@
 # Source algorithms and stability audit — 2026-10-10
 
+> Historical source snapshot — 2026-10-19 audit: implementation and results below belong to the dated change, including statements labelled “current” or “latest”. Current boundaries are maintained in [ARCHITECTURE.md](ARCHITECTURE.md); use [VERIFICATION.md](VERIFICATION.md) for new checks and external artifact output. This audit does not rerun or re-certify historical results.
+
 The audit addresses the user's request to inspect the entire project for correctness, crashes, unreleased memory, avoidable algorithm costs and poor Pan/Rotate/Zoom behavior. It preserves the approved architecture, Circuit Graph contracts, instrument chassis pitch and control pivots. Findings below describe inspected implementations, rather than assuming planned systems already exist.
 
 ## Source inventory and execution flow

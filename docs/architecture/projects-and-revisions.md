@@ -8,12 +8,20 @@ Admin; a role never grants implicit access to another principal's projects.
 
 `project_id` identifies a server project. `document_id` identifies a server
 document and is independent of the canonical graph's embedded `circuit_id`.
-Create, Save, Open, and Save As preserve graph 1.0/1.1, supported extensions,
+Create, Save, Open, and Save As preserve supported graph 1.0/1.1/1.2, extensions,
 metadata, mounting/contact bindings, memory images, lead properties and wire
 visuals without covertly renaming the embedded graph. The document name is
 separate from imported graph metadata. Structural storage validation does not
 authorize execution or assert physical wiring correctness. Browser editor
 representability and execution validation remain explicit consumer boundaries.
+
+The original public schema and routes remain frozen for legacy graphs. Additive
+`contracts/public/placement.schema.json` and `/api/v2` document operations
+accept `AnySupportedCircuitGraph`, including 1.2 flexible assemblies and explicit
+free physical descriptors. A legacy read/list/save that selects a 1.2 document
+returns `UNSUPPORTED_DOCUMENT_VERSION`; the Web chooses v2 before writes and
+retries a read only after that explicit version error. Mutation requests are
+never replayed. See [flexible placement](../../contracts/design-models/flexible-placement.md).
 
 Projects and documents have revisions and timestamps. A save supplies
 `base_revision`, `name`, and the canonical `graph`. The database updates the

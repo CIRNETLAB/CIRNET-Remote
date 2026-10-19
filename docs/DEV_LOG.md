@@ -1,15 +1,25 @@
 ---
 project: net-Circuit-Remote
-current_phase: web-contracts-W8
-status: verified-local
-last_updated: 2026-10-18
-next_task: user-review-and-commit-component-placement
-blocking_issue: none-in-authorized-software-scope
+current_phase: documentation-artifact-audit
+status: documentation-artifact-policy-verified-existing-test-failure-recorded
+last_updated: 2026-10-19
+next_task: user-review-legacy-artifact-disposition
+blocking_issue: pre-existing-python-import-regex-test-false-positive
 hardware_mode: simulation
 fpga_development_started: true
 ---
 
 # Development Log
+
+## Documentation and artifact policy audit — 2026-10-19
+
+The current task audits project-managed Markdown against source, Contracts, tests, scripts and CI at baseline `0cc66f8`, preserving historical prompts, result counts, user artwork and existing visual artifacts. Current Codex rules live in [AGENTS.md](../AGENTS.md); [VERIFICATION.md](VERIFICATION.md) owns reproduction and external artifact handling. The complete per-file classification, missing historical images, proposed cleanup and actual checks belong to [the audit report](verification/2026-10-19-documentation-artifact-audit.md). Verification for this task is recorded there separately from all older gates below. No staging, commit, push, document removal or image removal is authorized.
+
+Latest implemented UI source includes the [File / Component / Run Ribbon](verification/2026-10-19-ribbon-shell.md), [adaptive depth policy](verification/2026-10-19-adaptive-depth.md) and [anchored camera navigation](verification/2026-10-19-unified-camera-navigation.md), plus the 2026-10-18 package/contact/Label changes. Their reports remain dated evidence; the present audit does not certify those historical suites as freshly run.
+
+## AI Handoff — current documentation audit
+
+Follow the root Codex rules and shared verification guide, use the actual current source for decisions, and keep screenshots, video, traces, HTML reports with images and raw diagnostic artifacts outside the worktree from creation. Preserve hash-locked archive bytes and tests. Review the audit report for current PASS/FAIL/NOT_RUN/BLOCKED evidence and cleanup proposals; older action checklists, Git blockers and next-task statements are historical. The user decides any later deletion or commit.
 
 ## Component placement — 2026-10-18
 
@@ -23,7 +33,7 @@ W0–W8 software scope is implemented and verified sequentially. Canonical gener
 
 Final W8 evidence:1015 full Python PASS/1 Icarus SKIP (including355 Contracts),1054 Web PASS,14 actual Chromium PASS with API0 on restart/shutdown,16 actual PostgreSQL migration/restore/race cases, four clean wheels exercised physically outside checkout, and50 authenticated principals/1195 requests/0 unexpected or transport errors/eight retained real virtual captures. Generation, typecheck, AST, production build and source inventory pass. See `verification/2026-10-16-web-contracts.md`, the individual acceptance matrix and final handoff. Phase Git checkpoints are recorded with the metadata permission limitation; no reset, push, merge or deployment occurred.
 
-## AI Handoff — current Web/Contracts task
+## AI Handoff — Web/Contracts snapshot (historical)
 
 Use `verification/2026-10-18-component-placement.md` for the latest change, together with the existing `verification/2026-10-16-web-contracts-handoff.md` for W0–W8. Do not reinterpret historical Phase1/2/R/H handoffs below as missing current functionality. `scripts/check_release.py --show-plan` lists reproducible gates; required PostgreSQL, browser and external wheel probes fail explicitly when unavailable. Keep hardware/analog truth, the single API scheduler and principal-bound cancellation. The user will commit this change; never bypass Git metadata permissions or fabricate historical phase commits.
 
@@ -37,7 +47,7 @@ Implemented the approved Native plan: explicit shared 830/630/100 topology, Inst
 
 ## Current Goal
 
-The authorized Web/Contracts W0–W8 software task has passed local acceptance/build/tests and is left in refactor for review with the documented Git delivery blocker. No push/merge/deploy is authorized or performed. `verification/2026-10-16-web-contracts.md` is the execution ledger. ARCHITECTURE.md remains authoritative; older entries/handoffs below are historical evidence and do not override canonical v3.1 or implemented current source.
+Complete the Markdown audit and external-artifact policy, record fresh checks in `verification/2026-10-19-documentation-artifact-audit.md`, and leave all changes unstaged for review. `ARCHITECTURE.md` remains authoritative; the W/R/H and editor entries below preserve their original results, Git states and remaining gates. Their old next-task instructions do not override the present authorized scope.
 
 ## Post-R7 H0–H6 — 2026-10-13
 

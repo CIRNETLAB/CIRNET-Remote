@@ -2,7 +2,7 @@
 
 Baseline: `40a4cad80be76a5b08943fab51ee2218cb7d7012`. Runtime: v24.20.0, Windows_NT 10.0.26300 x64, 12th Gen Intel(R) Core(TM) i5-12500H.
 
-Reproduce from the repository root with `node apps/web/scripts/benchmark-component-palette.mjs`. The command rewrites the accompanying JSON and this report. No new dependency is required. Historical search/cache source is loaded with `git show` through esbuild; both versions use the same current catalog, Three.js, and ComponentModel dependencies.
+Reproduce from the repository root with `node apps/web/scripts/benchmark-component-palette.mjs`. New runs write their Markdown summary and raw JSON through the shared external artifact resolver; they do not overwrite this historical report or its checked-in JSON. Set `NETCIRCUIT_ARTIFACTS_DIR` to choose an absolute external parent. See [VERIFICATION.md](../VERIFICATION.md) for configuration and cleanup. No new dependency is required. Historical search/cache source is loaded with `git show` through esbuild; both versions use the same current catalog, Three.js, and ComponentModel dependencies.
 
 This saved report reused unchanged historical search timings from `docs/verification/2026-10-16-component-palette-benchmark-baseline.json`, captured at 2026-10-16T01:40:14.449Z, and freshly measured the final indexed search and all thumbnail phases. Baseline/current search timings therefore come from separate processes on the same CPU/OS/Node runtime. Ref, source hashes, queries, warmups, sample count and shared dependency hashes are validated before reuse. Reproduce this exact mode by adding `--reuse-baseline-search docs/verification/2026-10-16-component-palette-benchmark-baseline.json`; omit the flag to rerun both search implementations in one process.
 

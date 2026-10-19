@@ -4,6 +4,8 @@ Current authority: docs/ARCHITECTURE.md
 
 # Single Workspace Documentation and Implementation Manifest
 
+> Archive locator — 2026-10-19: the list below preserves original locations. The archived [Web Foundation design](2026-10-08-web-foundation-design.md), [Web Foundation plan](2026-10-08-web-foundation.md) and [Single Workspace prompt](PROMPT_SINGLE_WORKSPACE_UI_AI.md) are now beside this manifest. `docs/LO_TRINH_VA_MASTER_PROMPT_AI_netCIRCUIT_REMOTE_V1.md` is absent at audit baseline. The five original `interface_1.png`…`interface_5.png` reference images **are present** under `assets/Image_sample/`; preserve them as user source artwork. Missing historical report captures are noted in the individual reports, separately from those references. Do not reconstruct missing evidence or infer current status from this manifest. See [the current verification guide](../../VERIFICATION.md).
+
 The initial package approved the Single Workspace direction through Markdown changes. The 2026-10-09 implementation now migrates the source, tests and icon pipeline as well. Original specification/history is retained; current implementation evidence lives in DEV_LOG.
 
 ## Files

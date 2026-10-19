@@ -1,5 +1,7 @@
 # Phân tích thuật toán điều hướng workspace — 2026-10-09
 
+> Historical source snapshot — 2026-10-19 audit: implementation and results below belong to the dated change, including statements labelled “current” or “latest”. Current boundaries are maintained in [ARCHITECTURE.md](ARCHITECTURE.md); use [VERIFICATION.md](VERIFICATION.md) for new checks and external artifact output. This audit does not rerun or re-certify historical results.
+
 ## Phạm vi và kết luận
 
 **Quy tắc hiện hành theo yêu cầu mới nhất:** chỉ button Move cho phép nắm kéo trực tiếp breadboard và mọi model khác. Select chỉ chọn; kéo trên model trong Select không pan camera, không preview và không ghi history. Kéo nền để pan, chuột phải orbit và XYZ theo camera được giữ. [Bằng chứng cập nhật](verification/2026-10-09-move-tool-browser.md).

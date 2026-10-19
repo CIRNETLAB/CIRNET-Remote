@@ -1,5 +1,7 @@
 # Phase 2 verification — 2026-10-09
 
+> Audit status — 2026-10-19: this is historical evidence. The image files named below were already absent from the supplied repository at baseline `0cc66f8`; this audit did not inspect or recreate them. Recorded measurements and results are preserved. New verification outputs follow [the shared guide](../VERIFICATION.md) and stay outside the repository.
+
 Result: **PASS** for the requested interactive workspace scope. Local Vite at `http://localhost:5173/`, real FastAPI backend at port 8000; simulation station discovery and event WebSocket connected. Browser controlled through Codex computer-use APIs, with native mouse/keyboard gestures for canvas and coordinate inputs. No synthetic simulator, signal readings or hardware source was introduced.
 
 ## Automated checks
@@ -54,6 +56,6 @@ One fresh read-only reviewer found missing InstancedMesh buffer disposal and Esc
 
 Screenshot shows 17 models and five logical connections at desktop size. [Saved Circuit Graph JSON](2026-10-09-interactive-workspace.json) was downloaded through the actual Save action and can be opened with the workbench's Open button. It contains local initial memory configuration, not measured or simulated results.
 
-![Interactive workspace](2026-10-09-interactive-workspace.jpg)
+Interactive workspace (historical image reference: `2026-10-09-interactive-workspace.jpg`; absent at audit baseline).
 
 Scope limits: no runtime simulation, physical pin map/node topology, power source, capture or generator output is claimed. Context-loss handling is implemented; browser manual context-loss injection was not performed. Session persistence remains local file download/import.

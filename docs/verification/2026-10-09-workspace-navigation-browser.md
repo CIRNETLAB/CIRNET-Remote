@@ -1,5 +1,7 @@
 # Workspace navigation verification — 2026-10-09
 
+> Audit status — 2026-10-19: this is historical evidence. The image files named below were already absent from the supplied repository at baseline `0cc66f8`; this audit did not inspect or recreate them. Recorded measurements and results are preserved. New verification outputs follow [the shared guide](../VERIFICATION.md) and stay outside the repository.
+
 **Historical report:** this records the earlier Select/Move drag implementation. The latest user request requires Move for direct model dragging; current 54-test/build/browser evidence is in [Move-only verification](2026-10-09-move-tool-browser.md). Pan/orbit/XYZ/layout evidence below remains relevant.
 
 ## Commands and results
@@ -52,4 +54,4 @@ Viewport override was reset after verification. No fabricated simulator output/h
 
 One fresh read-only reviewer reported no Critical issue, one Important low-camera drag issue and one Minor pointer overlay issue. Both were addressed; the low-camera regression was confirmed RED → GREEN, and DOM hit testing confirmed the overlay correction. Multitouch and simulator/electrical implementation remain outside this mouse-navigation change.
 
-![Final scene and camera-oriented XYZ with adjacent navigation](2026-10-09-workspace-navigation.jpg)
+Final scene and camera-oriented XYZ with adjacent navigation (historical image reference: `2026-10-09-workspace-navigation.jpg`; absent at audit baseline).

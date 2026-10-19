@@ -51,6 +51,10 @@ resources through `disposeObject`.
 
 ## Reproducible assets
 
+These exports are product assets. Screenshots, traces and rendered diagnostic
+comparisons from inspection follow the repository [verification policy](../../../../../docs/VERIFICATION.md)
+and are created outside the checkout; retained inspection evidence is Markdown.
+
 From `apps/web`:
 
 ```bash

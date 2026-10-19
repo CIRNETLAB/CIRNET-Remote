@@ -1,6 +1,7 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test'
 import { build } from 'esbuild'
 import { mkdir, writeFile } from 'node:fs/promises'
+import { getArtifactDirectory } from '../../../scripts/artifact-paths.mjs'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import type { Mesh, MeshPhysicalMaterial, Object3D, Camera } from 'three'
@@ -11,7 +12,7 @@ import type { solveFlexibleMount as FlexibleSolver } from '../src/electrical/fle
 import { exportedNativeGraph, nativeComponentBody, nativeSceneEvidence, observeNativeScene, sceneReady, workspaceCanvas } from './native-scene'
 
 type Runtime = typeof Catalog & { solveMounting: typeof RigidSolver; solveFlexibleMount: typeof FlexibleSolver }
-const galleryDirectory = resolve('.test-build/sealed-model-gallery')
+const galleryDirectory = getArtifactDirectory('sealed-model-gallery')
 const info = (page: Page) => page.getByRole('complementary', { name: 'Component Info', exact: true })
 const board: CircuitModule = { id: 'BB', type: 'BREADBOARD', position: { x: 0, y: 0, z: 0 } }
 const fileGraph = (graph: CircuitGraph): CircuitGraph => JSON.parse(JSON.stringify(graph)) as CircuitGraph

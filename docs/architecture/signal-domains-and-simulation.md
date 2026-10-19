@@ -63,8 +63,9 @@ and unknown values without claiming to execute their behavior.
 
 ## Execution boundary
 
-`netcircuit_sim.dispatch.SimulationDispatcher` accepts the generated
-`SimulationRequest` and returns generated `SimulationResult` or
+`netcircuit_sim.dispatch.SimulationDispatcher` accepts generated
+`SimulationRequest` or additive `SimulationRequestV2` (request schema 2.0,
+including Graph 1.2) and returns generated `SimulationResult` or
 `SimulationErrorResult`. Digital/DC execution delegates to the existing event
 engine. SPICEAdapter and MixedSignalCoordinator accept the same typed request
 and return `ANALOG_UNAVAILABLE` / `MIXED_SIGNAL_UNAVAILABLE` without a capture or
@@ -72,7 +73,7 @@ fabricated samples. Historical direct untyped adapter calls retain their
 RuntimeError compatibility behavior. Unsupported digital models return a typed
 rejection. There is no additional public Run or analysis endpoint.
 
-VirtualHardwareStation admits supported CircuitGraph 1.0/1.1 through this
+VirtualHardwareStation admits supported CircuitGraph 1.0/1.1/1.2 through this
 dispatcher, then executes through the existing Lab lifecycle, RPC, bounded
 process worker and capture persistence. The physical station continues to use
 its observed topology, policy, plan and safety authority; editor graphs never

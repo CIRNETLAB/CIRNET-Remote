@@ -1,5 +1,7 @@
 # CRUMB Wire Tool — source analysis
 
+> Historical source snapshot — 2026-10-19 audit: implementation and results below belong to the dated change, including statements labelled “current” or “latest”. Current boundaries are maintained in [ARCHITECTURE.md](ARCHITECTURE.md); use [VERIFICATION.md](VERIFICATION.md) for new checks and external artifact output. This audit does not rerun or re-certify historical results.
+
 Implemented against the approved 2026-10-14 design/plan. CircuitGraph remains schema 1.0 and scene remains a projection. All geometry dimensions are editor units, not physical hardware ratings.
 
 ## Topology and electrical identity

@@ -1,5 +1,7 @@
 # Wire path, copper terminals và routing UX — 2026-10-14
 
+> Audit status — 2026-10-19: this is historical evidence. The image files named below were already absent from the supplied repository at baseline `0cc66f8`; this audit did not inspect or recreate them. Recorded measurements and results are preserved. New verification outputs follow [the shared guide](../VERIFICATION.md) and stay outside the repository.
+
 Thực thi brief `e75ec390/Pasted text.txt` trên working tree sạch tại HEAD `0d742c1`. Phạm vi frontend/Three.js Wire; báo cáo này mô tả workflow hiện hành sau refactor. Zoom, pan XZ, đường kính cấu hình, model geometry, CircuitGraph schema và electrical resolver giữ nguyên.
 
 ## Root cause
@@ -70,9 +72,9 @@ Selected user handles dùng instancing, radius khoảng 3.5 CSS px, pick margin 
 
 Đã dựng TOP/OBLIQUE bằng software rasterizer từ actual production housing/socket/body/copper triangles và camera matrices, rồi kiểm tra ảnh. Visible ancestor filtering giữ hidden gizmos ngoài ảnh. FREE diagonal/custom path, ORTHOGONAL elbows, low board routing và preview free tip có trong fixture. Không có browser/WebGL capture, texture labels, PBR reflections, GPU shadow/AA hoặc xác nhận native browser pointer UX; không dùng ảnh CPU để tuyên bố đã QA WebGL.
 
-![TOP — CPU production mesh preview](2026-10-14-wire-refactor-top-cpu.png)
+TOP — CPU production mesh preview (historical image reference: `2026-10-14-wire-refactor-top-cpu.png`; absent at audit baseline).
 
-![OBLIQUE — CPU production mesh preview](2026-10-14-wire-refactor-oblique-cpu.png)
+OBLIQUE — CPU production mesh preview (historical image reference: `2026-10-14-wire-refactor-oblique-cpu.png`; absent at audit baseline).
 
 Tight corners có taper cục bộ; pin-adjacent ORTHOGONAL edits reshape quanh pin cố định. Crossings/returns có chủ ý được giữ, không có collision/rerouting tự động giữa dây. Saved legacy anchors đã materialize từ bản cũ không được tự suy đoán provenance. Build chuẩn còn bị giới hạn realpath của môi trường; browser/GPU appearance/performance chưa xác minh.
 

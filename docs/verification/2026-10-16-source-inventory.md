@@ -1,5 +1,7 @@
 # Source inventory — 2026-10-16
 
+> Historical evidence status — 2026-10-19 audit: command outputs, Git state and local artifact locations below describe the original session. They do not report this audit’s results or authorize new output under `.build`, `.superpowers`, `.test-build` or `docs/verification`. For reruns use [VERIFICATION.md](../VERIFICATION.md); generated visual and raw diagnostic artifacts must start outside the repository. Existing outputs await separate owner review and have not been deleted or moved.
+
 Inventory of publishable changed and new files against the original clean HEAD `8100039988272c2fa2b5972a00a603261e80064e` (`8100039`). HEAD still points to that commit. This compares the accumulated W0–W8 workspace with the original baseline; it does not claim an isolated clean CI run or a release commit.
 
 `M` means a tracked path changed relative to the original HEAD. `A` means a new path reported as untracked. Additions remain untracked because Git metadata is read-only. Staging was attempted and failed; no staging or commit succeeded.

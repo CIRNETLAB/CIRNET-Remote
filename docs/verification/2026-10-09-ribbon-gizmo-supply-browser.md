@@ -1,5 +1,7 @@
 # Ribbon, gizmo and upright supply verification — 2026-10-09
 
+> Audit status — 2026-10-19: this is historical evidence. The image files named below were already absent from the supplied repository at baseline `0cc66f8`; this audit did not inspect or recreate them. Recorded measurements and results are preserved. New verification outputs follow [the shared guide](../VERIFICATION.md) and stay outside the repository.
+
 Target: local development workbench at `http://localhost:5173/`, real Three.js/WebGL in the Codex in-app browser. Final-source fresh reload: **2026-10-09T15:44:13.705Z**. Only a session-local test draft was used; no circuit was saved or submitted for hardware execution.
 
 ## Ribbon and responsive layout
@@ -18,7 +20,7 @@ The Embedded/Controller label has one rendered text line at every measured size.
 
 The narrow override requested 661 px; DOM `innerWidth` reported 662 px. Measurements record the observed viewport. All palettes stayed inside it. Raw measurements: [JSON](2026-10-09-ribbon-gizmo-layouts.json).
 
-![Palette attached to Input; choice cards only](2026-10-09-anchored-ribbon.jpg)
+Palette attached to Input; choice cards only (historical image reference: `2026-10-09-anchored-ribbon.jpg`; absent at audit baseline).
 
 ## Native gizmo interaction
 
@@ -37,9 +39,9 @@ Verified the actual upright metallic mesh from front and oblique views: portrait
 
 The Component Info introduction and original vector preview now describe/show the two-knob/two-post layout. Its image stays within the art frame. Clearing selection hides the panel; selecting the supply again reopens it with only Close/Add actions. The ribbon has no Info rows.
 
-![Upright supply and clear adjacent gizmo](2026-10-09-upright-power-supply.jpg)
+Upright supply and clear adjacent gizmo (historical image reference: `2026-10-09-upright-power-supply.jpg`; absent at audit baseline).
 
-![Matching information and preview](2026-10-09-upright-power-supply-info.jpg)
+Matching information and preview (historical image reference: `2026-10-09-upright-power-supply-info.jpg`; absent at audit baseline).
 
 ## Automated checks and review
 

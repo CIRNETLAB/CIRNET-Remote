@@ -1,5 +1,7 @@
 # Phân tích Component Transform Gizmo — 2026-10-09
 
+> Historical source snapshot — 2026-10-19 audit: implementation and results below belong to the dated change, including statements labelled “current” or “latest”. Current boundaries are maintained in [ARCHITECTURE.md](ARCHITECTURE.md); use [VERIFICATION.md](VERIFICATION.md) for new checks and external artifact output. This audit does not rerun or re-certify historical results.
+
 > Báo cáo này ghi nhận lần triển khai gizmo ban đầu. Tinh chỉnh mới nhất về menu, núm Y chạy theo góc xoay và Power Supply dáng đứng hai núm/hai cọc nằm trong [SOURCE_ANALYSIS_RIBBON_GIZMO_SUPPLY.md](SOURCE_ANALYSIS_RIBBON_GIZMO_SUPPLY.md). Bằng chứng kiểm thử bên dưới là lịch sử của lần triển khai trước.
 
 ## Hiện trạng và nguyên nhân

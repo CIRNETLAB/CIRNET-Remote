@@ -1,5 +1,7 @@
 # Kiểm chứng tối ưu resize panel — 2026-10-11
 
+> Audit status — 2026-10-19: this is historical evidence. The image files named below were already absent from the supplied repository at baseline `0cc66f8`; this audit did not inspect or recreate them. Recorded measurements and results are preserved. New verification outputs follow [the shared guide](../VERIFICATION.md) and stay outside the repository.
+
 Base: `80b6f90` (`update`). Workspace sạch khi bắt đầu. Thay đổi chưa commit/push/deploy.
 
 ## Phương pháp và kết quả trước/sau
@@ -65,6 +67,6 @@ Tests:
 
 Documentation: `apps/web/README.md`, `docs/DEV_LOG.md`, `docs/CONTEXT.md`, `docs/ARCHITECTURE.md`, `docs/CHANGELOG.md`, `docs/ROADMAP.md`, `docs/SOURCE_ANALYSIS_COLLAPSIBLE_TOOLBARS.md`, report này và hai PNG dưới đây. ToolRail.vue được đọc/phân tích, không cần sửa template/logic vì CSS/observer chung xử lý cả hai panel. Không đổi icons, model/graph/schema/transport hoặc simulation logic.
 
-![Expanded with Scope and 44-component circuit](2026-10-11-panel-performance-expanded.png)
+Expanded with Scope and 44-component circuit (historical image reference: `2026-10-11-panel-performance-expanded.png`; absent at audit baseline).
 
-![Fully collapsed workspace with retained Scope and circuit](2026-10-11-panel-performance-collapsed.png)
+Fully collapsed workspace with retained Scope and circuit (historical image reference: `2026-10-11-panel-performance-collapsed.png`; absent at audit baseline).

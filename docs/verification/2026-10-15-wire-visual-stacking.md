@@ -1,5 +1,7 @@
 # Tinned terminals, constant-diameter wire và stacking — 2026-10-15
 
+> Audit status — 2026-10-19: this is historical evidence. The image files named below were already absent from the supplied repository at baseline `0cc66f8`; this audit did not inspect or recreate them. Recorded measurements and results are preserved. New verification outputs follow [the shared guide](../VERIFICATION.md) and stay outside the repository.
+
 Thực thi brief `8bc71255/Pasted text.txt` trên working tree sạch tại `a7210e6`. Phạm vi frontend/Three.js Wire. Giữ vị trí WireOptions ở góc trên bên phải và không khôi phục scene inventory đã bỏ trong commit đó. Không thay backend, contracts, simulator, hardware/FPGA, CircuitGraph schema, electrical resolver, topology/socket/housing/model geometry hoặc zoom/pan/placement/Gizmo/ViewCube.
 
 ## Root cause
@@ -88,8 +90,8 @@ RMB toggle/undo corner, FREE/ORTHOGONAL/AUTO, Esc/Backspace/Delete, captured ges
 
 Hai ảnh dưới là software rasterization từ actual production housing/socket/body/tinned-metal triangles và camera matrices. Đã kiểm tra TOP/OBLIQUE: purple nằm trên shared red path, orange layer 2 crossing, free preview green đặc, silver inserted leads, uniform coat và bo góc. Hidden ancestors/gizmos được loại đúng. Không có PBR reflections, texture labels, GPU shadows/AA hoặc native browser interactions trong ảnh; chưa xác minh WebGL appearance/performance vì browser access chưa được cấp lại.
 
-![TOP — actual mesh CPU preview](2026-10-15-wire-stack-top-cpu.png)
+TOP — actual mesh CPU preview (historical image reference: `2026-10-15-wire-stack-top-cpu.png`; absent at audit baseline).
 
-![OBLIQUE — actual mesh CPU preview](2026-10-15-wire-stack-oblique-cpu.png)
+OBLIQUE — actual mesh CPU preview (historical image reference: `2026-10-15-wire-stack-oblique-cpu.png`; absent at audit baseline).
 
 Short/sub-precision corners dùng capsule fallback thay vì một continuous smooth fillet không thể chứa full tube radius. Intentional self-crossings/returns được giữ; primitive joints không phải Boolean solid union. Stacking là conservative visual-envelope routing, không phải physics/collision simulator cho mọi housing/component; metal leads vẫn đi về fixed endpoints và có thể cùng vị trí tại shared contact. Largest scene diameter cho layer spacing có tính conservative; imported unusually thick wires có thể làm các tầng cao hơn. Route edits không tự đổi layer; Top/manual controls xử lý order khi cần. Build chuẩn còn bị native realpath permission; browser/GPU QA chưa thực hiện. Source/tests/docs giữ trong working tree.

@@ -1,8 +1,10 @@
 # Single Workspace browser verification — 2026-10-09
 
+> Audit status — 2026-10-19: this is historical evidence. The image files named below were already absent from the supplied repository at baseline `0cc66f8`; this audit did not inspect or recreate them. Recorded measurements and results are preserved. New verification outputs follow [the shared guide](../VERIFICATION.md) and stay outside the repository.
+
 Tested the real Vite app at `http://localhost:5173/` in Codex's in-app browser, with the existing FastAPI simulation service at `127.0.0.1:8000`. Temporary browser fixtures were created under ignored `.superpowers/`; no production graph/device data was changed.
 
-![Verified Single Workspace with floating Scope and Generator](2026-10-09-single-workspace.jpg)
+Verified Single Workspace with floating Scope and Generator (historical image reference: `2026-10-09-single-workspace.jpg`; absent at audit baseline).
 
 The saved screenshot shows the verified 1280×720 workbench with two floating instrument shells and a connected backend. The temporary viewport override was reset after testing. Final browser console inspection returned no warnings/errors after a fresh load with the backend running.
 

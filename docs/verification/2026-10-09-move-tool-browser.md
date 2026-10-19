@@ -1,5 +1,7 @@
 # Move-only model dragging verification — 2026-10-09
 
+> Audit status — 2026-10-19: this is historical evidence. The image files named below were already absent from the supplied repository at baseline `0cc66f8`; this audit did not inspect or recreate them. Recorded measurements and results are preserved. New verification outputs follow [the shared guide](../VERIFICATION.md) and stay outside the repository.
+
 Latest requested behavior: direct mouse dragging of breadboards and all other scene models is allowed only with Move active. Select selects models/wires. Empty-surface left pan and right-button orbit remain available.
 
 ## Automated checks
@@ -25,4 +27,4 @@ Codex in-app browser at `http://localhost:5173/`, real WebGL scene, existing tes
 
 This update does not repeat the four desktop sizes or native pan/button checks from the [previous navigation report](2026-10-09-workspace-navigation-browser.md). Right-button native drag is unavailable in the current automation API; the production OrbitControls integration test passes. No dependency, electrical contract or driver change was needed.
 
-![Move active in the circuit workspace](2026-10-09-move-tool.jpg)
+Move active in the circuit workspace (historical image reference: `2026-10-09-move-tool.jpg`; absent at audit baseline).

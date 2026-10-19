@@ -1,5 +1,7 @@
 # Instrument GUI redesign — 2026-10-12
 
+> Audit status — 2026-10-19: this is historical evidence. The image files named below were already absent from the supplied repository at baseline `0cc66f8`; this audit did not inspect or recreate them. Recorded measurements and results are preserved. New verification outputs follow [the shared guide](../VERIFICATION.md) and stay outside the repository.
+
 Baseline: `e5b7f6b`. Local verification only; no acquisition/hardware execution claim.
 
 ## Source analysis and boundaries
@@ -57,8 +59,8 @@ FloatingWindow.vue, FloatingWindowManager.vue, instrument.ts, ui.ts, CircuitWork
 
 Clean app Scope, default desktop:
 
-![Oscilloscope](2026-10-12-oscilloscope-desktop.jpg)
+Oscilloscope (historical image reference: `2026-10-12-oscilloscope-desktop.jpg`; absent at audit baseline).
 
 Clean app Monitor with no configured channels/capture, default desktop:
 
-![Signal Monitor](2026-10-12-signal-monitor-desktop.jpg)
+Signal Monitor (historical image reference: `2026-10-12-signal-monitor-desktop.jpg`; absent at audit baseline).

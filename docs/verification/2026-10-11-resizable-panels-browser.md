@@ -1,5 +1,7 @@
 # Fully collapsible and resizable panels — 2026-10-11
 
+> Audit status — 2026-10-19: this is historical evidence. The image files named below were already absent from the supplied repository at baseline `0cc66f8`; this audit did not inspect or recreate them. Recorded measurements and results are preserved. New verification outputs follow [the shared guide](../VERIFICATION.md) and stay outside the repository.
+
 Verified the local Vite application in the Codex browser using native clicks/drags and keyboard input. DOM inspection measured visible layout; no application-store mutations were used through browser evaluation. The preceding partial-collapse report is historical.
 
 ## Results
@@ -32,9 +34,9 @@ Canvas dimensions are CSS pixels. Fractional values follow browser scaling/statu
 
 At1280×720 fully collapsed, canvas rect equals the complete available workbench rect: x0,y52,width1280,height629. The top reopen button is x626/y58, and the left reopen button is x4/y352.5. Both hidden sections have zero client rects. Title/status still occupy their designed space.
 
-![Resized expanded panels](2026-10-11-resizable-panels-expanded.png)
+Resized expanded panels (historical image reference: `2026-10-11-resizable-panels-expanded.png`; absent at audit baseline).
 
-![Fully collapsed panels and connected circuit](2026-10-11-resizable-panels-collapsed.png)
+Fully collapsed panels and connected circuit (historical image reference: `2026-10-11-resizable-panels-collapsed.png`; absent at audit baseline).
 
 ## Automated verification
 

@@ -1,5 +1,7 @@
 # Unified placement pose and sticky Gizmo — 2026-10-12
 
+> Audit status — 2026-10-19: this is historical evidence. The image files named below were already absent from the supplied repository at baseline `0cc66f8`; this audit did not inspect or recreate them. Recorded measurements and results are preserved. New verification outputs follow [the shared guide](../VERIFICATION.md) and stay outside the repository.
+
 Baseline: `1d1688d`. This task replaces the visual anchor/idle settlement described in the earlier placement-follow report. Historical reports and screenshots are retained.
 
 ## Source analysis and implementation
@@ -34,11 +36,11 @@ Normal UI controls and native browser pointer input verify Breadboard, Oscillosc
 
 Preview screenshots show Components0, Undo disabled, no Component Info and four handles without Delete. Breadboard confirmation creates one component, preserves the pose and restores Delete. One Undo returns Components0; one Redo restores the same rotated pose. Canvas dimensions remain1280×629 CSS pixels /1600×786 drawing buffer. Runtime warning/error logs are empty.
 
-![Breadboard rotated preview after follow](2026-10-12-placement-sticky-breadboard.jpg)
-![Oscilloscope rotated preview after follow](2026-10-12-placement-sticky-oscilloscope.jpg)
-![Function Generator rotated preview after follow](2026-10-12-placement-sticky-generator.jpg)
-![Power Supply rotated preview after follow](2026-10-12-placement-sticky-supply.jpg)
-![Committed selection with Delete restored](2026-10-12-placement-sticky-committed.jpg)
+Breadboard rotated preview after follow (historical image reference: `2026-10-12-placement-sticky-breadboard.jpg`; absent at audit baseline).
+Oscilloscope rotated preview after follow (historical image reference: `2026-10-12-placement-sticky-oscilloscope.jpg`; absent at audit baseline).
+Function Generator rotated preview after follow (historical image reference: `2026-10-12-placement-sticky-generator.jpg`; absent at audit baseline).
+Power Supply rotated preview after follow (historical image reference: `2026-10-12-placement-sticky-supply.jpg`; absent at audit baseline).
+Committed selection with Delete restored (historical image reference: `2026-10-12-placement-sticky-committed.jpg`; absent at audit baseline).
 
 ## Files changed
 

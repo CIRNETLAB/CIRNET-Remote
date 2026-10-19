@@ -1,5 +1,7 @@
 # Contacts, deep insertion, continuous wires and visual Label
 
+> Historical evidence status — 2026-10-19 audit: command outputs, Git state and local artifact locations below describe the original session. They do not report this audit’s results or authorize new output under `.build`, `.superpowers`, `.test-build` or `docs/verification`. For reruns use [VERIFICATION.md](../VERIFICATION.md); generated visual and raw diagnostic artifacts must start outside the repository. Existing outputs await separate owner review and have not been deleted or moved.
+
 Baseline: `e41c260`. Scope: the approved `PROMPT_CODEX_Model_3D_SS12D10_Day_Dan_Label_netCircuit.md` and its twelve reference images. Source is left uncommitted for the user.
 
 ## Geometry and provenance

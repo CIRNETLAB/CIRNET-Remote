@@ -1,5 +1,7 @@
 # Phân tích Technical Workbench — 2026-10-09
 
+> Historical source snapshot — 2026-10-19 audit: implementation and results below belong to the dated change, including statements labelled “current” or “latest”. Current boundaries are maintained in [ARCHITECTURE.md](ARCHITECTURE.md); use [VERIFICATION.md](VERIFICATION.md) for new checks and external artifact output. This audit does not rerun or re-certify historical results.
+
 ## Yêu cầu và nguyên nhân
 
 Bản cập nhật này thay thế phần viền mảnh, lỗ trang trí và Info theo preview trong [phân tích selection trước](SOURCE_ANALYSIS_SELECTION_AND_COMPONENT_INFO.md). Người dùng yêu cầu viền Medium Gold 2 px rõ hơn, lỗ breadboard có chiều sâu, ngàm tương thích, ảnh không tràn, Info chỉ hiện cho model đang chọn và grid ít cạnh tranh thị giác.

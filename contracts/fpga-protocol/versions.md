@@ -2,8 +2,9 @@
 
 | Domain | Current status |
 |---|---|
-| CircuitGraph | 1.0, unchanged logical editor schema |
-| Assignment / physical Lab contracts | 1.0 |
+| CircuitGraph | 1.0/1.1 legacy schemas retained; additive 1.2 for flexible assemblies and explicit free descriptors |
+| Assignment | 1.0 retained; additive AssignmentDefinitionV2 2.0 for Graph 1.2 references |
+| Physical Lab contracts | 1.0 retained independently of graph/assignment versions |
 | Hardware RPC | 2.0, implemented local service wire boundary |
 | FPGA logical control envelope | 1.0-scaffold, software/RTL control boundary |
 | FPGA register map / binary framing | 1.0-reserved / TBD_BY_HARDWARE_DESIGN |

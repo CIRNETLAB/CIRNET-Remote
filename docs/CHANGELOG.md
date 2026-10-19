@@ -4,6 +4,18 @@ All notable project changes will be documented in this file. The project follows
 
 ## [Unreleased]
 
+### Documentation — 2026-10-19 Audit and external verification artifacts
+
+- Root Codex rules and the shared `VERIFICATION.md` guide keep newly generated screenshots, video, traces, image-bearing HTML reports and raw diagnostic outputs outside the repository; Markdown records reproducible checks and limits.
+- Historical source analyses and migration/verification reports have explicit status notes; missing handover images retain their filenames without broken image links or recreated evidence. Archive prompts, historical results and existing artwork/output files are preserved.
+- Complete per-file decisions and fresh policy checks: `verification/2026-10-19-documentation-artifact-audit.md`. No automatic deletion, staging or commit.
+
+### Added and changed — 2026-10-19 Ribbon and camera
+
+- File / Component / Run controls share the existing stable workspace shell and execution/file commands; system messages retain their actual source and scope.
+- Adaptive scene clipping and depth-safe surfaces accompany common framing for Fit/Home/Area; ordinary wheel and +/- zoom preserve their focal point within the physical 50–1000% limits.
+- Dated implementation evidence and limits: `verification/2026-10-19-ribbon-shell.md`, `verification/2026-10-19-adaptive-depth.md` and `verification/2026-10-19-unified-camera-navigation.md`.
+
 ### Added and changed — 2026-10-18 Component placement
 
 - Two-contact flexible placement, draft properties, authored bends, direct pin/body handles and atomic assembly Move/Undo, retaining rigid and legacy behavior.

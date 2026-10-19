@@ -23,6 +23,9 @@ Completed frontend history: Single Workspace, catalog, editing/wiring/history, m
 | H6 | Architecture/provenance/final verification and user review; no automatic merge |
 | Web/Contracts W0–W7 | Implemented and verified: canonical boundaries, auth, owned persistence, Web separation, recovery/publication, instruments/domains/captures |
 | Web/Contracts W8 | Local software gates verified: full Python/Web/native browser/PostgreSQL/wheels/workload; individual acceptance, source inventory and handoff recorded. Git delivery blocked by metadata permissions; hosted CI/target deployment remain separate. |
+| Subsequent editor work | IMPLEMENTED: Graph 1.2 flexible placement and pinned descriptors, automatic V2 geometry/sealed packages, versioned document/assignment boundaries, Component/Run ribbon and shared camera navigation. Source: `contracts/circuit-schema/circuit-v1.2.schema.json`, `contracts/design-models/flexible-placement.md`, `services/api/app/api/placement.py`, `apps/web/src/components/workbench/WorkbenchRibbon.vue`, `apps/web/src/three/ViewportNavigation.ts`. |
+
+R0–R7, H0–H6 and W0–W8 are historical phase labels; their reported PASS/counts belong to the dated evidence, not a fresh run against this checkout. IMPLEMENTED describes present source; VERIFIED requires a recorded current command/environment/result under [VERIFICATION.md](VERIFICATION.md). Hardware targets below remain PROPOSED/NOT_IMPLEMENTED until independent implementation and measurements exist.
 
 Milestone W1 requires virtual execution/results, lifecycle/ownership/queue and truthful frontend capabilities before actual FPGA integration. R7 validates scaffold only.
 

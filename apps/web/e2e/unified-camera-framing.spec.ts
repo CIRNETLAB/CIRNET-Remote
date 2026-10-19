@@ -1,12 +1,13 @@
 import { expect, test, type Page } from '@playwright/test'
 import { mkdir, writeFile } from 'node:fs/promises'
+import { getArtifactDirectory } from '../../../scripts/artifact-paths.mjs'
 import { resolve } from 'node:path'
 import type { Mesh, Object3D, PerspectiveCamera } from 'three'
 import type { CircuitGraph } from '../src/types/circuit'
 import { exportedNativeGraph, observeNativeScene, sceneReady, workspaceCanvas } from './native-scene'
 
 type ProbedCanvas = HTMLCanvasElement & { nativeSceneProbe?: { scene: Object3D; camera: PerspectiveCamera; frames: number; target?: number[] }; nativeNavigation?: { target: number[]; reference: number; percent: number } }
-const directory = resolve('.test-build/unified-camera', process.env.NETCIRCUIT_CAMERA_BASELINE ? 'before' : 'anchored-after')
+const directory = getArtifactDirectory(`unified-camera/${process.env.NETCIRCUIT_CAMERA_BASELINE ? 'before' : 'anchored-after'}`)
 
 async function settled(page: Page) {
   let previous = '', stable = 0

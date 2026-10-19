@@ -1,5 +1,7 @@
 # Zoom To Area verification — 2026-10-11
 
+> Audit status — 2026-10-19: this is historical evidence. The image files named below were already absent from the supplied repository at baseline `0cc66f8`; this audit did not inspect or recreate them. Recorded measurements and results are preserved. New verification outputs follow [the shared guide](../VERIFICATION.md) and stay outside the repository.
+
 ## Automated evidence
 
 | Check | Result |
@@ -34,6 +36,6 @@ Codex in-app browser against local Vite `http://127.0.0.1:5173/`; real Three.js 
 
 The default compact viewport also keeps all buttons visible and wraps the status bar. Temporary viewport overrides were reset after testing.
 
-![Zoom To Area button and armed canvas](2026-10-11-zoom-to-area-browser.png)
+Zoom To Area button and armed canvas (historical image reference: `2026-10-11-zoom-to-area-browser.png`; absent at audit baseline).
 
 Scope: navigation/editor integration, not simulation execution, FPGA integration or deployed hardware testing. Original supplied artwork and circuit/hardware contracts were preserved. No commit, push or deployment performed.

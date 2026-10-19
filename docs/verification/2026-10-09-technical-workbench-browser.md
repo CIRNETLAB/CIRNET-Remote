@@ -1,5 +1,7 @@
 # Technical Workbench verification — 2026-10-09
 
+> Audit status — 2026-10-19: this is historical evidence. The image files named below were already absent from the supplied repository at baseline `0cc66f8`; this audit did not inspect or recreate them. Recorded measurements and results are preserved. New verification outputs follow [the shared guide](../VERIFICATION.md) and stay outside the repository.
+
 ## Automated checks
 
 Final `cd apps/web && npm test`: **68/68 PASS**, including vue-tsc. Six regressions were RED before their respective fixes: requested 2px line unsupported by native LineSegments, socket centers capped by the deck, Info still open after deselection, no adaptive grid, mating keys without bevel clearance and straight docking edges overlapping.
@@ -30,6 +32,6 @@ Codex in-app browser at localhost:5173, session-local test draft:
 | 1366×768 | Yes | Yes | No | None |
 | 1280×720 | Yes | Yes | No | None |
 
-![Final border, recessed sockets, docked boards and contained introduction panel](2026-10-09-technical-workbench.jpg)
+Final border, recessed sockets, docked boards and contained introduction panel (historical image reference: `2026-10-09-technical-workbench.jpg`; absent at audit baseline).
 
-![Distant zoom showing faded detail and major grid](2026-10-09-technical-grid-far.jpg)
+Distant zoom showing faded detail and major grid (historical image reference: `2026-10-09-technical-grid-far.jpg`; absent at audit baseline).

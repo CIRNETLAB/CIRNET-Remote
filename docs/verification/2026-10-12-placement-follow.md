@@ -1,5 +1,7 @@
 # Placement cursor follow — 2026-10-12
 
+> Audit status — 2026-10-19: this is historical evidence. The image files named below were already absent from the supplied repository at baseline `0cc66f8`; this audit did not inspect or recreate them. Recorded measurements and results are preserved. New verification outputs follow [the shared guide](../VERIFICATION.md) and stay outside the repository.
+
 Baseline: `d6dbbc4`. The current request supersedes the placement-body-drag interaction. Earlier anchored-ghost reports and body-drag screenshots are historical records.
 
 ## Source analysis and behavior
@@ -30,11 +32,11 @@ The local workbench was tested through native browser pointer input and normal U
 
 All four models visibly move to successive cursor positions, rotate through the Y handle, then continue following with the changed orientation. Preview screenshots show Components0, Undo disabled, no Component Info, and X/Z/XZ/Rotate with no Delete. Native Breadboard confirmation produces Components1; one Undo returns to0, and one Redo restores the same rotated pose. Native Supply confirmation selects the real model and shows Delete again. Escape cancels the instrument ghosts. Runtime warning/error logs are empty. Canvas dimensions remain698.4×548.2 CSS pixels with872×685 drawing buffer throughout the checks.
 
-![Breadboard rotated preview after cursor follow](2026-10-12-placement-follow-breadboard.jpg)
-![Oscilloscope rotated preview after cursor follow](2026-10-12-placement-follow-oscilloscope.jpg)
-![Function Generator rotated preview after cursor follow](2026-10-12-placement-follow-generator.jpg)
-![Power Supply rotated preview after cursor follow](2026-10-12-placement-follow-supply.jpg)
-![Committed selected model restores Delete](2026-10-12-placement-follow-committed.jpg)
+Breadboard rotated preview after cursor follow (historical image reference: `2026-10-12-placement-follow-breadboard.jpg`; absent at audit baseline).
+Oscilloscope rotated preview after cursor follow (historical image reference: `2026-10-12-placement-follow-oscilloscope.jpg`; absent at audit baseline).
+Function Generator rotated preview after cursor follow (historical image reference: `2026-10-12-placement-follow-generator.jpg`; absent at audit baseline).
+Power Supply rotated preview after cursor follow (historical image reference: `2026-10-12-placement-follow-supply.jpg`; absent at audit baseline).
+Committed selected model restores Delete (historical image reference: `2026-10-12-placement-follow-committed.jpg`; absent at audit baseline).
 
 ## Files changed
 

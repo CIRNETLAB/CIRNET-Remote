@@ -7,7 +7,7 @@ Read ARCHITECTURE.md first: canonical Lab-First v3.1. Historical evidence never 
 - Preserve Vue/TypeScript/Pinia/Three.js Single Workspace.
 - Durable principals own data; opaque hashed server sessions authenticate; per-tab control contexts own execution lifetime. Exact origins/CSRF and role/object authorization apply to REST/WS/captures. Guest access is explicit development configuration; production requires authenticated users.
 - Versioned migrations preserve legacy owners, sessions, operation identity, captures and quarantined leases. Proven guest ownership transfers only after explicit claim. Assignment disclosure policy applies equally to HTTP and events; reference answers remain private under observed_only.
-- CircuitGraph schemas 1.0/1.1 are logical design truth; 1.1 adds validated physical mounting. Scene is projection; ghost/coordinates never create nets.
+- CircuitGraph schemas 1.0/1.1/1.2 are logical design truth; 1.1 adds validated rigid mounting and additive 1.2 adds flexible assemblies/free descriptor identity. New authoring uses automatic FlexibleMountV2; saved V1 geometry/revisions remain readable. Versioned `/api/v2` documents/assignments preserve frozen legacy wires. Scene is projection; ghost/coordinates never create nets.
 - DetectedTopologyGraph preserves mistakes/ambiguity, separate from editor authoring rules.
 - AssignmentDefinition / LabEndpoint describe assignments/infrastructure.
 - SafetyVerificationResult gates safety; TopologyVerificationResult diagnoses/grades; FunctionalVerificationResult evaluates observations.
@@ -32,3 +32,5 @@ Read ARCHITECTURE.md first: canonical Lab-First v3.1. Historical evidence never 
 - Release entrypoint: scripts/check_release.py. Actual evidence, environmental skips and Git checkpoint failures are reported independently; do not infer target/hosted CI or hardware success from local tests.
 
 Read source/tests before changes. Preserve user changes/history/source-analysis/browser evidence. Phase gates/commits/rulings: MIGRATION_LAB_FIRST.md. Stop before merge/push.
+
+Documentation entrypoint: [README.md](README.md). Current verification rules: [VERIFICATION.md](VERIFICATION.md), applied by root [AGENTS.md](../AGENTS.md). Generated visual/raw diagnostic artifacts belong directly in an external session directory; only Markdown evidence is retained in the repository. Historical counts and measurements describe their dated runs, not verification of the current checkout.

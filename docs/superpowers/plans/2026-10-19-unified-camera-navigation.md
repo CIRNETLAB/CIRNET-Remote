@@ -20,7 +20,7 @@
 
 ## Tasks
 
-- [x] Capture original native browser behavior and RED tightness/Area/Home regressions in ignored `.test-build/unified-camera`.
+- [x] Historical run: captured original native browser behavior and RED tightness/Area/Home regressions in ignored `.test-build/unified-camera`. New captures must instead use the external resolver in [VERIFICATION.md](../../VERIFICATION.md); do not recreate that old output directory.
 - [x] Add `CameraFraming.ts` and focused math/bounds tests: cached per-mesh/instance bounds, tight four-edge solver, selection-cone clipping and focal-plane fallback.
 - [x] Add a small navigation controller and integration regressions. Own full-circuit calibration, reported zoom and effective limits; apply Fit/Home/Area/wheel/+/- through one transaction in `SceneManager.ts`.
 - [x] Separate `workspace` command revision from readback; update `CircuitWorkspace3D.vue` bridge and status bar. Observe persistent layout only; transient selection/tooltips cannot change framing.

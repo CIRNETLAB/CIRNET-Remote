@@ -1,5 +1,7 @@
 # Breadboard mechanical docking — 2026-10-14
 
+> Audit status — 2026-10-19: this is historical evidence. The image files named below were already absent from the supplied repository at baseline `0cc66f8`; this audit did not inspect or recreate them. Recorded measurements and results are preserved. New verification outputs follow [the shared guide](../VERIFICATION.md) and stay outside the repository.
+
 Implemented against the current working tree at `9543582`, preserving the approved camera-relative placement change. Catalog dimensions, contact positions/IDs/nodes, sockets, wire routing and CircuitGraph remain unchanged.
 
 ## Shared geometry and mating rules
@@ -26,8 +28,8 @@ Full logs/probes are retained in `.superpowers/breadboard-docking/` (`red.log`, 
 
 The following previews rasterize the actual housing/socket triangles exported from SceneManager using a CPU depth buffer. TOP and oblique previews were visually inspected: the cluster joins without the wide dark spaces between straight board edges. Canvas artwork, application GUI and GPU shading are not reproduced. These are clearly labelled geometry previews, not browser screenshots.
 
-![TOP geometry preview](2026-10-14-breadboard-docking-top.png)
+TOP geometry preview (historical image reference: `2026-10-14-breadboard-docking-top.png`; absent at audit baseline).
 
-![Oblique geometry preview](2026-10-14-breadboard-docking-oblique.png)
+Oblique geometry preview (historical image reference: `2026-10-14-breadboard-docking-oblique.png`; absent at audit baseline).
 
 Earlier browser permission denial was honored; no alternate browser or UI workaround was used. Native browser appearance/input and GPU FPS remain unverified. The editor profiles use existing arbitrary world units; no physical manufacturing-fit certification is claimed. Direct nonfinite helper inputs are outside these tests; production graph/file/store validation continues rejecting them. Source remains reviewable in refactor without commit/merge/push.

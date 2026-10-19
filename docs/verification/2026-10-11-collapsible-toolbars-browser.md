@@ -1,5 +1,7 @@
 # Collapsible toolbar verification — 2026-10-11
 
+> Audit status — 2026-10-19: this is historical evidence. The image files named below were already absent from the supplied repository at baseline `0cc66f8`; this audit did not inspect or recreate them. Recorded measurements and results are preserved. New verification outputs follow [the shared guide](../VERIFICATION.md) and stay outside the repository.
+
 ## Automated evidence
 
 - Frontend `npm test`: **163/163 PASS**, no failures/skips. Two new real-store cases failed before the flags/actions existed, then passed with the implementation. They exercise palette closure/hidden-state guard, independent state and graph/history/editor invariants.
@@ -33,8 +35,8 @@ All four expanded/collapsed combinations were checked at each viewport. No horiz
 
 Values are CSS pixels; fractional sizes reflect browser scaling. Temporary viewport overrides were reset. The final screenshot uses the default browser viewport and one placed Breadboard.
 
-![Both toolbars expanded](2026-10-11-collapsible-toolbars-expanded.png)
+Both toolbars expanded (historical image reference: `2026-10-11-collapsible-toolbars-expanded.png`; absent at audit baseline).
 
-![Both toolbars collapsed](2026-10-11-collapsible-toolbars-collapsed.png)
+Both toolbars collapsed (historical image reference: `2026-10-11-collapsible-toolbars-collapsed.png`; absent at audit baseline).
 
 Scope: UI state, keyboard, viewport/scene/window integration. Backend/hardware execution is unchanged and was not re-tested in this UI task. Expanded is the reload default; no persistent preference was requested. No commit, push or deployment.

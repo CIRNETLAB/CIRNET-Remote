@@ -6,6 +6,8 @@ The Circuit Graph describes logical intent only. It must never contain FPGA regi
 
 Breaking schema changes require a new schema version and consumer updates.
 
+The same `circuit.schema.json` accepts 1.1 rigid physical mounting through `module.schema.json`; additive `circuit-v1.2.schema.json` supports flexible assemblies and pinned free physical descriptors. `AnySupportedCircuitGraph` selects these supported shapes; legacy 1.0/1.1 readers keep their frozen boundaries. See [component placement](../../docs/COMPONENT_PLACEMENT.md) and the [flexible contract](../design-models/flexible-placement.md) for versioned persistence/API behavior. The Phase 2 notes below describe retained legacy authoring rules.
+
 ## Phase 2 editor fields
 
 Modules optionally carry `position: {x,y,z}` in Three world coordinates (Y elevation, XZ work surface) and `rotation` in degrees around world Y. These fields are presentation only. Rotation was already permitted by the extensible module schema; it now has an explicit numeric definition without changing graph version 1.0.
