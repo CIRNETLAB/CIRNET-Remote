@@ -2,6 +2,7 @@ import { CanvasTexture, ExtrudeGeometry, Group, Mesh, MeshStandardMaterial, Path
 import { addBreadboardSockets, SOCKET_HALF_OPENING } from './BreadboardSockets'
 import { getBreadboardTopology } from '../electrical/BreadboardTopology'
 import { BREADBOARD_GEOMETRY as g, getBreadboardGeometrySpec } from '../geometry/BreadboardGeometrySpec'
+import { stabilizeThinSurface } from './StudioEnvironment'
 
 // Shared by untextured ABS and its artwork; leave headroom under direct light.
 export const BREADBOARD_PLASTIC_COLOR = '#d5d6d3'
@@ -52,7 +53,8 @@ export function addBreadboardHousing(group: Group, type: string, color: string, 
     geometry.rotateX(-Math.PI / 2)
     const positions = geometry.getAttribute('position'), uv = geometry.getAttribute('uv')
     for (let i = 0; i < positions.count; i++) uv.setXY(i, (positions.getX(i) + w / 2) / w, 0.5 - positions.getZ(i) / d)
-    const face = new Mesh(geometry, new MeshStandardMaterial({ map: texture, roughness: 0.86, metalness: 0 }))
+    const face = new Mesh(geometry, stabilizeThinSurface(new MeshStandardMaterial({ map: texture, roughness: 0.86, metalness: 0 })))
+    face.name = 'breadboard-artwork'
     face.receiveShadow = true
     face.position.y = h + g.artworkOffset; group.add(face)
   }

@@ -1,9 +1,9 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { Group, InstancedMesh, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, PerspectiveCamera, SRGBColorSpace, Vector3 } from 'three'
+import { Group, InstancedMesh, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, Raycaster, SRGBColorSpace, Vector3, type Material } from 'three'
 import { buildComponent, disposeObject } from '../src/three/ComponentModel'
-import { CAMERA_FAR, CAMERA_NEAR } from '../src/config/workbenchViewport'
+import { getPartForType, historicalPartCatalog, physicalDescriptorForPart } from '../src/data/partCatalog'
 import { createSceneManager } from '../src/three/SceneManager'
 import { addBreadboardHousing, BREADBOARD_PLASTIC_COLOR } from '../src/three/BreadboardHousing'
 import { getBreadboardTopology } from '../src/electrical/BreadboardTopology'
@@ -14,6 +14,22 @@ const materialOf = (model: ReturnType<typeof buildComponent>, name: string) => {
   assert.ok(object instanceof Mesh, name)
   assert.ok(object.material instanceof MeshStandardMaterial, name)
   return object.material
+}
+
+// These are material/geometry unit checks. Real depth-buffer stability is
+// exercised separately by the browser's WebGL visual regressions.
+const assertThinSurface = (material: Material, label: string) => {
+  assert.ok(material.polygonOffset && material.polygonOffsetFactor < 0 && material.polygonOffsetUnits < 0, `${label}: a small bias covers both sloping and front-on artwork`)
+  assert.ok(material.polygonOffsetFactor >= -1 && material.polygonOffsetUnits >= -2, `${label}: retain the shared modest bias`)
+  assert.equal(material.depthTest, true, `${label}: foreground geometry still participates in depth testing`)
+}
+
+const sameRayGap = (front: Mesh, backing: Mesh, origin: Vector3, direction: Vector3) => {
+  const ray = new Raycaster(origin, direction)
+  const frontHit = ray.intersectObject(front, false)[0], backingHit = ray.intersectObject(backing, false)[0]
+  assert.ok(frontHit && backingHit, `${front.name}/${backing.name}: both surfaces lie on the same ray`)
+  assert.ok(frontHit.distance < backingHit.distance, `${front.name}: authored geometry is in front of its backing`)
+  return backingHit.distance - frontHit.distance
 }
 
 test('a complete 360 degree Orbit preserves instrument assemblies, screen resources and graph state', () => {
@@ -87,59 +103,68 @@ test('package coating response is softened without changing silver lead finish o
       assert.equal(lead.metalness, .86); assert.equal(lead.roughness, .29); assert.equal(lead.envMapIntensity, .85)
     } finally { disposeObject(model) }
   }
-  const display = buildComponent({ id: 'display', type: 'SEGMENT_SC5611EWA' })
+  const legacyDisplay = historicalPartCatalog.find(part => part.editorType === 'SEGMENT_SC5611EWA' && part.revision === 1)!
+  const display = buildComponent({ id: 'display', type: legacyDisplay.editorType, physicalDescriptor: physicalDescriptorForPart(legacyDisplay) })
   try {
     const body = materialOf(display, 'package-body')
     assert.equal(body.roughness, .65); assert.equal(body.metalness, .02); assert.equal(body.envMapIntensity, 1)
   } finally { disposeObject(display) }
 })
 
-test('instrument screen and printed surfaces keep a depth bias where their real gaps collapse in a 24-bit buffer', () => {
-  const levels = 2 ** 24 - 1
+test('instrument artwork retains normal occlusion and its measured separation from the backing', () => {
   for (const type of ['DC_SUPPLY', 'OSCILLOSCOPE', 'GENERATOR']) {
     const model = buildComponent({ id: type, type })
     try {
       const screen = model.getObjectByName(type === 'DC_SUPPLY' ? 'supply-display' : 'screen') as Mesh<any, MeshBasicMaterial>
       const recess = model.getObjectByName(type === 'DC_SUPPLY' ? 'display-recess' : 'screen_recess') as Mesh
       const legends = model.getObjectByName(type === 'DC_SUPPLY' ? 'front-legends' : 'front_legends') as Mesh<any, MeshBasicMaterial> | undefined
-      recess.geometry.computeBoundingBox()
-      const front = new Vector3(0, 0, recess.geometry.boundingBox!.max.z).applyMatrix4(recess.matrixWorld)
+      model.updateMatrixWorld(true)
       const center = screen.getWorldPosition(new Vector3())
-      let collisions = 0
-      for (const distance of [24, 30, 36]) for (const degrees of [-65, -30, 0, 30, 65]) {
-        const angle = degrees * Math.PI / 180
-        const camera = new PerspectiveCamera(42, 16 / 9, CAMERA_NEAR, CAMERA_FAR)
-        camera.position.copy(center).addScaledVector(new Vector3(Math.sin(angle), .15, Math.cos(angle)).normalize(), distance)
-        camera.lookAt(center); camera.updateMatrixWorld(true)
-        const depth = (point: Vector3) => (point.clone().project(camera).z * .5 + .5) * levels
-        const screenDepth = depth(center), backingDepth = depth(front)
-        if (Math.round(screenDepth) === Math.round(backingDepth)) collisions++
-        // Polygon offset is a depth-buffer adjustment, not a camera or geometry
-        // change. A negative units bias ensures the authored surface wins even
-        // when the screen and recessed case round to the same depth value.
-        const units = screen.material.polygonOffset ? screen.material.polygonOffsetUnits : 0
-        assert.ok(Math.round(screenDepth + units) < Math.round(backingDepth), `${type}: stable screen separation at ${distance}/${degrees}`)
-      }
-      assert.ok(collisions > 0, `${type}: reproduce insufficient geometric separation before the material bias`)
-      assert.ok(screen.material.polygonOffset && screen.material.polygonOffsetUnits <= -2)
-      assert.equal(screen.material.depthTest, true, 'other geometry still occludes the screen naturally')
+      const normal = new Vector3(0, 0, 1).transformDirection(screen.matrixWorld)
+      const gap = sameRayGap(screen, recess, center.addScaledVector(normal, 2), normal.negate())
+      assert.ok(Math.abs(gap - (type === 'DC_SUPPLY' ? .0015 : .0045)) < 1e-7, `${type}: retain the authored screen and recess geometry, including chassis pitch`)
+      assertThinSurface(screen.material, `${type}/screen`)
+      assert.equal(screen.material.depthWrite, true, 'opaque screens retain depth ownership')
       if (legends) {
-        assert.ok(legends.material.polygonOffset && legends.material.polygonOffsetUnits <= -2, `${type}: printed controls need the same sub-pixel separation`)
+        assertThinSurface(legends.material, `${type}/legends`)
         assert.equal(legends.material.depthWrite, false)
-        const button = model.getObjectByName(type === 'OSCILLOSCOPE' ? 'auto_set_button' : 'waveform_button') as Mesh
-        button.geometry.computeBoundingBox()
-        const buttonFront = new Vector3(0, 0, button.geometry.boundingBox!.max.z).applyMatrix4(button.matrixWorld)
-        const printPoint = legends.worldToLocal(buttonFront.clone()); printPoint.z = 0; legends.localToWorld(printPoint)
-        assert.ok(printPoint.distanceTo(buttonFront) < .0011, `${type}: reproduce the near-coplanar printed button face`)
-        const camera = new PerspectiveCamera(42, 16 / 9, CAMERA_NEAR, CAMERA_FAR)
-        camera.position.copy(printPoint).addScaledVector(new Vector3(0, .15, 1).normalize(), 30)
-        camera.lookAt(printPoint); camera.updateMatrixWorld(true)
-        const printDepth = (printPoint.project(camera).z * .5 + .5) * levels
-        const buttonDepth = (buttonFront.project(camera).z * .5 + .5) * levels
-        assert.equal(Math.round(printDepth), Math.round(buttonDepth), `${type}: printed face rounds to the same depth as its button`)
-        assert.ok(Math.round(printDepth + legends.material.polygonOffsetUnits) < Math.round(buttonDepth))
       }
     } finally { disposeObject(model) }
+  }
+})
+
+test('current and historical Display faces, glyphs and decimal points use owned thin-surface materials', () => {
+  for (const type of ['SEGMENT_SC5611EWA', 'SEGMENT_DC5611EWA', 'SEGMENT_CC5612EWA']) {
+    const current = getPartForType(type)!, historical = historicalPartCatalog.find(part => part.editorType === type && part.revision === 1)!
+    assert.ok(current && historical)
+    for (const part of [current, historical]) {
+      const model = buildComponent({ id: type, type, physicalDescriptor: physicalDescriptorForPart(part) })
+      try {
+        model.updateMatrixWorld(true)
+        const face = model.getObjectByName('package-display-face') as Mesh<any, MeshStandardMaterial>
+        const body = model.getObjectByName('package-body') as Mesh<any, MeshStandardMaterial>
+        const label = `${type}/revision-${part.revision}`
+        assertThinSurface(face.material, `${label}/face`)
+        assert.equal(face.material.depthWrite, true)
+        assert.equal(body.material.polygonOffset, false, `${label}: do not bias the whole package`)
+        assert.notEqual(face.material, body.material)
+        const faceGap = sameRayGap(face, body, new Vector3(0, 3, 0), new Vector3(0, -1, 0))
+        assert.ok(Math.abs(faceGap - (part.revision === 1 ? .004 : .001535433)) < 1e-7, `${label}: keep the real pocket and plate thickness`)
+        let segments = 0
+        model.traverse(object => {
+          if (!(object instanceof Mesh) || typeof object.userData.segment !== 'string') return
+          assert.ok(object.material instanceof MeshStandardMaterial)
+          assertThinSurface(object.material, `${label}/${object.userData.segment}`)
+          assert.equal(object.material.depthWrite, true)
+          assert.notEqual(object.material, face.material)
+          const origin = object.getWorldPosition(new Vector3()); origin.y = 3
+          const glyphGap = sameRayGap(object, face, origin, new Vector3(0, -1, 0))
+          assert.ok(Math.abs(glyphGap - (part.revision === 1 ? .0027 : .001535433)) < 1e-7, `${label}: keep glyph and decimal-point heights`)
+          segments++
+        })
+        assert.equal(segments, 8 * part.package.digits!, `${label}: include every decimal point`)
+      } finally { disposeObject(model) }
+    }
   }
 })
 
@@ -164,6 +189,13 @@ test('all Breadboards use neutral off-white artwork in sRGB and preserve rail an
         assert.equal(deck.material.metalness, 0); assert.ok(deck.material.roughness >= .9)
         const artwork = model.children.find(o => o instanceof Mesh && o.material instanceof MeshStandardMaterial && o.material.map) as Mesh<any, MeshStandardMaterial>
         assert.ok(artwork?.material.map)
+        assertThinSurface(artwork.material, `${type}/artwork`)
+        assert.equal(artwork.name, 'breadboard-artwork')
+        assert.equal(artwork.material.depthWrite, true)
+        assert.equal(deck.material.polygonOffset, false, 'bias the owned artwork, not the ABS deck')
+        model.updateMatrixWorld(true)
+        const gap = sameRayGap(artwork, deck, new Vector3(.045, 3, type === 'BREADBOARD_100' ? 0 : .3), new Vector3(0, -1, 0))
+        assert.ok(Math.abs(gap - .002) < 1e-7, 'artwork clearance includes the transformed extrusion bevel')
         assert.equal(artwork.material.map.colorSpace, SRGBColorSpace, 'canvas color pixels need the same conversion as material colors')
         assert.equal(fills[firstFill], `#${deck.material.color.getHexString()}`, 'artwork and untextured deck share one off-white color')
       } finally { disposeObject(model) }

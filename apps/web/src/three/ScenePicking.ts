@@ -1,11 +1,15 @@
 import { Mesh,Plane,Vector2,Vector3,type Group,type Object3D,type PerspectiveCamera,type Raycaster } from 'three'
 import type { Point3 } from '../types/circuit'
 
+const DEFAULT_INTERACTION_REACH = 150
+const MIN_INTERACTION_DISTANCE = .00001
+
 /** Geometric picking has no editor commands, transport, or graph ownership. */
-export function createScenePicking({camera,content,wires,raycaster,viewport,target}:{camera:PerspectiveCamera;content:Group;wires:Group;
-  raycaster:Raycaster;viewport:()=>{width:number;height:number};target:()=>Vector3}) {
+export function createScenePicking({camera,content,wires,raycaster,viewport,target,ensureProjection=()=>{},interactionReach=()=>DEFAULT_INTERACTION_REACH}:{camera:PerspectiveCamera;content:Group;wires:Group;
+  raycaster:Raycaster;viewport:()=>{width:number;height:number};target:()=>Vector3;ensureProjection?:()=>void;interactionReach?:()=>number}) {
   const plane=new Plane(new Vector3(0,1,0),0)
   const ray=(x:number,y:number)=>{
+    ensureProjection()
     const {width,height}=viewport();camera.updateMatrixWorld()
     raycaster.params.Line.threshold=camera.position.distanceTo(target())*2*Math.tan(camera.fov*Math.PI/360)/(height*camera.zoom)*6
     raycaster.setFromCamera(new Vector2(x/width*2-1,-(y/height)*2+1),camera)
@@ -13,8 +17,13 @@ export function createScenePicking({camera,content,wires,raycaster,viewport,targ
   const pickOwner=(initial:Object3D)=>{let object=initial;while(object.parent&&!object.userData.kind) object=object.parent;return object}
   const ignored=(object:Object3D)=>{let current:Object3D|null=object;while(current) {if(current.userData.ignorePick) return true;current=current.parent}return false}
   const wireMeshes=(root?:Object3D)=>(root?[root]:wires.children).flatMap(mesh=>[mesh,...mesh.children.filter(child=>child instanceof Mesh)])
-  const contentHit=(x:number,y:number,excludeModuleId?:string,ignoreLabels=false)=>{ray(x,y);return raycaster.intersectObjects(content.children,true).find(hit=>!ignored(hit.object)&&(!excludeModuleId||pickOwner(hit.object).userData.id!==excludeModuleId)&&(!ignoreLabels||pickOwner(hit.object).userData.type!=='LABEL'))??null}
+  const inClipRange=(point:Vector3)=>{
+    const eyeDepth=-point.clone().applyMatrix4(camera.matrixWorldInverse).z
+    return eyeDepth>=camera.near&&eyeDepth<=camera.far
+  }
+  const contentHit=(x:number,y:number,excludeModuleId?:string,ignoreLabels=false)=>{ray(x,y);return raycaster.intersectObjects(content.children,true).find(hit=>inClipRange(hit.point)&&!ignored(hit.object)&&(!excludeModuleId||pickOwner(hit.object).userData.id!==excludeModuleId)&&(!ignoreLabels||pickOwner(hit.object).userData.type!=='LABEL'))??null}
   const screenPoint=(point:Point3)=>{
+    ensureProjection();camera.updateMatrixWorld()
     const {width,height}=viewport(),world=new Vector3(point.x,point.y,point.z),projected=world.clone().project(camera)
     const depth=-world.clone().applyMatrix4(camera.matrixWorldInverse).z
     return {x:(projected.x+1)*width/2,y:(1-projected.y)*height/2,depth,visible:projected.z>=-1&&projected.z<=1}
@@ -33,7 +42,9 @@ export function createScenePicking({camera,content,wires,raycaster,viewport,targ
   const planeHit=(elevation:number)=>{
     plane.constant=-elevation;const hit=raycaster.ray.intersectPlane(plane,new Vector3());if(!hit)return null
     const distance=hit.distanceTo(camera.position)
-    return Number.isFinite(distance)&&distance>=camera.near&&distance<=camera.far?hit:null
+    // Empty workspace remains interactive beyond the rendered content. This
+    // is a ray-distance horizon, deliberately separate from eye-depth clipping.
+    return Number.isFinite(distance)&&distance>=MIN_INTERACTION_DISTANCE&&distance<=interactionReach()?hit:null
   }
   return {ray,pickOwner,ignored,wireMeshes,contentHit,screenPoint,segmentHit,visiblePoint,planeHit}
 }

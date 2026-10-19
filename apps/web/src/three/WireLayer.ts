@@ -104,7 +104,7 @@ export function createWireLayer(endpointPosition: (endpoint: string) => Vector3 
     const points = [...(route.renderHandles ?? route.handles).map(h => h.position), route.points[0], route.points.at(-1)!]
     points.forEach((p, i) => {
       const depth = viewCamera ? -new Vector3(p.x, p.y, p.z).applyMatrix4(viewCamera.matrixWorldInverse).z : 0
-      const radius = viewCamera ? Math.max(viewCamera.near, depth) * 2 * Math.tan(viewCamera.fov * Math.PI / 360) / (viewHeight * viewCamera.zoom) * 3.5 : .04
+      const radius = viewCamera ? Math.max(.00001, depth) * 2 * Math.tan(viewCamera.fov * Math.PI / 360) / (viewHeight * viewCamera.zoom) * 3.5 : .04
       handleMesh!.setMatrixAt(i, new Matrix4().makeScale(radius / .04, radius / .04, radius / .04).setPosition(p.x, p.y, p.z))
       handleMesh!.setColorAt(i, new Color(i >= route.handles.length ? '#8ebf75' : route.handles[i].index === selectedHandle ? '#fff1bd' : '#d9b66f'))
     })

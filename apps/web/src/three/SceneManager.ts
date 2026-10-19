@@ -32,10 +32,11 @@ import { applyPowerSupplyControls, supplyControlPatch, type SupplyControl } from
 import { createWireLayer } from './WireLayer'
 import { createSelectionPreview } from './SelectionPreview'
 import { createScenePicking } from './ScenePicking'
+import { createSceneClipping } from './SceneClipping'
 import type { EditorSelection } from '../editor/selection'
 import { projectedTranslationDelta } from '../geometry/transformDrag'
 import { projectedBreadboardEnclosedInRect, projectedObjectIntersectsRect, type ScreenRect } from './ProjectedSelection'
-import { CAMERA_NEAR, CAMERA_FAR, ZOOM_MIN, ZOOM_MAX, ZOOM_DEFAULT, MIN_ZOOM_REFERENCE_DISTANCE, cameraNearForDistance, clampZoom } from '../config/workbenchViewport'
+import { CAMERA_NEAR, CAMERA_FAR, ZOOM_MIN, ZOOM_MAX, ZOOM_DEFAULT, MIN_ZOOM_REFERENCE_DISTANCE, navigationClearanceForDistance, clampZoom } from '../config/workbenchViewport'
 
 export interface SceneRenderer { readonly isWebGLRenderer?: boolean; setSize(width: number, height: number, updateStyle?: boolean): void; render(scene: Scene, camera: PerspectiveCamera): void; dispose(): void }
 interface SceneOptions { renderer: SceneRenderer; canvas?: HTMLCanvasElement; onBeforeRender?: () => void; onRender?: () => void; onZoomChange?: (percent: number) => void; requestFrame?: (callback: FrameRequestCallback) => number; cancelFrame?: (id: number) => void }
@@ -126,16 +127,22 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       marker.userData.id=module.id
     })
   }
-  const selectionPreview = createSelectionPreview(); scene.add(selectionPreview.root)
+  const selectionPreview = createSelectionPreview(() => contentChanged()); scene.add(selectionPreview.root)
   let gizmoObstacles: GizmoObstacle[] = []
   let gizmoLayoutRevision = 0
   const gizmoModel = () => ghost ? ghostModule?.type === 'LABEL' ? undefined : ghost : highlightedId ? models.get(highlightedId) : undefined
-  const updateGizmo = () => {gizmo.update(gizmoModel(), models.values(), camera, width, height, gizmoObstacles, gizmoLayoutRevision);updateFlexibleHandles()}
+  const updateGizmo = () => {ensureProjection();gizmo.update(gizmoModel(), models.values(), camera, width, height, gizmoObstacles, gizmoLayoutRevision);updateFlexibleHandles()}
   const raycaster = new Raycaster()
   let width = 1, height = 1, sized = false, frame: number | null = null, disposed = false, visible = false, suspended = false, pointerLocked = false
   let bufferWidth = 0, bufferHeight = 0
   let ghost: Group | null = null
   let ghostModule: CircuitModule | null = null
+  // Explicit rendering roots exclude the technical grid, picking proxies and
+  // editor helpers. Wire tools mix helpers with real in-progress wire geometry.
+  const clipping = createSceneClipping(camera, () => [content, wires, selectionPreview.root,
+    ...(ghost ? [ghost] : []), ...(flexibleGhost ? [flexibleGhost] : []),
+    ...wireLayer.tools.children.filter(object => object.name === 'wire-drawing-preview' || object.name === 'wire-duplicate-preview')])
+  const ensureProjection = () => { wireLayer.flush(); clipping.ensureProjection() }
   let highlightedPinModel: Group | null = null
   let showPins = false
   let transition: {
@@ -254,9 +261,9 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
         if (transition) stepTransition(timestamp)
         // setSize clears the drawing buffer. Refill it in this same frame.
         if (bufferWidth !== width || bufferHeight !== height) { renderer.setSize(width, height, false); bufferWidth = width; bufferHeight = height }
+        ensureProjection()
         const target = controls?.target ?? viewTarget
-        const focus = highlightedId ? models.get(highlightedId)?.position ?? target : target
-        updateTechnicalGrid(grid, camera, target, focus, height)
+        updateTechnicalGrid(grid, camera, target, height)
         updateGizmo()
         wireLayer.updateCamera(camera, height); wireLayer.flush(); scene.updateMatrixWorld(true)
         if (activeOutline) updateSelectionOutline(activeOutline.group, camera.position, width, height)
@@ -265,6 +272,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       }
     })
   }
+  const contentChanged = () => { clipping.invalidateBounds(); schedule() }
   const controls = canvas ? new OrbitControls(camera, canvas) : undefined
   const updateControlsEnabled = () => { if (controls) controls.enabled = !disposed && visible && !suspended && !pointerLocked }
   updateControlsEnabled()
@@ -281,7 +289,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     const travel = lastViewPosition.distanceTo(camera.position)
     if (travel < 1e-9) return
     const direction = camera.position.clone().sub(lastViewPosition).normalize()
-    const padding = Math.max(cameraNearForDistance(next.length()) * 4, Math.min(.015, next.length() * .05))
+    const padding = Math.max(navigationClearanceForDistance(next.length()) * 4, Math.min(.015, next.length() * .05))
     scene.updateMatrixWorld(true)
     dollyRay.set(lastViewPosition, direction); dollyRay.near = 0; dollyRay.far = travel + padding
     wireLayer.flush()
@@ -291,8 +299,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
   }
   const zoomPercent = () => zoomReferenceDistance / camera.position.distanceTo(target()) * ZOOM_DEFAULT
   const notifyZoom = () => {
-    const near = cameraNearForDistance(camera.position.distanceTo(target()))
-    if (near !== camera.near) { camera.near = near; camera.updateProjectionMatrix() }
+    ensureProjection()
     lastViewPosition.copy(camera.position); lastViewTarget.copy(target())
     const percent = Math.round(zoomPercent() * 100) / 100
     if (Number.isFinite(percent) && percent !== reportedZoom) { reportedZoom = percent; onZoomChange?.(percent) }
@@ -308,7 +315,8 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
   }
   const validPointer = (x: number, y: number) => !disposed && Number.isFinite(x) && Number.isFinite(y)
   const { ray, pickOwner, ignored, wireMeshes, contentHit, screenPoint, segmentHit, visiblePoint, planeHit } = createScenePicking({
-    camera, content, wires, raycaster, viewport: () => ({ width, height }), target,
+    camera, content, wires, raycaster, viewport: () => ({ width, height }), target, ensureProjection,
+    interactionReach: () => Math.max(150, zoomReferenceDistance * 4),
   })
   const translateView = (delta: Vector3) => { cancelTransition(); camera.position.add(delta); (controls?.target ?? viewTarget).add(delta); camera.updateMatrixWorld(); controls?.update(); schedule() }
   let activeOutline: { id: string; group: Group } | null = null
@@ -355,16 +363,16 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       const signature=JSON.stringify([module.type,module.properties,module.mount?.partId,module.mount?.partRevision,module.mount?.packageId,module.mount?.packageRevision,module.physicalDescriptor])
       if(model.userData.signature!==signature){
         if(activeOutline?.id===module.id)removeActiveOutline();removeMultiOutline(module.id);disposeObject(model);content.remove(model)
-        model=buildComponent(module,[...modules.values()]);model.userData.onVisualChange=schedule;models.set(module.id,model);content.add(model);attachOutline();attachMultiOutlines()
+        model=buildComponent(module,[...modules.values()]);model.userData.onVisualChange=contentChanged;models.set(module.id,model);content.add(model);attachOutline();attachMultiOutlines()
       }
-      updateFlexiblePackageGeometry(model,module,[...modules.values()]);applyPose(model,moduleWorldPose(module,[...modules.values()]));wireLayer.updateModule(module.id);updateFlexibleHandles();schedule()
+      updateFlexiblePackageGeometry(model,module,[...modules.values()]);applyPose(model,moduleWorldPose(module,[...modules.values()]));wireLayer.updateModule(module.id);updateFlexibleHandles();contentChanged()
     },
     setFlexiblePreview(module:CircuitModule|null,context:CircuitModule[]=[],valid=true){
       if(disposed)return
-      if(!module){if(flexibleGhost){flexibleGhost.removeFromParent();disposeObject(flexibleGhost);flexibleGhost=null}schedule();return}
+      if(!module){if(flexibleGhost){flexibleGhost.removeFromParent();disposeObject(flexibleGhost);flexibleGhost=null}contentChanged();return}
       const signature=JSON.stringify([module.type,module.properties,module.mount?.partId,module.mount?.partRevision,module.mount?.packageId,module.mount?.packageRevision,module.physicalDescriptor])
       if(flexibleGhost&&flexibleGhost.userData.signature!==signature){flexibleGhost.removeFromParent();disposeObject(flexibleGhost);flexibleGhost=null}
-      if(!flexibleGhost){flexibleGhost=buildComponent(module,context);flexibleGhost.userData.ignorePick=true;scene.add(flexibleGhost)}
+      if(!flexibleGhost){flexibleGhost=buildComponent(module,context);flexibleGhost.userData.ignorePick=true;flexibleGhost.userData.onVisualChange=contentChanged;scene.add(flexibleGhost)}
       else{updateFlexiblePackageGeometry(flexibleGhost,module,context);applyPose(flexibleGhost,moduleWorldPose(module,context))}
       flexibleGhost.traverse(object => {
         object.castShadow = false; object.receiveShadow = false
@@ -375,7 +383,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
             if ('transmission' in material) (material as any).transmission = 0
           }
         }
-      }); schedule()
+      }); contentChanged()
     },
     setGizmoObstacles(areas: GizmoObstacle[]) { if (!disposed && JSON.stringify(areas) !== JSON.stringify(gizmoObstacles)) { gizmoObstacles = areas.map((area) => ({ ...area })); schedule() } },
     gizmoHandlePosition(handle: TransformHandle) { if (disposed) return null; updateGizmo(); return gizmo.position(handle) },
@@ -416,7 +424,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
           else if (model.userData.type === module.type && getDefinition(module.type)?.visual === 'supply') model.userData.signature = signature
           else { if (activeOutline?.id === module.id) removeActiveOutline(); removeMultiOutline(module.id); disposeObject(model); content.remove(model); models.delete(module.id); model = undefined }
         }
-        if (!model) { model = buildComponent(module, next!.modules); model.userData.onVisualChange = schedule; models.set(module.id, model); content.add(model) }
+        if (!model) { model = buildComponent(module, next!.modules); model.userData.onVisualChange = contentChanged; models.set(module.id, model); content.add(model) }
         const previousRevision = model.userData.visualGeometryRevision
         updateFlexiblePackageGeometry(model, module, next!.modules)
         updateMountedPackageInsertion(model, module, next!.modules)
@@ -426,10 +434,10 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       }
       attachOutline()
       attachMultiOutlines()
-      wireLayer.sync(next?.connections ?? []); schedule()
+      wireLayer.sync(next?.connections ?? []); contentChanged()
     },
-    previewMove(id: string, position: Required<NonNullable<CircuitModule['position']>>) { const model = models.get(id); if (model && !disposed && [position.x, position.y, position.z].every(Number.isFinite)) { model.position.set(position.x, position.y, position.z); model.updateMatrixWorld(true); previewMountedChildren(id); wireLayer.updateModule(id); schedule() } },
-    previewRotation(id: string, degrees: number) { const model = models.get(id); if (model && !disposed && Number.isFinite(degrees)) { model.rotation.y = (degrees % 360) * Math.PI / 180; model.updateMatrixWorld(true); previewMountedChildren(id); wireLayer.updateModule(id); schedule() } },
+    previewMove(id: string, position: Required<NonNullable<CircuitModule['position']>>) { const model = models.get(id); if (model && !disposed && [position.x, position.y, position.z].every(Number.isFinite)) { model.position.set(position.x, position.y, position.z); model.updateMatrixWorld(true); previewMountedChildren(id); wireLayer.updateModule(id); contentChanged() } },
+    previewRotation(id: string, degrees: number) { const model = models.get(id); if (model && !disposed && Number.isFinite(degrees)) { model.rotation.y = (degrees % 360) * Math.PI / 180; model.updateMatrixWorld(true); previewMountedChildren(id); wireLayer.updateModule(id); contentChanged() } },
     setMountPreview(candidate: MountCandidate | null) {
       clearMountPreview()
       if (ghost && ghostModule) updateMountedPackageInsertion(ghost, { ...ghostModule, ...(candidate?.valid && candidate.mount ? { mount: candidate.mount } : { mount: undefined }) }, [...modules.values()])
@@ -437,7 +445,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
         const marker = new LineLoop(mountMarkerGeometry, pin.valid ? mountMarkerValid : mountMarkerInvalid)
         marker.position.set(pin.position.x, pin.position.y + .03, pin.position.z); marker.renderOrder = 20; mountPreview.add(marker)
       }
-      schedule()
+      contentChanged()
     },
     setSimulationStates(states: Record<string, { state?: string; reason?: string }> | null, pinValues: ObservedPinLevels = {}) {
       for (const [id, model] of models) {
@@ -486,11 +494,12 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     previewSupplyControl(id: string, control: SupplyControl, value: number | boolean) {
       const model = models.get(id), module = modules.get(id)
       if (model && module && getDefinition(module.type)?.visual === 'supply' && !disposed) {
-        applyPowerSupplyControls(model, { ...module.properties, ...supplyControlPatch(module.type, control, value) }); model.updateMatrixWorld(true); schedule()
+        applyPowerSupplyControls(model, { ...module.properties, ...supplyControlPatch(module.type, control, value) }); model.updateMatrixWorld(true); contentChanged()
       }
     },
     setGhost(type: string | null, position?: Required<NonNullable<CircuitModule['position']>>, rotation = 0, properties?: Record<string, unknown>) {
       if (disposed || !Number.isFinite(rotation) || (position && ![position.x, position.y, position.z].every(Number.isFinite))) return
+      clipping.invalidateBounds()
       const part=type?getPartForType(type):undefined,physicalDescriptor=part?physicalDescriptorForPart(part):undefined
       ghostModule = type && position ? { id: 'PLACE', type, position, rotation, properties, physicalDescriptor } : null
       if (ghost && type && position && ghost.userData.signature === JSON.stringify([type, properties,undefined,undefined,undefined,undefined,physicalDescriptor])) { applyPose(ghost, { id: 'PLACE', type, position, rotation, properties,physicalDescriptor }); updateGizmo(); schedule(); return }
@@ -498,6 +507,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       if (type && position && getDefinition(type)) {
         // PLACE is a render-only pick target, absent from models, ports and Circuit Graph.
         ghost = buildComponent({ id: 'PLACE', type, position, rotation, properties,physicalDescriptor }); ghost.userData.kind = 'placement'
+        ghost.userData.onVisualChange = contentChanged
         ghost.traverse((object) => {
           if (object instanceof Mesh) {
             const mats = Array.isArray(object.material) ? object.material : [object.material]
@@ -527,6 +537,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     },
     selectInRect(rect: ScreenRect): { moduleIds: string[]; wires: WireIdentity[] } {
       if (disposed) return { moduleIds: [], wires: [] }
+      ensureProjection()
       camera.updateMatrixWorld(); wireLayer.flush(); scene.updateMatrixWorld(true)
       return {
         moduleIds: [...models].filter(([id, model]) => {
@@ -577,6 +588,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     },
     hoverEndpoint(endpoint: string | null) {
       if (disposed) return
+      clipping.invalidateBounds()
       contactHover.visible = false
       if (highlightedPinModel) {
         setPackagePinHighlight(highlightedPinModel, null)
@@ -599,18 +611,18 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     setShowPins(value: boolean) {
       showPins = value
       for (const [id, model] of models) { const part = getPartForModule(modules.get(id)!); if (part) setPackagePinLabels(model, part, null, value) }
-      schedule()
+      contentChanged()
     },
     wireContext: routeContext,
     wireRoute(wire: WireIdentity) { if (disposed) return null; wireLayer.flush(); return wireLayer.route(wire) },
     wireOrderPeers(wire: WireIdentity, connected = false) { if (disposed) return []; wireLayer.flush(); return wireLayer.orderPeers(wire, connected) },
-    previewWireVisual(wire: WireIdentity, visual: WireVisual | null) { wireLayer.previewVisual(wire, visual); schedule() },
-    previewWireDrawing(wire: WireIdentity, visual: WireVisual, cursor: Point3 | null) { wireLayer.previewDrawing(wire, visual, cursor); schedule() },
-    clearWireDrawing() { wireLayer.clearDrawing(); schedule() },
-    previewWireDuplicate(wire: WireIdentity, visual: WireVisual, valid: boolean, fallback?: SolvedWireRoute | null) { wireLayer.previewDuplicate(wire, visual, valid, fallback); schedule() },
-    clearWireDuplicate() { wireLayer.clearDuplicate(); schedule() },
-    setSelectionPreview(graph: CircuitGraph, selection: EditorSelection, valid: boolean, fallbackRoutes?: Parameters<ReturnType<typeof createSelectionPreview>['show']>[3]) { if (!disposed) { selectionPreview.show(graph, selection, valid, fallbackRoutes); schedule() } },
-    clearSelectionPreview() { if (!disposed) { selectionPreview.clear(); schedule() } },
+    previewWireVisual(wire: WireIdentity, visual: WireVisual | null) { wireLayer.previewVisual(wire, visual); contentChanged() },
+    previewWireDrawing(wire: WireIdentity, visual: WireVisual, cursor: Point3 | null) { wireLayer.previewDrawing(wire, visual, cursor); contentChanged() },
+    clearWireDrawing() { wireLayer.clearDrawing(); contentChanged() },
+    previewWireDuplicate(wire: WireIdentity, visual: WireVisual, valid: boolean, fallback?: SolvedWireRoute | null) { wireLayer.previewDuplicate(wire, visual, valid, fallback); contentChanged() },
+    clearWireDuplicate() { wireLayer.clearDuplicate(); contentChanged() },
+    setSelectionPreview(graph: CircuitGraph, selection: EditorSelection, valid: boolean, fallbackRoutes?: Parameters<ReturnType<typeof createSelectionPreview>['show']>[3]) { if (!disposed) { selectionPreview.show(graph, selection, valid, fallbackRoutes); contentChanged() } },
+    clearSelectionPreview() { if (!disposed) { selectionPreview.clear(); contentChanged() } },
     hoverWireEdit(hit: WireEditPick | null) { wireLayer.hover(hit?.wire ?? null); wireLayer.selectHandle(hit?.kind === 'bend' ? hit.index : null); wireLayer.selectSegment(hit?.kind === 'segment' ? hit.index : null); schedule() },
     pickWireEdit(x: number, y: number, wire: WireIdentity): WireEditPick | null {
       if (!validPointer(x, y)) return null
@@ -668,7 +680,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       return { x: point.x, y: point.y, z: point.z }
     },
     groundPoint(x: number, y: number, elevation = 0) { if (!validPointer(x, y) || !Number.isFinite(elevation)) return null; ray(x, y); return planeHit(elevation) },
-    transformTranslation(pivot: Vector3, start: { x: number; y: number }, end: { x: number; y: number }, axis: 'x' | 'z' | 'xz') { return projectedTranslationDelta(camera, width, height, pivot, start, end, axis) },
+    transformTranslation(pivot: Vector3, start: { x: number; y: number }, end: { x: number; y: number }, axis: 'x' | 'z' | 'xz') { ensureProjection(); return projectedTranslationDelta(camera, width, height, pivot, start, end, axis) },
     panGrab(anchor: Vector3, x: number, y: number) {
       if (!validPointer(x, y) || suspended || !anchor.toArray().every(Number.isFinite)) return
       ray(x, y)
@@ -687,7 +699,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       ]
       return axes.map(({ label, direction, color }) => { direction.applyQuaternion(inverse); return { label, x: direction.x, y: -direction.y, depth: direction.z, color } }).sort((a, b) => a.depth - b.depth)
     },
-    project(point: Vector3) { camera.updateMatrixWorld(); const p = point.clone().project(camera); return { x: (p.x + 1) * width / 2, y: (1 - p.y) * height / 2, visible: p.z >= -1 && p.z <= 1 && Math.abs(p.x) < 1 && Math.abs(p.y) < 1 } },
+    project(point: Vector3) { ensureProjection(); const p = point.clone().project(camera); return { x: (p.x + 1) * width / 2, y: (1 - p.y) * height / 2, visible: p.z >= -1 && p.z <= 1 && Math.abs(p.x) < 1 && Math.abs(p.y) < 1 } },
     resize(w: number, h: number) {
       if (disposed || !Number.isFinite(w) || !Number.isFinite(h)) return
       const wasVisible = visible
@@ -695,7 +707,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       if (visible !== wasVisible) updateControlsEnabled()
       if (!visible) { if (frame !== null) cancelFrame(frame); frame = null; return }
       if (sized && width === w && height === h) { if (!wasVisible) schedule(); return }
-      width = w; height = h; sized = true; camera.aspect = w / h; camera.updateProjectionMatrix(); schedule()
+      width = w; height = h; sized = true; camera.aspect = w / h; ensureProjection(); schedule()
     },
     zoomPercent,
     setZoom(percent: number) {
@@ -704,7 +716,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       const origin = target(), direction = camera.position.clone().sub(origin).normalize()
       camera.position.copy(origin).addScaledVector(direction, zoomReferenceDistance * ZOOM_DEFAULT / clampZoom(percent))
       guardDolly()
-      camera.zoom = 1; camera.updateProjectionMatrix(); camera.updateMatrixWorld(); controls?.update(); notifyZoom(); schedule()
+      camera.zoom = 1; camera.updateMatrixWorld(); controls?.update(); notifyZoom(); schedule()
     },
     zoomToArea(x1: number, y1: number, x2: number, y2: number) {
       if (disposed || suspended || !visible || ![x1, y1, x2, y2].every(Number.isFinite)) return false
@@ -712,8 +724,10 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       const left = Math.max(0, Math.min(width, Math.min(x1, x2))), right = Math.max(0, Math.min(width, Math.max(x1, x2)))
       const top = Math.max(0, Math.min(height, Math.min(y1, y2))), bottom = Math.max(0, Math.min(height, Math.max(y1, y2)))
       if (right - left < 12 || bottom - top < 12) return false
+      ensureProjection()
       const origin = target(), direction = camera.position.clone().sub(origin), distance = direction.length()
-      if (!Number.isFinite(distance) || distance <= camera.near) return false
+      const clearance = navigationClearanceForDistance(distance)
+      if (!Number.isFinite(distance) || distance <= clearance) return false
       if (left === 0 && top === 0 && right === width && bottom === height) {
         zoomReferenceDistance = Math.max(distance, MIN_ZOOM_REFERENCE_DISTANCE)
         camera.position.copy(origin).addScaledVector(direction, zoomReferenceDistance / distance)
@@ -736,12 +750,12 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       }
       const focus = surfacePoint(x, y) ?? origin
       const depth = camera.position.clone().sub(focus).dot(direction)
-      if (!Number.isFinite(depth) || depth <= camera.near) return false
+      if (!Number.isFinite(depth) || depth <= clearance) return false
       ray(x, y)
       const focalPlane = new Plane().setFromNormalAndCoplanarPoint(direction, focus)
       const center = raycaster.ray.intersectPlane(focalPlane, new Vector3())
       if (!center || !center.toArray().every(Number.isFinite)) return false
-      let nextDistance = Math.max(MIN_ZOOM_REFERENCE_DISTANCE, camera.near * 4, depth * Math.max((right - left) / width, (bottom - top) / height))
+      let nextDistance = Math.max(MIN_ZOOM_REFERENCE_DISTANCE, clearance * 4, depth * Math.max((right - left) / width, (bottom - top) / height))
       const screenRight = new Vector3().setFromMatrixColumn(camera.matrixWorld, 0), screenUp = new Vector3().setFromMatrixColumn(camera.matrixWorld, 1)
       const verticalTangent = Math.tan(camera.fov * Math.PI / 360), horizontalTangent = verticalTangent * camera.aspect
       // Fit boundary surface depths too: a low-angle dolly must not pass the nearer edge.
@@ -750,19 +764,20 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
         if (!point) { ray(sx, sy); point = raycaster.ray.intersectPlane(focalPlane, new Vector3()) }
         if (!point || !point.toArray().every(Number.isFinite)) continue
         const offset = point.clone().sub(center)
-        nextDistance = Math.max(nextDistance, offset.dot(direction) + Math.max(camera.near * 4, Math.abs(offset.dot(screenRight)) / horizontalTangent, Math.abs(offset.dot(screenUp)) / verticalTangent))
+        nextDistance = Math.max(nextDistance, offset.dot(direction) + Math.max(clearance * 4, Math.abs(offset.dot(screenRight)) / horizontalTangent, Math.abs(offset.dot(screenUp)) / verticalTangent))
       }
       if (!Number.isFinite(nextDistance)) return false
       nextDistance *= 1.01
       origin.copy(center); camera.position.copy(center).addScaledVector(direction, nextDistance)
       keepViewAboveBoard(); camera.lookAt(origin)
-      camera.zoom = 1; camera.far = Math.max(camera.far, nextDistance * 4); camera.updateProjectionMatrix(); camera.updateMatrixWorld()
+      camera.zoom = 1; camera.updateMatrixWorld()
       zoomReferenceDistance = nextDistance; zoomLimits(); controls?.update(); notifyZoom(); schedule()
       return true
     },
     fitCircuit() {
       if (disposed || !models.size) return false
       cancelTransition()
+      ensureProjection()
       const bounds = new Box3().setFromObject(content); bounds.union(new Box3().setFromObject(wires))
       const sphere = bounds.getBoundingSphere(new Sphere()), target = controls?.target ?? viewTarget
       const center = sphere.center.clone().setY(Math.max(0, sphere.center.y))
@@ -772,7 +787,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       const distance = Math.max(3, radius / Math.sin(half) * 1.2)
       if (!Number.isFinite(distance) || !sphere.center.toArray().every(Number.isFinite)) return false
       target.copy(center); camera.position.copy(target).addScaledVector(direction, distance); camera.lookAt(target)
-      camera.zoom = 1; camera.far = Math.max(CAMERA_FAR, distance * 4 + radius * 2); camera.updateProjectionMatrix()
+      camera.zoom = 1
       zoomReferenceDistance = distance; zoomLimits(); controls?.update(); notifyZoom()
       schedule(); return true
     },
@@ -810,8 +825,6 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       controls?.target.set(0, 0, 0)
       applyViewPose(new Vector3(0, 11, 10).normalize(), defaultDistance)
       camera.zoom = 1
-      camera.far = CAMERA_FAR
-      camera.updateProjectionMatrix()
       camera.updateMatrixWorld()
       controls?.update()
       notifyZoom()

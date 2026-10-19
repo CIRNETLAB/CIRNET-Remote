@@ -179,8 +179,10 @@ test('toolbar and wheel reach 1000 percent with a close near plane and preserve 
     manager.setZoom(1000)
     assert.ok(Math.abs(manager.zoomPercent() - 1000) < 1e-6)
     assert.ok(Math.abs(manager.camera.position.distanceTo(manager.target()) - reference / 10) < 1e-6)
-    assert.ok(manager.camera.near <= .01)
-    const p = manager.project(manager.endpointPosition('BB.contact:terminal:A:32')!)
+    const contact = manager.endpointPosition('BB.contact:terminal:A:32')!
+    const p = manager.project(contact)
+    const eyeDepth = -contact.clone().applyMatrix4(manager.camera.matrixWorldInverse).z
+    assert.ok(manager.camera.near > 0 && manager.camera.near < eyeDepth && manager.camera.far > eyeDepth, 'close inspection retains the actual contact inside the clip interval')
     assert.equal(manager.pickEndpoint(p.x, p.y)?.endpoint, 'BB.contact:terminal:A:32')
     manager.setZoom(100)
     for (let i = 0; i < 80; i++) wheel(-100)

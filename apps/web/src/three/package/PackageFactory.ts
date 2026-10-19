@@ -14,6 +14,7 @@ import {addSealedDiscreteModel} from './DiscretePackageModels'
 import { addSwitchPackageModel } from './SwitchPackageModels'
 import { addDisplayPackageModel } from './DisplayPackageModels'
 import { addBuzzerPackageModel } from './BuzzerPackageModels'
+import { stabilizeThinSurface } from '../StudioEnvironment'
 
 export function addPackageModel(group: Group, module: CircuitModule, part: PartDefinition) {
   const pkg = part.package, mm = MM_TO_WORLD
@@ -210,7 +211,7 @@ export function addPackageModel(group: Group, module: CircuitModule, part: PartD
       plunger.userData.switchActuator = true
     }
   } else if (pkg.family === 'seven-segment') {
-    const face = new MeshStandardMaterial({ color: '#101317', roughness: .62 })
+    const face = stabilizeThinSurface(new MeshStandardMaterial({ color: '#101317', roughness: .62 }))
     roundedBox('package-body', w, h, d, 0, bottom + h / 2, 0)
     roundedBox('package-display-face', w * .95, .004, d * .94, 0, top + .002, 0, face)
     const digits = pkg.digits ?? 1, digitWidth = w * .83 / digits, digitHeight = d * .72, stroke = Math.min(digitWidth * .12, digitHeight * .055)
@@ -220,7 +221,7 @@ export function addPackageModel(group: Group, module: CircuitModule, part: PartD
         ['a', 0, -digitHeight / 2, half * 2, stroke], ['b', half, -quarter, stroke, quarter * 1.65], ['c', half, quarter, stroke, quarter * 1.65],
         ['d', 0, digitHeight / 2, half * 2, stroke], ['e', -half, quarter, stroke, quarter * 1.65], ['f', -half, -quarter, stroke, quarter * 1.65], ['g', 0, 0, half * 2, stroke], ['DP', half * 1.5, digitHeight / 2, stroke, stroke],
       ] as const) {
-        const segmentMaterial = new MeshStandardMaterial({ color: '#482526', roughness: .67, emissiveIntensity: 0 })
+        const segmentMaterial = stabilizeThinSurface(new MeshStandardMaterial({ color: '#482526', roughness: .67, emissiveIntensity: 0 }))
         const glyph = mesh(`package-digit-${digit}-${name}`, segmentGlyphGeometry(sx, sz, .0015), segmentMaterial, group, false); glyph.rotation.x = -Math.PI / 2; glyph.position.set(cx + x, top + .0052, z)
         glyph.userData.segment = `${digit}.${name}`; glyph.userData.ignorePick = true
       }

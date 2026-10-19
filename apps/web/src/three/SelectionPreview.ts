@@ -9,7 +9,7 @@ import { updateFlexiblePackageGeometry } from './package/FlexiblePackageGeometry
 import { isFlexibleMount } from '../electrical/flexibleGeometry'
 
 /** Render-only projection of a complete candidate. Never registered for picking. */
-export function createSelectionPreview() {
+export function createSelectionPreview(onVisualChange?: () => void) {
   const root = new Group(), models = new Map<string, Group>(), invalidWires = new Map<string, ReturnType<typeof createWireLayer>>()
   root.name = 'selection-duplicate-preview'; root.userData.ignorePick = true
   let graph: CircuitGraph | null = null
@@ -48,7 +48,7 @@ export function createSelectionPreview() {
         const signature = JSON.stringify([module.type, module.properties])
         let model = models.get(id)
         if (model && (model.userData.previewSignature !== signature || !!model.userData.resolvedPinAnchors!==isFlexibleMount(module.mount))) { model.removeFromParent(); disposeObject(model); models.delete(id); model = undefined }
-        if (!model) { model = buildComponent(module,candidate.modules); model.userData.previewSignature = signature; models.set(id, model); root.add(model) }
+        if (!model) { model = buildComponent(module,candidate.modules); model.userData.onVisualChange = onVisualChange; model.userData.previewSignature = signature; models.set(id, model); root.add(model) }
         updateFlexiblePackageGeometry(model,module,candidate.modules)
         applyPose(model, pose(id)!); tint(model, valid)
       }
