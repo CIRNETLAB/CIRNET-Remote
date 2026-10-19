@@ -1,0 +1,616 @@
+{
+  "samples": 60,
+  "tested_pixels": 11748767,
+  "changed_pixels": 0,
+  "dpr": [
+    1,
+    2
+  ],
+  "zoom_percent": [
+    50,
+    100,
+    1000
+  ],
+  "rows": [
+    {
+      "id": "DISPLAY",
+      "historical": false,
+      "zoom": 50,
+      "dpr": 1,
+      "near": 48.991828293245355,
+      "far": 77.12675198979123,
+      "tested": 67,
+      "changed": 0
+    },
+    {
+      "id": "DISPLAY",
+      "historical": false,
+      "zoom": 100,
+      "dpr": 1,
+      "near": 23.491828293245348,
+      "far": 42.62675198979123,
+      "tested": 266,
+      "changed": 0
+    },
+    {
+      "id": "DISPLAY",
+      "historical": false,
+      "zoom": 1000,
+      "dpr": 1,
+      "near": 0.5418282932453533,
+      "far": 9.549778292282305,
+      "tested": 27037,
+      "changed": 0
+    },
+    {
+      "id": "DOUBLE",
+      "historical": false,
+      "zoom": 50,
+      "dpr": 1,
+      "near": 49.349040580226735,
+      "far": 77.61003920158956,
+      "tested": 144,
+      "changed": 0
+    },
+    {
+      "id": "DOUBLE",
+      "historical": false,
+      "zoom": 100,
+      "dpr": 1,
+      "near": 23.849040580226724,
+      "far": 43.11003920158956,
+      "tested": 571,
+      "changed": 0
+    },
+    {
+      "id": "DOUBLE",
+      "historical": false,
+      "zoom": 1000,
+      "dpr": 1,
+      "near": 0.8990405802267288,
+      "far": 10.033065504080634,
+      "tested": 58624,
+      "changed": 0
+    },
+    {
+      "id": "QUAD",
+      "historical": false,
+      "zoom": 50,
+      "dpr": 1,
+      "near": 49.707500506818015,
+      "far": 78.09501439638953,
+      "tested": 300,
+      "changed": 0
+    },
+    {
+      "id": "QUAD",
+      "historical": false,
+      "zoom": 100,
+      "dpr": 1,
+      "near": 24.207500506818004,
+      "far": 43.59501439638953,
+      "tested": 1199,
+      "changed": 0
+    },
+    {
+      "id": "QUAD",
+      "historical": false,
+      "zoom": 1000,
+      "dpr": 1,
+      "near": 1.2575005068180107,
+      "far": 9.668348496705175,
+      "tested": 125854,
+      "changed": 0
+    },
+    {
+      "id": "SCOPE",
+      "historical": false,
+      "zoom": 50,
+      "dpr": 1,
+      "near": 45.164102108363,
+      "far": 71.94806362200923,
+      "tested": 2588,
+      "changed": 0
+    },
+    {
+      "id": "SCOPE",
+      "historical": false,
+      "zoom": 100,
+      "dpr": 1,
+      "near": 19.664102108363,
+      "far": 37.44806362200922,
+      "tested": 10684,
+      "changed": 0
+    },
+    {
+      "id": "SCOPE",
+      "historical": false,
+      "zoom": 1000,
+      "dpr": 1,
+      "near": 0.40919131790451246,
+      "far": 6.398063622009221,
+      "tested": 754317,
+      "changed": 0
+    },
+    {
+      "id": "GEN",
+      "historical": false,
+      "zoom": 50,
+      "dpr": 1,
+      "near": 47.24158305320291,
+      "far": 74.75877313561615,
+      "tested": 1067,
+      "changed": 0
+    },
+    {
+      "id": "GEN",
+      "historical": false,
+      "zoom": 100,
+      "dpr": 1,
+      "near": 21.741583053202902,
+      "far": 40.25877313561615,
+      "tested": 4328,
+      "changed": 0
+    },
+    {
+      "id": "GEN",
+      "historical": false,
+      "zoom": 1000,
+      "dpr": 1,
+      "near": 0.47195476865373504,
+      "far": 6.332107235931794,
+      "tested": 502867,
+      "changed": 0
+    },
+    {
+      "id": "BOARD",
+      "historical": false,
+      "zoom": 50,
+      "dpr": 1,
+      "near": 47.917751040480724,
+      "far": 69.30843456502606,
+      "tested": 260,
+      "changed": 0
+    },
+    {
+      "id": "BOARD",
+      "historical": false,
+      "zoom": 100,
+      "dpr": 1,
+      "near": 22.417751040480724,
+      "far": 34.80843456502607,
+      "tested": 1560,
+      "changed": 0
+    },
+    {
+      "id": "BOARD",
+      "historical": false,
+      "zoom": 1000,
+      "dpr": 1,
+      "near": 2.290314961021195,
+      "far": 3.6466500062504776,
+      "tested": 51200,
+      "changed": 0
+    },
+    {
+      "id": "PSU",
+      "historical": false,
+      "zoom": 50,
+      "dpr": 1,
+      "near": 48.53639474716116,
+      "far": 76.51057719214792,
+      "tested": 1018,
+      "changed": 0
+    },
+    {
+      "id": "PSU",
+      "historical": false,
+      "zoom": 100,
+      "dpr": 1,
+      "near": 23.036394747161157,
+      "far": 42.01057719214791,
+      "tested": 4228,
+      "changed": 0
+    },
+    {
+      "id": "PSU",
+      "historical": false,
+      "zoom": 1000,
+      "dpr": 1,
+      "near": 0.6465085411753904,
+      "far": 8.08391129246356,
+      "tested": 603435,
+      "changed": 0
+    },
+    {
+      "id": "DISPLAY",
+      "historical": true,
+      "zoom": 50,
+      "dpr": 1,
+      "near": 48.9908376625116,
+      "far": 77.12541172468086,
+      "tested": 63,
+      "changed": 0
+    },
+    {
+      "id": "DISPLAY",
+      "historical": true,
+      "zoom": 100,
+      "dpr": 1,
+      "near": 23.4908376625116,
+      "far": 42.62541172468086,
+      "tested": 253,
+      "changed": 0
+    },
+    {
+      "id": "DISPLAY",
+      "historical": true,
+      "zoom": 1000,
+      "dpr": 1,
+      "near": 0.5408376625116003,
+      "far": 9.548438027171933,
+      "tested": 25648,
+      "changed": 0
+    },
+    {
+      "id": "DOUBLE",
+      "historical": true,
+      "zoom": 50,
+      "dpr": 1,
+      "near": 49.34804994949298,
+      "far": 77.60869893647919,
+      "tested": 135,
+      "changed": 0
+    },
+    {
+      "id": "DOUBLE",
+      "historical": true,
+      "zoom": 100,
+      "dpr": 1,
+      "near": 23.848049949492975,
+      "far": 43.108698936479186,
+      "tested": 531,
+      "changed": 0
+    },
+    {
+      "id": "DOUBLE",
+      "historical": true,
+      "zoom": 1000,
+      "dpr": 1,
+      "near": 0.8980499494929758,
+      "far": 10.031725238970262,
+      "tested": 54456,
+      "changed": 0
+    },
+    {
+      "id": "QUAD",
+      "historical": true,
+      "zoom": 50,
+      "dpr": 1,
+      "near": 49.70650987813216,
+      "far": 78.09367413404985,
+      "tested": 275,
+      "changed": 0
+    },
+    {
+      "id": "QUAD",
+      "historical": true,
+      "zoom": 100,
+      "dpr": 1,
+      "near": 24.20650987813216,
+      "far": 43.593674134049856,
+      "tested": 1107,
+      "changed": 0
+    },
+    {
+      "id": "QUAD",
+      "historical": true,
+      "zoom": 1000,
+      "dpr": 1,
+      "near": 1.2565098781321618,
+      "far": 9.667008234365497,
+      "tested": 115570,
+      "changed": 0
+    },
+    {
+      "id": "DISPLAY",
+      "historical": false,
+      "zoom": 50,
+      "dpr": 2,
+      "near": 48.991828293245355,
+      "far": 77.12675198979123,
+      "tested": 266,
+      "changed": 0
+    },
+    {
+      "id": "DISPLAY",
+      "historical": false,
+      "zoom": 100,
+      "dpr": 2,
+      "near": 23.491828293245348,
+      "far": 42.62675198979123,
+      "tested": 1061,
+      "changed": 0
+    },
+    {
+      "id": "DISPLAY",
+      "historical": false,
+      "zoom": 1000,
+      "dpr": 2,
+      "near": 0.5418282932453533,
+      "far": 9.549778292282305,
+      "tested": 108141,
+      "changed": 0
+    },
+    {
+      "id": "DOUBLE",
+      "historical": false,
+      "zoom": 50,
+      "dpr": 2,
+      "near": 49.349040580226735,
+      "far": 77.61003920158956,
+      "tested": 571,
+      "changed": 0
+    },
+    {
+      "id": "DOUBLE",
+      "historical": false,
+      "zoom": 100,
+      "dpr": 2,
+      "near": 23.849040580226724,
+      "far": 43.11003920158956,
+      "tested": 2288,
+      "changed": 0
+    },
+    {
+      "id": "DOUBLE",
+      "historical": false,
+      "zoom": 1000,
+      "dpr": 2,
+      "near": 0.8990405802267288,
+      "far": 10.033065504080634,
+      "tested": 234498,
+      "changed": 0
+    },
+    {
+      "id": "QUAD",
+      "historical": false,
+      "zoom": 50,
+      "dpr": 2,
+      "near": 49.707500506818015,
+      "far": 78.09501439638953,
+      "tested": 1199,
+      "changed": 0
+    },
+    {
+      "id": "QUAD",
+      "historical": false,
+      "zoom": 100,
+      "dpr": 2,
+      "near": 24.207500506818004,
+      "far": 43.59501439638953,
+      "tested": 4797,
+      "changed": 0
+    },
+    {
+      "id": "QUAD",
+      "historical": false,
+      "zoom": 1000,
+      "dpr": 2,
+      "near": 1.2575005068180107,
+      "far": 9.668348496705175,
+      "tested": 503448,
+      "changed": 0
+    },
+    {
+      "id": "SCOPE",
+      "historical": false,
+      "zoom": 50,
+      "dpr": 2,
+      "near": 45.164102108363,
+      "far": 71.94806362200923,
+      "tested": 10349,
+      "changed": 0
+    },
+    {
+      "id": "SCOPE",
+      "historical": false,
+      "zoom": 100,
+      "dpr": 2,
+      "near": 19.664102108363,
+      "far": 37.44806362200922,
+      "tested": 42744,
+      "changed": 0
+    },
+    {
+      "id": "SCOPE",
+      "historical": false,
+      "zoom": 1000,
+      "dpr": 2,
+      "near": 0.40919131790451246,
+      "far": 6.398063622009221,
+      "tested": 3017259,
+      "changed": 0
+    },
+    {
+      "id": "GEN",
+      "historical": false,
+      "zoom": 50,
+      "dpr": 2,
+      "near": 47.24158305320291,
+      "far": 74.75877313561615,
+      "tested": 4262,
+      "changed": 0
+    },
+    {
+      "id": "GEN",
+      "historical": false,
+      "zoom": 100,
+      "dpr": 2,
+      "near": 21.741583053202902,
+      "far": 40.25877313561615,
+      "tested": 17309,
+      "changed": 0
+    },
+    {
+      "id": "GEN",
+      "historical": false,
+      "zoom": 1000,
+      "dpr": 2,
+      "near": 0.47195476865373504,
+      "far": 6.332107235931794,
+      "tested": 2011464,
+      "changed": 0
+    },
+    {
+      "id": "BOARD",
+      "historical": false,
+      "zoom": 50,
+      "dpr": 2,
+      "near": 47.917751040480724,
+      "far": 69.30843456502606,
+      "tested": 1560,
+      "changed": 0
+    },
+    {
+      "id": "BOARD",
+      "historical": false,
+      "zoom": 100,
+      "dpr": 2,
+      "near": 22.417751040480724,
+      "far": 34.80843456502607,
+      "tested": 6240,
+      "changed": 0
+    },
+    {
+      "id": "BOARD",
+      "historical": false,
+      "zoom": 1000,
+      "dpr": 2,
+      "near": 2.290314961021195,
+      "far": 3.6466500062504776,
+      "tested": 204800,
+      "changed": 0
+    },
+    {
+      "id": "PSU",
+      "historical": false,
+      "zoom": 50,
+      "dpr": 2,
+      "near": 48.53639474716116,
+      "far": 76.51057719214792,
+      "tested": 4106,
+      "changed": 0
+    },
+    {
+      "id": "PSU",
+      "historical": false,
+      "zoom": 100,
+      "dpr": 2,
+      "near": 23.036394747161157,
+      "far": 42.01057719214791,
+      "tested": 16883,
+      "changed": 0
+    },
+    {
+      "id": "PSU",
+      "historical": false,
+      "zoom": 1000,
+      "dpr": 2,
+      "near": 0.6465085411753904,
+      "far": 8.08391129246356,
+      "tested": 2413711,
+      "changed": 0
+    },
+    {
+      "id": "DISPLAY",
+      "historical": true,
+      "zoom": 50,
+      "dpr": 2,
+      "near": 48.9908376625116,
+      "far": 77.12541172468086,
+      "tested": 252,
+      "changed": 0
+    },
+    {
+      "id": "DISPLAY",
+      "historical": true,
+      "zoom": 100,
+      "dpr": 2,
+      "near": 23.4908376625116,
+      "far": 42.62541172468086,
+      "tested": 1009,
+      "changed": 0
+    },
+    {
+      "id": "DISPLAY",
+      "historical": true,
+      "zoom": 1000,
+      "dpr": 2,
+      "near": 0.5408376625116003,
+      "far": 9.548438027171933,
+      "tested": 102608,
+      "changed": 0
+    },
+    {
+      "id": "DOUBLE",
+      "historical": true,
+      "zoom": 50,
+      "dpr": 2,
+      "near": 49.34804994949298,
+      "far": 77.60869893647919,
+      "tested": 533,
+      "changed": 0
+    },
+    {
+      "id": "DOUBLE",
+      "historical": true,
+      "zoom": 100,
+      "dpr": 2,
+      "near": 23.848049949492975,
+      "far": 43.108698936479186,
+      "tested": 2132,
+      "changed": 0
+    },
+    {
+      "id": "DOUBLE",
+      "historical": true,
+      "zoom": 1000,
+      "dpr": 2,
+      "near": 0.8980499494929758,
+      "far": 10.031725238970262,
+      "tested": 217831,
+      "changed": 0
+    },
+    {
+      "id": "QUAD",
+      "historical": true,
+      "zoom": 50,
+      "dpr": 2,
+      "near": 49.70650987813216,
+      "far": 78.09367413404985,
+      "tested": 1107,
+      "changed": 0
+    },
+    {
+      "id": "QUAD",
+      "historical": true,
+      "zoom": 100,
+      "dpr": 2,
+      "near": 24.20650987813216,
+      "far": 43.593674134049856,
+      "tested": 4423,
+      "changed": 0
+    },
+    {
+      "id": "QUAD",
+      "historical": true,
+      "zoom": 1000,
+      "dpr": 2,
+      "near": 1.2565098781321618,
+      "far": 9.667008234365497,
+      "tested": 462264,
+      "changed": 0
+    }
+  ]
+}

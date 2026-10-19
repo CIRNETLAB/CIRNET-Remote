@@ -1,0 +1,586 @@
+[
+  {
+    "width": 1440,
+    "dpr": 1,
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 1440,
+      "height": 52
+    },
+    "footer": {
+      "x": 0,
+      "y": 961,
+      "width": 1440,
+      "height": 39
+    },
+    "message": {
+      "x": 12,
+      "y": 974,
+      "width": 1029.234375,
+      "height": 14
+    },
+    "viewportControls": [
+      {
+        "width": 318,
+        "scrollWidth": 318
+      }
+    ],
+    "canvas": {
+      "x": 0,
+      "y": 52,
+      "width": 1440,
+      "height": 909
+    },
+    "graphics": {
+      "dpr": 1,
+      "drawingBuffer": [
+        1440,
+        909
+      ],
+      "depthBits": 24
+    },
+    "memory": {
+      "geometries": 165,
+      "textures": 9
+    },
+    "global_listeners": {
+      "window:beforeunload:false": 1,
+      "window:pagehide:false": 2,
+      "window:popstate:false": 1,
+      "window:resize:false": 1,
+      "window:scroll:true": 1,
+      "window:keydown:false": 1,
+      "window:blur:false": 1,
+      "window:pointerdown:true": 2,
+      "window:contextmenu:true": 2,
+      "window:__playwright_global_listeners_check__:false": 1,
+      "window:mousemove:true": 1,
+      "window:pointerup:true": 1,
+      "window:touchstart:true": 1,
+      "window:touchend:true": 1,
+      "window:touchcancel:true": 1,
+      "window:mousedown:true": 1,
+      "window:mouseup:true": 1,
+      "window:click:true": 1,
+      "window:auxclick:true": 1,
+      "window:dblclick:true": 1,
+      "document:visibilitychange:false": 2,
+      "document:pointerdown:false": 2,
+      "document:focusin:false": 1,
+      "document:keydown:false": 1,
+      "document:keydown:true": 2
+    }
+  },
+  {
+    "width": 1280,
+    "dpr": 1,
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 52
+    },
+    "footer": {
+      "x": 0,
+      "y": 961,
+      "width": 1280,
+      "height": 39
+    },
+    "message": {
+      "x": 12,
+      "y": 974,
+      "width": 869.234375,
+      "height": 14
+    },
+    "viewportControls": [
+      {
+        "width": 318,
+        "scrollWidth": 318
+      }
+    ],
+    "canvas": {
+      "x": 0,
+      "y": 52,
+      "width": 1280,
+      "height": 909
+    },
+    "graphics": {
+      "dpr": 1,
+      "drawingBuffer": [
+        1280,
+        909
+      ],
+      "depthBits": 24
+    },
+    "memory": {
+      "geometries": 165,
+      "textures": 9
+    },
+    "global_listeners": {
+      "window:beforeunload:false": 1,
+      "window:pagehide:false": 2,
+      "window:popstate:false": 1,
+      "window:resize:false": 1,
+      "window:scroll:true": 1,
+      "window:keydown:false": 1,
+      "window:blur:false": 1,
+      "window:pointerdown:true": 2,
+      "window:contextmenu:true": 2,
+      "window:__playwright_global_listeners_check__:false": 1,
+      "window:mousemove:true": 1,
+      "window:pointerup:true": 1,
+      "window:touchstart:true": 1,
+      "window:touchend:true": 1,
+      "window:touchcancel:true": 1,
+      "window:mousedown:true": 1,
+      "window:mouseup:true": 1,
+      "window:click:true": 1,
+      "window:auxclick:true": 1,
+      "window:dblclick:true": 1,
+      "document:visibilitychange:false": 2,
+      "document:pointerdown:false": 2,
+      "document:focusin:false": 1,
+      "document:keydown:false": 1,
+      "document:keydown:true": 2
+    }
+  },
+  {
+    "width": 900,
+    "dpr": 1,
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 900,
+      "height": 52
+    },
+    "footer": {
+      "x": 0,
+      "y": 961,
+      "width": 900,
+      "height": 39
+    },
+    "message": {
+      "x": 12,
+      "y": 974,
+      "width": 489.234375,
+      "height": 14
+    },
+    "viewportControls": [
+      {
+        "width": 318,
+        "scrollWidth": 318
+      }
+    ],
+    "canvas": {
+      "x": 0,
+      "y": 52,
+      "width": 900,
+      "height": 909
+    },
+    "graphics": {
+      "dpr": 1,
+      "drawingBuffer": [
+        900,
+        909
+      ],
+      "depthBits": 24
+    },
+    "memory": {
+      "geometries": 165,
+      "textures": 9
+    },
+    "global_listeners": {
+      "window:beforeunload:false": 1,
+      "window:pagehide:false": 2,
+      "window:popstate:false": 1,
+      "window:resize:false": 1,
+      "window:scroll:true": 1,
+      "window:keydown:false": 1,
+      "window:blur:false": 1,
+      "window:pointerdown:true": 2,
+      "window:contextmenu:true": 2,
+      "window:__playwright_global_listeners_check__:false": 1,
+      "window:mousemove:true": 1,
+      "window:pointerup:true": 1,
+      "window:touchstart:true": 1,
+      "window:touchend:true": 1,
+      "window:touchcancel:true": 1,
+      "window:mousedown:true": 1,
+      "window:mouseup:true": 1,
+      "window:click:true": 1,
+      "window:auxclick:true": 1,
+      "window:dblclick:true": 1,
+      "document:visibilitychange:false": 2,
+      "document:pointerdown:false": 2,
+      "document:focusin:false": 1,
+      "document:keydown:false": 1,
+      "document:keydown:true": 2
+    }
+  },
+  {
+    "width": 480,
+    "dpr": 1,
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 480,
+      "height": 52
+    },
+    "footer": {
+      "x": 0,
+      "y": 961,
+      "width": 480,
+      "height": 39
+    },
+    "message": {
+      "x": 7,
+      "y": 975,
+      "width": 116.4375,
+      "height": 12
+    },
+    "viewportControls": [
+      {
+        "width": 287,
+        "scrollWidth": 318
+      }
+    ],
+    "canvas": {
+      "x": 0,
+      "y": 52,
+      "width": 480,
+      "height": 909
+    },
+    "graphics": {
+      "dpr": 1,
+      "drawingBuffer": [
+        480,
+        909
+      ],
+      "depthBits": 24
+    },
+    "memory": {
+      "geometries": 165,
+      "textures": 9
+    },
+    "global_listeners": {
+      "window:beforeunload:false": 1,
+      "window:pagehide:false": 2,
+      "window:popstate:false": 1,
+      "window:resize:false": 1,
+      "window:scroll:true": 1,
+      "window:keydown:false": 1,
+      "window:blur:false": 1,
+      "window:pointerdown:true": 2,
+      "window:contextmenu:true": 2,
+      "window:__playwright_global_listeners_check__:false": 1,
+      "window:mousemove:true": 1,
+      "window:pointerup:true": 1,
+      "window:touchstart:true": 1,
+      "window:touchend:true": 1,
+      "window:touchcancel:true": 1,
+      "window:mousedown:true": 1,
+      "window:mouseup:true": 1,
+      "window:click:true": 1,
+      "window:auxclick:true": 1,
+      "window:dblclick:true": 1,
+      "document:visibilitychange:false": 2,
+      "document:pointerdown:false": 2,
+      "document:focusin:false": 1,
+      "document:keydown:false": 1,
+      "document:keydown:true": 2
+    }
+  },
+  {
+    "width": 1440,
+    "dpr": 2,
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 1440,
+      "height": 52
+    },
+    "footer": {
+      "x": 0,
+      "y": 961,
+      "width": 1440,
+      "height": 39
+    },
+    "message": {
+      "x": 12,
+      "y": 974,
+      "width": 1029.234375,
+      "height": 14
+    },
+    "viewportControls": [
+      {
+        "width": 318,
+        "scrollWidth": 318
+      }
+    ],
+    "canvas": {
+      "x": 0,
+      "y": 52,
+      "width": 1440,
+      "height": 909
+    },
+    "graphics": {
+      "dpr": 2,
+      "drawingBuffer": [
+        2880,
+        1818
+      ],
+      "depthBits": 24
+    },
+    "memory": {
+      "geometries": 165,
+      "textures": 9
+    },
+    "global_listeners": {
+      "window:beforeunload:false": 1,
+      "window:pagehide:false": 2,
+      "window:popstate:false": 1,
+      "window:resize:false": 1,
+      "window:scroll:true": 1,
+      "window:keydown:false": 1,
+      "window:blur:false": 1,
+      "window:pointerdown:true": 2,
+      "window:contextmenu:true": 2,
+      "window:__playwright_global_listeners_check__:false": 1,
+      "window:mousemove:true": 1,
+      "window:pointerup:true": 1,
+      "window:touchstart:true": 1,
+      "window:touchend:true": 1,
+      "window:touchcancel:true": 1,
+      "window:mousedown:true": 1,
+      "window:mouseup:true": 1,
+      "window:click:true": 1,
+      "window:auxclick:true": 1,
+      "window:dblclick:true": 1,
+      "document:visibilitychange:false": 2,
+      "document:pointerdown:false": 2,
+      "document:focusin:false": 1,
+      "document:keydown:false": 1,
+      "document:keydown:true": 2
+    }
+  },
+  {
+    "width": 1280,
+    "dpr": 2,
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 52
+    },
+    "footer": {
+      "x": 0,
+      "y": 961,
+      "width": 1280,
+      "height": 39
+    },
+    "message": {
+      "x": 12,
+      "y": 974,
+      "width": 869.234375,
+      "height": 14
+    },
+    "viewportControls": [
+      {
+        "width": 318,
+        "scrollWidth": 318
+      }
+    ],
+    "canvas": {
+      "x": 0,
+      "y": 52,
+      "width": 1280,
+      "height": 909
+    },
+    "graphics": {
+      "dpr": 2,
+      "drawingBuffer": [
+        2560,
+        1818
+      ],
+      "depthBits": 24
+    },
+    "memory": {
+      "geometries": 165,
+      "textures": 9
+    },
+    "global_listeners": {
+      "window:beforeunload:false": 1,
+      "window:pagehide:false": 2,
+      "window:popstate:false": 1,
+      "window:resize:false": 1,
+      "window:scroll:true": 1,
+      "window:keydown:false": 1,
+      "window:blur:false": 1,
+      "window:pointerdown:true": 2,
+      "window:contextmenu:true": 2,
+      "window:__playwright_global_listeners_check__:false": 1,
+      "window:mousemove:true": 1,
+      "window:pointerup:true": 1,
+      "window:touchstart:true": 1,
+      "window:touchend:true": 1,
+      "window:touchcancel:true": 1,
+      "window:mousedown:true": 1,
+      "window:mouseup:true": 1,
+      "window:click:true": 1,
+      "window:auxclick:true": 1,
+      "window:dblclick:true": 1,
+      "document:visibilitychange:false": 2,
+      "document:pointerdown:false": 2,
+      "document:focusin:false": 1,
+      "document:keydown:false": 1,
+      "document:keydown:true": 2
+    }
+  },
+  {
+    "width": 900,
+    "dpr": 2,
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 900,
+      "height": 52
+    },
+    "footer": {
+      "x": 0,
+      "y": 961,
+      "width": 900,
+      "height": 39
+    },
+    "message": {
+      "x": 12,
+      "y": 974,
+      "width": 489.234375,
+      "height": 14
+    },
+    "viewportControls": [
+      {
+        "width": 318,
+        "scrollWidth": 318
+      }
+    ],
+    "canvas": {
+      "x": 0,
+      "y": 52,
+      "width": 900,
+      "height": 909
+    },
+    "graphics": {
+      "dpr": 2,
+      "drawingBuffer": [
+        1800,
+        1818
+      ],
+      "depthBits": 24
+    },
+    "memory": {
+      "geometries": 165,
+      "textures": 9
+    },
+    "global_listeners": {
+      "window:beforeunload:false": 1,
+      "window:pagehide:false": 2,
+      "window:popstate:false": 1,
+      "window:resize:false": 1,
+      "window:scroll:true": 1,
+      "window:keydown:false": 1,
+      "window:blur:false": 1,
+      "window:pointerdown:true": 2,
+      "window:contextmenu:true": 2,
+      "window:__playwright_global_listeners_check__:false": 1,
+      "window:mousemove:true": 1,
+      "window:pointerup:true": 1,
+      "window:touchstart:true": 1,
+      "window:touchend:true": 1,
+      "window:touchcancel:true": 1,
+      "window:mousedown:true": 1,
+      "window:mouseup:true": 1,
+      "window:click:true": 1,
+      "window:auxclick:true": 1,
+      "window:dblclick:true": 1,
+      "document:visibilitychange:false": 2,
+      "document:pointerdown:false": 2,
+      "document:focusin:false": 1,
+      "document:keydown:false": 1,
+      "document:keydown:true": 2
+    }
+  },
+  {
+    "width": 480,
+    "dpr": 2,
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 480,
+      "height": 52
+    },
+    "footer": {
+      "x": 0,
+      "y": 961,
+      "width": 480,
+      "height": 39
+    },
+    "message": {
+      "x": 7,
+      "y": 975,
+      "width": 116.4375,
+      "height": 12
+    },
+    "viewportControls": [
+      {
+        "width": 287,
+        "scrollWidth": 318
+      }
+    ],
+    "canvas": {
+      "x": 0,
+      "y": 52,
+      "width": 480,
+      "height": 909
+    },
+    "graphics": {
+      "dpr": 2,
+      "drawingBuffer": [
+        960,
+        1818
+      ],
+      "depthBits": 24
+    },
+    "memory": {
+      "geometries": 165,
+      "textures": 9
+    },
+    "global_listeners": {
+      "window:beforeunload:false": 1,
+      "window:pagehide:false": 2,
+      "window:popstate:false": 1,
+      "window:resize:false": 1,
+      "window:scroll:true": 1,
+      "window:keydown:false": 1,
+      "window:blur:false": 1,
+      "window:pointerdown:true": 2,
+      "window:contextmenu:true": 2,
+      "window:__playwright_global_listeners_check__:false": 1,
+      "window:mousemove:true": 1,
+      "window:pointerup:true": 1,
+      "window:touchstart:true": 1,
+      "window:touchend:true": 1,
+      "window:touchcancel:true": 1,
+      "window:mousedown:true": 1,
+      "window:mouseup:true": 1,
+      "window:click:true": 1,
+      "window:auxclick:true": 1,
+      "window:dblclick:true": 1,
+      "document:visibilitychange:false": 2,
+      "document:pointerdown:false": 2,
+      "document:focusin:false": 1,
+      "document:keydown:false": 1,
+      "document:keydown:true": 2
+    }
+  }
+]

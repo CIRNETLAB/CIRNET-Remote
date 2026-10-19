@@ -1,3 +1,4 @@
+import { fileCommand } from './workbench-ui'
 import { expect, type Page } from '@playwright/test'
 import type { Camera, Object3D, WebGLRenderer, Mesh } from 'three'
 import { readFileSync } from 'node:fs'
@@ -13,6 +14,26 @@ export const workspaceCanvas = (page: Page) => page.getByLabel('Three-dimensiona
  * test probe supplies coordinates only; all edits use the actual pointer UI. */
 export async function observeNativeScene(page: Page) {
   await page.addInitScript(() => {
+    // Count live, repeatable global registrations while always calling the real
+    // browser APIs. Once-only listeners are excluded because native dispatch
+    // removes them internally without calling removeEventListener.
+    const globalListeners = new Map<EventTarget, Map<string, Set<EventListenerOrEventListenerObject>>>()
+    const add = EventTarget.prototype.addEventListener, remove = EventTarget.prototype.removeEventListener
+    const key = (type: string, options?: boolean | EventListenerOptions) => type + ':' + String(typeof options === 'boolean' ? options : !!options?.capture)
+    EventTarget.prototype.addEventListener = function(type, callback, options) {
+      if (callback && (this === window || this === document) && !(typeof options === 'object' && options?.once)) {
+        let target = globalListeners.get(this); if (!target) { target = new Map(); globalListeners.set(this, target) }
+        const name = key(type, options); let callbacks = target.get(name)
+        if (!callbacks) { callbacks = new Set(); target.set(name, callbacks) }
+        callbacks.add(callback)
+      }
+      add.call(this, type, callback, options)
+    }
+    EventTarget.prototype.removeEventListener = function(type, callback, options) {
+      if (callback) globalListeners.get(this)?.get(key(type, options))?.delete(callback)
+      remove.call(this, type, callback, options)
+    }
+    Object.defineProperty(window, 'nativeGlobalListenerCounts', { value: () => Object.fromEntries([...globalListeners].flatMap(([target, entries]) => [...entries].map(([name, callbacks]) => [(target === window ? 'window:' : 'document:') + name, callbacks.size])).filter(([, size]) => Number(size) > 0)) })
     const events = new EventTarget()
     Object.defineProperty(window, '__THREE_DEVTOOLS__', { configurable: true, value: events })
     const isRenderer = (value: unknown): value is WebGLRenderer => value !== null && typeof value === 'object' && 'isWebGLRenderer' in value && value.isWebGLRenderer === true && 'domElement' in value && value.domElement instanceof HTMLCanvasElement && 'render' in value && typeof value.render === 'function'
@@ -118,9 +139,31 @@ export async function nativeSceneEvidence(page: Page) {
   })
 }
 
+/** Read native identities and camera pose without issuing layout or camera commands. */
+export async function nativeShellEvidence(page: Page) {
+  return workspaceCanvas(page).evaluate(element => {
+    const canvas = element as ProbedCanvas, probe = canvas.nativeSceneProbe
+    if (!probe) throw new Error('Missing actual renderer evidence.')
+    const resources: unknown[] = []
+    probe.scene.traverse(object => {
+      if (object.userData.kind !== 'module' && object.name !== 'committed-wires') return
+      object.traverse(child => {
+        const mesh = child as Mesh
+        if (!mesh.isMesh) return
+        resources.push({ mesh: mesh.uuid, geometry: mesh.geometry.uuid, material: (Array.isArray(mesh.material) ? mesh.material : [mesh.material]).map(material => material.uuid) })
+      })
+    })
+    const rect = canvas.getBoundingClientRect(), gl = canvas.getContext('webgl2')
+    return { scene: probe.scene.uuid, camera: probe.camera.uuid, position: probe.camera.position.toArray(), quaternion: probe.camera.quaternion.toArray(), projection: [...probe.camera.projectionMatrix.elements],
+      rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height }, resources, memory: probe.memory,
+      graphics: { dpr: devicePixelRatio, drawingBuffer: [canvas.width, canvas.height], depthBits: gl?.getParameter(gl.DEPTH_BITS) },
+      globalListeners: (window as unknown as { nativeGlobalListenerCounts: () => Record<string, number> }).nativeGlobalListenerCounts() }
+  })
+}
+
 export async function exportedNativeGraph(page: Page) {
   const pending = page.waitForEvent('download')
-  await page.getByRole('button', { name: 'Export circuit JSON', exact: true }).click()
+  await fileCommand(page, 'Export')
   const stream = await (await pending).createReadStream()
   if (!stream) throw new Error('The circuit JSON download is unavailable.')
   const chunks: Buffer[] = []

@@ -28,7 +28,7 @@ function requestedDefaults(){return {
   channel2:{waveform:'Square',frequency:1000,amplitude:1,offset:0,phase:0,dutyCycle:50}},
 }}
 
-export interface ConsoleEntry { id: number; time: string; level: 'info' | 'error'; message: string }
+export interface ConsoleEntry { id: number; time: string; level: 'info' | 'error'; message: string; source?:string; scope?:'session'|'draft' }
 export const useInstrumentStore = defineStore('instrument', {
   state: () => ({
     entries: [] as ConsoleEntry[], nextEntryId: 1,
@@ -117,8 +117,8 @@ export const useInstrumentStore = defineStore('instrument', {
     },
     async reconcileGenerator(channel:1|2){return commandControllers.get(this)?.reconcile(channel)??null},
     cancelGeneratorCommands(){commandControllers.get(this)?.cancel();commandControllers.delete(this);this.generatorControl=initialInstrumentCommandState()},
-    log(message: string, level: ConsoleEntry['level'] = 'info') {
-      this.entries.push({ id: this.nextEntryId++, time: new Date().toLocaleTimeString(), level, message })
+    log(message: string, level: ConsoleEntry['level'] = 'info', context:{source?:string;scope?:'session'|'draft'}={}) {
+      this.entries.push({ id: this.nextEntryId++, time: new Date().toLocaleTimeString(), level, message, ...context })
       if (this.entries.length > 100) this.entries.shift()
     },
     clearConsole() { this.entries = [] },

@@ -14,7 +14,7 @@ onBeforeUnmount(()=>instrument.cancelCaptureLoad())
 const captureStatus=computed(()=>capture.value?capture.value.source+' · CAPTURED':instrument.captureLoading?'LOADING CAPTURE':instrument.captureError?'CAPTURE ERROR':instrument.captureMetadata&&!instrument.captureMetadata.available?'CAPTURE UNAVAILABLE':'NO CAPTURE SOURCE')
 const traces=computed(()=>instrument.monitor.channels.map((signal,index)=>({signal,...digitalTrace(capture.value?.samples??[],signal,capture.value?.duration_ns??0,index)})))
 const canRun=computed(()=>station.canExecute&&!experiment.busy&&(station.mode==='simulation'?!!circuit.graph:!!experiment.assignmentId))
-async function runPause(){
+async function runStop(){
  if(experiment.canStop)return experiment.stop()
  if(!canRun.value)return false
  try{const configuration=instrument.preRunConfiguration(station.executionTarget!.capabilities!);instrument.configurationError=null;return experiment.run(circuit.graph,station.executionTarget,configuration.capture_config,undefined,configuration)}
@@ -31,7 +31,7 @@ const plotHeight = computed(() => Math.max(200, rowCount.value * 36))
         <legend class="visually-hidden">{{ canRun || experiment.canStop ? 'Capture controls' : 'Capture controls unavailable' }}</legend>
         <label>Time Base<select v-model="instrument.monitor.timeScale" disabled title="Use capture duration in Inspector"><option>1 ms</option></select></label>
         <label>Trigger<select disabled title="Trigger acquisition is unavailable"><option>Not configured</option></select></label>
-        <button type="button" @click="runPause"><span aria-hidden="true">▶</span> Run / Pause</button>
+        <button type="button" :aria-label="experiment.canStop ? 'Stop' : 'Run'" @click="runStop"><span aria-hidden="true">{{ experiment.canStop ? '■' : '▶' }}</span> {{ experiment.canStop ? 'Stop' : 'Run' }}</button>
       </fieldset>
       <p v-if="instrument.configurationError" role="alert">{{ instrument.configurationError }}</p>
       <div class="logic-capture">

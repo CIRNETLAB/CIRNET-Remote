@@ -1,3 +1,4 @@
+import { expectEventConnection } from './workbench-ui'
 import { test,expect,type Page } from '@playwright/test'
 import { randomUUID } from 'node:crypto'
 
@@ -65,7 +66,7 @@ test('administrator creates users and revocation removes a live student session 
     await studentPage.getByRole('button',{name:'Close account',exact:true}).click()
     const canvas=studentPage.getByLabel('Three-dimensional circuit workspace',{exact:true})
     await canvas.evaluate(element=>element.setAttribute('data-auth-canvas','student-preserved'))
-    await expect(studentPage.locator('.connection-status')).toContainText('connected')
+    await expectEventConnection(studentPage)
     const denied=await studentContext.request.get('/api/admin/users');expect(denied.status()).toBe(403)
     await page.getByRole('button',{name:`Disable ${student}`,exact:true}).click()
     await expect(page.getByRole('button',{name:`Enable ${student}`,exact:true})).toBeVisible()

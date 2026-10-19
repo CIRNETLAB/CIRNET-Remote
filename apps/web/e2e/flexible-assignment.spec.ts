@@ -1,3 +1,4 @@
+import { fileCommand, expectEventConnection } from './workbench-ui'
 import { test, expect } from '@playwright/test'
 import { randomUUID } from 'node:crypto'
 import {readFileSync} from 'node:fs'
@@ -15,12 +16,12 @@ test('actual authoring UI creates, reopens, updates and publishes a private Grap
   await page.getByRole('button', { name: 'Sign in', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Close account', exact: true }).click()
-  await expect(page.locator('.connection-status')).toContainText('connected')
+  await expectEventConnection(page)
   await page.getByLabel('Open circuit file', { exact: true }).setInputFiles({ name: 'reference-1.2.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(graph)) })
   await expect(page.locator('.project-title')).toContainText(name)
   const canvas = page.getByLabel('Three-dimensional circuit workspace', { exact: true })
   await canvas.evaluate(element => element.setAttribute('data-assignment-reference-canvas', 'same'))
-  await page.getByRole('button', { name: 'Open Assignments', exact: true }).click()
+  await fileCommand(page, 'Assignment')
   const panel = page.getByRole('region', { name: 'Assignments', exact: true })
   await panel.getByRole('button', { name: 'New assignment draft', exact: true }).click()
   const title = `${name} original`

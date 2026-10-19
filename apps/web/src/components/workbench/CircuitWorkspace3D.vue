@@ -10,6 +10,8 @@ import WireOptions from './WireOptions.vue'
 import WireContextMenu from './WireContextMenu.vue'
 import { useCircuitEditor } from '../../composables/useCircuitEditor'
 import { observeElementSize } from '../../composables/frameTasks'
+import { useWorkspaceMessageStore } from '../../stores/workspaceMessages'
+import { useWorkspaceSceneMessages } from '../../composables/useWorkspaceSceneMessages'
 const workspace = useWorkspaceStore()
 const circuit = useCircuitStore()
 const ui = useUiStore()
@@ -25,6 +27,16 @@ let contextLost = false
 let navigationActive = false
 let obstaclesDirty = true
 const editor = useCircuitEditor(canvas, () => manager)
+const messages=useWorkspaceMessageStore()
+useWorkspaceSceneMessages({
+  graphics:()=>graphicsError.value,zoomArea:()=>workspace.zoomAreaActive,marquee:()=>workspace.marqueeActive,
+  selectionPreview:()=>{
+  const duplicate=editor.selectionCommands.duplicatePreviewState.value,move=editor.selectionCommands.movePreviewState.value
+  return duplicate.active?duplicate.message||'Selection preview · Move to position · Click to paste · Right click or Esc to cancel':move.active?move.message||'Selection move · Move to position · Click to place · Right click or Esc to cancel':''
+  },
+  placement:()=>workspace.placementType?editor.controlHint.value||'Preview follows pointer · X/Z/XZ/Rotate Y to adjust · Click to place · Right click or Esc to cancel':'',
+  wire:()=>workspace.wireOptionsActive?editor.wireRouting.hint.value:'',
+})
 function visibility() { if (contextLost || document.hidden) editor.cancel(); manager?.suspend(contextLost || document.hidden) }
 function updateGizmoObstacles() {
   if (!obstaclesDirty) return
@@ -86,7 +98,7 @@ function rendered() {
 }
 function size(width: number, height: number) { obstaclesDirty = true; editor.cancel(); manager?.resize(width, height); ui.setViewport(width, height) }
 function lost(event: Event) { event.preventDefault(); contextLost = true; visibility(); graphicsError.value = 'Graphics context interrupted. Waiting for recovery…' }
-function restored() { contextLost = false; graphicsError.value = ''; visibility(); editor.sync(); obstaclesDirty = true; manager?.requestRender() }
+function restored() { contextLost = false; graphicsError.value = ''; messages.publish('graphics','Graphics context restored.',{scope:'session'}); visibility(); editor.sync(); obstaclesDirty = true; manager?.requestRender() }
 onMounted(() => {
   navigationActive = true
   let renderer: WebGLRenderer | undefined
@@ -128,18 +140,11 @@ onUnmounted(() => { navigationActive = false; workspace.cancelZoomRequest(); obs
     <WireContextMenu v-if="editor.selectionCommands.contextMenuState.value" :x="editor.selectionCommands.contextMenuState.value.x" :y="editor.selectionCommands.contextMenuState.value.y" :viewport-width="ui.viewport.width" :viewport-height="ui.viewport.height" :can-paste="editor.selectionCommands.canPaste.value" :can-edit-selection="workspace.selectionCount > 0" @action="wireMenuAction" @close="closeWireMenu" />
     <WireOptions v-if="workspace.wireOptionsActive && !editor.selectionCommands.duplicatePreviewState.value.active && !editor.selectionCommands.movePreviewState.value.active" :color="editor.wireRouting.color.value" :route-mode="editor.wireRouting.routeMode.value" :can-add="editor.wireRouting.canAdd.value" :can-remove="editor.wireRouting.canRemove.value" :hint="editor.wireRouting.hint.value" :layer="editor.wireRouting.layer.value" :can-stack="editor.wireRouting.canStack.value" :can-lower-stack="editor.wireRouting.canLowerStack.value" :can-raise-stack="editor.wireRouting.canRaiseStack.value" @color="editor.wireRouting.setColor" @mode="editor.wireRouting.setRouteMode" @add="editor.wireRouting.addBend" @remove="editor.wireRouting.removeSelectedBend" @route-key="editor.wireRouting.keydown" @stack="editor.wireRouting.setStackLayer" />
     <div v-if="editor.zoomAreaRect.value" class="zoom-area-rectangle" :style="{ left: editor.zoomAreaRect.value.left + 'px', top: editor.zoomAreaRect.value.top + 'px', width: editor.zoomAreaRect.value.width + 'px', height: editor.zoomAreaRect.value.height + 'px' }" aria-hidden="true" />
-    <p v-if="workspace.zoomAreaActive" class="zoom-area-notice" role="status">Drag an area to zoom · Right click or Esc to cancel</p>
     <div v-if="editor.marqueeRect.value" class="marquee-rectangle" :style="{ left: editor.marqueeRect.value.left + 'px', top: editor.marqueeRect.value.top + 'px', width: editor.marqueeRect.value.width + 'px', height: editor.marqueeRect.value.height + 'px' }" aria-hidden="true" />
-    <p v-if="workspace.marqueeActive" class="marquee-notice" role="status">Drag to select components and wires · Right click or Esc to cancel</p>
-    <p v-if="editor.selectionCommands.duplicatePreviewState.value.active" class="duplicate-notice" role="status">{{ editor.selectionCommands.duplicatePreviewState.value.message || 'Selection preview · Move to position · Click to paste · Right click or Esc to cancel' }}</p>
-    <p v-if="editor.selectionCommands.movePreviewState.value.active" class="duplicate-notice" role="status">{{ editor.selectionCommands.movePreviewState.value.message || 'Selection move · Move to position · Click to place · Right click or Esc to cancel' }}</p>
     <span class="visually-hidden">In Select, drag the power supply Voltage or Ampe knob up/right to increase its setting, down/left to decrease. Voltage gently snaps to 3, 3.3, 5, 6, 9, 12 and 15 V. Hold Shift for fine adjustment without snapping. Click the I/O rocker to turn the screen on or completely off. Release to finish; Escape cancels a knob adjustment.</span>
     <span id="editor-help" class="visually-hidden">Click to select or place. A placement preview follows the pointer on X/Z without holding a mouse button and keeps its rotation. Its gizmo offers X, Z, free X/Z and Rotate Y; hovering or dragging a handle pauses pointer following. Move away from the handle to continue following. Click outside the gizmo to place the full pose in one Undo step; right click or Escape cancels placement. After placement, Move allows body dragging and the selected object's full gizmo also includes Delete. Drag a highlighted handle, release to finish or Escape to cancel. In Select, left drag on a model or empty surface pans; a click selects. Right drag orbits, middle drag pans, wheel dollies. XYZ axes follow the camera. R rotates, Delete removes, arrows move a selection. Wire: choose a color, click a hole or port, right click for corners, then click the final endpoint. Repeat right click at the same snapped position or before moving four pixels to undo the last corner and keep drawing. Free mode allows diagonals and custom paths; Orthogonal keeps right angles. Select a wire to drag user bends/segments; double-click a segment to add an anchor. Delete removes a selected bend or the last draft bend; Escape cancels the wire draft; Alt bypasses snap. View tools and Workspace Object Snap are at the status bar's right. Zoom To Area: drag a rectangle, then release to frame it; right click or Escape cancels. Marquee Select: drag a rectangle to select components and wires without changing the view. Right click a wire for Delete, Duplicate or Paste. Duplicate and Paste start a ghost; move its source to a contact and click to commit. Each paste is one Undo step and prepares the next copy; right click or Escape ends preview.</span>
     <div v-if="!circuit.graph?.modules.length && !workspace.placementType" class="workspace-empty"><span class="empty-cross">+</span><p>Your next circuit starts here.</p><span>Drag a component from the ribbon.<br />Connect holes and ports to build your circuit.</span></div>
     <div class="scene-ports"><button v-for="port in editor.ports.value" :key="port.endpoint" :class="['port-anchor', port.direction, { pending: workspace.pendingPort === port.endpoint }]" :style="{ left: port.x + 'px', top: port.y + 'px' }" :aria-label="'Connect port ' + port.endpoint" @click.stop="editor.connect(port.endpoint)">{{ port.endpoint.split('.')[1] }}</button></div>
-    <p v-if="workspace.editError" class="editor-error" role="alert">{{ workspace.editError }}<button @click="workspace.editError = ''">Dismiss</button></p>
-    <p v-if="graphicsError" class="graphics-notice" role="status">{{ graphicsError }}</p>
-    <p v-if="workspace.placementType" class="placement-notice">{{ editor.controlHint.value || 'Preview follows pointer · X/Z/XZ/Rotate Y to adjust · Click to place · Right click or Esc to cancel' }}</p>
     <WorkspaceNavigator
       :axes="axes"
       :camera-quaternion="cameraQuaternion"
@@ -154,5 +159,4 @@ onUnmounted(() => { navigationActive = false; workspace.cancelZoomRequest(); obs
 <style scoped>
 .circuit-workspace.is-marquee canvas { cursor: crosshair; }
 .marquee-rectangle { position: absolute; border: 1px dashed var(--accent); background: #5ccbb822; pointer-events: none; }
-.marquee-notice, .duplicate-notice { position: absolute; top: calc(var(--drawer-top) + 12px); left: 50%; transform: translateX(-50%); margin: 0; padding: 6px 10px; border: 1px solid #405267; border-radius: 4px; background: #182330ed; color: #bed0de; pointer-events: none; }
 </style>

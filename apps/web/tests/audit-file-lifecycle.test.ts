@@ -10,6 +10,8 @@ import { createPinia, setActivePinia } from 'pinia'
 import { useCircuitStore } from '../src/stores/circuit'
 import { useWorkspaceStore } from '../src/stores/workspace'
 import { useProjectStore } from '../src/stores/projects'
+import { useUiStore } from '../src/stores/ui'
+import { useWorkspaceMessageStore } from '../src/stores/workspaceMessages'
 import type { MemoryImage } from '../src/types/memory'
 import { createMemoryImage } from '../src/services/files/memoryImage'
 
@@ -51,6 +53,103 @@ function pendingFile(name: string) {
 }
 const graph = (name: string) => JSON.stringify({ schema_version: '1.0', circuit_id: name, modules: [], connections: [], metadata: { name } })
 const image = (byte: number) => JSON.stringify({ version: '1.0', word_bits: 8, depth: 1, data: [byte] })
+
+test('Ctrl+S respects the same saving guard as the File menu command',()=>{
+ const previous=Object.getOwnPropertyDescriptor(globalThis,'window')
+ const keyboardWindow=Object.assign(new EventTarget(),{closest:()=>null})
+ Object.defineProperty(globalThis,'window',{configurable:true,value:keyboardWindow})
+ const h=mount(titleBar),circuit=useCircuitStore(),projects=useProjectStore(),ui=useUiStore()
+ try{
+  circuit.createDraft();projects.saveState.phase='saving'
+  const event=new Event('keydown',{cancelable:true})
+  Object.defineProperties(event,{key:{value:'s'},ctrlKey:{value:true},metaKey:{value:false}})
+  keyboardWindow.dispatchEvent(event)
+  assert.equal(event.defaultPrevented,true)
+  assert.equal(ui.windows.some(window=>window.kind==='projects'&&window.open),false)
+ }finally{h.unmount();if(previous)Object.defineProperty(globalThis,'window',previous);else Reflect.deleteProperty(globalThis,'window')}
+})
+
+test('File commands preserve exact menu order and share missing-document and pending-save guards',()=>{
+ const previous=Object.getOwnPropertyDescriptor(globalThis,'window')
+ Object.defineProperty(globalThis,'window',{configurable:true,value:new EventTarget()})
+ const h=mount(titleBar),circuit=useCircuitStore(),projects=useProjectStore(),ui=useUiStore()
+ try{
+  const items=h.state.fileItems as {id:string;label:string;disabled:boolean}[]
+  assert.deepEqual(items.map(item=>item.label),['New','Open Project','Save','Save As','Import','Export','History','Assignment'])
+  const command=h.state.fileCommand as (id:string)=>void
+  command('save');command('saveAs');assert.equal(ui.windows.some(window=>window.open),false)
+  circuit.createDraft();projects.saveState.phase='saving';command('save')
+  assert.equal(ui.windows.some(window=>window.kind==='projects'&&window.open),false)
+  command('open');assert.equal(ui.windows.some(window=>window.kind==='projects'&&window.open),true)
+  command('history');command('assignment')
+  assert.equal(ui.windows.some(window=>window.kind==='history'&&window.open),true)
+  assert.equal(ui.windows.some(window=>window.kind==='assignments'&&window.open),true)
+ }finally{h.unmount();if(previous)Object.defineProperty(globalThis,'window',previous);else Reflect.deleteProperty(globalThis,'window')}
+})
+
+test('oversized imports report in workspace messages without reading or changing the graph',async()=>{
+ const previous=Object.getOwnPropertyDescriptor(globalThis,'window')
+ Object.defineProperty(globalThis,'window',{configurable:true,value:new EventTarget()})
+ const h=mount(titleBar),circuit=useCircuitStore(),messages=useWorkspaceMessageStore()
+ try{
+  circuit.createDraft();const snapshot=circuit.snapshot();let reads=0
+  const input={files:[{name:'huge.json',size:3*1024*1024,text:async()=>{reads++;return graph('Huge')}}],value:'huge.json'}
+  await (h.state.openFile as (event:Event)=>Promise<void>)({target:input} as unknown as Event)
+  assert.equal(reads,0);assert.equal(circuit.snapshot(),snapshot);assert.equal(input.value,'')
+  assert.equal(messages.current?.source,'file');assert.equal(messages.current?.level,'error');assert.match(messages.current?.text??'',/maximum 2 MB/)
+ }finally{h.unmount();if(previous)Object.defineProperty(globalThis,'window',previous);else Reflect.deleteProperty(globalThis,'window')}
+})
+
+test('invalid JSON resets the input and a later successful import resolves its footer error',async()=>{
+ const previous=Object.getOwnPropertyDescriptor(globalThis,'window')
+ Object.defineProperty(globalThis,'window',{configurable:true,value:new EventTarget()})
+ const h=mount(titleBar),messages=useWorkspaceMessageStore()
+ try{
+  const open=h.state.openFile as (event:Event)=>Promise<void>,bad=pendingFile('same.json')
+  const failure=open(bad.event);bad.finish('{');await failure
+  assert.equal((bad.event.target as HTMLInputElement).value,'');assert.equal(messages.current?.level,'error')
+  const good=pendingFile('same.json'),success=open(good.event);good.finish(graph('Recovered'));await success
+  assert.equal((good.event.target as HTMLInputElement).value,'');assert.equal(useCircuitStore().current?.name,'Recovered')
+  assert.equal(messages.current?.level,'info');assert.equal(h.state.error,'')
+ }finally{h.unmount();if(previous)Object.defineProperty(globalThis,'window',previous);else Reflect.deleteProperty(globalThis,'window')}
+})
+
+test('successful Export keeps a failed Import actionable until another Import succeeds',async()=>{
+ const priorWindow=Object.getOwnPropertyDescriptor(globalThis,'window'),priorDocument=Object.getOwnPropertyDescriptor(globalThis,'document')
+ Object.defineProperty(globalThis,'window',{configurable:true,value:new EventTarget()})
+ Object.defineProperty(globalThis,'document',{configurable:true,value:{body:{append(){}},createElement:()=>({click(){},remove(){}})}})
+ const h=mount(titleBar),messages=useWorkspaceMessageStore();useCircuitStore().createDraft()
+ try{
+  const bad=pendingFile('invalid.json'),open=h.state.openFile as (event:Event)=>Promise<void>
+  const pending=open(bad.event);bad.finish('{');await pending
+  const error=messages.current
+  ;(h.state.fileCommand as (id:string)=>void)('export')
+  assert.equal(messages.current?.id,error?.id);assert.equal(messages.current?.level,'error')
+  assert.ok(messages.events.some(message=>message.text==='Circuit JSON export requested.'))
+  await new Promise(resolve=>setTimeout(resolve,5)) // Finish this download's URL cleanup before replacing browser globals.
+  const good=pendingFile('valid.json'),success=open(good.event);good.finish(graph('Recovered'));await success
+  assert.equal(messages.current?.level,'info');assert.match(messages.current?.text??'',/Opened valid.json/)
+ }finally{
+  h.unmount()
+  if(priorWindow)Object.defineProperty(globalThis,'window',priorWindow);else Reflect.deleteProperty(globalThis,'window')
+  if(priorDocument)Object.defineProperty(globalThis,'document',priorDocument);else Reflect.deleteProperty(globalThis,'document')
+ }
+})
+
+test('export revokes its object URL even when the download click throws',async()=>{
+ const previousWindow=Object.getOwnPropertyDescriptor(globalThis,'window'),previousDocument=Object.getOwnPropertyDescriptor(globalThis,'document')
+ const create=URL.createObjectURL,revoke=URL.revokeObjectURL
+ Object.defineProperty(globalThis,'window',{configurable:true,value:new EventTarget()})
+ let removed=0;const revoked:string[]=[]
+ Object.defineProperty(globalThis,'document',{configurable:true,value:{body:{append(){}},createElement:()=>({click(){throw new Error('Download blocked')},remove(){removed++}})}})
+ URL.createObjectURL=()=> 'blob:header-export';URL.revokeObjectURL=url=>{revoked.push(url)}
+ const h=mount(titleBar);useCircuitStore().createDraft()
+ try{
+  ;(h.state.fileCommand as (id:string)=>void)('export')
+  await new Promise(resolve=>setTimeout(resolve,5))
+  assert.equal(removed,1);assert.deepEqual(revoked,['blob:header-export']);assert.match(useWorkspaceMessageStore().current?.text??'',/Download blocked/)
+ }finally{h.unmount();URL.createObjectURL=create;URL.revokeObjectURL=revoke;if(previousWindow)Object.defineProperty(globalThis,'window',previousWindow);else Reflect.deleteProperty(globalThis,'window');if(previousDocument)Object.defineProperty(globalThis,'document',previousDocument);else Reflect.deleteProperty(globalThis,'document')}
+})
 
 test('newer circuit file selection wins when earlier file reads finish last', async () => {
   const previous = Object.getOwnPropertyDescriptor(globalThis, 'window')

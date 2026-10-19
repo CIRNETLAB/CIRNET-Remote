@@ -122,7 +122,7 @@ test('Search Clear, Escape, Enter and grid Arrow/Home/End navigation retain thei
   const view = mountSfc(await loadSfc('components/workbench/ComponentRibbon.vue'), pinia)
   try {
     await nextTick(); await nextTick()
-    const root = view.all().find(node => 'data-drawer-occupied' in node.props)!
+    const root = view.all().find(node => node.props.class === 'component-library-content')!
     let focused: unknown = null
     const cards = () => view.all().filter(node => node.props['data-component-type'])
     const trigger = view.find('button', 'data-group', 'logic')

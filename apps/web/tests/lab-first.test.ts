@@ -17,6 +17,7 @@ import { captureFixture, captureResponse, deferred } from './helpers/capture'
 import { stationFixture, runningExperiment } from './helpers/station'
 import {instrumentFetcher} from './helpers/instruments'
 import { bindLabApplication } from './helpers/labApplication'
+import { mountExecutionPanel } from './helpers/executionPanel'
 
 function target():StationDescriptor {
   return stationFixture()
@@ -167,7 +168,7 @@ test('physical Run sends assignment identity without logical validation or circu
   assert.equal(store.state,'QUEUED')
 })
 
-test('statusbar Run invokes backend lifecycle and preserves editor history',async()=>{
+test('Run Ribbon invokes backend lifecycle and preserves editor history',async()=>{
   const pinia=createPinia();setActivePinia(pinia)
   bindLabApplication(pinia)
   const circuit=useCircuitStore();circuit.createDraft('Run test')
@@ -179,8 +180,8 @@ test('statusbar Run invokes backend lifecycle and preserves editor history',asyn
   const calls:string[]=[]
   const bodies:unknown[]=[]
   configureApiClient({fetcher:async(url,options)=>{calls.push(String(url));if(options?.body) bodies.push(JSON.parse(String(options.body)));return Response.json(record(String(url).endsWith('/run')?'QUEUED':'CREATED',String(url).endsWith('/run')?2:0))}})
-  const component=await loadSfc('components/workbench/SimulationStatusBar.vue')
-  const mounted=mountSfc(component,pinia)
+  const component=await loadSfc('components/workbench/RunRibbonPanel.vue')
+  const mounted=mountExecutionPanel(component,pinia)
   const button=mounted.find('button','aria-label','Run')
   assert.ok(button,'Run lifecycle button missing')
   assert.equal(Boolean(button.props.disabled),false)
@@ -190,11 +191,12 @@ test('statusbar Run invokes backend lifecycle and preserves editor history',asyn
   assert.deepEqual(calls,['/api/experiments','/api/experiments/e1/run'])
   assert.deepEqual((bodies[0] as {capture_config:{signals:string[]}}).capture_config.signals,[])
   assert.equal(JSON.stringify(circuit.graph),before)
-  assert.ok(mounted.text().includes('QUEUED'))
+  assert.equal(experiment.executionState,'QUEUED')
+  assert.ok(mounted.find('button','aria-label','Stop'),'Queued owned execution must retain Stop in the Ribbon')
   mounted.app.unmount()
 })
 
-test('statusbar Run pins the clean saved revision and submits an inline immutable graph after a local edit',async()=>{
+test('Run Ribbon pins the clean saved revision and submits an inline immutable graph after a local edit',async()=>{
   const pinia=createPinia();setActivePinia(pinia)
   bindLabApplication(pinia)
   const projects=useProjectStore(),circuit=useCircuitStore(),experiment=useExperimentStore(),station=useStationStore()
@@ -207,7 +209,7 @@ test('statusbar Run pins the clean saved revision and submits an inline immutabl
     return Response.json(record(String(url).endsWith('/run')?'QUEUED':'CREATED',String(url).endsWith('/run')?2:0))
   }})
   assert.equal(await projects.openDocument('d1',true),true)
-  const mounted=mountSfc(await loadSfc('components/workbench/SimulationStatusBar.vue'),pinia)
+  const mounted=mountExecutionPanel(await loadSfc('components/workbench/RunRibbonPanel.vue'),pinia)
   try {
     await (mounted.find('button','aria-label','Run').props.onClick as ()=>Promise<unknown>)()
     assert.equal(createPaths[0],'/api/v2/experiments');assert.equal(bodies[0]!.circuit_document_id,'d1');assert.equal(bodies[0]!.circuit_revision,7);assert.equal('circuit_graph'in bodies[0]!,false)
@@ -228,11 +230,22 @@ test('independent safety topology function states and real trace render in exist
     return captureResponse(captureFixture('L.IN','capture-1').binary)
   }})
   const status=mountSfc(await loadSfc('components/workbench/SimulationStatusBar.vue'),pinia)
+  const inspector=mountSfc(await loadSfc('components/windows/InspectorWindow.vue'),pinia)
   const monitor=mountSfc(await loadSfc('components/windows/SignalMonitorWindow.vue'),pinia)
   await useInstrumentStore().ensureCaptureLoaded(); await nextTick()
-  for(const text of ['SAFETY','SAFE','TOPOLOGY','MISMATCH','FUNCTION','FAIL']) assert.ok(status.text().includes(text),text)
+  for(const [kind,value] of [['safety','SAFE'],['topology','MISMATCH'],['function','FAIL']]) {
+    const section=inspector.find('section','aria-label',kind+' verification')
+    assert.ok(section,kind+' verification must remain accessible in Inspector')
+    assert.equal(section.props['data-status'],value)
+  }
+  for(const text of ['SAFETY','SAFE','TOPOLOGY','MISMATCH','FUNCTION','FAIL']) assert.ok(inspector.text().includes(text),text)
+  for(const text of ['SAFETY','TOPOLOGY','FUNCTION']) assert.equal(status.text().includes(text),false,'Verification badges must be absent from the footer')
+  for(const label of ['Run','Stop','Pause','Step']) assert.equal(status.find('button','aria-label',label),undefined,'Execution belongs to the Run Ribbon')
+  for(const className of ['execution-buttons','simulation-state','mode-control','verification-status','count-status','connection-status']) {
+    assert.equal(status.all().some(node=>String(node.props.class??'').split(/\s+/).includes(className)),false,'Removed footer node: '+className)
+  }
   assert.ok(monitor.all().some(node=>node.tag==='path'&&node.props['data-signal']==='L.IN'),'observed trace is missing')
   assert.ok(monitor.text().includes('simulation'))
   assert.equal(useInstrumentStore().capture?.samples[0].value,'X')
-  status.app.unmount();monitor.app.unmount()
+  status.app.unmount();inspector.app.unmount();monitor.app.unmount()
 })

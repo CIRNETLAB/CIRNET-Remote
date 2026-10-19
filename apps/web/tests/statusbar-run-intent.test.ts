@@ -10,11 +10,13 @@ import { useWorkspaceStore } from '../src/stores/workspace'
 import { useAuthStore } from '../src/stores/auth'
 import { configureApiClient } from '../src/services/api/client'
 import { mountSfc,loadSfc } from './helpers/vueSfc'
+import { mountExecutionPanel } from './helpers/executionPanel'
+import { useUiStore } from '../src/stores/ui'
 import { stationFixture,runningExperiment } from './helpers/station'
 import { sessionFixture } from './helpers/auth'
 import type { ExecutionPresentationResult } from '../src/application/ports/execution'
 
-const Component=await loadSfc('components/workbench/SimulationStatusBar.vue')
+const Component=await loadSfc('components/workbench/RunRibbonPanel.vue')
 function setup(){
   const pinia=createPinia();setActivePinia(pinia)
   const circuit=useCircuitStore(),station=useStationStore(),experiment=useExperimentStore(),instrument=useInstrumentStore(),auth=useAuthStore(),workspace=useWorkspaceStore()
@@ -24,7 +26,7 @@ function setup(){
   circuit.attachExecutionPresentation(async()=>preview);station.setStations([stationFixture('v1'),stationFixture('v2')]);station.selectStation('v1');station.setEventsConnected(true)
   const calls:{url:string;body:unknown}[]=[]
   configureApiClient({fetcher:async(url,options)=>{calls.push({url:String(url),body:options?.body?JSON.parse(String(options.body)):null});const state=String(url).endsWith('/run')?'QUEUED':'CREATED';return Response.json({...runningExperiment(state),state_history:state==='CREATED'?['CREATED']:['CREATED','QUEUED'],revision:state==='CREATED'?0:2,lease_expires_at:null})}})
-  const view=mountSfc(Component,pinia),run=()=> (view.find('button','aria-label','Run').props.onClick as ()=>Promise<unknown>)()
+  const view=mountExecutionPanel(Component,pinia),run=()=>view.commands.run()
   return {pinia,circuit,station,experiment,instrument,auth,workspace,calls,view,run,resolve:()=>resolve({device_states:{},pin_values:{},diagnostics:[]}),reject}
 }
 
@@ -57,19 +59,19 @@ test('repeated Run clicks cannot bypass a pending physical preflight and unchang
   finally{context.view.app.unmount();context.experiment.cancelPending()}
 })
 
-test('an unmounted status bar cannot submit its late preflight result',async()=>{
+test('an unmounted workspace command owner cannot submit its late preflight result',async()=>{
   const context=setup(),pending=context.run();await Promise.resolve();context.view.app.unmount();context.resolve();await pending
   assert.deepEqual(context.calls,[]);context.experiment.cancelPending()
 })
 
-test('Stop during a pending physical preflight cancels that Run intent while retaining the preparation latch',async()=>{
+test('Cancel during physical preflight invalidates that intent while retaining the preparation latch',async()=>{
   const context=setup()
   try{
     const pending=context.run();await nextTick()
-    const stop=context.view.find('button','aria-label','Stop')
+    const stop=context.view.find('button','aria-label','Cancel')
     assert.equal(stop.props.disabled,false)
     await (stop.props.onClick as ()=>Promise<unknown>)();await nextTick()
-    assert.equal(context.view.find('button','aria-label','Run').props.disabled,true)
+    assert.equal(context.view.find('button','aria-label','Cancel').props.disabled,true)
     context.resolve();await pending;assert.equal(context.calls.length,0)
   }finally{context.view.app.unmount();context.resolve();context.experiment.cancelPending()}
 })
@@ -111,11 +113,33 @@ for(const change of ['clock','generator','trigger','test vectors','restored capt
  })
 }
 
-test('invalid numeric form intent blocks footer Create across remount and a corrected field restores Run',async()=>{
+test('invalid numeric form intent blocks Create across form remount and a corrected field restores Run',async()=>{
  const context=setup();context.circuit.importGraph({schema_version:'1.0',circuit_id:'valid-form',modules:[],connections:[]})
  const Form=await loadSfc('components/windows/InstrumentConfigurationForm.vue');let form=mountSfc(Form,context.pinia)
  try{const input=form.find('input','aria-label','Capture duration (ns)');(input.props.onChange as (event:{target:{value:string}})=>void)({target:{value:'9007199254740993'}});assert.equal(await context.run(),false);assert.equal(context.calls.length,0)
  form.app.unmount();form=mountSfc(Form,context.pinia);assert.equal(form.find('input','aria-label','Capture duration (ns)').props.value,'9007199254740993');assert.equal(await context.run(),false);assert.equal(context.calls.length,0)
  ;(form.find('input','aria-label','Capture duration (ns)').props.onChange as (event:{target:{value:string}})=>void)({target:{value:'40'}});assert.equal(await context.run(),true);assert.equal(context.calls.length,2)
  }finally{form.app.unmount();context.view.app.unmount();context.experiment.cancelPending()}
+})
+
+test('tab and collapse changes during preflight preserve the single shell-owned Run intent',async()=>{
+ const context=setup(),ui=useUiStore(),graph=context.circuit.snapshot(),history=context.circuit.past.length
+ try{
+  ui.selectRibbonTab('run');const pending=context.run();await nextTick()
+  for(let count=0;count<5;count++){ui.selectRibbonTab('component');ui.toggleComponentToolbar();ui.selectRibbonTab('run')}
+  await context.run();assert.equal(context.calls.length,0);assert.equal(context.view.commands.preparing.value,true)
+  context.resolve();assert.equal(await pending,true)
+  assert.deepEqual(context.calls.map(call=>call.url),['/api/experiments','/api/experiments/e1/run'])
+  assert.equal(context.circuit.snapshot(),graph);assert.equal(context.circuit.past.length,history)
+ }finally{context.view.app.unmount();context.experiment.cancelPending()}
+})
+
+test('unsupported Pause and Step remain disabled with a keyboard-readable explanation and no request',()=>{
+ const context=setup()
+ try{
+  assert.ok([true,''].includes(context.view.find('button','aria-label','Pause').props.disabled as boolean|string))
+  assert.ok([true,''].includes(context.view.find('button','aria-label','Step').props.disabled as boolean|string))
+  assert.ok(context.view.all().some(node=>node.props.id==='execution-capability-help'&&String(node.props.tabindex)==='0'))
+  assert.ok(context.view.text().includes('not supported'));assert.deepEqual(context.calls,[])
+ }finally{context.view.app.unmount();context.experiment.cancelPending()}
 })

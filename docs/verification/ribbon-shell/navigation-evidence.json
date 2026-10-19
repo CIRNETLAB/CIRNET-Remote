@@ -1,0 +1,87 @@
+{
+  "canvas_before": {
+    "x": 0,
+    "y": 52,
+    "width": 1440,
+    "height": 909
+  },
+  "canvas_after": {
+    "x": 0,
+    "y": 52,
+    "width": 1440,
+    "height": 909
+  },
+  "global_listeners_before": {
+    "window:beforeunload:false": 1,
+    "window:pagehide:false": 2,
+    "window:popstate:false": 1,
+    "window:resize:false": 1,
+    "window:scroll:true": 1,
+    "window:keydown:false": 1,
+    "window:blur:false": 1,
+    "window:pointerdown:true": 2,
+    "window:contextmenu:true": 2,
+    "window:__playwright_global_listeners_check__:false": 1,
+    "window:mousemove:true": 1,
+    "window:pointerup:true": 1,
+    "window:touchstart:true": 1,
+    "window:touchend:true": 1,
+    "window:touchcancel:true": 1,
+    "window:mousedown:true": 1,
+    "window:mouseup:true": 1,
+    "window:click:true": 1,
+    "window:auxclick:true": 1,
+    "window:dblclick:true": 1,
+    "document:visibilitychange:false": 2,
+    "document:pointerdown:false": 2,
+    "document:focusin:false": 1,
+    "document:keydown:false": 1,
+    "document:keydown:true": 2
+  },
+  "global_listeners_after": {
+    "window:beforeunload:false": 1,
+    "window:pagehide:false": 2,
+    "window:popstate:false": 1,
+    "window:resize:false": 1,
+    "window:scroll:true": 1,
+    "window:keydown:false": 1,
+    "window:blur:false": 1,
+    "window:pointerdown:true": 2,
+    "window:contextmenu:true": 2,
+    "window:__playwright_global_listeners_check__:false": 1,
+    "window:mousemove:true": 1,
+    "window:pointerup:true": 1,
+    "window:touchstart:true": 1,
+    "window:touchend:true": 1,
+    "window:touchcancel:true": 1,
+    "window:mousedown:true": 1,
+    "window:mouseup:true": 1,
+    "window:click:true": 1,
+    "window:auxclick:true": 1,
+    "window:dblclick:true": 1,
+    "document:visibilitychange:false": 2,
+    "document:pointerdown:false": 2,
+    "document:focusin:false": 1,
+    "document:keydown:false": 1,
+    "document:keydown:true": 2
+  },
+  "global_listener_totals": [
+    31,
+    31
+  ],
+  "scene_identity_equal": true,
+  "camera_identity_equal": true,
+  "camera_pose_equal": true,
+  "native_resource_entries": 226,
+  "memory_before": {
+    "geometries": 185,
+    "textures": 9
+  },
+  "memory_after": {
+    "geometries": 185,
+    "textures": 9
+  },
+  "execution_mutations": 0,
+  "new_event_sockets": 0,
+  "listener_scope": "Repeatable window/document registrations; once-only native auto-removing listeners excluded."
+}

@@ -1,3 +1,4 @@
+import { expectEventConnection } from './workbench-ui'
 import {test,expect,type Page,type WebSocket} from '@playwright/test'
 import {parseStructural} from '../src/contracts/structural'
 
@@ -19,7 +20,7 @@ async function holdRotationUntilPriorSocketCloses(page:Page,path:string,prior:We
 test('committed login and same-principal claim survive prior native socket closure before their responses',async({page,context})=>{
  const initial=eventSocket(page)
  await page.goto('/');const guestSocket=await initial
- await expect(page.locator('.connection-status')).toContainText('connected')
+ await expectEventConnection(page)
  const loginCalls=await holdRotationUntilPriorSocketCloses(page,'/api/auth/login',guestSocket)
  await page.getByRole('button',{name:'Open account',exact:true}).click()
  await page.getByLabel('Username',{exact:true}).fill('e2e_admin')
@@ -28,7 +29,7 @@ test('committed login and same-principal claim survive prior native socket closu
  await page.getByRole('button',{name:'Sign in',exact:true}).click()
  await expect(page.getByRole('button',{name:'Sign out',exact:true})).toBeVisible()
  const userSocket=await next
- await expect(page.locator('.connection-status')).toContainText('connected')
+ await expectEventConnection(page)
  const claimCalls=await holdRotationUntilPriorSocketCloses(page,'/api/auth/claim-guest',userSocket)
  await page.getByLabel('Confirm guest data transfer',{exact:true}).check()
  const claimed=eventSocket(page)
@@ -36,7 +37,7 @@ test('committed login and same-principal claim survive prior native socket closu
  await expect(page.getByLabel('Guest data transfer',{exact:true})).toBeHidden()
  await claimed
  await expect(page.getByRole('button',{name:'Sign out',exact:true})).toBeVisible()
- await expect(page.locator('.connection-status')).toContainText('connected')
+ await expectEventConnection(page)
  const session=parseStructural('SessionView',await(await context.request.get('/api/auth/session')).json())
  expect(session.authenticated).toBe(true);expect(session.principal?.username).toBe('e2e_admin');expect(session.claim_available).toBe(false)
  expect(loginCalls()).toBe(1);expect(claimCalls()).toBe(1)

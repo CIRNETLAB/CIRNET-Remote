@@ -11,7 +11,7 @@ function bound(window: WorkspaceWindow, width: number, height: number, insets: {
 }
 
 export const useUiStore = defineStore('ui', {
-  state: () => ({ activeRibbonGroup: null as string | null, componentToolbarCollapsed: false, toolsSidebarCollapsed: false, workbenchSize: { width: 900, height: 600 }, windows: [] as WorkspaceWindow[], viewport: { width: 900, height: 500 }, connectionState: 'idle' as ConnectionState }),
+  state: () => ({ activeRibbonTab: 'component' as 'component' | 'run', activeRibbonGroup: null as string | null, componentToolbarCollapsed: false, toolsSidebarCollapsed: false, workbenchSize: { width: 900, height: 600 }, windows: [] as WorkspaceWindow[], viewport: { width: 900, height: 500 }, connectionState: 'idle' as ConnectionState }),
   getters: {
     componentOverlayHeight: () => 96,
     toolsOverlayWidth: (state) => state.workbenchSize.width <= 560 ? 54 : 66,
@@ -20,7 +20,12 @@ export const useUiStore = defineStore('ui', {
     },
   },
   actions: {
-    toggleRibbon(id: string) { if (!this.componentToolbarCollapsed) this.activeRibbonGroup = this.activeRibbonGroup === id ? null : id },
+    selectRibbonTab(tab: 'component' | 'run') {
+      if(this.activeRibbonTab!==tab)this.activeRibbonGroup=null
+      this.activeRibbonTab=tab
+      if(this.componentToolbarCollapsed){this.componentToolbarCollapsed=false;this.boundWindows()}
+    },
+    toggleRibbon(id: string) { if (!this.componentToolbarCollapsed && this.activeRibbonTab==='component') this.activeRibbonGroup = this.activeRibbonGroup === id ? null : id },
     toggleComponentToolbar() {
       this.componentToolbarCollapsed = !this.componentToolbarCollapsed
       this.activeRibbonGroup = null

@@ -1,3 +1,4 @@
+import { fileCommand, expectEventConnection } from './workbench-ui'
 import {test,expect,type Page} from '@playwright/test'
 import {parseStructural} from '../src/contracts/structural'
 
@@ -5,7 +6,7 @@ type ContextProbe={gl:WebGL2RenderingContext;extension:WEBGL_lose_context;draws:
 type ProbedCanvas=HTMLCanvasElement&{contextProbe?:ContextProbe}
 
 async function exportedGraph(page:Page){
- const pending=page.waitForEvent('download');await page.getByRole('button',{name:'Export circuit JSON',exact:true}).click();const download=await pending,stream=await download.createReadStream()
+ const pending=page.waitForEvent('download');await fileCommand(page, 'Export');const download=await pending,stream=await download.createReadStream()
  if(!stream)throw new Error('The exported graph stream is unavailable.')
  const chunks:Buffer[]=[];for await(const chunk of stream)chunks.push(Buffer.from(chunk))
  return parseStructural('CircuitGraph',JSON.parse(Buffer.concat(chunks).toString('utf8')))
@@ -14,7 +15,7 @@ async function exportedGraph(page:Page){
 test('native WebGL context loss and restoration resume actual drawing without replacing canvas, graph, history or UI',async({page},testInfo)=>{
  test.setTimeout(90_000)
  const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message))
- await page.goto('/');await expect(page.locator('.connection-status')).toContainText('connected')
+ await page.goto('/');await expectEventConnection(page)
  const graph={schema_version:'1.0',circuit_id:'native-webgl-recovery',modules:[{id:'S',type:'DIGITAL_SWITCH',position:{x:0,y:0,z:0},properties:{state:false}},{id:'L',type:'LED',position:{x:3,y:0,z:0}}],connections:[{source:'S.OUT',destination:'L.IN'}],metadata:{name:'Native graphics recovery',opaque_extension:{retain:['exact',7]}}}
  await page.getByLabel('Open circuit file',{exact:true}).setInputFiles({name:'graphics.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(graph))});await expect(page.locator('.project-title')).toContainText('Native graphics recovery')
  await page.getByRole('button',{name:'Open Inspector',exact:true}).click();const inspector=page.getByRole('dialog').filter({has:page.getByRole('heading',{name:'Component editor',exact:true})});await expect(inspector).toBeVisible();await inspector.getByLabel('Select component').selectOption('L');await inspector.getByLabel('Component X',{exact:true}).fill('4');await inspector.getByLabel('Component X',{exact:true}).press('Tab')
@@ -40,12 +41,12 @@ test('native WebGL context loss and restoration resume actual drawing without re
  await page.getByRole('button',{name:'Zoom Out',exact:true}).click();await expect.poll(()=>canvas.evaluate(element=>(element as ProbedCanvas).contextProbe!.successfulDraws)).toBeGreaterThan(0)
  await canvas.evaluate(element=>(element as ProbedCanvas).contextProbe!.extension.loseContext())
  await expect.poll(()=>canvas.evaluate(element=>{const probe=(element as ProbedCanvas).contextProbe!;return {lost:probe.gl.isContextLost(),events:probe.losses,trusted:probe.trustedLoss}})).toEqual({lost:true,events:1,trusted:true})
- await expect(page.getByRole('status').filter({hasText:'Graphics context interrupted'})).toBeVisible()
+ await expect(page.locator('.system-message').getByRole('alert').filter({hasText:'Graphics context interrupted'})).toBeVisible()
  const drawsAtLoss=await canvas.evaluate(element=>(element as ProbedCanvas).contextProbe!.successfulDraws)
  await canvas.evaluate(element=>(element as ProbedCanvas).contextProbe!.extension.restoreContext())
  await expect.poll(()=>canvas.evaluate(element=>{const probe=(element as ProbedCanvas).contextProbe!;return {lost:probe.gl.isContextLost(),events:probe.restores,trusted:probe.trustedRestore}})).toEqual({lost:false,events:1,trusted:true})
  await expect.poll(()=>canvas.evaluate(element=>(element as ProbedCanvas).contextProbe!.successfulDraws)).toBeGreaterThan(drawsAtLoss)
- await expect(page.getByRole('status').filter({hasText:'Graphics context interrupted'})).toHaveCount(0)
+ await expect(page.locator('.system-message').getByRole('alert').filter({hasText:'Graphics context interrupted'})).toHaveCount(0)
  await expect(canvas).toHaveAttribute('data-recovery-canvas','same');await expect(inspector).toHaveAttribute('data-recovery-ui','same');await expect(inspector.getByLabel('Select component')).toHaveValue('L');await expect(inspector.getByLabel('Component X',{exact:true})).toHaveValue('4');await expect(page.getByRole('button',{name:'Move',exact:true})).toHaveAttribute('aria-pressed','true');expect(await exportedGraph(page)).toEqual(before)
  await page.getByRole('button',{name:'Undo',exact:true}).click();await expect(inspector.getByLabel('Component X',{exact:true})).toHaveValue('3');await page.getByRole('button',{name:'Redo',exact:true}).click();await expect(inspector.getByLabel('Component X',{exact:true})).toHaveValue('4');expect(await exportedGraph(page)).toEqual(before);expect(errors).toEqual([])
  const evidence=await canvas.evaluate(element=>{const probe=(element as ProbedCanvas).contextProbe!;return {extension:'WEBGL_lose_context',contextLost:probe.gl.isContextLost(),losses:probe.losses,restores:probe.restores,trustedLoss:probe.trustedLoss,trustedRestore:probe.trustedRestore,nativeDrawCalls:probe.draws,successfulNativeDrawCalls:probe.successfulDraws}})

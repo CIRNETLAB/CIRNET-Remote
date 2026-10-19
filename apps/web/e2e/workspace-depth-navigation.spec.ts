@@ -191,7 +191,7 @@ test('an empty workspace supports a visible ground placement preview, commit and
   }
   const emptyGrid = await captureGrid('empty-workspace-grid-before-placement')
   expect(emptyGrid.gridPixels, 'the empty-workspace background ROI contains visible grid strokes').toBeGreaterThan(10)
-  const expand = page.getByRole('button', { name: 'Expand Components', exact: true })
+  const expand = page.getByRole('button', { name: 'Expand Ribbon', exact: true })
   if (await expand.isVisible()) await expand.click()
   await page.locator('[data-group="structure"]').click()
   await page.locator('[data-component-type="BREADBOARD_100"]').click()

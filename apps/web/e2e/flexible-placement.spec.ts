@@ -1,3 +1,4 @@
+import { fileCommand } from './workbench-ui'
 import { test, expect, type Page, type TestInfo } from '@playwright/test'
 import { randomUUID } from 'node:crypto'
 import { observeNativeScene, sceneReady, workspaceCanvas, projectContact, projectModuleCenter, projectFlexibleHandle, projectFormerBodyHandle, exportedNativeGraph, nativeSceneEvidence, nativeComponentBody } from './native-scene'
@@ -18,7 +19,7 @@ async function openBoard(page: Page) {
   await page.getByRole('button', { name: 'Zoom To View Entire Circuit', exact: true }).click()
 }
 async function choose(page: Page, group: string, type: string) {
-  const expand = page.getByRole('button', { name: 'Expand Components', exact: true })
+  const expand = page.getByRole('button', { name: 'Expand Ribbon', exact: true })
   if (await expand.isVisible()) await expand.click()
   await page.locator(`[data-group="${group}"]`).click()
   await page.locator(`[data-component-type="${type}"]`).click()
@@ -96,7 +97,7 @@ test('native two-pin placement preserves exact contacts, camera, automatic reanc
   const nativeBeforeReload = await nativeSceneEvidence(page)
   expect(nativeBeforeReload.trustedPointerDowns).toBeGreaterThanOrEqual(6)
   expect(nativeBeforeReload.trustedContextMenus).toBeGreaterThanOrEqual(1)
-  await page.getByRole('button', { name: 'Open Project Manager', exact: true }).click()
+  await fileCommand(page, 'Open Project')
   const projects = page.getByRole('region', { name: 'Project Manager', exact: true })
   await projects.getByLabel('New project name', { exact: true }).fill(`Native placement ${randomUUID()}`)
   await projects.getByRole('button', { name: 'Create project', exact: true }).click()

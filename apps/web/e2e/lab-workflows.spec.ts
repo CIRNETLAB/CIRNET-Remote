@@ -1,3 +1,4 @@
+import { fileCommand, expectEventConnection, selectRun } from './workbench-ui'
 import {test,expect,type Browser,type BrowserContext,type Page} from '@playwright/test'
 import {randomUUID} from 'node:crypto'
 import type {ExperimentCreate,ExperimentRecord} from '../src/contracts/generated/dto'
@@ -9,13 +10,13 @@ const graph=(name='AND working circuit')=>({schema_version:'1.0',circuit_id:'w6-
 const definition=(id:string,title:string)=>({schema_version:'1.0',assignment_id:id,title,assessment_policy:'FUNCTIONAL_ONLY',lab_endpoints:[{endpoint_id:'x',role:'INPUT_SOURCE',design_port:'X.OUT'},{endpoint_id:'y',role:'OUTPUT_SENSE',design_port:'L.IN'}],expected_behavior:{expected_signals:[{signal:'y',time_ns:10,value:0}]},reference_design_graph:graph()})
 async function admin(browser:Browser){const context=await browser.newContext({baseURL:origin}),session=parseStructural('SessionView',await(await context.request.get('/api/auth/session')).json());const response=await context.request.post('/api/auth/login',{headers:{Origin:origin,'X-CSRF-Token':session.csrf_token},data:{username:'e2e_admin',password:process.env.NETCIRCUIT_E2E_ADMIN_PASSWORD!}});expect(response.status()).toBe(200);return {context,session:parseStructural('SessionView',await response.json())}}
 async function createUser(context:BrowserContext,csrf:string,role:'INSTRUCTOR'|'STUDENT'){const username=`w6_${role.toLowerCase()}_${randomUUID().slice(0,8)}`,password=`secret-${randomUUID()}`;expect((await context.request.post('/api/admin/users',{headers:{Origin:origin,'X-CSRF-Token':csrf},data:{username,password,display_name:username,role}})).status()).toBe(201);return {username,password}}
-async function login(page:Page,user:{username:string;password:string}){await page.goto('/');await page.getByRole('button',{name:'Open account',exact:true}).click();await page.getByLabel('Username',{exact:true}).fill(user.username);await page.getByLabel('Password',{exact:true}).fill(user.password);await page.getByRole('button',{name:'Sign in',exact:true}).click();await expect(page.getByRole('button',{name:'Sign out',exact:true})).toBeVisible();await page.getByRole('button',{name:'Close account',exact:true}).click();await expect(page.locator('.connection-status')).toContainText('connected')}
-async function openAssignments(page:Page){await page.getByRole('button',{name:'Open Assignments',exact:true}).click();await expect(assignmentPanel(page)).toBeVisible()}
+async function login(page:Page,user:{username:string;password:string}){await page.goto('/');await page.getByRole('button',{name:'Open account',exact:true}).click();await page.getByLabel('Username',{exact:true}).fill(user.username);await page.getByLabel('Password',{exact:true}).fill(user.password);await page.getByRole('button',{name:'Sign in',exact:true}).click();await expect(page.getByRole('button',{name:'Sign out',exact:true})).toBeVisible();await page.getByRole('button',{name:'Close account',exact:true}).click();await expectEventConnection(page)}
+async function openAssignments(page:Page){await fileCommand(page, 'Assignment');await expect(assignmentPanel(page)).toBeVisible()}
 async function importGraph(page:Page,value=graph()){await page.getByLabel('Open circuit file',{exact:true}).setInputFiles({name:'and.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(value))});await expect(page.locator('.project-title')).toContainText(String(value.metadata.name))}
 async function title(page:Page,value:string){await assignmentPanel(page).getByLabel('Assignment title',{exact:true}).fill(value);await assignmentPanel(page).getByLabel('Assignment title',{exact:true}).press('Tab')}
 async function save(page:Page,revision:number){await assignmentPanel(page).getByRole('button',{name:'Save assignment draft',exact:true}).click();await expect(assignmentPanel(page).getByLabel('Assignment save status',{exact:true})).toContainText(`revision ${revision}`);await expect(assignmentPanel(page).getByLabel('Assignment save status',{exact:true})).toContainText('saved')}
 async function endpoint(page:Page,id:string,role:string,target:string){const panel=assignmentPanel(page);await panel.getByLabel('Endpoint ID',{exact:true}).fill(id);await panel.getByLabel('Endpoint role',{exact:true}).selectOption(role);await panel.getByLabel('Endpoint target',{exact:true}).fill(target);await panel.getByRole('button',{name:'Add assignment endpoint',exact:true}).click()}
-async function history(page:Page){await page.getByRole('button',{name:'Open History and Queue',exact:true}).click();await expect(historyPanel(page)).toBeVisible()}
+async function history(page:Page){await fileCommand(page, 'History');await expect(historyPanel(page)).toBeVisible()}
 
 test('instructor drafts publish stable student views and CAS conflicts preserve local answers for a fork',async({browser})=>{
  test.setTimeout(120_000)
@@ -69,7 +70,7 @@ test('a student submits typed pre-run vectors to the real virtual AND circuit an
     await route.fulfill({response})
    }catch(error){rejectCreate(error);throw error}
   })
-  await page.getByRole('button',{name:'Run',exact:true}).click();const {submitted,record}=await actualCreate;expect(submitted.capture_config).toEqual({signals:['y'],duration_ns:40,max_events:100});expect(submitted.test_vectors).toEqual([{time_ns:20,inputs:{x:1}}]);expect(submitted).not.toHaveProperty('generator_config');expect(submitted).not.toHaveProperty('clock_config');expect(record.assignment_id).toBe(id);expect(createPosts).toBe(1)
+  await selectRun(page);await page.getByRole('toolbar',{name:'Execution controls',exact:true}).getByRole('button',{name:'Run',exact:true}).click();const {submitted,record}=await actualCreate;expect(submitted.capture_config).toEqual({signals:['y'],duration_ns:40,max_events:100});expect(submitted.test_vectors).toEqual([{time_ns:20,inputs:{x:1}}]);expect(submitted).not.toHaveProperty('generator_config');expect(submitted).not.toHaveProperty('clock_config');expect(record.assignment_id).toBe(id);expect(createPosts).toBe(1)
   await expect.poll(async()=> (await(await context.request.get(`/api/experiments/${record.experiment_id}`)).json()).state,{timeout:30_000}).toBe('COMPLETE')
   const result=parseStructural('ExperimentRecord',await(await context.request.get(`/api/experiments/${record.experiment_id}`)).json());expect(result.capture?.available).toBe(true);expect(result.functional_verification?.status).toBe('PASS');expect(result.functional_verification).not.toHaveProperty('expected_signals')
   await history(page);await historyPanel(page).getByRole('button',{name:'Refresh execution history',exact:true}).click();await historyPanel(page).getByRole('button',{name:`Read experiment ${record.experiment_id}`,exact:true}).click();await expect(page).toHaveURL(new RegExp(`/experiments/${record.experiment_id}$`));await expect(historyPanel(page).getByLabel('Evidence access',{exact:true})).toContainText('Read-only history')
@@ -82,14 +83,14 @@ test('a student submits typed pre-run vectors to the real virtual AND circuit an
 
 test('Stop during a real committed Create with a lost acknowledgement resolves identity and never sends Run',async({page,context})=>{
  test.setTimeout(90_000)
- await page.goto('/');await expect(page.locator('.connection-status')).toContainText('connected');await importGraph(page)
+ await page.goto('/');await expectEventConnection(page);await importGraph(page)
  let committed!:(value:ExperimentRecord)=>void,release!:()=>void;const actualCreate=new Promise<ExperimentRecord>(resolve=>committed=resolve),allowLoss=new Promise<void>(resolve=>release=resolve)
  let creates=0,runs=0,stops=0
  page.on('request',request=>{if(request.method()!=='POST')return;const path=new URL(request.url()).pathname;if(path==='/api/experiments')creates++;if(/\/run$/.test(path))runs++;if(/\/stop$/.test(path))stops++})
  await page.route('**/api/experiments',async route=>{if(route.request().method()!=='POST'){await route.continue();return}const response=await route.fetch();expect(response.status()).toBe(201);committed(parseStructural('ExperimentRecord',await response.json()));await allowLoss;await route.abort('connectionreset')})
- await page.getByRole('button',{name:'Run',exact:true}).click();const record=await actualCreate
+ await selectRun(page);await page.getByRole('toolbar',{name:'Execution controls',exact:true}).getByRole('button',{name:'Run',exact:true}).click();const record=await actualCreate
  expect((await context.request.get(`/api/experiments/${record.experiment_id}`)).status()).toBe(200)
- await page.getByRole('button',{name:'Stop',exact:true}).click();release()
+ await selectRun(page);await page.getByRole('toolbar',{name:'Execution controls',exact:true}).getByRole('button',{name:'Stop',exact:true}).click();release()
  await expect.poll(async()=> (await(await context.request.get(`/api/experiments/${record.experiment_id}`)).json()).state,{timeout:30_000}).toBe('COMPLETE')
  await history(page);await historyPanel(page).getByRole('button',{name:'Refresh execution history',exact:true}).click();await expect(historyPanel(page).getByRole('button',{name:`Read experiment ${record.experiment_id}`,exact:true})).toBeVisible()
  expect(creates).toBe(1);expect(stops).toBe(1);expect(runs).toBe(0)

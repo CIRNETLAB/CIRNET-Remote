@@ -60,7 +60,9 @@ test('scope renders its front-panel controls with an empty capture screen and no
 
 test('monitor has capture status, time markers and honest empty channels/measurements', async () => {
   const html = await renderWindow('SignalMonitorWindow')
-  for (const text of ['NO TRACE DATA', 'NO CAPTURE SOURCE', 'Channels', 'No channels configured', 'Time Base', 'Trigger', 'Run / Pause', 'Samples', 'Duration', 'Edges']) assert.ok(html.includes(text), text)
+  for (const text of ['NO TRACE DATA', 'NO CAPTURE SOURCE', 'Channels', 'No channels configured', 'Time Base', 'Trigger', 'Samples', 'Duration', 'Edges']) assert.ok(html.includes(text), text)
+  assert.match(html, /aria-label="Run"/)
+  assert.doesNotMatch(html, /Pause/)
   assert.match(html, /<fieldset[^>]*disabled/)
   assert.match(html, /Empty signal monitor; no acquired traces/)
   assert.match(html, /1 ms/)

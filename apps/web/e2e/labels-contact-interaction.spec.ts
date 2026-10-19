@@ -1,3 +1,4 @@
+import { fileCommand } from './workbench-ui'
 import { test, expect, type Page, type TestInfo } from '@playwright/test'
 import { randomUUID } from 'node:crypto'
 import { copyFile, mkdir, writeFile } from 'node:fs/promises'
@@ -41,7 +42,7 @@ async function selectTool(page: Page, tool: 'Select' | 'Move' | 'Rotate') {
   await page.getByRole('button', { name: tool, exact: true }).click()
 }
 async function chooseLabel(page: Page, text: string) {
-  const expand = page.getByRole('button', { name: 'Expand Components', exact: true })
+  const expand = page.getByRole('button', { name: 'Expand Ribbon', exact: true })
   if (await expand.isVisible()) await expand.click()
   await page.locator('[data-group="notation"]').click()
   await page.locator('[data-component-type="LABEL"]').click()
@@ -178,13 +179,13 @@ test('native Label placement, Unicode edit, transforms, duplicate/delete and can
 
   // Refresh the recovery list through the UI; do not force a checkpoint. Seeing
   // the new draft proves the ordinary automatic local-save path completed.
-  await page.getByRole('button', { name: 'Open Project Manager', exact: true }).click()
+  await fileCommand(page, 'Open Project')
   await expect.poll(async () => {
     await projects(page).getByRole('button', { name: 'Refresh recovery', exact: true }).click()
     return projects(page).getByRole('button', { name: `Recover ${name}`, exact: true }).count()
   }).toBeGreaterThan(0)
   await page.reload(); await sceneReady(page)
-  if (!(await projects(page).isVisible())) await page.getByRole('button', { name: 'Open Project Manager', exact: true }).click()
+  if (!(await projects(page).isVisible())) await fileCommand(page, 'Open Project')
   await projects(page).getByRole('button', { name: 'Refresh recovery', exact: true }).click()
   await projects(page).getByRole('button', { name: `Recover ${name}`, exact: true }).first().click()
   await projects(page).getByRole('button', { name: 'Confirm project action', exact: true }).click()
@@ -199,7 +200,7 @@ test('native Label placement, Unicode edit, transforms, duplicate/delete and can
   const response = await context.request.get(`/api/v2/circuits/${id}`)
   expect(response.ok()).toBe(true); expect((await response.json()).graph).toEqual(deleted)
   await page.reload(); await sceneReady(page)
-  if (!(await projects(page).isVisible())) await page.getByRole('button', { name: 'Open Project Manager', exact: true }).click()
+  if (!(await projects(page).isVisible())) await fileCommand(page, 'Open Project')
   await expect(projects(page).getByLabel('Server save status', { exact: true })).toContainText('saved')
   await expect(projects(page).getByLabel('Current circuit name', { exact: true })).toHaveValue(name)
   expect(await exportedNativeGraph(page)).toEqual(deleted)

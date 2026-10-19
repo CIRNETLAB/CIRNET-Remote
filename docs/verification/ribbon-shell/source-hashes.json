@@ -1,0 +1,82 @@
+[
+  {
+    "path": "apps/web/e2e/graphics-recovery.spec.ts",
+    "sha256": "298db9a32137704e58c2103471262fd5a29c74893c2570658234f86536b1f04a"
+  },
+  {
+    "path": "apps/web/e2e/native-scene.ts",
+    "sha256": "f7173dcb8a2d273de84d7a165291d3f785129e7e99081b1691d6b4a9bc56c97b"
+  },
+  {
+    "path": "apps/web/e2e/ribbon-shell.spec.ts",
+    "sha256": "4bca36c663179be53d480fc75a645908d3e3b5f8a6bb755ef91942ac54dce739"
+  },
+  {
+    "path": "apps/web/e2e/workbench-ui.ts",
+    "sha256": "de8522bd4b99b0502ce016f733db650de60e4de65e9fb9d554be7a81f24cd76e"
+  },
+  {
+    "path": "apps/web/src/components/workbench/AppTitleBar.vue",
+    "sha256": "08fdc095b9725c9f9138629b5c67aefe17d25899bf72e8a9bbf7293b31dfd18c"
+  },
+  {
+    "path": "apps/web/src/components/workbench/CircuitWorkspace3D.vue",
+    "sha256": "b19d839aab9865024faea7c454902838bd003322c557d89f4667869e4304bda9"
+  },
+  {
+    "path": "apps/web/src/components/workbench/ComponentRibbon.vue",
+    "sha256": "4022a5dc846d2e34dbd5dbc1a2a5c833cee4f09e8972a5a65f5df3488c3eac97"
+  },
+  {
+    "path": "apps/web/src/components/workbench/fileCommands.ts",
+    "sha256": "99b1b3c755619b91bf931dd03f57268e0cb8e641d12bfa5702a425833f0d9ec8"
+  },
+  {
+    "path": "apps/web/src/components/workbench/FileMenu.vue",
+    "sha256": "5e8b1896661d3640121d4117e208bac356fe3cc83d488dea535457b98a2cf7a5"
+  },
+  {
+    "path": "apps/web/src/components/workbench/RunRibbonPanel.vue",
+    "sha256": "84f93b644cf58068a262c66f6aca9f5369591007ed8e78b8ab1c5d02d591f310"
+  },
+  {
+    "path": "apps/web/src/components/workbench/SimulationStatusBar.vue",
+    "sha256": "6db2462c641e148dd02357d9c878ce5fe54c7811dba7442d42385f1258d633f8"
+  },
+  {
+    "path": "apps/web/src/components/workbench/SingleWorkspaceShell.vue",
+    "sha256": "a690fed7ca6d3ceae3d7a3f8edf3e2bf37c03035b81e23e17e7dbcafbed93423"
+  },
+  {
+    "path": "apps/web/src/components/workbench/SystemMessage.vue",
+    "sha256": "2bd628ef5af4798e161d31734286aea916d790331daad4cf19b90b49773767b7"
+  },
+  {
+    "path": "apps/web/src/components/workbench/WorkbenchRibbon.vue",
+    "sha256": "a0511a63b63473c9d517ee05293931af6820f21c6cf3e456efb5569aada8ccce"
+  },
+  {
+    "path": "apps/web/src/composables/useExecutionCommands.ts",
+    "sha256": "49ba0fe4fc77927ee3eb4922bba352d9c7e253fa04d85f77d5cbfd8a23d1668d"
+  },
+  {
+    "path": "apps/web/src/composables/useWorkspaceMessages.ts",
+    "sha256": "0c77fdc0af1e4991fa0b90462bee8d1a2f358d0cfccd6814665ea54553807d10"
+  },
+  {
+    "path": "apps/web/src/stores/instrument.ts",
+    "sha256": "aebbba1cd4a060c7b1ab1f694689437429bebeea82acf6e98f6abe1adabc17df"
+  },
+  {
+    "path": "apps/web/src/stores/ui.ts",
+    "sha256": "3f138b5608d48b3aadb6424bdf97c03e49726ede5e9ee4988fe312c3b8c58cea"
+  },
+  {
+    "path": "apps/web/src/stores/workspaceMessages.ts",
+    "sha256": "d1669c36dce31713806f5d18b6796c530d14906117df913dd5cec30968649278"
+  },
+  {
+    "path": "apps/web/src/style.css",
+    "sha256": "ad40e5189a36ed750163550b2d3fef3439ba410341624cf1582d1573b8c2deaa"
+  }
+]

@@ -22,21 +22,24 @@ test('Workspace source and CSS no longer contain .scene-inventory or text Compon
   assert.ok(!css.includes('.scene-inventory'), 'style.css must not contain .scene-inventory rule')
 })
 
-test('Simulation Status Bar continues to display component and wire counts', async () => {
+test('Inspector retains component and wire counts while footer omits inventory diagnostics', async () => {
   const pinia = createPinia(); setActivePinia(pinia)
   const circuit = useCircuitStore()
   circuit.createDraft()
   circuit.placeModule('74HC08', { x: 0, y: 0, z: 0 })
   circuit.placeModule('CLOCK', { x: 2, y: 0, z: 0 })
 
-  const view = mountSfc(await loadSfc('components/workbench/SimulationStatusBar.vue'), pinia)
+  const view = mountSfc(await loadSfc('components/windows/InspectorWindow.vue'), pinia)
+  const footer = mountSfc(await loadSfc('components/workbench/SimulationStatusBar.vue'), pinia)
   try {
-    const text = view.text()
-    assert.ok(text.includes('Components'), 'Status bar must show Components label')
-    assert.ok(text.includes('2'), 'Status bar must show 2 components')
-    assert.ok(text.includes('Wires'), 'Status bar must show Wires label')
-    assert.ok(text.includes('0'), 'Status bar must show 0 wires')
-  } finally { view.app.unmount() }
+    const counts = view.find('div', 'class', 'inspector-counts')
+    assert.ok(counts, 'Inspector must retain circuit inventory diagnostics')
+    assert.ok(counts.children.some(node=>node.text==='2 components'), 'Inspector must show 2 components')
+    assert.ok(counts.children.some(node=>node.text==='0 wires'), 'Inspector must show 0 wires')
+    assert.equal(footer.all().some(node=>node.props.class==='count-status'),false)
+    assert.equal(footer.text().includes('Components'),false)
+    assert.equal(footer.text().includes('Wires'),false)
+  } finally { view.app.unmount(); footer.app.unmount() }
 })
 
 test('Inspector allows selecting components and updates workspace selectedModuleId', async () => {

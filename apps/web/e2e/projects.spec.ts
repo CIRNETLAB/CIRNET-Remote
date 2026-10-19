@@ -1,9 +1,10 @@
+import { fileCommand } from './workbench-ui'
 import { test,expect,type Page } from '@playwright/test'
 import { randomUUID } from 'node:crypto'
 import { restartApiProcess } from './lifecycle'
 import { readFile } from 'node:fs/promises'
 const panel=(page:Page)=>page.getByRole('region',{name:'Project Manager',exact:true})
-async function projects(page:Page){await page.getByRole('button',{name:'Open Project Manager',exact:true}).click();await expect(panel(page)).toBeVisible()}
+async function projects(page:Page){await fileCommand(page, 'Open Project');await expect(panel(page)).toBeVisible()}
 async function importGraph(page:Page,graph:unknown){await page.getByLabel('Open circuit file',{exact:true}).setInputFiles({name:'circuit.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(graph))})}
 async function rename(page:Page,name:string){await panel(page).getByLabel('Current circuit name',{exact:true}).fill(name);await panel(page).getByLabel('Current circuit name',{exact:true}).press('Tab')}
 async function createProject(page:Page,name:string){await panel(page).getByLabel('New project name',{exact:true}).fill(name);await panel(page).getByRole('button',{name:'Create project',exact:true}).click();await expect(panel(page).getByRole('button',{name:'Update project',exact:true})).toBeEnabled()}
@@ -27,7 +28,7 @@ test('server Save As, reload and a real API process restart preserve exact docum
   await page.reload();await expect(panel(page).getByLabel('Current circuit name',{exact:true})).toHaveValue('Original graph')
   await expect(panel(page).getByLabel('Server save status',{exact:true})).toContainText('saved')
   await rename(page,'Unsaved browser edit')
-  const download=page.waitForEvent('download');await page.getByRole('button',{name:'Export circuit JSON',exact:true}).click();await download
+  const download=page.waitForEvent('download');await fileCommand(page, 'Export');await download
   await expect(panel(page).getByLabel('Server save status',{exact:true})).toContainText('dirty')
   expect((await (await context.request.get(`/api/circuits/${id}`)).json()).revision).toBe(1)
   await panel(page).getByRole('button',{name:'Save server circuit',exact:true}).click()
