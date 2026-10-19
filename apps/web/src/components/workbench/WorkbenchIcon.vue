@@ -1,11 +1,10 @@
 <script setup lang="ts">
 defineProps<{ name: string }>()
+const historyArrow = 'M9 2 3.5 7.5 9 13V9h5a4 4 0 0 1 0 8h-3v3h3a7 7 0 0 0 0-14H9z'
 const paths: Record<string, string> = {
   new: 'M6 3h8l4 4v14H6z M14 3v5h5 M9 14h6 M12 11v6',
   open: 'M3 7h7l2 3h9l-3 10H3z M3 7V4h7l2 3h7v3',
   save: 'M4 3h14l3 3v15H3V3z M7 3v6h10V3 M7 21v-8h10v8',
-  undo: 'M8 5 3 10l5 5 M3 10h10a7 7 0 0 1 7 7',
-  redo: 'M16 5l5 5-5 5 M21 10H11a7 7 0 0 0-7 7',
   select: 'M5 3v17l5-5 4 7 3-2-4-7h7z',
   wire: 'M4 4h6v7h9v9 M2 2h4v4H2z M17 18h4v4h-4z',
   move: 'M12 2v20 M2 12h20 M8 6l4-4 4 4 M8 18l4 4 4-4 M6 8l-4 4 4 4 M18 8l4 4-4 4',
@@ -43,4 +42,4 @@ const paths: Record<string, string> = {
   top: 'M5 5h14 M12 20V9 M7 14l5-5 5 5',
 }
 </script>
-<template><svg class="workbench-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path :d="paths[name] || paths.chip" /></svg></template>
+<template><svg class="workbench-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path v-if="name === 'undo' || name === 'redo'" :d="historyArrow" :transform="name === 'redo' ? 'translate(24 0) scale(-1 1)' : undefined" fill="currentColor" stroke="none" /><path v-else :d="paths[name] || paths.chip" /></svg></template>

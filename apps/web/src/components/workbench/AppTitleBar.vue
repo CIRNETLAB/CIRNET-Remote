@@ -113,8 +113,8 @@ onUnmounted(() => { disposed = true; readVersion++; window.removeEventListener('
     <div class="brand" aria-label="net*CIRCUIT Remote"><span class="brand-mark"><img :src="iconUrl('favicon')" alt="net*CIRCUIT Remote" width="38" height="38" /></span><strong>net<span class="brand-circuit">*CIRCUIT</span> <span class="brand-remote">Remote</span></strong></div>
     <div class="header-command-strip">
       <div class="quick-actions" role="group" aria-label="Edit history">
-      <button title="Undo (Ctrl+Z)" :disabled="!circuit.canUndo" @click="circuit.undo()"><WorkbenchIcon name="undo" />Undo</button>
-      <button title="Redo (Ctrl+Shift+Z)" :disabled="!circuit.canRedo" @click="circuit.redo()"><WorkbenchIcon name="redo" />Redo</button>
+      <button aria-label="Undo" title="Undo (Ctrl+Z)" :disabled="!circuit.canUndo" @click="circuit.undo()"><WorkbenchIcon name="undo" /></button>
+      <button aria-label="Redo" title="Redo (Ctrl+Shift+Z)" :disabled="!circuit.canRedo" @click="circuit.redo()"><WorkbenchIcon name="redo" /></button>
       </div>
       <FileMenu :items="fileItems" :dismiss-key="ui.activeRibbonTab" @command="fileCommand" />
       <div class="ribbon-tabs" role="tablist" aria-label="Workbench ribbon" data-workspace-text-input>

@@ -123,3 +123,22 @@ Fresh verification on Windows 10.0.26300, Node v24.20.0, pinned Playwright 1.64.
 The focused E2E cases use the real API/virtual Hardware Service. The separate geometry/pixel probe owns its Vite/browser and checks the rendered UI independently of backend availability. Component desktop, Run desktop, Component 480 px and Run 360 px captures were inspected directly. All new screenshots/raw measurements were created outside the repository through the shared artifact allocator; no temporary image links or replacement historical captures are stored here.
 
 After inspection, the owned external session was cleaned. Final physical inventory matched all 1516 pre-existing visual-like files by SHA-256 and mtime, including ignored output locations; no new or rewritten screenshot is in the repository. The index remains empty, with only the CSS, Web README and this report changed. No staging or commit was performed.
+
+## Icon-only Header Undo/Redo — 2026-10-20
+
+IMPLEMENTED from clean baseline `8d26deb`. The two supplied reference images were inspected. The Header now uses icon-only Undo/Redo buttons, with exact accessible names and the existing `title` tooltips (`Undo (Ctrl+Z)` / `Redo (Ctrl+Shift+Z)`). Native disabled bindings and history/shortcut handlers are preserved.
+
+`WorkbenchIcon.vue` renders a filled, thick horizontal 180° U-turn silhouette for Undo and reflects the same geometry for Redo. The remaining icons retain their original stroke rendering. Header-only styling uses 32×32 px buttons, 24×24 px glyphs, light gray `#e6e6e6`, 3 px padding and a 2 px pair gap; obsolete responsive text-hiding/padding overrides are removed. Inset keyboard focus stays visible inside the scrolling Header strip. Source changes are limited to `AppTitleBar.vue`, `WorkbenchIcon.vue` and `style.css`; the Web README documents the controls.
+
+Fresh checks use Windows 10.0.26300, Node v24.20.0 and pinned Playwright 1.64.1 Chromium/ANGLE/SwiftShader:
+
+| Status | Check | Observed result |
+| --- | --- | --- |
+| PASS | Final `npm run build` in `apps/web` | vue-tsc and production build pass; Vite 24.65 s, including the current focus styling. Existing large-chunk advisory remains. |
+| PASS | `npm test` in `apps/web` | 1384 passed, 0 failed, 0 skipped; 210.82 s. |
+| PASS | `npm run test:e2e -- ribbon-shell.spec.ts --grep "Header order\|native canvas identity\|responsive native Ribbon" --reporter=line` | 4 passed (3.3 min). Exact Undo/Redo role names, Header/File keyboard focus, real Inspector X change 4→3→4 through Undo/Redo, canvas/camera/history preservation, 1440/1280/900/480 widths, DPR 1/2 and rapid collapse/tab toggles. API shutdown exits 0. |
+| PASS | Temporary external native-browser icon probe | 8 viewport/DPR cases: 1440/900/480/360 × DPR 1/2. Both buttons have no text content, correct accessible names and shortcut titles, 32 px hit boxes/24 px filled glyphs, 2 px pair gap, 4–10 px separation before File and unchanged 52 px Header height. Explicit empty history disables both controls; real edits enable them. Click, Space, Ctrl+Z and Ctrl+Shift+Z undo/redo actual stored properties correctly; Tab and inset focus remain available. |
+
+The visual probe uses explicit history fixtures rather than assuming the application's startup history is empty. The native 66×32 px icon pair and actual Header captures at desktop and 480 px were inspected against the supplied references. Reference inputs remain untouched. All new screenshots, measurements and logs were created directly in the external owned artifact session; no new raster asset or permanent image link is added to the repository. Full camera/depth/physical-hardware campaigns are outside this UI follow-up.
+
+Cleanup completed for this follow-up's owned external session after inspection. Physical SHA-256/mtime comparison found all 1516 existing visual-like files unchanged, including ignored output directories. Markdown/context checks, the artifact guard and `git diff --check` pass. Only the three UI source files, Web README and this report changed; the index is empty and no commit was made.
