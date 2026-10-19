@@ -103,3 +103,23 @@ Measured browser rectangles, DPR/depth-buffer data and renderer memory: [layout 
 The native navigation case also retained identical nonempty repeatable global listener maps (25 event keys / 31 registrations, including the test observer), with zero additional WebSockets or execution mutations: [navigation evidence](ribbon-shell/navigation-evidence.json). Scene/camera identity, pose, canvas rectangle and renderer memory remained equal. One-shot listeners are excluded from this explicit-registration counter because the browser removes them internally.
 
 Native hidden-layer tests completed 60 model/Zoom/DPR samples at 50%/100%/1000%, DPR 1/2, with `changed = 0` in every tested region: [depth evidence](ribbon-shell/depth-evidence-summary.json). This covers current and supported historical display model revisions. The separate optional retained **pre-fix source** capture is skipped by the existing `NETCIRCUIT_DEPTH_BASELINE` guard because that variable is unset; the guard and current-source coverage were preserved.
+
+## Connected Header tabs — 2026-10-20
+
+IMPLEMENTED and VERIFIED for this styling follow-up, from clean baseline `dfcc797`. Earlier results and captures above remain historical evidence for their recorded revision.
+
+`apps/web/src/style.css` now shares `--ribbon-surface: #202d3c` between the selected Component/Run tab and both Ribbon panels. Tabs stretch to the Header bottom, retain only top corner rounding and have no bottom border. The Header uses an inset separator painted behind the tabs, avoiding a clipped negative-offset bridge inside the scrolling command strip. The short vertical group divider and inset keyboard focus remain visible. Header height stays 52 px and Ribbon height stays 96 px; tab activation and execution handlers are unchanged. The canonical UI description is updated in the Web README.
+
+Fresh verification on Windows 10.0.26300, Node v24.20.0, pinned Playwright 1.64.1 Chromium, ANGLE/SwiftShader:
+
+| Status | Check | Observed result |
+| --- | --- | --- |
+| PASS | `npm run build` in `apps/web` | TypeScript/vue-tsc and production build pass; Vite build 39.18 s. Existing large-chunk advisory remains. |
+| PASS | `npm run test:e2e -- ribbon-shell.spec.ts --grep "Header order\|responsive native Ribbon" --reporter=line` | 3 passed (3.0 min), including manual keyboard activation, File focus, 1440/1280/900/480 widths, DPR 1/2, reduced motion and rapid drawer toggles. Owned real API shutdown exits 0. |
+| PASS | Temporary external native-browser styling probe | 16 active-tab combinations: Component/Run × 1440/900/480/360 widths × DPR 1/2. Hovered background equals the visible panel; top radius 4 px, bottom radius/border 0; tab bottom and Ribbon top both at Header bottom 52 px. Pixels immediately above/below the join are RGB(32,45,60); the separator outside the tab remains RGB(52,67,85). Keyboard arrows retain manual activation; Enter selects; focus outline is inset. The 360 px case also exercises horizontal strip overflow. |
+| PASS | Offline Markdown/context checks, artifact Git guard and `git diff --check` | No link/context, artifact or whitespace errors. |
+| NOT_RUN | Full unit/Python suites and unrelated camera/depth matrices | This follow-up changes CSS only; no new permanent implementation-mirroring tests were added. |
+
+The focused E2E cases use the real API/virtual Hardware Service. The separate geometry/pixel probe owns its Vite/browser and checks the rendered UI independently of backend availability. Component desktop, Run desktop, Component 480 px and Run 360 px captures were inspected directly. All new screenshots/raw measurements were created outside the repository through the shared artifact allocator; no temporary image links or replacement historical captures are stored here.
+
+After inspection, the owned external session was cleaned. Final physical inventory matched all 1516 pre-existing visual-like files by SHA-256 and mtime, including ignored output locations; no new or rewritten screenshot is in the repository. The index remains empty, with only the CSS, Web README and this report changed. No staging or commit was performed.
