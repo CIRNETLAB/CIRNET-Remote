@@ -169,7 +169,7 @@ code { font-family: Consolas, monospace; }
 .status-viewport-tools button { border-color: transparent; background: transparent; display: grid; place-items: center; padding: 3px; width: 26px; min-height: 26px; }
 .status-viewport-tools button:hover:not(:disabled) { background: #304559; border-color: #4c657b; }
 .status-viewport-tools button[aria-pressed="true"] { color: var(--accent); background: #29463f; border-color: var(--accent); }
-.status-viewport-tools output { font: 10px Consolas, monospace; width: 50px; text-align: center; color: #bed0de; }
+.status-viewport-tools output { font: 10px Consolas, monospace; width: 80px; text-align: center; color: #bed0de; }
 .workspace-empty { position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: min(440px, 90%); pointer-events: none; }
 .empty-cross { color: #5ca49f; font: 40px/1 Consolas, monospace; opacity: .7; }
 .workspace-empty p { margin: 16px 0 9px; font-size: 19px; font-weight: 400; letter-spacing: -.3px; color: #bfd0dd; }

@@ -102,9 +102,12 @@ test('abandoned import saved fingerprints are released when undo history branche
 test('workspace zoom rejects non-finite inputs before they reach camera projection', () => {
   const store = useWorkspaceStore()
   store.setZoom(130)
+  const request = store.zoomRequest
   for (const value of [NaN, Infinity, -Infinity]) {
     store.setZoom(value)
-    assert.equal(store.zoom, 130)
+    assert.equal(store.requestedZoom, 130)
+    assert.equal(store.zoomRequest, request, 'invalid input must not issue a camera request')
+    assert.equal(store.zoom, 100, 'only the camera may publish measured zoom')
   }
 })
 

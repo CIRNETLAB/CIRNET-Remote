@@ -26,20 +26,22 @@ import { parseEndpoint } from '../electrical/endpoints'
 import { wireClearance, type SolvedWireRoute, type WireRouteContext } from '../wires/wireRouting'
 import { createSelectionOutline, updateSelectionOutline } from './SelectionOutline'
 import { createTechnicalGrid, updateTechnicalGrid } from './TechnicalGrid'
-import { Box3, Line3, Sphere } from 'three'
+import { Box3, Line3 } from 'three'
 import { createComponentTransformGizmo, type GizmoObstacle, type TransformHandle } from './ComponentTransformGizmo'
 import { applyPowerSupplyControls, supplyControlPatch, type SupplyControl } from './PowerSupplyModel'
 import { createWireLayer } from './WireLayer'
 import { createSelectionPreview } from './SelectionPreview'
 import { createScenePicking } from './ScenePicking'
 import { createSceneClipping } from './SceneClipping'
+import { createFramingBounds, solveOverview, solveArea, type FramingSnapshot, type NdcRect } from './CameraFraming'
+import { createViewportNavigation, type NavigationSnapshot } from './ViewportNavigation'
 import type { EditorSelection } from '../editor/selection'
 import { projectedTranslationDelta } from '../geometry/transformDrag'
 import { projectedBreadboardEnclosedInRect, projectedObjectIntersectsRect, type ScreenRect } from './ProjectedSelection'
-import { CAMERA_NEAR, CAMERA_FAR, ZOOM_MIN, ZOOM_MAX, ZOOM_DEFAULT, MIN_ZOOM_REFERENCE_DISTANCE, navigationClearanceForDistance, clampZoom } from '../config/workbenchViewport'
+import { CAMERA_NEAR, CAMERA_FAR, navigationClearanceForDistance } from '../config/workbenchViewport'
 
 export interface SceneRenderer { readonly isWebGLRenderer?: boolean; setSize(width: number, height: number, updateStyle?: boolean): void; render(scene: Scene, camera: PerspectiveCamera): void; dispose(): void }
-interface SceneOptions { renderer: SceneRenderer; canvas?: HTMLCanvasElement; onBeforeRender?: () => void; onRender?: () => void; onZoomChange?: (percent: number) => void; requestFrame?: (callback: FrameRequestCallback) => number; cancelFrame?: (id: number) => void }
+interface SceneOptions { renderer: SceneRenderer; canvas?: HTMLCanvasElement; onBeforeRender?: () => void; onRender?: () => void; onZoomChange?: (percent: number) => void; onNavigationChange?: (snapshot:NavigationSnapshot) => void; requestFrame?: (callback: FrameRequestCallback) => number; cancelFrame?: (id: number) => void }
 export type PickResult = ({ kind: 'module'; id: string } | { kind: 'control'; id: string; control: SupplyControl } | { kind: 'port'; id: string; endpoint: string } | { kind: 'wire'; source: string; destination: string }) & { point: Vector3 }
 export interface EndpointPick { kind: 'port' | 'contact'; id: string; endpoint: string; point: Vector3; contactId?: string }
 export type WireEditPick = { kind: 'bend' | 'segment'; wire: WireIdentity; index: number; point: Vector3; basePoint?: Vector3 }
@@ -47,7 +49,7 @@ export interface OrientationAxis { label: 'X' | 'Y' | 'Z'; x: number; y: number;
 export type FlexibleHandle = {id:string;handle:'pin-0'|'pin-1';point:Vector3}
 
 // Geometry is a projection of graph IDs and named logical ports, never a source of nets.
-export function createSceneManager({ renderer, canvas, onBeforeRender, onRender, onZoomChange, requestFrame = requestAnimationFrame, cancelFrame = cancelAnimationFrame }: SceneOptions) {
+export function createSceneManager({ renderer, canvas, onBeforeRender, onRender, onZoomChange, onNavigationChange, requestFrame = requestAnimationFrame, cancelFrame = cancelAnimationFrame }: SceneOptions) {
   const scene = new Scene(); scene.background = new Color('#101925')
   const studio = renderer.isWebGLRenderer ? createStudioEnvironment(renderer as WebGLRenderer) : null
   if (studio) { scene.environment = studio.texture; scene.environmentIntensity = .55 }
@@ -143,6 +145,10 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     ...(ghost ? [ghost] : []), ...(flexibleGhost ? [flexibleGhost] : []),
     ...wireLayer.tools.children.filter(object => object.name === 'wire-drawing-preview' || object.name === 'wire-duplicate-preview')])
   const ensureProjection = () => { wireLayer.flush(); clipping.ensureProjection() }
+  const framing = createFramingBounds(() => [content,wires],camera)
+  let committedBounds:FramingSnapshot|undefined, framingDirty=true, transientPose=false, navigationTransaction=0, committedGraphSignature=''
+  const captureCommittedBounds = () => {wireLayer.flush();framing.invalidate();committedBounds=framing.snapshot(camera);framingDirty=false}
+  const committedSnapshot = () => {if(!committedBounds||framingDirty&&!transientPose)captureCommittedBounds();return committedBounds!}
   let highlightedPinModel: Group | null = null
   let showPins = false
   let transition: {
@@ -164,18 +170,21 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
   }
 
   const applyViewPose = (direction: Vector3, distance: number) => {
+    navigationTransaction++
     keepViewAboveBoard()
     const targetPt = controls?.target ?? viewTarget
     const position = targetPt.clone().addScaledVector(direction, distance)
     // OrbitControls caches Y as its orbit axis and also uses camera.up for XZ panning.
     camera.up.set(0, 1, 0)
     camera.position.copy(position)
+    zoomLimits()
     controls?.update()
     // Controls nudges the pole for its spherical math. Presets retain exact positions.
     camera.position.copy(position)
     const lookUp = direction.x === 0 && direction.z === 0 ? new Vector3(0, 0, -1) : camera.up
     camera.quaternion.setFromRotationMatrix(new Matrix4().lookAt(position, targetPt, lookUp))
     camera.updateMatrixWorld()
+    navigationTransaction--
   }
 
   const cancelTransition = () => {
@@ -262,8 +271,11 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
         // setSize clears the drawing buffer. Refill it in this same frame.
         if (bufferWidth !== width || bufferHeight !== height) { renderer.setSize(width, height, false); bufferWidth = width; bufferHeight = height }
         ensureProjection()
-        const target = controls?.target ?? viewTarget
-        updateTechnicalGrid(grid, camera, target, height)
+        // Grid focus/fade derives from the camera's ground projection, never
+        // an Area focal point or circuit bounds. Clamp grazing intersections.
+        const direction=camera.getWorldDirection(new Vector3()),reach=Math.max(.1,camera.position.y/Math.max(.2,-direction.y))
+        const gridTarget=camera.position.clone().addScaledVector(direction,reach)
+        updateTechnicalGrid(grid, camera, gridTarget, height)
         updateGizmo()
         wireLayer.updateCamera(camera, height); wireLayer.flush(); scene.updateMatrixWorld(true)
         if (activeOutline) updateSelectionOutline(activeOutline.group, camera.position, width, height)
@@ -273,14 +285,35 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     })
   }
   const contentChanged = () => { clipping.invalidateBounds(); schedule() }
+  const committedContentChanged = () => {framingDirty=true;contentChanged()}
   const controls = canvas ? new OrbitControls(camera, canvas) : undefined
   const updateControlsEnabled = () => { if (controls) controls.enabled = !disposed && visible && !suspended && !pointerLocked }
   updateControlsEnabled()
   const viewTarget = new Vector3()
   const target = () => controls?.target ?? viewTarget
   const defaultDistance = Math.hypot(11, 10)
-  let zoomReferenceDistance = defaultDistance, reportedZoom = ZOOM_DEFAULT
+  const navigation=createViewportNavigation(camera,target,committedSnapshot)
+  let usableRect:NdcRect={left:-1,right:1,bottom:-1,top:1}
+  let lastNavigationReport='',reportedZoom=NaN
   const lastViewPosition = camera.position.clone(), lastViewTarget = target().clone(), dollyRay = new Raycaster()
+  const renderedMesh = (candidate:Object3D):candidate is Mesh => {
+    if(!(candidate instanceof Mesh)||!candidate.layers.test(camera.layers))return false
+    for(let object:Object3D|null=candidate;object;object=object.parent)if(!object.visible||object.userData.isOutline||object.userData.pinLabel||object.userData.clippingHelper||object.userData.framingHelper)return false
+    const materials=Array.isArray(candidate.material)?candidate.material:[candidate.material]
+    return materials.some(material=>material.visible&&(!material.transparent||material.opacity>0))
+  }
+  const safeAreaPosition = (origin:Vector3,position:Vector3) => {
+    const distance=position.distanceTo(origin),travel=position.clone().sub(camera.position),length=travel.length()
+    if(length<1e-9)return position
+    const padding=Math.max(.0001,navigationClearanceForDistance(distance)*4,Math.min(.015,distance*.05))
+    // Sweep the actual camera displacement against every committed rendered
+    // surface, including obstacles outside the selection cone. Reject blocked
+    // moves atomically; unrelated geometry behind the old eye cannot pull a
+    // panned empty-space inspection back across the scene.
+    dollyRay.set(camera.position,travel.divideScalar(length));dollyRay.near=0;dollyRay.far=length+padding
+    const hit=dollyRay.intersectObjects([content,wires],true).find(hit=>renderedMesh(hit.object))
+    return hit?null:position
+  }
   const guardDolly = () => {
     const origin = target(), previous = lastViewPosition.clone().sub(origin), next = camera.position.clone().sub(origin)
     // Only inward dolly is guarded; pan, orbit, Fit and changes of focal target
@@ -294,31 +327,57 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     dollyRay.set(lastViewPosition, direction); dollyRay.near = 0; dollyRay.far = travel + padding
     wireLayer.flush()
     const hit = dollyRay.intersectObjects([...content.children, ...wires.children], true).find(hit => hit.object instanceof Mesh && !ignored(hit.object))
-    if (hit) camera.position.copy(lastViewPosition).addScaledVector(direction, Math.max(0, hit.distance - padding))
+    if (hit) {
+      camera.position.copy(lastViewPosition).addScaledVector(direction, Math.max(0, hit.distance - padding))
+      navigation.limitAtDistance(camera.position.distanceTo(origin))
+    }
     camera.updateMatrixWorld()
   }
-  const zoomPercent = () => zoomReferenceDistance / camera.position.distanceTo(target()) * ZOOM_DEFAULT
-  const notifyZoom = () => {
+  const zoomPercent = () => navigation.snapshot().zoom
+  const notifyZoom = (force=false) => {
+    if(navigationTransaction)return
     ensureProjection()
     lastViewPosition.copy(camera.position); lastViewTarget.copy(target())
-    const percent = Math.round(zoomPercent() * 100) / 100
-    if (Number.isFinite(percent) && percent !== reportedZoom) { reportedZoom = percent; onZoomChange?.(percent) }
+    const state=navigation.snapshot(),signature=JSON.stringify(state)
+    if (Number.isFinite(state.zoom) && state.zoom !== reportedZoom) { reportedZoom=state.zoom;onZoomChange?.(state.zoom) }
+    if(force||signature!==lastNavigationReport){lastNavigationReport=signature;onNavigationChange?.(state)}
   }
-  const zoomLimits = () => { if (controls) { controls.minDistance = zoomReferenceDistance * ZOOM_DEFAULT / ZOOM_MAX; controls.maxDistance = zoomReferenceDistance * ZOOM_DEFAULT / ZOOM_MIN } }
-  const viewChanged = () => { keepViewAboveBoard(); guardDolly(); notifyZoom(); schedule() }
+  const zoomLimits = () => { if (controls) {controls.minDistance=navigation.minimumDistance();controls.maxDistance=navigation.snapshot().referenceDistance*2} }
+  const viewChanged = () => { if(navigationTransaction)return;keepViewAboveBoard();navigation.resetCollision();zoomLimits();notifyZoom();schedule() }
+  const applyNavigation = (origin:Vector3,position:Vector3,quaternion=camera.quaternion.clone(),guard=false) => {
+    navigationTransaction++
+    const requestedTarget=origin.clone()
+    if(target().distanceToSquared(origin)>1e-12)navigation.resetCollision()
+    target().copy(origin);camera.position.copy(position);camera.quaternion.copy(quaternion);camera.zoom=1;camera.updateMatrixWorld()
+    if(guard)guardDolly()
+    const actual=camera.position.clone();zoomLimits();controls?.update()
+    // OrbitControls clamps its target through a length round-trip. Retain the
+    // exact command anchor as well as its pose; even that numerical adjustment
+    // must not accumulate during repeated wheel/toolbar dolly.
+    target().copy(requestedTarget);camera.position.copy(actual);camera.quaternion.copy(quaternion);camera.updateMatrixWorld();navigationTransaction--
+    notifyZoom(true);schedule()
+  }
+  const navigateZoom = (percent:number) => {if(disposed||!Number.isFinite(percent))return;cancelTransition();const pose=navigation.zoomPose(percent);if(pose)applyNavigation(pose.target,pose.position,camera.quaternion.clone(),true)}
+  const wheelZoom = (event:WheelEvent) => {
+    if(disposed||!visible||suspended||pointerLocked||!Number.isFinite(event.deltaY)||event.deltaY===0)return
+    event.preventDefault();let delta=event.deltaY*(event.deltaMode===1?16:event.deltaMode===2?100:1);if(event.ctrlKey)delta*=10
+    const scale=Math.pow(.95,Math.min(100,Math.abs(delta)*.01));navigateZoom(zoomPercent()*(delta<0?1/scale:scale))
+  }
   if (controls) {
     controls.mouseButtons = { LEFT: null, MIDDLE: MOUSE.PAN, RIGHT: MOUSE.ROTATE }
     controls.touches = { ONE: null, TWO: null }; controls.screenSpacePanning = false
+    controls.enableZoom=false
     zoomLimits(); controls.minPolarAngle = 0; controls.maxPolarAngle = Math.PI / 2
     controls.addEventListener('start', cancelTransition)
     controls.addEventListener('change', viewChanged); controls.saveState()
   }
+  canvas?.addEventListener('wheel',wheelZoom,{passive:false})
   const validPointer = (x: number, y: number) => !disposed && Number.isFinite(x) && Number.isFinite(y)
   const { ray, pickOwner, ignored, wireMeshes, contentHit, screenPoint, segmentHit, visiblePoint, planeHit } = createScenePicking({
     camera, content, wires, raycaster, viewport: () => ({ width, height }), target, ensureProjection,
-    interactionReach: () => Math.max(150, zoomReferenceDistance * 4),
+    interactionReach: () => Math.max(150, navigation.overview().distance * 4),
   })
-  const translateView = (delta: Vector3) => { cancelTransition(); camera.position.add(delta); (controls?.target ?? viewTarget).add(delta); camera.updateMatrixWorld(); controls?.update(); schedule() }
+  const translateView = (delta: Vector3) => { cancelTransition();navigation.resetCollision();applyNavigation(target().clone().add(delta),camera.position.clone().add(delta)) }
   let activeOutline: { id: string; group: Group } | null = null
   const removeActiveOutline = () => {
     if (activeOutline) {
@@ -359,11 +418,12 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       for(const marker of flexibleHandles.children){const p=screenPoint(marker.position),d=Math.hypot(x-p.x,y-p.y);if(p.visible&&d<distance){distance=d;best={id:marker.userData.id,handle:marker.userData.flexibleHandle,point:marker.position.clone()}}}return best
     },
     previewFlexibleModule(module:CircuitModule){
+      transientPose=true
       let model=models.get(module.id);if(!model||disposed)return
       const signature=JSON.stringify([module.type,module.properties,module.mount?.partId,module.mount?.partRevision,module.mount?.packageId,module.mount?.packageRevision,module.physicalDescriptor])
       if(model.userData.signature!==signature){
         if(activeOutline?.id===module.id)removeActiveOutline();removeMultiOutline(module.id);disposeObject(model);content.remove(model)
-        model=buildComponent(module,[...modules.values()]);model.userData.onVisualChange=contentChanged;models.set(module.id,model);content.add(model);attachOutline();attachMultiOutlines()
+        model=buildComponent(module,[...modules.values()]);model.userData.onVisualChange=committedContentChanged;models.set(module.id,model);content.add(model);attachOutline();attachMultiOutlines()
       }
       updateFlexiblePackageGeometry(model,module,[...modules.values()]);applyPose(model,moduleWorldPose(module,[...modules.values()]));wireLayer.updateModule(module.id);updateFlexibleHandles();contentChanged()
     },
@@ -396,6 +456,8 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     setGizmoRotation(angle: number) { if (disposed) return; gizmo.setRotation(angle); schedule() },
     syncGraph(next: CircuitGraph | null) {
       if (disposed) return
+      const signature=JSON.stringify(next),refreshBounds=signature!==committedGraphSignature||framingDirty||transientPose
+      transientPose=false
       contactHover.visible = false
       gizmoLayoutRevision++
       modules.clear(); for (const module of next?.modules ?? []) modules.set(module.id, module)
@@ -424,7 +486,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
           else if (model.userData.type === module.type && getDefinition(module.type)?.visual === 'supply') model.userData.signature = signature
           else { if (activeOutline?.id === module.id) removeActiveOutline(); removeMultiOutline(module.id); disposeObject(model); content.remove(model); models.delete(module.id); model = undefined }
         }
-        if (!model) { model = buildComponent(module, next!.modules); model.userData.onVisualChange = contentChanged; models.set(module.id, model); content.add(model) }
+        if (!model) { model = buildComponent(module, next!.modules); model.userData.onVisualChange = committedContentChanged; models.set(module.id, model); content.add(model) }
         const previousRevision = model.userData.visualGeometryRevision
         updateFlexiblePackageGeometry(model, module, next!.modules)
         updateMountedPackageInsertion(model, module, next!.modules)
@@ -434,10 +496,12 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       }
       attachOutline()
       attachMultiOutlines()
-      wireLayer.sync(next?.connections ?? []); contentChanged()
+      wireLayer.sync(next?.connections ?? [])
+      if(refreshBounds){captureCommittedBounds();navigation.resetCollision();committedGraphSignature=signature}
+      contentChanged();notifyZoom()
     },
-    previewMove(id: string, position: Required<NonNullable<CircuitModule['position']>>) { const model = models.get(id); if (model && !disposed && [position.x, position.y, position.z].every(Number.isFinite)) { model.position.set(position.x, position.y, position.z); model.updateMatrixWorld(true); previewMountedChildren(id); wireLayer.updateModule(id); contentChanged() } },
-    previewRotation(id: string, degrees: number) { const model = models.get(id); if (model && !disposed && Number.isFinite(degrees)) { model.rotation.y = (degrees % 360) * Math.PI / 180; model.updateMatrixWorld(true); previewMountedChildren(id); wireLayer.updateModule(id); contentChanged() } },
+    previewMove(id: string, position: Required<NonNullable<CircuitModule['position']>>) { const model = models.get(id); if (model && !disposed && [position.x, position.y, position.z].every(Number.isFinite)) { transientPose=true;model.position.set(position.x, position.y, position.z); model.updateMatrixWorld(true); previewMountedChildren(id); wireLayer.updateModule(id); contentChanged() } },
+    previewRotation(id: string, degrees: number) { const model = models.get(id); if (model && !disposed && Number.isFinite(degrees)) { transientPose=true;model.rotation.y = (degrees % 360) * Math.PI / 180; model.updateMatrixWorld(true); previewMountedChildren(id); wireLayer.updateModule(id); contentChanged() } },
     setMountPreview(candidate: MountCandidate | null) {
       clearMountPreview()
       if (ghost && ghostModule) updateMountedPackageInsertion(ghost, { ...ghostModule, ...(candidate?.valid && candidate.mount ? { mount: candidate.mount } : { mount: undefined }) }, [...modules.values()])
@@ -616,7 +680,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     wireContext: routeContext,
     wireRoute(wire: WireIdentity) { if (disposed) return null; wireLayer.flush(); return wireLayer.route(wire) },
     wireOrderPeers(wire: WireIdentity, connected = false) { if (disposed) return []; wireLayer.flush(); return wireLayer.orderPeers(wire, connected) },
-    previewWireVisual(wire: WireIdentity, visual: WireVisual | null) { wireLayer.previewVisual(wire, visual); contentChanged() },
+    previewWireVisual(wire: WireIdentity, visual: WireVisual | null) { transientPose=true;wireLayer.previewVisual(wire, visual); contentChanged() },
     previewWireDrawing(wire: WireIdentity, visual: WireVisual, cursor: Point3 | null) { wireLayer.previewDrawing(wire, visual, cursor); contentChanged() },
     clearWireDrawing() { wireLayer.clearDrawing(); contentChanged() },
     previewWireDuplicate(wire: WireIdentity, visual: WireVisual, valid: boolean, fallback?: SolvedWireRoute | null) { wireLayer.previewDuplicate(wire, visual, valid, fallback); contentChanged() },
@@ -707,89 +771,48 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       if (visible !== wasVisible) updateControlsEnabled()
       if (!visible) { if (frame !== null) cancelFrame(frame); frame = null; return }
       if (sized && width === w && height === h) { if (!wasVisible) schedule(); return }
-      width = w; height = h; sized = true; camera.aspect = w / h; ensureProjection(); schedule()
+      width = w; height = h; sized = true; camera.aspect = w / h; ensureProjection();notifyZoom();schedule()
     },
     zoomPercent,
-    setZoom(percent: number) {
-      if (disposed || !Number.isFinite(percent)) return
-      cancelTransition()
-      const origin = target(), direction = camera.position.clone().sub(origin).normalize()
-      camera.position.copy(origin).addScaledVector(direction, zoomReferenceDistance * ZOOM_DEFAULT / clampZoom(percent))
-      guardDolly()
-      camera.zoom = 1; camera.updateMatrixWorld(); controls?.update(); notifyZoom(); schedule()
+    navigationSnapshot: () => navigation.snapshot(),
+    setUsableViewport(rect:{left:number;top:number;right:number;bottom:number}) {
+      if(disposed||![rect.left,rect.top,rect.right,rect.bottom].every(Number.isFinite)||width<=0||height<=0)return
+      const left=Math.max(0,Math.min(width,rect.left)),right=Math.max(0,Math.min(width,rect.right))
+      const top=Math.max(0,Math.min(height,rect.top)),bottom=Math.max(0,Math.min(height,rect.bottom))
+      if(right-left<1||bottom-top<1)return
+      const next={left:left/width*2-1,right:right/width*2-1,top:1-top/height*2,bottom:1-bottom/height*2}
+      if(JSON.stringify(next)===JSON.stringify(usableRect))return
+      usableRect=next;navigation.setRect(next);notifyZoom();schedule()
     },
+    setZoom: navigateZoom,
     zoomToArea(x1: number, y1: number, x2: number, y2: number) {
-      if (disposed || suspended || !visible || ![x1, y1, x2, y2].every(Number.isFinite)) return false
-      cancelTransition()
-      const left = Math.max(0, Math.min(width, Math.min(x1, x2))), right = Math.max(0, Math.min(width, Math.max(x1, x2)))
-      const top = Math.max(0, Math.min(height, Math.min(y1, y2))), bottom = Math.max(0, Math.min(height, Math.max(y1, y2)))
-      if (right - left < 12 || bottom - top < 12) return false
-      ensureProjection()
-      const origin = target(), direction = camera.position.clone().sub(origin), distance = direction.length()
-      const clearance = navigationClearanceForDistance(distance)
-      if (!Number.isFinite(distance) || distance <= clearance) return false
-      if (left === 0 && top === 0 && right === width && bottom === height) {
-        zoomReferenceDistance = Math.max(distance, MIN_ZOOM_REFERENCE_DISTANCE)
-        camera.position.copy(origin).addScaledVector(direction, zoomReferenceDistance / distance)
-        zoomLimits(); controls?.update(); notifyZoom(); schedule(); return true
-      }
-      direction.normalize()
-      const x = (left + right) / 2, y = (top + bottom) / 2
-      // Focus the actual surface under the rectangle, keeping a finite fallback above the horizon.
-      const surfacePoint = (sx: number, sy: number) => {
-        const hit = this.pick(sx, sy)
-        if (hit?.kind === 'wire') {
-          // Wire picking uses a forgiving centerline for editing. Area framing
-          // instead focuses the rendered tube surface to keep close dolly outside.
-          ray(sx, sy)
-          const mesh = wires.children.find(mesh => mesh.userData.source === hit.source && mesh.userData.destination === hit.destination)
-          const surface = mesh && raycaster.intersectObjects(wireMeshes(mesh), false)[0]
-          if (surface) return surface.point
-        }
-        return hit?.point ?? this.groundPoint(sx, sy)
-      }
-      const focus = surfacePoint(x, y) ?? origin
-      const depth = camera.position.clone().sub(focus).dot(direction)
-      if (!Number.isFinite(depth) || depth <= clearance) return false
-      ray(x, y)
-      const focalPlane = new Plane().setFromNormalAndCoplanarPoint(direction, focus)
-      const center = raycaster.ray.intersectPlane(focalPlane, new Vector3())
-      if (!center || !center.toArray().every(Number.isFinite)) return false
-      let nextDistance = Math.max(MIN_ZOOM_REFERENCE_DISTANCE, clearance * 4, depth * Math.max((right - left) / width, (bottom - top) / height))
-      const screenRight = new Vector3().setFromMatrixColumn(camera.matrixWorld, 0), screenUp = new Vector3().setFromMatrixColumn(camera.matrixWorld, 1)
-      const verticalTangent = Math.tan(camera.fov * Math.PI / 360), horizontalTangent = verticalTangent * camera.aspect
-      // Fit boundary surface depths too: a low-angle dolly must not pass the nearer edge.
-      for (const sx of [left, x, right]) for (const sy of [top, y, bottom]) {
-        let point = surfacePoint(sx, sy)
-        if (!point) { ray(sx, sy); point = raycaster.ray.intersectPlane(focalPlane, new Vector3()) }
-        if (!point || !point.toArray().every(Number.isFinite)) continue
-        const offset = point.clone().sub(center)
-        nextDistance = Math.max(nextDistance, offset.dot(direction) + Math.max(clearance * 4, Math.abs(offset.dot(screenRight)) / horizontalTangent, Math.abs(offset.dot(screenUp)) / verticalTangent))
-      }
-      if (!Number.isFinite(nextDistance)) return false
-      nextDistance *= 1.01
-      origin.copy(center); camera.position.copy(center).addScaledVector(direction, nextDistance)
-      keepViewAboveBoard(); camera.lookAt(origin)
-      camera.zoom = 1; camera.updateMatrixWorld()
-      zoomReferenceDistance = nextDistance; zoomLimits(); controls?.update(); notifyZoom(); schedule()
-      return true
+      if(disposed||suspended||!visible||![x1,y1,x2,y2].every(Number.isFinite))return false
+      const left=Math.max(0,Math.min(width,Math.min(x1,x2))),right=Math.max(0,Math.min(width,Math.max(x1,x2)))
+      const top=Math.max(0,Math.min(height,Math.min(y1,y2))),bottom=Math.max(0,Math.min(height,Math.max(y1,y2)))
+      if(right-left<12||bottom-top<12)return false
+      // A full-canvas selection is an actual no-op, including calibration.
+      if(left===0&&top===0&&right===width&&bottom===height)return true
+      cancelTransition();ensureProjection()
+      // Cone clipping selects the region, including thin objects missed by
+      // sampling. An actual centre hit anchors visible foreground details;
+      // their centre must not drift onto a backing board during inspection.
+      ray((left+right)/2,(top+bottom)/2);scene.updateMatrixWorld(true)
+      const foreground=raycaster.intersectObjects([content,wires],true).find(hit=>renderedMesh(hit.object)&&-hit.point.clone().applyMatrix4(camera.matrixWorldInverse).z>1e-6)
+      const pose=solveArea(committedSnapshot(),camera,{left:left/width*2-1,right:right/width*2-1,top:1-top/height*2,bottom:1-bottom/height*2},usableRect,target(),.05,1e-4,foreground?.point)
+      if(!pose)return false
+      if(pose.distance>navigation.snapshot().referenceDistance*2)return false
+      const distance=Math.max(pose.distance,navigation.minimumDistance(false))
+      const position=pose.target.clone().addScaledVector(new Vector3(0,0,1).applyQuaternion(camera.quaternion),distance)
+      const safePosition=safeAreaPosition(pose.target,position)
+      if(!safePosition)return false
+      navigation.resetCollision();applyNavigation(pose.target,safePosition);return true
     },
     fitCircuit() {
-      if (disposed || !models.size) return false
-      cancelTransition()
+      if(disposed)return false
       ensureProjection()
-      const bounds = new Box3().setFromObject(content); bounds.union(new Box3().setFromObject(wires))
-      const sphere = bounds.getBoundingSphere(new Sphere()), target = controls?.target ?? viewTarget
-      const center = sphere.center.clone().setY(Math.max(0, sphere.center.y))
-      const direction = camera.position.clone().sub(target).normalize()
-      const half = Math.min(camera.fov * Math.PI / 360, Math.atan(Math.tan(camera.fov * Math.PI / 360) * camera.aspect))
-      const radius = sphere.radius + center.distanceTo(sphere.center)
-      const distance = Math.max(3, radius / Math.sin(half) * 1.2)
-      if (!Number.isFinite(distance) || !sphere.center.toArray().every(Number.isFinite)) return false
-      target.copy(center); camera.position.copy(target).addScaledVector(direction, distance); camera.lookAt(target)
-      camera.zoom = 1
-      zoomReferenceDistance = distance; zoomLimits(); controls?.update(); notifyZoom()
-      schedule(); return true
+      const pose=navigation.overview()
+      if(!pose.points.length)return false
+      cancelTransition();navigation.commitOverview(pose);applyNavigation(pose.target,pose.position);return true
     },
     orbit(degrees: number, pitch = 0) {
       if (disposed || !Number.isFinite(degrees) || !Number.isFinite(pitch)) return
@@ -807,6 +830,7 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       offset.y = radius * Math.cos(phi)
       offset.z = radius * Math.sin(phi) * Math.cos(theta)
       applyViewPose(offset.divideScalar(radius), radius)
+      navigation.resetCollision();notifyZoom()
       schedule()
     },
     pan(horizontal: number, forward: number) {
@@ -817,18 +841,13 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
       translateView(right.multiplyScalar(horizontal).add(ahead.multiplyScalar(-forward)))
     },
     resetView() {
-      if (disposed) return
-      cancelTransition()
-      zoomReferenceDistance = defaultDistance
-      zoomLimits()
-      viewTarget.set(0, 0, 0)
-      controls?.target.set(0, 0, 0)
-      applyViewPose(new Vector3(0, 11, 10).normalize(), defaultDistance)
-      camera.zoom = 1
-      camera.updateMatrixWorld()
-      controls?.update()
-      notifyZoom()
-      schedule()
+      if(disposed)return
+      cancelTransition();ensureProjection()
+      const defaultCamera=camera.clone()
+      defaultCamera.position.set(0,11,10);defaultCamera.up.set(0,1,0);defaultCamera.lookAt(0,0,0);defaultCamera.updateMatrixWorld()
+      const pose=solveOverview(defaultCamera,committedSnapshot(),usableRect)
+      camera.up.set(0,1,0);navigation.commitOverview(pose??{distance:defaultDistance})
+      applyNavigation(pose?.target??new Vector3(),pose?.position??new Vector3(0,11,10),defaultCamera.quaternion)
     },
     cameraQuaternion(): [number, number, number, number] {
       return [camera.quaternion.x, camera.quaternion.y, camera.quaternion.z, camera.quaternion.w]
@@ -853,6 +872,6 @@ export function createSceneManager({ renderer, canvas, onBeforeRender, onRender,
     finishTransition,
     setViewOrientation,
     suspend(value: boolean) { suspended = value; if (value && frame !== null) { cancelFrame(frame); frame = null }; updateControlsEnabled(); if (!value) schedule() },
-    dispose() { if (disposed) return; disposed = true; cancelTransition(); gizmo.update(undefined, [], camera, width, height); if (frame !== null) cancelFrame(frame); frame = null; controls?.removeEventListener('change', viewChanged); controls?.removeEventListener('start', cancelTransition); controls?.dispose(); removeActiveOutline(); clearMultiOutlines(); selectionPreview.dispose(); wireLayer.dispose(); clearMountPreview(); mountMarkerGeometry.dispose(); mountMarkerValid.dispose(); mountMarkerInvalid.dispose(); disposeObject(scene); models.clear(); modules.clear(); ghost = null; highlightedId = null; gizmoObstacles = []; scene.environment = null; studio?.dispose(); scene.clear(); renderer.dispose() },
+    dispose() { if (disposed) return; disposed = true; cancelTransition(); gizmo.update(undefined, [], camera, width, height); if (frame !== null) cancelFrame(frame); frame = null; controls?.removeEventListener('change', viewChanged); controls?.removeEventListener('start', cancelTransition); controls?.dispose();canvas?.removeEventListener('wheel',wheelZoom); removeActiveOutline(); clearMultiOutlines(); selectionPreview.dispose(); wireLayer.dispose(); clearMountPreview(); mountMarkerGeometry.dispose(); mountMarkerValid.dispose(); mountMarkerInvalid.dispose(); disposeObject(scene); models.clear(); modules.clear(); ghost = null; highlightedId = null; gizmoObstacles = []; scene.environment = null; studio?.dispose(); scene.clear(); renderer.dispose() },
   }
 }

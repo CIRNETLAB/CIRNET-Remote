@@ -22,6 +22,7 @@ let manager: ReturnType<typeof createSceneManager> | undefined
 let observer: ReturnType<typeof observeElementSize> | undefined
 let drawerObserver: MutationObserver | undefined
 let contextLost = false
+let navigationActive = false
 let obstaclesDirty = true
 const editor = useCircuitEditor(canvas, () => manager)
 function visibility() { if (contextLost || document.hidden) editor.cancel(); manager?.suspend(contextLost || document.hidden) }
@@ -43,9 +44,27 @@ function updateGizmoObstacles() {
     obstacles.push({ left: 0, top: 0, right: ui.viewport.width, bottom: 36 })
     obstacles.push({ left: 4, top: ui.viewport.height / 2 - 14, right: 32, bottom: ui.viewport.height / 2 + ui.componentOverlayHeight / 2 + 14 })
     manager.setGizmoObstacles(obstacles)
+    // The canvas fills the stage underneath the persistent drawers. Framing
+    // reserves their real layout in CSS pixels, while transient selection
+    // panels, tooltips and floating windows remain outside overview policy.
+    manager.setUsableViewport({
+      left: layout.querySelector('.tools-panel[data-drawer-occupied=true]') ? ui.toolsOverlayWidth : 0,
+      top: layout.querySelector('.component-panel[data-drawer-occupied=true]') ? ui.componentOverlayHeight : 0,
+      right: origin.width,
+      bottom: origin.height,
+    })
   }
 }
 function invalidateObstacles() { obstaclesDirty = true; manager?.requestRender() }
+function navigate(action: (controller: ReturnType<typeof createSceneManager>) => void) {
+  if (!manager) return
+  updateGizmoObstacles()
+  editor.cancel()
+  // Commands may follow an edit in the same task, before Vue's graph watcher.
+  // Read committed circuit geometry rather than the previous rendered frame.
+  editor.sync()
+  action(manager)
+}
 function closeWireMenu(restoreFocus = false) { editor.selectionCommands.closeContextMenu(); if (restoreFocus) canvas.value?.focus() }
 function wireMenuAction(action: 'delete' | 'duplicate' | 'paste' | 'move') {
   if (action === 'delete') editor.selectionCommands.menuDelete()
@@ -69,14 +88,15 @@ function size(width: number, height: number) { obstaclesDirty = true; editor.can
 function lost(event: Event) { event.preventDefault(); contextLost = true; visibility(); graphicsError.value = 'Graphics context interrupted. Waiting for recovery…' }
 function restored() { contextLost = false; graphicsError.value = ''; visibility(); editor.sync(); obstaclesDirty = true; manager?.requestRender() }
 onMounted(() => {
+  navigationActive = true
   let renderer: WebGLRenderer | undefined
   try {
     renderer = new WebGLRenderer({ canvas: canvas.value, antialias: true, alpha: false })
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.shadowMap.enabled = true
     renderer.shadowMap.type = PCFSoftShadowMap
-    manager = createSceneManager({ renderer, canvas: canvas.value, onBeforeRender: updateGizmoObstacles, onRender: rendered, onZoomChange: (percent) => workspace.setZoom(percent) })
-    manager.setZoom(workspace.zoom)
+    manager = createSceneManager({ renderer, canvas: canvas.value, onBeforeRender: updateGizmoObstacles, onRender: rendered, onNavigationChange: ({ zoom, minZoom, maxZoom }) => { if (navigationActive) workspace.setReportedZoom(zoom, minZoom, maxZoom) } })
+    workspace.cancelZoomRequest()
     editor.sync(); visibility()
     manager.setShowPins(workspace.showPins); manager.setSimulationStates(circuit.physicalStates, circuit.physicalStates ? circuit.physicalPreview?.pin_values : undefined)
   } catch { if (manager) manager.dispose(); else renderer?.dispose(); manager = undefined; graphicsError.value = '3D graphics unavailable. Edit graph coordinates and ports using Inspector.' }
@@ -87,15 +107,20 @@ onMounted(() => {
   canvas.value?.addEventListener('webglcontextrestored', restored)
   document.addEventListener('visibilitychange', visibility)
 })
-watch(() => workspace.zoom, (zoom) => { if (manager && Math.abs(manager.zoomPercent() - zoom) > 0.02) { editor.cancel(); manager.setZoom(zoom) } })
-watch(() => workspace.fitRequest, () => { editor.cancel(); manager?.fitCircuit() })
+watch(() => workspace.zoomRequest, (request) => {
+  if (!manager || request === workspace.zoomAppliedRequest) return
+  navigate(controller => controller.setZoom(workspace.requestedZoom))
+  workspace.acknowledgeZoomRequest(request)
+}, { flush: 'sync' })
+watch(() => workspace.fitRequest, () => navigate(controller => { controller.fitCircuit() }), { flush: 'sync' })
+watch(() => circuit.activeId, () => workspace.cancelZoomRequest(), { flush: 'sync' })
 watch(() => [circuit.physicalStates, circuit.physicalPreview?.pin_values] as const, ([states, pins]) => manager?.setSimulationStates(states, states ? pins : undefined), { deep: true })
 watch(() => workspace.showPins, value => manager?.setShowPins(value))
 // Component Info can change height on selection without changing window state.
 watch([() => ui.windows, () => circuit.graph?.modules.find((module) => module.id === workspace.selectedModuleId)?.type], invalidateObstacles, { deep: true, flush: 'post' })
 watch([() => ui.drawerInsets.left, () => ui.drawerInsets.top, () => ui.componentOverlayHeight, () => ui.toolsOverlayWidth], invalidateObstacles, { flush: 'post' })
 watch([() => workspace.tool, () => workspace.selectedWire, () => workspace.placementType, () => workspace.zoomAreaActive, () => workspace.marqueeActive, () => workspace.wireOptionsActive, () => editor.wireRouting.hint.value], invalidateObstacles, { flush: 'post' })
-onUnmounted(() => { observer?.disconnect(); drawerObserver?.disconnect(); manager?.dispose(); canvas.value?.removeEventListener('webglcontextlost', lost); canvas.value?.removeEventListener('webglcontextrestored', restored); document.removeEventListener('visibilitychange', visibility) })
+onUnmounted(() => { navigationActive = false; workspace.cancelZoomRequest(); observer?.disconnect(); drawerObserver?.disconnect(); manager?.dispose(); canvas.value?.removeEventListener('webglcontextlost', lost); canvas.value?.removeEventListener('webglcontextrestored', restored); document.removeEventListener('visibilitychange', visibility) })
 </script>
 <template>
   <div ref="host" :class="['circuit-workspace', { 'is-dragging': editor.dragging.value || editor.wireRouting.editing.value, 'is-zoom-area': workspace.zoomAreaActive, 'is-marquee': workspace.marqueeActive, 'is-wiring': workspace.tool === 'wire' && !workspace.placementType, 'can-grab': editor.hoveredHandle.value || editor.hoveredControl.value || editor.wireRouting.editing.value || (['select', 'move'].includes(workspace.tool) && !workspace.placementType) }]" @dragover.prevent @drop="editor.drop">
@@ -118,10 +143,10 @@ onUnmounted(() => { observer?.disconnect(); drawerObserver?.disconnect(); manage
     <WorkspaceNavigator
       :axes="axes"
       :camera-quaternion="cameraQuaternion"
-      @orbit="(degrees, pitch) => { editor.cancel(); manager?.orbit(degrees, pitch) }"
-      @pan="(horizontal, forward) => { editor.cancel(); manager?.pan(horizontal, forward) }"
-      @set-view="(direction) => { editor.cancel(); manager?.setViewOrientation(direction) }"
-      @reset-view="() => { editor.cancel(); manager?.resetView() }"
+      @orbit="(degrees, pitch) => navigate(controller => controller.orbit(degrees, pitch))"
+      @pan="(horizontal, forward) => navigate(controller => controller.pan(horizontal, forward))"
+      @set-view="(direction) => navigate(controller => controller.setViewOrientation(direction))"
+      @reset-view="() => { workspace.cancelZoomRequest(); navigate(controller => controller.resetView()) }"
     />
   </div>
 </template>

@@ -1,16 +1,16 @@
 import { readFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { build } from 'esbuild'
+import { build, type Plugin } from 'esbuild'
 import { parse, compileScript } from 'vue/compiler-sfc'
 import { createRenderer, type Component } from 'vue'
 import type { Pinia } from 'pinia'
 
-export async function loadSfc(path: string): Promise<Component> {
+export async function loadSfc(path: string, plugins: Plugin[] = []): Promise<Component> {
   // Node runs test files in separate workers. Keep runtime bundles local to the
   // worker so another test cannot truncate a shared file while it is imported.
   const outfile = resolve('.test-build', `${process.pid}-` + path.replace(/[/\\.]/g, '-') + '.runtime.mjs')
-  await build({ entryPoints: [resolve('src', path)], outfile, bundle: true, platform: 'node', format: 'esm', packages: 'external', loader: { '.svg': 'dataurl' }, plugins: [{
+  await build({ entryPoints: [resolve('src', path)], outfile, bundle: true, platform: 'node', format: 'esm', packages: 'external', loader: { '.svg': 'dataurl' }, plugins: [...plugins, {
     name: 'runtime-sfc', setup(builder) {
       builder.onLoad({ filter: /\.vue$/ }, async ({ path }) => {
         const { descriptor } = parse(await readFile(path, 'utf8'), { filename: path })
@@ -26,9 +26,9 @@ export interface HostNode { tag: string; text: string; props: Record<string, unk
 // Minimal DOM boundary for pre-existing disabled v-model directives. App events
 // are still invoked from the compiled component's production event props.
 const node = (tag: string, text = ''): HostNode => ({ tag, text, props: {}, children: [], parent: null, tagName: tag.toUpperCase(), options: [], addEventListener() {}, removeEventListener() {} } as HostNode)
-export function mountSfc(component: Component, pinia: Pinia, props: Record<string, unknown> | null = null) {
+export function mountSfc(component: Component, pinia: Pinia, props: Record<string, unknown> | null = null, configureElement?: (node: HostNode) => void) {
   const renderer = createRenderer<HostNode, HostNode>({
-    createElement: (tag) => node(tag), createText: (text) => node('#text', text), createComment: (text) => node('#comment', text),
+    createElement: (tag) => { const element = node(tag); configureElement?.(element); return element }, createText: (text) => node('#text', text), createComment: (text) => node('#comment', text),
     setText: (node, text) => { node.text = text }, setElementText: (node, text) => { node.text = text; node.children = [] },
     parentNode: (node) => node.parent, nextSibling: (node) => node.parent?.children[node.parent.children.indexOf(node) + 1] ?? null,
     patchProp: (node, key, _old, value) => { node.props[key] = value },

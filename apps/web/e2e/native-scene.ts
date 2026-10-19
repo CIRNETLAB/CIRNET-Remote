@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import type { BreadboardTopology } from '../src/electrical/BreadboardTopology'
 import { parseStructural } from '../src/contracts/structural'
 
-interface NativeSceneProbe { scene: Object3D; camera: Camera; frames: number; trustedPointerDowns: number; trustedContextMenus: number;memory:{geometries:number;textures:number} }
+interface NativeSceneProbe { scene: Object3D; camera: Camera; frames: number; trustedPointerDowns: number; trustedContextMenus: number;memory:{geometries:number;textures:number}; target?: number[] }
 type ProbedCanvas = HTMLCanvasElement & { nativeSceneProbe?: NativeSceneProbe }
 const topologies=JSON.parse(readFileSync(new URL('../src/data/breadboardTopologies.json',import.meta.url),'utf8')) as {profiles:BreadboardTopology[]}
 export const workspaceCanvas = (page: Page) => page.getByLabel('Three-dimensional circuit workspace', { exact: true })
@@ -23,12 +23,22 @@ export async function observeNativeScene(page: Page) {
       if (canvas.getAttribute('aria-label') !== 'Three-dimensional circuit workspace') return
       const original = renderer.render.bind(renderer)
       let trustedPointerDowns = 0, trustedContextMenus = 0
+      const observedCameras = new WeakSet<Camera>()
+      let target: number[] | undefined
       window.addEventListener('pointerdown', event => { if (event.target === canvas && event.isTrusted) trustedPointerDowns++ }, { capture: true })
       window.addEventListener('contextmenu', event => { if (event.target === canvas && event.isTrusted) trustedContextMenus++ }, { capture: true })
       renderer.render = (scene, camera) => {
         original(scene, camera)
         if (!scene.getObjectByName('flexible-edit-handles')) return
-        canvas.nativeSceneProbe = { scene, camera, frames: (canvas.nativeSceneProbe?.frames ?? 0) + 1, trustedPointerDowns, trustedContextMenus,memory:{...renderer.info.memory} }
+        if (!observedCameras.has(camera)) {
+          observedCameras.add(camera)
+          const lookAt = camera.lookAt.bind(camera)
+          camera.lookAt = (x, y?: number, z?: number) => {
+            target = typeof x === 'number' ? [x, y!, z!] : x.toArray()
+            if (typeof x === 'number') lookAt(x, y!, z!); else lookAt(x)
+          }
+        }
+        canvas.nativeSceneProbe = { scene, camera, frames: (canvas.nativeSceneProbe?.frames ?? 0) + 1, trustedPointerDowns, trustedContextMenus,memory:{...renderer.info.memory}, target }
       }
     })
   })

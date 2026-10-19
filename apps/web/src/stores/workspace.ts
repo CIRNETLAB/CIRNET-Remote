@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import type { CircuitModule, WireIdentity, WireRouteMode } from '../types/circuit'
-import { ZOOM_DEFAULT, clampZoom } from '../config/workbenchViewport'
+import { ZOOM_DEFAULT, ZOOM_MIN, ZOOM_MAX } from '../config/workbenchViewport'
 import { normalizeComponentProperties } from '../data/componentProperties'
 import { getDefinition, validateProperties } from '../data/editorCatalog'
 import { componentDesignTransition } from '../data/partCatalog'
@@ -8,7 +8,7 @@ import { normalizeEditorSelection, toggleModuleSelection, toggleWireSelection, t
 export type WorkspaceTool = 'select' | 'wire' | 'move' | 'rotate'
 
 export const useWorkspaceStore = defineStore('workspace', {
-  state: () => ({ componentGeometryPreview: null as CircuitModule | null, selectedModuleId: null as string | null, selectedWire: null as WireIdentity | null, selectedModuleIds: [] as string[], selectedWires: [] as WireIdentity[], marqueeActive: false, pendingPort: null as string | null, wireColor: '#d8493f', wireRouteMode: 'FREE' as WireRouteMode, selectedWireBend: null as number | null, previewType: null as string | null, placementType: null as string | null, placementProperties: null as Record<string, unknown> | null, placementEpoch: 0, showPins: false, snap: true, zoom: ZOOM_DEFAULT, fitRequest: 0, zoomAreaActive: false, tool: 'select' as WorkspaceTool, editError: '' }),
+  state: () => ({ componentGeometryPreview: null as CircuitModule | null, selectedModuleId: null as string | null, selectedWire: null as WireIdentity | null, selectedModuleIds: [] as string[], selectedWires: [] as WireIdentity[], marqueeActive: false, pendingPort: null as string | null, wireColor: '#d8493f', wireRouteMode: 'FREE' as WireRouteMode, selectedWireBend: null as number | null, previewType: null as string | null, placementType: null as string | null, placementProperties: null as Record<string, unknown> | null, placementEpoch: 0, showPins: false, snap: true, zoom: ZOOM_DEFAULT, minZoom: ZOOM_MIN, maxZoom: ZOOM_MAX, requestedZoom: ZOOM_DEFAULT, zoomRequest: 0, zoomAppliedRequest: 0, fitRequest: 0, zoomAreaActive: false, tool: 'select' as WorkspaceTool, editError: '' }),
   getters: {
     selection: (state): EditorSelection => normalizeEditorSelection({
       moduleIds: [...state.selectedModuleIds, ...(state.selectedModuleId ? [state.selectedModuleId] : [])],
@@ -35,8 +35,28 @@ export const useWorkspaceStore = defineStore('workspace', {
     selectWire(source: string, destination: string) { this.cancelMarquee(true); this.selectedModuleId = null; this.selectedWire = { source, destination }; this.selectedWireBend = null; this.placementType = null },
     cancelPlacement() { this.placementType = null; this.placementProperties = null; this.pendingPort = null },
     clearSelection() { this.clearMarqueeSelection(); this.selectedModuleId = null; this.selectedWire = null; this.selectedWireBend = null; this.previewType = null; this.cancelPlacement(); this.editError = '' },
-    setZoom(value: number) { if (Number.isFinite(value)) { this.cancelZoomArea(); this.zoom = clampZoom(value) } },
-    fitEntireCircuit() { this.cancelMarquee(true); this.cancelZoomArea(); this.zoom = ZOOM_DEFAULT; this.fitRequest++ },
+    // Camera measurements are display state. Only an explicit intent advances
+    // zoomRequest, so changing calibration cannot feed back into camera motion.
+    setZoom(value: number) {
+      if (!Number.isFinite(value)) return
+      this.cancelZoomArea()
+      this.requestedZoom = Math.min(ZOOM_MAX, this.maxZoom, Math.max(ZOOM_MIN, this.minZoom, value))
+      this.zoomRequest++
+    },
+    stepZoom(delta: number) {
+      if (Number.isFinite(delta)) this.setZoom((this.zoomRequest === this.zoomAppliedRequest ? this.zoom : this.requestedZoom) + delta)
+    },
+    setReportedZoom(value: number, min = ZOOM_MIN, max = ZOOM_MAX) {
+      if (!Number.isFinite(value) || value <= 0 || !Number.isFinite(min) || min <= 0 || !Number.isFinite(max) || max < min) return
+      this.zoom = value
+      this.minZoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, min))
+      this.maxZoom = Math.max(this.minZoom, Math.min(ZOOM_MAX, max))
+    },
+    acknowledgeZoomRequest(request: number) {
+      if (Number.isInteger(request) && request >= this.zoomAppliedRequest && request <= this.zoomRequest) this.zoomAppliedRequest = request
+    },
+    cancelZoomRequest() { this.zoomAppliedRequest = this.zoomRequest },
+    fitEntireCircuit() { this.cancelMarquee(true); this.cancelZoomArea(); this.cancelZoomRequest(); this.fitRequest++ },
     toggleZoomArea() { this.cancelMarquee(true); this.zoomAreaActive = !this.zoomAreaActive; if (this.zoomAreaActive) { this.cancelPlacement(); this.editError = '' } },
     cancelZoomArea() { this.zoomAreaActive = false },
     toggleMarquee() {

@@ -788,10 +788,17 @@ for (const path of ['follow', 'immediate', 'drop'] as const) {
 
 const placementViews = ['default', 'FRONT', 'RIGHT', 'BACK', 'LEFT', 'TOP', 'TOP-FRONT-RIGHT', 'orbit37', 'orbit123'] as const
 function placementView(h: ReturnType<typeof setup>, view: typeof placementViews[number]) {
-  // Fit targets the actual positive-height housing center. Even an exact side
-  // view can then recover a y=0 world pointer below its horizontal horizon.
+  // A tight committed-circuit overview need not reserve the adjacent placement
+  // workspace or keep a positive-Y focal target. Establish an elevated housing
+  // inspection focus, then leave room for the uncommitted neighboring board.
+  // Exact side views can now recover a unique XZ pointer below their horizon.
   h.manager.fitCircuit()
-  assert.ok(h.manager.target().y > 0)
+  const housing = h.manager.project(new Vector3(0, .31, 0))
+  assert.equal(h.manager.zoomToArea(housing.x - 20, housing.y - 20, housing.x + 20, housing.y + 20), true)
+  const origin = h.manager.target(), direction = h.manager.cameraDirection()
+  assert.ok(origin.y > .05)
+  h.manager.camera.position.copy(origin).addScaledVector(direction, Math.max(Math.hypot(11, 10), h.manager.navigationSnapshot().referenceDistance * 2))
+  h.manager.camera.updateMatrixWorld()
   if (view === 'orbit37' || view === 'orbit123') h.manager.orbit(view === 'orbit37' ? 37 : 123)
   else if (view !== 'default') h.manager.setViewOrientation(view, false)
 }
@@ -806,8 +813,10 @@ for (const [type, dockZ] of [['BREADBOARD', 2.66], ['BREADBOARD_630', 2.26], ['B
           const fixed = h.circuit.placeModule('BREADBOARD', { x: 0, y: 0, z: 0 })
           await nextTick(); h.circuit.past = []; placementView(h, view)
           const world = new Vector3(.1, 0, dockZ + .2), p = h.manager.project(world)
-          assert.ok(p.visible, `${view}: pointer is in the actual viewport`)
-          assert.ok(h.manager.groundPoint(p.x, p.y)!.distanceTo(world) < 1e-7, `${view}: real camera unprojects the same world pointer`)
+          assert.ok(Number.isFinite(p.x) && Number.isFinite(p.y) && p.x >= 0 && p.x <= 1000 && p.y >= 0 && p.y <= 700, `${view}: ground pointer is inside the CSS viewport independently of model near/far`)
+          const ground = h.manager.groundPoint(p.x, p.y)
+          assert.ok(ground, `${view}: valid XZ ray ${JSON.stringify({ p, camera: h.manager.camera.position.toArray(), target: h.manager.target().toArray() })}`)
+          assert.ok(ground.distanceTo(world) < 1e-7, `${view}: real camera unprojects the same world pointer`)
           if (path === 'drop') h.editor.drop({ clientX: p.x, clientY: p.y, preventDefault() {}, dataTransfer: { getData: () => type } } as unknown as DragEvent)
           else {
             h.workspace.armPlacement(type); await nextTick()

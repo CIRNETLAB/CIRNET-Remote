@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { Quaternion, Vector3 } from 'three'
+import { Mesh, Quaternion, Raycaster, Vector3 } from 'three'
 import { createPinia, setActivePinia } from 'pinia'
 import { defineComponent, h, nextTick, ref } from 'vue'
 import { useCircuitStore } from '../src/stores/circuit'
@@ -19,6 +19,14 @@ function setup(onZoomChange?: (percent: number) => void) {
   manager.resize(1000, 700)
   const wheel = (deltaY: number) => canvas.dispatchEvent(Object.assign(new Event('wheel', { cancelable: true }), { deltaY, deltaMode: 0, ctrlKey: false, clientX: 500, clientY: 350 }))
   return { manager, wheel, canvas }
+}
+
+function focalPoint(manager: ReturnType<typeof createSceneManager>, x: number, y: number) {
+  manager.camera.updateMatrixWorld()
+  const direction = new Vector3(x / 1000 * 2 - 1, 1 - y / 700 * 2, .5).unproject(manager.camera).sub(manager.camera.position).normalize()
+  const normal = manager.camera.getWorldDirection(new Vector3())
+  const distance = manager.target().sub(manager.camera.position).dot(normal) / direction.dot(normal)
+  return manager.camera.position.clone().addScaledVector(direction, distance)
 }
 
 test('initial placement yaw faces the camera for cardinal and ViewCube corner views after panning', () => {
@@ -127,7 +135,7 @@ test('drawing buffer allocation and its redraw happen in the same frame, includi
   } finally { manager.dispose() }
 })
 
-test('actual viewport resizing preserves camera pose, magnification, models and connections', () => {
+test('actual viewport resizing preserves camera pose and models while recalibrating whole-circuit magnification', () => {
   const { manager } = setup()
   try {
     const graph = { schema_version: '1.0' as const, circuit_id: 'panels', modules: [{ id: 'A', type: 'CLOCK', position: { x: 0, y: 0, z: 0 } }, { id: 'B', type: 'LED', position: { x: 4, y: 0, z: 2 } }], connections: [{ source: 'A.OUT', destination: 'B.IN' }] }
@@ -138,7 +146,9 @@ test('actual viewport resizing preserves camera pose, magnification, models and 
       manager.resize(width, height)
       assert.ok(manager.camera.position.equals(position))
       assert.ok(manager.camera.quaternion.equals(heading))
-      assert.ok(Math.abs(manager.zoomPercent() - zoom) < 1e-9)
+      const state = manager.navigationSnapshot()
+      assert.ok(Math.abs(manager.zoomPercent() - state.referenceDistance * 100 / manager.camera.position.distanceTo(manager.target())) < 1e-9)
+      if (width === 1000 && height === 700) assert.ok(Math.abs(manager.zoomPercent() - zoom) < 1e-9, 'returning to the same viewport restores its overview calibration')
       assert.equal(manager.camera.aspect, width / height)
       assert.equal(JSON.stringify(graph), snapshot)
       assert.ok([...manager.models.values()].every((model, index) => model.matrixWorld.equals(poses[index])))
@@ -153,7 +163,7 @@ test('wheel and toolbar use target-relative dolly with one reported zoom and rev
     manager.setZoom(150)
     assert.ok(Math.abs(manager.camera.position.length() - distance / 1.5) < 1e-6)
     assert.equal(manager.camera.zoom, 1, 'keep one perspective projection through all navigation')
-    assert.equal(reports.at(-1), 150)
+    assert.ok(Math.abs(reports.at(-1)! - 150) < 1e-9)
     wheel(-100)
     assert.ok(reports.at(-1)! > 150, 'wheel changes must be visible to the toolbar')
     for (let i = 0; i < 50; i++) wheel(-100)
@@ -163,9 +173,13 @@ test('wheel and toolbar use target-relative dolly with one reported zoom and rev
     manager.setZoom(100)
     assert.ok(manager.camera.position.distanceTo(initial) < 1e-6)
     manager.pan(2, 3); manager.orbit(75)
-    const before = manager.camera.position.clone(), heading = manager.camera.quaternion.clone()
-    manager.setZoom(200); manager.setZoom(100)
-    assert.ok(manager.camera.position.distanceTo(before) < 1e-6)
+    const inspectionTarget = manager.target(), before = manager.camera.position.clone(), heading = manager.camera.quaternion.clone()
+    manager.setZoom(200)
+    assert.ok(manager.target().distanceTo(inspectionTarget) < 1e-6, 'zoom-in retains an inspection focus')
+    manager.setZoom(100)
+    assert.ok(manager.target().distanceTo(inspectionTarget) < 1e-6, 'ordinary zoom-out keeps the active panned focus')
+    assert.ok(manager.camera.position.distanceTo(before) < 1e-6, 'zoom-in/out is reversible around the same target')
+    assert.ok(Math.abs(manager.camera.position.distanceTo(manager.target()) - manager.navigationSnapshot().referenceDistance) < 1e-6)
     assert.ok(manager.camera.quaternion.angleTo(heading) < 1e-6)
   } finally { manager.dispose() }
 })
@@ -175,7 +189,7 @@ test('toolbar and wheel reach 1000 percent with a close near plane and preserve 
   try {
     manager.syncGraph({ schema_version: '1.0', circuit_id: 'close', modules: [{ id: 'BB', type: 'BREADBOARD' }], connections: [] })
     manager.setViewOrientation('TOP', false)
-    const model = manager.models.get('BB')!, pose = model.matrixWorld.clone(), reference = manager.camera.position.distanceTo(manager.target())
+    const model = manager.models.get('BB')!, pose = model.matrixWorld.clone(), reference = manager.navigationSnapshot().referenceDistance
     manager.setZoom(1000)
     assert.ok(Math.abs(manager.zoomPercent() - 1000) < 1e-6)
     assert.ok(Math.abs(manager.camera.position.distanceTo(manager.target()) - reference / 10) < 1e-6)
@@ -185,7 +199,7 @@ test('toolbar and wheel reach 1000 percent with a close near plane and preserve 
     assert.ok(manager.camera.near > 0 && manager.camera.near < eyeDepth && manager.camera.far > eyeDepth, 'close inspection retains the actual contact inside the clip interval')
     assert.equal(manager.pickEndpoint(p.x, p.y)?.endpoint, 'BB.contact:terminal:A:32')
     manager.setZoom(100)
-    for (let i = 0; i < 80; i++) wheel(-100)
+    wheel(-100 * Math.log(10) / -Math.log(.95))
     assert.ok(Math.abs(manager.zoomPercent() - 1000) < 1e-6)
     assert.ok(model.matrixWorld.equals(pose)); assert.equal(model.scale.x, 1)
     assert.ok(manager.camera.position.toArray().every(Number.isFinite))
@@ -211,9 +225,12 @@ test('close dolly stops before tall model surfaces for toolbar and native wheel,
   const { manager, wheel } = setup()
   try {
     manager.syncGraph({ schema_version: '1.0', circuit_id: 'collision', modules: [{ id: 'PS', type: 'POWER_SUPPLY' }], connections: [] })
+    manager.fitCircuit()
     const initial = manager.camera.position.clone()
     manager.setZoom(1000)
-    assert.ok(manager.camera.position.z > 1.6, 'camera must stay outside the power supply front face')
+    const direction = manager.camera.position.clone().sub(initial).normalize(), travel = manager.camera.position.distanceTo(initial)
+    const hit = new Raycaster(initial, direction).intersectObject(manager.models.get('PS')!, true).find(hit => hit.object instanceof Mesh && !hit.object.userData.ignorePick)
+    assert.ok(hit && hit.distance > travel + 1e-5, 'camera must stop outside the actual supply surface along its overview dolly path')
     const stopped = manager.camera.position.clone(), zoom = manager.zoomPercent()
     for (let i = 0; i < 30; i++) wheel(-100)
     assert.ok(manager.camera.position.distanceTo(stopped) < 1e-6, 'repeated zoom must not tunnel or jitter at a surface')
@@ -248,20 +265,21 @@ test('Zoom To Area focuses the actual wire surface and close dolly cannot enter 
     const p = manager.project(new Vector3(.26, .37, 0))
     assert.equal(manager.pick(p.x, p.y)?.kind, 'wire')
     assert.equal(manager.zoomToArea(p.x - 6, p.y - 6, p.x + 6, p.y + 6), true)
-    assert.ok(manager.target().y >= .384, 'camera focus uses the .36 base plus tube radius, not its electrical/route centerline')
-    assert.ok(Math.abs(manager.zoomPercent() - 100) < 1e-6)
-    manager.setZoom(1000)
+    const reference = manager.navigationSnapshot().referenceDistance
+    assert.equal(manager.pick(500, 350)?.kind, 'wire', 'the selected thin tube must remain under the Area center')
+    assert.ok(manager.camera.position.y > .386, 'Area camera stays above the actual .36 base plus tube radius')
+    assert.ok(manager.zoomPercent() > 100, 'Area reports inspection against the committed overview')
+    manager.setZoom(manager.navigationSnapshot().maxZoom)
     for (let i = 0; i < 30; i++) wheel(-100)
     assert.ok(manager.camera.position.y > .386, 'camera remains outside the .026-radius tube at the compact .36 base')
-    assert.ok(Math.abs(manager.zoomPercent() - 1000) < 1e-6)
+    assert.ok(Math.abs(manager.navigationSnapshot().referenceDistance - reference) < 1e-9, 'inspection never creates a wire-local zoom reference')
     assert.equal(manager.pick(500, 350)?.kind, 'wire', JSON.stringify({ camera: manager.camera.position.toArray(), target: manager.target().toArray(), route: manager.wireRoute(wire)?.points, projected: manager.project(new Vector3(.26, .37, 0)) }))
     manager.highlight(null, wire)
     assert.equal(manager.pickWireEdit(500, 350, wire)?.kind, 'segment', 'the visible tube remains editable away from its narrow centerline')
     for (let i = 0; i < 3; i++) {
       assert.equal(manager.zoomToArea(494, 344, 506, 356), true)
-      assert.ok(Math.abs(manager.zoomPercent() - 100) < 1e-6, 'each area sets an accurate new reference')
-      manager.setZoom(1000)
-      assert.ok(Math.abs(manager.zoomPercent() - 1000) < 1e-6, 'close references remain compatible with the shared zoom range')
+      assert.ok(Math.abs(manager.navigationSnapshot().referenceDistance - reference) < 1e-9, 'repeated Area retains the whole-circuit reference')
+      manager.setZoom(manager.navigationSnapshot().maxZoom)
       assert.equal(manager.pick(500, 350)?.kind, 'wire')
     }
   } finally { manager.dispose() }
@@ -364,10 +382,17 @@ test('area zoom centers an off-axis rectangle, preserves heading and fits both s
     assert.ok(Math.abs((projectedCorner.x - 500) / (350 - projectedCorner.y) - 5 / 7) < 1e-6, 'perspective aspect remains uniform')
     assert.ok(manager.camera.quaternion.angleTo(heading) < 1e-6)
     assert.equal(manager.camera.fov, fov); assert.equal(manager.camera.zoom, 1)
-    assert.ok(Math.abs(manager.zoomPercent() - 100) < 1e-6, 'a framed area becomes the new 100% reference, like Fit')
-    const framed = manager.camera.position.clone()
-    manager.setZoom(150); wheel(-30); manager.setZoom(100)
-    assert.ok(manager.camera.position.distanceTo(framed) < 1e-6, 'toolbar and wheel remain reversible after framing')
+    const reference = manager.navigationSnapshot().referenceDistance, inspectionZoom = manager.zoomPercent()
+    assert.ok(inspectionZoom > 100, 'Area is inspection on the same whole-circuit scale')
+    assert.ok(Math.abs(reference - distance) < 1e-6, 'empty-scene Area retains the finite shared fallback reference')
+    const framedTarget = manager.target(), framed = manager.camera.position.clone()
+    manager.setZoom(inspectionZoom + 50); wheel(-30); manager.setZoom(inspectionZoom)
+    assert.ok(Math.abs(manager.zoomPercent() - inspectionZoom) < 1e-6, 'toolbar and wheel use the same original overview calibration')
+    assert.ok(manager.camera.quaternion.angleTo(heading) < 1e-6)
+    assert.ok(manager.target().distanceTo(framedTarget) < 1e-6, 'ordinary wheel and toolbar zoom retain the selected Area focus')
+    assert.ok(manager.camera.position.distanceTo(framed) < 1e-6, 'a reversible dolly cannot slide the inspected region sideways')
+    manager.setZoom(50)
+    assert.ok(manager.target().distanceTo(framedTarget) < 1e-6, 'the 50 percent limit does not introduce an automatic recenter')
   } finally { manager.dispose() }
 })
 
@@ -390,13 +415,13 @@ test('area zoom clamps screen bounds and rejects tiny, invalid or inactive selec
   } finally { manager.dispose() }
 })
 
-test('area zoom focuses the selected foreground depth instead of passing through it', () => {
+test('area zoom uses a finite focal plane in empty space and actual foreground geometry for content', () => {
   const { manager } = setup()
   try {
-    const ground = manager.groundPoint(500, 550)!, heading = manager.camera.quaternion.clone()
+    const selected = focalPoint(manager, 500, 550), heading = manager.camera.quaternion.clone()
     assert.equal(manager.zoomToArea(450, 500, 550, 600), true)
-    const centered = manager.project(ground)
-    assert.ok(Math.abs(centered.x - 500) < 1e-6 && Math.abs(centered.y - 350) < 1e-6, 'selected foreground must remain at screen center')
+    const centered = manager.project(selected)
+    assert.ok(centered.x >= 50 && centered.x <= 950 && centered.y >= 35 && centered.y <= 665, 'empty Area retains its bounded focal-plane selection after the upper-hemisphere guard')
     assert.ok(centered.visible); assert.ok(manager.camera.position.y > 0)
     assert.ok(manager.camera.quaternion.angleTo(heading) < 1e-6)
     manager.resetView()
@@ -405,7 +430,10 @@ test('area zoom focuses the selected foreground depth instead of passing through
     assert.equal(picked.kind, 'module')
     assert.equal(manager.zoomToArea(screen.x - 50, screen.y - 50, screen.x + 50, screen.y + 50), true)
     const focused = manager.project(picked.point)
-    assert.ok(Math.abs(focused.x - 500) < 1e-6 && Math.abs(focused.y - 350) < 1e-6, 'elevated components supply their own focus depth')
+    assert.ok(focused.visible && focused.x >= 50 && focused.x <= 950 && focused.y >= 35 && focused.y <= 665, 'the selected foreground surface remains inside the usable frame')
+    assert.ok(manager.target().y > 2, 'elevated geometry supplies focus depth rather than the empty ground plane')
+    const centerHit = manager.pick(500, 350)
+    assert.ok(centerHit?.kind === 'module' && centerHit.id === 'A', 'balancing clipped geometry still centers the selected foreground model')
     manager.resetView(); manager.camera.position.set(0, 1, 20); manager.camera.lookAt(0, 0, 0)
     assert.equal(manager.groundPoint(800, 100), null)
     assert.equal(manager.zoomToArea(700, 50, 900, 150), true, 'above-horizon empty space retains a finite fallback')
@@ -413,13 +441,13 @@ test('area zoom focuses the selected foreground depth instead of passing through
   } finally { manager.dispose() }
 })
 
-test('area framing contains the nearer rectangle edges at default and near-horizontal angles', () => {
+test('empty area framing contains focal-plane rectangle edges at default and near-horizontal angles', () => {
   for (const lowAngle of [false, true]) {
     const { manager } = setup()
     try {
       if (lowAngle) { manager.camera.position.set(0, 1, 20); manager.camera.lookAt(0, 0, 0) }
       const top = lowAngle ? 400 : 500
-      const samples = [[450, top], [550, top], [450, 600], [550, 600], [500, 590]].map(([x, y]) => manager.groundPoint(x, y)!)
+      const samples = [[450, top], [550, top], [450, 600], [550, 600], [500, 590]].map(([x, y]) => focalPoint(manager, x, y))
       assert.ok(samples.every(Boolean))
       assert.equal(manager.zoomToArea(450, top, 550, 600), true)
       for (const point of samples) {

@@ -93,9 +93,10 @@ test('tools have one shared active state and preview is independent of circuit i
   assert.equal(workspace.previewType, '74HC08')
   assert.equal(workspace.selectedModuleId, null)
   workspace.setZoom(999)
-  assert.equal(workspace.zoom, 999)
-  workspace.setZoom(2000); assert.equal(workspace.zoom, 1000)
-  workspace.setZoom(1); assert.equal(workspace.zoom, 50)
+  assert.equal(workspace.requestedZoom, 999)
+  assert.equal(workspace.zoom, 100, 'intent does not speculate about camera readback')
+  workspace.setZoom(2000); assert.equal(workspace.requestedZoom, 1000)
+  workspace.setZoom(1); assert.equal(workspace.requestedZoom, 50)
 })
 
 test('component collapse closes the palette and restores an independent, closed toolbar', () => {

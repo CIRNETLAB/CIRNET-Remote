@@ -12,12 +12,15 @@ import { useProjectStore } from '../../stores/projects'
 import { useAuthStore } from '../../stores/auth'
 import type {PreRunConfiguration} from '../../application/instruments/configuration'
 import type { CircuitGraph } from '../../types/circuit'
-import { ZOOM_MIN, ZOOM_MAX, ZOOM_STEP } from '../../config/workbenchViewport'
+import { ZOOM_STEP } from '../../config/workbenchViewport'
 const circuit = useCircuitStore(), station = useStationStore(), experiment = useExperimentStore(), ui = useUiStore()
 const workspace = useWorkspaceStore()
 const instrument=useInstrumentStore()
 const projects=useProjectStore()
 const auth=useAuthStore(),preparing=ref(false),configurationVersion=ref(0)
+// Limit comparisons absorb numerical pose noise without changing readback.
+const zoomOutDisabled = computed(() => workspace.zoom <= workspace.minZoom + Math.max(1, workspace.minZoom) * 1e-10)
+const zoomInDisabled = computed(() => workspace.zoom >= workspace.maxZoom - Math.max(1, workspace.maxZoom) * 1e-10)
 watch(()=>[instrument.requestedInputErrors,instrument.captureDurationNs,instrument.captureSignals,instrument.captureMaxEvents,instrument.clockDraft,instrument.triggerDraft,instrument.generator,instrument.generatorEnabled,instrument.generatorPlanChannels,instrument.testVectors],()=>{configurationVersion.value++},{deep:true,flush:'sync'})
 let disposed=false
 onBeforeUnmount(()=>{disposed=true})
@@ -69,9 +72,9 @@ function marqueeSelect() {
     <div class="connection-status"><HardwareStatus /><button @click="ui.openWindow('inspector')" :class="{ connected: ui.connectionState === 'connected' }" :title="station.error || 'Backend event connection'"><i />{{ ui.connectionState }}</button></div>
     <div class="status-viewport-tools" role="toolbar" aria-label="Workspace view controls">
       <label class="snap-toggle" title="Workspace Object Snap: align placement and movement to 0.5-unit spacing, dock modular breadboards and snap gizmo rotation to 15 degrees."><input v-model="workspace.snap" type="checkbox" aria-label="Workspace Object Snap" aria-describedby="workspace-snap-help" />Object Snap</label>
-      <button aria-label="Zoom Out" title="Zoom Out" :disabled="workspace.zoom <= ZOOM_MIN" @click="workspace.setZoom(workspace.zoom - ZOOM_STEP)"><WorkbenchIcon name="minus" /></button>
-      <output aria-label="Workspace magnification">{{ workspace.zoom }}%</output>
-      <button aria-label="Zoom In" title="Zoom In" :disabled="workspace.zoom >= ZOOM_MAX" @click="workspace.setZoom(workspace.zoom + ZOOM_STEP)"><WorkbenchIcon name="plus" /></button>
+      <button aria-label="Zoom Out" title="Zoom Out" :disabled="zoomOutDisabled" @click="workspace.stepZoom(-ZOOM_STEP)"><WorkbenchIcon name="minus" /></button>
+      <output aria-label="Workspace magnification">{{ Math.round(workspace.zoom * 100) / 100 }}%</output>
+      <button aria-label="Zoom In" title="Zoom In" :disabled="zoomInDisabled" @click="workspace.stepZoom(ZOOM_STEP)"><WorkbenchIcon name="plus" /></button>
       <button aria-label="Marquee Select" title="Marquee Select" :aria-pressed="workspace.marqueeActive" @click="marqueeSelect"><WorkbenchIcon name="marquee-select" /></button>
       <button aria-label="Zoom To View Entire Circuit" title="Zoom To View Entire Circuit" :disabled="!circuit.graph?.modules.length" @click="workspace.fitEntireCircuit()"><WorkbenchIcon name="reset" /></button>
       <button aria-label="Zoom To Area" title="Zoom To Area" :aria-pressed="workspace.zoomAreaActive" @click="zoomToArea"><WorkbenchIcon name="zoom-area" /></button>

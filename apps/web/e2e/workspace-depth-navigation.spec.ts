@@ -83,6 +83,9 @@ test('real workspace depth navigation preserves graph and model resources throug
     return state
   }
   for (const zoom of [50, 100, 1000]) {
+    // Establish this direction's explicit Fit overview before each absolute
+    // toolbar level, then exercise the actual +/- buttons from its 100% state.
+    await page.getByRole('button', { name: 'Zoom To View Entire Circuit', exact: true }).click(); await settled(page)
     let current = Number((await page.getByLabel('Workspace magnification', { exact: true }).textContent())?.replace('%', ''))
     for (let clicks = 0; current !== zoom && clicks < 110; clicks++) {
       await page.getByRole('button', { name: current > zoom ? 'Zoom Out' : 'Zoom In', exact: true }).click()
