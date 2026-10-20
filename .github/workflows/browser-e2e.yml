@@ -18,7 +18,6 @@ jobs:
       # The harness owns a real SQLite database, API and virtual Hardware Service.
       # Its temporary accounts and opaque cookies are created locally for this run.
       NETCIRCUIT_E2E_PYTHON: python
-      NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-artifacts/${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -27,6 +26,8 @@ jobs:
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
       - name: Allocate an external verification artifact session
+        env:
+          NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-artifacts/${{ github.run_id }}-${{ github.run_attempt }}
         shell: bash
         run: |
           artifact_session="$(node scripts/artifact-paths.mjs)"

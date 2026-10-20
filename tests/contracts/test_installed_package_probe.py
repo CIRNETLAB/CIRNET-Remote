@@ -127,7 +127,8 @@ def test_failed_package_command_exposes_output_and_preserves_complete_log(tmp_pa
 def test_installed_package_ci_preserves_diagnostics_when_the_probe_fails():
     workflow=yaml.safe_load((ROOT/'.github/workflows/contracts.yml').read_text(encoding='utf-8'))
     job=workflow['jobs']['installed-packages'];steps=job['steps']
-    assert job['env']['NETCIRCUIT_ARTIFACTS_DIR']=='${{ runner.temp }}/netcircuit-package-check'
+    allocation=next(step for step in steps if 'NETCIRCUIT_ARTIFACTS_SESSION=' in step.get('run',''))
+    assert allocation.get('env',{}).get('NETCIRCUIT_ARTIFACTS_DIR')=='${{ runner.temp }}/netcircuit-package-check', 'runner.temp is available in step env, not job env'
     uploads=[step for step in steps if step.get('uses','').startswith('actions/upload-artifact@')]
     upload=next(step for step in uploads if step.get('if')=='always()'
                 and step.get('with',{}).get('path')=='${{ env.NETCIRCUIT_ARTIFACTS_SESSION }}/package-check/*.log')

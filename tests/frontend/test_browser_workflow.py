@@ -43,7 +43,8 @@ def test_browser_ci_installs_pinned_runner_and_all_real_services_then_runs_every
     assert 'npx tsc --noEmit -p tsconfig.e2e.json' in steps
     assert '--forbid-only' in steps
     assert job['env']['NETCIRCUIT_E2E_PYTHON'] == 'python'
-    assert job['env']['NETCIRCUIT_ARTIFACTS_DIR'] == '${{ runner.temp }}/netcircuit-artifacts/${{ github.run_id }}-${{ github.run_attempt }}'
+    allocation = next(step for step in job['steps'] if 'artifact_session=' in step.get('run', ''))
+    assert allocation.get('env', {}).get('NETCIRCUIT_ARTIFACTS_DIR') == '${{ runner.temp }}/netcircuit-artifacts/${{ github.run_id }}-${{ github.run_attempt }}', 'runner.temp is available in step env, not job env'
     assert 'node scripts/artifact-paths.mjs' in steps
     assert 'NETCIRCUIT_ARTIFACTS_SESSION=$artifact_session' in steps
     assert 'tee "$artifact_session/e2e.log"' in steps

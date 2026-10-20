@@ -1,15 +1,25 @@
 ---
 project: net-Circuit-Remote
-current_phase: wc20-architecture-complete
-status: architecture-complete-ui-verification-excluded-by-user
+current_phase: github-actions-workflow-repair
+status: locally-verified-hosted-confirmation-pending-user-push
 last_updated: 2026-10-20
 next_task: user-review-and-commit
-blocking_issue: none-for-current-architecture-scope
+blocking_issue: no-local-blocker-hosted-patch-not-yet-pushed
 hardware_mode: simulation
 fpga_development_started: true
 ---
 
 # Development Log
+
+## GitHub Actions workflow and import repair — 2026-10-20
+
+The user committed WC20 as `33b52f6` and requested investigation of the failed `refactor` Actions. Six workflows were rejected before creating jobs because eight job-level environment declarations used the unavailable `runner` context. Documentation separately failed clean pytest collection because the console entrypoint did not put the repository root on its import path; Simulator passed. The [Actions repair evidence](verification/2026-10-20-github-actions.md) links every starting run and records exact reproductions.
+
+Runner-dependent artifact parents now belong to allocation-step environment; existing owned sessions/defaults and downstream cleanup remain intact. Documentation uses `python -m pytest`, pinned pytest and isolated output, and validates all workflows with checksum-verified actionlint 1.7.12. Actual actionlint rejects the old eight errors and accepts all nine current workflows; integrated regression confirmation passes 50 cases. Product code and UI verification remain outside this CI-only repair. A new hosted result requires the user's commit/push; no automatic Git publication or workflow rerun occurs.
+
+## AI Handoff — current GitHub Actions repair
+
+Review and commit the workflow/test/documentation patch, then inspect the new `refactor` push's Actions results. Do not describe local lint/regression PASS as hosted CI success. Preserve the original failed runs and historical WC20 evidence, default databases, assets and compatibility baselines. No product UI testing, automatic staging, commit, push or deployment is authorized.
 
 ## Web/Contracts hardening WC20 — 2026-10-20
 
@@ -17,7 +27,7 @@ Implemented explicit credential bootstrap and bounded auth maintenance, isolated
 
 The WC20 architecture scope is complete. Final local architecture gates pass: 1,283 Python tests with one optional Icarus/vvp skip, 1,434 Web tests, the 245-module AST boundary check, 18 real PostgreSQL tests, four installed-wheel probes and production build/typecheck. The [current WC20 closure](verification/2026-10-20-web-contracts-closure.md) records source identity, exact commands, actual production measurements, historical failures and output-policy deviations. The user explicitly limited final verification to architecture and excluded UI verification; the running complete native browser gate was cancelled at that request. It is not a full native PASS and does not block architectural closure. Physical capability, target Mini PC capacity/soak, hosted CI and `nginx -t` remain separate open or unverified external gates.
 
-## AI Handoff — current WC20 architectural closure
+## AI Handoff — WC20 architectural closure (historical)
 
 Close the current architecture task and leave source unstaged for the user's review and commit. Do not restart UI verification without a new user request; preserve the cancelled native run and earlier browser failures as historical evidence. Physical hardware/FPGA conformance, actual Mini PC sustained capacity, hosted CI and Nginx configuration execution require separate environments and remain open; architectural completion does not certify them. Follow [VERIFICATION.md](VERIFICATION.md) for final evidence inventory and guarded owned-session cleanup, preserving historical reports, source assets and protected archive bytes. No automatic commit, push, merge or deployment. Earlier handoffs below describe their dated sessions.
 
@@ -57,7 +67,7 @@ Implemented the approved Native plan: explicit shared 830/630/100 topology, Inst
 
 ## Current Goal
 
-WC20 architecture implementation and verification are complete within the user's final architecture-only scope; see [the current closure](verification/2026-10-20-web-contracts-closure.md). UI verification was excluded and the running native gate cancelled at the user's request, without claiming a full browser pass. Leave changes unstaged for user review and commit. Physical hardware conformance, target Mini PC capacity/soak, hosted CI and `nginx -t` remain external open gates. The old Python import-regex false positive is resolved by the AST authority. `ARCHITECTURE.md` remains authoritative; the W/R/H, documentation-audit and editor entries preserve their original results, Git states and remaining gates. Their historical next-task instructions do not override the current WC20 scope.
+The current task repairs and locally verifies the actual failed `refactor` GitHub Actions; see [the current repair report](verification/2026-10-20-github-actions.md). Leave this patch unstaged for user review and commit; new hosted execution follows the user's push. WC20 architecture remains complete within its recorded architecture-only scope, and its cancelled UI run is preserved without a full native PASS claim. Physical hardware conformance, target Mini PC capacity/soak and `nginx -t` remain external open gates. `ARCHITECTURE.md` remains authoritative; historical handoffs retain their original results and do not override the current task.
 
 ## Post-R7 H0–H6 — 2026-10-13
 

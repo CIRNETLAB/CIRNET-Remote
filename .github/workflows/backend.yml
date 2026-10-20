@@ -7,8 +7,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -18,6 +16,8 @@ jobs:
         with:
           python-version: '3.12'
       - name: Allocate owned external verification runtime
+        env:
+          NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
         shell: bash
         run: |
           NETCIRCUIT_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"

@@ -15,6 +15,29 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
+      - name: Allocate owned external verification runtime
+        env:
+          NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
+        shell: bash
+        run: |
+          NETCIRCUIT_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"
+          export NETCIRCUIT_ARTIFACTS_SESSION
+          echo "NETCIRCUIT_ARTIFACTS_SESSION=$NETCIRCUIT_ARTIFACTS_SESSION" >> "$GITHUB_ENV"
+          ci_runtime="$(node scripts/artifact-paths.mjs ci-runtime)"
+          {
+            echo "NETCIRCUIT_DATABASE_URL=sqlite:///$ci_runtime/default.sqlite"
+            echo "NETCIRCUIT_CAPTURE_DIR=$ci_runtime/captures"
+          } >> "$GITHUB_ENV"
+      - name: Validate workflow syntax and GitHub expression contexts
+        shell: bash
+        run: |
+          lint_runtime="$(node scripts/artifact-paths.mjs workflow-lint)"
+          curl --fail --location --retry 3 \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz \
+            --output "$lint_runtime/actionlint.tar.gz"
+          printf '%s  %s\n' '8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8' "$lint_runtime/actionlint.tar.gz" | sha256sum --check -
+          tar -xzf "$lint_runtime/actionlint.tar.gz" -C "$lint_runtime" actionlint
+          "$lint_runtime/actionlint" -shellcheck= -pyflakes= .github/workflows/*.yml
       - run: python scripts/check_context.py
       - run: python scripts/check_markdown.py
       - name: Reject new or modified verification artifacts (including index)
@@ -26,5 +49,9 @@ jobs:
           fi
           node scripts/check-verification-artifacts.mjs --base "$ARTIFACT_BASE"
       - run: node --test scripts/artifact-paths.test.mjs scripts/check-verification-artifacts.test.mjs
-      - run: pip install pytest
-      - run: pytest -q tests/test_docs_baseline.py tests/test_post_r7_provenance.py tests/integration/test_context_integrity.py tests/test_markdown_links.py
+      - run: python -m pip install pytest==9.1.1
+      - run: python -m pytest -q tests/test_docs_baseline.py tests/test_post_r7_provenance.py tests/integration/test_context_integrity.py tests/test_markdown_links.py tests/test_docs_workflow.py --basetemp "$NETCIRCUIT_ARTIFACTS_SESSION/pytest"
+      - name: Clean the owned external verification session
+        if: always() && env.NETCIRCUIT_ARTIFACTS_SESSION != ''
+        shell: bash
+        run: node scripts/artifact-paths.mjs --cleanup "$NETCIRCUIT_ARTIFACTS_SESSION"

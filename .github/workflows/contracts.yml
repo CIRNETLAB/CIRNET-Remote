@@ -7,8 +7,6 @@ on:
 jobs:
   canonical-boundaries:
     runs-on: ubuntu-latest
-    env:
-      NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -20,6 +18,8 @@ jobs:
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
       - name: Allocate owned external verification runtime
+        env:
+          NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
         shell: bash
         run: |
           NETCIRCUIT_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"
@@ -45,8 +45,6 @@ jobs:
         run: node scripts/artifact-paths.mjs --cleanup "$NETCIRCUIT_ARTIFACTS_SESSION"
   installed-packages:
     runs-on: ubuntu-latest
-    env:
-      NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-package-check
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -56,6 +54,8 @@ jobs:
         with:
           node-version: '22'
       - name: Allocate external diagnostics session
+        env:
+          NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-package-check
         run: echo "NETCIRCUIT_ARTIFACTS_SESSION=$(node scripts/artifact-paths.mjs)" >> "$GITHUB_ENV"
       - run: python -m pip install -r requirements-verification.txt -e . -e './simulator/circuit-simulator[test]' -e './services/api[test]' -e './services/hardware-service[dev]'
       - name: Minimum Python runtime; actual wheels installed outside checkout

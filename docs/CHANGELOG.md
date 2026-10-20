@@ -4,6 +4,11 @@ All notable project changes will be documented in this file. The project follows
 
 ## [Unreleased]
 
+### Fixed — 2026-10-20 GitHub Actions
+
+- Place runner-dependent artifact paths at execution steps, where the GitHub Actions `runner` context is available; preserve isolated application defaults, owned evidence and cleanup.
+- Invoke Documentation tests through `python -m pytest` so clean CI can import repository tools without editable-install side effects. Workflow validation and isolated Python-startup regressions accompany the fixes; [actual failure and repair evidence](verification/2026-10-20-github-actions.md) separates local checks from future hosted runs.
+
 ### Added and changed — 2026-10-20 Web/Contracts hardening WC20
 
 - Explicit auth bootstrap, revocable legacy reads and bounded indexed maintenance; forward migration 0007 preserves existing ownership and evidence.

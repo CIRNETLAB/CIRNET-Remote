@@ -49,6 +49,16 @@ python -m pytest -q tests/test_docs_baseline.py tests/test_post_r7_provenance.py
 git diff --check
 ```
 
+For workflow changes, also validate every `.github/workflows/*.yml` with
+`actionlint` **1.7.12**, using `-shellcheck= -pyflakes=` for the reproducible
+workflow syntax/expression gate. Those flags omit optional external shell/Python
+linters; they do not disable workflow schema or context checks. The Documentation
+workflow downloads the official Linux release into its owned session and checks
+a pinned SHA256 before execution. YAML parsing alone cannot validate GitHub
+context availability: `${{ runner.temp }}` belongs in an execution step's `env`,
+not job-level `env`. Start repository tests with `python -m pytest` so clean CI
+has the checkout root on its import path. See the [Actions repair evidence](verification/2026-10-20-github-actions.md).
+
 For changed Web test output plumbing, run `npm test`, `npm run check:boundaries`, `npm run build` and `npx tsc --noEmit -p tsconfig.e2e.json` in `apps/web`, plus a real relevant `npm run test:e2e -- ...` browser scenario. Playwright output, explicit suite screenshots/reports, backend test state and reporter output use the shared allocator. A configured reporter/output directory inside a checkout is an error. Do not disable assertions to satisfy the policy. See [Contracts](../contracts/README.md) for release groups and external PostgreSQL/package prerequisites.
 
 Record revision and dirty state, time/timezone, environment/browser/renderer, scenario, commands, PASS/FAIL/NOT_RUN/BLOCKED, observed results and limits in the affected Markdown report. Historical measurements are not freshly verified. State whether temporary screenshots were actually inspected; do not claim visual or hardware success from source review alone. No permanent temporary-path links are required.

@@ -14,14 +14,14 @@ SHARED=('contracts/public/auth.schema.json','contracts/signal_domains.py','contr
 
 OWNED_PYTEST_JOBS=(('backend.yml','test'),('hardware-service.yml','test'),('frontend.yml','build'),
     ('integration.yml','repository-contracts'),('integration.yml','postgresql-migrations'),
-    ('contracts.yml','canonical-boundaries'))
+    ('contracts.yml','canonical-boundaries'),('docs.yml','context'))
 
 
 def assert_owned_test_runtime(job):
     steps=job['steps']
-    assert job.get('env',{}).get('NETCIRCUIT_ARTIFACTS_DIR','').startswith('${{ runner.temp }}/'), 'allocator parent must be runner.temp'
     allocation=next((index for index,step in enumerate(steps) if 'ci_runtime=' in step.get('run','')),None)
     assert allocation is not None,'job must allocate owned application defaults before verification'
+    assert steps[allocation].get('env',{}).get('NETCIRCUIT_ARTIFACTS_DIR','').startswith('${{ runner.temp }}/'), 'allocator parent must be runner.temp in step env; job env cannot use runner context'
     command=steps[allocation]['run']
     assert 'NETCIRCUIT_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"\n' in command
     assert 'export NETCIRCUIT_ARTIFACTS_SESSION\n' in command
@@ -128,6 +128,15 @@ def test_owned_runtime_gate_rejects_missing_capture_default_and_success_only_cle
     unsafe=deepcopy(job)
     next(step for step in unsafe['steps'] if '--cleanup' in step.get('run',''))['if']='success()'
     with pytest.raises(AssertionError,match='cleanup must run after failures'):assert_owned_test_runtime(unsafe)
+
+
+def test_owned_runtime_gate_rejects_runner_context_at_job_scope():
+    job=deepcopy(workflow('backend.yml')['jobs']['test'])
+    allocation=next(step for step in job['steps'] if 'ci_runtime=' in step.get('run',''))
+    job.setdefault('env',{})['NETCIRCUIT_ARTIFACTS_DIR']=allocation.pop('env',{}).get(
+        'NETCIRCUIT_ARTIFACTS_DIR','${{ runner.temp }}/netcircuit-verification')
+    with pytest.raises(AssertionError,match='job env cannot use runner context'):
+        assert_owned_test_runtime(job)
 
 
 def test_postgres_job_keeps_real_database_gate_while_isolating_only_application_defaults():

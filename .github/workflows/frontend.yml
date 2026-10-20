@@ -14,8 +14,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    env:
-      NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -35,6 +33,8 @@ jobs:
             services/api/pyproject.toml
             simulator/circuit-simulator/pyproject.toml
       - name: Allocate owned external verification runtime
+        env:
+          NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
         shell: bash
         run: |
           NETCIRCUIT_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"
