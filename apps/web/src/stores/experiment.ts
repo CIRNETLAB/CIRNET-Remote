@@ -14,6 +14,8 @@ import { historyApi } from '../services/api/history'
 import { errorMessage } from '../services/api/client'
 import type { ExperimentPresentationPort } from '../application/ports/lab'
 import { ExperimentLifecycleController,isReleasedExperiment } from '../application/experimentLifecycle'
+import {browserPendingObservations} from '../services/recovery/pendingObservations'
+const observationPrincipals=new StoreScopeMap<string>()
 
 const terminal=isReleasedExperiment
 const controllers=new StoreScopeMap<ExperimentLifecycleController>()
@@ -46,6 +48,7 @@ export const useExperimentStore=defineStore('experiment',{
     lifecycle():ExperimentLifecycleController {
       const existing=controllers.get(this);if(existing)return existing
       const controller=new ExperimentLifecycleController({
+        ...(observationPrincipals.get(this)?{observations:browserPendingObservations.scope(observationPrincipals.get(this)!)}:{}),
         create:(body,signal,key)=>experimentsApi.create(body,signal,key),run:(id,signal,key)=>experimentsApi.run(id,signal,key),
         stop:(id,signal,key)=>experimentsApi.stop(id,signal,key),operation:(key,query,signal)=>experimentsApi.operation(key,query,signal),
         get:(id,signal)=>experimentsApi.get(id,signal),owned:()=>this.currentExecution,key:()=>crypto.randomUUID(),
@@ -54,6 +57,12 @@ export const useExperimentStore=defineStore('experiment',{
       })
       controllers.set(this,controller);return controller
     },
+    setObservationPrincipal(id:string|null){
+      if(observationPrincipals.get(this)===id)return
+      controllers.get(this)?.cancel();controllers.delete(this)
+      if(id){observationPrincipals.set(this,id);this.lifecycle()}else observationPrincipals.delete(this)
+    },
+    forgetPendingObservation(){return this.lifecycle().forgetPending()},
     selectExperiment(id:string){const record=this.experiments.find(value=>value.experiment_id===id)??this.history.find(value=>value.experiment_id===id);if(!record)return;this.selectionVersion++;this.activeId=id;this.receive(record,'history');presentation.get(this)?.useCapture(this.active?.capture??record.capture)},
     showCurrentExecution(){if(this.ownedActiveId)this.selectExperiment(this.ownedActiveId)},
     attachPresentation(port:ExperimentPresentationPort) {
@@ -163,6 +172,6 @@ export const useExperimentStore=defineStore('experiment',{
       try {const value=await experimentsApi.get(id,signal); if(scope.active()) this.receive(value)}
       catch(error) {if(scope.active()) this.error=errorMessage(error)}
     },
-    cancelPending() {invalidateReadScope(this);++this.requestVersion;controllers.get(this)?.cancel();this.pending=false},
+    cancelPending() {invalidateReadScope(this);++this.requestVersion;controllers.get(this)?.cancel();controllers.delete(this);this.pending=false},
   },
 })

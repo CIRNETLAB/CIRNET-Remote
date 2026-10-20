@@ -54,6 +54,7 @@ const useBaseCircuitStore=defineStore('circuit',{
     commitGraph(graph:CircuitGraph){return mutateDocument(this,()=>document.commitGraph(this,graph))},
     setMomentaryModule(id:string,pressed:boolean){return mutateDocument(this,()=>document.setMomentaryModule(this,id,pressed))},
     releaseMomentaryModule(draftId:string|null,id:string){return mutateDocument(this,()=>document.releaseMomentaryModule(this,draftId,id))},
+    authoredDocument(draft?:document.CircuitDraft|null){return document.authoredDocument(this,draft===undefined?this.current:draft)},
     captureSelection(selection:EditorSelection):SelectionClipboard|null{return commands.captureSelection(this,selection)},
     deleteSelection(selection:EditorSelection){return mutateDocument(this,()=>commands.deleteSelection(this,selection))},
     pasteSelection(snapshot:SelectionClipboard,options?:PasteOptions){return mutateDocument(this,()=>commands.pasteSelection(this,snapshot,options))},
@@ -84,6 +85,7 @@ const useBaseCircuitStore=defineStore('circuit',{
     createDraft(name?:string):string{return mutateDocument(this,()=>document.createDraft(this,crypto.randomUUID(),name))},
     openDraft(id:string){return mutateDocument(this,()=>document.openDraft(this,id))},renameCurrent(name:string){return mutateDocument(this,()=>document.renameCurrent(this,name))},
     resetForPrincipal(){
+      document.releaseMomentaryInputs(this)
       validationControllers.get(this)?.abort();validationControllers.delete(this);physicalControllers.get(this)?.abort();physicalControllers.delete(this)
       const revision=this.documentRevision+1,validation=this.validationVersion+1,physical=this.physicalVersion+1,tracker=observerFor(this)
       if(tracker)tracker.batch++

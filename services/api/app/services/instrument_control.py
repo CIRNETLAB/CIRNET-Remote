@@ -28,6 +28,12 @@ def control_access(manager,eid,owner,session_id=None,client_id=None):
                 channels=sorted({value['channel'] for value in (record.get('_execution_plan') or {}).get('instrument_allocations',[])
                     if value['instrument']=='GENERATOR' and value['channel'] in (1,2) and value['channel']<=capability['channels']})
                 if not channels:reason='NO_ALLOCATED_CHANNEL'
+            with manager.lock:
+                current=manager.repo.get_experiment(eid,owner)
+                if (current['revision']!=record['revision'] or current.get('_reservation_generation')!=record.get('_reservation_generation')
+                        or not manager._control_active(session_id) or manager.cancel.get(eid) and manager.cancel[eid].is_set()):
+                    reason='NOT_RUNNING';channels=[]
+                record=current
     return validate_contract('InstrumentControlAccess',{'schema_version':'1.0','experiment_id':eid,'revision':record['revision'],
         'can_configure_generator':reason=='READY','generator_channels':channels,'reason':reason},profile='transport')
 
@@ -49,7 +55,7 @@ def _configure_generator(manager,eid,owner,configuration,key,session_id=None,cli
         manager.repo.get_experiment(eid,owner)
         previous=manager.operations.existing(owner,KIND,key,eid,fingerprint)
         if previous:return command_record(manager,eid,owner,key)
-        with manager.lock:
+        with manager._control_lock(eid):
             access=control_access(manager,eid,owner,session_id,client_id)
             if access['reason']=='CONTROL_CONTEXT_REQUIRED':raise PermissionError('FORBIDDEN')
             if not access['can_configure_generator']:raise ValueError('INVALID_STATE' if access['reason'] in ('NOT_RUNNING','LEASE_UNAVAILABLE') else 'UNEXECUTABLE')
@@ -70,7 +76,7 @@ def _configure_generator(manager,eid,owner,configuration,key,session_id=None,cli
             try:
                 reply=manager._configure_instrument_reply(eid,owner,{'instrument':'generator','configuration':configuration},
                     control_session_id=session_id,control_client_id=client_id)
-                if reply.get('accepted') is not True:raise GatewayError('PROTOCOL_MISMATCH')
+                if reply.get('accepted') is not True:raise GatewayError(reply.get('code','PROTOCOL_MISMATCH'))
                 applied=reply.get('hardware_applied') is True
                 record.update(status='APPLIED' if applied else 'ACCEPTED',accepted=True,hardware_applied=applied,revision=1)
             except Exception as error:

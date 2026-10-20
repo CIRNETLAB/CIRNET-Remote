@@ -1,5 +1,5 @@
 import { validateLeadProperties } from './leadProperties'
-import { ComponentDesignPropertiesV1 } from '../contracts/generated/validators.structural'
+import { ComponentDesignPropertiesV1 } from '../contracts/generated/validators.structural.core.js'
 import { getPartForType } from './partCatalog'
 import { validParameterValue } from './componentParameters'
 import { normalizeLabelProperties, validateLabelProperties } from './labelProperties'

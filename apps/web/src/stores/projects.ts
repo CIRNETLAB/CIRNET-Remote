@@ -33,7 +33,7 @@ export const useProjectStore=defineStore('projects',{
     controller():ProjectSaveController {
       const existing=controllers.get(this);if(existing)return existing
       const circuit=useCircuitStore()
-      const snapshot=(draft:NonNullable<typeof circuit.current>)=>({draftId:draft.id,name:draft.name,revision:circuit.draftRevisions[draft.id]??circuit.documentRevision,graph:draft.graph})
+      const snapshot=(draft:NonNullable<typeof circuit.current>)=>({draftId:draft.id,name:draft.name,revision:circuit.draftRevisions[draft.id]??circuit.documentRevision,graph:circuit.authoredDocument(draft)!.graph})
       const controller=new ProjectSaveController({documents:{revisioned:true,read:()=>circuit.current?snapshot(circuit.current):null,readAll:()=>circuit.drafts.map(snapshot),
         replace:value=>circuit.replaceDocument(value),clearForPrincipal:()=>{useWorkspaceStore().clearSelection();circuit.resetForPrincipal()}},
         remote:{get:(id,signal)=>projectsApi.getCircuit(id,signal),create:(id,value,signal)=>projectsApi.createCircuit(id,value,signal),
@@ -121,7 +121,7 @@ export const useProjectStore=defineStore('projects',{
         await projectsApi.remove(selected.project_id,selected.revision,controller.signal)
         if(controller.signal.aborted||version!==this.generation)return false
         this.projects=this.projects.filter(project=>project.project_id!==selected.project_id)
-        if(this.saveState.binding?.projectId===selected.project_id)this.controller().detach()
+        this.controller().detach({projectId:selected.project_id})
         this.selectedProjectId=null;this.circuits=[];this.nextCircuitCursor=null;return true
       }catch(error){if(!controller.signal.aborted&&version===this.generation)this.error=errorMessage(error);return false}
       finally{release(this,controller);if(version===this.generation)this.pending=false}
@@ -136,7 +136,7 @@ export const useProjectStore=defineStore('projects',{
         await projectsApi.removeCircuit(document.document_id,document.revision,controller.signal)
         if(controller.signal.aborted||version!==this.generation)return false
         this.circuits=this.circuits.filter(value=>value.document_id!==document.document_id)
-        if(this.saveState.binding?.documentId===document.document_id)this.controller().detach()
+        this.controller().detach({documentId:document.document_id})
         return true
       }catch(error){if(!controller.signal.aborted&&version===this.generation)this.error=errorMessage(error);return false}
       finally{release(this,controller);if(version===this.generation)this.pending=false}

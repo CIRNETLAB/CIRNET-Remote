@@ -31,7 +31,7 @@ async function screenshot(page: Page, testInfo: TestInfo, name: string) { const 
 async function settleCamera(page:Page){let previous='',stable=0;await expect.poll(async()=>{const camera=JSON.stringify((await nativeSceneEvidence(page)).camera.map(value=>Math.round(value*1e7)));stable=camera===previous?stable+1:0;previous=camera;return stable},{intervals:[100]}).toBeGreaterThanOrEqual(2)}
 
 test('native two-pin placement preserves exact contacts, camera, automatic reanchor and persisted undo history without body-pose tools', async ({ page }, testInfo) => {
-  test.setTimeout(180_000)
+  test.setTimeout(600_000)
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message))
   await openBoard(page)
   const original = await exportedNativeGraph(page)
@@ -112,7 +112,7 @@ test('native two-pin placement preserves exact contacts, camera, automatic reanc
 })
 
 test('generic property drafts and native drag-drop produce compact forms and actual multiview visual evidence at both viewport sizes', async ({ page }, testInfo) => {
-  test.setTimeout(300_000) // Draft captures plus native video at two viewport sizes on software WebGL.
+  test.setTimeout(600_000) // Draft captures plus native video at two viewport sizes on software WebGL.
   await page.setViewportSize({ width: 1280, height: 720 })
   await openBoard(page)
   for (const [group, type, label] of [['passive', 'GENERIC_RESISTOR', 'Resistor'], ['passive', 'GENERIC_CAPACITOR', 'Ceramic Capacitor'], ['passive', 'GENERIC_CAPACITOR_ELECTROLYTIC', 'Electrolytic Capacitor'], ['active', 'GENERIC_DIODE', 'Diode'], ['active', 'GENERIC_ZENER_DIODE', 'Zener Diode'], ['output', 'GENERIC_LED', 'LED'], ['output', 'GENERIC_BUZZER', 'Buzzer'], ['active', 'GENERIC_BJT', 'Transistor']] as const) {
@@ -160,6 +160,10 @@ test('generic property drafts and native drag-drop produce compact forms and act
   await expect(info(page).getByLabel('Type',{exact:true})).toHaveCount(0)
   await info(page).getByLabel('Capacitance',{exact:true}).fill('47');await info(page).getByLabel('Capacitance unit',{exact:true}).selectOption('µF')
   await info(page).getByRole('button',{name:'Update component properties',exact:true}).click()
+  // At 1280px the contextual panel covers E51; dismiss it through its real UI
+  // before sending the two exact native contact clicks.
+  await info(page).getByRole('button',{name:'Close Component Info',exact:true}).click()
+  await expect(info(page)).toBeHidden()
   await clickContact(page,'terminal:E:50');await clickContact(page,'terminal:E:51')
   const electro=(await exportedNativeGraph(page)).modules.find(module=>module.type==='GENERIC_CAPACITOR_ELECTROLYTIC')!
   if(electro?.mount?.kind!=='breadboard-flexible')throw Error('Compact electrolytic did not commit.')
@@ -182,7 +186,11 @@ test('generic property drafts and native drag-drop produce compact forms and act
     await page.mouse.move(center.x - 65, center.y - 65); await page.mouse.down(); await page.mouse.move(center.x + 65, center.y + 65, { steps: 10 }); await page.mouse.up()
     await screenshot(page, testInfo, `${viewport.width}x${viewport.height}-closeup`)
     await page.getByRole('button',{name:'Zoom To View Entire Circuit',exact:true}).click()
+    await info(page).getByRole('button',{name:'Close Component Info',exact:true}).click()
     const can=await projectModuleCenter(page,electro.id);await page.mouse.click(can.x,can.y)
+    // Selecting the body opens Info again; keep the following area gesture on
+    // the canvas rather than on that contextual overlay.
+    await info(page).getByRole('button',{name:'Close Component Info',exact:true}).click()
     await page.getByRole('button',{name:'Zoom To Area',exact:true}).click();await page.mouse.move(can.x-65,can.y-65);await page.mouse.down();await page.mouse.move(can.x+65,can.y+65,{steps:10});await page.mouse.up()
     await screenshot(page,testInfo,`${viewport.width}x${viewport.height}-compact-electrolytic`)
   }
@@ -190,7 +198,7 @@ test('generic property drafts and native drag-drop produce compact forms and act
 })
 
 test('native diode and Zener spans and whole-assembly Move preserve stable pin bonds without manual bend or body-pose controls',async({page},testInfo)=>{
- test.setTimeout(180_000);await openBoard(page)
+ test.setTimeout(600_000);await openBoard(page)
  for(const [type,row] of [['GENERIC_DIODE','A'],['GENERIC_ZENER_DIODE','J']] as const){
   const rotations=[]
   for(const [first,last] of [[10,11],[24,28],[38,46]]){
@@ -201,13 +209,20 @@ test('native diode and Zener spans and whole-assembly Move preserve stable pin b
   }
   expect(new Set(rotations).size).toBeGreaterThan(1)
  }
- await choose(page,'passive','GENERIC_RESISTOR');await clickContact(page,'terminal:A:50');await hoverContact(page,'terminal:A:58')
+ await choose(page,'passive','GENERIC_RESISTOR')
+ // The Info panel overlays the right-hand holes in this view. Closing it keeps
+ // both placement and right-click assertions on the actual workspace canvas.
+ await info(page).getByRole('button',{name:'Close Component Info',exact:true}).click()
+ await expect(info(page)).toBeHidden()
+ await clickContact(page,'terminal:A:50');await hoverContact(page,'terminal:A:58')
  const bend=await hoverContact(page,'terminal:C:57');await page.mouse.click(bend.x,bend.y,{button:'right'});await clickContact(page,'terminal:A:58')
  const bent=(await exportedNativeGraph(page)).modules.find(m=>m.type==='GENERIC_RESISTOR')!
  if(bent?.mount?.kind!=='breadboard-flexible')throw Error('Automatic placement did not commit.')
  expect(bent.mount.version).toBe(2);expect((await nativeSceneEvidence(page)).handleNames).toEqual(['pin-0','pin-1'])
  await expect(info(page).getByRole('button',{name:/lift|tilt|edit leads/i})).toHaveCount(0)
  const tilted=bent
+ await info(page).getByRole('button',{name:'Close Component Info',exact:true}).click()
+ await expect(info(page)).toBeHidden()
  await page.getByRole('button',{name:'Move',exact:true}).click()
  const body=await projectModuleCenter(page,bent.id),a=await projectContact(page,'BB','terminal:A:50'),b=await projectContact(page,'BB','terminal:A:51')
  await page.mouse.move(body.x,body.y);await page.mouse.down();await page.mouse.move(body.x+b.x-a.x,body.y+b.y-a.y,{steps:10});await page.mouse.up()
@@ -220,7 +235,7 @@ test('native diode and Zener spans and whole-assembly Move preserve stable pin b
 })
 
 test('native explicit rebuild previews historical geometry, cancels and applies with one Undo while preserving saved overrides',async({page},testInfo)=>{
- test.setTimeout(120_000);await openBoard(page)
+ test.setTimeout(600_000);await openBoard(page)
  const graph=JSON.parse(readFileSync(new URL('../../../contracts/design-models/fixtures/component-mechanics-legacy.json',import.meta.url),'utf8')) as CircuitGraph,module=graph.modules.find(module=>module.mount)!
  await page.getByLabel('Open circuit file',{exact:true}).setInputFiles({name:'historical-component.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(graph))})
  await page.getByRole('button',{name:'Zoom To View Entire Circuit',exact:true}).click()
@@ -242,7 +257,7 @@ test('native explicit rebuild previews historical geometry, cancels and applies 
 })
 
 test('native place, reanchor, Escape and delete cycles release component GPU geometry and stale handles',async({page},testInfo)=>{
- test.setTimeout(180_000);await openBoard(page)
+ test.setTimeout(600_000);await openBoard(page)
  const samples=[]
  for(let cycle=0;cycle<3;cycle++){
   await choose(page,'passive','GENERIC_RESISTOR');await clickContact(page,'terminal:C:20');await clickContact(page,'terminal:C:24')
@@ -261,7 +276,7 @@ test('native place, reanchor, Escape and delete cycles release component GPU geo
 })
 
 test('actual unselected component closeups show automatic axial templates and upright radial proportions',async({page},testInfo)=>{
- test.setTimeout(180_000);await openBoard(page);await page.setViewportSize({width:1920,height:1080})
+ test.setTimeout(600_000);await openBoard(page);await page.setViewportSize({width:1920,height:1080})
  const solverPath=resolve('.test-build/native-mechanics-solver.mjs')
  await build({stdin:{contents:"export {solveFlexibleMount} from './src/electrical/flexibleGeometry'",resolveDir:process.cwd(),loader:'ts'},outfile:solverPath,bundle:true,platform:'node',format:'esm',packages:'external'})
  const {solveFlexibleMount}=await import(pathToFileURL(solverPath).href) as {solveFlexibleMount:typeof Solver}

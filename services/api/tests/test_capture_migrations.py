@@ -25,7 +25,7 @@ def test_capture_migration_backfills_sealed_metadata_only_on_a_verified_backup(t
     assert repo.capture_reference('cap-one','retained-owner')['metadata']==metadata()
     with repo.engine.connect() as db:
         assert db.execute(select(repo.captures.c.capture_id)).scalars().all()==['cap-one']
-        assert db.execute(text('SELECT version_num FROM alembic_version')).scalar()==HEAD=='0005_captures'
+        assert db.execute(text('SELECT version_num FROM alembic_version')).scalar()==HEAD
     for identity,value in values.items():assert repo.get_experiment(identity)==value
     assert repo.leases()==[{'station_id':'station','slot':0,'experiment_id':'sealed','expires_at':10,'quarantined':True}]
     assert payload.read_bytes()==b'original-sealed-payload'

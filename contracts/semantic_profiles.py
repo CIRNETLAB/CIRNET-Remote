@@ -67,8 +67,13 @@ def validation_issues(error, profile="structural"):
         return existing
     nonfinite = isinstance(error.instance, float) and not isfinite(error.instance)
     code = "NONFINITE_NUMBER" if nonfinite else "SCHEMA_" + str(error.validator or "VALIDATION").upper()
+    path = list(error.absolute_path)
+    if error.validator == 'required' and isinstance(error.instance, dict):
+        missing = next((key for key in error.validator_value if key not in error.instance), None)
+        if missing is not None:
+            path.append(missing)
     return [{"code": code,
-             "path": _pointer(error.absolute_path), "severity": "error",
+             "path": _pointer(path), "severity": "error",
              "profile": profile, "message": error.message}]
 
 

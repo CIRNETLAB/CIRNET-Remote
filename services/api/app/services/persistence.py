@@ -3,7 +3,7 @@ from copy import deepcopy
 from threading import RLock
 import time
 import uuid
-from sqlalchemy import create_engine, delete, insert, literal, select, update, event
+from sqlalchemy import create_engine, delete, insert, literal, select, update, event, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.pool import StaticPool
 from contracts.validation import validate
@@ -32,6 +32,7 @@ class Repository:
         self.circuit_revisions=schema.circuit_revisions; self.experiment_document_refs=schema.experiment_document_refs
         self.assignment_documents=schema.assignment_documents; self.assignment_revisions=schema.assignment_revisions
         self.captures=schema.captures
+        self.experiment_runtime=schema.experiment_runtime
 
     def create_assignment(self,value,*,owner_id='legacy-system',published=False,feedback_policy='observed_only'):
         value=validate("AssignmentDefinition",value)
@@ -94,6 +95,8 @@ class Repository:
                     raise ValueError('DOCUMENT_UNAVAILABLE')
             else:
                 db.execute(insert(self.experiments).values(**record))
+            from app.migrations.schema_v0006 import projection
+            db.execute(insert(self.experiment_runtime).values(**projection(value)))
             if reference:
                 db.execute(insert(self.experiment_document_refs).values(experiment_id=value['experiment_id'],document_id=reference['document_id'],revision=reference['revision']))
             operation=value.get('_operation')
@@ -161,6 +164,8 @@ class Repository:
         # Updating the parent row is also the fence used by claim, reservation
         # and capture retirement before related rows are changed.
         changed=db.execute(update(self.experiments).where(self.experiments.c.experiment_id==value["experiment_id"]).values(payload=deepcopy(value)))
+        from app.migrations.schema_v0006 import projection
+        db.execute(update(self.experiment_runtime).where(self.experiment_runtime.c.experiment_id==value['experiment_id']).values(**projection(value)))
         from app.services.capture_repository import sync_capture
         sync_capture(self,db,value)
         return changed
@@ -209,6 +214,37 @@ class Repository:
         from app.services.experiment_history import page_experiments
         return page_experiments(self,owner,limit=limit,cursor=cursor,active=active)
 
+    def has_active_experiment(self,owner):
+        table=self.experiments;runtime=self.experiment_runtime
+        query=select(1).select_from(runtime.join(table,runtime.c.experiment_id==table.c.experiment_id)).where(
+            runtime.c.active==True,table.c.owner_id==owner).exists()
+        with self.lock,self.engine.connect() as db:return bool(db.execute(select(query)).scalar())
+
+    def active_experiments(self,owner=None,*,session_id=None,client_id=None,after='',limit=100,payload=True):
+        """Indexed keyset batch; runtime-only callers never hydrate a graph."""
+        if type(limit) is not int or not 1<=limit<=100:raise ValueError('INVALID_PAGE_LIMIT')
+        table=self.experiments;runtime=self.experiment_runtime
+        fields=(table.c.payload,) if payload else (runtime.c.experiment_id,table.c.owner_id,runtime.c.control_session_id,runtime.c.control_client_id)
+        query=select(*fields).select_from(runtime.join(table,runtime.c.experiment_id==table.c.experiment_id)).where(
+            runtime.c.active==True,runtime.c.experiment_id>after)
+        if owner is not None:query=query.where(table.c.owner_id==owner)
+        if session_id is not None:query=query.where(runtime.c.control_session_id==session_id)
+        if client_id is not None:query=query.where(runtime.c.control_client_id==client_id)
+        with self.lock,self.engine.connect() as db:
+            rows=db.execute(query.order_by(runtime.c.experiment_id).limit(limit))
+            return deepcopy(list(rows.scalars())) if payload else [dict(row) for row in rows.mappings()]
+
+    def scheduler_recovery_page(self,kind,*,after='',limit=100):
+        if kind not in ('queued','legacy_capture') or type(limit) is not int or not 1<=limit<=100:raise ValueError('INVALID_PAGE_LIMIT')
+        runtime=self.experiment_runtime;table=self.experiments
+        query=select(table.c.payload).select_from(runtime.join(table,runtime.c.experiment_id==table.c.experiment_id)).where(runtime.c.experiment_id>after)
+        query=query.where(runtime.c.state=='QUEUED') if kind=='queued' else query.where(runtime.c.legacy_capture==True)
+        with self.lock,self.engine.connect() as db:return deepcopy(list(db.execute(query.order_by(runtime.c.experiment_id).limit(limit)).scalars()))
+
+    def admission_sequence(self):
+        with self.lock,self.engine.connect() as db:
+            return db.execute(select(func.max(self.experiment_runtime.c.queue_sequence))).scalar() or 0
+
     def owned_experiment_ids(self,owner,identities):
         if not identities:return set()
         table=self.experiments
@@ -228,6 +264,13 @@ class Repository:
     def leases(self):
         with self.lock,self.engine.connect() as db:
             return [dict(row) for row in db.execute(select(self.lease_table)).mappings()]
+
+    def lease_page(self,*,after='',limit=100):
+        if type(limit) is not int or not 1<=limit<=100:raise ValueError('INVALID_PAGE_LIMIT')
+        table=self.lease_table
+        with self.lock,self.engine.connect() as db:
+            return [dict(row) for row in db.execute(select(table).where(table.c.experiment_id>after)
+                .order_by(table.c.experiment_id).limit(limit)).mappings()]
 
     def release(self,experiment_id):
         with self.lock,self.engine.begin() as db:

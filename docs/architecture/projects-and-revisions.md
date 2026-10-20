@@ -77,6 +77,32 @@ save. Local recovery is a separate, versioned browser repository partitioned by
 principal; it contains document work rather than credentials, approvals, or
 hardware execution authority.
 
+The document engine exposes one authored projection for history, export,
+clipboard duplication, server writes, recovery checkpoints and saved-document
+references. Captured momentary contacts overlay live `pressed` input while retaining
+the original authored field and its omission semantics. They advance the live
+graph generation for preview/validation without advancing the authored content
+generation or making a clean document dirty. Release, document switch, deletion,
+Undo/Redo and principal reset remove the captured input scope. Imported persistent
+`pressed=true` remains authored data, including after a captured press/release.
+
+Save metadata is indexed by local draft within the current principal. Switching
+from a server draft to a scratch draft and back preserves only the server draft's
+binding and acknowledged base revision. A pending save ACK or conflict updates
+its originating draft even while another draft is active; it cannot mark that
+other draft saved. The registry retains at most 128 live server draft bindings
+and rejects an additional binding with an explicit error rather than silently
+evicting an open binding. Removed drafts are pruned. Principal transitions first
+capture all authored recovery snapshots and per-draft bindings, then synchronously
+clear documents and metadata before awaiting storage. Confirmed remote deletion
+detaches every matching draft binding and keeps its local content.
+
+Recovery stores each draft's binding separately but treats it as an untrusted
+server reference: a recovered draft is dirty, and an authenticated owner-checked
+CAS Save or server Open must establish a current acknowledgement before a saved
+execution reference can be used. Recovery never restores session or hardware
+authority and never replays a pending save.
+
 Before deployment, stop writers, make a verified backup, and rehearse the upgrade
 on a separate restored database. The SQLite backup API rehearsal tests preserve
 W3 data, run `PRAGMA integrity_check`, upgrade the copy, and verify the original

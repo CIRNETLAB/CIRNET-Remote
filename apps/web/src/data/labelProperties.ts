@@ -1,5 +1,5 @@
 import type { LabelPropertiesV1 } from '../contracts/generated/dto'
-import { LabelPropertiesV1 as validLabelProperties } from '../contracts/generated/validators.structural'
+import { LabelPropertiesV1 as validLabelProperties } from '../contracts/generated/validators.structural.core.js'
 
 export type { LabelPropertiesV1 } from '../contracts/generated/dto'
 export const defaultLabelProperties: Readonly<LabelPropertiesV1> = Object.freeze({ version: 1, text: 'Hello', fontSizeMm: 3, textColor: '#20252A', backgroundColor: '#FAFAF7', paddingMm: 1 })

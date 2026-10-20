@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "cases": [
+    {"id":"project-name-type","contract":"ProjectCreate","profile":"transport","value":{"name":17},"issue":{"code":"SCHEMA_TYPE","path":"/name"}},
+    {"id":"project-name-required","contract":"ProjectCreate","profile":"transport","value":{},"issue":{"code":"SCHEMA_REQUIRED","path":"/name"}},
+    {"id":"observation-value-enum","contract":"DigitalObservation","profile":"transport","value":{"signal":"out","time_ns":0,"value":{}},"issue":{"code":"SCHEMA_ENUM","path":"/value"}},
+    {"id":"graph-version-union","contract":"AnySupportedCircuitGraph","profile":"structural","value":{"schema_version":"9.9","circuit_id":"future","modules":[],"connections":[]},"issue":{"code":"SCHEMA_ONEOF","path":""}},
+    {"id":"observation-large-integer","contract":"DigitalObservation","profile":"transport","value":{"signal":"out","time_ns":9007199254740992,"value":0},"issue":{"code":"SCHEMA_MAXIMUM","path":"/time_ns"}},
+    {"id":"duplicate-observed-node","contract":"DetectedTopologyGraph","profile":"transport","value":{"schema_version":"1.0","scan_id":"scan","nodes":[{"node_id":"n"},{"node_id":"n"}],"components":[],"connections":[],"ambiguities":[]},"issue":{"code":"DUPLICATE_ID","path":"/nodes/1/node_id"}},
+    {"id":"future-document-metadata","contract":"AnySupportedCircuitGraph","profile":"structural","value":{"schema_version":"1.2","circuit_id":"future","modules":[],"connections":[],"metadata":{"future":{"version":"99","payload":[null,false,0]}}},"valid":true}
+  ]
+}

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { createContactInteraction } from '../src/editor/contactInteraction'
 import { getPartForType, physicalDescriptorForPart } from '../src/data/partCatalog'
 import * as document from '../src/domain/document/editorDocument'
-import { removeModule, updateModuleProperties } from '../src/domain/document/graphCommands'
+import { captureSelection, removeModule, updateModuleProperties } from '../src/domain/document/graphCommands'
 import { createPinia, setActivePinia } from 'pinia'
 import { useCircuitStore } from '../src/stores/circuit'
 import type { CircuitGraph } from '../src/types/circuit'
@@ -85,7 +85,7 @@ test('Pinia captured input invalidates graph revisions while retaining Redo and 
     store.importGraph(document.currentGraph(h.state)!); store.past = []; store.future = []; store.markSaved()
     const revision = store.graphRevision
     store.setMomentaryModule('SW', true); assert.equal(store.graph!.modules.find(module => module.id === 'SW')!.properties?.pressed, true)
-    assert.ok(store.graphRevision > revision); assert.equal(store.past.length, 0); assert.equal(store.dirty, true)
+    assert.ok(store.graphRevision > revision); assert.equal(store.past.length, 0); assert.equal(store.dirty, false)
     store.setMomentaryModule('SW', false); assert.equal(store.graph!.modules.find(module => module.id === 'SW')!.properties?.pressed, false)
     assert.equal(store.past.length, 0); assert.equal(store.dirty, false)
     store.updateModuleProperties('R', { resistanceOhms: 1000 }); store.undo(); assert.equal(store.future.length, 1)
@@ -93,4 +93,39 @@ test('Pinia captured input invalidates graph revisions while retaining Redo and 
     store.redo(); assert.equal(store.graph!.modules.find(module => module.id === 'R')!.properties?.resistanceOhms, 1000)
     assert.equal(store.graph!.modules.find(module => module.id === 'SW')!.properties?.pressed, false)
   } finally { store.$dispose() }
+})
+
+test('a held input is excluded from export, duplicate and dirty state while authored edits persist', () => {
+  const h = fixture(); document.markSaved(h.state)
+  const revision=h.state.draftRevisions.old
+  h.interaction.begin(1, { id:'SW',property:'pressed' })
+  assert.equal(h.pressed(),true)
+  assert.equal(document.isDocumentDirty(h.state),false)
+  assert.equal(h.state.draftRevisions.old,revision)
+  assert.equal(JSON.parse(document.exportGraph(h.state)).modules[0].properties.pressed,false)
+  const clipboard=captureSelection(h.state,{moduleIds:['SW'],wires:[]})!
+  assert.equal(clipboard.modules[0].properties?.pressed,false)
+  updateModuleProperties(h.state,'R',{resistanceOhms:4700})
+  const exported=JSON.parse(document.exportGraph(h.state))
+  assert.equal(exported.modules[0].properties.pressed,false)
+  assert.equal(exported.modules[1].properties.resistanceOhms,4700)
+  assert.equal(document.isDocumentDirty(h.state),true)
+  h.interaction.cancel()
+})
+
+test('capturing and releasing an imported persistent press preserves its authored value', () => {
+  const h=fixture(true);document.markSaved(h.state)
+  h.interaction.begin(1,{id:'SW',property:'pressed'});h.interaction.end(1)
+  assert.equal(h.pressed(),true)
+  assert.equal(JSON.parse(document.exportGraph(h.state)).modules[0].properties.pressed,true)
+  assert.equal(document.isDocumentDirty(h.state),false)
+})
+
+test('an explicit authored pressed edit during a hold ends the input scope and remains persistent',()=>{
+  const h=fixture();document.markSaved(h.state)
+  h.interaction.begin(1,{id:'SW',property:'pressed'});updateModuleProperties(h.state,'SW',{pressed:true})
+  h.interaction.cancel()
+  assert.equal(JSON.parse(document.exportGraph(h.state)).modules[0].properties.pressed,true)
+  assert.equal(document.isDocumentDirty(h.state),true)
+  document.undoDocument(h.state);assert.equal(h.pressed(),false)
 })

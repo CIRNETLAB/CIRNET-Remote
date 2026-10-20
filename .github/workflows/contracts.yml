@@ -7,6 +7,8 @@ on:
 jobs:
   canonical-boundaries:
     runs-on: ubuntu-latest
+    env:
+      NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -17,6 +19,17 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
+      - name: Allocate owned external verification runtime
+        shell: bash
+        run: |
+          NETCIRCUIT_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"
+          export NETCIRCUIT_ARTIFACTS_SESSION
+          echo "NETCIRCUIT_ARTIFACTS_SESSION=$NETCIRCUIT_ARTIFACTS_SESSION" >> "$GITHUB_ENV"
+          ci_runtime="$(node scripts/artifact-paths.mjs ci-runtime)"
+          {
+            echo "NETCIRCUIT_DATABASE_URL=sqlite:///$ci_runtime/default.sqlite"
+            echo "NETCIRCUIT_CAPTURE_DIR=$ci_runtime/captures"
+          } >> "$GITHUB_ENV"
       - run: python -m pip install -r requirements-verification.txt -e . -e './simulator/circuit-simulator[test]' -e './services/api[test]' -e './services/hardware-service[dev]'
       - run: npm ci --no-audit --no-fund
         working-directory: apps/web
@@ -26,6 +39,10 @@ jobs:
       - name: Browser numeric/semantic conformance and generated type checks
         run: npm test
         working-directory: apps/web
+      - name: Clean the owned external verification session
+        if: always() && env.NETCIRCUIT_ARTIFACTS_SESSION != ''
+        shell: bash
+        run: node scripts/artifact-paths.mjs --cleanup "$NETCIRCUIT_ARTIFACTS_SESSION"
   installed-packages:
     runs-on: ubuntu-latest
     env:

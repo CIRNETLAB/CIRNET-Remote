@@ -42,20 +42,10 @@ def test_frontend_services_do_not_expose_physical_fpga_controls():
 
 
 def test_frontend_imports_stay_inside_the_application_boundary():
-    source = WEB/'src'
-    # Schema parsing inspects original numeric tokens before conversion can round them.
-    allowed_packages = {'vue', 'pinia', 'vue-router', 'three', 'lossless-json'}
-    for path in source.rglob('*'):
-        if path.suffix not in {'.ts', '.vue'}:
-            continue
-        text = path.read_text(encoding='utf-8')
-        imports = re.findall(r'''(?:from\s*|import\s*\(\s*|import\s*)['"]([^'"]+)['"]''', text)
-        for specifier in imports:
-            if specifier.startswith('.'):
-                assert (path.parent/specifier).resolve().is_relative_to(source.resolve()), (path, specifier)
-            else:
-                package = '/'.join(specifier.split('/')[:2]) if specifier.startswith('@') else specifier.split('/')[0]
-                assert package in allowed_packages, (path, specifier)
+    import subprocess
+    result = subprocess.run(['node', 'scripts/check-boundaries.mjs'], cwd=WEB,
+                            capture_output=True, text=True, timeout=60)
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_fetch_has_explicit_api_and_versioned_asset_boundaries():

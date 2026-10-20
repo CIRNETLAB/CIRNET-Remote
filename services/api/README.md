@@ -4,7 +4,7 @@ FastAPI modular-monolith Lab-First laboratory. Authority: ../../docs/ARCHITECTUR
 
 Install the root contracts package into both service environments. API also needs grpcio/protobuf and psycopg (declared dependencies). For source-checkout development, install Hardware Service dev extras and run `python scripts/generate_hardware_rpc.py` before startup/tests to create ignored shared RPC bindings. Installed production wheels already contain those bindings and resources; startup needs neither the checkout nor code generation/dev tools. Start hardware_service.server in its own process on localhost50051. An absent gateway reports unavailable; the virtual station executes the existing real digital simulator.
 
-Use one API worker; do not start multiple scheduler workers against the same stations. SQLAlchemy persists definitions/results/sessions/leases and FIFO order; versioned migrations through 0005 upgrade new and legacy databases. Restart recovers active leases and quarantines failed safe cleanup. Actual PostgreSQL migration/backup/restore and independent-writer tests have run locally; target production deployment remains unverified. Durable principals, server sessions, Argon2id passwords, CSRF/exact-origin and role/object authorization protect HTTP/WebSocket. Follow [auth setup](../../docs/architecture/auth-and-migrations.md) for administrator bootstrap, and the [production guide](../../deployment/README.md) for installed wheels, migration checks, TLS/origins, persistent data and maintenance. Development guests are explicit; production disables them.
+Use one API worker; do not start multiple scheduler workers against the same stations. SQLAlchemy persists definitions/results/sessions/leases and FIFO order; versioned migrations through 0007 upgrade new and legacy databases, including indexed runtime state and bounded auth maintenance. Restart recovers active leases and quarantines failed safe cleanup. Actual PostgreSQL migration/backup/restore and independent-writer tests have run locally; target production deployment remains unverified. Durable principals, server sessions, Argon2id passwords, CSRF/exact-origin and role/object authorization protect HTTP/WebSocket. Follow [auth setup](../../docs/architecture/auth-and-migrations.md) for administrator bootstrap, and the [production guide](../../deployment/README.md) for installed wheels, migration checks, TLS/origins, persistent data and maintenance. Development guests are explicit; production disables them.
 
 ## Post-R7 execution and data plane
 
@@ -146,7 +146,8 @@ is already occupied):
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:8000/api/health
-Invoke-RestMethod http://localhost:5173/api/stations
+Invoke-RestMethod http://localhost:5173/api/auth/session -SessionVariable labWebSession
+Invoke-RestMethod http://localhost:5173/api/stations -WebSession $labWebSession
 ```
 
 The health response should identify `netcircuit-api`; station discovery in

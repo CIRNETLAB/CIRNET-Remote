@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {InstrumentCommandController,type InstrumentCommandPorts} from '../src/application/instruments/commands'
 import type {InstrumentCommandRecord,InstrumentControlAccess,GeneratorConfiguration} from '../src/contracts/generated/dto'
 import {runningExperiment,stationFixture} from './helpers/station'
+import {PendingObservationLedger} from '../src/application/operations/pendingObservations'
 const configuration=():GeneratorConfiguration=>({channel:1,waveform:'SINE',frequency_hz:1000,amplitude_vpp:1,offset_v:0,enabled:true})
 const ready:InstrumentControlAccess={schema_version:'1.0',experiment_id:'e1',revision:1,can_configure_generator:true,generator_channels:[1,2],reason:'READY'}
 function record(config:GeneratorConfiguration,status:InstrumentCommandRecord['status']='ACCEPTED',key='key-1'):InstrumentCommandRecord{return {schema_version:'1.0',experiment_id:'e1',operation_key:key,status,revision:1,accepted:status==='ACCEPTED'||status==='APPLIED',hardware_applied:status==='APPLIED',error_code:status==='REQUESTED'?'ACKNOWLEDGEMENT_UNKNOWN':status==='FAILED'?'DRIVER_REJECTED':null,configuration:config}}
@@ -61,4 +62,59 @@ test('returned command evidence cannot mutate internal acknowledgement configura
  assert.equal(controller.state().channels[1].lastAcknowledged?.configuration.frequency_hz,1000)
  const access=controller.state().access!;try{access.generator_channels.length=0}catch{}
  assert.equal(controller.state().access?.generator_channels.length,2)
+})
+
+test('reload reads a pending generator key without resending configuration or granting control',async()=>{
+ let raw:string|null=null,sends=0,reads=0
+ const observations=new PendingObservationLedger({read:()=>raw,write:value=>{raw=value}}).scope('alice')
+ observations.begin({kind:'generator',key:'old-generator',experimentId:'e1',channel:1});observations.unknown('old-generator')
+ const {controller,context}=setup({observations,send:async()=>{sends++;return record(configuration())},get:async(_id,key)=>{reads++;return record(configuration(),'APPLIED',key)}})
+ context.controlledExperimentId=null
+ assert.equal(controller.state().channels[1].phase,'unknown')
+ await controller.reconcile(1);assert.equal(reads,1);assert.equal(sends,0)
+ assert.equal(context.controlledExperimentId,null);assert.equal(controller.state().channels[1].phase,'applied')
+ assert.deepEqual(observations.list(),[])
+})
+
+test('generator identity is persisted before Apply and temporary NOT_FOUND never proves output unchanged',async()=>{
+ let raw:string|null=null,sends=0
+ const observations=new PendingObservationLedger({read:()=>raw,write:value=>{raw=value}}).scope('alice')
+ const {controller}=setup({observations,send:async()=>{sends++;assert.equal(observations.list()[0]?.key,'key-1');throw new TypeError('lost')},get:async()=>{throw Object.assign(Error('not visible'),{status:404})}})
+ await controller.configure('e1',configuration());assert.equal(sends,1)
+ assert.equal(controller.state().channels[1].phase,'unknown');assert.equal(observations.list()[0]?.status,'unknown')
+ await controller.reconcile(1);assert.equal(controller.state().channels[1].phase,'unknown')
+ await controller.forget(1);assert.equal(sends,1);assert.deepEqual(observations.list(),[])
+})
+
+test('multiple restored generator records on the same channel remain observable without replay',async()=>{
+ let raw:string|null=null
+ const observations=new PendingObservationLedger({read:()=>raw,write:value=>{raw=value}}).scope('alice')
+ for(const key of ['first','second'])observations.begin({kind:'generator',key,experimentId:'e1',channel:1})
+ const {controller,calls}=setup({observations})
+ assert.equal(controller.state().channels[1].operationKey,'first')
+ await controller.reconcile(1);assert.equal(controller.state().channels[1].operationKey,'second')
+ await controller.reconcile(1);assert.equal(controller.state().channels[1].phase,'applied')
+ assert.deepEqual(calls.map(call=>call.kind),['get','get']);assert.deepEqual(observations.list(),[])
+})
+
+test('browser storage failure prevents an untracked generator Apply before any send',async()=>{
+ let sends=0
+ const observations=new PendingObservationLedger({read:()=>null,write:()=>{throw Error('quota')}}).scope('alice')
+ const {controller}=setup({observations,send:async()=>{sends++;return record(configuration())}})
+ await assert.rejects(controller.configure('e1',configuration()),/tracking|storage/i)
+ assert.equal(sends,0);assert.equal(controller.state().channels[1].phase,'failed')
+})
+
+test('Apply waits for the exclusive storage transaction and cancellation during its wait sends nothing',async()=>{
+ for(const cancelled of [false,true]){
+  let raw:string|null=null,sends=0,queued=false
+  const gate=deferred<void>()
+  const observations=new PendingObservationLedger({read:()=>raw,write:value=>{raw=value},transaction:async action=>{queued=true;await gate.promise;action()}}).scope('alice')
+  const {controller}=setup({observations,send:async(_id,config,key)=>{sends++;assert.equal(observations.list()[0]?.key,key);return record(config,'APPLIED',key)}})
+  const request=controller.configure('e1',configuration())
+  for(let step=0;step<20&&!queued;step++)await Promise.resolve()
+  assert.equal(queued,true);assert.equal(sends,0);assert.equal(raw,null)
+  if(cancelled)controller.cancel()
+  gate.resolve();await request;assert.equal(sends,cancelled?0:1)
+ }
 })

@@ -39,6 +39,31 @@ npm run test:e2e:install
 npm run test:e2e -- --forbid-only
 ```
 
+The install command populates `.runtime/playwright`; test invocations must run
+from a fresh complete copy in a unique `br-<8hex>` child of the same shared
+allocator session, selected through the public `PLAYWRIGHT_BROWSERS_PATH`.
+Before copying, the launcher checks that every copied Windows `.exe` destination
+path is at most **259 UTF-16 characters**. Overlong paths fail with instructions
+to set a shorter absolute external `NETCIRCUIT_ARTIFACTS_DIR` parent and allocate
+a fresh session, without falling back to the installation cache. Copy the exact
+installed cache with its binaries,
+resources, installation markers, FFmpeg and platform helpers, dereferencing
+links and excluding only old `debug.log`/`chrome_debug.log` files and `.links`.
+The pinned browser revision and channel stay unchanged. The current Windows
+cache adds approximately **718 MiB per invocation**, plus copy I/O and test
+outputs. If the cache is absent, install it with the command above; missing or
+unreadable cache and failed external copying must fail the test launcher without
+falling back to a browser inside the repository.
+
+Windows headless GPU logging can ignore `--log-file` and `CHROME_LOG_FILE` and
+write beside the executable. Running the exact copied runtime keeps those
+diagnostics outside source along with screenshots, video and traces. Direct
+profiling must use the same isolation. Inspect the owned runtime's logs, ensure
+browser/FFmpeg/helper processes have exited, then clean only its allocator-owned
+session through the [guarded cleanup](../../docs/VERIFICATION.md#cleanup-and-ci).
+Preserve the installation cache and all historical logs; log flags alone are
+not proof of containment.
+
 The harness starts the actual API, SQLite database, local gRPC Hardware Service, virtual digital simulator and Vite. It creates temporary accounts with a fresh generated administrator password, keeps one worker and zero retries, and owns orderly API/RPC/simulation-worker shutdown. A shutdown timeout or nonzero API exit fails the runner. The suite in `e2e/` covers imported GLB previews/fallback, native WebGL context loss/restoration with resumed draw calls and preserved canvas/document/history, real login/revocation/guest claim including socket closure before rotation acknowledgement, assignment CAS/publication/privacy, typed pre-run vectors with a real captured rising edge, history reload without Run replay, a lost Create ACK followed by safe Stop, exact project persistence across an actual API process restart, two-tab save conflicts and principal-partitioned IndexedDB recovery. Later editor cases cover physical assemblies, contact/wire tools, ribbon and camera navigation. Fault interception occurs at explicit boundaries after the corresponding real server action; it does not substitute a simulator or physical driver.
 
 The default Python executable is the repository's `.audit-runtime` environment. Set `NETCIRCUIT_E2E_PYTHON` to another prepared interpreter if needed (`export NETCIRCUIT_E2E_PYTHON=python` in POSIX shells, or `$env:NETCIRCUIT_E2E_PYTHON = 'python'` in PowerShell). Reserve loopback ports 14173, 15151 and 18181. Production credentials and physical equipment are not used. The [shared verification guide](../../docs/VERIFICATION.md) defines external session output through `NETCIRCUIT_ARTIFACTS_DIR` and `scripts/artifact-paths.mjs`; Playwright output, failure screenshots/traces and harness scratch must resolve outside the repository. Only Markdown verification evidence is retained in the checkout.
@@ -126,6 +151,8 @@ App.vue -> SingleWorkspaceShell
 ```
 
 The document core in `domain/document` owns commands, history, serialization and revisions as pure functions operating on the existing caller-owned state. The circuit Pinia facade keeps component actions and remote validation/presentation adapters. Per-draft content watchers preserve legacy direct-edit invalidation; getters use revisions instead of serializing graphs during rendering. There is one mutable graph authority. Auth, projects, workspace, station, experiment, instrument and UI state keep their own lifetimes. Experiment/instrument effects are joined by an explicit application controller using per-instance ports; neither store imports the other.
+
+Generated core validator entrypoints cover synchronous local document, property and requested-configuration edits. API and realtime adapters prepare the remaining offline profiles at their workflow boundary; pointer moves do not fetch or compile schemas. The AST gate covers every domain/application controller and permits only the pure `lossless-json` external package in that dependency closure. Framework and I/O adapters remain outside it. The production-main bundle regression checks eager imports through actual Vue components, including property validators, rather than inspecting only the registry facade.
 
 Scene resources stay outside Pinia. Render requests coalesce into RAF when graph/camera/gesture changes. Zero-sized/hidden/context-lost scenes pause; resize/context restore redraw. Unmount disposes observers/listeners/controls/frames/GPU geometry/material/texture/instance buffers. Floating-window layout/focus still uses the shared manager. Scene picking and pointer gesture ownership have separate tested modules. The two existing GLB preview pages consume the bounded asset provider, revision manifest and procedural fallback; the main workspace keeps its established procedural visuals. See [W5 asset provenance and lifecycle](../../docs/verification/2026-10-16-w5-assets.md).
 

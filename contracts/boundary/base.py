@@ -3,6 +3,7 @@ from typing import Any, ClassVar, Generic, TypeVar
 
 from jsonschema import ValidationError as SchemaValidationError
 from pydantic import BaseModel, ConfigDict, RootModel, ValidationInfo, model_validator
+from pydantic_core import PydanticCustomError
 
 
 def preserve_json_literal(literals):
@@ -35,8 +36,11 @@ class CanonicalValidation:
             try:
                 return validate_contract(cls.__contract_id__, value, profile=profile)
             except SchemaValidationError as error:
-                path = '.'.join(str(part) for part in error.absolute_path)
-                raise ValueError(f'{path}: {error.message}' if path else error.message) from None
+                from contracts.semantic_profiles import validation_issues
+                issues = [{**issue, 'message': 'The field does not match its declared contract.'}
+                          for issue in validation_issues(error, profile)]
+                raise PydanticCustomError('canonical_contract', 'The value does not match its canonical contract.',
+                                          {'issues': issues}) from None
         return value
 
     def model_dump(self, **kwargs: Any) -> Any:

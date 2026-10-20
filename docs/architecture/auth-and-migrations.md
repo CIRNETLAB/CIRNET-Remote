@@ -27,6 +27,40 @@ proven guest ownership. The Web retires prior remote connections during an auth
 mutation and reconciles an unsuccessful/unknown rotation with one read-only
 session request; it never replays login, claim or Run.
 
+Ordinary requests only resolve existing credentials. Credential-free health and
+OPTIONS requests allocate no session or guest row; credential-free protected
+reads return `UNAUTHENTICATED`. Supplied stale cookies retain the established
+`SESSION_EXPIRED` policy, including health, and never install a cookie. Legacy
+reads reuse one revocable internal context per proof. Only explicit bootstrap
+allocates new credentials: creation is limited to 30 per client address per
+60 seconds by default (`NETCIRCUIT_BOOTSTRAP_LIMIT`); valid credential reuse is
+not counted. Login retains separate address and account admission limits.
+An expired or revoked internal legacy context returns 401 on ordinary reads,
+even if the original proof has a longer remaining lifetime. It is not refreshed
+or resurrected; explicit bootstrap may still consume that live ownership proof
+and rotate to a new opaque credential.
+
+The application monitor performs one maintenance batch at most every minute,
+independently of the scheduler lock. An indexed batch removes at most 100
+credentials whose nominal expiry is at least one day old, including revoked
+credentials; it also removes at most 100 rate buckets older than one day.
+`NETCIRCUIT_AUTH_RETENTION_SECONDS` and `NETCIRCUIT_AUTH_MAINTENANCE_BATCH`
+configure retention and batch size. A failed batch leaves the next monitor
+iteration able to retry. Principals, users, ownership, operations and audit rows
+are retained; session deletion cannot delete evidence or an owned document.
+Expired/revoked context rows remain as fences while the matching legacy proof
+is live, including with a zero retention setting. Maintenance reads at most
+one configured batch of candidate scalar rows and proof IDs; an expiry/ID
+keyset cursor advances past protected rows so other expired sessions still
+progress, then wraps for the next pass. Principals are not deleted.
+The address bucket table fails closed at 10,000 rows pending maintenance.
+Multi-session revocation accepts every affected execution cancellation before
+remote cleanup is dispatched. Expiry/disconnect sweeps use the same bounded
+four-worker Stop dispatcher, with at most 16 outstanding identities, separately
+from simulation workers. A contended execution configuration is retried by the
+monitor rather than delaying another station's Stop. Stop ACK bookkeeping does
+not release a lease; worker cleanup still requires the real safe-state outcome.
+
 Set `NETCIRCUIT_ALLOW_GUEST=false` in production and provide explicit HTTPS
 `NETCIRCUIT_TRUSTED_ORIGINS`. Production also requires PostgreSQL. Insecure
 production combinations fail configuration validation. Development guest mode
@@ -62,7 +96,9 @@ Feedback defaults to `observed_only`; future detailed feedback must honor the
 stored policy rather than expose teacher answers by default.
 
 The current Alembic chain is `0001_legacy` → `0002_auth` → `0003_projects` →
-`0004_assignments` → `0005_captures`. This guide describes its identity foundation;
+`0004_assignments` → `0005_captures` → `0006_experiment_runtime` →
+`0007_auth_maintenance`. Revision 0007 adds expiry/principal/rate-window indexes
+without rewriting credentials or ownership. This guide describes its identity foundation;
 the project, assignment and capture guides cover their later revisions. New
 repositories run the chain, replacing unversioned `create_all`. The baseline verifies required legacy
 columns before admitting an existing database and creates missing historical

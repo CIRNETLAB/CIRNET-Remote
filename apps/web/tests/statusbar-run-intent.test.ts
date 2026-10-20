@@ -25,7 +25,7 @@ function setup(){
   const preview=new Promise<ExecutionPresentationResult>((yes,no)=>{resolve=yes;reject=no})
   circuit.attachExecutionPresentation(async()=>preview);station.setStations([stationFixture('v1'),stationFixture('v2')]);station.selectStation('v1');station.setEventsConnected(true)
   const calls:{url:string;body:unknown}[]=[]
-  configureApiClient({fetcher:async(url,options)=>{calls.push({url:String(url),body:options?.body?JSON.parse(String(options.body)):null});const state=String(url).endsWith('/run')?'QUEUED':'CREATED';return Response.json({...runningExperiment(state),state_history:state==='CREATED'?['CREATED']:['CREATED','QUEUED'],revision:state==='CREATED'?0:2,lease_expires_at:null})}})
+  configureApiClient({fetcher:async(url,options)=>{calls.push({url:String(url),body:options?.body?JSON.parse(String(options.body)):null});const state=String(url).endsWith('/run')?'QUEUED':'CREATED';return Response.json({...runningExperiment(state),state_history:state==='CREATED'?['CREATED']:['CREATED','QUEUED'],revision:state==='CREATED'?0:2,lease_expires_at:null},{status:String(url).endsWith('/experiments')?201:200})}})
   const view=mountExecutionPanel(Component,pinia),run=()=>view.commands.run()
   return {pinia,circuit,station,experiment,instrument,auth,workspace,calls,view,run,resolve:()=>resolve({device_states:{},pin_values:{},diagnostics:[]}),reject}
 }
@@ -85,7 +85,7 @@ test('after preflight finishes the Stop button preserves pending Create transpor
     for(let i=0;i<20&&!calls.length;i++)await new Promise(resolve=>setTimeout(resolve,0))
     await nextTick();await (context.view.find('button','aria-label','Stop').props.onClick as ()=>Promise<unknown>)()
     assert.equal(signal?.aborted,false)
-    acknowledge(Response.json({...runningExperiment('CREATED'),state_history:['CREATED'],revision:0,lease_expires_at:null}));await pending
+    acknowledge(Response.json({...runningExperiment('CREATED'),state_history:['CREATED'],revision:0,lease_expires_at:null},{status:201}));await pending
     assert.deepEqual(calls,['/api/experiments','/api/experiments/e1/stop'])
   }finally{context.view.app.unmount();context.experiment.cancelPending()}
 })

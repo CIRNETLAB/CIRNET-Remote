@@ -122,7 +122,7 @@ test('payload fetch uses the configured API and encoded ID rather than an untrus
 test('owner denial retains a visible error and never renders or caches samples', async () => {
   const pinia = createPinia(); setActivePinia(pinia)
   const { metadata } = captureFixture()
-  configureApiClient({ fetcher: async () => Response.json({ code: 'CAPTURE_NOT_FOUND', message: 'Capture is unavailable to this session.' }, { status: 404 }) })
+  configureApiClient({ fetcher: async () => Response.json({ code: 'CAPTURE_NOT_FOUND', message: 'Capture is unavailable to this session.', request_id:'capture-denied' }, { status: 404 }) })
   const store = useInstrumentStore(); store.useCapture(metadata); await store.ensureCaptureLoaded()
   assert.equal(store.capture, null); assert.equal(store.captureError, 'Capture is unavailable to this session.')
   const monitor = mountSfc(await loadSfc('components/windows/SignalMonitorWindow.vue'), pinia)

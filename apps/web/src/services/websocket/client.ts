@@ -6,7 +6,7 @@ import { controlClientId } from '../session/controlClient'
 export type ResyncReason = 'STREAM_RESET' | 'SEQUENCE_GAP' | 'QUEUE_OVERFLOW' | 'PROTOCOL_MISMATCH' | 'INVALID_EVENT'
 export interface EventProtocolIssue { code: 'INVALID_EVENT' | 'PROTOCOL_MISMATCH'; message: string }
 
-export type ConnectionState = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'closed'
+export type ConnectionState = 'idle' | 'connecting' | 'connected' | 'negotiating' | 'reconciling' | 'ready' | 'reconnecting' | 'closed'
 export interface SocketLike {
   onopen: ((event: Event) => void) | null
   onclose: ((event: CloseEvent) => void) | null
@@ -40,6 +40,7 @@ export function createEventClient(options: EventClientOptions): EventClient {
   let timer: ReturnType<typeof setTimeout> | null = null
   let attempts = 0
   let streamId: string | null = null, sequence = -1
+  let helloReceived=false
   const revisions = new Map<string, number>()
   const schedule = options.schedule ?? setTimeout
   const cancel = options.cancel ?? clearTimeout
@@ -53,6 +54,7 @@ export function createEventClient(options: EventClientOptions): EventClient {
     }
   }
   function retire() {
+    helloReceived=false
     if (!socket) return
     const previous = socket
     socket = null
@@ -73,6 +75,7 @@ export function createEventClient(options: EventClientOptions): EventClient {
     try {
       const current = (options.createSocket ?? ((url) => new WebSocket(url)))(options.url)
       socket = current
+      helloReceived=false;streamId=null;sequence=-1
       current.onopen = () => { if (active && socket === current) {
         attempts = 0; state('connected')
         current.send?.(JSON.stringify({ type: 'client.hello', protocol_version: '1.0',control_client_id:(options.controlClientId??controlClientId)() }))
@@ -91,13 +94,19 @@ export function createEventClient(options: EventClientOptions): EventClient {
         if (isRecord(data) && 'protocol_version' in data && data.protocol_version !== '1.0') { protocolFailure('PROTOCOL_MISMATCH'); return }
         const event = parseServerEvent(data)
         if (!event) { protocolFailure('INVALID_EVENT'); return }
+        // OPEN is only the transport state. A scoped hello establishes which
+        // ordered stream may feed consumers; an update cannot invent it.
+        if(event.type!=='hello'&&!helloReceived){protocolFailure('INVALID_EVENT');return}
+        if(!isVersionedServerEvent(event)&&streamId!==null){protocolFailure('INVALID_EVENT');return}
         if (isVersionedServerEvent(event)) {
           if (event.type === 'hello') {
             if(streamId===event.stream_id&&event.sequence<=sequence) return
-            if (streamId !== event.stream_id || event.resync_required) resync('STREAM_RESET')
+            const reset=streamId!==event.stream_id||event.resync_required
             streamId = event.stream_id; sequence = event.sequence
+            helloReceived=true;state('ready')
+            if(reset)resync('STREAM_RESET')
           } else {
-            if (streamId !== event.stream_id) { resync('STREAM_RESET'); streamId = event.stream_id; sequence = -1 }
+            if (streamId !== event.stream_id) { protocolFailure('INVALID_EVENT');return }
             if (event.sequence <= sequence) return
             if (sequence >= 0 && event.sequence !== sequence + 1 && event.type !== 'resync.required') resync('SEQUENCE_GAP')
             sequence = event.sequence
@@ -111,7 +120,7 @@ export function createEventClient(options: EventClientOptions): EventClient {
             // Sequence ordering remains authoritative; the revision cache only needs recent aggregates.
             if(revisions.size>256) revisions.delete(revisions.keys().next().value!)
           }
-        }
+        }else if(event.type==='hello'){helloReceived=true;state('ready');resync('STREAM_RESET')}
         options.onEvent(event)
       }
     } catch { reconnect() }

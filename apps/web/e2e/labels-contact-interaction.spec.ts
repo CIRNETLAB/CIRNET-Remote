@@ -246,6 +246,8 @@ test('native board transforms carry Labels, board copy remaps association and bo
   await historyRoundTrip(page, moved, rotated)
 
   await selectTool(page, 'Select')
+  // A quarter-turned long board extends beyond the previous horizontal framing.
+  await page.getByRole('button', { name: 'Zoom To View Entire Circuit', exact: true }).click()
   const removePoint = await projectContact(page, 'BB', 'terminal:A:03'); await page.mouse.click(removePoint.x, removePoint.y)
   await workspaceCanvas(page).press('Delete')
   const detached = await exportedNativeGraph(page), note = moduleById(detached, placed.label.id)
@@ -295,11 +297,16 @@ test('native SS12D10, independent DIP bits and tactile press/release/cancel use 
     await historyRoundTrip(page, before, after); before = after
   }
   for (const bit of [0, 2]) {
+    // The previous selected component's Info panel overlays the right-hand DIP.
+    const close = info(page).getByRole('button', { name: 'Close Component Info', exact: true })
+    if (await close.isVisible()) await close.click()
     const point = await actuatorPoint(page, 'D', `package-switch-actuator-${bit}`); await page.mouse.click(point.x, point.y)
     const after = await exportedNativeGraph(page)
     expect([0, 1, 2, 3].map(index => moduleById(after, 'D').properties?.[`position${index}`])).toEqual(bit === 0 ? [true, false, false, false] : [true, false, true, false])
     await historyRoundTrip(page, before, after); before = after
   }
+  const close = info(page).getByRole('button', { name: 'Close Component Info', exact: true })
+  if (await close.isVisible()) await close.click()
   const dipCancel = await actuatorPoint(page, 'D', 'package-switch-actuator-1')
   await page.mouse.move(dipCancel.x, dipCancel.y); await page.mouse.down(); await cancelPointer(page)
   expect(await exportedNativeGraph(page), 'cancelled latching input has no transaction').toEqual(before)
@@ -315,4 +322,59 @@ test('native SS12D10, independent DIP bits and tactile press/release/cancel use 
   expect(after.connections).toEqual([])
   expect((await nativeSceneEvidence(page)).trustedPointerDowns).toBeGreaterThanOrEqual(7)
   await attachEvidence(page, testInfo, 'native-contact-controls', after)
+})
+
+test('native held tactile input stays out of checkpoint, Export and server Save',async({page,context},testInfo)=>{
+  test.setTimeout(150_000)
+  const {getPartForType,physicalDescriptorForPart}=await contactCatalog(),part=getPartForType('PUSH_BUTTON_B3F1000')!
+  const name=`Authored tactile ${randomUUID()}`
+  await openNative(page,{schema_version:'1.2',circuit_id:name,metadata:{name},modules:[{
+    id:'T',type:part.editorType,position:{x:0,y:.5,z:0},physicalDescriptor:physicalDescriptorForPart(part),properties:{...part.editor.defaults,pressed:false},
+  }],connections:[]})
+  const runtime=await workspaceCanvas(page).evaluate(element=>{
+    const canvas=element as HTMLCanvasElement,gl=canvas.getContext('webgl2')??canvas.getContext('webgl')
+    const debug=gl?.getExtension('WEBGL_debug_renderer_info')
+    return{userAgent:navigator.userAgent,devicePixelRatio:window.devicePixelRatio,renderer:gl?.getParameter(debug?debug.UNMASKED_RENDERER_WEBGL:gl.RENDERER),vendor:gl?.getParameter(debug?debug.UNMASKED_VENDOR_WEBGL:gl.VENDOR)}
+  })
+  await testInfo.attach('browser-runtime',{body:Buffer.from(JSON.stringify({browserVersion:page.context().browser()?.version(),...runtime})),contentType:'application/json'})
+  await fileCommand(page,'Open Project')
+  await projects(page).getByLabel('New project name',{exact:true}).fill(name)
+  await projects(page).getByRole('button',{name:'Create project',exact:true}).click()
+  await projects(page).getByRole('button',{name:'Save circuit as new server document',exact:true}).click()
+  await expect(projects(page).getByLabel('Server save status',{exact:true})).toContainText('saved')
+  await expect(page).toHaveURL(/\/projects\/[^/]+\/circuits\/[^/]+$/)
+  const id=new URL(page.url()).pathname.split('/').at(-1)!
+  await page.getByRole('button',{name:'Close Project Manager',exact:true}).click()
+  await selectTool(page,'Select')
+  const point=await actuatorPoint(page,'T');await page.mouse.move(point.x,point.y)
+  const holdStarted=await page.evaluate(()=>Date.now())
+  await page.mouse.down()
+  await expect.poll(async()=>(await actuatorPoint(page,'T')).worldY).toBeLessThan(point.worldY-.0001)
+  // Read the real storage adapter's persisted row after its 350 ms debounce.
+  // This observer has no document/controller mutation path.
+  await expect.poll(()=>page.evaluate(async({name,holdStarted})=>{
+    const database=await new Promise<IDBDatabase>((resolve,reject)=>{const open=indexedDB.open('netcircuit-document-recovery');open.onsuccess=()=>resolve(open.result);open.onerror=()=>reject(open.error)})
+    try{return await new Promise<unknown>((resolve,reject)=>{const request=database.transaction('drafts','readonly').objectStore('drafts').getAll();request.onsuccess=()=>{const row=request.result.find((row:{value:{name:string}})=>row.value.name===name);resolve(row?{pressed:row.value.graph.modules[0].properties.pressed,fresh:row.value.updatedAt>=holdStarted+350}:null)};request.onerror=()=>reject(request.error)})}
+    finally{database.close()}
+  },{name,holdStarted})).toEqual({pressed:false,fresh:true})
+  // Keyboard menu activation preserves the real held pointer while making the
+  // saved status visible again; a mouse click would release the tactile input.
+  await page.getByRole('button',{name:'File',exact:true}).press('Enter')
+  await page.getByRole('menuitem',{name:'Open Project',exact:true}).press('Enter')
+  await expect(projects(page).getByLabel('Server save status',{exact:true})).toContainText('saved')
+  const saved=page.waitForResponse(response=>response.request().method()==='PUT'&&response.url().endsWith(`/api/v2/circuits/${id}`))
+  await page.keyboard.press('Control+s');expect((await saved).ok()).toBe(true)
+  expect((await(await context.request.get(`/api/v2/circuits/${id}`)).json()).graph.modules[0].properties.pressed).toBe(false)
+  await expect.poll(async()=>(await actuatorPoint(page,'T')).worldY).toBeLessThan(point.worldY-.0001)
+  const pending=page.waitForEvent('download')
+  await page.getByRole('button',{name:'File',exact:true}).press('Enter')
+  await page.getByRole('menuitem',{name:'Export',exact:true}).press('Enter')
+  const stream=await(await pending).createReadStream();expect(stream).not.toBeNull()
+  const chunks:Buffer[]=[];for await(const chunk of stream!)chunks.push(Buffer.from(chunk))
+  expect(JSON.parse(Buffer.concat(chunks).toString('utf8')).modules[0].properties.pressed).toBe(false)
+  await page.mouse.up()
+  await expect.poll(async()=>(await actuatorPoint(page,'T')).worldY).toBeCloseTo(point.worldY,8)
+  await page.reload();await sceneReady(page)
+  expect(moduleById(await exportedNativeGraph(page),'T').properties?.pressed).toBe(false)
+  await attachEvidence(page,testInfo,'native-tactile-authored-persistence',await exportedNativeGraph(page))
 })

@@ -36,6 +36,18 @@ function harness() {
 const hello = (stream = 'stream-1') => ({ type: 'hello', service: 'netcircuit-api', protocol_version: '1.0', stream_id: stream, sequence: 0,
   resync_required: true, supported_protocol_versions: ['1.0'], capabilities: { snapshot_resync: true, ordered_stream: true, replay_commands: false } })
 
+test('transport OPEN cannot deliver state before hello, and protocol readiness follows valid hello',()=>{
+  const h=harness();h.client.connect();h.sockets[0].onopen?.({} as Event)
+  assert.equal(h.states.at(-1),'connected')
+  const send=(value:unknown)=>h.sockets[0].onmessage?.({data:JSON.stringify(value)} as MessageEvent)
+  send({type:'experiment.updated',protocol_version:'1.0',stream_id:'stream-1',sequence:1,
+    aggregate_id:'e1',aggregate_revision:1,experiment:{...runningExperiment(),revision:1}})
+  assert.equal(h.messages.length,0)
+  assert.ok(!h.states.includes('ready'))
+  send(hello());assert.equal(h.states.at(-1),'ready')
+  h.client.disconnect()
+})
+
 test('versioned streams negotiate and request snapshots on sequence gaps without replaying commands', () => {
   const h = harness(); h.client.connect(); h.sockets[0].onopen?.({} as Event)
   const send = (value: unknown) => h.sockets[0].onmessage?.({ data: JSON.stringify(value) } as MessageEvent)

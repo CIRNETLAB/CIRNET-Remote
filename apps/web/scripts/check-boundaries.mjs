@@ -95,8 +95,12 @@ const program=ts.createProgram([...files.keys()].filter(file=>extname(file)!=='.
 const checker=program.getTypeChecker()
 const bound=node=>!!checker.getSymbolAtLocation(node)?.declarations?.length
 const privateModule=spec=>/(?:hardware[_-]client|hardware-service|contracts\/hardware|rpc_v\d|@grpc|^grpc|^(?:node:)?(?:net|tls|fs|child_process|http|https|http2|dgram)(?:\/|$))/.test(spec)
-const pure=file=>/^(?:domain\/|application\/(?:projects|assets|ports)\/|editor\/PointerGestureSession\.ts$)/.test(label(file))
-const coreDependency=(spec,target)=>/^(?:vue(?:\/|$)|@vue\/|pinia(?:\/|$)|three(?:\/|$)|axios(?:\/|$)|undici(?:\/|$)|socket\.io|ws$)/.test(spec)
+const pure=file=>/^(?:domain\/|application\/|editor\/PointerGestureSession\.ts$)/.test(label(file))
+// Pure number-preserving JSON is the sole external core dependency. New
+// packages require an explicit policy decision; a transport package cannot
+// bypass the boundary merely by avoiding a known client's package name.
+const corePackages=new Set(['lossless-json'])
+const coreDependency=(spec,target)=>(!spec.startsWith('.')&&!spec.startsWith('@/')&&!corePackages.has(spec))
   ||!!target&&/^(?:stores|components|composables|three|services\/(?:api|websocket|session|assets))\//.test(label(target))
 const rendererDependency=(spec,target)=>/^(?:vue(?:\/|$)|@vue\/|pinia(?:\/|$)|axios(?:\/|$)|undici(?:\/|$)|socket\.io|ws$)/.test(spec)
   ||privateModule(spec)||!!target&&/^(?:stores|services\/(?:api|websocket))\//.test(label(target))

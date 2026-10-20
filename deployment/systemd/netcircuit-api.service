@@ -13,7 +13,7 @@ EnvironmentFile=/etc/netcircuit/netcircuit.env
 Environment=NETCIRCUIT_ENV=production
 Environment=NETCIRCUIT_CAPTURE_DIR=/var/lib/netcircuit/captures
 ExecStartPre=/opt/netcircuit/venv-api/bin/python -m app.migrate --check
-ExecStart=/opt/netcircuit/venv-api/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1 --proxy-headers --forwarded-allow-ips 127.0.0.1 --no-access-log
+ExecStart=/opt/netcircuit/venv-api/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1 --proxy-headers --forwarded-allow-ips 127.0.0.1 --no-access-log --ws-max-size 65536 --ws-max-queue 4
 Restart=on-failure
 RestartSec=3
 NoNewPrivileges=true

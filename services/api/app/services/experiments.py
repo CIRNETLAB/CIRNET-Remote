@@ -3,6 +3,7 @@ from collections import defaultdict, deque
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from threading import Event, RLock
+from weakref import WeakValueDictionary
 import time
 import uuid
 from jsonschema import ValidationError
@@ -25,6 +26,7 @@ TERMINAL={'COMPLETE','FAULT'}
 
 
 class ExperimentManager:
+    recovery_limit=10000
     def __init__(self,repository,gateway,*,submit=None,clock=time.time,lease_seconds=120,emit=None,capture_store=None,simulation_workers=None,
                  control_session_active=None,public_projection=None,document_resolver=None,authorize_session=None,
                  assignment_resolver=None,authorize_assignment=None,capture_retention_seconds=2592000):
@@ -39,6 +41,12 @@ class ExperimentManager:
         self.authorize_assignment=authorize_assignment
         self.capture_retention_seconds=capture_retention_seconds
         self.lock=RLock(); self.queues=defaultdict(deque); self.cancel={}; self.rate={}
+        self.rate_limit_entries=4096
+        self.dispatching=set();self.dispatch_again=set();self.control_locks=WeakValueDictionary()
+        # Safety dispatch has independent, bounded capacity; running simulator
+        # workers or a blocked same-execution configuration cannot occupy it.
+        self.stop_executor=ThreadPoolExecutor(max_workers=4,thread_name_prefix='netcircuit-stop')
+        self.stop_pending=set();self.stop_acknowledged=set();self.stop_dispatch_closed=False
         self.operations=OperationIdentity(self)
         self.simulation_workers=simulation_worker_count(simulation_workers)
         self.executor=ThreadPoolExecutor(max_workers=self.simulation_workers+4) if submit is None else None
@@ -55,7 +63,7 @@ class ExperimentManager:
     def _recover(self):
         # Electrical cleanup must precede capture I/O: an unwritable storage
         # directory or malformed historical payload cannot leave a live lease.
-        for lease in self.repo.leases():
+        for lease in self._lease_records():
             eid=lease['experiment_id']; e=self.repo.get_experiment(eid)
             try:
                 reply=self.gateway.call(e['station_id'],eid,'stop_execution')
@@ -69,7 +77,7 @@ class ExperimentManager:
         # Upgrade local unpublished R7 records without retaining samples in SQL.
         # Storage errors abort startup only after cleanup; valid old data stays
         # in SQL for a retry. Impossible old evidence is reported explicitly.
-        for record in self.repo.list_experiments():
+        for record in self._recovery_records('legacy_capture'):
             if record.get('capture') and 'samples' in record['capture']:
                 try:
                     record['capture']=self.captures.persist(record['capture'],record['mode'])
@@ -79,8 +87,8 @@ class ExperimentManager:
                     record['error_code']=record.get('error_code') or 'CAPTURE_CORRUPT'
                 record['revision']=record.get('revision',0)+1
                 self.repo.save_experiment(record)
-        experiments=self.repo.list_experiments()
-        self.admission_sequence=max((e.get('_queue_sequence',0) for e in experiments),default=0)
+        experiments=list(self._recovery_records('queued'))
+        self.admission_sequence=self.repo.admission_sequence()
         for e in sorted(experiments,key=lambda e:e.get('_queue_sequence',0)):
             if e['state']=='QUEUED':
                 if '_assignment_snapshot' not in e:
@@ -93,8 +101,41 @@ class ExperimentManager:
                     self.repo.save_experiment(e)
                 self.queues[e['station_id']].append(e['experiment_id'])
         # Resume persisted FIFO work without waiting for another student's Run.
+        for station_id in tuple(self.queues): self._dispatch(station_id)
+
+    def _recovery_records(self,kind):
+        after='';count=0
+        while True:
+            records=self.repo.scheduler_recovery_page(kind,after=after)
+            if not records:return
+            for record in records:
+                count+=1
+                if count>self.recovery_limit:raise ValueError('RECOVERY_LIMIT_EXCEEDED')
+                yield record
+            after=records[-1]['experiment_id']
+
+    def _lease_records(self):
+        after=''
+        while True:
+            records=self.repo.lease_page(after=after)
+            if not records:return
+            yield from records
+            after=records[-1]['experiment_id']
+
+    def _active_records(self,owner=None,*,session_id=None,client_id=None):
+        after=''
+        while True:
+            records=self.repo.active_experiments(owner,session_id=session_id,client_id=client_id,after=after,payload=False)
+            if not records:return
+            yield from records
+            after=records[-1]['experiment_id']
+
+    def _control_lock(self,eid):
+        # Only waiting/active callers retain an execution lock.
         with self.lock:
-            for station_id in tuple(self.queues): self._dispatch(station_id)
+            value=self.control_locks.get(eid)
+            if value is None:value=RLock();self.control_locks[eid]=value
+            return value
 
     def _public(self,e,owner):
         value=deepcopy({k:v for k,v in e.items() if not k.startswith('_') and k!='capture'})
@@ -108,7 +149,8 @@ class ExperimentManager:
     def get(self,eid,owner):
         with self.lock:
             e=self.repo.get_experiment(eid,owner)
-            e['queue_position']=(list(self.queues[e['station_id']]).index(eid)+1) if eid in self.queues[e['station_id']] else None
+            queue=self.queues.get(e['station_id'],())
+            e['queue_position']=(list(queue).index(eid)+1) if eid in queue else None
             return self._public(e,owner)
 
     def list(self,owner):
@@ -126,7 +168,7 @@ class ExperimentManager:
     def active_snapshot(self,owner,*,cursor=None):return self._page(owner,limit=100,cursor=cursor,active=True)
 
     def queue(self,station_id):
-        with self.lock: return list(self.queues[station_id])
+        with self.lock: return list(self.queues.get(station_id,()))
 
     def _refresh_queue_positions(self,station_id):
         for position,eid in enumerate(self.queues[station_id],1):
@@ -242,9 +284,11 @@ class ExperimentManager:
             if e['state'] not in {'CREATED'}:
                 if e['state'] not in TERMINAL: return self.get(eid,owner)
                 raise ValueError('INVALID_STATE')
-            if self.clock()-self.rate.get(owner,float('-inf'))<1:
+            now=self.clock()
+            self.rate={key:stamp for key,stamp in self.rate.items() if now-stamp<1}
+            if now-self.rate.get(owner,float('-inf'))<1 or len(self.rate)>=self.rate_limit_entries:
                 raise ValueError('RATE_LIMITED')
-            if any(x['state'] not in TERMINAL|{'CREATED'} for x in self.repo.list_experiments(owner)):
+            if self.repo.has_active_experiment(owner):
                 raise ValueError('RESOURCE_CONFLICT')
             if len(self.queues[e['station_id']])>=50: raise ValueError('QUEUE_FULL')
             assignment_snapshot=e['_assignment_snapshot'] if '_assignment_snapshot' in e else self.repo.get_assignment(e['assignment_id']) if e['assignment_id'] else None
@@ -256,38 +300,62 @@ class ExperimentManager:
                              _control_session_id=control_session_id,_control_client_id=control_client_id,
                              _assignment_snapshot=deepcopy(assignment_snapshot),
                              _snapshot_provenance=e.get('_snapshot_provenance','legacy_admission'))
-            self._dispatch(e['station_id'])
-            return self.get(eid,owner)
+        self._dispatch(e['station_id'])
+        return self.get(eid,owner)
 
     def _dispatch(self,station_id):
-        if self.closed: return
-        queue=self.queues[station_id]
-        while queue:
-            e=self.repo.get_experiment(queue[0]); eid=e['experiment_id']
-            leases=[l for l in self.repo.leases() if l['station_id']==station_id]
-            # A quarantined fabric cannot be partitioned into an assumed safe slot.
-            if any(l['quarantined'] for l in leases): return
-            try:
-                caps=validate('StationCapabilities',self.gateway.capabilities(station_id))
-                supported=caps['available'] and caps['mode']==e['mode'] and (caps['virtual_digital'] if e['mode']=='simulation' else caps['physical_digital'])
-                capacity=self.simulation_workers if e['mode']=='simulation' else caps['physical_execution_slots']
-            except (GatewayError,ValueError,ValidationError): supported=False; capacity=0
-            if not supported or capacity==0:
-                queue.popleft()
-                self._transition(eid,'COMPLETE',queue_position=None,execution_decision={'schema_version':'1.0',
-                    'decision':'BLOCK_UNEXECUTABLE','reasons':['Station unavailable or execution capacity is zero']})
-                self._refresh_queue_positions(station_id)
-                continue
-            occupied={l['slot'] for l in leases}
-            if len(occupied)>=capacity: return
-            slot=next((n for n in range(capacity) if n not in occupied),None)
-            if slot is None: return
-            eid=queue[0]; expiry=self.clock()+self.lease_seconds
-            if not self.repo.reserve(station_id,slot,eid,expiry): return
-            self.cancel.setdefault(eid,Event())
-            queue.popleft(); self._transition(eid,'RESERVED',lease_expires_at=expiry,queue_position=None)
-            self._refresh_queue_positions(station_id)
-            self.submit(self._execute,eid)
+        with self.lock:
+            if self.closed:return
+            if station_id in self.dispatching:
+                self.dispatch_again.add(station_id);return
+            self.dispatching.add(station_id)
+        try:
+            while True:
+                with self.lock:
+                    queue=self.queues.get(station_id)
+                    if self.closed or not queue:return
+                    e=self.repo.get_experiment(queue[0]);eid=e['experiment_id'];revision=e['revision']
+                # Capabilities are remote I/O. The queue-head/revision fence is
+                # checked again before consuming FIFO or reserving a slot.
+                try:
+                    caps=validate('StationCapabilities',self.gateway.capabilities(station_id))
+                    supported=caps['available'] and caps['mode']==e['mode'] and (caps['virtual_digital'] if e['mode']=='simulation' else caps['physical_digital'])
+                    capacity=self.simulation_workers if e['mode']=='simulation' else caps['physical_execution_slots']
+                except (GatewayError,ValueError,ValidationError):supported=False;capacity=0
+                with self.lock:
+                    if self.closed:return
+                    if not queue or queue[0]!=eid:continue
+                    latest=self.repo.get_experiment(eid)
+                    if latest['revision']!=revision or latest['state']!='QUEUED':continue
+                    session=latest.get('_control_session_id')
+                    if session and not self._control_active(session):
+                        queue.popleft();self.cancel.pop(eid,None)
+                        self._transition(eid,'COMPLETE',error_code='SESSION_EXPIRED',queue_position=None)
+                        self._refresh_queue_positions(station_id);continue
+                    leases=[l for l in self.repo.leases() if l['station_id']==station_id]
+                    if any(l['quarantined'] for l in leases):return
+                    if not supported or capacity==0:
+                        queue.popleft();self.cancel.pop(eid,None)
+                        self._transition(eid,'COMPLETE',queue_position=None,execution_decision={'schema_version':'1.0',
+                            'decision':'BLOCK_UNEXECUTABLE','reasons':['Station unavailable or execution capacity is zero']})
+                        self._refresh_queue_positions(station_id);continue
+                    occupied={l['slot'] for l in leases}
+                    if len(occupied)>=capacity:return
+                    slot=next((n for n in range(capacity) if n not in occupied),None)
+                    if slot is None:return
+                    expiry=self.clock()+self.lease_seconds
+                    if not self.repo.reserve(station_id,slot,eid,expiry):return
+                    self.cancel.setdefault(eid,Event());queue.popleft()
+                    self._transition(eid,'RESERVED',lease_expires_at=expiry,queue_position=None,_reservation_generation=uuid.uuid4().hex)
+                    self._refresh_queue_positions(station_id)
+                self.submit(self._execute,eid)
+        finally:
+            with self.lock:
+                self.dispatching.discard(station_id)
+                again=station_id in self.dispatch_again
+                self.dispatch_again.discard(station_id)
+                if not self.queues.get(station_id):self.queues.pop(station_id,None)
+            if again:self._dispatch(station_id)
 
     def _control_active(self,session_id):
         if self.control_session_active is None: return True
@@ -307,6 +375,7 @@ class ExperimentManager:
         e=self.repo.get_experiment(eid)
         reply=self.gateway.call(e['station_id'],eid,method,**kwargs)
         if reply.get('accepted') is False: raise GatewayError(reply.get('code','DRIVER_ERROR'))
+        self._check_cancel(eid)
         return reply
 
     def _execute(self,eid):
@@ -317,15 +386,16 @@ class ExperimentManager:
             return self._execute_in_context(eid)
 
     def _execute_in_context(self,eid):
-        touched=False
+        touched=False;terminal_state='COMPLETE'
         try:
             self._check_cancel(eid)
             e=self.repo.get_experiment(eid)
             assignment=deepcopy(e['_assignment_snapshot']) if '_assignment_snapshot' in e else self.repo.get_assignment(e['assignment_id']) if e['assignment_id'] else None
             caps=validate('StationCapabilities',self.gateway.capabilities(e['station_id']))
+            self._check_cancel(eid)
             supported=caps['available'] and (caps['virtual_digital'] if e['mode']=='simulation' else caps['physical_digital'] and caps['physical_execution_slots']>=1)
             if not supported:
-                self._transition(eid,'COMPLETE',execution_decision={'schema_version':'1.0','decision':'BLOCK_UNEXECUTABLE','reasons':['Station unavailable or capability unsupported']})
+                self._transition(eid,e['state'],execution_decision={'schema_version':'1.0','decision':'BLOCK_UNEXECUTABLE','reasons':['Station unavailable or capability unsupported']})
                 return
             self._transition(eid,'SAFE_STATE'); touched=True; self._call(eid,'enter_safe_state')
             if e['mode']=='hardware':
@@ -347,7 +417,7 @@ class ExperimentManager:
             decision=self.policy.decide(safety,executable,unknown)
             self._transition(eid,'EXECUTION_DECISION',safety_verification=safety,topology_verification=topology,execution_decision=decision)
             if decision['decision'].startswith('BLOCK_'):
-                self._transition(eid,'COMPLETE'); return
+                return
             self._transition(eid,'ROUTE_PREPARE',_execution_plan=plan); self._call(eid,'prepare_execution',plan=plan,decision=decision)
             self._call(eid,'apply_routing')
             self._transition(eid,'GUARDED_POWER_UP'); self._call(eid,'guarded_power_up')
@@ -361,16 +431,17 @@ class ExperimentManager:
             except OSError:raise GatewayError('CAPTURE_STORAGE_UNAVAILABLE') from None
             functional=self.functional.verify(assignment,data,e['_configuration'].get('test_vectors',[]))
             grade=validate('AssessmentResult',self.assessment.evaluate(assignment,topology,functional))
-            self._transition(eid,'COMPLETE',functional_verification=functional,assessment=grade)
+            self._transition(eid,'FUNCTIONAL_VERIFY',functional_verification=functional,assessment=grade)
         except Cancelled:
-            self._transition(eid,'COMPLETE')
+            pass
         except Exception as error:
             code=error.code if isinstance(error,GatewayError) else str(error) if isinstance(error,ValueError) and str(error) in ('CAPTURE_QUOTA_EXCEEDED','CAPTURE_KEY_CONFLICT','CAPTURE_PAYLOAD_LIMIT') else 'DRIVER_ERROR'
             # Stop can invalidate the current RPC generation; actual safety/driver
             # faults must still be reported even when cancellation is concurrent.
             if self.cancel.get(eid) and self.cancel[eid].is_set() and isinstance(error,GatewayError) and code in ('INVALID_STATE','RESOURCE_CONFLICT'):
-                self._transition(eid,'COMPLETE')
+                pass
             else:
+                terminal_state='FAULT'
                 updates={}
                 if code in ('UNSAFE','SAFETY_INDETERMINATE'):
                     updates['safety_verification']=result('UNSAFE' if code=='UNSAFE' else 'INDETERMINATE',[code])
@@ -380,12 +451,11 @@ class ExperimentManager:
                 self._transition(eid,'FAULT',error_code=code,**updates)
         finally:
             e=self.repo.get_experiment(eid)
-            terminal_state=e['state']
             safe=not touched
             if touched:
                 try:
                     self._transition(eid,'STOPPING')
-                    reply=self.gateway.call(e['station_id'],eid,'stop_execution')
+                    with self._control_lock(eid):reply=self.gateway.call(e['station_id'],eid,'stop_execution')
                     safe=reply.get('accepted') is True and (e['mode']=='simulation' or reply.get('hardware_applied') is True)
                 except Exception: safe=False
             with self.lock:
@@ -400,8 +470,9 @@ class ExperimentManager:
                         safety_verification=result('INDETERMINATE',['Safe cleanup unacknowledged']),
                         execution_decision={'schema_version':'1.0','decision':'BLOCK_SAFETY','reasons':['SAFE_STATE_FAILED']})
                 self.cancel.pop(eid,None)
+                self.stop_acknowledged.discard(eid)
                 self._transition(eid,terminal_state,lease_expires_at=None)
-                self._dispatch(e['station_id'])
+            self._dispatch(e['station_id'])
 
     def stop(self,eid,owner,code='STOPPED',*,operation_key=None):
         if operation_key is not None:
@@ -409,23 +480,72 @@ class ExperimentManager:
         return self._stop(eid,owner,code)
 
     def _stop(self,eid,owner,code='STOPPED'):
+        remote=self._accept_stop(eid,owner,code)
+        if remote:self._remote_stop(eid,blocking=True)
+        return self.get(eid,owner)
+
+    def _accept_stop(self,eid,owner,code):
         with self.lock:
             e=self.repo.get_experiment(eid,owner)
-            if e['state'] in TERMINAL: return self.get(eid,owner)
-            if eid in self.queues[e['station_id']]:
+            if e['state'] in TERMINAL:return False
+            if eid in self.queues.get(e['station_id'],()):
                 self.queues[e['station_id']].remove(eid)
                 self.cancel.pop(eid,None)
                 self._transition(eid,'COMPLETE',error_code=code,queue_position=None)
                 self._refresh_queue_positions(e['station_id'])
             elif eid in self.cancel:
-                if self.cancel[eid].is_set(): return self.get(eid,owner)
+                if self.cancel[eid].is_set():return False
                 self.cancel[eid].set()
                 self._transition(eid,'STOPPING',error_code=code)
-                # Interrupt actual hardware immediately; slot is released by worker only after acknowledged cleanup.
-                try: self.gateway.call(e['station_id'],eid,'stop_execution')
-                except Exception: pass
+                return True
             else: self._transition(eid,'COMPLETE',error_code=code)
-            return self.get(eid,owner)
+        return False
+
+    def _remote_stop(self,eid,*,blocking=False):
+        control=self._control_lock(eid)
+        acquired=control.acquire(blocking=blocking)
+        try:
+            # A sweep never waits behind the same execution's configuration.
+            # The accepted cancellation remains eligible on the next monitor
+            # tick; its worker also checks it before/after every remote call.
+            if not acquired:return
+            with self.lock:
+                event=self.cancel.get(eid)
+                if event is None or not event.is_set():return
+                e=self.repo.get_experiment(eid)
+                if e['state']!='STOPPING':return
+                generation=e.get('_reservation_generation')
+            try:reply=self.gateway.call(e['station_id'],eid,'stop_execution')
+            except Exception:return
+            if reply.get('accepted') is True and (e['mode']=='simulation' or reply.get('hardware_applied') is True):
+                with self.lock:
+                    current=self.repo.get_experiment(eid)
+                    if (eid in self.cancel and current['state']=='STOPPING'
+                            and current.get('_reservation_generation')==generation):self.stop_acknowledged.add(eid)
+            # Only worker cleanup may release/quarantine a lease. This ACK is
+            # bookkeeping for duplicate suppression, never a safe-state claim.
+        finally:
+            if acquired:control.release()
+            if not blocking:
+                with self.lock:self.stop_pending.discard(eid)
+
+    def dispatch_cancelled_stops(self):
+        with self.lock:
+            if self.stop_dispatch_closed:return
+            available=16-len(self.stop_pending)
+            identities=[eid for eid,event in self.cancel.items()
+                if event.is_set() and eid not in self.stop_pending and eid not in self.stop_acknowledged][:available]
+            self.stop_pending.update(identities)
+        for eid in identities:
+            try:self.stop_executor.submit(self._remote_stop,eid)
+            except RuntimeError:
+                with self.lock:self.stop_pending.discard(eid)
+
+    def _cancel_records(self,records,code):
+        # Accept the entire indexed stream before scheduling any slow cleanup.
+        # No extra list of graphs or unbounded executor backlog is retained.
+        for record in records:self._accept_stop(record['experiment_id'],record['owner_id'],code)
+        self.dispatch_cancelled_stops()
 
     def configure_instrument(self,eid,owner,payload,*,control_session_id=None,control_client_id=None):
         reply=self._configure_instrument_reply(eid,owner,payload,control_session_id=control_session_id,control_client_id=control_client_id)
@@ -433,7 +553,7 @@ class ExperimentManager:
 
     def instrument_access(self,eid,owner,*,control_session_id=None,control_client_id=None):
         from app.services.instrument_control import control_access
-        with self.lock:return control_access(self,eid,owner,control_session_id,control_client_id)
+        return control_access(self,eid,owner,control_session_id,control_client_id)
 
     def configure_generator_command(self,eid,owner,configuration,key,*,control_session_id=None,control_client_id=None):
         from app.services.instrument_control import configure_generator
@@ -444,33 +564,47 @@ class ExperimentManager:
         return command_record(self,eid,owner,key)
 
     def _configure_instrument_reply(self,eid,owner,payload,*,control_session_id=None,control_client_id=None):
-        # Short bounded control RPC shares the same lock as Stop/lease release.
-        # StartExecution remains outside this lock so Stop can interrupt it.
-        with self.lock:
-            e=self.repo.get_experiment(eid,owner)
-            if control_session_id is not None and not self._control_active(control_session_id):
-                raise ValueError('SESSION_EXPIRED')
-            if control_session_id is not None and (e.get('_control_session_id')!=control_session_id
-                    or e.get('_control_client_id')!=control_client_id):
-                raise PermissionError('FORBIDDEN')
-            if not isinstance(payload,dict) or set(payload)!={'instrument','configuration'}:
-                raise ValueError('INVALID_CONFIGURATION')
-            if payload['instrument'] not in ('generator','clock','trigger'): raise ValueError('INVALID_CONFIGURATION')
-            lease=next((l for l in self.repo.leases() if l['experiment_id']==eid),None)
-            if (self.closed or e['state']!='RUNNING' or lease is None or lease['quarantined']
-                    or lease['expires_at']<=self.clock() or self.cancel.get(eid,Event()).is_set()):
-                raise ValueError('INVALID_STATE')
-            if payload['instrument']!='generator': raise ValueError('NOT_IMPLEMENTED')
+        with self._control_lock(eid):
+            with self.lock:
+                e,lease=self._instrument_context(eid,owner,control_session_id,control_client_id)
+                revision=e['revision'];generation=e.get('_reservation_generation')
+            if not isinstance(payload,dict) or set(payload)!={'instrument','configuration'}:raise ValueError('INVALID_CONFIGURATION')
+            if payload['instrument'] not in ('generator','clock','trigger'):raise ValueError('INVALID_CONFIGURATION')
+            if payload['instrument']!='generator':raise ValueError('NOT_IMPLEMENTED')
             caps=validate('StationCapabilities',self.gateway.capabilities(e['station_id']))
             capability=caps['instrument_capabilities']['generator']
-            if not caps['available'] or caps['mode']!=e['mode']: raise ValueError('UNEXECUTABLE')
-            if not capability['runtime_reconfiguration_supported']: raise ValueError('NOT_IMPLEMENTED')
+            if not caps['available'] or caps['mode']!=e['mode']:raise ValueError('UNEXECUTABLE')
+            if not capability['runtime_reconfiguration_supported']:raise ValueError('NOT_IMPLEMENTED')
             config=validate_generator(payload['configuration'],capability)
             if not any(a['instrument']=='GENERATOR' and a['channel']==config['channel']
-                       for a in (e.get('_execution_plan') or {}).get('instrument_allocations',[])):
-                raise ValueError('UNEXECUTABLE')
-            reply=self._call(eid,'configure_instrument',**payload)
+                       for a in (e.get('_execution_plan') or {}).get('instrument_allocations',[])):raise ValueError('UNEXECUTABLE')
+            with self.lock:
+                current,current_lease=self._instrument_context(eid,owner,control_session_id,control_client_id)
+                if current['revision']!=revision or current.get('_reservation_generation')!=generation or current_lease!=lease:raise ValueError('INVALID_STATE')
+            reply=self.gateway.call(e['station_id'],eid,'configure_instrument',**payload)
+            with self.lock:
+                try:
+                    current,current_lease=self._instrument_context(eid,owner,control_session_id,control_client_id)
+                    if current['revision']!=revision or current.get('_reservation_generation')!=generation or current_lease!=lease:raise ValueError('INVALID_STATE')
+                except (ValueError,PermissionError):
+                    # A late remote ACK cannot restore a revoked lifecycle or
+                    # certify the configuration as applied to a new reservation.
+                    return {'accepted':False,'hardware_applied':False,'code':'CANCELLED'}
+            if reply.get('accepted') is False:raise GatewayError(reply.get('code','DRIVER_ERROR'))
             return reply
+
+    def _instrument_context(self,eid,owner,control_session_id,control_client_id):
+        e=self.repo.get_experiment(eid,owner)
+        if control_session_id is not None and not self._control_active(control_session_id):
+            raise ValueError('SESSION_EXPIRED')
+        if control_session_id is not None and (e.get('_control_session_id')!=control_session_id
+                or e.get('_control_client_id')!=control_client_id):
+            raise PermissionError('FORBIDDEN')
+        lease=next((l for l in self.repo.leases() if l['experiment_id']==eid),None)
+        if (self.closed or e['state']!='RUNNING' or lease is None or lease['quarantined']
+                or lease['expires_at']<=self.clock() or self.cancel.get(eid,Event()).is_set()):
+            raise ValueError('INVALID_STATE')
+        return e,lease
 
     def _capture_record(self,capture_id,owner):
         return self.repo.capture_reference(capture_id,owner)
@@ -508,34 +642,35 @@ class ExperimentManager:
             dry_run=dry_run,on_retired=self._capture_retired)
 
     def disconnect(self,owner):
-        for e in self.repo.list_experiments(owner):
-            if e['state'] not in TERMINAL|{'CREATED'}: self.stop(e['experiment_id'],owner,'DISCONNECTED')
+        self._cancel_records(self._active_records(owner),'DISCONNECTED')
 
     def disconnect_control(self,session_id,client_id=None,code='DISCONNECTED'):
         # Principal access is durable. Only the originating session/tab can
         # maintain this control lifetime; unrelated viewers have no influence.
-        for e in self.repo.list_experiments():
-            if (e.get('_control_session_id')==session_id
-                    and (client_id is None or e.get('_control_client_id')==client_id)
-                    and e['state'] not in TERMINAL|{'CREATED'}):
-                self.stop(e['experiment_id'],self.repo.owner(e['experiment_id']),code)
+        self._cancel_records(self._active_records(session_id=session_id,client_id=client_id),code)
+
+    def disconnect_controls(self,session_ids,code='SESSION_REVOKED'):
+        records=(record for session_id in dict.fromkeys(session_ids) for record in self._active_records(session_id=session_id))
+        self._cancel_records(records,code)
 
     def expire_control_sessions(self,is_active):
-        sessions={e.get('_control_session_id') for e in self.repo.list_experiments()
-                  if e['state'] not in TERMINAL|{'CREATED'} and e.get('_control_session_id')}
+        sessions={e['control_session_id'] for e in self._active_records() if e['control_session_id']}
+        expired=[]
         for session_id in sessions:
             try: active=is_active(session_id)
             except Exception: active=False
-            if not active: self.disconnect_control(session_id,code='SESSION_EXPIRED')
+            if not active:expired.append(session_id)
+        self.disconnect_controls(expired,code='SESSION_EXPIRED')
 
     def expire_leases(self):
-        for lease in self.repo.leases():
-            if not lease['quarantined'] and lease['expires_at']<=self.clock():
-                eid=lease['experiment_id']; self.stop(eid,self.repo.owner(eid),'TIMEOUT')
+        expired=({'experiment_id':lease['experiment_id'],'owner_id':self.repo.owner(lease['experiment_id'])}
+            for lease in self._lease_records() if not lease['quarantined'] and lease['expires_at']<=self.clock())
+        self._cancel_records(expired,'TIMEOUT')
 
     def close(self):
         if self.closed: return
         self.closed=True
-        for owner in {self.repo.owner(e['experiment_id']) for e in self.repo.list_experiments()}:
-            self.disconnect(owner)
+        self._cancel_records(self._active_records(),'DISCONNECTED')
         if self.executor: self.executor.shutdown(wait=True,cancel_futures=False)
+        with self.lock:self.stop_dispatch_closed=True
+        self.stop_executor.shutdown(wait=True,cancel_futures=False)

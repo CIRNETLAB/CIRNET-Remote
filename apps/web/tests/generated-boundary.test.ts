@@ -8,10 +8,22 @@ import { ApiError, createApiClient } from '../src/services/api/client'
 import type { ContractMap } from '../src/contracts/generated/dto'
 import type { ValidationProfile } from '../src/contracts/validation'
 import conformance from '../../../contracts/fixtures/conformance.json'
+import diagnostics from '../../../contracts/fixtures/diagnostics.json'
 
 const graph = (number: string, location = 'metadata') => location === 'metadata'
   ? `{"schema_version":"1.0","circuit_id":"precision","modules":[],"connections":[],"metadata":{"value":${number}}}`
   : `{"schema_version":"1.0","circuit_id":"precision","modules":[{"id":"L","type":"LED","position":{"x":${number}}}],"connections":[]}`
+
+test('shared canonical diagnostics preserve code, JSON Pointer and profile',()=>{
+  for(const item of diagnostics.cases) {
+    const name=item.contract as keyof ContractMap,profile=item.profile as ValidationProfile
+    if(item.valid){assert.deepEqual(parseLab(name,item.value,profile),item.value);continue}
+    assert.throws(()=>parseLab(name,item.value,profile),(error:unknown)=>{
+      const issues=(error as {issues?:{code:string;path:string;profile:string}[]}).issues
+      return !!issues?.some(issue=>issue.code===item.issue?.code&&issue.path===item.issue.path&&issue.profile===profile)
+    },item.id)
+  }
+})
 
 test('editor import rejects numeric schema versions without coercion', () => {
   assert.throws(() => parseCircuitFile('{"schema_version":1.1,"circuit_id":"numeric-version","modules":[],"connections":[]}'))

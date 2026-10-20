@@ -25,10 +25,12 @@ def page_experiments(repository,owner,*,limit=50,cursor=None,active=False):
     if type(limit) is not int or not 1<=limit<=100:raise ValueError('INVALID_PAGE_LIMIT')
     kind='active' if active else 'history';after=_cursor(cursor,owner,kind)
     table=repository.experiments;leases=repository.lease_table
-    state=table.c.payload['state'].as_string()
+    runtime=repository.experiment_runtime
+    state=runtime.c.state
     held=select(leases.c.experiment_id).where(leases.c.experiment_id==table.c.experiment_id).exists()
     priority=case((and_(state=='CREATED',~held),0),else_=1) if active else case((table.c.sequence>0,1),else_=1)
-    query=select(table.c.sequence,table.c.payload,priority.label('priority')).where(table.c.owner_id==owner)
+    query=select(table.c.sequence,table.c.payload,priority.label('priority')).select_from(
+        table.join(runtime,table.c.experiment_id==runtime.c.experiment_id)).where(table.c.owner_id==owner)
     if active:query=query.where(or_(state.not_in(('COMPLETE','FAULT')),held))
     if after:
         query=query.where(or_(priority<after['priority'],and_(priority==after['priority'],table.c.sequence<after['after'])))

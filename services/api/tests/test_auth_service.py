@@ -224,3 +224,24 @@ def test_no_guest_application_rejects_a_persisted_development_guest_cookie():
         current=client.get('/api/auth/session')
         assert current.status_code==200 and current.json()['principal'] is None
         assert client.get('/api/stations').status_code==401
+
+
+def test_bounded_maintenance_cursor_skips_live_legacy_fence_without_starving_other_sessions():
+    from sqlalchemy import insert,update
+    from app.services.auth import AuthService
+    repo=Repository('sqlite://');now=[1000.0]
+    auth=AuthService(repo,Settings(session_ttl_seconds=60,auth_retention_seconds=0,auth_maintenance_batch=1),clock=lambda:now[0])
+    try:
+        with repo.engine.begin() as db:db.execute(insert(repo.sessions).values(session_id='legacy-cursor',expires_at=4600))
+        protected,_=auth.ensure_session('legacy-cursor',consume_legacy=False,allow_create=False)
+        ordinary,_=auth.ensure_session(None)
+        with repo.engine.begin() as db:
+            db.execute(update(repo.auth_sessions).where(repo.auth_sessions.c.session_id==protected.session_id).values(expires_at=1,revoked=True))
+            db.execute(update(repo.auth_sessions).where(repo.auth_sessions.c.session_id==ordinary.session_id).values(expires_at=2))
+        assert auth.maintain()['sessions_removed']==0
+        assert auth.maintain()['sessions_removed']==1
+        assert auth.ensure_session('legacy-cursor',consume_legacy=False,allow_create=False)==(None,None)
+        auth.maintain()  # Finish the indexed pass; next batch wraps to its start.
+        now[0]=4601
+        assert auth.maintain()['sessions_removed']==1
+    finally:repo.close()

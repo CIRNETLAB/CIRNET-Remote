@@ -1,6 +1,11 @@
 import { defineConfig } from '@playwright/test'
 import { basename, dirname, resolve } from 'node:path'
 import { getArtifactDirectory, validateArtifactDirectory } from '../../scripts/artifact-paths.mjs'
+import {prepareContractProfile} from './src/contracts/structural'
+
+// API/graph assertions run in Playwright's Node worker, independently of the
+// browser's workflow loading. Preparing this test process cannot preload Vite.
+await Promise.all((['structural','editor','transport'] as const).map(profile=>prepareContractProfile(profile)))
 
 const outputDirectory = getArtifactDirectory('playwright')
 for (let index = 0; index < process.argv.length; index++) {
@@ -33,5 +38,6 @@ export default defineConfig({
   testDir:'./e2e',outputDir:outputDirectory,fullyParallel:false,workers:1,retries:0,
   timeout:45_000,expect:{timeout:10_000},reporter:'list',
   use:{baseURL:'http://127.0.0.1:14173',headless:true,viewport:{width:1440,height:1000},screenshot:'only-on-failure',trace:'retain-on-failure',
-    launchOptions:{args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']}},
+    launchOptions:{args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader',
+      `--log-file=${resolve(getArtifactDirectory('browser-logs'),'chromium-debug.log')}`]}},
 })

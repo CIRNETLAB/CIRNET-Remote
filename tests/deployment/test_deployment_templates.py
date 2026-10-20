@@ -47,6 +47,9 @@ def test_single_worker_startup_checks_migrations_and_uses_persistent_capture_sta
     assert 'StateDirectory=netcircuit' in text and 'WorkingDirectory=/var/lib/netcircuit' in text
     assert '-m app.migrate --check' in text and '--workers 1' in text
     assert '--forwarded-allow-ips 127.0.0.1' in text
+    # Bound the protocol receive queue before frames reach the application's
+    # independent 64KiB/message and per-session admission checks.
+    assert '--ws-max-size 65536' in text and '--ws-max-queue 4' in text
 
 
 def test_capture_retention_is_an_explicit_bounded_separate_timer():

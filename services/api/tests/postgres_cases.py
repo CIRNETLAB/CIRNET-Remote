@@ -456,7 +456,7 @@ def test_postgresql_w6_backup_upgrade_indexes_only_sealed_captures(pg,tmp_path):
     assert payload.read_bytes()==b'filesystem-payload-preserved' and repo.leases()[0]['quarantined'] is True
     with repo.engine.connect() as db:
         assert db.execute(select(repo.captures.c.capture_id)).scalars().all()==['cap-one']
-        assert db.execute(text('SELECT version_num FROM alembic_version')).scalar()==HEAD=='0005_captures'
+        assert db.execute(text('SELECT version_num FROM alembic_version')).scalar()==HEAD
     with engine.connect() as db:assert db.execute(text('SELECT version_num FROM alembic_version')).scalar()=='0004_assignments'
 
 
@@ -565,3 +565,42 @@ def test_postgresql_restart_recovery_commits_lease_state_and_audit_atomically_af
                 ('EXPERIMENT_RESTART_RECOVERED' if safe else 'EXPERIMENT_RESTART_QUARANTINED',identity,None)]
         assert gateway.calls==['stop_execution','stop_execution']
     finally:recovered.close()
+
+
+def test_postgresql_scheduler_queries_read_indexed_active_subset_after_accumulated_history(pg):
+    from app.migrations.schema_v0006 import projection
+    _,_,repo,_,owner,_=initialized(pg)
+    runtime=repo.experiment_runtime
+    terminal=[{'experiment_id':f'history-{index:05}','state':'COMPLETE','private_graph':{'padding':'x'*4096}} for index in range(2000)]
+    running={'experiment_id':'running-only','state':'RUNNING','_control_session_id':'session','_control_client_id':'tab'}
+    with repo.engine.begin() as db:
+        values=[*terminal,running]
+        db.execute(insert(repo.experiments),[{'experiment_id':value['experiment_id'],'owner_id':owner.owner_id,'payload':value} for value in values])
+        db.execute(insert(runtime),[projection(value) for value in values])
+        db.execute(text('ANALYZE lab_experiment_runtime'));db.execute(text('ANALYZE lab_experiments'))
+        plan=db.execute(text('EXPLAIN (ANALYZE, FORMAT JSON, BUFFERS) SELECT experiment_id FROM lab_experiment_runtime WHERE active=true ORDER BY experiment_id LIMIT 100')).scalar()
+    def nodes(node):
+        yield node
+        for child in node.get('Plans',[]):yield from nodes(child)
+    assert any(node.get('Index Name')=='ix_lab_runtime_active' for node in nodes(plan[0]['Plan']))
+    assert repo.has_active_experiment(owner.owner_id)
+    assert repo.active_experiments(owner.owner_id)==[running]
+    assert repo.active_experiments(session_id='session',client_id='tab',payload=False)==[
+        {'experiment_id':'running-only','owner_id':owner.owner_id,'control_session_id':'session','control_client_id':'tab'}]
+    assert repo.active_experiments(session_id='other',payload=False)==[]
+
+
+def test_postgresql_scheduler_backup_restore_upgrade_keeps_payload_and_indexes(pg,tmp_path):
+    source_name,source_url=pg.new_schema();engine=pg.engine(source_url);migrate(engine,'0005_captures')
+    value={'experiment_id':'old-queued','state':'QUEUED','_queue_sequence':72,
+        '_control_session_id':'old-session','_control_client_id':'old-tab','private_keep':{'original':[None,2]}}
+    with engine.begin() as db:db.execute(insert(legacy.experiments).values(experiment_id=value['experiment_id'],owner_id='retained-owner',payload=value))
+    backup=tmp_path/'scheduler.sql';run_database_tool(pg,'pg_dump',['--schema='+source_name,'--no-owner','--no-privileges','--file='+str(backup)])
+    restored_name,restored_url=pg.new_schema(create=False)
+    restored=tmp_path/'scheduler-restore.sql';restored.write_bytes(backup.read_bytes().replace(source_name.encode(),restored_name.encode()))
+    run_database_tool(pg,'psql',['--no-psqlrc','--set=ON_ERROR_STOP=1','--file='+str(restored)])
+    repo=pg.repository(restored_url)
+    assert repo.get_experiment('old-queued')==value and repo.active_experiments()==[value]
+    assert repo.admission_sequence()==72
+    with repo.engine.connect() as db:assert db.execute(text('SELECT version_num FROM alembic_version')).scalar()==HEAD
+    with engine.connect() as db:assert db.execute(text('SELECT version_num FROM alembic_version')).scalar()=='0005_captures'

@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 import os
+import math
 from contracts.runtime_config import simulation_worker_count
 
 def guest_mode() -> bool:
@@ -24,8 +25,36 @@ class Settings:
     mutation_limit: int = 120
     login_limit: int = 10
     login_window_seconds: int = 60
+    bootstrap_limit: int = field(default_factory=lambda:int(os.getenv('NETCIRCUIT_BOOTSTRAP_LIMIT','30')))
+    auth_rate_max_buckets: int = 10000
+    auth_retention_seconds: int = field(default_factory=lambda:int(os.getenv('NETCIRCUIT_AUTH_RETENTION_SECONDS','86400')))
+    auth_maintenance_batch: int = field(default_factory=lambda:int(os.getenv('NETCIRCUIT_AUTH_MAINTENANCE_BATCH','100')))
+    request_max_bytes: int = field(default_factory=lambda:int(os.getenv('NETCIRCUIT_REQUEST_MAX_BYTES','4194304')))
+    auth_request_max_bytes: int = field(default_factory=lambda:int(os.getenv('NETCIRCUIT_AUTH_REQUEST_MAX_BYTES','16384')))
+    request_json_max_depth: int = field(default_factory=lambda:int(os.getenv('NETCIRCUIT_REQUEST_JSON_MAX_DEPTH','64')))
+    request_json_max_tokens: int = field(default_factory=lambda:int(os.getenv('NETCIRCUIT_REQUEST_JSON_MAX_TOKENS','2000000')))
+    request_body_seconds: float = field(default_factory=lambda:float(os.getenv('NETCIRCUIT_REQUEST_BODY_SECONDS','10')))
+    websocket_max_subscriptions: int = field(default_factory=lambda:int(os.getenv('NETCIRCUIT_WEBSOCKET_MAX_SUBSCRIPTIONS','512')))
+    websocket_max_per_owner: int = field(default_factory=lambda:int(os.getenv('NETCIRCUIT_WEBSOCKET_MAX_PER_OWNER','16')))
+    websocket_max_per_session: int = field(default_factory=lambda:int(os.getenv('NETCIRCUIT_WEBSOCKET_MAX_PER_SESSION','8')))
+    websocket_event_bytes: int = 512 * 1024
+    websocket_queue_bytes: int = 1024 * 1024
+    websocket_total_bytes: int = 16 * 1024 * 1024
+    websocket_handshake_seconds: float = field(default_factory=lambda:float(os.getenv('NETCIRCUIT_WEBSOCKET_HANDSHAKE_SECONDS','5')))
+    websocket_send_seconds: float = field(default_factory=lambda:float(os.getenv('NETCIRCUIT_WEBSOCKET_SEND_SECONDS','5')))
+    websocket_cleanup_seconds: float = field(default_factory=lambda:float(os.getenv('NETCIRCUIT_WEBSOCKET_CLEANUP_SECONDS','5')))
+    websocket_message_limit: int = 120
 
     def __post_init__(self) -> None:
+        limits=(self.bootstrap_limit,self.auth_rate_max_buckets,self.auth_maintenance_batch,self.request_max_bytes,
+            self.auth_request_max_bytes,self.request_json_max_depth,self.request_json_max_tokens,
+            self.websocket_max_subscriptions,self.websocket_max_per_owner,self.websocket_max_per_session,
+            self.websocket_event_bytes,self.websocket_queue_bytes,self.websocket_total_bytes,self.websocket_message_limit)
+        if any(type(value) is not int or value<1 for value in limits): raise ValueError('Invalid application resource limit')
+        if self.request_max_bytes<2000000 or type(self.auth_retention_seconds) is not int or self.auth_retention_seconds<0: raise ValueError('Invalid request or retention limit')
+        if self.websocket_total_bytes<=self.websocket_max_subscriptions*512 or self.websocket_queue_bytes<1024: raise ValueError('Insufficient realtime resync reserve')
+        if any(not math.isfinite(value) or value<=0 or value>60 for value in (self.request_body_seconds,self.websocket_handshake_seconds,self.websocket_send_seconds,self.websocket_cleanup_seconds)):
+            raise ValueError('Websocket deadlines must be finite and at most 60 seconds')
         if self.environment not in ('development','test','production'): raise ValueError('NETCIRCUIT_ENV must be development, test or production')
         if type(self.allow_guest) is not bool: raise ValueError('allow_guest must be a boolean')
         if (type(self.capture_max_bytes) is not int or self.capture_max_bytes<1 or type(self.capture_max_files) is not int

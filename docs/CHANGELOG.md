@@ -4,6 +4,16 @@ All notable project changes will be documented in this file. The project follows
 
 ## [Unreleased]
 
+### Added and changed — 2026-10-20 Web/Contracts hardening WC20
+
+- Explicit auth bootstrap, revocable legacy reads and bounded indexed maintenance; forward migration 0007 preserves existing ownership and evidence.
+- Control RPC isolation, cancellation sweeps and indexed active experiment queries keep unrelated Stop independent of delayed control and terminal history.
+- Bounded request bytes/encoding/complexity and realtime ingress/delivery/deadlines, retaining frozen public response contracts.
+- Generated operation status/media/error validation, field-level canonical diagnostics and lazy complete validator profiles with synchronous generated cores.
+- Authored momentary-input projection, per-draft/principal save bindings and bounded unknown-operation observations across reload; cross-tab Web Locks and Stop/cancellation fences preserve no-replay control semantics.
+- AST coverage for all application controllers, isolated release/CI state and current Contracts/FPGA conformance mapping with physical gates still open.
+- Exact executed gates, production measurements, native status and recorded output-policy deviations: [WC20 closure](verification/2026-10-20-web-contracts-closure.md). This unreleased entry does not establish hosted CI, target deployment or new hardware capability.
+
 ### Documentation — 2026-10-19 Audit and external verification artifacts
 
 - Root Codex rules and the shared `VERIFICATION.md` guide keep newly generated screenshots, video, traces, image-bearing HTML reports and raw diagnostic outputs outside the repository; Markdown records reproducible checks and limits.

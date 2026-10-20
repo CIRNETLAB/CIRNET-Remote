@@ -75,9 +75,9 @@ test('flexible authoring selects v2 before mutation and retains its saved refere
  let saved={...document,schema_version:'2.0',definition:flexible}
  configureApiClient({fetcher:async(url,options)=>{
   paths.push(`${options?.method} ${String(url)}`)
-  if(!String(url).includes('/v2/'))return Response.json({code:'UNSUPPORTED_DOCUMENT_VERSION',message:'Use the supported assignment endpoint.'},{status:422})
+  if(!String(url).includes('/v2/'))return Response.json({code:'UNSUPPORTED_DOCUMENT_VERSION',message:'Use the supported assignment endpoint.',request_id:'assignment-version'},{status:422})
   if(options?.method==='PATCH')saved={...saved,revision:2,published:true,published_revision:2}
-  return Response.json(saved)
+  return Response.json(saved,{status:options?.method==='POST'?201:200})
  }})
  store.newDraft('author-and');store.editDefinition(flexible)
  assert.equal(await store.saveDraft(),true);assert.equal(store.binding?.schema_version,'2.0')

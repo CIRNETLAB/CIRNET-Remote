@@ -13,7 +13,11 @@ async function createUser(context:BrowserContext,csrf:string,role:'INSTRUCTOR'|'
 async function login(page:Page,user:{username:string;password:string}){await page.goto('/');await page.getByRole('button',{name:'Open account',exact:true}).click();await page.getByLabel('Username',{exact:true}).fill(user.username);await page.getByLabel('Password',{exact:true}).fill(user.password);await page.getByRole('button',{name:'Sign in',exact:true}).click();await expect(page.getByRole('button',{name:'Sign out',exact:true})).toBeVisible();await page.getByRole('button',{name:'Close account',exact:true}).click();await expectEventConnection(page)}
 async function openAssignments(page:Page){await fileCommand(page, 'Assignment');await expect(assignmentPanel(page)).toBeVisible()}
 async function importGraph(page:Page,value=graph()){await page.getByLabel('Open circuit file',{exact:true}).setInputFiles({name:'and.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(value))});await expect(page.locator('.project-title')).toContainText(String(value.metadata.name))}
-async function title(page:Page,value:string){await assignmentPanel(page).getByLabel('Assignment title',{exact:true}).fill(value);await assignmentPanel(page).getByLabel('Assignment title',{exact:true}).press('Tab')}
+async function title(page:Page,value:string){
+ const input=assignmentPanel(page).getByLabel('Assignment title',{exact:true})
+ await input.fill(value);await input.press('Tab');await expect(input).toHaveValue(value)
+ await expect.poll(async()=>JSON.parse(await assignmentPanel(page).getByLabel('Assignment definition JSON',{exact:true}).inputValue()).title).toBe(value)
+}
 async function save(page:Page,revision:number){await assignmentPanel(page).getByRole('button',{name:'Save assignment draft',exact:true}).click();await expect(assignmentPanel(page).getByLabel('Assignment save status',{exact:true})).toContainText(`revision ${revision}`);await expect(assignmentPanel(page).getByLabel('Assignment save status',{exact:true})).toContainText('saved')}
 async function endpoint(page:Page,id:string,role:string,target:string){const panel=assignmentPanel(page);await panel.getByLabel('Endpoint ID',{exact:true}).fill(id);await panel.getByLabel('Endpoint role',{exact:true}).selectOption(role);await panel.getByLabel('Endpoint target',{exact:true}).fill(target);await panel.getByRole('button',{name:'Add assignment endpoint',exact:true}).click()}
 async function history(page:Page){await fileCommand(page, 'History');await expect(historyPanel(page)).toBeVisible()}
@@ -94,4 +98,41 @@ test('Stop during a real committed Create with a lost acknowledgement resolves i
  await expect.poll(async()=> (await(await context.request.get(`/api/experiments/${record.experiment_id}`)).json()).state,{timeout:30_000}).toBe('COMPLETE')
  await history(page);await historyPanel(page).getByRole('button',{name:'Refresh execution history',exact:true}).click();await expect(historyPanel(page).getByRole('button',{name:`Read experiment ${record.experiment_id}`,exact:true})).toBeVisible()
  expect(creates).toBe(1);expect(stops).toBe(1);expect(runs).toBe(0)
+})
+
+test('hard reload after a committed Create observes its durable key without replaying Run or restoring control',async({page,context})=>{
+ test.setTimeout(90_000)
+ await page.goto('/');await expectEventConnection(page);await importGraph(page)
+ let committed!:(value:ExperimentRecord)=>void,release!:()=>void,creates=0,runs=0,operationReads=0
+ const actualCreate=new Promise<ExperimentRecord>(resolve=>committed=resolve),lostResponse=new Promise<void>(resolve=>release=resolve)
+ page.on('request',request=>{const path=new URL(request.url()).pathname;if(request.method()==='POST'&&path==='/api/experiments')creates++;if(request.method()==='POST'&&/\/run$/.test(path))runs++;if(request.method()==='GET'&&path.startsWith('/api/operations/'))operationReads++})
+ await page.route('**/api/experiments',async route=>{
+  if(route.request().method()!=='POST'){await route.continue();return}
+  const response=await route.fetch({maxRetries:0});expect(response.status()).toBe(201)
+  committed(parseStructural('ExperimentRecord',await response.json()))
+  await lostResponse
+  try{await route.abort('connectionreset')}catch{/* The navigation may already have cancelled the lost response. */}
+ })
+ await selectRun(page);await page.getByRole('toolbar',{name:'Execution controls',exact:true}).getByRole('button',{name:'Run',exact:true}).click()
+ const record=await actualCreate
+ const tracked=await page.evaluate(()=>JSON.parse(localStorage.getItem('netcircuit.pending-observations.v1')??'[]') as {key:string;kind:string}[])
+ expect(tracked.some(row=>row.kind==='create')).toBe(true)
+ await page.reload();release();await expectEventConnection(page)
+ await expect.poll(()=>operationReads).toBeGreaterThan(0)
+ await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('netcircuit.pending-observations.v1')??'[]').length)).toBe(0)
+ await history(page);await expect(historyPanel(page).getByRole('region',{name:'Current owned execution',exact:true})).toContainText(record.experiment_id)
+ await expect(historyPanel(page).getByLabel('Evidence access',{exact:true})).toContainText('only by an acknowledged Run in this tab')
+ expect(creates).toBe(1);expect(runs).toBe(0)
+ expect((await(await context.request.get(`/api/experiments/${record.experiment_id}`)).json()).state).toBe('CREATED')
+ const lockHolder=await context.newPage();await lockHolder.goto('/');await expectEventConnection(lockHolder)
+ await lockHolder.evaluate(()=>{
+  const holder=globalThis as typeof globalThis&{releaseStopTrackingLock?:()=>void;stopTrackingLockHeld?:boolean}
+  void navigator.locks.request('netcircuit.pending-observations.v1',()=>new Promise<void>(resolve=>{holder.releaseStopTrackingLock=()=>{holder.stopTrackingLockHeld=false;resolve()};holder.stopTrackingLockHeld=true}))
+ })
+ try{
+  await expect.poll(()=>lockHolder.evaluate(()=>(globalThis as typeof globalThis&{stopTrackingLockHeld?:boolean}).stopTrackingLockHeld)).toBe(true)
+  await historyPanel(page).getByRole('button',{name:'Stop current owned execution',exact:true}).click()
+  await expect.poll(async()=>(await(await context.request.get(`/api/experiments/${record.experiment_id}`)).json()).state).toBe('COMPLETE')
+  expect(await lockHolder.evaluate(()=>(globalThis as typeof globalThis&{stopTrackingLockHeld?:boolean}).stopTrackingLockHeld)).toBe(true)
+ }finally{await lockHolder.evaluate(()=>(globalThis as typeof globalThis&{releaseStopTrackingLock?:()=>void}).releaseStopTrackingLock?.());await lockHolder.close()}
 })

@@ -25,16 +25,21 @@ from app.services.events import EventHub
 from app.services.stations import StationService
 from app.services.capture_store import FilesystemCaptureStore
 from app.services.auth import AuthService, AuthError
-from app.services.request_limits import MutationAdmission
+from app.services.request_limits import MutationAdmission,RequestBudgetMiddleware
 from app.services.experiment_access import ExperimentAccessProjection
 from app.services.projects import ProjectService,RevisionConflict
 from app.services.assignments import AssignmentService
 from app.services.observability import configure_logging,correlation,log_event
 
+def bind_session_revocation(auth,manager):
+    auth.set_revoke_callback(lambda session_ids:manager.disconnect_controls(session_ids,code='SESSION_REVOKED'))
+
 def create_app(*,repository=None,gateway=None,submit=None,configuration=None,capture_store=None,schema_only=False,lazy=False):
     config=configuration or settings
     repo=repository
-    hub=EventHub()
+    hub=EventHub(maximum_subscriptions=config.websocket_max_subscriptions,maximum_per_owner=config.websocket_max_per_owner,
+        maximum_per_session=config.websocket_max_per_session,event_bytes=config.websocket_event_bytes,queue_bytes=config.websocket_queue_bytes,
+        total_bytes=config.websocket_total_bytes)
     captures=capture_store
     manager=None
     auth=None
@@ -60,8 +65,7 @@ def create_app(*,repository=None,gateway=None,submit=None,configuration=None,cap
                     public_projection=ExperimentAccessProjection(repo),document_resolver=projects.resolve_snapshot,
                     authorize_session=auth.require_principal_session,assignment_resolver=assignments.resolve_snapshot,
                     authorize_assignment=assignments.authorize_snapshot,capture_retention_seconds=config.capture_retention_seconds)
-                auth.set_revoke_callback(lambda session_ids:[manager.disconnect_control(session_id,code='SESSION_REVOKED')
-                                                              for session_id in session_ids])
+                bind_session_revocation(auth,manager)
                 application.state.repository=repo
                 application.state.gateway=gateway
                 application.state.manager=manager
@@ -71,10 +75,21 @@ def create_app(*,repository=None,gateway=None,submit=None,configuration=None,cap
                 application.state.assignments=assignments
 
     async def monitor():
+        last_maintenance=0
         while True:
             await asyncio.sleep(1)
             await asyncio.to_thread(manager.expire_leases)
             await asyncio.to_thread(manager.expire_control_sessions,auth.session_active)
+            await asyncio.to_thread(manager.dispatch_cancelled_stops)
+            if time.monotonic()-last_maintenance>=60:
+                last_maintenance=time.monotonic()
+                try:
+                    result=await asyncio.to_thread(auth.maintain)
+                    log_event('auth.maintenance',deleted=result['sessions_removed']+result['rate_buckets_removed'],limit=config.auth_maintenance_batch)
+                except Exception:
+                    # Keep the monitor alive; do not log database exception
+                    # text or turn a transient maintenance failure into a scan.
+                    log_event('auth.maintenance',outcome='FAILED',error_code='UNAVAILABLE')
 
     @asynccontextmanager
     async def lifespan(application):
@@ -125,15 +140,21 @@ def create_app(*,repository=None,gateway=None,submit=None,configuration=None,cap
                 # POST. Reject its origin before minting any replacement cookie.
                 if request.method not in {'GET','HEAD','OPTIONS'}:
                     auth.verify_origin(request.headers.get('origin'))
-                context,rotated=await asyncio.to_thread(auth.ensure_session,request.cookies.get('netcircuit_session'),
-                    consume_legacy=request.method=='GET' and request.url.path=='/api/auth/session')
+                bootstrap=request.method=='GET' and request.url.path=='/api/auth/session'
+                cookie=request.cookies.get('netcircuit_session')
+                if bootstrap and await asyncio.to_thread(auth.current,cookie) is None:
+                    await asyncio.to_thread(auth.admit_bootstrap,request.client.host if request.client else '')
+                context,rotated=await asyncio.to_thread(auth.ensure_session,cookie,
+                    consume_legacy=bootstrap,allow_create=bootstrap) if cookie is not None or bootstrap else (None,None)
                 request.state.auth=context
-                request.state.owner=context.owner_id
-                if context.replaced_invalid_cookie and request.url.path!='/api/auth/session':
+                request.state.owner=context.owner_id if context else None
+                if (cookie is not None and context is None) or (context and context.replaced_invalid_cookie and not bootstrap):
                     raise AuthError('SESSION_EXPIRED',401)
+                if context is None and request.url.path!='/api/health' and request.method!='OPTIONS':
+                    raise AuthError('UNAUTHENTICATED',401)
                 if request.method not in {'GET','HEAD','OPTIONS'}:
                     await asyncio.to_thread(auth.verify_mutation,context,request.headers.get('origin'),request.headers.get('x-csrf-token'))
-                if request.url.path not in {'/api/health','/api/auth/session','/api/auth/login','/api/auth/logout'} and not context.principal_id:
+                if request.method!='OPTIONS' and request.url.path not in {'/api/health','/api/auth/session','/api/auth/login','/api/auth/logout'} and not context.principal_id:
                     raise AuthError('UNAUTHENTICATED',401)
                 if (request.method not in {'GET','HEAD','OPTIONS'} and request.url.path not in {'/api/auth/login','/api/auth/logout'}
                         and not request.url.path.endswith('/stop') and not admission.allow(context.owner_id)):
@@ -174,6 +195,11 @@ def create_app(*,repository=None,gateway=None,submit=None,configuration=None,cap
             code,status='REQUEST_VALIDATION_ERROR',422
             for issue in exception.errors():
                 path=''.join('/'+str(part).replace('~','~0').replace('/','~1') for part in issue['loc'])
+                if issue['type']=='canonical_contract':
+                    for canonical in issue.get('ctx',{}).get('issues',[]):
+                        issues.append({**canonical,'path':path+canonical['path'],
+                                       'message':'The request field does not match its declared contract.'})
+                    continue
                 issues.append({'code':issue['type'],'path':path,'severity':'error','profile':'http-request',
                                'message':'The request field does not match its declared contract.'})
         elif isinstance(exception,ResponseValidationError): code,status='RESPONSE_CONTRACT_MISMATCH',500
@@ -226,6 +252,7 @@ def create_app(*,repository=None,gateway=None,submit=None,configuration=None,cap
     application.include_router(projects_router)
     from app.api.placement import router as placement_router
     application.include_router(placement_router)
+    application.add_middleware(RequestBudgetMiddleware,configuration=config)
     if config.trusted_origins:
         application.add_middleware(CORSMiddleware,allow_origins=list(config.trusted_origins),allow_credentials=True,
             allow_methods=['GET','POST','PUT','PATCH','DELETE','OPTIONS'],

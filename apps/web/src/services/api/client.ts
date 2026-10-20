@@ -20,6 +20,7 @@ export interface RequestOptions<T> {
   maxResponseBytes?: number
   controlContext?: boolean
   parse?: (value: unknown) => T
+  validateResponse?: (status: number, contentType: string, value: unknown) => void
 }
 type ParsedRequestOptions<T> = RequestOptions<T> & { parse: (value: unknown) => T }
 type UnparsedRequestOptions = Omit<RequestOptions<unknown>, 'parse'> & { parse?: never }
@@ -103,7 +104,12 @@ export function createApiClient(options: { baseUrl?: string; timeoutMs?: number;
           credentials: options.credentials ?? 'same-origin',
         })
         if (controller.signal.aborted) throw new Error('Request cancelled.')
+        let authenticationNotified=false
+        const authenticationLost=()=>{
+          if(!authenticationNotified&&(options.csrfToken?.()??null)===sessionToken){authenticationNotified=true;options.onAuthenticationLost?.()}
+        }
         if (response.status === 204) {
+          request.validateResponse?.(response.status,response.headers.get('Content-Type')??'',undefined)
           if (request.responseType === 'arrayBuffer') throw new ApiError(response.status, 'INVALID_RESPONSE', 'The API returned no binary payload.')
           return request.parse ? request.parse(undefined) : undefined
         }
@@ -124,15 +130,22 @@ export function createApiClient(options: { baseUrl?: string; timeoutMs?: number;
             data = undefined
           } else data = binary ? bytes.buffer : parseDocumentJson(new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes), 'transport')
         } catch (error) {
+          if(response.status===401||response.status===403)authenticationLost()
           if (controller.signal.aborted) throw new ApiError(0, timedOut ? 'REQUEST_TIMEOUT' : 'REQUEST_CANCELLED', timedOut ? 'API request timed out. Please retry.' : 'Request cancelled.')
           if (error instanceof ApiError || error instanceof ContractValidationError) throw error
           throw new ApiError(response.status, 'INVALID_RESPONSE', 'The API returned an unreadable response.')
         }
         if (controller.signal.aborted) throw new ApiError(0, timedOut ? 'REQUEST_TIMEOUT' : 'REQUEST_CANCELLED', timedOut ? 'API request timed out. Please retry.' : 'Request cancelled.')
+        try { request.validateResponse?.(response.status,response.headers.get('Content-Type')??'',data) }
+        catch(error) {
+          if(response.status===401||response.status===403)authenticationLost()
+          if(error instanceof ApiError)throw error
+          throw new ApiError(response.status,'INVALID_RESPONSE','The API response does not match the operation contract.')
+        }
         if (!response.ok && !request.acceptStatuses?.includes(response.status)) {
           const lostSession=response.status===401&&(!isRecord(data)||data.code!=='INVALID_CREDENTIALS')
             ||response.status===403&&isRecord(data)&&data.code==='CSRF_REJECTED'
-          if(lostSession&&(options.csrfToken?.()??null)===sessionToken) options.onAuthenticationLost?.()
+          if(lostSession)authenticationLost()
           throw new ApiError(response.status,
             isRecord(data) && typeof data.code === 'string' ? data.code : 'HTTP_ERROR',
             isRecord(data) && typeof data.message === 'string' ? data.message : `API request failed (${response.status}).`, data)

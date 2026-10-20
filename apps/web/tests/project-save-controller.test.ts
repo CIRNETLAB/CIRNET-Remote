@@ -26,12 +26,12 @@ class Storage implements RecoveryStorage {
   async read() {return structuredClone(this.rows)}
   async update(change:(rows:unknown[])=>unknown[]) {this.rows=structuredClone(change(structuredClone(this.rows)))}
 }
-function setup() {
+function setup(maxBindings?:number) {
   const documents=new Documents(),storage=new Storage(),recovery=new BoundedRecoveryRepository(storage)
   const calls:{revision:number;value:number}[]=[]
   const remote:ProjectDocumentRepository={get:async()=>document(),create:async(_id,body)=>({...document(),name:body.name,graph:body.graph}),
     save:async(_id,revision,body)=>{calls.push({revision,value:Number(body.graph.metadata?.value)});return {...document(Number(body.graph.metadata?.value),revision+1),name:body.name}}}
-  const controller=new ProjectSaveController({documents,remote,recovery,recoveryDelayMs:0})
+  const controller=new ProjectSaveController({documents,remote,recovery,recoveryDelayMs:0,maxBindings})
   return {controller,documents,storage,recovery,remote,calls}
 }
 async function opened() {const fixture=setup();await fixture.controller.setPrincipal('alice');assert.equal(await fixture.controller.open('remote'),true);return fixture}
@@ -166,14 +166,80 @@ test('recovery cleanup is confined to the current principal and never clears the
   assert.equal(documents.read(),current);controller.dispose()
 })
 
-test('changing local drafts while Save is pending cancels its UI state without losing either draft',async()=>{
+test('changing local drafts while Save is pending associates its ACK with the original draft',async()=>{
   const {controller,documents,remote}=await opened(),ack=deferred<CircuitDocument>()
+  const original=documents.active
   documents.edit(2);controller.documentChanged();remote.save=async()=>ack.promise
   const pending=controller.save()
   documents.replace({name:'Other draft',graph:graph(7)},'recovery');controller.documentChanged()
-  ack.resolve(document(2,2));assert.equal(await pending,false)
+  ack.resolve(document(2,2));assert.equal(await pending,true)
   assert.equal(controller.state().phase,'local');assert.equal(controller.state().binding,null)
-  assert.equal(documents.readAll().length,2);assert.equal(documents.read()!.graph.metadata?.value,7);controller.dispose()
+  assert.equal(documents.readAll().length,2);assert.equal(documents.read()!.graph.metadata?.value,7)
+  documents.active=original;controller.documentChanged()
+  assert.equal(controller.state().binding?.serverRevision,2);assert.equal(controller.state().phase,'saved');controller.dispose()
+})
+
+test('server A to local B to A retains only A binding and checkpoints both draft scopes',async()=>{
+  const {controller,documents,recovery,calls}=await opened(),original=documents.active!
+  documents.replace({name:'Scratch',graph:graph(8)},'recovery');const scratch=documents.active!
+  controller.documentChanged();assert.equal(controller.state().binding,null)
+  assert.equal(await controller.save(),false)
+  documents.active=original;controller.documentChanged()
+  assert.equal(controller.state().binding?.documentId,'remote');assert.equal(controller.state().dirty,false)
+  documents.edit(3);controller.documentChanged();assert.equal(await controller.save(),true)
+  assert.deepEqual(calls,[{revision:1,value:3}])
+  await controller.checkpoint()
+  assert.equal((await recovery.load('alice',original))?.binding?.serverRevision,2)
+  assert.equal((await recovery.load('alice',scratch))?.binding,undefined)
+  controller.dispose()
+})
+
+test('a conflict arriving while B is active remains attached to A after switching back',async()=>{
+  const {controller,documents,remote}=await opened(),original=documents.active!,ack=deferred<CircuitDocument>()
+  documents.edit(1);controller.documentChanged();remote.save=async()=>ack.promise
+  const pending=controller.save();documents.replace({name:'Scratch',graph:graph(9)},'recovery');controller.documentChanged()
+  ack.reject({status:409,code:'REVISION_CONFLICT'});assert.equal(await pending,false)
+  assert.equal(controller.state().phase,'local');assert.equal(controller.state().error,null)
+  documents.active=original;controller.documentChanged()
+  assert.equal(controller.state().phase,'conflict');assert.equal(controller.state().binding?.serverRevision,1)
+  assert.equal(await controller.save(),false);controller.dispose()
+})
+
+test('confirmed deletion detaches inactive bindings without deleting either local document',async()=>{
+  const {controller,documents}=await opened(),original=documents.active!
+  documents.replace({name:'Scratch',graph:graph(8)},'recovery');controller.documentChanged()
+  controller.detach({documentId:'remote'})
+  documents.active=original;controller.documentChanged()
+  assert.equal(controller.state().binding,null);assert.equal(documents.readAll().length,2)
+  assert.equal(documents.read()!.graph.metadata?.value,0);controller.dispose()
+})
+
+test('bounded binding metadata rejects extra documents without evicting a live draft binding',async()=>{
+  const {controller,documents}=setup(2);await controller.setPrincipal('alice')
+  assert.equal(await controller.open('remote'),true);const first=documents.active!
+  assert.equal(await controller.open('remote'),true)
+  assert.equal(await controller.open('remote'),false)
+  assert.match(controller.state().error??'',/limit/)
+  documents.active=first;controller.documentChanged()
+  assert.equal(controller.state().binding?.documentId,'remote');assert.equal(controller.state().phase,'saved')
+  await controller.setPrincipal('bob');assert.equal(await controller.open('remote'),true)
+  controller.dispose()
+})
+
+test('recovery retains each server draft binding independently after a principal round trip',async()=>{
+  const {controller,documents,remote,recovery}=await opened(),first=documents.active!
+  remote.get=async id=>({...document(7,4),document_id:id,project_id:'other-project',name:'Other server draft'})
+  assert.equal(await controller.open('other'),true);const second=documents.active!
+  await controller.checkpoint()
+  assert.equal((await recovery.load('alice',first))?.binding?.documentId,'remote')
+  assert.equal((await recovery.load('alice',second))?.binding?.documentId,'other')
+  await controller.setPrincipal('bob');await controller.setPrincipal('alice')
+  assert.equal(await controller.recover(first),true);const recoveredFirst=documents.active!
+  assert.equal(await controller.recover(second,{discardLocal:true}),true)
+  assert.equal(controller.state().binding?.documentId,'other');assert.equal(controller.state().binding?.serverRevision,4)
+  documents.active=recoveredFirst;controller.documentChanged()
+  assert.equal(controller.state().binding?.documentId,'remote');assert.equal(controller.state().binding?.serverRevision,1)
+  assert.equal(controller.currentSavedReference(),null);controller.dispose()
 })
 
 test('stale save rejection from the previous principal cannot cancel the current principal coalesced save',async()=>{

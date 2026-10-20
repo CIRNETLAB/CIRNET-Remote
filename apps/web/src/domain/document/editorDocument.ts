@@ -40,15 +40,19 @@ function momentaryField(module:CircuitModule,pressed:boolean|undefined,propertie
   if(propertiesAbsent&&!Object.keys(properties).length){const {properties:_,...rest}=module;return rest}
   return {...module,properties}
 }
-export function snapshotDocument(state:EditorDocumentState):string {
+/** Sole persistent projection. Live input is owned metadata over this graph,
+ * never an authored change or a second mutable document. */
+export function authoredDocument(state:EditorDocumentState,draft=currentDocument(state)):CircuitDraft|null {
+  if(!draft)return null
   const captures=momentaryInputs.get(state)
-  if(!captures?.size)return JSON.stringify({drafts:state.drafts,activeId:state.activeId})
-  // An authored edit or tab switch while a pointer is held must not make the
-  // temporary press reachable through future Undo/Redo snapshots.
-  const drafts=state.drafts.map(draft=>({...draft,graph:{...draft.graph,modules:draft.graph.modules.map(module=>{
+  if(!captures?.size)return draft
+  return {...draft,graph:{...draft.graph,modules:draft.graph.modules.map(module=>{
     const held=captures.get(momentaryKey(draft.id,module.id))
     return held?.type===module.type?momentaryField(module,held.originalPressed,held.propertiesAbsent):module
-  })}}))
+  })} as CircuitGraph}
+}
+export function snapshotDocument(state:EditorDocumentState):string {
+  const drafts=state.drafts.map(draft=>authoredDocument(state,draft)!)
   return JSON.stringify({drafts,activeId:state.activeId})
 }
 export function pruneSaved(state:EditorDocumentState) {
@@ -67,6 +71,7 @@ export function trimHistory(state:EditorDocumentState) {
 }
 export function recordChange(state:EditorDocumentState){state.past.push(snapshotDocument(state));state.future=[];trimHistory(state)}
 export function restoreDocument(state:EditorDocumentState,snapshot:string) {
+  releaseMomentaryInputs(state)
   const restored=JSON.parse(snapshot) as {drafts:CircuitDraft[];activeId:string|null}
   state.drafts=restored.drafts;state.activeId=restored.activeId;state.documentRevision++
   state.draftRevisions=Object.fromEntries(state.drafts.map(draft=>[draft.id,state.documentRevision]))
@@ -76,16 +81,18 @@ export function restoreDocument(state:EditorDocumentState,snapshot:string) {
 }
 export function undoDocument(state:EditorDocumentState){const previous=state.past.pop();if(previous){state.future.push(snapshotDocument(state));restoreDocument(state,previous);trimHistory(state)}}
 export function redoDocument(state:EditorDocumentState){const next=state.future.pop();if(next){state.past.push(snapshotDocument(state));restoreDocument(state,next);trimHistory(state)}}
-export function markSaved(state:EditorDocumentState){const draft=currentDocument(state);if(draft){state.saved[draft.id]=JSON.stringify(draft);state.savedRevisions[draft.id]=state.draftRevisions[draft.id]??0}}
+export function markSaved(state:EditorDocumentState){const draft=authoredDocument(state);if(draft){state.saved[draft.id]=JSON.stringify(draft);state.savedRevisions[draft.id]=state.draftRevisions[draft.id]??0}}
 export function isDocumentDirty(state:EditorDocumentState){const draft=currentDocument(state);return !!draft&&state.savedRevisions[draft.id]!==state.draftRevisions[draft.id]}
 export function createDraft(state:EditorDocumentState,id:string,name?:string):string {
+  releaseMomentaryInputs(state)
   recordChange(state)
   state.drafts.push({id,name:(name??`Untitled circuit ${state.drafts.length+1}`).trim()||'Untitled circuit',graph:{schema_version:'1.0',circuit_id:id,modules:[],connections:[]}})
   state.activeId=id;touchDocument(state);return id
 }
-export function openDraft(state:EditorDocumentState,id:string){if(state.activeId!==id&&state.drafts.some(draft=>draft.id===id)){recordChange(state);state.activeId=id;state.documentRevision++}}
+export function openDraft(state:EditorDocumentState,id:string){if(state.activeId!==id&&state.drafts.some(draft=>draft.id===id)){releaseMomentaryInputs(state);recordChange(state);state.activeId=id;state.documentRevision++}}
 export function renameCurrent(state:EditorDocumentState,name:string){const draft=currentDocument(state);if(draft&&name.trim()&&draft.name!==name.trim()){recordChange(state);draft.name=name.trim();touchDocument(state,draft.id,false)}}
 function appendDocument(state:EditorDocumentState,id:string,name:string,graph:CircuitGraph) {
+  releaseMomentaryInputs(state)
   recordChange(state);state.drafts.push({id,name,graph});state.activeId=id;touchDocument(state);markSaved(state)
 }
 export function replaceDocument(state:EditorDocumentState,id:string,document:{name:string;graph:CircuitGraph}) {
@@ -96,7 +103,7 @@ export function importGraph(state:EditorDocumentState,id:string,graph:CircuitGra
   appendDocument(state,id,name,copy)
 }
 export function exportGraph(state:EditorDocumentState):string {
-  const draft=currentDocument(state);if(!draft)throw new Error('Create or open a circuit first.')
+  const draft=authoredDocument(state);if(!draft)throw new Error('Create or open a circuit first.')
   const graph={...draft.graph,metadata:{...draft.graph.metadata,name:draft.name}},compact=JSON.stringify(graph)
   parseCircuitFile(compact);const pretty=JSON.stringify(graph,null,2)
   return new TextEncoder().encode(pretty).length<=MAX_CIRCUIT_FILE_BYTES?pretty:compact
@@ -107,6 +114,8 @@ export function commitGraph(state:EditorDocumentState,graph:CircuitGraph) {
   if(modules!==graph.modules)graph={...graph,modules} as CircuitGraph
   if(equalDocumentValue(graph,draft.graph))return
   validateMountBindings(graph);recordChange(state);draft.graph=graph;touchDocument(state)
+  const captures=momentaryInputs.get(state)
+  for(const [key,held]of captures??[])if(held.draftId===draft.id&&!graph.modules.some(module=>module.id===held.id&&module.type===held.type))captures!.delete(key)
 }
 /** Validated live input changes graph revision for execution/observation, but
  * does not consume or invalidate authored Undo/Redo history. */
@@ -121,8 +130,10 @@ export function setMomentaryModule(state:EditorDocumentState,id:string,pressed:b
   const captures=momentaryInputs.get(state)??new Map<string,CapturedMomentary>(),key=momentaryKey(draft.id,id)
   if(!captures.has(key))captures.set(key,{draftId:draft.id,id,type:module.type,originalPressed:module.properties?.pressed as boolean|undefined,propertiesAbsent:module.properties===undefined})
   momentaryInputs.set(state,captures)
-  if(!equalDocumentValue(graph,draft.graph)){draft.graph=graph;touchDocument(state,draft.id)}
+  if(!equalDocumentValue(graph,draft.graph)){draft.graph=graph;touchMomentary(state,draft.id)}
 }
+function touchMomentary(state:EditorDocumentState,draftId:string){state.documentRevision++;state.draftGraphRevisions[draftId]=state.documentRevision}
+export function releaseMomentaryInputs(state:EditorDocumentState){for(const held of [...momentaryInputs.get(state)?.values()??[]])releaseMomentaryModule(state,held.draftId,held.id)}
 /** Release only an input captured through setMomentaryModule, in its original
  * draft. Unrelated imported or explicitly authored persistent values survive. */
 export function releaseMomentaryModule(state:EditorDocumentState,draftId:string|null,id:string) {
@@ -131,8 +142,7 @@ export function releaseMomentaryModule(state:EditorDocumentState,draftId:string|
   if(!held)return
   const draft=state.drafts.find(item=>item.id===draftId),module=draft?.graph.modules.find(item=>item.id===id)
   if(!draft||!module||module.type!==held.type){captures!.delete(key);return}
-  const graph=parseCircuitFile(JSON.stringify({...draft.graph,modules:draft.graph.modules.map(item=>item===module?momentaryField(item,held.originalPressed===undefined?undefined:false,held.propertiesAbsent):item)}))
+  const graph=parseCircuitFile(JSON.stringify({...draft.graph,modules:draft.graph.modules.map(item=>item===module?momentaryField(item,held.originalPressed,held.propertiesAbsent):item)}))
   captures!.delete(key)
-  if(!equalDocumentValue(graph,draft.graph)){draft.graph=graph;touchDocument(state,draft.id)}
-  if(state.saved[draft.id]===JSON.stringify(draft))state.savedRevisions[draft.id]=state.draftRevisions[draft.id]??0
+  if(!equalDocumentValue(graph,draft.graph)){draft.graph=graph;touchMomentary(state,draft.id)}
 }

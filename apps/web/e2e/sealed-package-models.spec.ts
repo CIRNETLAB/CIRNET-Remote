@@ -41,8 +41,8 @@ async function settle(page: Page) {
     stable = current && current === previous ? stable + 1 : 0; previous = current; return stable
   }, { intervals: [150], timeout: 20_000 }).toBeGreaterThanOrEqual(2)
 }
-async function projectedPackage(page: Page, id: string) {
-  return workspaceCanvas(page).evaluate((element, id) => {
+async function projectedPackage(page: Page, id: string, bodyOnly = false) {
+  return workspaceCanvas(page).evaluate((element, {id,bodyOnly}) => {
     const canvas = element as HTMLCanvasElement & { nativeSceneProbe?: { scene: Object3D; camera: Camera } }, probe = canvas.nativeSceneProbe
     if (!probe) throw Error('Missing actual native renderer.')
     let model: Object3D | undefined; probe.scene.traverse(object => { if (object.userData.kind === 'module' && object.userData.id === id) model = object })
@@ -67,11 +67,16 @@ async function projectedPackage(page: Page, id: string) {
         if (object === body) { bodyXs.push(px); bodyYs.push(py) }
       }
     })
-    const halfX = Math.max(18, ...xs.map(x => Math.abs(x - cx) * 1.2)), halfY = Math.max(18, ...ys.map(y => Math.abs(y - cy) * 1.2))
+    const framedXs=bodyOnly?bodyXs:xs,framedYs=bodyOnly?bodyYs:ys
+    const halfX = Math.max(18, ...framedXs.map(x => Math.abs(x - cx) * 1.2)), halfY = Math.max(18, ...framedYs.map(y => Math.abs(y - cy) * 1.2))
     return { x1: cx - halfX, y1: cy - halfY, x2: cx + halfX, y2: cy + halfY, bodyPixels: Math.max(Math.max(...bodyXs) - Math.min(...bodyXs), Math.max(...bodyYs) - Math.min(...bodyYs)) }
-  }, id)
+  }, {id,bodyOnly})
 }
 async function closeup(page: Page, id: string, view: string) {
+  const report = async (stage: string) => {
+    if (view !== 'TOP-RIGHT') return
+    console.info('Native closeup probe', JSON.stringify({stage,bodyPixels:(await projectedPackage(page,id,true)).bodyPixels,magnification:await page.getByLabel('Workspace magnification',{exact:true}).textContent(),areaArmed:await page.getByRole('button',{name:'Zoom To Area',exact:true}).getAttribute('aria-pressed'),zoomInEnabled:await page.getByRole('button',{name:'Zoom In',exact:true}).isEnabled(),camera:(await nativeSceneEvidence(page)).camera}))
+  }
   // Opposite cube faces/corners are culled from the actual widget. Compass
   // controls remain available; Home exposes the default elevated corners.
   const cardinal = ({ LEFT: 'W', RIGHT: 'E', FRONT: 'S', BACK: 'N' } as Record<string, string>)[view]
@@ -83,17 +88,33 @@ async function closeup(page: Page, id: string, view: string) {
   }
   await settle(page)
   await page.getByRole('button', { name: 'Zoom To View Entire Circuit', exact: true }).click(); await settle(page)
+  await report('fit')
   const close = page.getByRole('button', { name: 'Close Component Info', exact: true }); if (await close.isVisible()) await close.click()
-  // Each native area gesture resets the app's zoom reference. Reframing from
-  // fresh projected body bounds avoids a tiny subject or a focus on the board.
+  // Area retains the Fit reference and its native magnification limit. Use
+  // fresh projected body bounds at each native framing gesture.
   for (let pass = 0; pass < 3; pass++) {
-    const rect = await projectedPackage(page, id)
+    // Entire lead spans can already fill the viewport while a small axial
+    // body remains tiny. Refine using that real body's projected bounds.
+    const rect = await projectedPackage(page, id, pass > 0)
     if (rect.bodyPixels >= 380) break
     const before = (await nativeSceneEvidence(page)).frames
-    await page.getByRole('button', { name: 'Zoom To Area', exact: true }).click()
+    const area = page.getByRole('button', { name: 'Zoom To Area', exact: true })
+    if (await area.getAttribute('aria-pressed') !== 'true') await area.click()
     await page.mouse.move(rect.x1, rect.y1); await page.mouse.down(); await page.mouse.move(rect.x2, rect.y2, { steps: 6 }); await page.mouse.up()
     await expect.poll(async () => (await nativeSceneEvidence(page)).frames, { timeout: 20_000 }).toBeGreaterThan(before)
     await settle(page)
+    await report(`area-${pass}`)
+  }
+  // An Area request can be rejected and remain armed. Cancel it before
+  // refining with the same native wheel a user
+  // uses for a small closeup; do not toggle a still-armed tool into a pan.
+  if (await page.getByRole('button', { name: 'Zoom To Area', exact: true }).getAttribute('aria-pressed') === 'true') await workspaceCanvas(page).press('Escape')
+  for (let step = 0; step < 3; step++) {
+    const rect = await projectedPackage(page, id, true)
+    if (rect.bodyPixels >= 180 || !await page.getByRole('button', { name: 'Zoom In', exact: true }).isEnabled()) break
+    await page.mouse.move((rect.x1 + rect.x2) / 2, (rect.y1 + rect.y2) / 2)
+    await page.mouse.wheel(0, -400); await settle(page)
+    await report(`wheel-${step}`)
   }
   const framed = await projectedPackage(page, id)
   expect(framed.bodyPixels, `Actual ${view} body must be visible at a useful closeup size`).toBeGreaterThanOrEqual(180)
@@ -152,7 +173,9 @@ async function renderedBodyCenter(page: Page, id: string) {
 test('sealed package gallery retains actual native renders of every family and molded-lead closeups', async ({ page }, testInfo) => {
   test.setTimeout(600_000)
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message))
-  await begin(page); await page.setViewportSize({ width: 1440, height: 900 }); await settle(page)
+  // Retain begin()'s 1920x1080 capture viewport: at the native 1000% limit a
+  // tiny axial body cannot reach 180px in the smaller 1440x900 viewport.
+  await begin(page); await settle(page)
   const api = await runtime(), evidence: unknown[] = []
   const cases = [
     ['resistor-horizontal', 'GENERIC_RESISTOR', 13], ['resistor-standing', 'GENERIC_RESISTOR', 11],

@@ -1,8 +1,9 @@
 import type { ExperimentCreateV2 as ExperimentCreate,ExperimentRecord,OperationRecord } from '../contracts/generated/dto'
+import type {PendingObservationScope} from './operations/pendingObservations'
 
 export const isReleasedExperiment=(record:ExperimentRecord|null)=>!record||(['COMPLETE','FAULT'].includes(record.state)&&record.lease_expires_at===null)
 type Kind='create'|'run'|'stop'
-interface Identity {kind:Kind;key:string;id?:string}
+interface Identity {kind:Kind;key:string;id?:string;observational?:true}
 export interface ExperimentLifecycleState {
   pending:boolean
   requestStatus:'idle'|'creating'|'starting'|'stopping'|'reconciling'|'unknown'
@@ -21,6 +22,7 @@ export interface ExperimentLifecyclePorts {
   changed(state:ExperimentLifecycleState):void
   key():string
   wait?:(milliseconds:number,signal:AbortSignal)=>Promise<void>
+  observations?:PendingObservationScope
 }
 const message=(error:unknown)=>error instanceof Error?error.message:'The experiment operation failed.'
 function uncertain(error:unknown){
@@ -44,11 +46,23 @@ export class ExperimentLifecycleController {
   private unknown=new Map<string,Identity>()
   private disposed=false
   private reconciling=false
+  private trackingError:string|null=null
   private value:ExperimentLifecycleState={pending:false,requestStatus:'idle',controlledExperimentId:null,unresolved:false,error:null}
-  constructor(private readonly ports:ExperimentLifecyclePorts){}
+  constructor(private readonly ports:ExperimentLifecyclePorts){
+    try{
+      for(const row of ports.observations?.list()??[])if(row.kind!=='generator')this.unknown.set(row.key,{kind:row.kind,key:row.key,...(row.experimentId?{id:row.experimentId}:{}),observational:true})
+      if(this.unknown.size){this.value.requestStatus='unknown';this.value.error='Restored request tracking is read-only. The server outcome must be reconciled; control has not been restored.'}
+    }catch(error){this.value.error=message(error)}
+    this.emit()
+  }
   state(){return {...this.value}}
-  private emit(){this.value.pending=this.workflow||this.stopTask!==null;this.value.unresolved=this.unknown.size>0;this.ports.changed(this.state())}
+  private emit(){this.value.pending=this.workflow||this.stopTask!==null;this.value.unresolved=this.unknown.size>0;if(this.trackingError&&!this.value.error)this.value.error=this.trackingError;this.ports.changed(this.state())}
   private current(generation:number){return !this.disposed&&generation===this.generation&&!this.controller.signal.aborted}
+  private async tracking(key:string,complete:boolean,ifAvailable=false){
+    const options=ifAvailable?{ifAvailable:true as const}:undefined
+    try{await (complete?this.ports.observations?.complete(key,options):this.ports.observations?.unknown(key,options));this.trackingError=null}
+    catch(error){this.trackingError=message(error);this.value.error=this.trackingError}
+  }
   private async recover(identity:Identity,signal:AbortSignal):Promise<ExperimentRecord|null>{
     for(let attempt=0;attempt<3&&!signal.aborted;attempt++){
       if(attempt)await (this.ports.wait??pause)(150*2**(attempt-1),signal)
@@ -64,14 +78,29 @@ export class ExperimentLifecycleController {
     return null
   }
   private async invoke(identity:Identity,signal:AbortSignal,body?:ExperimentCreate):Promise<ExperimentRecord|null>{
+    // Persist only identity before dispatch. Storage failure blocks new output
+    // intent, while an explicit authenticated Stop remains available.
+    try{const pending=this.ports.observations?.begin({kind:identity.kind,key:identity.key,...(identity.id?{experimentId:identity.id}:{})},identity.kind==='stop'?{ifAvailable:true}:undefined);if(pending)await pending}
+    catch(error){if(identity.kind!=='stop')throw error;this.trackingError=message(error);this.value.error=this.trackingError}
+    if(signal.aborted||identity.kind!=='stop'&&this.stopRequested){
+      // A queued storage transaction cannot revive superseded output intent.
+      // Only local metadata was written, so cleanup never waits on another tab.
+      await this.tracking(identity.key,true,true);return null
+    }
     try{
       const record=identity.kind==='create'?await this.ports.create(body!,signal,identity.key):await this.ports[identity.kind](identity.id!,signal,identity.key)
+      if(signal.aborted)return null
+      await this.tracking(identity.key,true,identity.kind==='stop')
+      if(signal.aborted)return null
       this.unknown.delete(identity.key);return record
     }catch(error){
-      if(signal.aborted||!uncertain(error))throw error
+      if(signal.aborted)throw error
+      if(!uncertain(error)){await this.tracking(identity.key,true,identity.kind==='stop');throw error}
+      await this.tracking(identity.key,false,identity.kind==='stop')
+      if(signal.aborted)return null
       this.value.requestStatus='reconciling';this.emit()
       const record=await this.recover(identity,signal)
-      if(record){this.unknown.delete(identity.key);return record}
+      if(record){await this.tracking(identity.key,true,identity.kind==='stop');if(signal.aborted)return null;this.unknown.delete(identity.key);return record}
       this.unknown.set(identity.key,identity);this.value.requestStatus='unknown'
       this.value.error='The server outcome is not yet known. Run is disabled while the operation is reconciled; no Run request will be replayed.'
       this.emit();return null
@@ -126,14 +155,23 @@ export class ExperimentLifecycleController {
           const record=await this.recover(identity,currentSignal)
           if(!this.current(generation)||currentSignal.aborted)return
           if(!record)continue
+          await this.tracking(identity.key,true)
+          if(!this.current(generation)||currentSignal.aborted)return
           this.unknown.delete(identity.key);this.value.error=null;this.ports.receive(record,false)
-          if(identity.kind==='run'&&!this.stopRequested&&this.ports.owned()?.experiment_id===record.experiment_id&&!isReleasedExperiment(this.ports.owned()))this.value.controlledExperimentId=record.experiment_id
+          if(!identity.observational&&identity.kind==='run'&&!this.stopRequested&&this.ports.owned()?.experiment_id===record.experiment_id&&!isReleasedExperiment(this.ports.owned()))this.value.controlledExperimentId=record.experiment_id
           if(this.stopRequested)await this.stop()
-        }catch(error){if(this.current(generation)&&!currentSignal.aborted){this.unknown.delete(identity.key);this.value.error=message(error)}}
+        }catch(error){if(this.current(generation)&&!currentSignal.aborted){await this.tracking(identity.key,true);if(!this.current(generation)||currentSignal.aborted)return;this.unknown.delete(identity.key);this.value.error=message(error)}}
       }
     }finally{if(this.current(generation)){this.reconciling=false;if(!this.unknown.size)this.value.requestStatus='idle';this.emit()}}
   }
   observe(record:ExperimentRecord){if(this.value.controlledExperimentId===record.experiment_id&&isReleasedExperiment(record)){this.value.controlledExperimentId=null;this.emit()}}
-  cancel(){this.generation++;this.controller.abort();this.controller=new AbortController();this.workflow=false;this.stopTask=null;this.stopRequested=false;this.reconciling=false;this.unknown.clear();this.stopped.clear();this.value={pending:false,requestStatus:'idle',controlledExperimentId:null,unresolved:false,error:null};this.emit()}
+  async forgetPending(){
+    if(this.workflow||this.stopTask||this.reconciling)return
+    const generation=this.generation;this.reconciling=true
+    try{for(const key of this.unknown.keys())await this.ports.observations?.forget(key);if(!this.current(generation))return;this.unknown.clear();this.value.requestStatus='idle';this.value.error='Local tracking was removed. Server evidence and output state were kept; no command was sent.'}
+    catch(error){if(this.current(generation))this.value.error=message(error)}
+    finally{if(this.current(generation)){this.reconciling=false;this.emit()}}
+  }
+  cancel(){this.generation++;this.controller.abort();this.controller=new AbortController();this.workflow=false;this.stopTask=null;this.stopRequested=false;this.reconciling=false;this.trackingError=null;this.unknown.clear();this.stopped.clear();this.value={pending:false,requestStatus:'idle',controlledExperimentId:null,unresolved:false,error:null};this.emit()}
   dispose(){this.cancel();this.disposed=true}
 }

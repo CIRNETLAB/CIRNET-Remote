@@ -10,6 +10,7 @@ import type { InstrumentControlPort } from '../application/ports/lab'
 import type {ClockConfiguration,TriggerConfiguration,TestVector,PublicStationCapabilities} from '../contracts/generated/dto'
 import {InstrumentCommandController,initialInstrumentCommandState} from '../application/instruments/commands'
 import {buildPreRunConfiguration,type RequestedRunConfiguration} from '../application/instruments/configuration'
+import {browserPendingObservations} from '../services/recovery/pendingObservations'
 
 const requests = new StoreScopeMap<{ controller: AbortController; promise: Promise<void> }>()
 const controls = new StoreScopeMap<InstrumentControlPort>()
@@ -104,7 +105,7 @@ export const useInstrumentStore = defineStore('instrument', {
       const existing=commandControllers.get(this);if(existing)return existing
       const control=controls.get(this)
       if(!control)throw new Error('Live instrument control is not connected to an application session.')
-      const controller=new InstrumentCommandController({...control,key:()=>crypto.randomUUID(),changed:state=>{this.generatorControl=state}})
+      const controller=new InstrumentCommandController({...control,...(this.principalId?{observations:browserPendingObservations.scope(this.principalId)}:{}),key:()=>crypto.randomUUID(),changed:state=>{this.generatorControl=state}})
       commandControllers.set(this,controller);return controller
     },
     async refreshGeneratorAccess(id:string){
@@ -116,6 +117,16 @@ export const useInstrumentStore = defineStore('instrument', {
       return this.commands().configure(experimentId,this.generatorConfiguration(channel,enabled))
     },
     async reconcileGenerator(channel:1|2){return commandControllers.get(this)?.reconcile(channel)??null},
+    async recoverGeneratorObservations(){
+      if(!this.principalId||!controls.get(this))return
+      try{const controller=this.commands();for(const channel of [1,2] as const)for(let attempt=0;attempt<32;attempt++){
+        const before=controller.state().channels[channel];if(!['unknown','accepted'].includes(before.phase)||before.pending)break
+        await controller.reconcile(channel)
+        if(controller.state().channels[channel].operationKey===before.operationKey)break
+      }}
+      catch(error){this.generatorControl.accessError=errorMessage(error)}
+    },
+    forgetGeneratorObservation(channel:1|2){return commandControllers.get(this)?.forget(channel)},
     cancelGeneratorCommands(){commandControllers.get(this)?.cancel();commandControllers.delete(this);this.generatorControl=initialInstrumentCommandState()},
     log(message: string, level: ConsoleEntry['level'] = 'info', context:{source?:string;scope?:'session'|'draft'}={}) {
       this.entries.push({ id: this.nextEntryId++, time: new Date().toLocaleTimeString(), level, message, ...context })

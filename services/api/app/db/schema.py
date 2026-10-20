@@ -10,9 +10,12 @@ operations=Table('lab_operations',metadata,Column('owner_id',String,primary_key=
 principals=Table('auth_principals',metadata,Column('principal_id',String,primary_key=True),Column('kind',String,nullable=False),Column('created_at',Float,nullable=False))
 users=Table('auth_users',metadata,Column('principal_id',String,ForeignKey('auth_principals.principal_id'),primary_key=True),Column('username',String,nullable=False),Column('username_key',String,unique=True,nullable=False),Column('display_name',String,nullable=False),Column('password_hash',String,nullable=False),Column('role',String,nullable=False),Column('active',Boolean,nullable=False),Column('auth_revision',Integer,nullable=False))
 auth_sessions=Table('auth_sessions',metadata,Column('session_id',String,primary_key=True),Column('token_hash',String,unique=True,nullable=False),Column('principal_id',String,ForeignKey('auth_principals.principal_id')),Column('csrf_token',String,nullable=False),Column('expires_at',Float,nullable=False),Column('revoked',Boolean,nullable=False),Column('auth_revision',Integer,nullable=False),Column('claimable_guest_id',String,ForeignKey('auth_principals.principal_id')))
+Index('ix_auth_sessions_expiry',auth_sessions.c.expires_at,auth_sessions.c.session_id)
+Index('ix_auth_sessions_principal',auth_sessions.c.principal_id,auth_sessions.c.revoked)
 assignment_access=Table('lab_assignment_access',metadata,Column('assignment_id',String,ForeignKey('lab_assignments.assignment_id'),primary_key=True),Column('owner_id',String,ForeignKey('auth_principals.principal_id'),nullable=False),Column('published',Boolean,nullable=False),Column('feedback_policy',String,nullable=False))
 audit=Table('auth_audit',metadata,Column('sequence',Integer,primary_key=True,autoincrement=True),Column('occurred_at',Float,nullable=False),Column('actor_id',String,ForeignKey('auth_principals.principal_id')),Column('action',String,nullable=False),Column('subject_id',String,nullable=False))
 rate_limits=Table('auth_rate_limits',metadata,Column('bucket',String,primary_key=True),Column('window_start',Float,nullable=False),Column('attempts',Integer,nullable=False))
+Index('ix_auth_rate_limits_window',rate_limits.c.window_start,rate_limits.c.bucket)
 
 LEGACY=(assignments,experiments,leases,sessions,operations)
 AUTH=(principals,users,auth_sessions,assignment_access,audit,rate_limits)
@@ -28,3 +31,6 @@ ASSIGNMENTS=(assignment_documents,assignment_revisions)
 from app.migrations.schema_v0005 import CAPTURES as _CAPTURE_SNAPSHOT
 captures,=(table.to_metadata(metadata) for table in _CAPTURE_SNAPSHOT)
 CAPTURES=(captures,)
+
+from app.migrations.schema_v0006 import experiment_runtime as _RUNTIME_SNAPSHOT
+experiment_runtime=_RUNTIME_SNAPSHOT.to_metadata(metadata)

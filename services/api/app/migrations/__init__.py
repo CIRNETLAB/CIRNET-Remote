@@ -3,7 +3,7 @@ from pathlib import Path
 from alembic import command
 from alembic.config import Config
 
-HEAD='0005_captures'
+HEAD='0007_auth_maintenance'
 
 def migrate(engine, revision='head'):
     config=Config()

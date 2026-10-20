@@ -79,7 +79,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "UserView",
+          "array": true,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "createUser": {
     "method": "POST",
@@ -94,7 +180,93 @@ export const apiOperations = {
     "successStatuses": [
       201
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "201": {
+        "application/json": {
+          "contract": "UserView",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "updateUser": {
     "method": "PATCH",
@@ -109,7 +281,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "UserView",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "listAssignmentDocuments": {
     "method": "GET",
@@ -124,7 +382,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "AssignmentAuthoringPage",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "createAssignmentDocument": {
     "method": "POST",
@@ -139,7 +483,93 @@ export const apiOperations = {
     "successStatuses": [
       201
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "201": {
+        "application/json": {
+          "contract": "AssignmentAuthoringDocument",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "getAssignmentDocument": {
     "method": "GET",
@@ -154,7 +584,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "AssignmentAuthoringDocument",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "saveAssignmentDocument": {
     "method": "PUT",
@@ -169,7 +685,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "AssignmentAuthoringDocument",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "publishAssignmentDocument": {
     "method": "PATCH",
@@ -184,7 +786,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "AssignmentAuthoringDocument",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "listAssignments": {
     "method": "GET",
@@ -199,7 +887,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "AssignmentView",
+          "array": true,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "createAssignment": {
     "method": "POST",
@@ -214,7 +988,93 @@ export const apiOperations = {
     "successStatuses": [
       201
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "201": {
+        "application/json": {
+          "contract": "InstructorAssignmentDocument",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "getAssignment": {
     "method": "GET",
@@ -229,7 +1089,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "AssignmentView",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "publishAssignment": {
     "method": "PATCH",
@@ -244,7 +1190,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "InstructorAssignmentDocument",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "claimGuest": {
     "method": "POST",
@@ -259,7 +1291,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "SessionView",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "login": {
     "method": "POST",
@@ -274,7 +1392,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "SessionView",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "logout": {
     "method": "POST",
@@ -289,7 +1493,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "SessionView",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "getSession": {
     "method": "GET",
@@ -304,7 +1594,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "SessionView",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "deleteCapturePayload": {
     "method": "DELETE",
@@ -319,7 +1695,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "CaptureMetadata",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "getCapturePayload": {
     "method": "GET",
@@ -334,7 +1796,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": true
+    "binary": true,
+    "responses": {
+      "200": {
+        "application/vnd.netcircuit.capture; version=1": {
+          "contract": null,
+          "array": false,
+          "binary": true
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "previewCircuit": {
     "method": "POST",
@@ -349,7 +1897,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "PhysicalPreviewResult",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "CircuitValidationResult",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "validateCircuit": {
     "method": "POST",
@@ -364,7 +1998,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "CircuitValidationResult",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "CircuitValidationResult",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "deleteCircuit": {
     "method": "DELETE",
@@ -379,7 +2099,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "CircuitDeletion",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "getCircuit": {
     "method": "GET",
@@ -394,7 +2200,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "CircuitDocument",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "saveCircuit": {
     "method": "PUT",
@@ -409,7 +2301,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "CircuitDocument",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "listExperiments": {
     "method": "GET",
@@ -424,7 +2402,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "ExperimentRecord",
+          "array": true,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "createExperiment": {
     "method": "POST",
@@ -439,7 +2503,93 @@ export const apiOperations = {
     "successStatuses": [
       201
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "201": {
+        "application/json": {
+          "contract": "ExperimentRecord",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "listActiveExperiments": {
     "method": "GET",
@@ -454,7 +2604,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "ExperimentActiveSnapshot",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "listExperimentHistory": {
     "method": "GET",
@@ -469,7 +2705,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "ExperimentHistoryPage",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "getExperiment": {
     "method": "GET",
@@ -484,7 +2806,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "ExperimentRecord",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "getExperimentDocumentReference": {
     "method": "GET",
@@ -499,7 +2907,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "ExperimentDocumentReference",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "configureExperimentInstrument": {
     "method": "POST",
@@ -514,7 +3008,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "InstrumentOperationResult",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "getExperimentInstrumentAccess": {
     "method": "GET",
@@ -529,7 +3109,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "InstrumentControlAccess",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "getExperimentInstrumentCommand": {
     "method": "GET",
@@ -544,7 +3210,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "InstrumentCommandRecord",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "configureExperimentGenerator": {
     "method": "POST",
@@ -559,7 +3311,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "InstrumentCommandRecord",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "getExperimentResults": {
     "method": "GET",
@@ -574,7 +3412,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "ExperimentRecord",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "runExperiment": {
     "method": "POST",
@@ -589,7 +3513,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "ExperimentRecord",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "stopExperiment": {
     "method": "POST",
@@ -604,7 +3614,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "ExperimentRecord",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "getHealth": {
     "method": "GET",
@@ -619,7 +3715,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "HealthResponse",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "getOperation": {
     "method": "GET",
@@ -634,7 +3816,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "OperationRecord",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "listProjects": {
     "method": "GET",
@@ -649,7 +3917,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "ProjectPage",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "createProject": {
     "method": "POST",
@@ -664,7 +4018,93 @@ export const apiOperations = {
     "successStatuses": [
       201
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "201": {
+        "application/json": {
+          "contract": "Project",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "deleteProject": {
     "method": "DELETE",
@@ -679,7 +4119,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "ProjectDeletion",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "getProject": {
     "method": "GET",
@@ -694,7 +4220,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "Project",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "updateProject": {
     "method": "PATCH",
@@ -709,7 +4321,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "Project",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "listCircuits": {
     "method": "GET",
@@ -724,7 +4422,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "CircuitPage",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "createCircuit": {
     "method": "POST",
@@ -739,7 +4523,93 @@ export const apiOperations = {
     "successStatuses": [
       201
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "201": {
+        "application/json": {
+          "contract": "CircuitDocument",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "listStations": {
     "method": "GET",
@@ -754,7 +4624,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "StationDescriptor",
+          "array": true,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "getStationCapabilities": {
     "method": "GET",
@@ -769,7 +4725,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "PublicStationCapabilities",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "getStationQueue": {
     "method": "GET",
@@ -784,7 +4826,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "QueueState",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "listAssignmentDocumentsV2": {
     "method": "GET",
@@ -799,7 +4927,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "AssignmentAuthoringPageV2",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "createAssignmentDocumentV2": {
     "method": "POST",
@@ -814,7 +5028,93 @@ export const apiOperations = {
     "successStatuses": [
       201
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "201": {
+        "application/json": {
+          "contract": "AssignmentAuthoringDocumentV2",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "getAssignmentDocumentV2": {
     "method": "GET",
@@ -829,7 +5129,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "AssignmentAuthoringDocumentV2",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "saveAssignmentDocumentV2": {
     "method": "PUT",
@@ -844,7 +5230,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "AssignmentAuthoringDocumentV2",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "publishAssignmentDocumentV2": {
     "method": "PATCH",
@@ -859,7 +5331,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "AssignmentAuthoringDocumentV2",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "listAssignmentsV2": {
     "method": "GET",
@@ -874,7 +5432,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "AssignmentViewV2",
+          "array": true,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "getAssignmentV2": {
     "method": "GET",
@@ -889,7 +5533,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "AssignmentViewV2",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "previewCircuitV2": {
     "method": "POST",
@@ -904,7 +5634,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "PhysicalPreviewResult",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "CircuitValidationResult",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "validateCircuitV2": {
     "method": "POST",
@@ -919,7 +5735,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "CircuitValidationResult",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "CircuitValidationResult",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "getCircuitV2": {
     "method": "GET",
@@ -934,7 +5836,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "CircuitDocumentV2",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "saveCircuitV2": {
     "method": "PUT",
@@ -949,7 +5937,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "CircuitDocumentV2",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "createExperimentV2": {
     "method": "POST",
@@ -964,7 +6038,93 @@ export const apiOperations = {
     "successStatuses": [
       201
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "201": {
+        "application/json": {
+          "contract": "ExperimentRecord",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "getExperimentDocumentReferenceV2": {
     "method": "GET",
@@ -979,7 +6139,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "ExperimentDocumentReferenceV2",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "listCircuitsV2": {
     "method": "GET",
@@ -994,7 +6240,93 @@ export const apiOperations = {
     "successStatuses": [
       200
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "200": {
+        "application/json": {
+          "contract": "CircuitPageV2",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   },
   "createCircuitV2": {
     "method": "POST",
@@ -1009,7 +6341,93 @@ export const apiOperations = {
     "successStatuses": [
       201
     ],
-    "binary": false
+    "binary": false,
+    "responses": {
+      "201": {
+        "application/json": {
+          "contract": "CircuitDocumentV2",
+          "array": false,
+          "binary": false
+        }
+      },
+      "400": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "401": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "403": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "404": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "409": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "412": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "422": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "429": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "500": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "503": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      },
+      "504": {
+        "application/json": {
+          "contract": "ErrorEnvelope",
+          "array": false,
+          "binary": false
+        }
+      }
+    }
   }
 } as const
 export type OperationName = keyof ApiOperations

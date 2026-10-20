@@ -28,7 +28,7 @@ test('Stop during Create retains mutation identity and stops the acknowledged ex
   const pending=store.run(graph,stationFixture());await store.stop()
   assert.equal(calls[0]!.signal?.aborted,false)
   assert.ok(calls[0]!.key)
-  created.resolve(Response.json(record()));await pending
+  created.resolve(Response.json(record(),{status:201}));await pending
   assert.deepEqual(calls.map(call=>call.url),['/api/experiments','/api/experiments/e1/stop'])
   assert.ok(calls[1]!.key);assert.equal(store.busy,false)
 })
@@ -51,7 +51,7 @@ test('a lost accepted Run acknowledgement is queried and never replays Start',as
   setActivePinia(createPinia());const store=useExperimentStore(),calls:{url:string;key:string|null}[]=[]
   configureApiClient({fetcher:async(url,options)=>{
     calls.push({url:String(url),key:new Headers(options?.headers).get('Idempotency-Key')})
-    if(String(url)==='/api/experiments')return Response.json(record())
+    if(String(url)==='/api/experiments')return Response.json(record(),{status:201})
     if(String(url).endsWith('/run'))throw new TypeError('Run acknowledgement lost')
     const run=calls.find(call=>call.url.endsWith('/run'))!
     return Response.json({schema_version:'1.0',operation_key:run.key,kind:'run',status:'ACCEPTED',experiment_id:'e1',error_code:null,revision:1,experiment:record('RUNNING',4)})
@@ -85,7 +85,7 @@ test('an explicit history selection while Create is pending is not overwritten b
   configureApiClient({fetcher:async url=>String(url)==='/api/experiments'?created.promise:Response.json(record('RUNNING',4))})
   store.receive({...record('COMPLETE',9),experiment_id:'history'})
   const pending=store.run(graph,stationFixture());store.selectExperiment('history')
-  created.resolve(Response.json(record()));assert.equal(await pending,true)
+  created.resolve(Response.json(record(),{status:201}));assert.equal(await pending,true)
   assert.equal(store.activeId,'history');assert.equal(store.ownedActiveId,'e1');assert.equal(store.controlledExperimentId,'e1')
 })
 
@@ -100,7 +100,7 @@ test('a reload snapshot restores owned evidence without inventing this tab live 
 
 test('a stale Run acknowledgement cannot grant live control after a newer terminal lifecycle event',async()=>{
   setActivePinia(createPinia());const store=useExperimentStore(),started=deferred<Response>()
-  configureApiClient({fetcher:async url=>String(url).endsWith('/run')?started.promise:Response.json(record())})
+  configureApiClient({fetcher:async url=>String(url).endsWith('/run')?started.promise:Response.json(record(),{status:201})})
   const pending=store.run(graph,stationFixture());for(let i=0;i<20&&!store.ownedActiveId;i++)await new Promise(resolve=>setTimeout(resolve,0))
   store.receive(record('COMPLETE',20));started.resolve(Response.json(record('RUNNING',4)));await pending
   assert.equal(store.active?.state,'COMPLETE');assert.equal(store.busy,false);assert.equal(store.controlledExperimentId,null)

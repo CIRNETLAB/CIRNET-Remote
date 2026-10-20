@@ -1,15 +1,25 @@
 ---
 project: net-Circuit-Remote
-current_phase: documentation-artifact-audit
-status: documentation-artifact-policy-verified-existing-test-failure-recorded
-last_updated: 2026-10-19
-next_task: user-review-legacy-artifact-disposition
-blocking_issue: pre-existing-python-import-regex-test-false-positive
+current_phase: wc20-architecture-complete
+status: architecture-complete-ui-verification-excluded-by-user
+last_updated: 2026-10-20
+next_task: user-review-and-commit
+blocking_issue: none-for-current-architecture-scope
 hardware_mode: simulation
 fpga_development_started: true
 ---
 
 # Development Log
+
+## Web/Contracts hardening WC20 — 2026-10-20
+
+Implemented explicit credential bootstrap and bounded auth maintenance, isolated control calls and indexed runtime experiment selection, bounded request/realtime delivery, operation status/media/error validation and field-level canonical diagnostics. Generated validator cores preserve synchronous authoring while complete profiles load at workflow boundaries. Authored document projection excludes held momentary input from persistent data; save bindings remain associated with their draft and principal. A bounded browser ledger reconciles unknown operations by reads, with atomic cross-tab writes, available explicit Stop and cancellation fences against delayed Run.
+
+The WC20 architecture scope is complete. Final local architecture gates pass: 1,283 Python tests with one optional Icarus/vvp skip, 1,434 Web tests, the 245-module AST boundary check, 18 real PostgreSQL tests, four installed-wheel probes and production build/typecheck. The [current WC20 closure](verification/2026-10-20-web-contracts-closure.md) records source identity, exact commands, actual production measurements, historical failures and output-policy deviations. The user explicitly limited final verification to architecture and excluded UI verification; the running complete native browser gate was cancelled at that request. It is not a full native PASS and does not block architectural closure. Physical capability, target Mini PC capacity/soak, hosted CI and `nginx -t` remain separate open or unverified external gates.
+
+## AI Handoff — current WC20 architectural closure
+
+Close the current architecture task and leave source unstaged for the user's review and commit. Do not restart UI verification without a new user request; preserve the cancelled native run and earlier browser failures as historical evidence. Physical hardware/FPGA conformance, actual Mini PC sustained capacity, hosted CI and Nginx configuration execution require separate environments and remain open; architectural completion does not certify them. Follow [VERIFICATION.md](VERIFICATION.md) for final evidence inventory and guarded owned-session cleanup, preserving historical reports, source assets and protected archive bytes. No automatic commit, push, merge or deployment. Earlier handoffs below describe their dated sessions.
 
 ## Documentation and artifact policy audit — 2026-10-19
 
@@ -17,7 +27,7 @@ The current task audits project-managed Markdown against source, Contracts, test
 
 Latest implemented UI source includes the [File / Component / Run Ribbon](verification/2026-10-19-ribbon-shell.md), [adaptive depth policy](verification/2026-10-19-adaptive-depth.md) and [anchored camera navigation](verification/2026-10-19-unified-camera-navigation.md), plus the 2026-10-18 package/contact/Label changes. Their reports remain dated evidence; the present audit does not certify those historical suites as freshly run.
 
-## AI Handoff — current documentation audit
+## AI Handoff — documentation audit (historical, 2026-10-19)
 
 Follow the root Codex rules and shared verification guide, use the actual current source for decisions, and keep screenshots, video, traces, HTML reports with images and raw diagnostic artifacts outside the worktree from creation. Preserve hash-locked archive bytes and tests. Review the audit report for current PASS/FAIL/NOT_RUN/BLOCKED evidence and cleanup proposals; older action checklists, Git blockers and next-task statements are historical. The user decides any later deletion or commit.
 
@@ -47,7 +57,7 @@ Implemented the approved Native plan: explicit shared 830/630/100 topology, Inst
 
 ## Current Goal
 
-Complete the Markdown audit and external-artifact policy, record fresh checks in `verification/2026-10-19-documentation-artifact-audit.md`, and leave all changes unstaged for review. `ARCHITECTURE.md` remains authoritative; the W/R/H and editor entries below preserve their original results, Git states and remaining gates. Their old next-task instructions do not override the present authorized scope.
+WC20 architecture implementation and verification are complete within the user's final architecture-only scope; see [the current closure](verification/2026-10-20-web-contracts-closure.md). UI verification was excluded and the running native gate cancelled at the user's request, without claiming a full browser pass. Leave changes unstaged for user review and commit. Physical hardware conformance, target Mini PC capacity/soak, hosted CI and `nginx -t` remain external open gates. The old Python import-regex false positive is resolved by the AST authority. `ARCHITECTURE.md` remains authoritative; the W/R/H, documentation-audit and editor entries preserve their original results, Git states and remaining gates. Their historical next-task instructions do not override the current WC20 scope.
 
 ## Post-R7 H0–H6 — 2026-10-13
 

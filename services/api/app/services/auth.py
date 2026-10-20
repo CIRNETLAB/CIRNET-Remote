@@ -39,6 +39,7 @@ class AuthService:
         self.repo=repository; self.config=configuration; self.clock=clock or time.time
         self.hasher=PasswordHasher(); self._dummy_hash=self.hasher.hash(secrets.token_urlsafe(32))
         self._revoke_callback=lambda session_ids:None
+        self._maintenance_after=None
 
     def set_revoke_callback(self,callback): self._revoke_callback=callback
 
@@ -56,13 +57,49 @@ class AuthService:
     def _admit(self,bucket,limit,window):
         now=self.clock(); table=self.repo.rate_limits
         with self.repo.lock,self.repo.engine.begin() as db:
-            db.execute(delete(table).where(table.c.window_start<now-86400))
             row=db.execute(select(table).where(table.c.bucket==bucket)).mappings().first()
             if row and row['window_start']>now-window:
                 if row['attempts']>=limit: raise AuthError('RATE_LIMITED',429)
                 db.execute(update(table).where(table.c.bucket==bucket).values(attempts=row['attempts']+1))
             elif row: db.execute(update(table).where(table.c.bucket==bucket).values(window_start=now,attempts=1))
-            else: db.execute(insert(table).values(bucket=bucket,window_start=now,attempts=1))
+            else:
+                # Fail closed at a finite number of live address buckets. Old
+                # buckets are collected by maintenance, never a request scan.
+                if db.execute(select(table.c.bucket).limit(1).offset(self.config.auth_rate_max_buckets-1)).first():
+                    raise AuthError('RATE_LIMITED',429)
+                db.execute(insert(table).values(bucket=bucket,window_start=now,attempts=1))
+
+    def admit_bootstrap(self,client_address):
+        key=hashlib.sha256(str(client_address).encode()).hexdigest()
+        self._admit('bootstrap:'+key,self.config.bootstrap_limit,self.config.login_window_seconds)
+
+    def maintain(self):
+        """One indexed batch; credentials only, never principal/audit evidence."""
+        now=self.clock(); batch=self.config.auth_maintenance_batch
+        with self.repo.lock,self.repo.engine.begin() as db:
+            sessions=self.repo.auth_sessions
+            candidates=select(sessions.c.session_id,sessions.c.principal_id,sessions.c.expires_at).where(
+                sessions.c.expires_at<=now-self.config.auth_retention_seconds
+            )
+            if self._maintenance_after is not None:
+                expiry,identity=self._maintenance_after
+                candidates=candidates.where((sessions.c.expires_at>expiry)|
+                    ((sessions.c.expires_at==expiry)&(sessions.c.session_id>identity)))
+            rows=list(db.execute(candidates.order_by(sessions.c.expires_at,sessions.c.session_id).limit(batch)).mappings())
+            self._maintenance_after=(rows[-1]['expires_at'],rows[-1]['session_id']) if len(rows)==batch else None
+            # Retain expired/revoked read-context tombstones while an original
+            # legacy proof is live. Deleting them could let that same proof
+            # silently recreate revoked authority. Both reads stay batch-bound.
+            principals={row['principal_id'] for row in rows if row['principal_id'] is not None}
+            legacy=self.repo.sessions
+            retained=set(db.execute(select(legacy.c.session_id).where(legacy.c.session_id.in_(principals),legacy.c.expires_at>now)).scalars()) if principals else set()
+            ids=[row['session_id'] for row in rows if row['principal_id'] not in retained]
+            if ids: db.execute(delete(sessions).where(sessions.c.session_id.in_(ids)))
+            limits=self.repo.rate_limits
+            buckets=list(db.execute(select(limits.c.bucket).where(
+                limits.c.window_start<=now-86400).order_by(limits.c.window_start,limits.c.bucket).limit(batch)).scalars())
+            if buckets: db.execute(delete(limits).where(limits.c.bucket.in_(buckets)))
+        return {'sessions_removed':len(ids),'rate_buckets_removed':len(buckets)}
 
     def _context(self,row,user=None):
         return SessionContext(row['session_id'],row['principal_id'],row['principal_id'],user['role'] if user else 'STUDENT',bool(user),row['csrf_token'],row['expires_at'],row['claimable_guest_id'],user['username'] if user else None,user['display_name'] if user else None)
@@ -114,8 +151,8 @@ class AuthService:
     def session_active(self,session_id):
         with self.repo.lock,self.repo.engine.connect() as db: return self._resolve(db,session_id=session_id) is not None
 
-    def _new_session(self,db,principal_id=None,*,claimable_guest_id=None,expires_at=None):
-        token=secrets.token_urlsafe(32); session_id=uuid.uuid4().hex
+    def _new_session(self,db,principal_id=None,*,claimable_guest_id=None,expires_at=None,session_id=None):
+        token=secrets.token_urlsafe(32); session_id=session_id or uuid.uuid4().hex
         revision=0
         if principal_id:
             revision=db.execute(select(self.repo.auth_users.c.auth_revision).where(self.repo.auth_users.c.principal_id==principal_id)).scalar_one_or_none() or 0
@@ -133,7 +170,7 @@ class AuthService:
             db.execute(insert(self.repo.auth_principals).values(principal_id=principal,kind='GUEST',created_at=self.clock()))
         return self._new_session(db,principal)
 
-    def ensure_session(self,cookie,*,consume_legacy=True):
+    def ensure_session(self,cookie,*,consume_legacy=True,allow_create=True):
         context=self.current(cookie)
         if context: return context,None
         with self.repo.lock,self.repo.engine.begin() as db:
@@ -150,7 +187,20 @@ class AuthService:
                     if consumed.rowcount!=1:
                         context,token=self._guest(db)
                         return replace(context,replaced_invalid_cookie=True),token
-                return self._new_session(db,cookie,expires_at=expiry if not consume_legacy else None)
+                else:
+                    # One revocable read context for each still-valid legacy
+                    # proof; repeated ordinary reads do not mint credentials.
+                    internal=uuid.uuid5(uuid.NAMESPACE_URL,'netcircuit-legacy-read:'+cookie).hex
+                    current=self._resolve(db,session_id=internal)
+                    if current: return current,None
+                    if db.execute(select(self.repo.auth_sessions.c.session_id).where(self.repo.auth_sessions.c.session_id==internal)).first():
+                        # Expiry/revocation is a lookup failure, not permission
+                        # to refresh the same deterministic session. Explicit
+                        # bootstrap can still consume the original proof.
+                        return None,None
+                    return self._new_session(db,cookie,expires_at=expiry,session_id=internal)[0],None
+                return self._new_session(db,cookie)
+            if not allow_create: return None,None
             context,token=self._guest(db)
             return replace(context,replaced_invalid_cookie=cookie is not None),token
 

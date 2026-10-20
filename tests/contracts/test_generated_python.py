@@ -25,6 +25,44 @@ def graph():
     ], 'connections': [], 'metadata': {'keep': [0, False, '']}}
 
 
+def test_canonical_issue_survives_generated_boundary_without_echoing_input():
+    with pytest.raises(ValidationError) as failure:
+        models().ProjectCreate.model_validate({'name': 17}, context={'profile':'transport'})
+    issue = failure.value.errors(include_input=False)[0]
+    assert issue['type'] == 'canonical_contract'
+    assert issue['ctx']['issues'][0]['code'] == 'SCHEMA_TYPE'
+    assert issue['ctx']['issues'][0]['path'] == '/name'
+    assert issue['ctx']['issues'][0]['profile'] == 'transport'
+    assert '17' not in issue['msg']
+
+
+def test_canonical_missing_property_keeps_the_child_pointer():
+    with pytest.raises(ValidationError) as failure:
+        models().ProjectCreate.model_validate({}, context={'profile': 'transport'})
+    issue = failure.value.errors(include_input=False)[0]['ctx']['issues'][0]
+    assert issue['code'] == 'SCHEMA_REQUIRED'
+    assert issue['path'] == '/name'
+    assert issue['profile'] == 'transport'
+
+
+def test_diagnostic_corpus_preserves_registry_and_generated_code_path_profile():
+    import json
+    from contracts.registry import validate_contract
+    from jsonschema import ValidationError as SchemaError
+    corpus=json.loads((ROOT/'contracts/fixtures/diagnostics.json').read_text())
+    for case in corpus['cases']:
+        if case.get('valid'):
+            assert validate_contract(case['contract'],case['value'],case['profile'])==case['value']
+            continue
+        with pytest.raises(SchemaError) as registry:
+            validate_contract(case['contract'],case['value'],case['profile'])
+        with pytest.raises(ValidationError) as generated:
+            getattr(models(),case['contract']).model_validate(case['value'],context={'profile':case['profile']})
+        for issue in [registry.value.issues[0],generated.value.errors(include_input=False)[0]['ctx']['issues'][0]]:
+            assert {key:issue[key] for key in ('code','path')}==case['issue'],case['id']
+            assert issue['profile']==case['profile']
+
+
 def test_generated_graph_preserves_unbounded_legacy_numbers_and_omission():
     value = graph()
     value['modules'][0].update(position={'x': 10**400}, rotation=10**400)

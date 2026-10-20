@@ -3,6 +3,7 @@ import type {Experiment} from '../../types/experiment'
 import type {StationDescriptor} from '../../types/station'
 import {generatorConfigurationIssue,runtimeGeneratorIssue} from '../../types/station'
 import {parseLab} from '../../contracts/validation'
+import type {PendingObservation,PendingObservationScope} from '../operations/pendingObservations'
 
 export interface InstrumentCommandPorts {
  context():{experiment:Experiment|null;controlledExperimentId:string|null;target:StationDescriptor|null;connected:boolean}
@@ -11,6 +12,7 @@ export interface InstrumentCommandPorts {
  get(id:string,key:string,signal:AbortSignal):Promise<InstrumentCommandRecord>
  key():string
  changed?(state:InstrumentCommandState):void
+ observations?:PendingObservationScope
 }
 export interface GeneratorCommandState {
  phase:'idle'|'pending'|'unknown'|'accepted'|'applied'|'failed'
@@ -36,10 +38,24 @@ export class InstrumentCommandController {
  private controller=new AbortController()
  private accessVersion=0
  private value=initialInstrumentCommandState()
- constructor(private readonly ports:InstrumentCommandPorts){}
+ private restored=new Map<string,PendingObservation>()
+ constructor(private readonly ports:InstrumentCommandPorts){
+  try{for(const row of ports.observations?.list()??[])if(row.kind==='generator')this.restored.set(row.key,row)
+   this.restoreNext(1);this.restoreNext(2)
+  }catch(error){this.value.accessError=message(error)}
+  this.emit()
+ }
  state():InstrumentCommandState{return {...this.value,channels:{1:{...this.value.channels[1]},2:{...this.value.channels[2]}}}}
  private emit(){this.ports.changed?.(this.state())}
  private current(generation:number){return generation===this.generation&&!this.controller.signal.aborted}
+ private async tracking(key:string,complete:boolean){try{await (complete?this.ports.observations?.complete(key):this.ports.observations?.unknown(key))}catch(error){this.value.accessError=message(error)}}
+ private restoreNext(channel:1|2){
+  const row=[...this.restored.values()].find(row=>row.channel===channel&&row.experimentId)
+  if(!row)return
+  const state=this.value.channels[channel]
+  state.phase='unknown';state.operationKey=row.key;state.experimentId=row.experimentId!;state.command=null;state.requestedConfiguration=null
+  state.error='Restored command tracking is read-only. Refresh status to observe the outcome; output control was not restored.'
+ }
  private assertLive(id:string,configuration:GeneratorConfiguration){
   const context=this.ports.context(),experiment=context.experiment
   if(!experiment||experiment.experiment_id!==id||context.controlledExperimentId!==id)throw new Error('Live control requires an acknowledged Run in this tab.')
@@ -59,10 +75,13 @@ export class InstrumentCommandController {
   }catch(error){if(this.current(generation)&&version===this.accessVersion){this.value.access=null;this.value.accessError=message(error)}return null}
   finally{if(this.current(generation)&&version===this.accessVersion){this.value.accessLoading=false;this.emit()}}
  }
- private accept(channel:1|2,record:InstrumentCommandRecord,key:string,id:string,configuration?:GeneratorConfiguration){
+ private async accept(channel:1|2,record:InstrumentCommandRecord,key:string,id:string,configuration?:GeneratorConfiguration){
   parseLab('InstrumentCommandRecord',record)
   if(record.experiment_id!==id||record.operation_key!==key||record.configuration.channel!==channel
    ||configuration&&configurationKey(record.configuration)!==configurationKey(configuration))throw Object.assign(new Error('Instrument acknowledgement does not match the submitted command.'),{code:'INVALID_RESPONSE'})
+  const generation=this.generation
+  await this.tracking(key,record.status==='APPLIED'||record.status==='FAILED')
+  if(!this.current(generation))return
   const state=this.value.channels[channel]
   if(state.command?.operation_key===key&&(state.command.revision>record.revision||state.command.status==='APPLIED'&&state.command.revision>=record.revision))return
   const command=snapshot(record);state.command=command;state.operationKey=key;state.experimentId=id
@@ -70,6 +89,7 @@ export class InstrumentCommandController {
   else if(command.status==='ACCEPTED'){state.phase='accepted';state.lastAcknowledged=command;state.error=null}
   else if(command.status==='FAILED'){state.phase='failed';state.error=command.error_code??'The driver rejected the command.'}
   else {state.phase='unknown';state.error='Acknowledgement is unknown. Output may have changed; refresh this command or Stop before another Apply.'}
+  if((command.status==='APPLIED'||command.status==='FAILED')&&this.restored.delete(key))this.restoreNext(channel)
  }
  async configure(id:string,draft:GeneratorConfiguration):Promise<InstrumentCommandRecord|null>{
   const validated=parseLab('GeneratorConfiguration',draft),configuration=snapshot(validated),channel=configuration.channel,state=this.value.channels[channel]
@@ -85,17 +105,25 @@ export class InstrumentCommandController {
    if(!access)throw new Error(this.value.accessError??'Instrument access is unavailable.')
    if(!access.can_configure_generator||access.reason!=='READY'||!access.generator_channels.includes(channel))throw new Error(`Generator channel is not allocated for live control (${access.reason}).`)
    if(access.revision!==context.experiment!.revision)throw new Error('Execution changed while instrument access was checked. Refresh access before applying.')
-   key=this.ports.key();state.operationKey=key;state.experimentId=id;state.command=null;state.requestedConfiguration=configuration
+   const candidate=this.ports.key()
+   const pending=this.ports.observations?.begin({kind:'generator',key:candidate,experimentId:id,channel});if(pending)await pending
+   if(!this.current(generation))return null
+   this.assertLive(id,configuration)
+   key=candidate;state.operationKey=key;state.experimentId=id;state.command=null;state.requestedConfiguration=configuration
    const record=await this.ports.send(id,configuration,key,signal)
    if(!this.current(generation))return null
-   this.accept(channel,record,key,id,configuration);return record
+   await this.accept(channel,record,key,id,configuration);return this.current(generation)?record:null
   }catch(error){
    if(!this.current(generation))return null
    if(key&&uncertain(error)){
+    await this.tracking(key,false)
+    if(!this.current(generation))return null
     state.phase='unknown';state.error='Acknowledgement is unknown. Output may have changed; no command will be replayed.';this.emit()
-    try{const record=await this.ports.get(id,key,signal);if(!this.current(generation))return null;this.accept(channel,record,key,id,configuration);return record}
+    try{const record=await this.ports.get(id,key,signal);if(!this.current(generation))return null;await this.accept(channel,record,key,id,configuration);return this.current(generation)?record:null}
     catch(readError){if(this.current(generation))state.error=`Acknowledgement is unknown: ${message(readError)}. No command was replayed.`;return null}
    }
+   if(key)await this.tracking(key,true)
+   if(!this.current(generation))return null
    state.phase='failed';state.error=message(error);throw error
   }finally{if(this.current(generation)){state.pending=false;this.emit()}}
  }
@@ -103,9 +131,16 @@ export class InstrumentCommandController {
   const state=this.value.channels[channel],key=state.operationKey,id=state.experimentId
   if(state.pending||!key||!id)return null
   const generation=this.generation,signal=this.controller.signal;state.pending=true;this.emit()
-  try{const record=await this.ports.get(id,key,signal);if(!this.current(generation))return null;this.accept(channel,record,key,id,state.requestedConfiguration??undefined);return record}
+  try{const record=await this.ports.get(id,key,signal);if(!this.current(generation))return null;await this.accept(channel,record,key,id,state.requestedConfiguration??undefined);return this.current(generation)?record:null}
   catch(error){if(this.current(generation))state.error=`Cannot refresh the command: ${message(error)}. No command was replayed.`;return null}
   finally{if(this.current(generation)){state.pending=false;this.emit()}}
  }
- cancel(){this.generation++;this.accessVersion++;this.controller.abort();this.controller=new AbortController();this.value=initialInstrumentCommandState();this.emit()}
+ async forget(channel:1|2){
+  const state=this.value.channels[channel];if(state.pending||!state.operationKey)return
+  const generation=this.generation;state.pending=true;this.emit()
+  try{await this.ports.observations?.forget(state.operationKey);if(!this.current(generation))return;this.restored.delete(state.operationKey);this.value.channels[channel]=channelState();this.value.channels[channel].error='Local tracking was removed. Server evidence and output state were kept; no command was sent.';this.restoreNext(channel)}
+  catch(error){if(this.current(generation))state.error=message(error)}
+  finally{if(this.current(generation)){this.value.channels[channel].pending=false;this.emit()}}
+ }
+ cancel(){this.generation++;this.accessVersion++;this.controller.abort();this.controller=new AbortController();this.restored.clear();this.value=initialInstrumentCommandState();this.emit()}
 }

@@ -15,7 +15,7 @@ test('graph 1.2 classification preserves explicit digital-domain execution rules
 
 test('graph 1.2 mutations and validation select versioned operations without replay',async()=>{
   const paths:string[]=[]
-  const client=createApiClient({baseUrl:'http://lab/api',fetcher:async(url)=>{paths.push(String(url));return Response.json(String(url).endsWith('/validate')?{valid:true,code:'OK',message:'Valid'}:document)}})
+  const client=createApiClient({baseUrl:'http://lab/api',fetcher:async(url,options)=>{paths.push(String(url));return Response.json(String(url).endsWith('/validate')?{valid:true,code:'OK',message:'Valid'}:document,{status:options?.method==='POST'&&String(url).endsWith('/circuits')?201:200})}})
   const projects=createProjectsApi(client)
   await projects.createCircuit('p',{name:'Design',graph})
   await projects.saveCircuit('d',{name:'Design',base_revision:1,graph})
@@ -27,7 +27,7 @@ test('a legacy unsupported-document response opts into one versioned read',async
   const methods:string[]=[]
   const client=createApiClient({baseUrl:'http://lab/api',fetcher:async(url,options)=>{
     methods.push(`${options?.method} ${String(url)}`)
-    return String(url).includes('/v2/')?Response.json(document):Response.json({code:'UNSUPPORTED_DOCUMENT_VERSION',message:'Use the supported document endpoint.'},{status:422})
+    return String(url).includes('/v2/')?Response.json(document):Response.json({code:'UNSUPPORTED_DOCUMENT_VERSION',message:'Use the supported document endpoint.',request_id:'document-version'},{status:422})
   }})
   assert.equal((await createProjectsApi(client).getCircuit('d')).graph.schema_version,'1.2')
   assert.deepEqual(methods,['GET http://lab/api/circuits/d','GET http://lab/api/v2/circuits/d'])

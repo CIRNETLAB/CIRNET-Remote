@@ -19,7 +19,7 @@ import { buildDeleteCandidate, buildMoveSelectionCandidate, buildPasteCandidate,
 import { captureSelectionClipboard, type SelectionClipboard } from '../../editor/selectionClipboard'
 import { emptyEditorSelection, type EditorSelection } from '../../editor/selection'
 
-import { currentGraph,commitGraph,type EditorDocumentState } from './editorDocument'
+import { authoredDocument,currentGraph,commitGraph,releaseMomentaryModule,type EditorDocumentState } from './editorDocument'
 
 const copyData=<T>(value:T):T=>JSON.parse(JSON.stringify(value)) as T
 function checkedCommit(state:EditorDocumentState,graph:CircuitGraph){commitGraph(state,parseCircuitFile(JSON.stringify(graph)))}
@@ -121,7 +121,7 @@ export function convertModuleToFlexible(state:EditorDocumentState,id:string):voi
 }
 
 export function captureSelection(state:EditorDocumentState, selection: EditorSelection): SelectionClipboard | null {
-  const graph=currentGraph(state)
+  const graph=authoredDocument(state)?.graph
   return graph ? captureSelectionClipboard(graph, selection) : null
 }
 export function deleteSelection(state:EditorDocumentState, selection: EditorSelection): EditorSelection {
@@ -250,7 +250,11 @@ export function updateModuleProperties(state:EditorDocumentState, id: string, pa
   if (Object.keys(normalizedPatch).some((key) => !definition?.parameters.some((parameter) => parameter.key === key) && !(isLeadEditableType(module.type) && ['leadForm', 'leadLengthMm', 'bodyLiftMm'].includes(key)))) throw new Error('Unsupported component parameter.')
   const properties = normalizeComponentProperties(module.type, { ...definition?.defaults, ...normalizeComponentProperties(module.type, module.properties), ...normalizedPatch })
   validateProperties(module.type, properties)
-  commitGraph(state,withCircuitModules(graph,graph.modules.map((item) => item.id === id ? { ...item, properties } : item)))
+  // An explicit authored input edit supersedes this captured pointer scope.
+  // Validate first so an invalid patch cannot release or change the document.
+  if(Object.hasOwn(normalizedPatch,'pressed'))releaseMomentaryModule(state,state.activeId,id)
+  const current=currentGraph(state)!
+  commitGraph(state,withCircuitModules(current,current.modules.map((item) => item.id === id ? { ...item, properties } : item)))
 }
 export function setMemoryImage(state:EditorDocumentState, id: string, image: MemoryImage) {
   const graph=currentGraph(state)

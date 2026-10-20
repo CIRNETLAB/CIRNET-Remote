@@ -50,7 +50,7 @@ test('login and logout rotate volatile session scope and use its current CSRF wi
 test('invalid credentials preserve the guest CSRF/session and surface an actionable error',async()=>{
   const auth=useAuthStore()
   configureApiClient({csrfToken:()=>auth.csrfToken,fetcher:async(url)=>String(url).endsWith('/login')
-    ?Response.json({code:'INVALID_CREDENTIALS',message:'Username or password is incorrect.'},{status:401}):Response.json(session())})
+    ?Response.json({code:'INVALID_CREDENTIALS',message:'Username or password is incorrect.',request_id:'invalid-login'},{status:401}):Response.json(session())})
   await auth.bootstrap();assert.equal(await auth.login('learner','wrong password'),false)
   assert.equal(auth.csrfToken,csrf('guest-csrf'));assert.equal(auth.principal?.kind,'GUEST')
   assert.match(auth.error??'',/password/i);assert.equal(auth.pending,false)

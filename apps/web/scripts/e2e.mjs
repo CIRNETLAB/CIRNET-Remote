@@ -4,6 +4,7 @@ import { randomBytes } from 'node:crypto'
 import { readdir,readFile,writeFile } from 'node:fs/promises'
 import { getArtifactDirectory } from '../../../scripts/artifact-paths.mjs'
 import { stopOwnedBackend } from './e2e-lifecycle.mjs'
+import { copyBrowserRuntime } from './e2e-browser-runtime.mjs'
 const root=resolve('../..'),args=process.argv.slice(2)
 for(let index=0;index<args.length;index++) {
   const output=/^(--output|-o)(?:=(.*))?$/.exec(args[index])
@@ -64,6 +65,10 @@ async function restartCommands() {
 }
 try {
   if(args[0]==='test') {
+    // Preserve the install cache; launch only a fresh owned external copy so
+    // executable-adjacent browser diagnostics also start outside the checkout.
+    environment.PLAYWRIGHT_BROWSERS_PATH=await copyBrowserRuntime(environment.PLAYWRIGHT_BROWSERS_PATH,
+      getArtifactDirectory('br-'+randomBytes(4).toString('hex')))
     environment.NETCIRCUIT_E2E_ADMIN_PASSWORD??=randomBytes(24).toString('base64url')
     environment.NETCIRCUIT_E2E_DATA_DIR=getArtifactDirectory('e2e-runtime')
     python=environment.NETCIRCUIT_E2E_PYTHON??resolve(root,'.audit-runtime',process.platform==='win32'?'Scripts/python.exe':'bin/python')

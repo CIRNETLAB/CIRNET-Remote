@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import sys
 import time
+import uuid
 try:
     from scripts.artifact_paths import artifact_directory
 except ModuleNotFoundError:
@@ -70,7 +71,13 @@ def main(argv=None):
         print(json.dumps(steps,indent=2));return 0
     if any(step['group']=='postgres' for step in steps) and not os.environ.get('NETCIRCUIT_TEST_POSTGRES_URL'):
         parser.error('NETCIRCUIT_TEST_POSTGRES_URL must name an isolated real PostgreSQL test database; this gate is never skipped.')
-    environment={**os.environ,'NETCIRCUIT_E2E_PYTHON':sys.executable}
+    # A gate can import a default application as well as explicitly isolated
+    # fixtures. Never let those fallback instances open a developer database
+    # or use the capture default, even when inherited from the caller's shell.
+    runtime=artifact_directory('release-runtime-'+uuid.uuid4().hex)
+    environment={**os.environ,'NETCIRCUIT_E2E_PYTHON':sys.executable,
+        'NETCIRCUIT_DATABASE_URL':'sqlite:///'+(runtime/'default.sqlite').as_posix(),
+        'NETCIRCUIT_CAPTURE_DIR':str(runtime/'captures')}
     began=time.perf_counter()
     for step in steps:
         print(f"[{step['group']}] {shlex.join(step['command'])}",flush=True)

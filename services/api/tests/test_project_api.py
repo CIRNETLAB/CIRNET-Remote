@@ -18,8 +18,21 @@ def headers(client):
     return {'Origin':'http://testserver','X-CSRF-Token':session.json()['csrf_token']}
 
 
+def test_project_canonical_issue_retains_field_pointer_and_profile(project_app):
+    with TestClient(project_app) as client:
+        response=client.post('/api/projects',json={'name':17},headers=headers(client))
+        assert response.status_code==422
+        body=response.json()
+        assert body['code']=='REQUEST_VALIDATION_ERROR'
+        assert body['issues'][0]['code']=='SCHEMA_TYPE'
+        assert body['issues'][0]['path']=='/body/name'
+        assert body['issues'][0]['profile']=='structural'
+        assert '17' not in body['message'] and '17' not in body['issues'][0]['message']
+
+
 def test_project_http_roundtrip_conflict_save_as_and_private_owner_scope(project_app):
     with TestClient(project_app) as owner,TestClient(project_app) as stranger:
+        headers(stranger)  # A browser explicitly bootstraps before owned-resource reads.
         created=owner.post('/api/projects',json={'name':'Project'},headers=headers(owner))
         assert created.status_code==201,created.text
         project=created.json(); assert created.headers['ETag']=='"1"'

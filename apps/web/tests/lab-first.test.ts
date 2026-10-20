@@ -80,7 +80,7 @@ test('create/run/stop use lifecycle endpoints with immutable design input',async
   const calls:{url:string;method:string;body:unknown}[]=[]
   const api=createExperimentsApi(createApiClient({fetcher:async(url,options)=>{
     calls.push({url:String(url),method:options?.method ?? '',body:options?.body?JSON.parse(String(options.body)):null})
-    return Response.json(record('QUEUED',2))
+    return Response.json(record('QUEUED',2),{status:String(url).endsWith('/experiments')?201:200})
   }})) as unknown as {create(body:unknown):Promise<unknown>;run(id:string):Promise<unknown>;stop(id:string):Promise<unknown>}
   assert.equal(typeof api.create,'function','creation lifecycle missing')
   const graph={schema_version:'1.0',circuit_id:'c1',modules:[],connections:[]}; const before=JSON.stringify(graph)
@@ -119,7 +119,7 @@ test('Stop during creation attaches its late identity only to request safe clean
   const store=useExperimentStore()
   const pending=store.run({schema_version:'1.0',circuit_id:'c1',modules:[],connections:[]},target())
   await store.stop()
-  resolve(Response.json(record('CREATED',0)))
+  resolve(Response.json(record('CREATED',0),{status:201}))
   await pending
   assert.equal(store.activeId,'e1'); assert.equal(store.pending,false);assert.equal(store.busy,false)
   assert.deepEqual(requests,['/api/experiments','/api/experiments/e1/stop'])
@@ -147,7 +147,7 @@ test('starting a new experiment detaches the previous capture before late lifecy
   store.receive(record('COMPLETE',20))
   try {assert.equal(instrument.captureMetadata,null,'late old experiment must not restore its capture during creation')}
   finally {
-    created.resolve(Response.json({...record('CREATED',0),experiment_id:'e2',capture:null}))
+    created.resolve(Response.json({...record('CREATED',0),experiment_id:'e2',capture:null},{status:201}))
     await pending
   }
   assert.equal(store.activeId,'e2');assert.equal(instrument.captureMetadata,null)
@@ -158,7 +158,7 @@ test('physical Run sends assignment identity without logical validation or circu
   configureApiClient({fetcher:async(url,options)=>{
     if(options?.body) bodies.push(JSON.parse(String(options.body)))
     const state=String(url).endsWith('/run')?'QUEUED':'CREATED'
-    return Response.json({...record(state,state==='CREATED'?0:2),mode:'hardware'})
+    return Response.json({...record(state,state==='CREATED'?0:2),mode:'hardware'},{status:String(url).endsWith('/experiments')?201:200})
   }})
   const hardware=target();hardware.mode='hardware';hardware.capabilities={...hardware.capabilities!,mode:'hardware',physical_digital:true,
     physical_execution_slots:1,topology_scan_supported:true,safety_gate_supported:true,guarded_run_supported:true}
@@ -179,7 +179,7 @@ test('Run Ribbon invokes backend lifecycle and preserves editor history',async()
   useInstrumentStore().useCapture(parseExperiment(record()).capture)
   const calls:string[]=[]
   const bodies:unknown[]=[]
-  configureApiClient({fetcher:async(url,options)=>{calls.push(String(url));if(options?.body) bodies.push(JSON.parse(String(options.body)));return Response.json(record(String(url).endsWith('/run')?'QUEUED':'CREATED',String(url).endsWith('/run')?2:0))}})
+  configureApiClient({fetcher:async(url,options)=>{calls.push(String(url));if(options?.body) bodies.push(JSON.parse(String(options.body)));return Response.json(record(String(url).endsWith('/run')?'QUEUED':'CREATED',String(url).endsWith('/run')?2:0),{status:String(url).endsWith('/experiments')?201:200})}})
   const component=await loadSfc('components/workbench/RunRibbonPanel.vue')
   const mounted=mountExecutionPanel(component,pinia)
   const button=mounted.find('button','aria-label','Run')
@@ -206,7 +206,7 @@ test('Run Ribbon pins the clean saved revision and submits an inline immutable g
   configureApiClient({fetcher:async(url,options)=>{
     if(String(url)==='/api/circuits/d1')return Response.json({schema_version:'1.0',document_id:'d1',project_id:'p1',owner_id:'owner',name:'Saved',graph,graph_schema_version:'1.0',revision:7,created_at:1,updated_at:1})
     if(['/api/experiments','/api/v2/experiments'].includes(String(url))){createPaths.push(String(url));bodies.push(JSON.parse(String(options?.body)))}
-    return Response.json(record(String(url).endsWith('/run')?'QUEUED':'CREATED',String(url).endsWith('/run')?2:0))
+    return Response.json(record(String(url).endsWith('/run')?'QUEUED':'CREATED',String(url).endsWith('/run')?2:0),{status:String(url).endsWith('/experiments')?201:200})
   }})
   assert.equal(await projects.openDocument('d1',true),true)
   const mounted=mountExecutionPanel(await loadSfc('components/workbench/RunRibbonPanel.vue'),pinia)

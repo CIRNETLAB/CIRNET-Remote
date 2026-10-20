@@ -12,6 +12,8 @@ Use `scripts/artifact-paths.mjs` from Node/TypeScript. Python tools use `scripts
 
 Verification harnesses require Node (CI pins Node 22) and Git in `PATH`, including Python callers of the allocator. These are existing repository toolchain prerequisites; no new package dependency is introduced.
 
+`scripts/check_release.py` allocates fresh external default SQLite and capture paths for every invocation before launching child commands. It overrides inherited application defaults so a fixture that imports a default app cannot touch a developer's database or capture directory; the caller's environment stays unchanged. The real PostgreSQL gate still requires its separate `NETCIRCUIT_TEST_POSTGRES_URL`. For direct API pytest commands outside this runner, set both default database and capture paths to allocator-owned locations before importing application modules.
+
 ```js
 import { getArtifactDirectory } from './scripts/artifact-paths.mjs'
 const screenshots = getArtifactDirectory('screenshots')
@@ -51,6 +53,47 @@ For changed Web test output plumbing, run `npm test`, `npm run check:boundaries`
 
 Record revision and dirty state, time/timezone, environment/browser/renderer, scenario, commands, PASS/FAIL/NOT_RUN/BLOCKED, observed results and limits in the affected Markdown report. Historical measurements are not freshly verified. State whether temporary screenshots were actually inspected; do not claim visual or hardware success from source review alone. No permanent temporary-path links are required.
 
+### Browser executable and log containment
+
+Actual Windows headless Chromium probes found that GPU diagnostics still append
+to executable-adjacent `debug.log` even when `--log-file` and `CHROME_LOG_FILE`
+direct other browser output externally. Those settings may remain useful for
+auxiliary logs, but they do not establish output containment. Preserve existing
+cache log history; never remove or truncate it as an automatic test cleanup.
+
+Before a browser-test or programmatic profiling launch, make a complete physical
+copy of the installed Playwright browser cache into a unique `br-<8hex>` child
+of the same allocator-owned session. Before copying, verify that every copied
+Windows `.exe` destination path is at most **259 UTF-16 characters**. A longer
+path must fail with instructions to choose a shorter absolute external
+`NETCIRCUIT_ARTIFACTS_DIR` parent and allocate a fresh session; do not fall back
+to the installation cache. An existing copied executable and matching hash do
+not establish that Windows can launch an overlong path. Preserve the browser binaries, resources,
+installation markers and platform helpers, including FFmpeg and Windows loader
+helpers. Dereference links while copying so the owned runtime cannot write
+through an alias into the source cache. Exclude only old `debug.log`,
+`chrome_debug.log` files and the `.links` directory. Do not replace a browser
+binary, change its pinned revision/channel or trim its runtime resources.
+Select this owned copy through Playwright's public `PLAYWRIGHT_BROWSERS_PATH`
+environment variable before launching any browser/helper process. Diagnostics
+beside its executable then remain inside the external session too.
+
+`npm run test:e2e:install` continues to populate `.runtime/playwright` as the
+installation cache. Test mode must prepare and use the owned copy; a missing or
+unreadable cache, denied copy or invalid artifact directory fails closed, with
+no fallback launch from the installation cache. The current complete Windows
+cache costs approximately **718 MiB per test invocation**, plus captures and
+reports; provide external disk space and account for copy I/O. Programmatic
+profiling has the same requirement even when it does not use the E2E launcher.
+
+Record the selected executable path, browser version and source/copy binary
+identity when verifying this boundary. Inventory both the installation cache
+and the owned copy before/after execution; a Git guard alone cannot detect
+ignored executable-adjacent output. After inspecting diagnostics and ensuring
+all owned browser/helper processes have exited, remove the copied runtime only
+through its owning session's guarded cleanup. Keep the installation cache and
+historical logs intact.
+
 Before/after work, compare Git status and staged diff plus a physical inventory of generated output locations including ignored files. The artifact Git guard checks added/modified worktree and index paths and optional `--base <commit>` CI changes using one policy implementation. Approved asset/fixture paths are distinguished from known generated locations; unknown visual additions require explicit review of their source role. The guard does not remove old tracked outputs or replace the on-disk comparison.
 
 `scripts/legacy-verification-evidence.json` preserves only the 16 exact paths/hashes already tracked at `0cc66f8` (seven PNGs and nine raw JSON records), pending the user's decision. This prevents a PR against an older branch, or a first-push CI comparison, from treating retained history as newly generated evidence. Any subsequent content change is rejected; only Git's JSON LF/CRLF checkout conversion is normalized. Do not add new captures to this manifest. Markdown embedded data-URI visuals and unapproved HTML report output are also rejected, including index-only content. Original artwork/reference images under `assets/`, product assets and the two source instrument-preview HTML entrypoints are source inputs.
@@ -60,6 +103,8 @@ Before/after work, compare Git status and staged diff plus a physical inventory 
 After inspecting results, run `node scripts/artifact-paths.mjs --cleanup <session-root>` (Python: `cleanup_artifact_session(root)`). Cleanup verifies the canonical external path, unique session name and ownership marker before deleting only that session. Do not pass an arbitrary temporary parent, pre-existing output directory, another user's files or another session. Interrupted sessions remain outside source; locate and inspect their ownership before a separate authorized cleanup.
 
 CI allocates in `runner.temp`, uploads external evidence when needed, then cleans its own session. Upload retention is not a reason to commit artifacts. `.gitignore` is a narrow secondary defense for known generated directories, not a blanket image-extension ban.
+
+The backend, hardware-service, frontend, repository integration, PostgreSQL migration and canonical Contracts jobs allocate a fresh session through `scripts/artifact-paths.mjs` before verification. They publish its ownership before allocating application defaults, set the default database and captures inside that session, pass its `pytest` child as `--basetemp` for direct pytest commands, and run the allocator's guarded cleanup with `always()` after failures as well as success. The migration job retains its PostgreSQL 18 service and explicit `NETCIRCUIT_TEST_POSTGRES_URL`; the isolated SQLite default applies only to incidental default-app imports and does not replace PostgreSQL validation. Local workflow policy tests check this configuration; hosted CI execution is separate evidence.
 
 ## Archive and missing evidence
 

@@ -82,3 +82,24 @@ test('legacy unprefixed Node transport modules cannot enter a browser',()=>{
   const result=audit({'services/client.ts':"import {connect} from 'net';export {connect}"})
   assert.equal(result.status,1,result.stderr+result.stdout);assert.match(result.stdout,/browser.*net/)
 })
+
+test('Vue union literals, comments and template text are not imports',()=>{
+  const result=audit({'components/Title.vue':`<script setup lang="ts">type Action='import' | 'export'; // import 'invented'
+    const label="from 'invented'"</script><template>import 'invented'</template>`})
+  assert.equal(result.status,0,result.stderr+result.stdout)
+})
+
+test('every application controller is covered by core dependency policy',()=>{
+  for(const name of ['experimentLifecycle.ts','remoteConnection.ts','remotePolling.ts','labApplication.ts','assignments/authoring.ts','instruments/commands.ts']) {
+    const result=audit({['application/'+name]:"export {ref} from 'vue'"})
+    assert.equal(result.status,1,`${name}: ${result.stderr}${result.stdout}`)
+    assert.match(result.stdout,/core.*vue/)
+  }
+})
+
+test('an unlisted external transport package cannot bypass the pure core through a different package name',()=>{
+  const result=audit({'application/remotePolling.ts':"import request from 'cross-fetch'; export const load=()=>request('/api')"})
+  assert.equal(result.status,1,result.stderr+result.stdout);assert.match(result.stdout,/core.*cross-fetch/)
+  const pure=audit({'domain/json.ts':"export {parse} from 'lossless-json'"})
+  assert.equal(pure.status,0,pure.stderr+pure.stdout)
+})

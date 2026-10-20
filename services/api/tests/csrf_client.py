@@ -25,6 +25,12 @@ class CsrfTestClient(TestClient):
                 'X-Control-Client': self.control_client_id}
 
     def request(self, method, url, **kwargs):
+        # The browser bootstraps credentials explicitly before its first
+        # protected read. Ordinary API reads no longer mint hidden guests.
+        if (method.upper() in {'GET','HEAD'} and str(url).startswith('/api/')
+                and str(url).split('?')[0] not in {'/api/health','/api/auth/session'}
+                and not self.cookies.get('netcircuit_session')):
+            self.browser_headers()
         if method.upper() not in {'GET', 'HEAD', 'OPTIONS'}:
             headers = httpx.Headers(self.browser_headers())
             headers.update(kwargs.pop('headers', None) or {})

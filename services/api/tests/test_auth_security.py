@@ -56,7 +56,7 @@ def test_session_bootstrap_exposes_csrf_without_returning_the_session_secret(sec
 
 def test_same_origin_cookie_without_csrf_cannot_create_an_experiment(security_application):
     with TestClient(security_application) as client:
-        client.get('/api/stations')
+        client.get('/api/auth/session')
         response = client.post('/api/experiments', headers={'Origin': 'http://testserver'},
                                json={'station_id': 'p1', 'assignment_id': 'a1'})
         assert response.status_code == 403

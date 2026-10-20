@@ -89,6 +89,7 @@ def test_real_legacy_cookie_claims_only_its_data_and_operation_after_login(tmp_p
         assert owner.cookies.get('netcircuit_session')=='legacy-owner-cookie'
         assert owner.get('/api/auth/session').status_code==200
         assert owner.cookies.get('netcircuit_session') != 'legacy-owner-cookie'
+        assert stranger.get('/api/auth/session').status_code==200
         assert stranger.get('/api/experiments/legacy-owned').status_code == 403
         login(owner, 'admin', 'administrator password')
         assert owner.get('/api/experiments/legacy-owned').status_code == 403

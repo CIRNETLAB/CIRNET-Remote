@@ -1,8 +1,20 @@
 import { build } from 'esbuild'
-import { readdir, mkdir } from 'node:fs/promises'
+import { readdir, mkdir, readFile } from 'node:fs/promises'
+import {existsSync} from 'node:fs'
+import {resolve} from 'node:path'
 import { spawnSync } from 'node:child_process'
 
-const files = (await readdir('tests')).filter((file) => file.endsWith('.test.ts')).sort()
+const selected=process.argv.slice(2)
+const productContracts=existsSync(resolve('src/contracts/structural.ts'))
+const contractProfiles=resolve('tests/helpers/contractProfiles.ts')
+if(productContracts&&!existsSync(contractProfiles))throw new Error('Product tests require the offline contract profile preparation helper.')
+// The generic batching harness also runs isolated fixture projects. Only the
+// real product has synchronous validators that need a prepared test workflow.
+const workflowPlugins=productContracts?[{name:'unit-contract-workflow',setup(builder){
+  builder.onLoad({filter:/\.test\.ts$/},async args=>({contents:`import ${JSON.stringify(contractProfiles.replaceAll('\\','/'))}\n${await readFile(args.path,'utf8')}`,loader:'ts'}))
+}}]:[]
+const files = (await readdir('tests')).filter((file) => file.endsWith('.test.ts')&&(!selected.length||selected.includes(file))).sort()
+if(!files.length)throw new Error('No matching tests.')
 // Inline source maps repeat the large geometry/catalog modules in each bundle.
 // Bound both compilation and runtime workers independently of the host CPU count.
 const buildBatchSize = 8
@@ -19,6 +31,7 @@ for (let offset = 0; offset < files.length; offset += buildBatchSize) {
     platform: 'node',
     format: 'esm',
     packages: 'external',
+    plugins:workflowPlugins,
     sourcemap: 'inline',
   })
 }

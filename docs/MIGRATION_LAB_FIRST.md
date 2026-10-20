@@ -1,5 +1,7 @@
 # Lab-First R0–R7 migration ledger
 
+Current Web/Contracts hardening WC20 (2026-10-20), its source identity, executed gates and remaining limits are recorded in the [WC20 closure](verification/2026-10-20-web-contracts-closure.md). The R/H/W phase rows below retain their original history and are not current gate results.
+
 > Historical migration ledger — 2026-10-19 audit: phase instructions, Git states, counts and hashes below record the original R/H/W sessions; they are not instructions to repeat phases, stage or commit now. [ARCHITECTURE.md](ARCHITECTURE.md) remains current authority and [VERIFICATION.md](VERIFICATION.md) governs new evidence. The archived R0–R7 prompt is hash-locked and remains byte-for-byte unchanged.
 
 ## Post-R7 architecture hardening H0–H6
