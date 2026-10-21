@@ -52,3 +52,7 @@ The before/after physical inventory covered ignored runtime, old evidence, build
 Fetched hosted logs, first failing regressions, actual lint errors and all reported passing local outputs were inspected before final reporting. All commands and child subprocesses have returned; no application/browser server was started by this repair. The shared allocator successfully removed only this task's marked external session, including raw diagnostics and the downloaded lint tool; its absence was verified. Historical reports, default databases, browser-cache logs, assets and compatibility baselines are preserved. No source was staged, committed or pushed.
 
 Hosted runs listed above retain their original failures. A new hosted result requires the user to commit and push the repaired files; local verification must not be described as a green hosted run.
+
+## Hosted follow-up — 2026-10-21
+
+The user committed this repair as `0951a216edc143255ee4185d98c73ae7b0147e1d` and pushed `refactor`. Documentation, Backend, Hardware Service and both Integration jobs now pass on GitHub; the Contracts Python and installed-wheel gates also pass. Frontend and Contracts expose a separate shared runtime-copy fixture assertion on shorter Linux paths. The browser job is cancelled and retains a separate screenshot timeout. [The new repair report](2026-10-21-github-actions.md) records these actual results and the new regression fix without changing the historical evidence above.

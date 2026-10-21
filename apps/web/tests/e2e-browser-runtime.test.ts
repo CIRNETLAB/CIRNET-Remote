@@ -15,6 +15,14 @@ async function fixture(){
  await mkdir(source,{recursive:true});await mkdir(destination)
  return {owned,source,destination}
 }
+function boundaryDestination(executableLength:number){
+ const name='path-boundary-'+randomBytes(4).toString('hex')
+ const padding=executableLength-join(getArtifactDirectory(),name,'browser-1','browser.exe').length
+ assert.ok(padding>=0,'The external artifact parent must leave room for the Windows launch-path boundary.')
+ const destination=getArtifactDirectory(name+'x'.repeat(padding)) as string
+ assert.equal(join(destination,'browser-1','browser.exe').length,executableLength)
+ return destination
+}
 
 test('browser runtime copy preserves installed binaries, revision directories and resource markers while excluding prior logs',async()=>{
  const h=await fixture(),runtime=join(h.source,'chromium_headless_shell-1248','platform-shell')
@@ -71,10 +79,18 @@ test('missing or empty browser cache fails closed before a source-runtime fallba
  assert.deepEqual(await readdir(h.destination),[])
 })
 
-test('Windows rejects an unlaunchable copied executable path before publishing runtime files',async()=>{
+test('Windows accepts a copied executable path at the 259-character boundary',async()=>{
  const h=await fixture(),runtime=join(h.source,'browser-1')
  await mkdir(runtime);await writeFile(join(runtime,'browser.exe'),'pinned browser')
- const tooLong=getArtifactDirectory('long-runtime-'+randomBytes(4).toString('hex')+'x'.repeat(140)) as string
+ const destination=boundaryDestination(259)
+ assert.equal(await copyBrowserRuntime(h.source,destination,{platform:'win32'}),destination)
+ assert.equal(await readFile(join(destination,'browser-1','browser.exe'),'utf8'),'pinned browser')
+})
+
+test('Windows rejects a 260-character copied executable path before publishing runtime files',async()=>{
+ const h=await fixture(),runtime=join(h.source,'browser-1')
+ await mkdir(runtime);await writeFile(join(runtime,'browser.exe'),'pinned browser')
+ const tooLong=boundaryDestination(260)
  assert.ok(join(tooLong,'browser-1','browser.exe').length>259)
  await assert.rejects(copyBrowserRuntime(h.source,tooLong,{platform:'win32'}),/shorter.*NETCIRCUIT_ARTIFACTS_DIR/)
  assert.deepEqual(await readdir(tooLong),[],'Preflight must fail before copying any installed runtime.')

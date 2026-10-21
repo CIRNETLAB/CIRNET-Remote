@@ -1,15 +1,25 @@
 ---
 project: net-Circuit-Remote
-current_phase: github-actions-workflow-repair
+current_phase: github-actions-runtime-path-fixture
 status: locally-verified-hosted-confirmation-pending-user-push
-last_updated: 2026-10-20
+last_updated: 2026-10-21
 next_task: user-review-and-commit
-blocking_issue: no-local-blocker-hosted-patch-not-yet-pushed
+blocking_issue: no-local-unit-blocker-browser-ui-gate-remains-separate
 hardware_mode: simulation
 fpga_development_started: true
 ---
 
 # Development Log
+
+## Latest Actions: runtime path fixture — 2026-10-21
+
+Hosted `0951a21` confirms the preceding workflow-context and documentation-import fixes: Documentation, Backend, Hardware Service and both Integration jobs pass; the Contracts Python and installed-wheel gates pass. Frontend and Contracts now share one failed runtime-copy unit fixture: fixed padding does not create an overlong executable path under the shorter Linux temporary parent. The [latest Actions report](verification/2026-10-21-github-actions.md) retains the actual job links and separate cancelled browser/screenshot-timeout evidence.
+
+The old assertion was reproduced with the real allocator under a short external parent before editing source. The test now sizes the whole executable path and exercises successful copying at 259 characters and rejection at 260. The production limit and copy helper are unchanged. Focused tests pass on the short parent; full Web verification on the normal parent passes 1,435 tests with zero failures/skips on Node 22.23.3. Test typechecking, 245-module AST boundaries, 13 documentation/provenance/startup tests and five allocator/guard self-tests pass. No product browser/UI verification, gate weakening, Git publication or deployment is performed.
+
+## AI Handoff — current runtime path fixture repair
+
+The full Web gate, final evidence inventory and guarded owned-session cleanup are complete. Leave the fixture/documentation patch unstaged for the user's commit and push; confirm new hosted results separately. The cancelled real-browser gate also recorded a screenshot timeout and remains incomplete UI evidence under the user's earlier exclusion; preserve its assertions and deadlines. Historical WC20 and Actions evidence remain dated records.
 
 ## GitHub Actions workflow and import repair — 2026-10-20
 
@@ -17,7 +27,7 @@ The user committed WC20 as `33b52f6` and requested investigation of the failed `
 
 Runner-dependent artifact parents now belong to allocation-step environment; existing owned sessions/defaults and downstream cleanup remain intact. Documentation uses `python -m pytest`, pinned pytest and isolated output, and validates all workflows with checksum-verified actionlint 1.7.12. Actual actionlint rejects the old eight errors and accepts all nine current workflows; integrated regression confirmation passes 50 cases. Product code and UI verification remain outside this CI-only repair. A new hosted result requires the user's commit/push; no automatic Git publication or workflow rerun occurs.
 
-## AI Handoff — current GitHub Actions repair
+## AI Handoff — GitHub Actions workflow/import repair (historical)
 
 Review and commit the workflow/test/documentation patch, then inspect the new `refactor` push's Actions results. Do not describe local lint/regression PASS as hosted CI success. Preserve the original failed runs and historical WC20 evidence, default databases, assets and compatibility baselines. No product UI testing, automatic staging, commit, push or deployment is authorized.
 
@@ -67,7 +77,7 @@ Implemented the approved Native plan: explicit shared 830/630/100 topology, Inst
 
 ## Current Goal
 
-The current task repairs and locally verifies the actual failed `refactor` GitHub Actions; see [the current repair report](verification/2026-10-20-github-actions.md). Leave this patch unstaged for user review and commit; new hosted execution follows the user's push. WC20 architecture remains complete within its recorded architecture-only scope, and its cancelled UI run is preserved without a full native PASS claim. Physical hardware conformance, target Mini PC capacity/soak and `nginx -t` remain external open gates. `ARCHITECTURE.md` remains authoritative; historical handoffs retain their original results and do not override the current task.
+The current task repairs the runtime-copy fixture that fails both Frontend and Contracts on `refactor`; see [the latest repair report](verification/2026-10-21-github-actions.md). Leave this patch unstaged for user review and commit; new hosted execution follows the user's push. The preceding workflow/import repair now has actual hosted PASS evidence in its dated follow-up. WC20 architecture remains complete within its recorded architecture-only scope. Browser UI verification, physical hardware conformance, target Mini PC capacity/soak and `nginx -t` remain separate gates. `ARCHITECTURE.md` remains authoritative; historical handoffs retain their original results and do not override the current task.
 
 ## Post-R7 H0–H6 — 2026-10-13
 

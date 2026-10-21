@@ -4,6 +4,10 @@ All notable project changes will be documented in this file. The project follows
 
 ## [Unreleased]
 
+### Fixed — 2026-10-21 GitHub Actions runtime fixture
+
+- Size synthetic runtime-copy paths from the actual external allocator root, replacing fixed padding that failed on shorter Linux CI paths. Boundary regressions now prove successful copying at 259 characters and rejection at 260 before publishing files, preserving production launch limits. [Latest hosted failures and verification](verification/2026-10-21-github-actions.md).
+
 ### Fixed — 2026-10-20 GitHub Actions
 
 - Place runner-dependent artifact paths at execution steps, where the GitHub Actions `runner` context is available; preserve isolated application defaults, owned evidence and cleanup.

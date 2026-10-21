@@ -104,6 +104,12 @@ all owned browser/helper processes have exited, remove the copied runtime only
 through its owning session's guarded cleanup. Keep the installation cache and
 historical logs intact.
 
+Runtime-copy boundary fixtures must derive padding from the complete executable
+path under the actual allocator root; fixed padding can miss the boundary on
+shorter CI paths. Exercise successful copying at 259 characters and rejection
+at 260 with short and normal external parents. These synthetic file-copy tests
+do not launch a browser or establish visual E2E success.
+
 Before/after work, compare Git status and staged diff plus a physical inventory of generated output locations including ignored files. The artifact Git guard checks added/modified worktree and index paths and optional `--base <commit>` CI changes using one policy implementation. Approved asset/fixture paths are distinguished from known generated locations; unknown visual additions require explicit review of their source role. The guard does not remove old tracked outputs or replace the on-disk comparison.
 
 `scripts/legacy-verification-evidence.json` preserves only the 16 exact paths/hashes already tracked at `0cc66f8` (seven PNGs and nine raw JSON records), pending the user's decision. This prevents a PR against an older branch, or a first-push CI comparison, from treating retained history as newly generated evidence. Any subsequent content change is rejected; only Git's JSON LF/CRLF checkout conversion is normalized. Do not add new captures to this manifest. Markdown embedded data-URI visuals and unapproved HTML report output are also rejected, including index-only content. Original artwork/reference images under `assets/`, product assets and the two source instrument-preview HTML entrypoints are source inputs.
