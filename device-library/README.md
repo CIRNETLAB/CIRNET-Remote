@@ -2,6 +2,8 @@
 
 Declarative metadata for virtual and physical devices.
 
+M1 status: this retained tree is a frozen reference. Canonical registry and catalog generation belong to net-Circuit-Contracts. Change and release them there, then select the reviewed versioned artifact in Remote. The commands below describe the retained pre-extraction layout; Remote commands now check installed artifacts and never update these inputs.
+
 This folder separates legacy logical editor tools from selected physical parts. Physical pin numbers, package dimensions, lead profiles, internal contacts and model support are recorded for exact variants with source documents.
 
 ## Phase 2 functional editor catalog
@@ -12,4 +14,4 @@ Breadboards retain no logical ports but reference the canonical editor topology 
 
 `parts/physical-parts.json` is the canonical versioned registry for exact and generic physical descriptors; see [physical part support and sources](parts/README.md). It separates current `parts` from immutable `historicalParts`, defining physical pins independently of logical ports and meshes. The separate `SN74HC08N`, `LED_LTL307EE` and `DC_SUPPLY` editor types require explicit power/return wiring; opening a legacy file does not silently convert it. Use the generator's reported counts instead of a historical catalog total.
 
-Run `python scripts/sync_editor_catalog.py` after changing either source. It validates the registry, appends physical editor entries to the retained functional/visual definitions, and writes `apps/web/src/data/editorCatalog.json`, lean `apps/web/src/data/editorParts.json`, full `apps/web/src/data/physicalParts.json`, `contracts/design-models/physical-parts.v1.json` and signal-domain projections. Run the same command with `--check` in verification. Do not edit generated snapshots independently. Catalog placement support is separate from each part's declared simulation support. [Flexible placement](../contracts/design-models/flexible-placement.md) records Graph 1.2, automatic geometry, exact revision lookup and explicit rebuild semantics.
+In Remote, run `python scripts/sync_editor_catalog.py --check` to compare installed projections with the frozen snapshots. The Contracts repository owns generation from both source registries and exports `apps/web/src/data/editorCatalog.json`, lean `apps/web/src/data/editorParts.json`, full `apps/web/src/data/physicalParts.json`, `contracts/design-models/physical-parts.v1.json` and signal-domain projections. Do not edit generated snapshots independently. Catalog placement support is separate from each part's declared simulation support. [Flexible placement](../contracts/design-models/flexible-placement.md) records Graph 1.2, automatic geometry, exact revision lookup and explicit rebuild semantics.

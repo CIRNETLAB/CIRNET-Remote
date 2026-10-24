@@ -1,0 +1,11 @@
+{
+  "status": "LOCAL_UNPUBLISHED",
+  "python": { "name": "netcircuit-contracts", "version": "1.0.1" },
+  "npm": { "name": "@tinihi-labs/contracts", "version": "1.0.1" },
+  "dev": {
+    "name": "netcircuit-artifact-paths",
+    "version": "1.0.0a1",
+    "wheel_sha256": "ff76532c69b2115338edb641660c966c5459dd40cb806f52a1e2e8c379c70a1f",
+    "node_sha256": "7c42c4fd171ed861b365f08501f3c765282d6bba2dcd6430c9677cddd1abe345"
+  }
+}

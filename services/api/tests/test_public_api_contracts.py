@@ -140,11 +140,14 @@ def test_generated_browser_operations_follow_route_methods_paths_and_binary_medi
     assert bindings['capture']['responseMedia']==['application/vnd.netcircuit.capture; version=1']
 
 
-def test_staged_openapi_export_does_not_publish_python_import_cache(tmp_path):
+def test_openapi_export_rejects_staged_model_injection(tmp_path):
     models=tmp_path/'models.py'
     models.write_bytes((ROOT/'contracts/boundary/models.py').read_bytes())
     result=subprocess.run([sys.executable,str(ROOT/'scripts/export_openapi.py'),'--models',str(models),
                            '--output',str(tmp_path/'openapi.json'),'--operations',str(tmp_path/'operations.ts')],
                           cwd=ROOT,capture_output=True,text=True)
-    assert result.returncode==0,result.stdout+result.stderr
+    assert result.returncode!=0
+    assert '--models' in result.stderr
+    assert not (tmp_path/'openapi.json').exists()
+    assert not (tmp_path/'operations.ts').exists()
     assert not list(tmp_path.rglob('*.pyc'))

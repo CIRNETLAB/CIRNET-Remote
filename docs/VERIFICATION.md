@@ -10,7 +10,9 @@ Source logos/icons/textures, model assets, product/design references, contract f
 
 Use `scripts/artifact-paths.mjs` from Node/TypeScript. Python tools use `scripts/artifact_paths.py`, which delegates to that same implementation. No independent path-validation algorithm is permitted in consumers.
 
-Verification harnesses require Node (CI pins Node 22) and Git in `PATH`, including Python callers of the allocator. These are existing repository toolchain prerequisites; no new package dependency is introduced.
+Verification harnesses require Node (CI pins Node 22) and Git in `PATH`, including Python callers of the allocator. M1 packages the canonical allocator separately as DEV tooling: `netcircuit-artifact-paths==1.0.0a1`. Bootstrap the reviewed artifact before running checks with `python scripts/install_contracts.py --with-dev --manifest ABSOLUTE_MANIFEST`. CI uses the same digest-verified bootstrap before allocation; production Contracts consumers do not need DEV tooling. Remote adapters delegate to this installed implementation and fail if it is absent or differs from `integration/contracts-version.json`.
+
+For verification spanning Remote and Contracts, supply `NETCIRCUIT_ARTIFACTS_CONTEXT` as JSON with an explicit owner and both absolute repository roots before allocation. Inherited children and cleanup must retain that context. The allocator expands each Git family and rejects discovered checkout/Git administration paths, including aliases. A session allocated under the earlier single-root context must be cleaned with its original owner/root context.
 
 `scripts/check_release.py` allocates fresh external default SQLite and capture paths for every invocation before launching child commands. It overrides inherited application defaults so a fixture that imports a default app cannot touch a developer's database or capture directory; the caller's environment stays unchanged. The real PostgreSQL gate still requires its separate `NETCIRCUIT_TEST_POSTGRES_URL`. For direct API pytest commands outside this runner, set both default database and capture paths to allocator-owned locations before importing application modules.
 
@@ -20,6 +22,8 @@ const screenshots = getArtifactDirectory('screenshots')
 ```
 
 The allocator defaults to a unique `netcircuit-*` session in the OS temporary directory on Windows/Linux. `NETCIRCUIT_ARTIFACTS_DIR` optionally selects an **absolute external parent**, under which a fresh session is created. `NETCIRCUIT_ARTIFACTS_SESSION` is internal inherited state used by child processes/workers to share that session. `getArtifactDirectory(subdir, { directory: externalParent })` allocates a separate session under an explicit external parent. Repository/Git paths and symlink escapes are rejected before output creation. Git enumeration failures fail closed. If external writing is denied, report BLOCKED/request the needed tool permission; never fall back to source directories.
+
+Pytest's `--basetemp` controls fixture files, separately from `.pytest_cache`. Root, API, Simulator and Hardware Python projects disable `cacheprovider` through their pytest configuration. Preserve that setting for nested subprocesses; if explicitly enabling the plugin, select an allocator-owned external `cache_dir` before running it. The M1 report records the earlier cache containment deviation and the follow-up regression check.
 
 For one shell session, allocate once, then export the returned root to child commands:
 

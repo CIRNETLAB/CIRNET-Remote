@@ -16,7 +16,11 @@ from tempfile import TemporaryDirectory,gettempdir
 from zipfile import ZipFile
 
 ROOT=Path(__file__).resolve().parents[1]
-WHEEL_PROJECTS=('.','services/api','simulator/circuit-simulator','services/hardware-service')
+WHEEL_PROJECTS=('services/api','simulator/circuit-simulator','services/hardware-service')
+try:
+    from scripts.contracts_artifact import selected_wheel
+except ModuleNotFoundError:
+    from contracts_artifact import selected_wheel
 REQUIRED_RESOURCES=(
     'contracts/manifest.json','contracts/profiles.json','contracts/boundary/models.py',
     'contracts/boundary/capture_layout.py','contracts/generated/rpc_v2_pb2.py','contracts/generated/rpc_v2_pb2_grpc.py',
@@ -50,14 +54,11 @@ def stage_project(project,target):
     """Rebuild from source with no cached build tree or ignored RPC bindings."""
     if project not in WHEEL_PROJECTS:raise ValueError('Unknown wheel project')
     source=ROOT/project;target=Path(target);target.mkdir(parents=True)
-    names=('pyproject.toml','setup.py','MANIFEST.in','requirements-codegen.txt','LICENSE','README.md') if project=='.' else ('pyproject.toml','README.md')
+    names=('pyproject.toml','README.md')
     for name in names:
         if (source/name).is_file():shutil.copy2(source/name,target/name)
-    package={'services/api':'app','services/hardware-service':'hardware_service','simulator/circuit-simulator':'netcircuit_sim'}.get(project,'contracts')
+    package={'services/api':'app','services/hardware-service':'hardware_service','simulator/circuit-simulator':'netcircuit_sim'}[project]
     shutil.copytree(source/package,target/package,ignore=shutil.ignore_patterns('__pycache__','*.pyc','generated','build','.build','*.egg-info'))
-    if project=='.':
-        (target/'scripts').mkdir()
-        shutil.copy2(ROOT/'scripts/generate_hardware_rpc.py',target/'scripts/generate_hardware_rpc.py')
     return target
 
 
@@ -189,8 +190,14 @@ print(json.dumps({'installed_packages':4,'capture_versions':sorted(versions),'mi
 def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--temporary-root',type=Path)
+    parser.add_argument('--contracts-manifest',type=Path)
     arguments=parser.parse_args(argv)
-    workspace=ROOT/'.build';workspace.mkdir(exist_ok=True)
+    contracts=selected_wheel(arguments.contracts_manifest)
+    try:
+        from scripts.artifact_paths import artifact_directory
+    except ModuleNotFoundError:
+        from artifact_paths import artifact_directory
+    workspace=artifact_directory('package-build')
     with TemporaryDirectory(prefix='package-build-',dir=workspace) as build,external_workspace(arguments.temporary_root) as target:
         build=Path(build);dist=build/'dist';dist.mkdir()
         try:
@@ -215,8 +222,8 @@ def main(argv=None):
             staged=stage_project(project,build/'source'/('contracts' if project=='.' else Path(project).name))
             checked([sys.executable,'-m','build','--wheel','--no-isolation','--outdir',str(dist)],cwd=staged)
         wheels=sorted(dist.glob('*.whl'))
-        if len(wheels)!=len(WHEEL_PROJECTS):raise ValueError('Expected exactly four distinct package wheels.')
-        contracts=next(wheel for wheel in wheels if wheel.name.startswith('netcircuit_contracts-'))
+        if len(wheels)!=len(WHEEL_PROJECTS):raise ValueError('Expected exactly three distinct consumer wheels.')
+        wheels.append(contracts)
         verify_contract_wheel(contracts)
         api=next(wheel for wheel in wheels if wheel.name.startswith('netcircuit_api-'))
         with ZipFile(api) as archive:
@@ -227,9 +234,11 @@ def main(argv=None):
         checked([str(python),'-I','-m','pip','--isolated','install','--disable-pip-version-check','--cache-dir',str(workspace/'pip-cache'),
                         *(str(wheel)+'[rpc]' if wheel==contracts else str(wheel) for wheel in wheels)],cwd=target)
         probe=target/'installed_probe.py';probe.write_text(RUNTIME_PROBE,encoding='utf-8')
-        source_parts=json.loads((ROOT/'contracts/design-models/physical-parts.v1.json').read_text(encoding='utf-8'))['parts']
+        with ZipFile(contracts) as archive:
+            source_parts=json.loads(archive.read('contracts/design-models/physical-parts.v1.json'))['parts']
         expected_catalog=hashlib.sha256(json.dumps(source_parts,sort_keys=True,separators=(',',':')).encode('utf-8')).hexdigest()
         checked([str(python),'-I',str(probe),str(ROOT),expected_catalog],cwd=target)
+        checked([str(python),'-I','-m','pip','check'],cwd=target)
         environment['NETCIRCUIT_DATABASE_URL']='sqlite:///'+(target/'installed-cli.sqlite').as_posix()
         environment['NETCIRCUIT_CAPTURE_DIR']=str(target/'cli-captures')
         for arguments in (['app.migrate'],['app.migrate','--check'],['app.bootstrap_admin','--help'],['app.capture_maintenance','--dry-run','--limit','1']):

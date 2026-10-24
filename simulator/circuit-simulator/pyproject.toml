@@ -7,10 +7,11 @@ name = "netcircuit-simulator"
 version = "0.1.0"
 description = "Virtual digital hardware simulator for net*CIRCUIT Remote"
 requires-python = ">=3.11"
-dependencies = ["netcircuit-contracts==1.0.0"]
+dependencies = ["netcircuit-contracts==1.0.1"]
 
 [project.optional-dependencies]
 test = ["pytest==9.1.1"]
 
 [tool.pytest.ini_options]
+addopts = "-p no:cacheprovider"
 testpaths = ["tests"]

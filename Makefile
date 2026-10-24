@@ -11,8 +11,7 @@ dev-info:
 	$(PYTHON) scripts/dev-info.py
 
 contracts-generate:
-	$(PYTHON) scripts/generate_contracts.py
-	$(PYTHON) scripts/generate_hardware_rpc.py
+	$(PYTHON) scripts/generate_contracts.py --output-root "$(CONTRACTS_OUTPUT)"
 
 contracts-check:
 	$(PYTHON) scripts/generate_contracts.py --check

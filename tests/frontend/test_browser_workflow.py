@@ -24,7 +24,7 @@ def test_frontend_checks_shared_generation_and_every_dependency_trigger():
     for event in ('push', 'pull_request'):
         assert shared <= set(events[event]['paths'])
     steps = commands(document['jobs']['build'])
-    for check in ('generate_hardware_rpc.py', 'generate_contracts.py --check', 'export_openapi.py --check',
+    for check in ('scripts.check_contract_consumer', 'generate_contracts.py --check', 'export_openapi.py --check',
                   'sync_editor_catalog.py --check', 'npm run check:boundaries', 'npm test', 'npm run build', 'tests/frontend'):
         assert check in steps
     assert document['permissions'] == {'contents': 'read'}
@@ -34,9 +34,9 @@ def test_browser_ci_installs_pinned_runner_and_all_real_services_then_runs_every
     document = workflow('browser-e2e.yml')
     job = document['jobs']['chromium']
     steps = commands(job)
-    for package in ('-e .', './services/api[test]', './simulator/circuit-simulator[test]', './services/hardware-service[dev]'):
+    for package in ('install_contracts.py', './services/api[test]', './simulator/circuit-simulator[test]', './services/hardware-service[dev]'):
         assert package in steps
-    for check in ('npm ci', 'generate_hardware_rpc.py', 'generate_contracts.py --check',
+    for check in ('npm ci', 'scripts.check_contract_consumer', 'generate_contracts.py --check',
                   'export_openapi.py --check', 'npm run check:boundaries', 'npm run build',
                   'npm run test:e2e:install -- --with-deps', 'npm run test:e2e -- --reporter=line,junit'):
         assert check in steps

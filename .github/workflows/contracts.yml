@@ -1,9 +1,18 @@
 name: Contracts
+env:
+  NETCIRCUIT_CONTRACTS_DEV_WHEEL_URL: ${{ vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_URL }}
+  NETCIRCUIT_CONTRACTS_DEV_WHEEL_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_SHA256 }}
+  NETCIRCUIT_CONTRACTS_WHEEL_FILENAME: netcircuit_contracts-1.0.1-py3-none-any.whl
+  NETCIRCUIT_CONTRACTS_NPM_FILENAME: tinihi-labs-contracts-1.0.1.tgz
+  NETCIRCUIT_CONTRACTS_WHEEL_URL: ${{ vars.NETCIRCUIT_CONTRACTS_WHEEL_URL }}
+  NETCIRCUIT_CONTRACTS_WHEEL_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_WHEEL_SHA256 }}
+  NETCIRCUIT_CONTRACTS_NPM_URL: ${{ vars.NETCIRCUIT_CONTRACTS_NPM_URL }}
+  NETCIRCUIT_CONTRACTS_NPM_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_NPM_SHA256 }}
 on:
   push:
-    paths: ['contracts/**', 'device-library/**', 'scripts/**', 'tests/contracts/**', 'tests/frontend/**', 'services/**', 'simulator/**', 'apps/web/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
+    paths: ['contracts/**', 'device-library/**', 'scripts/**', 'tests/contracts/**', 'tests/frontend/**', 'services/**', 'simulator/**', 'apps/web/**', 'integration/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
   pull_request:
-    paths: ['contracts/**', 'device-library/**', 'scripts/**', 'tests/contracts/**', 'tests/frontend/**', 'services/**', 'simulator/**', 'apps/web/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
+    paths: ['contracts/**', 'device-library/**', 'scripts/**', 'tests/contracts/**', 'tests/frontend/**', 'services/**', 'simulator/**', 'apps/web/**', 'integration/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
 jobs:
   canonical-boundaries:
     runs-on: ubuntu-latest
@@ -17,6 +26,11 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
+      - name: Bootstrap the pinned independent DEV allocator
+        env:
+          NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
+          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+        run: python scripts/install_contracts.py --dev-only
       - name: Allocate owned external verification runtime
         env:
           NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
@@ -30,10 +44,16 @@ jobs:
             echo "NETCIRCUIT_DATABASE_URL=sqlite:///$ci_runtime/default.sqlite"
             echo "NETCIRCUIT_CAPTURE_DIR=$ci_runtime/captures"
           } >> "$GITHUB_ENV"
-      - run: python -m pip install -r requirements-verification.txt -e . -e './simulator/circuit-simulator[test]' -e './services/api[test]' -e './services/hardware-service[dev]'
+      - env:
+          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+        run: |
+          python -m pip install -r requirements-verification.txt
+          python scripts/install_contracts.py
+          python -m pip install -e './simulator/circuit-simulator[test]' -e './services/api[test]' -e './services/hardware-service[dev]'
+          python -m pip check
       - run: npm ci --no-audit --no-fund
         working-directory: apps/web
-      - run: python scripts/generate_hardware_rpc.py
+      - run: python -m scripts.check_contract_consumer
       - name: Offline schemas, deterministic generation, compatibility and Python conformance
         run: python scripts/check_release.py --group contracts
       - name: Browser numeric/semantic conformance and generated type checks
@@ -53,11 +73,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Bootstrap the pinned independent DEV allocator
+        env:
+          NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
+          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+        run: python scripts/install_contracts.py --dev-only
       - name: Allocate external diagnostics session
         env:
           NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-package-check
         run: echo "NETCIRCUIT_ARTIFACTS_SESSION=$(node scripts/artifact-paths.mjs)" >> "$GITHUB_ENV"
-      - run: python -m pip install -r requirements-verification.txt -e . -e './simulator/circuit-simulator[test]' -e './services/api[test]' -e './services/hardware-service[dev]'
+      - env:
+          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+        run: |
+          python -m pip install -r requirements-verification.txt
+          python scripts/install_contracts.py
+          python -m pip install -e './simulator/circuit-simulator[test]' -e './services/api[test]' -e './services/hardware-service[dev]'
+          python -m pip check
       - name: Minimum Python runtime; actual wheels installed outside checkout
         run: python scripts/check_contract_package.py
       - name: Preserve installed-package diagnostics

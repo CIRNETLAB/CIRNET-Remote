@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Application backend for net*CIRCUIT Remote"
 requires-python = ">=3.11"
 dependencies = [
-  "netcircuit-contracts==1.0.0",
+  "netcircuit-contracts==1.0.1",
   "netcircuit-simulator==0.1.0",
   "grpcio==1.84.0",
   "protobuf==7.36.2",
@@ -25,4 +25,5 @@ dependencies = [
 test = ["pytest==9.1.1", "httpx==0.28.1"]
 
 [tool.pytest.ini_options]
+addopts = "-p no:cacheprovider"
 testpaths = ["tests"]

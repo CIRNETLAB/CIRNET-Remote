@@ -1,49 +1,41 @@
-"""Python bridge to the single Node artifact path/ownership implementation."""
+"""Remote adapter to the installed DEV bridge; Node owns all path/session policy."""
+import hashlib
+from importlib.metadata import PackageNotFoundError, distribution
+import json
 import os
 from pathlib import Path
-import shutil
-import subprocess
 
-_CLI = Path(__file__).resolve().with_name('artifact-paths.mjs')
-
-
-def _invoke(*arguments):
-    node = shutil.which('node')
-    if not node:
-        raise RuntimeError('Node is required by the shared artifact allocator; no repository fallback is allowed.')
-    try:
-        result = subprocess.run([node, str(_CLI), *map(str, arguments)], capture_output=True, text=True, check=True)
-    except subprocess.CalledProcessError as error:
-        raise RuntimeError(error.stderr.strip() or 'Artifact allocator failed; no repository fallback is allowed.') from error
-    return result.stdout.strip()
-
-
-def artifact_directory(subdirectory='', directory=None):
-    arguments = ['--directory', directory] if directory is not None else []
-    # A separate CLI process cannot export its environment to Python: inherit the
-    # allocated root explicitly so backend subprocesses reuse this exact session.
-    session = Path(_invoke(*arguments))
-    if directory is None:
-        os.environ['NETCIRCUIT_ARTIFACTS_SESSION'] = str(session)
-    if not subdirectory:
-        return session
-    environment = os.environ.copy()
-    try:
-        os.environ['NETCIRCUIT_ARTIFACTS_SESSION'] = str(session)
-        return Path(_invoke(subdirectory))
-    finally:
-        if directory is not None:
-            if 'NETCIRCUIT_ARTIFACTS_SESSION' in environment:
-                os.environ['NETCIRCUIT_ARTIFACTS_SESSION'] = environment['NETCIRCUIT_ARTIFACTS_SESSION']
-            else:
-                os.environ.pop('NETCIRCUIT_ARTIFACTS_SESSION', None)
+_ROOT = Path(__file__).resolve().parents[1]
+try:
+    _artifact = distribution('netcircuit-artifact-paths')
+    if _artifact.version != '1.0.0a1':
+        raise RuntimeError('Wrong DEV allocator version.')
+    _direct = _artifact.read_text('direct_url.json')
+    if _direct and 'dir_info' in json.loads(_direct):
+        raise RuntimeError('Editable/source-directory DEV allocator is unsupported.')
+    _pin = json.loads((_ROOT / 'integration/contracts-version.json').read_text())['dev']
+    _node = Path(_artifact.locate_file('netcircuit_artifact_paths/artifact-paths.mjs'))
+    if hashlib.sha256(_node.read_bytes()).hexdigest() != _pin['node_sha256']:
+        raise RuntimeError('DEV allocator resource does not match the pinned wheel.')
+    import netcircuit_artifact_paths as _installed
+except (PackageNotFoundError, OSError, KeyError, RuntimeError) as error:
+    raise RuntimeError('Install the pinned independent DEV allocator first: python scripts/install_contracts.py --dev-only --manifest ABSOLUTE_ARTIFACT_MANIFEST. No local policy fallback is available.') from error
 
 
-def validate_artifact_directory(directory):
-    return Path(_invoke('--validate', directory))
+def artifact_context(context=None):
+    if context is not None or os.environ.get('NETCIRCUIT_ARTIFACTS_CONTEXT'):
+        return _installed.artifact_context(context)
+    selected = _installed.artifact_context({'owner': 'remote-context-discovery', 'roots': [str(_ROOT)]})
+    return {**selected, 'owner': 'git:' + selected['roots'][0]}
 
 
-def cleanup_artifact_session(directory):
-    _invoke('--cleanup', directory)
-    if os.environ.get('NETCIRCUIT_ARTIFACTS_SESSION') == str(directory):
-        os.environ.pop('NETCIRCUIT_ARTIFACTS_SESSION', None)
+def artifact_directory(subdirectory='', directory=None, *, context=None):
+    return _installed.artifact_directory(subdirectory, directory, context=artifact_context(context))
+
+
+def validate_artifact_directory(directory, *, context=None):
+    return _installed.validate_artifact_directory(directory, context=artifact_context(context))
+
+
+def cleanup_artifact_session(directory, *, context=None):
+    return _installed.cleanup_artifact_session(directory, context=artifact_context(context))

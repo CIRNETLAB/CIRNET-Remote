@@ -1,4 +1,13 @@
 name: Integration
+env:
+  NETCIRCUIT_CONTRACTS_DEV_WHEEL_URL: ${{ vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_URL }}
+  NETCIRCUIT_CONTRACTS_DEV_WHEEL_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_SHA256 }}
+  NETCIRCUIT_CONTRACTS_WHEEL_FILENAME: netcircuit_contracts-1.0.1-py3-none-any.whl
+  NETCIRCUIT_CONTRACTS_NPM_FILENAME: tinihi-labs-contracts-1.0.1.tgz
+  NETCIRCUIT_CONTRACTS_WHEEL_URL: ${{ vars.NETCIRCUIT_CONTRACTS_WHEEL_URL }}
+  NETCIRCUIT_CONTRACTS_WHEEL_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_WHEEL_SHA256 }}
+  NETCIRCUIT_CONTRACTS_NPM_URL: ${{ vars.NETCIRCUIT_CONTRACTS_NPM_URL }}
+  NETCIRCUIT_CONTRACTS_NPM_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_NPM_SHA256 }}
 on:
   push:
   pull_request:
@@ -15,6 +24,11 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
+      - name: Bootstrap the pinned independent DEV allocator
+        env:
+          NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
+          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+        run: python scripts/install_contracts.py --dev-only
       - name: Allocate owned external verification runtime
         env:
           NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
@@ -28,12 +42,18 @@ jobs:
             echo "NETCIRCUIT_DATABASE_URL=sqlite:///$ci_runtime/default.sqlite"
             echo "NETCIRCUIT_CAPTURE_DIR=$ci_runtime/captures"
           } >> "$GITHUB_ENV"
-      - run: python -m pip install -r requirements-verification.txt -e . -e './services/api[test]' -e './simulator/circuit-simulator[test]' -e './services/hardware-service[dev]'
+      - env:
+          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+        run: |
+          python -m pip install -r requirements-verification.txt
+          python scripts/install_contracts.py
+          python -m pip install -e './services/api[test]' -e './simulator/circuit-simulator[test]' -e './services/hardware-service[dev]'
+          python -m pip check
       - name: Install browser contract generator tools
         working-directory: apps/web
         run: npm ci --no-audit --no-fund
-      - name: Generate hardware RPC bindings
-        run: python scripts/generate_hardware_rpc.py
+      - name: Verify installed Contracts RPC provenance
+        run: python -m scripts.check_contract_consumer
       - run: python -m pytest -q tests/integration tests/contracts tests/frontend tests/deployment tests/fpga tests/test_docs_baseline.py tests/test_root_config.py --basetemp "$NETCIRCUIT_ARTIFACTS_SESSION/pytest"
       - name: Clean the owned external verification session
         if: always() && env.NETCIRCUIT_ARTIFACTS_SESSION != ''
@@ -63,6 +83,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Bootstrap the pinned independent DEV allocator
+        env:
+          NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
+          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+        run: python scripts/install_contracts.py --dev-only
       - name: Allocate owned external verification runtime
         env:
           NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
@@ -82,7 +107,13 @@ jobs:
           sudo apt-get install -y postgresql-common
           sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
           sudo apt-get install -y postgresql-client-18
-      - run: python -m pip install -r requirements-verification.txt -e . -e './simulator/circuit-simulator[test]' -e './services/api[test]'
+      - env:
+          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+        run: |
+          python -m pip install -r requirements-verification.txt
+          python scripts/install_contracts.py
+          python -m pip install -e './simulator/circuit-simulator[test]' -e './services/api[test]'
+          python -m pip check
       - name: Actual migrations, backup/restore and independent writer races
         run: python -m pytest -q services/api/tests/postgres_cases.py --basetemp "$NETCIRCUIT_ARTIFACTS_SESSION/pytest"
       - name: Clean the owned external verification session

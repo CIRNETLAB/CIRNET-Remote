@@ -9,7 +9,7 @@ import pytest
 ROOT=Path(__file__).resolve().parents[2]
 SHARED=('contracts/public/auth.schema.json','contracts/signal_domains.py','contracts/capture/layout.json',
     'contracts/hardware/v2/rpc_v2.proto','scripts/generate_python_contracts.py',
-    'device-library/parts/physical-parts.json','pyproject.toml','requirements-codegen.txt',
+    'device-library/parts/physical-parts.json','integration/contracts-version.json','pyproject.toml','requirements-codegen.txt',
     'requirements-verification.txt','requirements-benchmark.txt','setup.py','MANIFEST.in','Makefile','.gitattributes')
 
 OWNED_PYTEST_JOBS=(('backend.yml','test'),('hardware-service.yml','test'),('frontend.yml','build'),
@@ -146,3 +146,29 @@ def test_postgres_job_keeps_real_database_gate_while_isolating_only_application_
     commands='\n'.join(step.get('run','') for step in job['steps'])
     assert 'services/api/tests/postgres_cases.py' in commands
     assert 'NETCIRCUIT_TEST_POSTGRES_URL=' not in commands
+
+
+def test_contract_consumer_jobs_install_verified_artifacts_and_never_root_contracts_source():
+    for name in ('backend.yml','hardware-service.yml','simulator.yml','contracts.yml','frontend.yml','browser-e2e.yml','integration.yml'):
+        document=workflow(name)
+        for job in document['jobs'].values():
+            commands='\n'.join(step.get('run','') for step in job['steps'])
+            if 'requirements-verification.txt' not in commands:
+                continue
+            assert 'install_contracts.py' in commands,name
+            assert '-e . ' not in commands,name
+            assert 'python -m pip check' in commands,name
+            assert 'python scripts/generate_hardware_rpc.py' not in commands,name
+
+
+def test_dev_bootstrap_precedes_every_consumer_and_docs_allocator_invocation():
+    for name in ('backend.yml','hardware-service.yml','simulator.yml','contracts.yml','frontend.yml','browser-e2e.yml','integration.yml','docs.yml'):
+        for job_name, job in workflow(name)['jobs'].items():
+            steps=job['steps']
+            allocation=next(index for index,step in enumerate(steps) if 'node scripts/artifact-paths.mjs' in step.get('run',''))
+            bootstrap=next((index for index,step in enumerate(steps) if 'install_contracts.py --dev-only' in step.get('run','')),None)
+            assert bootstrap is not None,(name,job_name,'independent DEV bootstrap is missing')
+            assert bootstrap<allocation,(name,job_name,'allocator ran before independent DEV bootstrap')
+            assert any(index<bootstrap and step.get('uses','').startswith('actions/setup-node@') for index,step in enumerate(steps))
+            assert any(index<bootstrap and step.get('uses','').startswith('actions/setup-python@') for index,step in enumerate(steps))
+            assert steps[bootstrap].get('env',{}).get('NETCIRCUIT_ARTIFACTS_TOKEN')=='${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}'

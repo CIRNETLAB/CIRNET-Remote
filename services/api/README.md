@@ -2,7 +2,7 @@
 
 FastAPI modular-monolith Lab-First laboratory. Authority: ../../docs/ARCHITECTURE.md. The application includes durable authentication/RBAC, owned Project/Circuit revisions, published assignments, experiments/history, verification, captures and FIFO/lease lifecycle. PostgreSQL is required in production; SQLite is for tests/development. Public contracts and all typed routes: ../../contracts/api/README.md.
 
-Install the root contracts package into both service environments. API also needs grpcio/protobuf and psycopg (declared dependencies). For source-checkout development, install Hardware Service dev extras and run `python scripts/generate_hardware_rpc.py` before startup/tests to create ignored shared RPC bindings. Installed production wheels already contain those bindings and resources; startup needs neither the checkout nor code generation/dev tools. Start hardware_service.server in its own process on localhost50051. An absent gateway reports unavailable; the virtual station executes the existing real digital simulator.
+Install the reviewed `netcircuit-contracts==1.0.1` wheel into both service environments using the M1 artifact manifest (`python scripts/install_contracts.py --with-dev --manifest ABSOLUTE_MANIFEST` from Remote root for development). API also needs grpcio/protobuf and psycopg (declared dependencies). RPC bindings and offline resources come from that wheel; `python scripts/generate_hardware_rpc.py --check` verifies them without writing retained source. Production needs neither source Contracts nor DEV tools. Start hardware_service.server in its own process on localhost50051. An absent gateway reports unavailable; the virtual station executes the existing real digital simulator.
 
 Use one API worker; do not start multiple scheduler workers against the same stations. SQLAlchemy persists definitions/results/sessions/leases and FIFO order; versioned migrations through 0007 upgrade new and legacy databases, including indexed runtime state and bounded auth maintenance. Restart recovers active leases and quarantines failed safe cleanup. Actual PostgreSQL migration/backup/restore and independent-writer tests have run locally; target production deployment remains unverified. Durable principals, server sessions, Argon2id passwords, CSRF/exact-origin and role/object authorization protect HTTP/WebSocket. Follow [auth setup](../../docs/architecture/auth-and-migrations.md) for administrator bootstrap, and the [production guide](../../deployment/README.md) for installed wheels, migration checks, TLS/origins, persistent data and maintenance. Development guests are explicit; production disables them.
 
@@ -25,13 +25,14 @@ New verification follows [VERIFICATION.md](../../docs/VERIFICATION.md), with raw
 diagnostics created outside the checkout and retained reports in Markdown. Earlier
 test/deployment claims describe their dated evidence, not a rerun during a doc edit.
 
-Final review corrections: observed terminal aliases and resource allocations are solved jointly, without changing student wiring. Unscoped/zero-confidence pin/net evidence cannot infer required physical endpoints; fixed terminals still work. ReadCapture RPC data uses bounded NCAP binary rather than repeating sample signal names in result_json; gateway rejects inconsistent descriptors. Regenerate RPC bindings and restart both local services together before use.
+Final review corrections: observed terminal aliases and resource allocations are solved jointly, without changing student wiring. Unscoped/zero-confidence pin/net evidence cannot infer required physical endpoints; fixed terminals still work. ReadCapture RPC data uses bounded NCAP binary rather than repeating sample signal names in result_json; gateway rejects inconsistent descriptors. Install the same reviewed Contracts artifact and restart both local services together before use.
 
 Full supported verification environment from root:
 
 ```bash
-pip install -r requirements-verification.txt -e . -e './services/api[test]' -e './services/hardware-service[dev]' -e './simulator/circuit-simulator[test]'
-python scripts/generate_hardware_rpc.py
+python scripts/install_contracts.py --with-dev --manifest ABSOLUTE_MANIFEST
+pip install -r requirements-verification.txt -e './services/api[test]' -e './services/hardware-service[dev]' -e './simulator/circuit-simulator[test]'
+python scripts/generate_hardware_rpc.py --check
 python scripts/check_context.py
 python scripts/sync_lab_contracts.py --check
 pytest -q

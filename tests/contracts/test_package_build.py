@@ -29,21 +29,20 @@ def test_verification_toolchain_satisfies_every_no_isolation_build_requirement()
             assert pinned[requirement.name] in requirement.specifier,(project,value,pinned[requirement.name])
 
 
-def test_wheel_contains_generated_rpc_and_offline_resources(tmp_path):
+def test_remote_metapackage_does_not_package_or_generate_contracts(tmp_path):
     result=subprocess.run([sys.executable,'-m','build','--wheel','--no-isolation','--outdir',str(tmp_path)],
                           cwd=ROOT,capture_output=True,text=True,
                           env={**os.environ,'TMP':str(tmp_path),'TEMP':str(tmp_path)})
     assert result.returncode==0,result.stdout+result.stderr
-    wheel=next(tmp_path.glob('*.whl'))
+    wheel=next(tmp_path.glob('netcircuit_remote_dev-*.whl'))
     with ZipFile(wheel) as archive:
         files=set(archive.namelist())
-    assert {'contracts/manifest.json','contracts/profiles.json','contracts/fixtures/conformance.json','contracts/api/openapi.json',
-            'contracts/design/visual.schema.json','contracts/public/common.schema.json',
-            'contracts/compatibility/2026-10-16/baseline.json',
-            'contracts/compatibility/2026-10-16/public-wire-baseline.json',
-            'contracts/design-models/fixtures/physical-mounting-parity.json',
-            'contracts/design-models/signal-domains.schema.json','contracts/design-models/signal-port-catalog.json',
-            'contracts/capture/ncap.schema.json','contracts/capture/layout.json','contracts/fixtures/capture/conformance.json',
-            'contracts/boundary/capture_layout.py','contracts/signal_domains.py','contracts/capture_validation.py',
-            'contracts/hardware/v2/rpc_v2.proto','contracts/fpga-protocol/control.schema.json',
-            'contracts/boundary/models.py','contracts/generated/rpc_v2_pb2.py','contracts/generated/rpc_v2_pb2_grpc.py'} <= files
+        assert not any(name.startswith('contracts/') for name in files)
+        metadata=archive.read(next(name for name in files if name.endswith('/METADATA'))).decode()
+    assert 'Requires-Dist: netcircuit-contracts==1.0.1' in metadata
+
+
+def test_selected_contract_artifact_contains_rpc_and_offline_resources():
+    from scripts.contracts_artifact import selected_wheel
+    from scripts.check_contract_package import verify_contract_wheel
+    verify_contract_wheel(selected_wheel())

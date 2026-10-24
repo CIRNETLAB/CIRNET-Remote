@@ -27,9 +27,10 @@ def test_package_workspace_rejects_checkout_and_descendants(tmp_path):
     assert checker.verify_external_path(tmp_path/'outside',checkout)==(tmp_path/'outside').resolve()
 
 
-def test_all_four_package_wheels_are_verified():
+def test_consumer_builds_three_wheels_and_selects_the_independent_contracts_artifact():
     assert hasattr(checker,'WHEEL_PROJECTS'),'API/simulator/hardware wheels are not verified.'
-    assert set(checker.WHEEL_PROJECTS)=={'.','services/api','services/hardware-service','simulator/circuit-simulator'}
+    assert set(checker.WHEEL_PROJECTS)=={'services/api','services/hardware-service','simulator/circuit-simulator'}
+    assert callable(checker.selected_wheel)
 
 
 def catalog_fingerprint(parts):
@@ -86,10 +87,11 @@ def test_wheel_missing_a_sampled_capture_resource_fails_before_install(tmp_path)
 def test_clean_build_staging_excludes_ignored_rpc_and_cached_build_outputs(tmp_path):
     assert hasattr(checker,'stage_project'),'The clean source build stage is missing.'
     target=tmp_path/'source'
-    checker.stage_project('.',target)
-    assert (target/'scripts/generate_hardware_rpc.py').is_file()
-    assert (target/'contracts/hardware/v2/rpc_v2.proto').is_file()
-    assert not (target/'contracts/generated').exists() and not (target/'.build').exists()
+    with pytest.raises(ValueError, match='Unknown wheel project'):
+        checker.stage_project('.',target)
+    checker.stage_project('services/api',target)
+    assert (target/'app/main.py').is_file()
+    assert not (target/'contracts').exists() and not (target/'.build').exists()
 
 
 @pytest.mark.parametrize('prefix',['','x'*20000],ids=['short-output','long-output'])
@@ -98,6 +100,7 @@ def test_failed_package_command_exposes_output_and_preserves_complete_log(tmp_pa
     monkeypatch.setenv('NETCIRCUIT_ARTIFACTS_DIR',str(tmp_path))
     monkeypatch.delenv('NETCIRCUIT_ARTIFACTS_SESSION',raising=False)
     monkeypatch.setattr(checker,'ROOT',checkout)
+    monkeypatch.setattr(checker,'selected_wheel',lambda manifest:tmp_path/'contracts.whl')
     monkeypatch.setattr(checker,'external_workspace',lambda base:nullcontext(tmp_path))
     monkeypatch.setattr(checker,'stage_project',lambda project,target:tmp_path)
     actual_run=subprocess.run

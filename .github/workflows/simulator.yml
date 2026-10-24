@@ -1,16 +1,56 @@
 name: Simulator
+env:
+  NETCIRCUIT_CONTRACTS_DEV_WHEEL_URL: ${{ vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_URL }}
+  NETCIRCUIT_CONTRACTS_DEV_WHEEL_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_SHA256 }}
+  NETCIRCUIT_CONTRACTS_WHEEL_FILENAME: netcircuit_contracts-1.0.1-py3-none-any.whl
+  NETCIRCUIT_CONTRACTS_NPM_FILENAME: tinihi-labs-contracts-1.0.1.tgz
+  NETCIRCUIT_CONTRACTS_WHEEL_URL: ${{ vars.NETCIRCUIT_CONTRACTS_WHEEL_URL }}
+  NETCIRCUIT_CONTRACTS_WHEEL_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_WHEEL_SHA256 }}
+  NETCIRCUIT_CONTRACTS_NPM_URL: ${{ vars.NETCIRCUIT_CONTRACTS_NPM_URL }}
+  NETCIRCUIT_CONTRACTS_NPM_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_NPM_SHA256 }}
 on:
   push:
-    paths: ['simulator/**', 'contracts/**', 'device-library/**', 'scripts/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/simulator.yml']
+    paths: ['simulator/**', 'contracts/**', 'device-library/**', 'scripts/**', 'integration/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/simulator.yml']
   pull_request:
-    paths: ['simulator/**', 'contracts/**', 'device-library/**', 'scripts/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/simulator.yml']
+    paths: ['simulator/**', 'contracts/**', 'device-library/**', 'scripts/**', 'integration/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/simulator.yml']
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python -m pip install -r requirements-verification.txt -e . -e './simulator/circuit-simulator[test]'
-      - run: pytest -q simulator/circuit-simulator/tests
+      - name: Bootstrap the pinned independent DEV allocator
+        env:
+          NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
+          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+        run: python scripts/install_contracts.py --dev-only
+      - name: Allocate owned external verification runtime
+        env:
+          NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
+        shell: bash
+        run: |
+          NETCIRCUIT_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"
+          export NETCIRCUIT_ARTIFACTS_SESSION
+          echo "NETCIRCUIT_ARTIFACTS_SESSION=$NETCIRCUIT_ARTIFACTS_SESSION" >> "$GITHUB_ENV"
+          ci_runtime="$(node scripts/artifact-paths.mjs ci-runtime)"
+          {
+            echo "NETCIRCUIT_DATABASE_URL=sqlite:///$ci_runtime/default.sqlite"
+            echo "NETCIRCUIT_CAPTURE_DIR=$ci_runtime/captures"
+          } >> "$GITHUB_ENV"
+      - env:
+          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+        run: |
+          python -m pip install -r requirements-verification.txt
+          python scripts/install_contracts.py
+          python -m pip install -e './simulator/circuit-simulator[test]'
+          python -m pip check
+      - run: python -m pytest -q simulator/circuit-simulator/tests --basetemp "$NETCIRCUIT_ARTIFACTS_SESSION/pytest"
+      - name: Clean the owned external verification session
+        if: always() && env.NETCIRCUIT_ARTIFACTS_SESSION != ''
+        shell: bash
+        run: node scripts/artifact-paths.mjs --cleanup "$NETCIRCUIT_ARTIFACTS_SESSION"

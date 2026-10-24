@@ -35,15 +35,17 @@ def release_plan(groups,package_temporary_root=None):
         python(group,'-m','pytest','-q',*paths,'--basetemp',target)
     if 'contracts' in selected:
         python('contracts','scripts/check_context.py')
-        python('contracts','scripts/generate_hardware_rpc.py')
+        python('contracts','-m','scripts.check_contract_consumer')
         for script in ('generate_contracts.py','sync_editor_catalog.py','sync_breadboard_topologies.py'):
             python('contracts','scripts/'+script,'--check')
+        python('contracts','scripts/export_openapi.py','--check')
         python('contracts','scripts/check_public_compatibility.py')
+        python('contracts','scripts/check_contract_sdk.py')
         if 'python' not in selected:pytest('contracts','tests/contracts')
     if 'python' in selected:
         if 'contracts' not in selected:
             python('python','scripts/check_context.py')
-            python('python','scripts/generate_hardware_rpc.py')
+            python('python','-m','scripts.check_contract_consumer')
         pytest('python')
     if 'web' in selected:
         for command in ('check:boundaries','test','build'):
