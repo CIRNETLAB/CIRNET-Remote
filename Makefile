@@ -17,7 +17,7 @@ contracts-check:
 	$(PYTHON) scripts/generate_contracts.py --check
 
 web-boundaries:
-	cd apps/web && npm run check:boundaries
+	node scripts/check_interface.mjs check:boundaries
 
 contracts-suite:
 	$(PYTHON) scripts/check_release.py --group contracts

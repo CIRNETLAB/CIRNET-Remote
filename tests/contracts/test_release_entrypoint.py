@@ -30,10 +30,22 @@ def test_contract_plan_includes_generation_compatibility_and_conformance():
 def test_full_release_plan_has_real_postgres_browser_packages_and_one_full_python_run():
     steps=plan('all');commands=[' '.join(step['command']) for step in steps]
     assert sum(step['group']=='python' and step['command'][1:4]==['-m','pytest','-q'] for step in steps)==1
-    for marker in ('postgres_cases.py','test:e2e','check_contract_package.py','check:boundaries','npm'):
+    for marker in ('postgres_cases.py','e2e-interface.mjs','check_contract_package.py','check:boundaries','check_interface.mjs'):
         assert any(marker in command for command in commands),marker
     assert not any('pytest -q tests/contracts' in command for command in commands)
     assert all('--basetemp' in step['command'] for step in steps if 'pytest' in step['command'])
+
+
+def test_browser_release_uses_remote_orchestration_without_retained_web_fallback():
+    steps=plan('browser')
+    assert len(steps)==1 and steps[0]['cwd']=='.'
+    assert steps[0]['command'][-2:]==['scripts/e2e-interface.mjs','--forbid-only']
+
+
+def test_web_release_checks_the_explicit_interface_product_without_retained_source():
+    steps=plan('web')
+    assert [step['command'][-1] for step in steps]==['check:boundaries','test','build']
+    assert all(step['cwd']=='.' and 'scripts/check_interface.mjs' in step['command'] for step in steps)
 
 
 def test_load_is_an_explicit_optional_group_with_honest_workload():

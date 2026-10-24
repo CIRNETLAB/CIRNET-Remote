@@ -8,6 +8,8 @@ env:
   NETCIRCUIT_CONTRACTS_WHEEL_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_WHEEL_SHA256 }}
   NETCIRCUIT_CONTRACTS_NPM_URL: ${{ vars.NETCIRCUIT_CONTRACTS_NPM_URL }}
   NETCIRCUIT_CONTRACTS_NPM_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_NPM_SHA256 }}
+  NETCIRCUIT_CONTRACTS_SDIST_URL: ${{ vars.NETCIRCUIT_CONTRACTS_SDIST_URL }}
+  NETCIRCUIT_ARTIFACT_PATHS_NPM_URL: ${{ vars.NETCIRCUIT_ARTIFACT_PATHS_NPM_URL }}
 on:
   push:
     paths: ['apps/web/**', 'tests/frontend/**', 'contracts/**', 'device-library/**', 'scripts/**', 'services/api/**', 'simulator/circuit-simulator/**', 'integration/**', 'pyproject.toml', 'requirements-codegen.txt', 'requirements-verification.txt', 'requirements-benchmark.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
@@ -28,8 +30,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-          cache-dependency-path: apps/web/package-lock.json
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -51,6 +51,9 @@ jobs:
           NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
         shell: bash
         run: |
+          NETCIRCUIT_ARTIFACTS_CONTEXT="$(node --input-type=module -e "import {getArtifactContext} from './scripts/artifact-paths.mjs'; console.log(JSON.stringify(getArtifactContext()))")"
+          export NETCIRCUIT_ARTIFACTS_CONTEXT
+          echo "NETCIRCUIT_ARTIFACTS_CONTEXT=$NETCIRCUIT_ARTIFACTS_CONTEXT" >> "$GITHUB_ENV"
           NETCIRCUIT_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"
           export NETCIRCUIT_ARTIFACTS_SESSION
           echo "NETCIRCUIT_ARTIFACTS_SESSION=$NETCIRCUIT_ARTIFACTS_SESSION" >> "$GITHUB_ENV"
@@ -67,8 +70,18 @@ jobs:
           python scripts/install_contracts.py
           python -m pip install -e './services/api[test]' -e './simulator/circuit-simulator[test]'
           python -m pip check
-      - name: Install locked browser tools
-        working-directory: apps/web
+      - name: Download the explicit reviewed Interface product
+        env:
+          NETCIRCUIT_INTERFACE_ARTIFACT_URL: ${{ vars.NETCIRCUIT_INTERFACE_ARTIFACT_URL }}
+          NETCIRCUIT_INTERFACE_ARTIFACT_SHA256: ${{ vars.NETCIRCUIT_INTERFACE_ARTIFACT_SHA256 }}
+          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+        run: python -m scripts.install_interface --github-env "$GITHUB_ENV"
+      - name: Bootstrap Interface artifacts before its clean install
+        env:
+          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+        run: node "$NETCIRCUIT_INTERFACE_ROOT/scripts/bootstrap-contracts.mjs" --github-env "$GITHUB_ENV"
+      - name: Install locked Playwright 1.64.1 and Interface dependencies
+        working-directory: ${{ env.NETCIRCUIT_INTERFACE_ROOT }}
         run: npm ci --no-audit --no-fund
       - name: Check pinned artifact projections and route parity
         run: |
@@ -77,13 +90,13 @@ jobs:
           python scripts/export_openapi.py --check
           python scripts/sync_editor_catalog.py --check
       - name: AST dependency boundaries
-        working-directory: apps/web
+        working-directory: ${{ env.NETCIRCUIT_INTERFACE_ROOT }}
         run: npm run check:boundaries
       - name: Typecheck and frontend runtime tests
-        working-directory: apps/web
+        working-directory: ${{ env.NETCIRCUIT_INTERFACE_ROOT }}
         run: npm test
       - name: Build workbench and imported GLB previews
-        working-directory: apps/web
+        working-directory: ${{ env.NETCIRCUIT_INTERFACE_ROOT }}
         run: npm run build
       - name: Python browser-boundary and workflow tests
         run: python -m pytest -q tests/frontend --basetemp "$NETCIRCUIT_ARTIFACTS_SESSION/pytest"

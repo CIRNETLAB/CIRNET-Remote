@@ -31,11 +31,11 @@ Full supported verification environment from root:
 
 ```bash
 python scripts/install_contracts.py --with-dev --manifest ABSOLUTE_MANIFEST
-pip install -r requirements-verification.txt -e './services/api[test]' -e './services/hardware-service[dev]' -e './simulator/circuit-simulator[test]'
+python -m pip install -r requirements-verification.txt -e './services/api[test]' -e './services/hardware-service[dev]' -e './simulator/circuit-simulator[test]'
 python scripts/generate_hardware_rpc.py --check
 python scripts/check_context.py
 python scripts/sync_lab_contracts.py --check
-pytest -q
+python scripts/check_release.py --group python
 python scripts/check_release.py --show-plan
 ```
 
@@ -50,100 +50,66 @@ does not start it.
 
 ### Windows PowerShell
 
-First-time setup, from the repository root (verified locally with Python 3.12; package minimum 3.11):
+First-time setup from the Remote repository root, with Python 3.12 (package minimum 3.11). Select the reviewed M1 artifact manifest before installing consumer packages:
 
 ```powershell
 py -3.12 -m venv services/api/.venv
-.\services\api\.venv\Scripts\python.exe -m pip install -r requirements-verification.txt -e . -e './simulator/circuit-simulator[test]' -e './services/api[test]' -e './services/hardware-service[dev]'
-.\services\api\.venv\Scripts\python.exe scripts/generate_hardware_rpc.py
+$env:NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST = 'C:\absolute\reviewed\artifacts.json'
+.\services\api\.venv\Scripts\python.exe scripts/install_contracts.py --with-dev --manifest $env:NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST
+.\services\api\.venv\Scripts\python.exe -m pip install -r requirements-verification.txt -e './simulator/circuit-simulator[test]' -e './services/api[test]' -e './services/hardware-service[dev]'
+.\services\api\.venv\Scripts\python.exe scripts/generate_hardware_rpc.py --check
+.\services\api\.venv\Scripts\python.exe -m pip check
 ```
 
 #### Refresh an existing environment after pulling source changes
 
-An editable install updates imported source immediately, but its installed
-dependency metadata is only refreshed when the package is installed again. An
-older `.venv` can therefore run new API source without its new dependencies;
-`pip check` may still pass because it reads the old metadata. For example,
-`ModuleNotFoundError: No module named 'argon2'` means the active interpreter lacks
-`argon2-cffi`, the package that provides `argon2`. Authentication also requires
-Alembic for the database migrations. Both are already declared in
-`services/api/pyproject.toml`.
+Editable consumer source updates immediately, but installed dependency metadata
+changes only when the packages are installed again. An older environment can
+therefore lack newly declared dependencies even if `pip check` still passes.
+For example, `argon2-cffi` supplies `argon2`, and authentication also requires
+Alembic; both are declared by the API package.
 
-Keep the existing environment and refresh all local packages from the repository
-root, then regenerate the ignored RPC bindings:
+Keep the existing environment. From Remote root, rerun the reviewed Contracts
+installer when selecting an updated artifact set, then rerun the consumer
+installation and `pip check` commands above using this same interpreter.
+Restart both local services after updating their compatibility set. RPC bindings
+come from the installed Contracts wheel; `generate_hardware_rpc.py --check`
+verifies their provenance. Root Contracts source installation and regeneration
+are not development prerequisites.
 
-```powershell
-.\services\api\.venv\Scripts\python.exe -m pip install -r requirements-verification.txt -e . -e './simulator/circuit-simulator[test]' -e './services/api[test]' -e './services/hardware-service[dev]'
-.\services\api\.venv\Scripts\python.exe scripts/generate_hardware_rpc.py
-.\services\api\.venv\Scripts\python.exe -m pip check
-.\services\api\.venv\Scripts\python.exe -c "from argon2 import PasswordHasher; import alembic; from app.main import app; print('API imports OK')"
-```
-
-Use this interpreter explicitly for installation and startup; installing into a
-different Python environment does not repair this one. Restart the API after the
-refresh. Installing only `argon2-cffi` can leave other newly declared dependencies
-missing. No database deletion or virtual environment reset is needed.
-
-If your terminal is in `apps/web`, the refresh and checks are equivalent to:
-
-```powershell
-..\..\services\api\.venv\Scripts\python.exe -m pip install -r ..\..\requirements-verification.txt -e ..\.. -e '../../simulator/circuit-simulator[test]' -e '../../services/api[test]' -e '../../services/hardware-service[dev]'
-..\..\services\api\.venv\Scripts\python.exe ..\..\scripts\generate_hardware_rpc.py
-..\..\services\api\.venv\Scripts\python.exe -m pip check
-..\..\services\api\.venv\Scripts\python.exe -c "from argon2 import PasswordHasher; import alembic; from app.main import app; print('API imports OK')"
-```
-
-Root contracts packaging automatically creates
-`.build/metadata/netcircuit_contracts.egg-info/` and places other build files
-under `.build/`. This ignored cache is independent of `.audit-runtime` and the
-service virtual environments. It can be deleted and is recreated on the next
-install or build; no manual directory setup is needed on a fresh checkout.
-
-Start the API and keep this terminal running:
-
-First start the local Hardware Service in another terminal with the same environment:
+Start the local Hardware Service in one terminal, from Remote root:
 
 ```powershell
 .\services\api\.venv\Scripts\python.exe -m hardware_service.server 127.0.0.1:50051
 ```
 
-It provides the existing virtual station. Starting Vite or the API does not start this RPC service.
+It provides the existing virtual station. Start the API in another terminal,
+also from Remote root:
 
 ```powershell
 .\services\api\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir services/api --reload-dir services/api --host 127.0.0.1 --port 8000 --reload
 ```
 
-If your terminal is already in `apps/web`, use this equivalent command:
-
-```powershell
-..\..\services\api\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir ..\..\services\api --reload-dir ..\..\services\api --host 127.0.0.1 --port 8000 --reload
-```
-
-`--app-dir` selects the import path; `--reload-dir` selects the watched source
-directory. Start only one API on port 8000. If another API is already running,
-use it or stop it in its original terminal before starting another instance.
-On Windows a second bind may report `WinError 10013`.
-
-To identify an existing listener before taking any action:
+`--app-dir` selects the import path; `--reload-dir` selects watched source.
+Keep one API on port 8000. To inspect an existing listener before taking action:
 
 ```powershell
 Get-NetTCPConnection -LocalPort 8000 -State Listen | Select-Object LocalAddress,LocalPort,OwningProcess
 Invoke-RestMethod http://127.0.0.1:8000/api/health
 ```
 
-These commands use the project's virtual environment directly, so PowerShell
-activation and execution-policy changes are unnecessary. The default mode is
-simulation; a physical station is not required for these endpoints.
-
-In a separate terminal:
+Start Vite in a separate terminal from an explicitly selected, prepared
+net-Circuit-Interface product. Its own README and the [M2 ledger](../../docs/superpowers/plans/2026-10-24-multi-repo-migration-m2.md)
+cover the digest-verified artifact bootstrap and locked install:
 
 ```powershell
-cd apps/web
+$env:NETCIRCUIT_INTERFACE_ROOT = 'C:\absolute\reviewed\net-Circuit-Interface'
+Set-Location -LiteralPath $env:NETCIRCUIT_INTERFACE_ROOT
 npm run dev
 ```
 
-Verify the API directly and through Vite (use the port printed by Vite if 5173
-is already occupied):
+Vite proxies `/api` and `/ws` to `127.0.0.1:8000`. Verify directly and through
+the Vite port printed at startup (5173 by default):
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:8000/api/health
@@ -151,20 +117,45 @@ Invoke-RestMethod http://localhost:5173/api/auth/session -SessionVariable labWeb
 Invoke-RestMethod http://localhost:5173/api/stations -WebSession $labWebSession
 ```
 
-The health response should identify `netcircuit-api`; station discovery in
-simulation mode should return `virtual-station-01` with state `ready`.
+The health response identifies `netcircuit-api`; virtual station discovery
+returns `virtual-station-01`. These explicit interpreter commands need no
+PowerShell activation or execution-policy changes. A physical station is not
+required for virtual execution.
 
 ### Linux/macOS
 
+Run setup from Remote root with an installed Python 3.12 interpreter:
+
 ```bash
-cd services/api
-python -m venv .venv
-. .venv/bin/activate
-pip install -r ../../requirements-verification.txt -e ../.. -e '../../simulator/circuit-simulator[test]' -e '../../services/hardware-service[dev]' -e '.[test]'
-python ../../scripts/generate_hardware_rpc.py
-# In another terminal with this environment: python -m hardware_service.server 127.0.0.1:50051
-uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+python3.12 -m venv services/api/.venv
+export NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST=/absolute/reviewed/artifacts.json
+services/api/.venv/bin/python scripts/install_contracts.py --with-dev --manifest "$NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST"
+services/api/.venv/bin/python -m pip install -r requirements-verification.txt -e './simulator/circuit-simulator[test]' -e './services/api[test]' -e './services/hardware-service[dev]'
+services/api/.venv/bin/python scripts/generate_hardware_rpc.py --check
+services/api/.venv/bin/python -m pip check
 ```
+
+Start each service in its own terminal from Remote root, using that interpreter:
+
+```bash
+# Hardware Service terminal:
+services/api/.venv/bin/python -m hardware_service.server 127.0.0.1:50051
+# API terminal:
+services/api/.venv/bin/python -m uvicorn app.main:app --app-dir services/api --reload-dir services/api --host 127.0.0.1 --port 8000 --reload
+```
+
+In a third terminal, select the prepared independent Interface product:
+
+```bash
+export NETCIRCUIT_INTERFACE_ROOT=/absolute/reviewed/net-Circuit-Interface
+cd "$NETCIRCUIT_INTERFACE_ROOT"
+npm run dev
+```
+
+Remote retains `apps/web` as a frozen compatibility/rollback reference. Current
+Web development and release checks use Interface; integrated browser verification
+uses `node scripts/e2e-interface.mjs --interface-root ABSOLUTE_PRODUCT --forbid-only`
+from Remote root and the [shared external-output policy](../../docs/VERIFICATION.md).
 
 Core execution endpoints (the [generated API reference](../../contracts/api/README.md) lists the complete typed surface):
 

@@ -8,6 +8,8 @@ env:
   NETCIRCUIT_CONTRACTS_WHEEL_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_WHEEL_SHA256 }}
   NETCIRCUIT_CONTRACTS_NPM_URL: ${{ vars.NETCIRCUIT_CONTRACTS_NPM_URL }}
   NETCIRCUIT_CONTRACTS_NPM_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_NPM_SHA256 }}
+  NETCIRCUIT_CONTRACTS_SDIST_URL: ${{ vars.NETCIRCUIT_CONTRACTS_SDIST_URL }}
+  NETCIRCUIT_ARTIFACT_PATHS_NPM_URL: ${{ vars.NETCIRCUIT_ARTIFACT_PATHS_NPM_URL }}
 on:
   push:
     paths: ['apps/web/**', 'tests/frontend/**', 'tests/integration/**', 'contracts/**', 'device-library/**', 'scripts/**', 'services/api/**', 'services/hardware-service/**', 'simulator/circuit-simulator/**', 'integration/**', 'pyproject.toml', 'requirements-codegen.txt', 'requirements-verification.txt', 'requirements-benchmark.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
@@ -32,8 +34,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-          cache-dependency-path: apps/web/package-lock.json
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -56,6 +56,9 @@ jobs:
           NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-artifacts/${{ github.run_id }}-${{ github.run_attempt }}
         shell: bash
         run: |
+          NETCIRCUIT_ARTIFACTS_CONTEXT="$(node --input-type=module -e "import {getArtifactContext} from './scripts/artifact-paths.mjs'; console.log(JSON.stringify(getArtifactContext()))")"
+          export NETCIRCUIT_ARTIFACTS_CONTEXT
+          echo "NETCIRCUIT_ARTIFACTS_CONTEXT=$NETCIRCUIT_ARTIFACTS_CONTEXT" >> "$GITHUB_ENV"
           artifact_session="$(node scripts/artifact-paths.mjs)"
           echo "NETCIRCUIT_ARTIFACTS_SESSION=$artifact_session" >> "$GITHUB_ENV"
       - name: Install all real local services and pinned contract tools
@@ -66,8 +69,18 @@ jobs:
           python scripts/install_contracts.py
           python -m pip install -e './services/api[test]' -e './simulator/circuit-simulator[test]' -e './services/hardware-service[dev]'
           python -m pip check
-      - name: Install locked Playwright 1.64.1 and frontend dependencies
-        working-directory: apps/web
+      - name: Download the explicit reviewed Interface product
+        env:
+          NETCIRCUIT_INTERFACE_ARTIFACT_URL: ${{ vars.NETCIRCUIT_INTERFACE_ARTIFACT_URL }}
+          NETCIRCUIT_INTERFACE_ARTIFACT_SHA256: ${{ vars.NETCIRCUIT_INTERFACE_ARTIFACT_SHA256 }}
+          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+        run: python -m scripts.install_interface --github-env "$GITHUB_ENV"
+      - name: Bootstrap Interface artifacts before its clean install
+        env:
+          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+        run: node "$NETCIRCUIT_INTERFACE_ROOT/scripts/bootstrap-contracts.mjs" --github-env "$GITHUB_ENV"
+      - name: Install locked Playwright 1.64.1 and Interface dependencies
+        working-directory: ${{ env.NETCIRCUIT_INTERFACE_ROOT }}
         run: npm ci --no-audit --no-fund
       - name: Check pinned artifact projections and route parity
         run: |
@@ -76,23 +89,22 @@ jobs:
           python scripts/export_openapi.py --check
           python scripts/sync_editor_catalog.py --check
       - name: AST dependency boundaries
-        working-directory: apps/web
+        working-directory: ${{ env.NETCIRCUIT_INTERFACE_ROOT }}
         run: npm run check:boundaries
       - name: Typecheck and build production entrypoints
-        working-directory: apps/web
+        working-directory: ${{ env.NETCIRCUIT_INTERFACE_ROOT }}
         run: |
           npx tsc --noEmit -p tsconfig.e2e.json
           npm run build
       - name: Install the pinned Chromium revision and Linux dependencies
-        working-directory: apps/web
+        working-directory: ${{ env.NETCIRCUIT_INTERFACE_ROOT }}
         run: npm run test:e2e:install -- --with-deps
       - name: Real API, SQLite, Hardware Service and Chromium suite
-        working-directory: apps/web
         shell: bash
         run: |
           set -o pipefail
-          artifact_session="$(node ../../scripts/artifact-paths.mjs)"
-          npm run test:e2e -- --reporter=line,junit --forbid-only 2>&1 | tee "$artifact_session/e2e.log"
+          artifact_session="$(node scripts/artifact-paths.mjs)"
+          node scripts/e2e-interface.mjs --reporter=line,junit --forbid-only 2>&1 | tee "$artifact_session/e2e.log"
       - name: Browser failure evidence and JUnit results
         if: always()
         uses: actions/upload-artifact@v4

@@ -49,9 +49,9 @@ def release_plan(groups,package_temporary_root=None):
         pytest('python')
     if 'web' in selected:
         for command in ('check:boundaries','test','build'):
-            add('web',[npm,'run',command],'apps/web')
+            add('web',[shutil.which('node') or 'node','scripts/check_interface.mjs',command])
     if 'postgres' in selected:pytest('postgres','services/api/tests/postgres_cases.py')
-    if 'browser' in selected:add('browser',[npm,'run','test:e2e'],'apps/web')
+    if 'browser' in selected:add('browser',[shutil.which('node') or 'node','scripts/e2e-interface.mjs','--forbid-only'])
     if 'package' in selected:
         command=[sys.executable,'scripts/check_contract_package.py']
         if package_temporary_root:command.extend(['--temporary-root',package_temporary_root])
@@ -67,6 +67,7 @@ def main(argv=None):
     parser.add_argument('--group',action='append',choices=GROUPS)
     parser.add_argument('--show-plan',action='store_true')
     parser.add_argument('--package-temporary-root',type=Path)
+    parser.add_argument('--interface-root',type=Path,help='Explicit extracted Interface product for the Remote-owned browser gate; no retained Web fallback.')
     arguments=parser.parse_args(argv)
     steps=release_plan(arguments.group or ['all'],arguments.package_temporary_root)
     if arguments.show_plan:
@@ -80,6 +81,9 @@ def main(argv=None):
     environment={**os.environ,'NETCIRCUIT_E2E_PYTHON':sys.executable,
         'NETCIRCUIT_DATABASE_URL':'sqlite:///'+(runtime/'default.sqlite').as_posix(),
         'NETCIRCUIT_CAPTURE_DIR':str(runtime/'captures')}
+    if arguments.interface_root:
+        if not arguments.interface_root.is_absolute():parser.error('--interface-root must be absolute.')
+        environment['NETCIRCUIT_INTERFACE_ROOT']=str(arguments.interface_root)
     began=time.perf_counter()
     for step in steps:
         print(f"[{step['group']}] {shlex.join(step['command'])}",flush=True)

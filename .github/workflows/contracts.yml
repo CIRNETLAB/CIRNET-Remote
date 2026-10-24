@@ -51,12 +51,13 @@ jobs:
           python scripts/install_contracts.py
           python -m pip install -e './simulator/circuit-simulator[test]' -e './services/api[test]' -e './services/hardware-service[dev]'
           python -m pip check
-      - run: npm ci --no-audit --no-fund
+      - name: Install frozen M1 Web reference tooling for retained compatibility checks
+        run: npm ci --no-audit --no-fund
         working-directory: apps/web
       - run: python -m scripts.check_contract_consumer
       - name: Offline schemas, deterministic generation, compatibility and Python conformance
         run: python scripts/check_release.py --group contracts
-      - name: Browser numeric/semantic conformance and generated type checks
+      - name: Retained M1 Web reference numeric and semantic compatibility checks
         run: npm test
         working-directory: apps/web
       - name: Clean the owned external verification session

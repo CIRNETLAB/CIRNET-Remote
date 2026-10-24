@@ -49,7 +49,7 @@ jobs:
           python scripts/install_contracts.py
           python -m pip install -e './services/api[test]' -e './simulator/circuit-simulator[test]' -e './services/hardware-service[dev]'
           python -m pip check
-      - name: Install browser contract generator tools
+      - name: Install frozen M1 Web tool fixtures for retained Python compatibility checks
         working-directory: apps/web
         run: npm ci --no-audit --no-fund
       - name: Verify installed Contracts RPC provenance
