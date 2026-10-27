@@ -1,5 +1,6 @@
 """Repository schema compatibility does not certify the proposed FPGA board."""
 import json
+from importlib.resources import files
 from pathlib import Path
 import pytest
 from jsonschema import ValidationError
@@ -26,7 +27,7 @@ def test_current_mapping_is_explicit_about_independent_open_hardware_gates():
 
 
 def test_proposal_names_do_not_become_implicit_runtime_contract_aliases():
-    manifest=json.loads((ROOT/'contracts/manifest.json').read_text(encoding='utf-8'))
+    manifest=json.loads(files('contracts').joinpath('manifest.json').read_text(encoding='utf-8'))
     records={value['id']:value for value in manifest['contracts']}
     assert records['InstrumentationExecutionPlan']['version']=='1.0'
     assert records['InstrumentationExecutionPlan']['visibility']=='internal'
@@ -54,7 +55,7 @@ def test_scaffold_and_sampled_helpers_do_not_enable_an_absent_physical_producer(
         with pytest.raises(RuntimeError) as caught:transport.exchange(b'fixture',timeout_s=1)
         assert caught.value.code=='HARDWARE_UNAVAILABLE'
     from contracts.capture_codec import decode_sampled
-    corpus=json.loads((ROOT/'contracts/fixtures/capture/conformance.json').read_text(encoding='utf-8'))
+    corpus=json.loads(files('contracts').joinpath('fixtures/capture/conformance.json').read_text(encoding='utf-8'))
     fixture=next(value for value in corpus['cases'] if value['valid'] and value['version']==2)
     decoded=decode_sampled(bytes.fromhex(fixture['payload_hex']),fixture['descriptor'])
     assert decoded['descriptor']['header']['source']=='simulation'

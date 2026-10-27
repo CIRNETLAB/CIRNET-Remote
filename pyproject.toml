@@ -15,4 +15,4 @@ include-package-data = false
 
 [tool.pytest.ini_options]
 addopts = "-p no:cacheprovider"
-norecursedirs = ["services/hardware-service", "simulator/circuit-simulator", ".*", "build", "dist", "node_modules", "venv"]
+norecursedirs = ["services/hardware-service", "simulator/circuit-simulator", "tests/fpga", ".*", "build", "dist", "node_modules", "venv"]

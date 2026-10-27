@@ -26,6 +26,8 @@ Post-R7 H0–H6: observed pin/net evidence resolves arbitrary student placement 
 
 Repository: apps/web, services/api, services/hardware-service, simulator/circuit-simulator, contracts, device-library, fpga, deployment, docs, tests, scripts. Source analyses, DEV_LOG/CHANGELOG and docs/verification preserve implementation history. Superseded architecture/prompts are in docs/archive/legacy-v1.
 
+M5 FPGA verification uses the independent `netcircuit-fpga-scaffold` source artifact `0.1.0`, selected by manifest/SHA256; it is not an API runtime dependency or board image. Original `fpga/` and `tests/fpga/` are frozen references. Pure RTL acceptance belongs to net-Circuit-FPGA and requires pinned parser/compiler/runtime without skips. Remote release checks require the selected FPGA artifact root; see the [M5 plan](docs/superpowers/plans/2026-10-27-multi-repo-migration-m5.md) and [consumer setup](contracts/README.md). Logical 1.0-scaffold remains independent of source version and unavailable physical firmware.
+
 ## Tiếng Việt
 
 Nền tảng phòng thí nghiệm điện tử từ xa Web-first, Safety-gated, Lab-First. [Kiến trúc Lab-First v3.1](docs/ARCHITECTURE.md) là authority duy nhất. Kiểm tra an toàn cho phép chạy; IC/jumper sinh viên quyết định kết quả vật lý; phần mềm quan sát và chấm. SAFETY != CORRECTNESS. Sai topology/IC nhưng an toàn không tự động chặn Run.

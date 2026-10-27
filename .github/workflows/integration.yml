@@ -1,5 +1,8 @@
 name: Integration
 env:
+  NETCIRCUIT_FPGA_ARTIFACT_FILENAME: netcircuit-fpga-scaffold-0.1.0.tar.gz
+  NETCIRCUIT_FPGA_ARTIFACT_URL: ${{ vars.NETCIRCUIT_FPGA_ARTIFACT_URL }}
+  NETCIRCUIT_FPGA_ARTIFACT_SHA256: ${{ vars.NETCIRCUIT_FPGA_ARTIFACT_SHA256 }}
   NETCIRCUIT_HARDWARE_WHEEL_FILENAME: netcircuit_hardware_service-0.1.1-py3-none-any.whl
   NETCIRCUIT_HARDWARE_WHEEL_URL: ${{ vars.NETCIRCUIT_HARDWARE_WHEEL_URL }}
   NETCIRCUIT_HARDWARE_WHEEL_SHA256: ${{ vars.NETCIRCUIT_HARDWARE_WHEEL_SHA256 }}
@@ -64,7 +67,13 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Verify installed Contracts RPC provenance
         run: python -m scripts.check_contract_consumer
-      - run: python -m pytest -q tests/integration tests/contracts tests/frontend tests/deployment tests/fpga tests/test_docs_baseline.py tests/test_root_config.py --basetemp "$NETCIRCUIT_ARTIFACTS_SESSION/pytest"
+      - name: Select and verify the exact reviewed FPGA source artifact
+        env:
+          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+        run: |
+          python scripts/install_fpga.py
+      - run: python -m scripts.check_fpga_consumer
+      - run: python -m pytest -q tests/integration tests/contracts tests/frontend tests/deployment tests/test_docs_baseline.py tests/test_root_config.py --basetemp "$NETCIRCUIT_ARTIFACTS_SESSION/pytest"
       - name: Clean the owned external verification session
         if: always() && env.NETCIRCUIT_ARTIFACTS_SESSION != ''
         shell: bash

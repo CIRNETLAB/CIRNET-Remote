@@ -62,7 +62,7 @@ def assert_shared_coverage(data,name):
             assert patterns is None or any(fnmatchcase(path,pattern) for pattern in patterns),(name,event,path)
 
 
-@pytest.mark.parametrize('name',['contracts.yml','backend.yml','hardware-service.yml','simulator.yml','frontend.yml','integration.yml'])
+@pytest.mark.parametrize('name',['contracts.yml','backend.yml','hardware-service.yml','simulator.yml','frontend.yml','integration.yml','fpga.yml'])
 def test_shared_changes_trigger_the_contract_gate_and_every_consumer(name):
     assert_shared_coverage(workflow(name),name)
 
@@ -190,3 +190,21 @@ def test_hardware_consuming_jobs_select_installed_artifacts_and_never_frozen_uni
         assert 'pytest -q services/hardware-service/tests' not in commands,(name,job_id)
         assert 'services/hardware-service/tests/test_' not in commands,(name,job_id)
         assert 'NETCIRCUIT_HARDWARE_WHEEL_SHA256' in workflow(name).get('env',{})
+
+
+def test_fpga_acceptance_uses_explicit_source_artifact_and_mandatory_owned_rtl():
+    document = workflow('fpga.yml')
+    job = document['jobs']['syntax']
+    commands = '\n'.join(step.get('run', '') for step in job['steps'])
+    assert_owned_test_runtime(job)
+    for marker in ('install_fpga.py', 'scripts.check_fpga_consumer', 'scripts/install_toolchain.py',
+            'scripts/check_rtl.py', 'tests/integration/test_fpga_compatibility.py'):
+        assert marker in commands, marker
+    assert 'iverilog -g2012 -tnull fpga/' not in commands
+    assert 'pytest -q tests/fpga' not in commands
+    assert 'NETCIRCUIT_FPGA_ARTIFACT_SHA256' in document['env']
+    assert document['env']['NETCIRCUIT_FPGA_ARTIFACT_FILENAME'] == 'netcircuit-fpga-scaffold-0.1.0.tar.gz'
+    for name, job_id in (('contracts.yml', 'canonical-boundaries'), ('integration.yml', 'repository-contracts')):
+        commands = '\n'.join(step.get('run', '') for step in workflow(name)['jobs'][job_id]['steps'])
+        assert 'install_fpga.py' in commands and 'scripts.check_fpga_consumer' in commands, name
+        assert 'tests/deployment tests/fpga' not in commands

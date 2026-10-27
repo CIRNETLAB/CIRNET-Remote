@@ -38,6 +38,7 @@ def release_plan(groups,package_temporary_root=None):
         python('contracts','-m','scripts.check_contract_consumer')
         python('contracts','-m','scripts.check_simulator_consumer')
         python('contracts','-m','scripts.check_hardware_consumer')
+        python('contracts','-m','scripts.check_fpga_consumer')
         for script in ('generate_contracts.py','sync_editor_catalog.py','sync_breadboard_topologies.py'):
             python('contracts','scripts/'+script,'--check')
         python('contracts','scripts/export_openapi.py','--check')
@@ -50,6 +51,7 @@ def release_plan(groups,package_temporary_root=None):
             python('python','-m','scripts.check_contract_consumer')
             python('python','-m','scripts.check_simulator_consumer')
             python('python','-m','scripts.check_hardware_consumer')
+            python('python','-m','scripts.check_fpga_consumer')
         pytest('python')
     if 'web' in selected:
         for command in ('check:boundaries','test','build'):
@@ -76,6 +78,8 @@ def main(argv=None):
     parser.add_argument('--show-plan',action='store_true')
     parser.add_argument('--package-temporary-root',type=Path)
     parser.add_argument('--interface-root',type=Path,help='Explicit extracted Interface product for the Remote-owned browser gate; no retained Web fallback.')
+    parser.add_argument('--fpga-root',type=Path,help='Explicit verified extracted FPGA source product; no retained FPGA fallback.')
+    parser.add_argument('--fpga-manifest',type=Path,help='Explicit FPGA archive path/SHA256 manifest.')
     arguments=parser.parse_args(argv)
     steps=release_plan(arguments.group or ['all'],arguments.package_temporary_root)
     if arguments.show_plan:
@@ -92,6 +96,10 @@ def main(argv=None):
     if arguments.interface_root:
         if not arguments.interface_root.is_absolute():parser.error('--interface-root must be absolute.')
         environment['NETCIRCUIT_INTERFACE_ROOT']=str(arguments.interface_root)
+    for option,key in ((arguments.fpga_root,'NETCIRCUIT_FPGA_ROOT'),(arguments.fpga_manifest,'NETCIRCUIT_FPGA_ARTIFACT_MANIFEST')):
+        if option:
+            if not option.is_absolute():parser.error('FPGA source selectors must be absolute.')
+            environment[key]=str(option)
     began=time.perf_counter()
     for step in steps:
         print(f"[{step['group']}] {shlex.join(step['command'])}",flush=True)

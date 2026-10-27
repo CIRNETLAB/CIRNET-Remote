@@ -14,11 +14,16 @@ python scripts/install_simulator.py
 export NETCIRCUIT_HARDWARE_ARTIFACT_MANIFEST=/absolute/reviewed/hardware-artifacts.json
 python scripts/install_hardware.py
 python -m pip install -r requirements-verification.txt -e './services/api[test]'
+export NETCIRCUIT_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"
+export NETCIRCUIT_FPGA_ARTIFACT_MANIFEST=/absolute/reviewed/fpga-artifacts.json
+export NETCIRCUIT_FPGA_ROOT="$(python -B scripts/install_fpga.py --manifest "$NETCIRCUIT_FPGA_ARTIFACT_MANIFEST" | python -c 'import json,sys; print(json.load(sys.stdin)["fpgaRoot"])')"
 ```
 
 M2 Web setup belongs to the independent net-Circuit-Interface product. Bootstrap its exact reviewed SDK/DEV artifacts before its locked npm install; use its own README and the [M2 ledger](../docs/superpowers/plans/2026-10-24-multi-repo-migration-m2.md). Remote Web/browser gates require an explicit `NETCIRCUIT_INTERFACE_ROOT` or `--interface-root`; retained `apps/web` supplies frozen compatibility fixtures only.
 
 M3/M4 Simulator and Hardware builds/unit tests belong to their independent repositories. Remote consumes Simulator 0.2.0 and Hardware 0.1.1 by reviewed manifest/digest; retained implementation trees are frozen references. This README documents the Remote consumer setup; canonical Contracts inputs and baselines remain unchanged.
+
+M5 consumes FPGA source/scaffold 0.1.0 as an exact source archive, not a Python dependency. Its installer prints JSON identifying a fresh owned extracted root. Keep the manifest/root/session selection for child release checks; inspect evidence and use the canonical cleanup afterward. On PowerShell, capture the installer JSON with `ConvertFrom-Json` and assign its `fpgaRoot` to `$env:NETCIRCUIT_FPGA_ROOT`. Native RTL acceptance runs in the independent FPGA product with its pinned toolchain and installed Contracts; Remote's original `tests/fpga` is excluded from current discovery. No optional skip becomes RTL acceptance.
 
 For subsequent verification, allocate/reuse an external owned session as described in [VERIFICATION.md](../docs/VERIFICATION.md). Return to the repository root for the following read-only consumer checks. API registrations export without starting runtime services; Contracts generation does not import API or Web source:
 

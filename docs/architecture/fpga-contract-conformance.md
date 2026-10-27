@@ -25,14 +25,28 @@ never gain raw FPGA register/MUX/SDRAM addresses, USB/SPI frames or private RPC
 controls from this mapping. Sampled capture fixtures remain labelled
 `simulation` / `synthetic_fixture`; they do not become measured evidence.
 
+M5 compatibility ruling for the M0 B12 ambiguity: installed Contracts 1.0.1's
+registered `FpgaControlScaffold` and control schema require **1.0-scaffold**.
+The preserved unavailable `v1-target-capabilities.json` example contains
+**2.0-scaffold** as an illustrative design-target label; it is incompatible as
+the current logical-envelope version and must be rejected in that context.
+Do not normalize the example, rewrite published Contracts, derive firmware from
+it or enable hardware. The source/scaffold artifact's **0.1.0** version is a
+third, independent domain. Runtime physical FPGA protocol remains UNAVAILABLE.
+The standalone FPGA product verifies this distinction against installed wheel
+resources, without requiring Contracts Markdown/source files.
+
 Software conformance is covered by
 `tests/contracts/test_fpga_proposal_mapping.py`, existing sampled-format and
 instrument-capability tests, physical-station lifecycle/freshness tests and
 FPGA scaffold tests. These check plan naming/visibility, rejection of private
 transport fields, truthful unavailable adapters and producer separation.
-`tests/fpga/test_lab_first_control.py` has optional local RTL compiler/simulation
-checks whose availability/results must be reported separately. Passing a
-software suite does not close OPEN-ABI, OPEN-FRESHNESS or OPEN-HARDWARE.
+Current pure scaffold/parser/RTL behavioral acceptance belongs to
+net-Circuit-FPGA and requires its pinned slang/Icarus/vvp toolchain without
+optional skips. Original `tests/fpga` files in Remote are frozen references
+excluded from current discovery; selected source-artifact/Contracts/Hardware
+compatibility remains in Remote integration tests. Passing software/RTL gates
+does not close OPEN-ABI, OPEN-FRESHNESS or OPEN-HARDWARE.
 
 Future hardware promotion requires a selected versioned ICD and driver/profile,
 actual image/capture fixtures from that hardware, reset/replay/stale-evidence

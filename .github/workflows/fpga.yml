@@ -1,5 +1,8 @@
-name: FPGA Scaffold
+name: FPGA source artifact acceptance
 env:
+  NETCIRCUIT_FPGA_ARTIFACT_FILENAME: netcircuit-fpga-scaffold-0.1.0.tar.gz
+  NETCIRCUIT_FPGA_ARTIFACT_URL: ${{ vars.NETCIRCUIT_FPGA_ARTIFACT_URL }}
+  NETCIRCUIT_FPGA_ARTIFACT_SHA256: ${{ vars.NETCIRCUIT_FPGA_ARTIFACT_SHA256 }}
   NETCIRCUIT_HARDWARE_WHEEL_FILENAME: netcircuit_hardware_service-0.1.1-py3-none-any.whl
   NETCIRCUIT_HARDWARE_WHEEL_URL: ${{ vars.NETCIRCUIT_HARDWARE_WHEEL_URL }}
   NETCIRCUIT_HARDWARE_WHEEL_SHA256: ${{ vars.NETCIRCUIT_HARDWARE_WHEEL_SHA256 }}
@@ -16,9 +19,9 @@ env:
   NETCIRCUIT_CONTRACTS_NPM_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_NPM_SHA256 }}
 on:
   push:
-    paths: ['fpga/**', 'contracts/fpga-protocol/**', 'tests/fpga/**', 'integration/**', 'scripts/**', 'pyproject.toml', 'requirements-*.txt', '.github/workflows/fpga.yml']
+    paths: ['fpga/**', 'contracts/**', 'device-library/**', 'tests/contracts/**', 'tests/integration/**', 'tests/fpga/**', 'integration/**', 'scripts/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/fpga.yml']
   pull_request:
-    paths: ['fpga/**', 'contracts/fpga-protocol/**', 'tests/fpga/**', 'integration/**', 'scripts/**', 'pyproject.toml', 'requirements-*.txt', '.github/workflows/fpga.yml']
+    paths: ['fpga/**', 'contracts/**', 'device-library/**', 'tests/contracts/**', 'tests/integration/**', 'tests/fpga/**', 'integration/**', 'scripts/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/fpga.yml']
 jobs:
   syntax:
     runs-on: ubuntu-latest
@@ -26,7 +29,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: '3.12'
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -58,13 +61,25 @@ jobs:
           python -m pip check
           python -m scripts.check_simulator_consumer
           python -m scripts.check_hardware_consumer
-      - run: python -m pip install pyslang
-      - name: Install Icarus Verilog
-        run: sudo apt-get update && sudo apt-get install -y iverilog
-      - name: Syntax check both scaffold domains
-        run: iverilog -g2012 -tnull fpga/experiment-controller/rtl/top.v fpga/instrument/rtl/top.v
-      - name: Safety and unavailable-instrument behavior
-        run: python -m pytest -q tests/fpga --basetemp "$NETCIRCUIT_ARTIFACTS_SESSION/pytest"
+      - name: Select the exact reviewed FPGA source artifact
+        env:
+          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+        run: python scripts/install_fpga.py
+      - name: Verify source, logical Contracts and B12 compatibility
+        run: python -m scripts.check_fpga_consumer
+      - name: Install the source artifact's hash-locked parser and test tools
+        shell: bash
+        run: |
+          wheelhouse="$(node scripts/artifact-paths.mjs fpga-wheelhouse)"
+          python -m pip download --require-hashes --only-binary=:all: --dest "$wheelhouse" -r "$NETCIRCUIT_FPGA_ROOT/requirements-verification.lock"
+          python -m pip install --no-index --require-hashes --find-links "$wheelhouse" -r "$NETCIRCUIT_FPGA_ROOT/requirements-verification.lock"
+          python -m pip check
+      - name: Install the source artifact's pinned native RTL toolchain
+        run: python -B "$NETCIRCUIT_FPGA_ROOT/scripts/install_toolchain.py"
+      - name: Mandatory parser, compiler and safety behavior from the reviewed source
+        run: python -B "$NETCIRCUIT_FPGA_ROOT/scripts/check_rtl.py" --toolchain-root "$NETCIRCUIT_FPGA_TOOLCHAIN_ROOT"
+      - name: Installed Hardware remains unavailable under the selected scaffold
+        run: python -m pytest -q tests/integration/test_fpga_compatibility.py tests/contracts/test_fpga_proposal_mapping.py --basetemp "$NETCIRCUIT_ARTIFACTS_SESSION/pytest"
       - name: Clean the owned external verification session
         if: always() && env.NETCIRCUIT_ARTIFACTS_SESSION != ''
         shell: bash

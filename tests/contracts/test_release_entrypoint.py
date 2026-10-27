@@ -22,9 +22,16 @@ def plan(*groups):
 
 def test_contract_plan_includes_generation_compatibility_and_conformance():
     commands=[' '.join(step['command']) for step in plan('contracts')]
-    for marker in ('check_context.py','scripts.check_contract_consumer','scripts.check_simulator_consumer','scripts.check_hardware_consumer','generate_contracts.py --check','sync_editor_catalog.py --check','sync_breadboard_topologies.py --check','check_public_compatibility.py','pytest -q tests/contracts'):
+    for marker in ('check_context.py','scripts.check_contract_consumer','scripts.check_simulator_consumer','scripts.check_hardware_consumer','scripts.check_fpga_consumer','generate_contracts.py --check','sync_editor_catalog.py --check','sync_breadboard_topologies.py --check','check_public_compatibility.py','pytest -q tests/contracts'):
         assert any(marker in command for command in commands),marker
     assert 'check_context.py' in commands[0] and 'scripts.check_contract_consumer' in commands[1]
+
+
+def test_python_release_checks_selected_fpga_source_before_collection():
+    commands = [' '.join(step['command']) for step in plan('python')]
+    consumer = next(index for index, command in enumerate(commands) if 'scripts.check_fpga_consumer' in command)
+    collection = next(index for index, command in enumerate(commands) if '-m pytest -q' in command)
+    assert consumer < collection
 
 
 def test_full_release_plan_has_real_postgres_browser_packages_and_one_full_python_run():

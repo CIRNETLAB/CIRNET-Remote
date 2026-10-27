@@ -36,6 +36,9 @@ python scripts/install_contracts.py --with-dev --manifest ABSOLUTE_MANIFEST
 python scripts/install_simulator.py --manifest ABSOLUTE_SIMULATOR_MANIFEST
 python scripts/install_hardware.py --manifest ABSOLUTE_HARDWARE_MANIFEST
 python -m pip install -r requirements-verification.txt -e './services/api[test]'
+export NETCIRCUIT_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"
+export NETCIRCUIT_FPGA_ARTIFACT_MANIFEST=/absolute/reviewed/fpga-artifacts.json
+export NETCIRCUIT_FPGA_ROOT="$(python -B scripts/install_fpga.py --manifest "$NETCIRCUIT_FPGA_ARTIFACT_MANIFEST" | python -c 'import json,sys; print(json.load(sys.stdin)["fpgaRoot"])')"
 python scripts/generate_hardware_rpc.py --check
 python scripts/check_context.py
 python scripts/sync_lab_contracts.py --check
@@ -43,7 +46,7 @@ python scripts/check_release.py --group python
 python scripts/check_release.py --show-plan
 ```
 
-Hardware is installed as the reviewed `netcircuit-hardware-service==0.1.1` wheel using `scripts/install_hardware.py`; the retained service source is a frozen reference. Runtime RPC bindings come from Contracts, so RPC tests do not generate code or require Hardware dev extras. Root generator verification dependencies remain in requirements-codegen.txt. FPGA behavioral tests explicitly skip when Icarus/vvp are absent; static compiler tests do not establish physical safety.
+Hardware is installed as the reviewed `netcircuit-hardware-service==0.1.1` wheel using `scripts/install_hardware.py`; the retained service source is a frozen reference. Runtime RPC bindings come from Contracts, so RPC tests do not generate code or require Hardware dev extras. Root generator verification dependencies remain in requirements-codegen.txt. Full release verification also selects FPGA source/scaffold 0.1.0 as shown above; API local runtime needs no FPGA artifact. Mandatory native RTL acceptance belongs to net-Circuit-FPGA; missing pinned tools fail that gate, and software/compiler results do not establish physical safety.
 
 ## Local run
 

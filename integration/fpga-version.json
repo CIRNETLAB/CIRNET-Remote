@@ -1,0 +1,9 @@
+{
+  "status": "LOCAL_UNPUBLISHED",
+  "source": {"name": "netcircuit-fpga-scaffold", "version": "0.1.0", "kind": "source"},
+  "contracts": {"name": "netcircuit-contracts", "version": "1.0.1"},
+  "logicalProtocolVersion": "1.0-scaffold",
+  "registerMapVersion": "1.0-reserved",
+  "physicalAvailable": false,
+  "b12": "2.0-scaffold is an illustrative unavailable target and is rejected by the executable logical envelope"
+}

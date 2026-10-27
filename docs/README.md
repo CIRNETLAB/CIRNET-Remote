@@ -21,6 +21,7 @@ Current authority is [Lab-First v3.1](ARCHITECTURE.md). Historical plans, measur
 | M3 Simulator extraction | [Execution ledger](superpowers/plans/2026-10-27-multi-repo-migration-m3.md), [verification/rollback](verification/2026-10-27-multi-repo-migration-m3.md), [history mapping](verification/2026-10-27-simulator-history.md); standalone engine with versioned Contracts and installed-wheel consumers |
 | M3B replaceable simulation backends | [ngspice analysis and backend design](superpowers/specs/2026-10-27-simulator-backends-design.md), [execution plan](superpowers/plans/2026-10-27-simulator-backends.md), [verification/rollback](verification/2026-10-27-simulator-backends.md); preparation for native cores, current legacy behavior retained |
 | M4 Hardware extraction | [Execution plan](superpowers/plans/2026-10-27-multi-repo-migration-m4.md), [verification/rollback](verification/2026-10-27-multi-repo-migration-m4.md), [history mapping](verification/2026-10-27-hardware-history.md); independent service with versioned Contracts/Simulator and Remote-owned integrated acceptance |
+| M5 FPGA extraction | [Execution plan](superpowers/plans/2026-10-27-multi-repo-migration-m5.md), [verification/rollback](verification/2026-10-27-multi-repo-migration-m5.md), [history mapping](verification/2026-10-27-fpga-history.md); versioned source scaffold, installed Contracts and mandatory pinned RTL verification |
 | Full Markdown audit and legacy evidence inventory | [Documentation/artifact audit](verification/2026-10-19-documentation-artifact-audit.md) |
 
 ## Source map
@@ -28,7 +29,7 @@ Current authority is [Lab-First v3.1](ARCHITECTURE.md). Historical plans, measur
 - `apps/web/`: retained frozen Web rollback/reference tree after M2. Current UI, stores, workbench commands, Three.js rendering and browser assertions belong to net-Circuit-Interface; current release gates consume its explicit product/artifact.
 - `contracts/` and `device-library/`: retained frozen migration references. Runtime `contracts` imports/resources forward to the independent 1.0.1 wheel; canonical inputs/generation live in net-Circuit-Contracts. Root synchronization commands are installed-artifact consumer adapters.
 - `services/api/`: FastAPI auth, persistence and execution orchestration; `services/hardware-service/`: frozen M4 rollback/reference, with current hardware RPC/virtual/physical station/transport ownership in net-Circuit-Hardware. `simulator/circuit-simulator/`: frozen M3 reference; current simulation belongs to net-Circuit-Simulator. Current integration consumes both as exact versioned wheels.
-- `fpga/`: gateware scaffolding and simulation. A scaffold or proposed hardware design does not establish physical availability.
+- `fpga/` and original `tests/fpga/`: frozen M5 references. Current RTL/scaffold/toolchain and pure tests belong to net-Circuit-FPGA, with explicit source-artifact compatibility acceptance in Remote. A scaffold or proposed hardware design does not establish physical availability.
 - `scripts/`, `.github/workflows/`, `tests/`: actual generation, verification, CI and repository conformance entrypoints. [Deployment](../deployment/README.md) contains deployment templates, not proof of a live deployment.
 
 ## Reading status
