@@ -7,13 +7,12 @@ from pathlib import Path
 import pytest
 
 ROOT=Path(__file__).resolve().parents[2]
-for relative in ['services/api','services/api/tests','services/hardware-service']:
+for relative in ['services/api','services/api/tests']:
     sys.path.insert(0,str(ROOT/relative))
 from csrf_client import CsrfTestClient as TestClient, login_admin
 
 
 def test_real_virtual_and_run_returns_capture_and_function_after_alias_mapping():
-    subprocess.run([sys.executable,str(ROOT/'scripts/generate_hardware_rpc.py')],check=True)
     from hardware_service.server import build_server
     from app.main import create_app
     from app.services.persistence import Repository

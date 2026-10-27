@@ -9,14 +9,14 @@ import sys
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-for relative in ('services/api', 'services/hardware-service', 'services/hardware-service/tests'):
+for relative in ('services/api',):
     sys.path.insert(0, str(ROOT / relative))
 
 from app.services.hardware_client import HardwareServiceClient, GatewayError
 from app.services.lab_compiler import LabExecutionCompiler
 from hardware_service.server import build_server
 from hardware_service.station.physical import PhysicalHardwareStation
-from test_instrument_capabilities import GeneratorTestDriver, generator_configuration
+from tests.support.hardware_drivers import GeneratorTestDriver, generator_configuration
 
 
 @pytest.mark.parametrize('role', ['GENERATOR', 'SCOPE'])

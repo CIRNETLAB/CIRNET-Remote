@@ -176,3 +176,17 @@ def test_dev_bootstrap_precedes_every_consumer_and_docs_allocator_invocation():
             assert any(index<bootstrap and step.get('uses','').startswith('actions/setup-node@') for index,step in enumerate(steps))
             assert any(index<bootstrap and step.get('uses','').startswith('actions/setup-python@') for index,step in enumerate(steps))
             assert steps[bootstrap].get('env',{}).get('NETCIRCUIT_ARTIFACTS_TOKEN')=='${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}'
+
+
+def test_hardware_consuming_jobs_select_installed_artifacts_and_never_frozen_units():
+    for name, job_id in (('contracts.yml','canonical-boundaries'),('contracts.yml','installed-packages'),
+            ('integration.yml','repository-contracts'),('browser-e2e.yml','chromium'),
+            ('simulator.yml','test'),('hardware-service.yml','test'),('fpga.yml','syntax')):
+        job=workflow(name)['jobs'][job_id]
+        commands='\n'.join(step.get('run','') for step in job['steps'])
+        assert 'install_hardware.py' in commands,(name,job_id)
+        assert 'scripts.check_hardware_consumer' in commands,(name,job_id)
+        assert "-e './services/hardware-service" not in commands,(name,job_id)
+        assert 'pytest -q services/hardware-service/tests' not in commands,(name,job_id)
+        assert 'services/hardware-service/tests/test_' not in commands,(name,job_id)
+        assert 'NETCIRCUIT_HARDWARE_WHEEL_SHA256' in workflow(name).get('env',{})

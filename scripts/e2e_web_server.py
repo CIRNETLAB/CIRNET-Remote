@@ -29,6 +29,8 @@ def wait_for_pipe_eof(descriptor):
             if readable and not os.read(descriptor,4096):return
 
 def main():
+    from hardware_artifact import installed_provenance
+    installed_provenance()
     session=artifact_directory()
     data=validate_artifact_directory(os.environ['NETCIRCUIT_E2E_DATA_DIR'])
     if data==session or not data.is_relative_to(session): raise ValueError('E2E data must stay inside its owned external artifact session')

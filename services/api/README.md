@@ -34,7 +34,8 @@ Full supported verification environment from root:
 ```bash
 python scripts/install_contracts.py --with-dev --manifest ABSOLUTE_MANIFEST
 python scripts/install_simulator.py --manifest ABSOLUTE_SIMULATOR_MANIFEST
-python -m pip install -r requirements-verification.txt -e './services/api[test]' -e './services/hardware-service[dev]'
+python scripts/install_hardware.py --manifest ABSOLUTE_HARDWARE_MANIFEST
+python -m pip install -r requirements-verification.txt -e './services/api[test]'
 python scripts/generate_hardware_rpc.py --check
 python scripts/check_context.py
 python scripts/sync_lab_contracts.py --check
@@ -42,7 +43,7 @@ python scripts/check_release.py --group python
 python scripts/check_release.py --show-plan
 ```
 
-`grpcio-tools` comes from Hardware Service dev extras; missing grpc_tools must be repaired in the environment before judging RPC tests. FPGA behavioral tests explicitly skip when Icarus/vvp are absent; static compiler tests do not establish physical safety.
+Hardware is installed as the reviewed `netcircuit-hardware-service==0.1.1` wheel using `scripts/install_hardware.py`; the retained service source is a frozen reference. Runtime RPC bindings come from Contracts, so RPC tests do not generate code or require Hardware dev extras. Root generator verification dependencies remain in requirements-codegen.txt. FPGA behavioral tests explicitly skip when Icarus/vvp are absent; static compiler tests do not establish physical safety.
 
 ## Local run
 
@@ -61,7 +62,9 @@ $env:NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST = 'C:\absolute\reviewed\artifacts.js
 .\services\api\.venv\Scripts\python.exe scripts/install_contracts.py --with-dev --manifest $env:NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST
 $env:NETCIRCUIT_SIMULATOR_ARTIFACT_MANIFEST = 'C:\absolute\reviewed\simulator-artifacts.json'
 .\services\api\.venv\Scripts\python.exe scripts/install_simulator.py
-.\services\api\.venv\Scripts\python.exe -m pip install -r requirements-verification.txt -e './services/api[test]' -e './services/hardware-service[dev]'
+$env:NETCIRCUIT_HARDWARE_ARTIFACT_MANIFEST = 'C:\absolute\reviewed\hardware-artifacts.json'
+.\services\api\.venv\Scripts\python.exe scripts/install_hardware.py
+.\services\api\.venv\Scripts\python.exe -m pip install -r requirements-verification.txt -e './services/api[test]'
 .\services\api\.venv\Scripts\python.exe scripts/generate_hardware_rpc.py --check
 .\services\api\.venv\Scripts\python.exe -m pip check
 ```
@@ -74,8 +77,8 @@ therefore lack newly declared dependencies even if `pip check` still passes.
 For example, `argon2-cffi` supplies `argon2`, and authentication also requires
 Alembic; both are declared by the API package.
 
-Keep the existing environment. From Remote root, rerun the reviewed Contracts
-and Simulator installers when selecting an updated artifact set, then rerun the consumer
+Keep the existing environment. From Remote root, rerun the reviewed Contracts,
+Simulator and Hardware installers when selecting an updated artifact set, then rerun the consumer
 installation and `pip check` commands above using this same interpreter.
 Restart both local services after updating their compatibility set. RPC bindings
 come from the installed Contracts wheel; `generate_hardware_rpc.py --check`
@@ -137,7 +140,9 @@ export NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST=/absolute/reviewed/artifacts.json
 services/api/.venv/bin/python scripts/install_contracts.py --with-dev --manifest "$NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST"
 export NETCIRCUIT_SIMULATOR_ARTIFACT_MANIFEST=/absolute/reviewed/simulator-artifacts.json
 services/api/.venv/bin/python scripts/install_simulator.py
-services/api/.venv/bin/python -m pip install -r requirements-verification.txt -e './services/api[test]' -e './services/hardware-service[dev]'
+export NETCIRCUIT_HARDWARE_ARTIFACT_MANIFEST=/absolute/reviewed/hardware-artifacts.json
+services/api/.venv/bin/python scripts/install_hardware.py
+services/api/.venv/bin/python -m pip install -r requirements-verification.txt -e './services/api[test]'
 services/api/.venv/bin/python scripts/generate_hardware_rpc.py --check
 services/api/.venv/bin/python -m pip check
 ```

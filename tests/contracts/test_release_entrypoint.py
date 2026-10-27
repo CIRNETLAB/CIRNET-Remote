@@ -22,7 +22,7 @@ def plan(*groups):
 
 def test_contract_plan_includes_generation_compatibility_and_conformance():
     commands=[' '.join(step['command']) for step in plan('contracts')]
-    for marker in ('check_context.py','scripts.check_contract_consumer','scripts.check_simulator_consumer','generate_contracts.py --check','sync_editor_catalog.py --check','sync_breadboard_topologies.py --check','check_public_compatibility.py','pytest -q tests/contracts'):
+    for marker in ('check_context.py','scripts.check_contract_consumer','scripts.check_simulator_consumer','scripts.check_hardware_consumer','generate_contracts.py --check','sync_editor_catalog.py --check','sync_breadboard_topologies.py --check','check_public_compatibility.py','pytest -q tests/contracts'):
         assert any(marker in command for command in commands),marker
     assert 'check_context.py' in commands[0] and 'scripts.check_contract_consumer' in commands[1]
 
@@ -38,9 +38,10 @@ def test_full_release_plan_has_real_postgres_browser_packages_and_one_full_pytho
 
 def test_browser_release_uses_remote_orchestration_without_retained_web_fallback():
     steps=plan('browser')
-    assert len(steps)==2 and all(step['cwd']=='.' for step in steps)
+    assert len(steps)==3 and all(step['cwd']=='.' for step in steps)
     assert steps[0]['command'][-2:]==['-m','scripts.check_simulator_consumer']
-    assert steps[1]['command'][-2:]==['scripts/e2e-interface.mjs','--forbid-only']
+    assert steps[1]['command'][-2:]==['-m','scripts.check_hardware_consumer']
+    assert steps[2]['command'][-2:]==['scripts/e2e-interface.mjs','--forbid-only']
 
 
 def test_web_release_checks_the_explicit_interface_product_without_retained_source():

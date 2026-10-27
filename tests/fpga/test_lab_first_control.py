@@ -30,9 +30,8 @@ def test_control_boundary_names_and_transport_neutral_contract():
 
 
 def test_serial_and_usb_spi_adapters_never_fake_hardware_success():
-    sys.path.insert(0,str(ROOT/'services/hardware-service'))
-    path=ROOT/'services/hardware-service/hardware_service/fpga_transport.py'
-    assert path.is_file(),'transport abstraction missing'
+    from scripts.hardware_artifact import installed_provenance
+    assert installed_provenance()['version'] == '0.1.1'
     from hardware_service.fpga_transport import SerialFpgaTransport, UsbSpiFpgaTransport
     for transport in [SerialFpgaTransport(),UsbSpiFpgaTransport()]:
         assert transport.available is False

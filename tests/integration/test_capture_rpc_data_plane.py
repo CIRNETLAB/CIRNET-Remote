@@ -7,13 +7,12 @@ import sys
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-for relative in ['services/api', 'services/hardware-service']:
+for relative in ['services/api']:
     sys.path.insert(0, str(ROOT / relative))
 
 
 @pytest.mark.parametrize('signal', ['y', 'long_' + 's' * 256])
 def test_100k_capture_crosses_default_rpc_limit_losslessly_as_ncap(signal):
-    subprocess.run([sys.executable, str(ROOT / 'scripts/generate_hardware_rpc.py')], check=True)
     from contracts.generated import rpc_v2_pb2 as pb
     from hardware_service.server import build_server
     from hardware_service.station.physical import PhysicalHardwareStation

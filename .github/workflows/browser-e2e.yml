@@ -1,5 +1,8 @@
 name: Real browser release gate
 env:
+  NETCIRCUIT_HARDWARE_WHEEL_FILENAME: netcircuit_hardware_service-0.1.1-py3-none-any.whl
+  NETCIRCUIT_HARDWARE_WHEEL_URL: ${{ vars.NETCIRCUIT_HARDWARE_WHEEL_URL }}
+  NETCIRCUIT_HARDWARE_WHEEL_SHA256: ${{ vars.NETCIRCUIT_HARDWARE_WHEEL_SHA256 }}
   NETCIRCUIT_SIMULATOR_WHEEL_FILENAME: netcircuit_simulator-0.2.0-py3-none-any.whl
   NETCIRCUIT_SIMULATOR_WHEEL_URL: ${{ vars.NETCIRCUIT_SIMULATOR_WHEEL_URL }}
   NETCIRCUIT_SIMULATOR_WHEEL_SHA256: ${{ vars.NETCIRCUIT_SIMULATOR_WHEEL_SHA256 }}
@@ -15,9 +18,9 @@ env:
   NETCIRCUIT_ARTIFACT_PATHS_NPM_URL: ${{ vars.NETCIRCUIT_ARTIFACT_PATHS_NPM_URL }}
 on:
   push:
-    paths: ['apps/web/**', 'tests/frontend/**', 'tests/integration/**', 'contracts/**', 'device-library/**', 'scripts/**', 'services/api/**', 'services/hardware-service/**', 'simulator/circuit-simulator/**', 'integration/**', 'pyproject.toml', 'requirements-codegen.txt', 'requirements-verification.txt', 'requirements-benchmark.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
+    paths: ['apps/web/**', 'tests/frontend/**', 'tests/integration/**', 'tests/support/**', 'contracts/**', 'device-library/**', 'scripts/**', 'services/api/**', 'services/hardware-service/**', 'simulator/circuit-simulator/**', 'integration/**', 'pyproject.toml', 'requirements-codegen.txt', 'requirements-verification.txt', 'requirements-benchmark.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
   pull_request:
-    paths: ['apps/web/**', 'tests/frontend/**', 'tests/integration/**', 'contracts/**', 'device-library/**', 'scripts/**', 'services/api/**', 'services/hardware-service/**', 'simulator/circuit-simulator/**', 'integration/**', 'pyproject.toml', 'requirements-codegen.txt', 'requirements-verification.txt', 'requirements-benchmark.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
+    paths: ['apps/web/**', 'tests/frontend/**', 'tests/integration/**', 'tests/support/**', 'contracts/**', 'device-library/**', 'scripts/**', 'services/api/**', 'services/hardware-service/**', 'simulator/circuit-simulator/**', 'integration/**', 'pyproject.toml', 'requirements-codegen.txt', 'requirements-verification.txt', 'requirements-benchmark.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
   workflow_dispatch:
 permissions:
   contents: read
@@ -47,7 +50,7 @@ jobs:
             requirements-benchmark.txt
             pyproject.toml
             services/api/pyproject.toml
-            services/hardware-service/pyproject.toml
+            integration/hardware-version.json
             integration/simulator-version.json
       - name: Bootstrap the pinned independent DEV allocator
         env:
@@ -71,9 +74,11 @@ jobs:
           python -m pip install -r requirements-verification.txt
           python scripts/install_contracts.py
           python scripts/install_simulator.py
-          python -m pip install -e './services/api[test]' -e './services/hardware-service[dev]'
+          python scripts/install_hardware.py
+          python -m pip install -e './services/api[test]'
           python -m pip check
           python -m scripts.check_simulator_consumer
+          python -m scripts.check_hardware_consumer
       - name: Download the explicit reviewed Interface product
         env:
           NETCIRCUIT_INTERFACE_ARTIFACT_URL: ${{ vars.NETCIRCUIT_INTERFACE_ARTIFACT_URL }}

@@ -48,11 +48,13 @@ def test_package_runtime_rejects_checkout_and_unowned_external_parent(tmp_path):
                 pytest.fail('unowned package runtime accepted')
 
 
-def test_consumer_builds_two_wheels_and_selects_independent_contracts_and_simulator():
+def test_consumer_builds_only_api_and_selects_three_independent_producers():
     assert hasattr(checker,'WHEEL_PROJECTS'),'API/simulator/hardware wheels are not verified.'
-    assert set(checker.WHEEL_PROJECTS)=={'services/api','services/hardware-service'}
+    assert set(checker.WHEEL_PROJECTS)=={'services/api'}
     assert callable(checker.selected_wheel)
     assert callable(checker.selected_simulator_wheel)
+    assert callable(checker.selected_hardware_wheel)
+    assert hasattr(checker, 'HARDWARE_RPC_PROBE')
 
 
 def catalog_fingerprint(parts):
@@ -124,12 +126,14 @@ def test_failed_package_command_exposes_output_and_preserves_complete_log(tmp_pa
     monkeypatch.setattr(checker,'ROOT',checkout)
     monkeypatch.setattr(checker,'selected_wheel',lambda manifest:tmp_path/'contracts.whl')
     monkeypatch.setattr(checker,'selected_simulator_wheel',lambda manifest:tmp_path/'simulator.whl')
+    monkeypatch.setattr(checker,'selected_hardware_wheel',lambda manifest:tmp_path/'hardware.whl')
     monkeypatch.setattr(checker,'external_workspace',lambda base:nullcontext(tmp_path))
     monkeypatch.setattr(checker,'stage_project',lambda project,target:tmp_path)
     actual_run=subprocess.run
     def failed_build(command,**kwargs):
         if command[:3]!=[sys.executable,'-m','build']:
             return actual_run(command,**kwargs)
+        assert all(kwargs['env'].get(name)==str(tmp_path) for name in ('TMP','TEMP','TMPDIR')), 'package build inherited unsafe temporary paths'
         script=f'import sys; print({prefix!r},flush=True); print("missing setuptools build dependency",flush=True); print("compiler stderr detail",file=sys.stderr); sys.exit(23)'
         return actual_run([sys.executable,'-c',script],**kwargs)
     monkeypatch.setattr(checker.subprocess,'run',failed_build)

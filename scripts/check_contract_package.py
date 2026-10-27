@@ -1,8 +1,8 @@
 """Install four wheels and exercise them physically outside the checkout.
 
 Scratch stays in the canonical external session; --temporary-root may select
-another validated child of that session. Simulator and Contracts are selected
-artifacts; only API and Hardware Service are built from this repository.
+another validated child of that session. Hardware, Simulator and Contracts are selected
+artifacts; only API is built from this repository.
 """
 import argparse
 from contextlib import contextmanager
@@ -17,15 +17,19 @@ from tempfile import TemporaryDirectory
 from zipfile import ZipFile
 
 ROOT=Path(__file__).resolve().parents[1]
-WHEEL_PROJECTS=('services/api','services/hardware-service')
+WHEEL_PROJECTS=('services/api',)
 try:
     from scripts.contracts_artifact import selected_wheel
     from scripts.simulator_artifact import selected_wheel as selected_simulator_wheel
     from scripts.simulator_artifact import verify_selected_install as verify_simulator_install
+    from scripts.hardware_artifact import selected_wheel as selected_hardware_wheel
+    from scripts.hardware_artifact import verify_selected_install as verify_hardware_install
 except ModuleNotFoundError:
     from contracts_artifact import selected_wheel
     from simulator_artifact import selected_wheel as selected_simulator_wheel
     from simulator_artifact import verify_selected_install as verify_simulator_install
+    from hardware_artifact import selected_wheel as selected_hardware_wheel
+    from hardware_artifact import verify_selected_install as verify_hardware_install
 REQUIRED_RESOURCES=(
     'contracts/manifest.json','contracts/profiles.json','contracts/boundary/models.py',
     'contracts/boundary/capture_layout.py','contracts/generated/rpc_v2_pb2.py','contracts/generated/rpc_v2_pb2_grpc.py',
@@ -62,7 +66,7 @@ def stage_project(project,target):
     names=('pyproject.toml','README.md')
     for name in names:
         if (source/name).is_file():shutil.copy2(source/name,target/name)
-    package={'services/api':'app','services/hardware-service':'hardware_service'}[project]
+    package='app'
     shutil.copytree(source/package,target/package,ignore=shutil.ignore_patterns('__pycache__','*.pyc','generated','build','.build','*.egg-info'))
     return target
 
@@ -120,6 +124,7 @@ for name in ('contracts','app','netcircuit_sim','hardware_service'):
     assert module.__file__ and not any(Path(module.__file__).resolve().is_relative_to(root) for root in checkout_roots),name
 assert version('netcircuit-simulator')=='0.2.0'
 assert version('netcircuit-contracts')=='1.0.1'
+assert version('netcircuit-hardware-service')=='0.1.1'
 
 from contracts.registry import check_manifest,validate_contract
 from contracts.boundary.models import CircuitGraph,SimulationRequest,AnySupportedCircuitGraph
@@ -240,14 +245,100 @@ if __name__=='__main__':
 '''
 
 
+HARDWARE_RPC_PROBE=r'''
+import json
+from importlib.metadata import version
+import multiprocessing
+import os
+from pathlib import Path
+import sys
+
+if __name__=='__main__':
+    assert sys.flags.isolated==1
+    os.environ['NETCIRCUIT_SIMULATION_BACKEND']='legacy'
+    os.environ['NETCIRCUIT_SIMULATION_WORKERS']='1'
+    import hardware_service
+    import hardware_service.station.virtual as virtual
+    from hardware_service.server import build_server, serve
+    from app.services.hardware_client import HardwareServiceClient, GatewayError
+    from contracts.capture_codec import decode_digital
+    from contracts.generated import rpc_v2_pb2 as pb
+    from contracts.validation import validate
+    assert version('netcircuit-hardware-service')=='0.1.1'
+    assert version('netcircuit-contracts')=='1.0.1'
+    assert version('netcircuit-simulator')=='0.2.0'
+    assert Path(hardware_service.__file__).resolve().is_relative_to(Path(sys.prefix).resolve())
+    for address in ('0.0.0.0:50051','[::]:50051','192.0.2.1:50051'):
+        try:serve(address)
+        except ValueError as error:assert 'local-only' in str(error)
+        else:raise AssertionError('Hardware accepted a non-local bind: '+address)
+    server=build_server()
+    port=server.add_insecure_port('127.0.0.1:0')
+    assert port>0
+    server.start()
+    client=HardwareServiceClient(f'127.0.0.1:{port}')
+    try:
+        physical=client.capabilities('physical-station-01')
+        validate('StationCapabilities',physical)
+        assert physical['available'] is False and physical['physical_execution_slots']==0
+        assert physical['hardware_rpc_version']=='2.0' and physical['fpga_protocol_version']=='UNAVAILABLE'
+        assert not physical['physical_digital'] and not physical['physical_analog_routing']
+        assert all(item['channels']==0 for item in physical['instrument_capabilities'].values())
+        try:client.call('physical-station-01','installed','start_execution')
+        except GatewayError as error:assert error.code=='HARDWARE_UNAVAILABLE'
+        else:raise AssertionError('Absent driver started physical execution')
+        capabilities=client.capabilities('virtual-station-01')
+        assert capabilities['virtual_digital'] is True and capabilities['virtual_analog'] is False
+        graph={'schema_version':'1.0','circuit_id':'installed-rpc','modules':[
+            {'id':'D','type':'DIGITAL_SWITCH','properties':{'state':True}}],'connections':[]}
+        station,experiment='virtual-station-01','installed-rpc'
+        assert client.call(station,experiment,'enter_safe_state')['accepted']
+        assert client.call(station,experiment,'apply_circuit',circuit_graph=graph)['accepted']
+        plan={'schema_version':'1.0','station_id':station,'experiment_id':experiment,
+            'power_policy':{'profile_id':'virtual-1.0','guarded':True},'endpoint_bindings':[],
+            'routing_allocations':[],'instrument_allocations':[],'clock_config':{},'generator_config':[],
+            'capture_config':{'signals':['D.OUT'],'duration_ns':20},'test_vectors':[],
+            'runtime_safety_policy':{'profile_id':'virtual-1.0','watchdog_required':True}}
+        assert client.call(station,experiment,'prepare_execution',plan=plan,
+            decision={'schema_version':'1.0','decision':'RUN_NORMAL','reasons':[]})['accepted']
+        assert client.call(station,experiment,'arm_capture',configuration=plan['capture_config'])['accepted']
+        assert client.call(station,experiment,'start_execution')['accepted']
+        workers=list(virtual.simulation_pool()._processes.values())
+        assert workers and all(worker.pid!=os.getpid() and worker.is_alive() for worker in workers)
+        reply=client._stub.ReadCapture(pb.Target(station_id=station,experiment_id=experiment),timeout=10)
+        assert reply.accepted and reply.code==pb.OK and reply.capture_payload.startswith(b'NCAP')
+        metadata=json.loads(reply.result_json)
+        assert 'samples' not in metadata and metadata['available'] is True
+        capture=decode_digital(reply.capture_payload)
+        assert metadata['sample_count']==len(capture['samples'])==1
+        assert metadata['duration_ns']==capture['duration_ns']==20
+        assert capture['samples']==[{'signal':'D.OUT','time_ns':0,'value':1}]
+        assert client.call(station,experiment,'read_capture')['samples']==capture['samples']
+        assert client.call(station,experiment,'stop_execution')['accepted']
+    finally:
+        client.close()
+        server.stop(0).wait()
+        virtual.close_simulation_pool()
+    assert not multiprocessing.active_children(),'Hardware worker survived orderly shutdown'
+    assert all(not worker.is_alive() for worker in workers)
+    for name,module in tuple(sys.modules.items()):
+        if name=='hardware_service' or name.startswith('hardware_service.'):
+            assert Path(module.__file__).resolve().is_relative_to(Path(sys.prefix).resolve()),name
+    print(json.dumps({'hardware':'0.1.1','rpc':'2.0','loopback':True,'worker_pids':[worker.pid for worker in workers],
+        'ncap_samples':metadata['sample_count'],'physical_available':False,'unsafe_bind_rejected':True,'shutdown':True}))
+'''
+
+
 def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--temporary-root',type=Path)
     parser.add_argument('--contracts-manifest',type=Path)
     parser.add_argument('--simulator-manifest',type=Path)
+    parser.add_argument('--hardware-manifest',type=Path)
     arguments=parser.parse_args(argv)
     contracts=selected_wheel(arguments.contracts_manifest)
     simulator=selected_simulator_wheel(arguments.simulator_manifest)
+    hardware=selected_hardware_wheel(arguments.hardware_manifest)
     try:
         from scripts.artifact_paths import artifact_directory
     except ModuleNotFoundError:
@@ -272,13 +363,13 @@ def main(argv=None):
                         f'Command: {command!r}\nWorking directory: {cwd}\n'
                         f'Last command output (up to 16000 bytes):\n{output}\nFull log: {log_path}')
         environment={key:value for key,value in os.environ.items() if key not in {'PYTHONPATH','PYTHONHOME','PYTHONUSERBASE','VIRTUAL_ENV','PIP_TARGET','PIP_PREFIX'}}
-        environment.update(TMP=str(target),TEMP=str(target),NETCIRCUIT_ENV='test',NETCIRCUIT_ALLOW_GUEST='true')
+        environment.update(TMP=str(target),TEMP=str(target),TMPDIR=str(target),NETCIRCUIT_ENV='test',NETCIRCUIT_ALLOW_GUEST='true')
         for project in WHEEL_PROJECTS:
             staged=stage_project(project,build/'source'/('contracts' if project=='.' else Path(project).name))
             checked([sys.executable,'-m','build','--wheel','--no-isolation','--outdir',str(dist)],cwd=staged)
         wheels=sorted(dist.glob('*.whl'))
-        if len(wheels)!=len(WHEEL_PROJECTS):raise ValueError('Expected exactly two distinct local consumer wheels.')
-        wheels.extend((contracts,simulator))
+        if len(wheels)!=len(WHEEL_PROJECTS):raise ValueError('Expected exactly one local API wheel.')
+        wheels.extend((contracts,simulator,hardware))
         verify_contract_wheel(contracts)
         api=next(wheel for wheel in wheels if wheel.name.startswith('netcircuit_api-'))
         with ZipFile(api) as archive:
@@ -296,6 +387,9 @@ def main(argv=None):
         verify_simulator_install(simulator,hashlib.sha256(simulator.read_bytes()).hexdigest(),python=python)
         worker_probe=target/'installed_simulator_worker.py';worker_probe.write_text(SIMULATOR_WORKER_PROBE,encoding='utf-8')
         checked([str(python),'-I',str(worker_probe)],cwd=target)
+        verify_hardware_install(hardware,hashlib.sha256(hardware.read_bytes()).hexdigest(),python=python)
+        hardware_probe=target/'installed_hardware_rpc.py';hardware_probe.write_text(HARDWARE_RPC_PROBE,encoding='utf-8')
+        checked([str(python),'-I',str(hardware_probe)],cwd=target)
         checked([str(python),'-I','-m','pip','check'],cwd=target)
         environment['NETCIRCUIT_DATABASE_URL']='sqlite:///'+(target/'installed-cli.sqlite').as_posix()
         environment['NETCIRCUIT_CAPTURE_DIR']=str(target/'cli-captures')

@@ -7,7 +7,7 @@ name = "netcircuit-remote-dev"
 version = "0.1.0"
 description = "Local integration dependency entrypoint for net*CIRCUIT Remote"
 requires-python = ">=3.11"
-dependencies = ["netcircuit-contracts==1.0.1", "netcircuit-simulator==0.2.0"]
+dependencies = ["netcircuit-contracts==1.0.1", "netcircuit-simulator==0.2.0", "netcircuit-hardware-service==0.1.1"]
 
 [tool.setuptools]
 packages = []
@@ -15,4 +15,4 @@ include-package-data = false
 
 [tool.pytest.ini_options]
 addopts = "-p no:cacheprovider"
-norecursedirs = ["simulator/circuit-simulator", ".*", "build", "dist", "node_modules", "venv"]
+norecursedirs = ["services/hardware-service", "simulator/circuit-simulator", ".*", "build", "dist", "node_modules", "venv"]

@@ -1,0 +1,19 @@
+{
+  "status": "LOCAL_UNPUBLISHED",
+  "python": {
+    "name": "netcircuit-hardware-service",
+    "version": "0.1.1"
+  },
+  "contracts": {
+    "name": "netcircuit-contracts",
+    "version": "1.0.1"
+  },
+  "simulator": {
+    "name": "netcircuit-simulator",
+    "version": "0.2.0"
+  },
+  "namespace": "hardware_service",
+  "hardwareRpcVersion": "2.0",
+  "physicalAvailable": false,
+  "virtualAnalog": false
+}

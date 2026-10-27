@@ -6,7 +6,7 @@ import time
 from sqlalchemy import update
 
 ROOT=Path(__file__).resolve().parents[2]
-for relative in ('services/api','services/api/tests','services/hardware-service'):
+for relative in ('services/api','services/api/tests'):
     sys.path.insert(0,str(ROOT/relative))
 from csrf_client import CsrfTestClient,login_admin
 

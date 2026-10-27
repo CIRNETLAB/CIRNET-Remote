@@ -1,5 +1,8 @@
 name: Simulator artifact consumer
 env:
+  NETCIRCUIT_HARDWARE_WHEEL_FILENAME: netcircuit_hardware_service-0.1.1-py3-none-any.whl
+  NETCIRCUIT_HARDWARE_WHEEL_URL: ${{ vars.NETCIRCUIT_HARDWARE_WHEEL_URL }}
+  NETCIRCUIT_HARDWARE_WHEEL_SHA256: ${{ vars.NETCIRCUIT_HARDWARE_WHEEL_SHA256 }}
   NETCIRCUIT_SIMULATOR_WHEEL_FILENAME: netcircuit_simulator-0.2.0-py3-none-any.whl
   NETCIRCUIT_SIMULATOR_WHEEL_URL: ${{ vars.NETCIRCUIT_SIMULATOR_WHEEL_URL }}
   NETCIRCUIT_SIMULATOR_WHEEL_SHA256: ${{ vars.NETCIRCUIT_SIMULATOR_WHEEL_SHA256 }}
@@ -13,9 +16,9 @@ env:
   NETCIRCUIT_CONTRACTS_NPM_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_NPM_SHA256 }}
 on:
   push:
-    paths: ['simulator/**', 'contracts/**', 'device-library/**', 'scripts/**', 'integration/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/simulator.yml']
+    paths: ['tests/integration/**', 'tests/contracts/**', 'tests/support/**', 'services/api/**', 'simulator/**', 'contracts/**', 'device-library/**', 'scripts/**', 'integration/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/simulator.yml']
   pull_request:
-    paths: ['simulator/**', 'contracts/**', 'device-library/**', 'scripts/**', 'integration/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/simulator.yml']
+    paths: ['tests/integration/**', 'tests/contracts/**', 'tests/support/**', 'services/api/**', 'simulator/**', 'contracts/**', 'device-library/**', 'scripts/**', 'integration/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/simulator.yml']
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -51,10 +54,12 @@ jobs:
           python -m pip install -r requirements-verification.txt
           python scripts/install_contracts.py
           python scripts/install_simulator.py
-          python -m pip install -e './services/api[test]' -e './services/hardware-service[dev]'
+          python scripts/install_hardware.py
+          python -m pip install -e './services/api[test]'
           python -m pip check
           python -m scripts.check_simulator_consumer
-      - run: python -m pytest -q tests/contracts/test_simulator_artifact.py services/api/tests/test_physical_preview.py services/hardware-service/tests/test_virtual_execution.py services/hardware-service/tests/test_simulation_workers.py tests/integration/test_virtual_lab_execution.py tests/integration/test_simulation_backend_selection.py --basetemp "$NETCIRCUIT_ARTIFACTS_SESSION/pytest"
+          python -m scripts.check_hardware_consumer
+      - run: python -m pytest -q tests/contracts/test_simulator_artifact.py services/api/tests/test_physical_preview.py tests/integration/test_virtual_lab_execution.py tests/integration/test_simulation_backend_selection.py --basetemp "$NETCIRCUIT_ARTIFACTS_SESSION/pytest"
       - name: Clean the owned external verification session
         if: always() && env.NETCIRCUIT_ARTIFACTS_SESSION != ''
         shell: bash

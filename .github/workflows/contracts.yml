@@ -1,5 +1,8 @@
 name: Contracts
 env:
+  NETCIRCUIT_HARDWARE_WHEEL_FILENAME: netcircuit_hardware_service-0.1.1-py3-none-any.whl
+  NETCIRCUIT_HARDWARE_WHEEL_URL: ${{ vars.NETCIRCUIT_HARDWARE_WHEEL_URL }}
+  NETCIRCUIT_HARDWARE_WHEEL_SHA256: ${{ vars.NETCIRCUIT_HARDWARE_WHEEL_SHA256 }}
   NETCIRCUIT_SIMULATOR_WHEEL_FILENAME: netcircuit_simulator-0.2.0-py3-none-any.whl
   NETCIRCUIT_SIMULATOR_WHEEL_URL: ${{ vars.NETCIRCUIT_SIMULATOR_WHEEL_URL }}
   NETCIRCUIT_SIMULATOR_WHEEL_SHA256: ${{ vars.NETCIRCUIT_SIMULATOR_WHEEL_SHA256 }}
@@ -53,9 +56,11 @@ jobs:
           python -m pip install -r requirements-verification.txt
           python scripts/install_contracts.py
           python scripts/install_simulator.py
-          python -m pip install -e './services/api[test]' -e './services/hardware-service[dev]'
+          python scripts/install_hardware.py
+          python -m pip install -e './services/api[test]'
           python -m pip check
           python -m scripts.check_simulator_consumer
+          python -m scripts.check_hardware_consumer
       - name: Install frozen M1 Web reference tooling for retained compatibility checks
         run: npm ci --no-audit --no-fund
         working-directory: apps/web
@@ -94,9 +99,11 @@ jobs:
           python -m pip install -r requirements-verification.txt
           python scripts/install_contracts.py
           python scripts/install_simulator.py
-          python -m pip install -e './services/api[test]' -e './services/hardware-service[dev]'
+          python scripts/install_hardware.py
+          python -m pip install -e './services/api[test]'
           python -m pip check
           python -m scripts.check_simulator_consumer
+          python -m scripts.check_hardware_consumer
       - name: Minimum Python runtime; actual wheels installed outside checkout
         run: python scripts/check_contract_package.py
       - name: Preserve installed-package diagnostics
