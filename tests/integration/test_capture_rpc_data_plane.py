@@ -7,7 +7,7 @@ import sys
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-for relative in ['services/api', 'services/hardware-service', 'simulator/circuit-simulator']:
+for relative in ['services/api', 'services/hardware-service']:
     sys.path.insert(0, str(ROOT / relative))
 
 

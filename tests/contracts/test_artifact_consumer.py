@@ -87,11 +87,12 @@ def test_distribution_metadata_cannot_redirect_to_retained_source(tmp_path):
 
 def test_consumer_metadata_pins_the_same_artifact_version():
     import tomllib
-    for relative in ('pyproject.toml', 'services/api/pyproject.toml',
-                     'simulator/circuit-simulator/pyproject.toml', 'services/hardware-service/pyproject.toml'):
+    for relative in ('pyproject.toml', 'services/api/pyproject.toml', 'services/hardware-service/pyproject.toml'):
         metadata = tomllib.loads((ROOT / relative).read_text(encoding='utf-8'))
         assert 'netcircuit-contracts==1.0.1' in metadata['project']['dependencies'], relative
     assert tomllib.loads((ROOT / 'pyproject.toml').read_text())['project']['name'] == 'netcircuit-remote-dev'
     lock = json.loads((ROOT / 'integration/contracts-version.json').read_text())
     assert lock['python'] == {'name': 'netcircuit-contracts', 'version': '1.0.1'}
     assert lock['npm'] == {'name': '@tinihi-labs/contracts', 'version': '1.0.1'}
+    simulator = json.loads((ROOT / 'integration/simulator-version.json').read_text(encoding='utf-8'))
+    assert simulator['contracts'] == lock['python']

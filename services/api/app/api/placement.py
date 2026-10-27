@@ -42,13 +42,14 @@ def validate_circuit(payload:Any=Body(default=None)):
 
 
 @router.post('/circuits/physical-preview',operation_id='previewCircuitV2',response_model=PhysicalPreviewResult,response_model_exclude_none=True,response_model_exclude_unset=True,responses=GRAPH_ERRORS,openapi_extra=GRAPH_REQUEST)
-def preview_circuit(payload:Any=Body(default=None)):
+def preview_circuit(request:Request,payload:Any=Body(default=None)):
     valid,code,message=validate_supported_circuit_graph(payload)
     if not valid:return JSONResponse(status_code=422,content={'valid':False,'code':code,'message':message})
-    from netcircuit_sim.engine import preview_physical_graph,SimulationError
+    from netcircuit_sim.backends import preview_physical_graph,SimulationError
     from contracts.component_properties import normalize_design_properties
     try:
-        value=preview_physical_graph(normalize_design_properties(payload))
+        value=preview_physical_graph(normalize_design_properties(payload),
+            backend_id=request.app.state.configuration.simulation_backend)
         return {**value,'provenance':'simulation_preview','limitations':['Educational DC and digital component models have a limited execution envelope.','Physical acquisition and full SPICE or mixed-signal execution remain unavailable.']}
     except SimulationError as error:
         return JSONResponse(status_code=422,content={'valid':False,'code':str(error),'message':'The physical preview could not compile or settle this design.'})

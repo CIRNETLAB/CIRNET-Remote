@@ -81,13 +81,15 @@ def test_contract_workflow_triggers_browser_compiler_and_runner_configuration():
             assert any(fnmatchcase(path,pattern) for pattern in events[event]['paths']),(event,path)
 
 
-def test_api_consumer_installs_the_local_simulator_and_uses_compatible_wire_runtimes():
+def test_api_consumer_installs_the_versioned_simulator_and_uses_compatible_wire_runtimes():
     commands='\n'.join(step.get('run','') for step in workflow('backend.yml')['jobs']['test']['steps'])
-    assert 'simulator/circuit-simulator' in commands
+    assert 'install_simulator.py' in commands
+    assert 'simulator/circuit-simulator' not in commands
     for relative in ('services/api/pyproject.toml','services/hardware-service/pyproject.toml'):
         metadata=tomllib.loads((ROOT/relative).read_text(encoding='utf-8'))
         assert 'grpcio==1.84.0' in metadata['project']['dependencies']
         assert 'protobuf==7.36.2' in metadata['project']['dependencies']
+        assert 'netcircuit-simulator==0.2.0' in metadata['project']['dependencies']
     api=tomllib.loads((ROOT/'services/api/pyproject.toml').read_text(encoding='utf-8'))
     assert 'fastapi==0.143.0' in api['project']['dependencies']
 
@@ -156,6 +158,8 @@ def test_contract_consumer_jobs_install_verified_artifacts_and_never_root_contra
             if 'requirements-verification.txt' not in commands:
                 continue
             assert 'install_contracts.py' in commands,name
+            assert 'install_simulator.py' in commands,name
+            assert "-e './simulator/circuit-simulator" not in commands,name
             assert '-e . ' not in commands,name
             assert 'python -m pip check' in commands,name
             assert 'python scripts/generate_hardware_rpc.py' not in commands,name

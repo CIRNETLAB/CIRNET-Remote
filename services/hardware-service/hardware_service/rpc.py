@@ -22,12 +22,11 @@ class LifecycleRpc:
         if station is None:
             raise HardwareError('HARDWARE_UNAVAILABLE')
         if station.get_capabilities().mode=='simulation' and target.experiment_id:
-            from hardware_service.station.virtual import VirtualHardwareStation
             key=(target.station_id,target.experiment_id)
             with self.lock:
                 if key not in self.sessions:
                     if len(self.sessions)>=64: raise HardwareError('RESOURCE_CONFLICT')
-                    self.sessions[key]=VirtualHardwareStation(target.station_id)
+                    self.sessions[key]=station.new_session()
                 station=self.sessions[key]
         if station._experiment_id is not None and target.experiment_id != station._experiment_id:
             raise HardwareError('RESOURCE_CONFLICT')

@@ -21,7 +21,7 @@ def test_verification_toolchain_satisfies_every_no_isolation_build_requirement()
     pinned={requirement.name:next(iter(requirement.specifier)).version
             for requirement in requirements(ROOT/'requirements-verification.txt')
             if len(requirement.specifier)==1 and next(iter(requirement.specifier)).operator=='=='}
-    for project in ('.','services/api','simulator/circuit-simulator','services/hardware-service'):
+    for project in ('.','services/api','services/hardware-service'):
         metadata=tomllib.loads((ROOT/project/'pyproject.toml').read_text(encoding='utf-8'))
         for value in metadata['build-system']['requires']:
             requirement=Requirement(value)

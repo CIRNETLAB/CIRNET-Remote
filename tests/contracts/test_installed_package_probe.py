@@ -27,10 +27,32 @@ def test_package_workspace_rejects_checkout_and_descendants(tmp_path):
     assert checker.verify_external_path(tmp_path/'outside',checkout)==(tmp_path/'outside').resolve()
 
 
-def test_consumer_builds_three_wheels_and_selects_the_independent_contracts_artifact():
+def test_package_runtime_uses_owned_child_and_preserves_neighbor(tmp_path):
+    from scripts.artifact_paths import artifact_directory
+    session=artifact_directory()
+    base=tmp_path/'owned-package-base'
+    neighbor=tmp_path/'keep.txt';neighbor.write_text('preserved',encoding='utf-8')
+    with checker.external_workspace(base) as target:
+        assert target.is_relative_to(session) and target.parent==base
+        (target/'probe.txt').write_text('temporary',encoding='utf-8')
+    assert not target.exists()
+    assert neighbor.read_text(encoding='utf-8')=='preserved'
+
+
+def test_package_runtime_rejects_checkout_and_unowned_external_parent(tmp_path):
+    from scripts.artifact_paths import artifact_directory
+    session=artifact_directory()
+    for base in (ROOT,session,session.parent/'unowned-m3-package-probe'):
+        with pytest.raises((ValueError,RuntimeError)):
+            with checker.external_workspace(base):
+                pytest.fail('unowned package runtime accepted')
+
+
+def test_consumer_builds_two_wheels_and_selects_independent_contracts_and_simulator():
     assert hasattr(checker,'WHEEL_PROJECTS'),'API/simulator/hardware wheels are not verified.'
-    assert set(checker.WHEEL_PROJECTS)=={'services/api','services/hardware-service','simulator/circuit-simulator'}
+    assert set(checker.WHEEL_PROJECTS)=={'services/api','services/hardware-service'}
     assert callable(checker.selected_wheel)
+    assert callable(checker.selected_simulator_wheel)
 
 
 def catalog_fingerprint(parts):
@@ -101,6 +123,7 @@ def test_failed_package_command_exposes_output_and_preserves_complete_log(tmp_pa
     monkeypatch.delenv('NETCIRCUIT_ARTIFACTS_SESSION',raising=False)
     monkeypatch.setattr(checker,'ROOT',checkout)
     monkeypatch.setattr(checker,'selected_wheel',lambda manifest:tmp_path/'contracts.whl')
+    monkeypatch.setattr(checker,'selected_simulator_wheel',lambda manifest:tmp_path/'simulator.whl')
     monkeypatch.setattr(checker,'external_workspace',lambda base:nullcontext(tmp_path))
     monkeypatch.setattr(checker,'stage_project',lambda project,target:tmp_path)
     actual_run=subprocess.run

@@ -1,5 +1,8 @@
-name: Simulator
+name: Simulator artifact consumer
 env:
+  NETCIRCUIT_SIMULATOR_WHEEL_FILENAME: netcircuit_simulator-0.2.0-py3-none-any.whl
+  NETCIRCUIT_SIMULATOR_WHEEL_URL: ${{ vars.NETCIRCUIT_SIMULATOR_WHEEL_URL }}
+  NETCIRCUIT_SIMULATOR_WHEEL_SHA256: ${{ vars.NETCIRCUIT_SIMULATOR_WHEEL_SHA256 }}
   NETCIRCUIT_CONTRACTS_DEV_WHEEL_URL: ${{ vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_URL }}
   NETCIRCUIT_CONTRACTS_DEV_WHEEL_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_SHA256 }}
   NETCIRCUIT_CONTRACTS_WHEEL_FILENAME: netcircuit_contracts-1.0.1-py3-none-any.whl
@@ -47,9 +50,11 @@ jobs:
         run: |
           python -m pip install -r requirements-verification.txt
           python scripts/install_contracts.py
-          python -m pip install -e './simulator/circuit-simulator[test]'
+          python scripts/install_simulator.py
+          python -m pip install -e './services/api[test]' -e './services/hardware-service[dev]'
           python -m pip check
-      - run: python -m pytest -q simulator/circuit-simulator/tests --basetemp "$NETCIRCUIT_ARTIFACTS_SESSION/pytest"
+          python -m scripts.check_simulator_consumer
+      - run: python -m pytest -q tests/contracts/test_simulator_artifact.py services/api/tests/test_physical_preview.py services/hardware-service/tests/test_virtual_execution.py services/hardware-service/tests/test_simulation_workers.py tests/integration/test_virtual_lab_execution.py tests/integration/test_simulation_backend_selection.py --basetemp "$NETCIRCUIT_ARTIFACTS_SESSION/pytest"
       - name: Clean the owned external verification session
         if: always() && env.NETCIRCUIT_ARTIFACTS_SESSION != ''
         shell: bash

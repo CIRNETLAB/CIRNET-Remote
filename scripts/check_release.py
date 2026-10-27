@@ -36,6 +36,7 @@ def release_plan(groups,package_temporary_root=None):
     if 'contracts' in selected:
         python('contracts','scripts/check_context.py')
         python('contracts','-m','scripts.check_contract_consumer')
+        python('contracts','-m','scripts.check_simulator_consumer')
         for script in ('generate_contracts.py','sync_editor_catalog.py','sync_breadboard_topologies.py'):
             python('contracts','scripts/'+script,'--check')
         python('contracts','scripts/export_openapi.py','--check')
@@ -46,12 +47,15 @@ def release_plan(groups,package_temporary_root=None):
         if 'contracts' not in selected:
             python('python','scripts/check_context.py')
             python('python','-m','scripts.check_contract_consumer')
+            python('python','-m','scripts.check_simulator_consumer')
         pytest('python')
     if 'web' in selected:
         for command in ('check:boundaries','test','build'):
             add('web',[shutil.which('node') or 'node','scripts/check_interface.mjs',command])
     if 'postgres' in selected:pytest('postgres','services/api/tests/postgres_cases.py')
-    if 'browser' in selected:add('browser',[shutil.which('node') or 'node','scripts/e2e-interface.mjs','--forbid-only'])
+    if 'browser' in selected:
+        if not {'contracts','python'} & selected:python('browser','-m','scripts.check_simulator_consumer')
+        add('browser',[shutil.which('node') or 'node','scripts/e2e-interface.mjs','--forbid-only'])
     if 'package' in selected:
         command=[sys.executable,'scripts/check_contract_package.py']
         if package_temporary_root:command.extend(['--temporary-root',package_temporary_root])

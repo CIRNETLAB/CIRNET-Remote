@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 ROOT=Path(__file__).resolve().parents[2]
-for relative in ['services/api','services/api/tests','services/hardware-service','simulator/circuit-simulator']:
+for relative in ['services/api','services/api/tests','services/hardware-service']:
     sys.path.insert(0,str(ROOT/relative))
 from csrf_client import CsrfTestClient as TestClient, login_admin
 

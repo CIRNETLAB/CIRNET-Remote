@@ -1,5 +1,5 @@
 from typing import Any
-from fastapi import APIRouter, Body
+from fastapi import APIRouter, Body, Request
 from fastapi.responses import JSONResponse
 from app.services.circuit_validator import validate_circuit_graph
 from contracts.boundary.models import CircuitValidationResult, PhysicalDeviceState, PhysicalPreviewResult
@@ -25,14 +25,15 @@ PhysicalPreview = PhysicalPreviewResult
              response_model_exclude_unset=True,
              responses={422:{'model':CircuitValidationResult,'description':'Legacy structural circuit validation result'}},
              openapi_extra=GRAPH_REQUEST)
-def physical_preview(payload: Any = Body(default=None)):
+def physical_preview(request: Request, payload: Any = Body(default=None)):
     valid, code, message = validate_circuit_graph(payload)
     if not valid:
         return JSONResponse(status_code=422, content={'valid': False, 'code': code, 'message': message})
-    from netcircuit_sim.engine import preview_physical_graph, SimulationError
+    from netcircuit_sim.backends import preview_physical_graph, SimulationError
     from app.models.circuit import CircuitGraph
     try:
-        result = preview_physical_graph(CircuitGraph.model_validate(payload).model_dump(exclude_unset=True))
+        result = preview_physical_graph(CircuitGraph.model_validate(payload).model_dump(exclude_unset=True),
+            backend_id=request.app.state.configuration.simulation_backend)
         return {**result, 'provenance':'simulation_preview',
                 'limitations':['Educational DC and digital component models have a limited execution envelope.',
                                'Physical acquisition and full SPICE or mixed-signal execution remain unavailable.']}

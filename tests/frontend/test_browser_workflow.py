@@ -47,7 +47,7 @@ def test_browser_ci_installs_pinned_runner_and_all_real_services_then_runs_every
     job = document['jobs']['chromium']
     assert_interface_bootstrap_ownership(job)
     steps = commands(job)
-    for package in ('install_contracts.py', './services/api[test]', './simulator/circuit-simulator[test]', './services/hardware-service[dev]'):
+    for package in ('install_contracts.py', 'install_simulator.py', './services/api[test]', './services/hardware-service[dev]'):
         assert package in steps
     for check in ('npm ci', 'scripts.check_contract_consumer', 'generate_contracts.py --check',
                   'export_openapi.py --check', 'npm run check:boundaries', 'npm run build',

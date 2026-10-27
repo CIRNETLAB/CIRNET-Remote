@@ -73,11 +73,30 @@ fabricated samples. Historical direct untyped adapter calls retain their
 RuntimeError compatibility behavior. Unsupported digital models return a typed
 rejection. There is no additional public Run or analysis endpoint.
 
+Simulator 0.2.0 adds `netcircuit_sim.backends` as a replaceable provider boundary.
+The default `legacy` provider delegates compile/run to the unchanged dispatcher
+and engine; preview delegates directly to the existing permissive preview so
+UNSUPPORTED device states remain visible. API settings and virtual stations
+freeze `NETCIRCUIT_SIMULATION_BACKEND` at construction. Plans carry the selected
+backend ID, adapter version, plan format and serializable provider payload;
+spawned or reused workers resolve this identity without rereading selection
+from environment. Unknown, missing or mismatched providers never fall back.
+
+The built-in `ngspice` name reserves the integration boundary and reports
+unavailable, with zero execution/instrument capabilities. It does not load a
+binary or implement analog models. Document validation, classification and
+storage remain independent of solver availability. Other providers require
+explicit trusted registry composition, including in each worker; service
+configuration currently selects only the two built-ins. Real ngspice integration
+will require graph/netlist and model mapping, native artifact provenance,
+analog result contracts, time/unit alignment and bounded lifecycle tests. See
+the [analysis and design](../superpowers/specs/2026-10-27-simulator-backends-design.md).
+
 VirtualHardwareStation admits supported CircuitGraph 1.0/1.1/1.2 through this
-dispatcher, then executes through the existing Lab lifecycle, RPC, bounded
+provider boundary, then executes through the existing Lab lifecycle, RPC, bounded
 process worker and capture persistence. The physical station continues to use
 its observed topology, policy, plan and safety authority; editor graphs never
-replace that authority. Capabilities continue to report virtual digital only.
+replace that authority. The default legacy capabilities report virtual digital only.
 The historical NCAP v1 digital encoding is unchanged.
 
 The scheduling budget `CaptureConfiguration.max_events` may be as high as

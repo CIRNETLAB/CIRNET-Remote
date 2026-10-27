@@ -8,8 +8,8 @@ from contracts.validation import validate
 from contracts.instrument_validation import validate_plan_instruments
 from hardware_service.models import BreadboardCapability, StationCapabilities
 from hardware_service.station.base import HardwareStation, HardwareError, StationState as S, serialized
-from netcircuit_sim.engine import SimulationError, run_plan
-from netcircuit_sim.dispatch import SimulationDispatcher
+from netcircuit_sim.backends import (SimulationError, run_plan, compile_graph,
+    select_backend_id, get_backend_descriptor)
 
 _pool=None
 _pool_lock=RLock()
@@ -32,8 +32,10 @@ def close_simulation_pool():
 
 class VirtualHardwareStation(HardwareStation):
     """Independent digital session backed by bounded process-worker execution."""
-    def __init__(self, station_id):
+    def __init__(self, station_id, *, backend_id=None):
         super().__init__(station_id)
+        self._backend_id=select_backend_id(backend_id)
+        self._backend=get_backend_descriptor(self._backend_id)
         self._circuit = None
         self._inputs = {}
         self._capture = None
@@ -41,14 +43,28 @@ class VirtualHardwareStation(HardwareStation):
         self._generation=0
         self._future=None
 
+    def new_session(self):
+        """Create independent experiment state with this station's backend."""
+        session=VirtualHardwareStation(self.station_id,backend_id=self._backend_id)
+        if session._backend.identity!=self._backend.identity:
+            raise HardwareError('UNEXECUTABLE')
+        return session
+
     def get_capabilities(self):
-        return StationCapabilities(self.station_id, "simulation", True,
-            virtual_digital=True,
+        backend=self._backend
+        available=backend.available
+        analyzer=backend.logic_analyzer_channels if available else 0
+        generator=backend.generator_channels if available else 0
+        scope=backend.oscilloscope_channels if available else 0
+        legacy=backend.identity.id=='legacy' and available
+        return StationCapabilities(self.station_id, "simulation", available,
+            virtual_digital=available and backend.digital,virtual_analog=available and backend.analog,
             breadboards=(BreadboardCapability("BB0"), BreadboardCapability("BB1")),
-            hardware_profile_version="virtual-1.0", firmware_version="virtual-events-1.0",
-            instrument_capabilities={"logic_analyzer":{"channels":4,"runtime_reconfiguration_supported":False,"status":"digital-events"},
-                         "generator":{"channels":0,"runtime_reconfiguration_supported":False,"status":"NOT_IMPLEMENTED"},
-                         "oscilloscope":{"channels":0,"runtime_reconfiguration_supported":False,"status":"NOT_IMPLEMENTED"}})
+            hardware_profile_version="virtual-1.0" if legacy else "UNAVAILABLE",
+            firmware_version="virtual-events-1.0" if legacy else "UNAVAILABLE",
+            instrument_capabilities={"logic_analyzer":{"channels":analyzer,"runtime_reconfiguration_supported":False,"status":"digital-events" if analyzer else "NOT_IMPLEMENTED"},
+                         "generator":{"channels":generator,"runtime_reconfiguration_supported":False,"status":"available" if generator else "NOT_IMPLEMENTED"},
+                         "oscilloscope":{"channels":scope,"runtime_reconfiguration_supported":False,"status":"available" if scope else "NOT_IMPLEMENTED"}})
 
     @serialized
     def validate_configuration(self, configuration):
@@ -61,7 +77,10 @@ class VirtualHardwareStation(HardwareStation):
         self._circuit=self._virtual_plan=None
         if not isinstance(circuit, dict) or circuit.get("schema_version") not in ("1.0","1.1","1.2") or not isinstance(circuit.get("modules"),list) or not isinstance(circuit.get("connections"),list):
             raise HardwareError("UNEXECUTABLE")
-        try: self._virtual_plan=SimulationDispatcher().compile(circuit)
+        try:
+            self._virtual_plan=compile_graph(circuit,backend_id=self._backend_id)
+            if self._virtual_plan.backend!=self._backend.identity:
+                raise SimulationError('BACKEND_IDENTITY_MISMATCH')
         except SimulationError:
             self._circuit=self._virtual_plan=None
             raise HardwareError('UNEXECUTABLE') from None

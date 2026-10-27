@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 import os
 import math
 from contracts.runtime_config import simulation_worker_count
+from netcircuit_sim.backends import select_backend_id
 
 def guest_mode() -> bool:
     value=os.getenv('NETCIRCUIT_ALLOW_GUEST','true')
@@ -19,6 +20,7 @@ class Settings:
     capture_max_files: int = field(default_factory=lambda: int(os.getenv('NETCIRCUIT_CAPTURE_MAX_FILES','4096')))
     capture_retention_seconds: int = field(default_factory=lambda: int(os.getenv('NETCIRCUIT_CAPTURE_RETENTION_SECONDS','2592000')))
     simulation_workers: int = field(default_factory=simulation_worker_count)
+    simulation_backend: str = field(default_factory=lambda: os.getenv('NETCIRCUIT_SIMULATION_BACKEND', 'legacy'))
     allow_guest: bool = field(default_factory=guest_mode)
     trusted_origins: tuple[str,...] = field(default_factory=lambda: tuple(value.strip() for value in os.getenv('NETCIRCUIT_TRUSTED_ORIGINS','http://testserver,http://localhost:5173,http://127.0.0.1:5173').split(',') if value.strip()))
     session_ttl_seconds: int = field(default_factory=lambda: int(os.getenv('NETCIRCUIT_SESSION_TTL_SECONDS','86400')))
@@ -60,6 +62,9 @@ class Settings:
         if (type(self.capture_max_bytes) is not int or self.capture_max_bytes<1 or type(self.capture_max_files) is not int
                 or self.capture_max_files<1 or type(self.capture_retention_seconds) is not int or self.capture_retention_seconds<0):raise ValueError('Invalid capture quota or retention configuration')
         object.__setattr__(self,'simulation_workers',simulation_worker_count(self.simulation_workers))
+        if not isinstance(self.simulation_backend,str):
+            raise ValueError('NETCIRCUIT_SIMULATION_BACKEND must name a registered backend.')
+        object.__setattr__(self,'simulation_backend',select_backend_id(self.simulation_backend))
         from urllib.parse import urlsplit
         if self.session_ttl_seconds<60 or self.session_ttl_seconds>604800: raise ValueError('Session TTL must be between 60 and 604800 seconds')
         for origin in self.trusted_origins:

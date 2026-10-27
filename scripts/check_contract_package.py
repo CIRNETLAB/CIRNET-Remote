@@ -1,7 +1,8 @@
 """Install four wheels and exercise them physically outside the checkout.
 
-Default scratch is the OS temporary directory; --temporary-root permits another
-explicit writable external base. Build artifacts may stay in .build.
+Scratch stays in the canonical external session; --temporary-root may select
+another validated child of that session. Simulator and Contracts are selected
+artifacts; only API and Hardware Service are built from this repository.
 """
 import argparse
 from contextlib import contextmanager
@@ -12,15 +13,19 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
-from tempfile import TemporaryDirectory,gettempdir
+from tempfile import TemporaryDirectory
 from zipfile import ZipFile
 
 ROOT=Path(__file__).resolve().parents[1]
-WHEEL_PROJECTS=('services/api','simulator/circuit-simulator','services/hardware-service')
+WHEEL_PROJECTS=('services/api','services/hardware-service')
 try:
     from scripts.contracts_artifact import selected_wheel
+    from scripts.simulator_artifact import selected_wheel as selected_simulator_wheel
+    from scripts.simulator_artifact import verify_selected_install as verify_simulator_install
 except ModuleNotFoundError:
     from contracts_artifact import selected_wheel
+    from simulator_artifact import selected_wheel as selected_simulator_wheel
+    from simulator_artifact import verify_selected_install as verify_simulator_install
 REQUIRED_RESOURCES=(
     'contracts/manifest.json','contracts/profiles.json','contracts/boundary/models.py',
     'contracts/boundary/capture_layout.py','contracts/generated/rpc_v2_pb2.py','contracts/generated/rpc_v2_pb2_grpc.py',
@@ -57,14 +62,22 @@ def stage_project(project,target):
     names=('pyproject.toml','README.md')
     for name in names:
         if (source/name).is_file():shutil.copy2(source/name,target/name)
-    package={'services/api':'app','services/hardware-service':'hardware_service','simulator/circuit-simulator':'netcircuit_sim'}[project]
+    package={'services/api':'app','services/hardware-service':'hardware_service'}[project]
     shutil.copytree(source/package,target/package,ignore=shutil.ignore_patterns('__pycache__','*.pyc','generated','build','.build','*.egg-info'))
     return target
 
 
 @contextmanager
 def external_workspace(base=None):
-    base=verify_external_path(base or gettempdir());base.mkdir(parents=True,exist_ok=True)
+    try:
+        from scripts.artifact_paths import artifact_directory, validate_artifact_directory
+    except ModuleNotFoundError:
+        from artifact_paths import artifact_directory, validate_artifact_directory
+    session=artifact_directory()
+    base=verify_external_path(validate_artifact_directory(base) if base else artifact_directory('installed-packages'))
+    if base==session or not base.is_relative_to(session):
+        raise ValueError('Installed package temporary root must be a child of the owned artifact session.')
+    base.mkdir(parents=True,exist_ok=True)
     owned=TemporaryDirectory(prefix='netcircuit-wheel-check-',dir=base)
     target=verify_external_path(owned.name)
     try:yield target
@@ -88,20 +101,25 @@ assert catalog_fingerprint==sys.argv[2], 'Installed physical catalog differs fro
 RUNTIME_PROBE=r'''
 import importlib
 from importlib.resources import files
+from importlib.metadata import version
 import json
+import os
 from pathlib import Path
 import secrets
 import sys
 
 checkout=Path(sys.argv[1]).resolve()
+checkout_roots=[checkout,*map(lambda value:Path(value).resolve(),json.loads(os.environ.get('NETCIRCUIT_ARTIFACTS_CONTEXT','{}')).get('roots',[]))]
 assert sys.flags.isolated==1
 assert not Path.cwd().resolve().is_relative_to(checkout)
 assert not Path(sys.prefix).resolve().is_relative_to(checkout)
 for path in sys.path:
-    if path:assert not Path(path).resolve().is_relative_to(checkout),path
+    if path:assert not any(Path(path).resolve().is_relative_to(root) for root in checkout_roots),path
 for name in ('contracts','app','netcircuit_sim','hardware_service'):
     module=importlib.import_module(name)
-    assert module.__file__ and not Path(module.__file__).resolve().is_relative_to(checkout),name
+    assert module.__file__ and not any(Path(module.__file__).resolve().is_relative_to(root) for root in checkout_roots),name
+assert version('netcircuit-simulator')=='0.2.0'
+assert version('netcircuit-contracts')=='1.0.1'
 
 from contracts.registry import check_manifest,validate_contract
 from contracts.boundary.models import CircuitGraph,SimulationRequest,AnySupportedCircuitGraph
@@ -187,12 +205,49 @@ print(json.dumps({'installed_packages':4,'capture_versions':sorted(versions),'mi
 '''
 
 
+SIMULATOR_WORKER_PROBE=r'''
+from concurrent.futures import ProcessPoolExecutor
+from importlib.metadata import version
+import json
+import multiprocessing
+from pathlib import Path
+import sys
+
+def execute(plan):
+    import netcircuit_sim
+    from netcircuit_sim.backends import run_plan
+    return {'origin':netcircuit_sim.__file__,'prefix':sys.prefix,'version':version('netcircuit-simulator'),
+            'method':multiprocessing.get_start_method(),
+            'capture':run_plan(plan,{'signals':['D.OUT'],'duration_ns':20})}
+
+if __name__=='__main__':
+    import os
+    from netcircuit_sim.backends import compile_graph
+    graph={'schema_version':'1.0','circuit_id':'installed-spawn','modules':[{'id':'D','type':'DIGITAL_SWITCH','properties':{'state':True}}],'connections':[]}
+    plan=compile_graph(graph,backend_id='legacy')
+    os.environ['NETCIRCUIT_SIMULATION_BACKEND']='ngspice'
+    with ProcessPoolExecutor(max_workers=1,mp_context=multiprocessing.get_context('spawn')) as pool:
+        first=pool.submit(execute,plan).result(timeout=30)
+        os.environ['NETCIRCUIT_SIMULATION_BACKEND']='unknown-after-start'
+        second=pool.submit(execute,plan).result(timeout=30)
+    assert first==second,'installed worker capture or provenance was nondeterministic'
+    assert first['method']=='spawn' and first['version']=='0.2.0'
+    assert Path(first['origin']).resolve().is_relative_to(Path(sys.prefix).resolve())
+    assert first['prefix']==sys.prefix
+    assert first['capture']=={'available':True,'state':'COMPLETE','duration_ns':20,'samples':[{'signal':'D.OUT','time_ns':0,'value':1}]}
+    assert not multiprocessing.active_children(),'owned simulation worker survived pool shutdown'
+    print(json.dumps(first,sort_keys=True))
+'''
+
+
 def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--temporary-root',type=Path)
     parser.add_argument('--contracts-manifest',type=Path)
+    parser.add_argument('--simulator-manifest',type=Path)
     arguments=parser.parse_args(argv)
     contracts=selected_wheel(arguments.contracts_manifest)
+    simulator=selected_simulator_wheel(arguments.simulator_manifest)
     try:
         from scripts.artifact_paths import artifact_directory
     except ModuleNotFoundError:
@@ -222,8 +277,8 @@ def main(argv=None):
             staged=stage_project(project,build/'source'/('contracts' if project=='.' else Path(project).name))
             checked([sys.executable,'-m','build','--wheel','--no-isolation','--outdir',str(dist)],cwd=staged)
         wheels=sorted(dist.glob('*.whl'))
-        if len(wheels)!=len(WHEEL_PROJECTS):raise ValueError('Expected exactly three distinct consumer wheels.')
-        wheels.append(contracts)
+        if len(wheels)!=len(WHEEL_PROJECTS):raise ValueError('Expected exactly two distinct local consumer wheels.')
+        wheels.extend((contracts,simulator))
         verify_contract_wheel(contracts)
         api=next(wheel for wheel in wheels if wheel.name.startswith('netcircuit_api-'))
         with ZipFile(api) as archive:
@@ -238,6 +293,9 @@ def main(argv=None):
             source_parts=json.loads(archive.read('contracts/design-models/physical-parts.v1.json'))['parts']
         expected_catalog=hashlib.sha256(json.dumps(source_parts,sort_keys=True,separators=(',',':')).encode('utf-8')).hexdigest()
         checked([str(python),'-I',str(probe),str(ROOT),expected_catalog],cwd=target)
+        verify_simulator_install(simulator,hashlib.sha256(simulator.read_bytes()).hexdigest(),python=python)
+        worker_probe=target/'installed_simulator_worker.py';worker_probe.write_text(SIMULATOR_WORKER_PROBE,encoding='utf-8')
+        checked([str(python),'-I',str(worker_probe)],cwd=target)
         checked([str(python),'-I','-m','pip','check'],cwd=target)
         environment['NETCIRCUIT_DATABASE_URL']='sqlite:///'+(target/'installed-cli.sqlite').as_posix()
         environment['NETCIRCUIT_CAPTURE_DIR']=str(target/'cli-captures')

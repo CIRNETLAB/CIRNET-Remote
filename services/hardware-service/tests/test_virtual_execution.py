@@ -3,7 +3,6 @@ from pathlib import Path
 import pytest
 ROOT=Path(__file__).resolve().parents[3]
 sys.path.insert(0,str(ROOT/'services/hardware-service'))
-sys.path.insert(0,str(ROOT/'simulator/circuit-simulator'))
 from hardware_service.station.virtual import VirtualHardwareStation
 
 

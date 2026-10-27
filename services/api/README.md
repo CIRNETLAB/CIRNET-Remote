@@ -2,7 +2,7 @@
 
 FastAPI modular-monolith Lab-First laboratory. Authority: ../../docs/ARCHITECTURE.md. The application includes durable authentication/RBAC, owned Project/Circuit revisions, published assignments, experiments/history, verification, captures and FIFO/lease lifecycle. PostgreSQL is required in production; SQLite is for tests/development. Public contracts and all typed routes: ../../contracts/api/README.md.
 
-Install the reviewed `netcircuit-contracts==1.0.1` wheel into both service environments using the M1 artifact manifest (`python scripts/install_contracts.py --with-dev --manifest ABSOLUTE_MANIFEST` from Remote root for development). API also needs grpcio/protobuf and psycopg (declared dependencies). RPC bindings and offline resources come from that wheel; `python scripts/generate_hardware_rpc.py --check` verifies them without writing retained source. Production needs neither source Contracts nor DEV tools. Start hardware_service.server in its own process on localhost50051. An absent gateway reports unavailable; the virtual station executes the existing real digital simulator.
+Install the reviewed `netcircuit-contracts==1.0.1` wheel into both service environments using the M1 artifact manifest (`python scripts/install_contracts.py --with-dev --manifest ABSOLUTE_MANIFEST` from Remote root for development). Both services also install the same reviewed `netcircuit-simulator==0.2.0` wheel using `python scripts/install_simulator.py --manifest ABSOLUTE_SIMULATOR_MANIFEST`; no retained Simulator source or editable install is required. API also needs grpcio/protobuf and psycopg (declared dependencies). RPC bindings and offline resources come from that wheel; `python scripts/generate_hardware_rpc.py --check` verifies them without writing retained source. Production needs neither source Contracts nor DEV tools. Start hardware_service.server in its own process on localhost50051. An absent gateway reports unavailable; the virtual station executes the existing real digital simulator.
 
 Use one API worker; do not start multiple scheduler workers against the same stations. SQLAlchemy persists definitions/results/sessions/leases and FIFO order; versioned migrations through 0007 upgrade new and legacy databases, including indexed runtime state and bounded auth maintenance. Restart recovers active leases and quarantines failed safe cleanup. Actual PostgreSQL migration/backup/restore and independent-writer tests have run locally; target production deployment remains unverified. Durable principals, server sessions, Argon2id passwords, CSRF/exact-origin and role/object authorization protect HTTP/WebSocket. Follow [auth setup](../../docs/architecture/auth-and-migrations.md) for administrator bootstrap, and the [production guide](../../deployment/README.md) for installed wheels, migration checks, TLS/origins, persistent data and maintenance. Development guests are explicit; production disables them.
 
@@ -15,6 +15,8 @@ Experiment SQL JSON and `experiment.updated` contain CaptureMetadata, never samp
 Hardware admission uses current validated capabilities.physical_execution_slots (zero means unavailable), with FIFO dispatch and station quarantine. `NETCIRCUIT_SIMULATION_WORKERS` is positive/default 4 and must match the Hardware Service setting. Keep one API scheduler process. Instrument channels are 1-based and `instrument_capabilities` is the sole authority. `/api/experiments/{id}/instruments` delegates to ExperimentManager under ownership/lease/state synchronization. Baseline generator configuration is part of the execution plan; live configuration requires RUNNING, explicit runtime support, allocation, fresh safety and profile limits. Current Scope/Generator have zero channels; no electrical bounds are invented.
 
 Typed `/instruments/access`, `/instruments/generator` and `/instruments/commands/{key}` add allocation-aware durable acknowledgement without changing the legacy instrument response. REQUESTED/unknown never replays output; ACCEPTED does not imply APPLIED. Required mutation keys and control-client headers are recorded in OpenAPI. Pre-run configuration is immutable; the server independently validates it.
+
+Set `NETCIRCUIT_SIMULATION_BACKEND=legacy` in both API and Hardware environments to preserve existing behavior. API settings freeze the selection at app creation; both physical-preview routes use that setting. The reserved `ngspice` backend returns an explicit unavailable response while structural validation and document storage remain usable. Unknown or empty selectors fail startup. Restart both services when changing this setting; no native executable/library is installed or discovered by it.
 
 Projects/circuits use saved revisions and database CAS, with session fences against revoke/guest claim. Create pins the owned document revision and assignment publication. History/active endpoints are bounded and read-only; connection recovery cannot grant Run authority. Students receive only published redacted assignment views. See the architecture guides for [projects](../../docs/architecture/projects-and-revisions.md), [assignments](../../docs/architecture/assignments-and-publication.md), [capture catalog](../../docs/architecture/capture-catalog.md) and [domains](../../docs/architecture/signal-domains-and-simulation.md).
 
@@ -31,7 +33,8 @@ Full supported verification environment from root:
 
 ```bash
 python scripts/install_contracts.py --with-dev --manifest ABSOLUTE_MANIFEST
-python -m pip install -r requirements-verification.txt -e './services/api[test]' -e './services/hardware-service[dev]' -e './simulator/circuit-simulator[test]'
+python scripts/install_simulator.py --manifest ABSOLUTE_SIMULATOR_MANIFEST
+python -m pip install -r requirements-verification.txt -e './services/api[test]' -e './services/hardware-service[dev]'
 python scripts/generate_hardware_rpc.py --check
 python scripts/check_context.py
 python scripts/sync_lab_contracts.py --check
@@ -56,7 +59,9 @@ First-time setup from the Remote repository root, with Python 3.12 (package mini
 py -3.12 -m venv services/api/.venv
 $env:NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST = 'C:\absolute\reviewed\artifacts.json'
 .\services\api\.venv\Scripts\python.exe scripts/install_contracts.py --with-dev --manifest $env:NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST
-.\services\api\.venv\Scripts\python.exe -m pip install -r requirements-verification.txt -e './simulator/circuit-simulator[test]' -e './services/api[test]' -e './services/hardware-service[dev]'
+$env:NETCIRCUIT_SIMULATOR_ARTIFACT_MANIFEST = 'C:\absolute\reviewed\simulator-artifacts.json'
+.\services\api\.venv\Scripts\python.exe scripts/install_simulator.py
+.\services\api\.venv\Scripts\python.exe -m pip install -r requirements-verification.txt -e './services/api[test]' -e './services/hardware-service[dev]'
 .\services\api\.venv\Scripts\python.exe scripts/generate_hardware_rpc.py --check
 .\services\api\.venv\Scripts\python.exe -m pip check
 ```
@@ -70,7 +75,7 @@ For example, `argon2-cffi` supplies `argon2`, and authentication also requires
 Alembic; both are declared by the API package.
 
 Keep the existing environment. From Remote root, rerun the reviewed Contracts
-installer when selecting an updated artifact set, then rerun the consumer
+and Simulator installers when selecting an updated artifact set, then rerun the consumer
 installation and `pip check` commands above using this same interpreter.
 Restart both local services after updating their compatibility set. RPC bindings
 come from the installed Contracts wheel; `generate_hardware_rpc.py --check`
@@ -130,7 +135,9 @@ Run setup from Remote root with an installed Python 3.12 interpreter:
 python3.12 -m venv services/api/.venv
 export NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST=/absolute/reviewed/artifacts.json
 services/api/.venv/bin/python scripts/install_contracts.py --with-dev --manifest "$NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST"
-services/api/.venv/bin/python -m pip install -r requirements-verification.txt -e './simulator/circuit-simulator[test]' -e './services/api[test]' -e './services/hardware-service[dev]'
+export NETCIRCUIT_SIMULATOR_ARTIFACT_MANIFEST=/absolute/reviewed/simulator-artifacts.json
+services/api/.venv/bin/python scripts/install_simulator.py
+services/api/.venv/bin/python -m pip install -r requirements-verification.txt -e './services/api[test]' -e './services/hardware-service[dev]'
 services/api/.venv/bin/python scripts/generate_hardware_rpc.py --check
 services/api/.venv/bin/python -m pip check
 ```
