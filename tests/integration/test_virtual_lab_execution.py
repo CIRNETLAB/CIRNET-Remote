@@ -1,3 +1,4 @@
+from tests.support.release_inputs import contract_resource
 """REST → real loopback RPC → process-worker simulator → unified result."""
 import subprocess
 import json
@@ -64,7 +65,7 @@ def test_flexible_graph_12_runs_over_real_rest_rpc_and_retains_exact_saved_mount
     from contracts.capture_codec import decode_digital
     server=build_server();port=server.add_insecure_port('127.0.0.1:0');server.start()
     application=create_app(repository=Repository('sqlite:///'+(tmp_path/'flex-rpc.sqlite').as_posix()),gateway=HardwareServiceClient(f'127.0.0.1:{port}'))
-    graph=json.loads((ROOT/'contracts/design-models/fixtures/flexible-mounting-parity.json').read_text(encoding='utf-8'))['cases'][0]['graph']
+    graph=json.loads((contract_resource('design-models/fixtures/flexible-mounting-parity.json')).read_text(encoding='utf-8'))['cases'][0]['graph']
     graph['modules'] += [{'id':'X','type':'DIGITAL_SWITCH','properties':{'state':True}},{'id':'L','type':'LED'}]
     graph['connections']=[{'source':'X.OUT','destination':'L.IN'}]
     try:

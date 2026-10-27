@@ -1,3 +1,4 @@
+from tests.support.release_inputs import contract_resource
 import importlib.util
 import json
 from pathlib import Path
@@ -45,7 +46,7 @@ def test_v2_compiles_and_exposes_lifecycle_without_direct_raw_graph_run(tmp_path
 
 def test_v2_capabilities_match_domain_and_errors_are_stable(tmp_path):
     module = compiled(tmp_path)
-    schema = json.loads((ROOT / 'contracts/physical-lab/lab.schema.json').read_text())
+    schema = json.loads((contract_resource('physical-lab/lab.schema.json')).read_text())
     required = schema['$defs']['StationCapabilities']['required']
     assert set(required) <= set(module.StationCapabilities.DESCRIPTOR.fields_by_name.keys())
     errors = module.ErrorCode.keys()

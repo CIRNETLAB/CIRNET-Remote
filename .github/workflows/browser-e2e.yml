@@ -1,15 +1,16 @@
 name: Real browser release gate
 env:
+  PYTHONDONTWRITEBYTECODE: '1'
   NETCIRCUIT_HARDWARE_WHEEL_FILENAME: netcircuit_hardware_service-0.1.1-py3-none-any.whl
   NETCIRCUIT_HARDWARE_WHEEL_URL: ${{ vars.NETCIRCUIT_HARDWARE_WHEEL_URL }}
   NETCIRCUIT_HARDWARE_WHEEL_SHA256: ${{ vars.NETCIRCUIT_HARDWARE_WHEEL_SHA256 }}
-  NETCIRCUIT_SIMULATOR_WHEEL_FILENAME: netcircuit_simulator-0.2.0-py3-none-any.whl
+  NETCIRCUIT_SIMULATOR_WHEEL_FILENAME: netcircuit_simulator-0.1.1-py3-none-any.whl
   NETCIRCUIT_SIMULATOR_WHEEL_URL: ${{ vars.NETCIRCUIT_SIMULATOR_WHEEL_URL }}
   NETCIRCUIT_SIMULATOR_WHEEL_SHA256: ${{ vars.NETCIRCUIT_SIMULATOR_WHEEL_SHA256 }}
   NETCIRCUIT_CONTRACTS_DEV_WHEEL_URL: ${{ vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_URL }}
   NETCIRCUIT_CONTRACTS_DEV_WHEEL_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_SHA256 }}
-  NETCIRCUIT_CONTRACTS_WHEEL_FILENAME: netcircuit_contracts-1.0.1-py3-none-any.whl
-  NETCIRCUIT_CONTRACTS_NPM_FILENAME: tinihi-labs-contracts-1.0.1.tgz
+  NETCIRCUIT_CONTRACTS_WHEEL_FILENAME: netcircuit_contracts-0.1.1-py3-none-any.whl
+  NETCIRCUIT_CONTRACTS_NPM_FILENAME: tinihi-labs-contracts-0.1.1.tgz
   NETCIRCUIT_CONTRACTS_WHEEL_URL: ${{ vars.NETCIRCUIT_CONTRACTS_WHEEL_URL }}
   NETCIRCUIT_CONTRACTS_WHEEL_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_WHEEL_SHA256 }}
   NETCIRCUIT_CONTRACTS_NPM_URL: ${{ vars.NETCIRCUIT_CONTRACTS_NPM_URL }}
@@ -75,7 +76,8 @@ jobs:
           python scripts/install_contracts.py
           python scripts/install_simulator.py
           python scripts/install_hardware.py
-          python -m pip install -e './services/api[test]'
+          python -m build --no-isolation --wheel --outdir "$NETCIRCUIT_ARTIFACTS_SESSION/api-dist" ./services/api
+          python -m pip install "$NETCIRCUIT_ARTIFACTS_SESSION/api-dist/netcircuit_api-0.1.1-py3-none-any.whl"
           python -m pip check
           python -m scripts.check_simulator_consumer
           python -m scripts.check_hardware_consumer
@@ -87,6 +89,7 @@ jobs:
         run: python -m scripts.install_interface --github-env "$GITHUB_ENV"
       - name: Bootstrap Interface artifacts before its clean install
         env:
+          NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST: ''
           NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
         run: node "$NETCIRCUIT_INTERFACE_ROOT/scripts/bootstrap-contracts.mjs" --github-env "$GITHUB_ENV"
       - name: Install locked Playwright 1.64.1 and Interface dependencies

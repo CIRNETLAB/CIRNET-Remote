@@ -1,16 +1,16 @@
 {
-  "status": "LOCAL_UNPUBLISHED",
+  "status": "PINNED_ARTIFACT_INPUTS",
   "python": {
     "name": "netcircuit-hardware-service",
     "version": "0.1.1"
   },
   "contracts": {
     "name": "netcircuit-contracts",
-    "version": "1.0.1"
+    "version": "0.1.1"
   },
   "simulator": {
     "name": "netcircuit-simulator",
-    "version": "0.2.0"
+    "version": "0.1.1"
   },
   "namespace": "hardware_service",
   "hardwareRpcVersion": "2.0",

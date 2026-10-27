@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "productVersion": "0.1.1",
+  "owners": {
+    "Remote": ["FastAPI/auth/persistence", "scheduler/orchestration", "API OpenAPI registrations/export", "deployment", "integrated acceptance", "system release/rollback manifest"],
+    "Contracts": ["canonical schemas/registry/manifest", "CircuitGraph and catalog/Device Library", "Protobuf/logical protocols", "validators/code generation", "Python/public TypeScript SDK", "compatibility baselines", "independently versioned DEV tooling"],
+    "Interface": ["Vue/TypeScript/Three.js", "Web/editor/component library", "source assets", "browser assertions", "source/static product build"],
+    "Simulator": ["simulation engine/models", "replaceable backend boundary", "determinism/backend identity tests"],
+    "Hardware": ["local RPC service", "stations/transport/drivers", "workers/NCAP/control lifecycle", "hardware safety gates"],
+    "FPGA": ["RTL/scaffold", "testbenches", "pinned parser/compiler/runtime", "source artifact build"]
+  },
+  "remoteActivePaths": ["services/api", "deployment", "integration", "scripts", "tests", "docs", "contracts/__init__.py"],
+  "retainedReferences": {
+    "apps/web": "Frozen M2 reference; Interface artifacts supply supported gates and runtime.",
+    "contracts": "Frozen M1 inputs except the strict installed-wheel forwarding entrypoint; Contracts is the sole canonical owner.",
+    "device-library": "Frozen M1 reference; installed Contracts catalog resources supply consumers.",
+    "simulator/circuit-simulator": "Frozen M3 reference; installed Simulator supplies execution.",
+    "services/hardware-service": "Frozen M4 reference; installed Hardware supplies RPC/stations/transport.",
+    "fpga": "Frozen M5 reference; explicitly selected FPGA artifact supplies acceptance.",
+    "tests/fpga": "Frozen original mixed tests; active pure RTL tests belong to FPGA, installed compatibility to Remote."
+  },
+  "retainedSourceBuildRuntimeReleaseDependency": false,
+  "dependencyEdges": {
+    "Contracts": [],
+    "Interface": ["Contracts public SDK/resources"],
+    "Simulator": ["Contracts"],
+    "Hardware": ["Contracts", "Simulator"],
+    "FPGA": ["Contracts", "pinned RTL tools"],
+    "Remote": ["Contracts", "Simulator", "Hardware artifact/local RPC", "Interface source/static artifacts", "FPGA source artifact"]
+  },
+  "operationAuthority": "FastAPI registrations; Contracts holds the reviewed immutable export, without importing API implementation."
+}

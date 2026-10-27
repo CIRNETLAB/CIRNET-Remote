@@ -1,3 +1,5 @@
+from tests.support.release_inputs import sdk_resource
+from tests.support.release_inputs import device_resource, interface_root
 """Manufacturer pin maps are authoring contracts, independent of execution support."""
 import copy
 import importlib.util
@@ -13,7 +15,7 @@ SPEC.loader.exec_module(sync)
 
 
 def registry():
-    return json.loads((ROOT / 'device-library/parts/physical-parts.json').read_text(encoding='utf-8'))
+    return json.loads((device_resource('parts/physical-parts.json')).read_text(encoding='utf-8'))
 
 
 def test_all_requested_logic_codes_have_independent_verified_pinout_fixtures():
@@ -66,13 +68,13 @@ def test_editor_descriptor_generates_without_manufacturer_or_execution_data():
         for key in ['simulation', 'manufacturer', 'partNumber', 'datasheet', 'provenance', 'notes']:
             part.pop(key, None)
     generated = sync.generate_editor_parts(minimal)
-    snapshot = json.loads((ROOT / 'apps/web/src/data/editorParts.json').read_text(encoding='utf-8'))
+    snapshot = json.loads((sdk_resource('data/editorParts.json')).read_text(encoding='utf-8'))
     assert generated == snapshot
     assert len(generated['parts']) == len(source['parts'])
     for part in generated['parts']:
         assert not {'simulation', 'manufacturer', 'partNumber', 'datasheet', 'provenance'} & part.keys()
         assert part['package']['pins']
-    legacy = json.loads((ROOT / 'device-library/editor/components.json').read_text(encoding='utf-8'))
+    legacy = json.loads((device_resource('editor/components.json')).read_text(encoding='utf-8'))
     assert sync.generate_catalog(legacy, minimal)['components']
 
 

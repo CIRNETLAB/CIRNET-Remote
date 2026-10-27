@@ -1,3 +1,5 @@
+from tests.support.release_inputs import sdk_resource
+from tests.support.release_inputs import contract_resource, device_resource, interface_root
 """Explicit domain metadata never invents a model for an imported component."""
 import json
 import importlib
@@ -9,7 +11,7 @@ ROOT=Path(__file__).resolve().parents[2]
 
 
 def test_signal_domain_contract_is_versioned_separately_from_legacy_graphs():
-    path=ROOT/'contracts/design-models/signal-domains.schema.json'
+    path=contract_resource('design-models/signal-domains.schema.json')
     assert path.exists(), 'Versioned signal-domain boundary is missing.'
     schema=json.loads(path.read_text(encoding='utf-8'))
     assert schema['$defs']['SignalDomain']['enum']==['DIGITAL','ANALOG','POWER','GROUND','CLOCK','MIXED']
@@ -17,8 +19,8 @@ def test_signal_domain_contract_is_versioned_separately_from_legacy_graphs():
 
 
 def test_canonical_catalog_ports_have_explicit_domains():
-    editor=json.loads((ROOT/'device-library/editor/components.json').read_text(encoding='utf-8'))
-    physical=json.loads((ROOT/'device-library/parts/physical-parts.json').read_text(encoding='utf-8'))
+    editor=json.loads((device_resource('editor/components.json')).read_text(encoding='utf-8'))
+    physical=json.loads((device_resource('parts/physical-parts.json')).read_text(encoding='utf-8'))
     domains={'DIGITAL','ANALOG','POWER','GROUND','CLOCK','MIXED'}
     for component in editor['components']:
         assert all(port.get('domain') in domains for port in component['ports']),component['type']
@@ -27,14 +29,14 @@ def test_canonical_catalog_ports_have_explicit_domains():
 
 
 def test_python_and_browser_receive_the_same_domain_catalog():
-    python=ROOT/'contracts/design-models/signal-port-catalog.json'
-    browser=ROOT/'apps/web/src/data/signalPortCatalog.json'
+    python=contract_resource('design-models/signal-port-catalog.json')
+    browser=sdk_resource('data/signalPortCatalog.json')
     assert python.exists() and browser.exists(),'The shared port-domain projection is missing.'
     assert json.loads(python.read_text(encoding='utf-8'))==json.loads(browser.read_text(encoding='utf-8'))
 
 
 def domain_boundary():
-    assert (ROOT/'contracts/signal_domains.py').exists(),'Shared signal-domain rules are missing.'
+    assert (contract_resource('signal_domains.py')).exists(),'Shared signal-domain rules are missing.'
     return importlib.import_module('contracts.signal_domains')
 
 
@@ -87,7 +89,7 @@ def test_namespace_cannot_relabel_known_ports_and_future_versions_remain_storabl
 def test_shared_domain_corpus_matches_python_classification_and_error_paths():
     from contracts.registry import validate_contract
     domains=domain_boundary()
-    corpus=json.loads((ROOT/'contracts/fixtures/signal-domains-conformance.json').read_text(encoding='utf-8'))
+    corpus=json.loads((contract_resource('fixtures/signal-domains-conformance.json')).read_text(encoding='utf-8'))
     for case in corpus['compatibility']:
         assert domains.domains_compatible(case['source'],case['destination'])==case['compatible']
     for case in corpus['classification']:

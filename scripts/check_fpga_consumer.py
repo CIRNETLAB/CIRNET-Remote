@@ -15,7 +15,7 @@ except ModuleNotFoundError:
 def check(root=None, manifest=None):
     product = source_product(root, manifest)
     provenance = installed_provenance()
-    if provenance['version'] != '1.0.1': raise ValueError('FPGA consumer requires installed Contracts 1.0.1.')
+    if provenance['version'] != '0.1.1': raise ValueError('FPGA consumer requires installed Contracts 0.1.1.')
     resources = files('contracts')
     schema = json.loads(resources.joinpath('fpga-protocol/control.schema.json').read_text(encoding='utf-8'))
     Draft202012Validator.check_schema(schema)

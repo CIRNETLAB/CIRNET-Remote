@@ -1,3 +1,5 @@
+from tests.support.release_inputs import sdk_resource
+from tests.support.release_inputs import contract_resource, device_resource, interface_root, release_resource
 """Physical registry validation prevents malformed source reaching either runtime."""
 import copy
 import importlib.util
@@ -14,7 +16,7 @@ spec.loader.exec_module(sync)
 
 
 def registry():
-    return json.loads((ROOT / 'device-library/parts/physical-parts.json').read_text(encoding='utf-8'))
+    return json.loads((device_resource('parts/physical-parts.json')).read_text(encoding='utf-8'))
 
 
 def test_generator_rejects_impossible_body_geometry_and_nonplanar_mounting_pins():
@@ -51,16 +53,16 @@ def test_generated_physical_snapshots_have_exact_canonical_provenance():
     canonical = registry()
     sync.validate_parts(canonical)
     for snapshot in ['apps/web/src/data/physicalParts.json', 'contracts/design-models/physical-parts.v1.json']:
-        assert json.loads((ROOT / snapshot).read_text(encoding='utf-8')) == canonical
+        assert json.loads(release_resource(snapshot).read_text(encoding='utf-8')) == canonical
 
 
 def test_mechanical_authoring_snapshot_has_exact_canonical_provenance():
-    canonical = json.loads((ROOT / 'contracts/design-models/flexible-mechanics.json').read_text(encoding='utf-8'))
-    assert json.loads((ROOT / 'apps/web/src/data/flexibleMechanics.json').read_text(encoding='utf-8')) == canonical
+    canonical = json.loads((contract_resource('design-models/flexible-mechanics.json')).read_text(encoding='utf-8'))
+    assert json.loads((sdk_resource('data/flexibleMechanics.json')).read_text(encoding='utf-8')) == canonical
 
 
 def test_generation_adds_physical_pin_ports_without_mutating_legacy_metadata():
-    legacy = json.loads((ROOT / 'device-library/editor/components.json').read_text(encoding='utf-8'))
+    legacy = json.loads((device_resource('editor/components.json')).read_text(encoding='utf-8'))
     before = copy.deepcopy(legacy)
     catalog = sync.generate_catalog(legacy, registry())
     assert legacy == before
@@ -132,7 +134,7 @@ def test_sealed_current_packages_have_exact_envelopes_sections_and_centered_exit
         'GENERIC_BJT': (4.6, 5.1, 3.9, 2.5, 'to92', .44),
         'SN74HC08N': (19, 3.04, 6.35, 1, 'dip', .46),
     }
-    mechanics = json.loads((ROOT / 'contracts/design-models/flexible-mechanics.json').read_text())['profiles']
+    mechanics = json.loads((contract_resource('design-models/flexible-mechanics.json')).read_text())['profiles']
     for kind, (x, y, z, standoff, family, width) in expected.items():
         pkg = parts[kind]['package']
         assert pkg['bodyMm'] == dict(x=x, y=y, z=z), kind
@@ -163,12 +165,12 @@ def test_all_previously_current_descriptors_remain_frozen_and_resolvable():
     # physical descriptors, including the compact revision created by that task.
     catalog = registry()
     all_parts = [*catalog['parts'], *catalog['historicalParts']]
-    frozen = json.loads((ROOT / 'contracts/design-models/fixtures/sealed-package-legacy.json').read_text())
+    frozen = json.loads((contract_resource('design-models/fixtures/sealed-package-legacy.json')).read_text())
     digest = lambda value: hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()).hexdigest()
     for saved in frozen['parts']:
         previous = next(part for part in all_parts if (part['id'], part['revision']) == (saved['id'], saved['revision']))
         assert digest(previous) == saved['sha256']
-    profiles = json.loads((ROOT / 'contracts/design-models/flexible-mechanics.json').read_text())['profiles']
+    profiles = json.loads((contract_resource('design-models/flexible-mechanics.json')).read_text())['profiles']
     for saved in frozen['profiles']:
         previous = next(profile for profile in profiles if (profile['id'], profile['revision']) == (saved['id'], saved['revision']))
         assert digest(previous) == saved['sha256']
@@ -201,7 +203,7 @@ def test_generator_rejects_invalid_sealed_shape_specs(mutation):
 
 
 def test_generator_rejects_shape_profile_exit_drift_and_degenerate_new_wire_bends():
-    mechanics = json.loads((ROOT / 'contracts/design-models/flexible-mechanics.json').read_text())
+    mechanics = json.loads((contract_resource('design-models/flexible-mechanics.json')).read_text())
     catalog=registry()
     sync.validate_mechanics(catalog, mechanics)
     frozen_catalog=copy.deepcopy(catalog)

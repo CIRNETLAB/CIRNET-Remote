@@ -1,3 +1,4 @@
+from tests.support.release_inputs import device_resource
 """Labels are validated visual annotations, never electrical components."""
 from copy import deepcopy
 import json
@@ -30,7 +31,7 @@ def test_label_contract_preserves_plain_unicode_text_and_has_no_electrical_domai
     validate_design_graph(value)
     assert value == original
     assert classify_graph(value) == dict(schema_version='1.0', kind='DIGITAL', domains=[], unsupported_components=[])
-    source = json.loads((ROOT/'device-library/editor/components.json').read_text(encoding='utf-8'))
+    source = json.loads((device_resource('editor/components.json')).read_text(encoding='utf-8'))
     definition = next(item for item in source['components'] if item['type'] == 'LABEL')
     assert definition['ports'] == [] and definition['visualOnly'] is True
 

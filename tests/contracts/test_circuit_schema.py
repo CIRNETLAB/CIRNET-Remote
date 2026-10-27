@@ -1,3 +1,4 @@
+from tests.support.release_inputs import contract_resource
 import json
 from pathlib import Path
 import pytest
@@ -5,7 +6,7 @@ from jsonschema import Draft202012Validator, ValidationError
 from referencing import Registry, Resource
 
 ROOT=Path(__file__).resolve().parents[2]
-SCHEMA_DIR=ROOT/'contracts/circuit-schema'
+SCHEMA_DIR=contract_resource('circuit-schema')
 
 
 def load(name):

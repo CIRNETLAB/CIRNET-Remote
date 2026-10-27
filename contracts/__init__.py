@@ -9,12 +9,12 @@ import json
 from pathlib import Path
 import sys
 
-_EXPECTED_VERSION = '1.0.1'
+_EXPECTED_VERSION = '0.1.1'
 _legacy = Path(__file__).resolve().parent
 try:
     _distribution = distribution('netcircuit-contracts')
 except PackageNotFoundError as error:
-    raise ImportError('netcircuit-contracts==1.0.1 is not installed; install the pinned wheel before starting Remote.') from error
+    raise ImportError('netcircuit-contracts==0.1.1 is not installed; install the pinned wheel before starting Remote.') from error
 if _distribution.version != _EXPECTED_VERSION:
     raise ImportError(f'Remote requires netcircuit-contracts=={_EXPECTED_VERSION}; found {_distribution.version}.')
 _direct = _distribution.read_text('direct_url.json')

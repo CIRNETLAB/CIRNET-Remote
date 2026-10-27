@@ -122,8 +122,8 @@ for path in sys.path:
 for name in ('contracts','app','netcircuit_sim','hardware_service'):
     module=importlib.import_module(name)
     assert module.__file__ and not any(Path(module.__file__).resolve().is_relative_to(root) for root in checkout_roots),name
-assert version('netcircuit-simulator')=='0.2.0'
-assert version('netcircuit-contracts')=='1.0.1'
+assert version('netcircuit-simulator')=='0.1.1'
+assert version('netcircuit-contracts')=='0.1.1'
 assert version('netcircuit-hardware-service')=='0.1.1'
 
 from contracts.registry import check_manifest,validate_contract
@@ -236,7 +236,7 @@ if __name__=='__main__':
         os.environ['NETCIRCUIT_SIMULATION_BACKEND']='unknown-after-start'
         second=pool.submit(execute,plan).result(timeout=30)
     assert first==second,'installed worker capture or provenance was nondeterministic'
-    assert first['method']=='spawn' and first['version']=='0.2.0'
+    assert first['method']=='spawn' and first['version']=='0.1.1'
     assert Path(first['origin']).resolve().is_relative_to(Path(sys.prefix).resolve())
     assert first['prefix']==sys.prefix
     assert first['capture']=={'available':True,'state':'COMPLETE','duration_ns':20,'samples':[{'signal':'D.OUT','time_ns':0,'value':1}]}
@@ -265,8 +265,8 @@ if __name__=='__main__':
     from contracts.generated import rpc_v2_pb2 as pb
     from contracts.validation import validate
     assert version('netcircuit-hardware-service')=='0.1.1'
-    assert version('netcircuit-contracts')=='1.0.1'
-    assert version('netcircuit-simulator')=='0.2.0'
+    assert version('netcircuit-contracts')=='0.1.1'
+    assert version('netcircuit-simulator')=='0.1.1'
     assert Path(hardware_service.__file__).resolve().is_relative_to(Path(sys.prefix).resolve())
     for address in ('0.0.0.0:50051','[::]:50051','192.0.2.1:50051'):
         try:serve(address)

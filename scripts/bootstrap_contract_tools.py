@@ -128,19 +128,33 @@ console.log(JSON.stringify({session:bootstrapSession,context:bootstrapContext}))
     os.environ['NETCIRCUIT_ARTIFACTS_CONTEXT'] = json.dumps(allocated['context'])
     runtime = session / 'dev-bootstrap'
     runtime.mkdir(exist_ok=True)
+    temporary = runtime / 'tmp'
+    pip_cache = runtime / 'pip-cache'
+    npm_cache = runtime / 'npm-cache'
+    for directory in (temporary, pip_cache, npm_cache):
+        directory.mkdir(exist_ok=True)
+    contained_environment = {'TMP': str(temporary), 'TEMP': str(temporary), 'TMPDIR': str(temporary),
+        'PIP_CACHE_DIR': str(pip_cache), 'npm_config_cache': str(npm_cache), 'PYTHONDONTWRITEBYTECODE': '1'}
+    os.environ.update(contained_environment)
+    canonical_cli = runtime / 'allocator.mjs'
+    canonical_cli.write_bytes(node_source)
+    if os.environ.get('GITHUB_ENV'):
+        with Path(os.environ['GITHUB_ENV']).open('a', encoding='utf-8') as output:
+            output.write(f'NETCIRCUIT_ARTIFACTS_SESSION={session}\n')
+            output.write(f'NETCIRCUIT_ARTIFACTS_CLI={canonical_cli}\n')
+            output.write(f'NETCIRCUIT_ARTIFACTS_CONTEXT={json.dumps(allocated["context"])}\n')
+            for key, value in contained_environment.items():
+                output.write(f'{key}={value}\n')
     archive = runtime / 'netcircuit_artifact_paths-1.0.0a1-py3-none-any.whl'
     archive.write_bytes(payload)
     log = runtime / 'install.log'
     with log.open('wb') as output:
-        completed = subprocess.run([sys.executable, '-m', 'pip', 'install', '--force-reinstall', '--no-deps',
-            '--cache-dir', str(runtime / 'pip-cache'), str(archive)], stdout=output, stderr=subprocess.STDOUT)
+        completed = subprocess.run([sys.executable, '-B', '-m', 'pip', 'install', '--force-reinstall', '--no-deps',
+            '--cache-dir', str(runtime / 'pip-cache'), str(archive)], stdout=output, stderr=subprocess.STDOUT,
+            env={**os.environ, **contained_environment})
     if completed.returncode:
         raise RuntimeError('DEV wheel install failed: ' + log.read_text(errors='replace')[-16000:])
     materialize_allocator(cache_root)
-    if os.environ.get('GITHUB_ENV'):
-        with Path(os.environ['GITHUB_ENV']).open('a', encoding='utf-8') as output:
-            output.write(f'NETCIRCUIT_ARTIFACTS_SESSION={session}\n')
-            output.write(f'NETCIRCUIT_ARTIFACTS_CONTEXT={json.dumps(allocated["context"])}\n')
     print(f'Independent DEV allocator {DEV_VERSION} installed and verified; canonical cache materialized.')
     return allocated
 

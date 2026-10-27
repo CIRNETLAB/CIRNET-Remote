@@ -13,7 +13,7 @@ import sys
 from zipfile import ZipFile
 
 NAME = 'netcircuit-simulator'
-VERSION = '0.2.0'
+VERSION = '0.1.1'
 MODULES = ('__init__.py', 'analog.py', 'backends.py', 'circuit.py', 'dispatch.py', 'engine.py', 'logic.py', 'nets.py', 'waveform.py')
 
 
@@ -33,8 +33,8 @@ def verify_wheel(path, digest):
     if value['Name'] != NAME or value['Version'] != VERSION:
         raise ValueError(f'Expected {NAME}=={VERSION}; got {value["Name"]}=={value["Version"]}.')
     dependencies = [entry.replace(' ', '') for entry in value.get_all('Requires-Dist', []) if ';' not in entry]
-    if sorted(dependencies) != ['jsonschema==4.26.0', 'netcircuit-contracts==1.0.1']:
-        raise ValueError('Simulator must pin Contracts 1.0.1 and its direct jsonschema 4.26.0 dependency.')
+    if sorted(dependencies) != ['jsonschema==4.26.0', 'netcircuit-contracts==0.1.1']:
+        raise ValueError('Simulator must pin Contracts 0.1.1 and its direct jsonschema 4.26.0 dependency.')
     if missing:
         raise ValueError('Simulator wheel is missing runtime modules: ' + ', '.join(missing))
     return path
@@ -63,7 +63,7 @@ import sys
 from zipfile import ZipFile
 wheel,digest=sys.argv[1:]
 artifact=distribution('netcircuit-simulator')
-assert artifact.version=='0.2.0','selected archive version differs from installation'
+assert artifact.version=='0.1.1','selected archive version differs from installation'
 direct=json.loads(artifact.read_text('direct_url.json') or '{}')
 assert 'dir_info' not in direct,'Simulator must not use an editable/source installation'
 info=direct.get('archive_info',{})

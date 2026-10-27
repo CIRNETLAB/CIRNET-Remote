@@ -141,6 +141,18 @@ R7 implements an abstract control FSM and unavailable transport/instrument inter
 
 Future EP4CE10E22C8N + external SDRAM: Logic Analyzer, Scope 2CH + ADC/AFE, Generator 2CH + DAC/output stage, shared SDRAM arbiter, trigger, timestamps and explicit CDC. Pinout, switching/protection schematic, part selections, timing and electrical values: TBD_BY_HARDWARE_DESIGN. Never fabricate hardware success or measurements.
 
+## Current multi-repo release boundary
+
+M6 uses independent Contracts, Interface, Simulator, Hardware, FPGA and Remote products at **0.1.1**. `integration/release-set.json` records exact committed sources, immutable artifact locations/digests, compatibility and rollback. API application-info and API/root metadata align at 0.1.1. CircuitGraph 1.0/1.1/1.2, Hardware RPC 2.0, NCAP1/2, FPGA logical 1.0-scaffold and register-map 1.0-reserved retain their meaning; DEV tooling keeps its independent pins.
+
+Contracts is the sole schema/catalog/protocol/SDK owner. FastAPI registrations remain operation authority and final-wheel OpenAPI equality is mandatory. Interface owns editor/assets/browser assertions; Simulator owns the existing engine/backend boundary; Hardware owns local-only RPC/stations/private transport; FPGA owns scaffold/RTL/toolchain. Remote owns auth/persistence, one scheduler process, orchestration, deployment and integrated acceptance. Supported gates use installed artifacts/resources, without sibling/frozen source dependencies or editable producers. Retained monorepo source is historical reference only.
+
+Keep same-origin Web/API/WebSocket and unavailable native/physical capabilities. Rollback requires matching database/capture backups, no command replay and retained quarantine. Fresh publication/CI/acceptance dispositions belong to the [M6 record](verification/2026-10-27-multi-repo-migration-m6.md).
+
+## Migration execution history
+
+M0–M5 versions and dispositions below describe their recorded stages; the current release boundary supersedes temporary package/workflow setup.
+
 ## Execution discipline
 
 Current verification and artifact storage rules are in [VERIFICATION.md](VERIFICATION.md), with the short Codex policy in root [AGENTS.md](../AGENTS.md). Temporary screenshots, video, traces, image-bearing HTML reports and raw diagnostic artifacts must be created outside every repository/worktree and Git directory. Retained repository evidence is Markdown; dated reports preserve their original results and do not authorize rerunning historical checklists. Product assets and approved regression fixtures keep their own roles.
@@ -159,6 +171,6 @@ M5 assigns the existing FPGA scaffold, testbenches and pure RTL/toolchain verifi
 
 R0–R7 run sequentially, TDD and acceptance gates, one main commit per phase. MIGRATION_LAB_FIRST.md records evidence/rulings/blockers. Preserve frontend/history; no unrelated rewrites, broker/cloud dependencies or bundle optimization. Unsupported features report UNAVAILABLE / NOT_IMPLEMENTED / capability=false.
 
-Post-R7 H0–H6 hardening completes contracts/resolution, capture storage, capacity/workers, instruments, feedback and documentation. Preserve existing phase commits and subsequent user changes. Leave branch refactor for user review. Do not merge or push to main.
+Post-R7 H0–H6 hardening completes contracts/resolution, capture storage, capacity/workers, instruments, feedback and documentation. Preserve existing phase commits and subsequent user changes. The original refactor handoff retained its branch for review; later integration follows the current explicit user authorization and acceptance gates.
 
 Web/Contracts W0–W8 execution evidence is in `verification/2026-10-16-web-contracts.md`; historical proposals do not supersede this authority. Independent Contracts CI and consumer gates cover offline references, numeric/semantic parity, deterministic artifacts, retained public wire/NCAP anchors, actual installed wheels, real browser flows and database migrations. `scripts/check_release.py --show-plan` exposes the reproducible commands; the optional local workload reports observed HTTP/virtual concurrency separately. Hosted CI, target deployment and hardware success require their own evidence. Runtime JSON correlation logs contain allowlisted request/experiment/operation/capture metadata, and critical recovery/destructive changes retain database audit records.

@@ -6,11 +6,18 @@ import subprocess
 import sys
 
 import pytest
+from tests.support.release_inputs import installed_distribution
 
 
 ROOT = Path(__file__).resolve().parents[2]
-PROJECTS = (ROOT, ROOT / 'services/api', ROOT / 'simulator/circuit-simulator',
-            ROOT / 'services/hardware-service')
+PROJECTS = (ROOT, ROOT / 'services/api')
+
+
+@pytest.mark.parametrize('name', ('netcircuit-contracts', 'netcircuit-simulator', 'netcircuit-hardware-service'))
+def test_installed_producer_payloads_do_not_ship_pytest_diagnostics(name):
+    product = installed_distribution(name)
+    assert product.files
+    assert not any('.pytest_cache' in entry.parts for entry in product.files)
 
 
 def cache_snapshot():
@@ -27,7 +34,7 @@ def cache_snapshot():
     return result
 
 
-@pytest.mark.parametrize('project', PROJECTS, ids=('root', 'api', 'simulator', 'hardware'))
+@pytest.mark.parametrize('project', PROJECTS, ids=('root', 'api'))
 def test_real_pytest_entrypoint_disables_cache_without_touching_source(project, tmp_path):
     probe = tmp_path / 'test_cache_probe.py'
     probe.write_text('def test_cache_disabled(pytestconfig):\n'

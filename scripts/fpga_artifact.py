@@ -18,8 +18,8 @@ MAX_MEMBERS = 10_000
 MAX_EXPANDED_BYTES = 128 * 1024 * 1024
 MAX_ARCHIVE_BYTES = 128 * 1024 * 1024
 IDENTITY = 'fpga-artifact.json'
-PINS = {'schemaVersion': 1, 'name': 'netcircuit-fpga-scaffold', 'version': '0.1.0',
-    'kind': 'source', 'contractsVersion': '1.0.1', 'logicalProtocolVersion': '1.0-scaffold',
+PINS = {'schemaVersion': 1, 'name': 'netcircuit-fpga-scaffold', 'version': '0.1.1',
+    'kind': 'source', 'contractsVersion': '0.1.1', 'logicalProtocolVersion': '1.0-scaffold',
     'registerMapVersion': '1.0-reserved', 'physicalAvailable': False}
 REPOSITORY = 'https://github.com/TINIHI-Labs/net-Circuit-FPGA.git'
 ORIGINAL_REPOSITORY = 'https://github.com/net-Circuit-Remote/net-Circuit-Remote.git'
@@ -67,7 +67,7 @@ def _check_ancestors(path):
 def _identity(identity, contents):
     if not isinstance(identity, dict) or any(type(identity.get(key)) is not type(value)
             or identity[key] != value for key, value in PINS.items()):
-        raise ValueError('FPGA source identity must match source 0.1.0 and Contracts 1.0.1/logical 1.0-scaffold pins.')
+        raise ValueError('FPGA source identity must match source 0.1.1 and Contracts 0.1.1/logical 1.0-scaffold pins.')
     source = identity.get('source')
     if (not isinstance(source, dict) or source.get('repository') != REPOSITORY
             or source.get('originalRepository') != ORIGINAL_REPOSITORY

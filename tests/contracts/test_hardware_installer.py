@@ -32,7 +32,7 @@ def candidate(tmp_path, monkeypatch):
             archive.writestr('hardware_service/' + module, '')
         archive.writestr('netcircuit_hardware_service-0.1.1.dist-info/METADATA',
             'Name: netcircuit-hardware-service\nVersion: 0.1.1\n'
-            'Requires-Dist: netcircuit-contracts==1.0.1\nRequires-Dist: netcircuit-simulator==0.2.0\nRequires-Dist: grpcio==1.84.0\nRequires-Dist: protobuf==7.36.2\nRequires-Dist: jsonschema==4.26.0\n')
+            'Requires-Dist: netcircuit-contracts==0.1.1\nRequires-Dist: netcircuit-simulator==0.1.1\nRequires-Dist: grpcio==1.84.0\nRequires-Dist: protobuf==7.36.2\nRequires-Dist: jsonschema==4.26.0\n')
     digest = hashlib.sha256(wheel.read_bytes()).hexdigest()
     manifest = tmp_path / 'selected.json'
     manifest.write_text(json.dumps({'schemaVersion': 1, 'python': {'path': str(wheel), 'sha256': digest}}), encoding='utf-8')

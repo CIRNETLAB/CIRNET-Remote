@@ -17,13 +17,13 @@ class ReachedInstaller(Exception):
 
 @pytest.fixture
 def candidate(tmp_path, monkeypatch):
-    wheel = tmp_path / 'netcircuit_simulator-0.2.0-py3-none-any.whl'
+    wheel = tmp_path / 'netcircuit_simulator-0.1.1-py3-none-any.whl'
     with ZipFile(wheel, 'w') as archive:
         for module in MODULES:
             archive.writestr('netcircuit_sim/' + module, '')
-        archive.writestr('netcircuit_simulator-0.2.0.dist-info/METADATA',
-            'Name: netcircuit-simulator\nVersion: 0.2.0\n'
-            'Requires-Dist: netcircuit-contracts==1.0.1\nRequires-Dist: jsonschema==4.26.0\n')
+        archive.writestr('netcircuit_simulator-0.1.1.dist-info/METADATA',
+            'Name: netcircuit-simulator\nVersion: 0.1.1\n'
+            'Requires-Dist: netcircuit-contracts==0.1.1\nRequires-Dist: jsonschema==4.26.0\n')
     digest = hashlib.sha256(wheel.read_bytes()).hexdigest()
     manifest = tmp_path / 'selected.json'
     manifest.write_text(json.dumps({'schemaVersion': 1, 'python': {'path': str(wheel), 'sha256': digest}}), encoding='utf-8')

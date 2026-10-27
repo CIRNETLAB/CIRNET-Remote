@@ -1,3 +1,4 @@
+from tests.support.release_inputs import contract_resource
 """Compact defaults must never reinterpret a pinned historical package."""
 from copy import deepcopy
 import json
@@ -38,7 +39,7 @@ def test_pinned_historical_descriptor_resolves_without_accepting_fabricated_revi
 
 
 def test_version_two_auto_routing_is_explicit_and_frozen_version_one_rejects_it():
-    corpus = json.loads((ROOT / 'contracts/design-models/fixtures/flexible-mounting-parity.json').read_text())
+    corpus = json.loads((contract_resource('design-models/fixtures/flexible-mounting-parity.json')).read_text())
     original = corpus['cases'][0]['graph']['modules'][1]['mount']
     automatic = deepcopy(original)
     automatic.update(version=2, geometryRevision=2, routing={'version': 1, 'mode': 'automatic', 'template': 'axial-horizontal'})
@@ -55,7 +56,7 @@ def test_version_two_auto_routing_is_explicit_and_frozen_version_one_rejects_it(
 def test_pinned_manual_pose_fixture_round_trips_without_reflow_or_property_loss():
     from contracts.boundary.models import AnySupportedCircuitGraph
     from contracts.design_validation import validate_design_graph
-    graph = json.loads((ROOT / 'contracts/design-models/fixtures/component-mechanics-legacy.json').read_text())
+    graph = json.loads((contract_resource('design-models/fixtures/component-mechanics-legacy.json')).read_text())
     original = deepcopy(graph)
     validate_design_graph(graph)
     restored = AnySupportedCircuitGraph.model_validate(graph).model_dump(exclude_unset=True)

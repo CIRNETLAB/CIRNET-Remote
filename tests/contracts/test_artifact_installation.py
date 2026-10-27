@@ -20,7 +20,7 @@ def helper():
     return module
 
 
-def wheel(tmp_path, version='1.0.1'):
+def wheel(tmp_path, version='0.1.1'):
     target = tmp_path / f'netcircuit_contracts-{version}-py3-none-any.whl'
     with ZipFile(target, 'w') as archive:
         archive.writestr(f'netcircuit_contracts-{version}.dist-info/METADATA',
@@ -38,7 +38,7 @@ def test_same_name_wrong_bytes_are_rejected_before_install(tmp_path):
 
 def test_wrong_version_is_rejected_even_with_a_matching_digest(tmp_path):
     target = wheel(tmp_path, '1.0.0')
-    with pytest.raises(ValueError, match='1.0.1'):
+    with pytest.raises(ValueError, match='0.1.1'):
         helper().verify_wheel(target, hashlib.sha256(target.read_bytes()).hexdigest())
 
 

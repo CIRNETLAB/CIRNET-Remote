@@ -11,7 +11,7 @@ import sys
 import subprocess
 from zipfile import ZipFile
 
-VERSION = '1.0.1'
+VERSION = '0.1.1'
 NAME = 'netcircuit-contracts'
 
 
@@ -54,7 +54,7 @@ import sys
 from zipfile import ZipFile
 wheel,digest=sys.argv[1:]
 artifact=distribution('netcircuit-contracts')
-assert artifact.version=='1.0.1','selected archive version differs from the installation'
+assert artifact.version=='0.1.1','selected archive version differs from the installation'
 direct=json.loads(artifact.read_text('direct_url.json') or '{}')
 archive_info=direct.get('archive_info',{})
 actual_digest=archive_info.get('hashes',{}).get('sha256')

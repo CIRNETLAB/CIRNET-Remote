@@ -1,3 +1,4 @@
+from tests.support.release_inputs import contract_resource
 import copy
 import importlib
 import json
@@ -10,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def validate(name, value):
-    assert (ROOT / 'contracts/validation.py').is_file(), 'Lab contract validator missing'
+    assert (contract_resource('validation.py')).is_file(), 'Lab contract validator missing'
     return importlib.import_module('contracts.validation').validate(name, value)
 
 
@@ -71,7 +72,7 @@ def test_safe_topology_mismatch_and_guarded_decision_are_independent_contracts()
 
 
 def test_v1_target_capability_contract_exposes_one_slot_but_no_unimplemented_instruments():
-    value = json.loads((ROOT / 'contracts/physical-lab/examples/v1-target-capabilities.json').read_text()) if (ROOT / 'contracts/physical-lab/examples/v1-target-capabilities.json').exists() else {}
+    value = json.loads((contract_resource('physical-lab/examples/v1-target-capabilities.json')).read_text()) if (contract_resource('physical-lab/examples/v1-target-capabilities.json')).exists() else {}
     validate('StationCapabilities', value)
     assert value['physical_execution_slots']==1
     assert all(cap['channels']==0 for cap in value['instrument_capabilities'].values())

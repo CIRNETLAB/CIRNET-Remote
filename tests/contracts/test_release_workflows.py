@@ -5,11 +5,12 @@ from pathlib import Path
 import tomllib
 import yaml
 import pytest
+from tests.support.release_inputs import installed_distribution
+from tests.support.ci_release import assert_interface_release_job
 
 ROOT=Path(__file__).resolve().parents[2]
-SHARED=('contracts/public/auth.schema.json','contracts/signal_domains.py','contracts/capture/layout.json',
-    'contracts/hardware/v2/rpc_v2.proto','scripts/generate_python_contracts.py',
-    'device-library/parts/physical-parts.json','integration/contracts-version.json','pyproject.toml','requirements-codegen.txt',
+SHARED=('integration/contracts-version.json','integration/simulator-version.json','integration/hardware-version.json',
+    'integration/fpga-version.json','scripts/contract_exports.py','scripts/check_contract_sdk.py','pyproject.toml','requirements-codegen.txt',
     'requirements-verification.txt','requirements-benchmark.txt','setup.py','MANIFEST.in','Makefile','.gitattributes')
 
 OWNED_PYTEST_JOBS=(('backend.yml','test'),('hardware-service.yml','test'),('frontend.yml','build'),
@@ -72,12 +73,34 @@ def test_contract_workflow_checks_artifacts_compatibility_and_outside_packages()
     assert 'check_release.py --group contracts' in commands
     assert 'check_contract_package.py' in commands
     assert 'npm ci' in commands and 'requirements-verification.txt' in commands
+    job=data['jobs']['canonical-boundaries']
+    assert_interface_release_job(job)
+    assert any('npm test' in step.get('run','') for step in job['steps'])
+    assert_interface_release_job(workflow('integration.yml')['jobs']['repository-contracts'])
+    for document in (data, workflow('integration.yml')):
+        for name in ('NETCIRCUIT_CONTRACTS_SDIST_URL', 'NETCIRCUIT_ARTIFACT_PATHS_NPM_URL'):
+            assert document.get('env', {}).get(name) == '${{ vars.' + name + ' }}', name
 
 
-def test_contract_workflow_triggers_browser_compiler_and_runner_configuration():
+@pytest.mark.parametrize('failure', ['missing-digest', 'frozen-directory', 'early-npm-install'])
+def test_interface_release_gate_rejects_missing_digest_frozen_source_and_early_install(failure):
+    job=deepcopy(workflow('contracts.yml')['jobs']['canonical-boundaries'])
+    if failure=='missing-digest':
+        next(step for step in job['steps'] if 'scripts.install_interface' in step.get('run',''))['env'].pop('NETCIRCUIT_INTERFACE_ARTIFACT_SHA256')
+    elif failure=='frozen-directory':
+        next(step for step in job['steps'] if 'npm test' in step.get('run',''))['working-directory']='apps/web'
+    else:
+        install=next(step for step in job['steps'] if 'npm ci' in step.get('run',''))
+        job['steps'].remove(install)
+        job['steps'].insert(0,install)
+    with pytest.raises(AssertionError):
+        assert_interface_release_job(job)
+
+
+def test_contract_workflow_triggers_release_input_and_browser_acceptance_configuration():
     data=workflow('contracts.yml');events=data.get('on',data.get(True))
     for event in ('push','pull_request'):
-        for path in ('apps/web/tsconfig.json','apps/web/tsconfig.e2e.json','apps/web/vite.config.ts','apps/web/playwright.config.ts'):
+        for path in ('integration/contracts-version.json','scripts/e2e-interface-target.mjs','tests/frontend/test_frontend_shell.py','.github/workflows/frontend.yml'):
             assert any(fnmatchcase(path,pattern) for pattern in events[event]['paths']),(event,path)
 
 
@@ -85,11 +108,11 @@ def test_api_consumer_installs_the_versioned_simulator_and_uses_compatible_wire_
     commands='\n'.join(step.get('run','') for step in workflow('backend.yml')['jobs']['test']['steps'])
     assert 'install_simulator.py' in commands
     assert 'simulator/circuit-simulator' not in commands
-    for relative in ('services/api/pyproject.toml','services/hardware-service/pyproject.toml'):
-        metadata=tomllib.loads((ROOT/relative).read_text(encoding='utf-8'))
-        assert 'grpcio==1.84.0' in metadata['project']['dependencies']
-        assert 'protobuf==7.36.2' in metadata['project']['dependencies']
-        assert 'netcircuit-simulator==0.2.0' in metadata['project']['dependencies']
+    api=tomllib.loads((ROOT/'services/api/pyproject.toml').read_text(encoding='utf-8'))
+    for dependencies in (api['project']['dependencies'], installed_distribution('netcircuit-hardware-service').requires):
+        assert 'grpcio==1.84.0' in dependencies
+        assert 'protobuf==7.36.2' in dependencies
+        assert 'netcircuit-simulator==0.1.1' in dependencies
     api=tomllib.loads((ROOT/'services/api/pyproject.toml').read_text(encoding='utf-8'))
     assert 'fastapi==0.143.0' in api['project']['dependencies']
 
@@ -107,7 +130,7 @@ def test_negative_shared_file_removal_is_detected_by_trigger_coverage():
     # The same assertion used by real workflows rejects the previous narrow gate.
     data=workflow('backend.yml');events=data.get('on',data.get(True))
     events['push']['paths']=['services/api/**','contracts/circuit-schema/**']
-    with pytest.raises(AssertionError,match='auth.schema.json'):assert_shared_coverage(data,'backend.yml')
+    with pytest.raises(AssertionError,match='contracts-version.json'):assert_shared_coverage(data,'backend.yml')
 
 
 def test_shared_verification_installs_benchmark_process_cleanup_dependency():
@@ -203,7 +226,7 @@ def test_fpga_acceptance_uses_explicit_source_artifact_and_mandatory_owned_rtl()
     assert 'iverilog -g2012 -tnull fpga/' not in commands
     assert 'pytest -q tests/fpga' not in commands
     assert 'NETCIRCUIT_FPGA_ARTIFACT_SHA256' in document['env']
-    assert document['env']['NETCIRCUIT_FPGA_ARTIFACT_FILENAME'] == 'netcircuit-fpga-scaffold-0.1.0.tar.gz'
+    assert document['env']['NETCIRCUIT_FPGA_ARTIFACT_FILENAME'] == 'netcircuit-fpga-scaffold-0.1.1.tar.gz'
     for name, job_id in (('contracts.yml', 'canonical-boundaries'), ('integration.yml', 'repository-contracts')):
         commands = '\n'.join(step.get('run', '') for step in workflow(name)['jobs'][job_id]['steps'])
         assert 'install_fpga.py' in commands and 'scripts.check_fpga_consumer' in commands, name

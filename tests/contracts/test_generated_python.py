@@ -1,3 +1,4 @@
+from tests.support.release_inputs import contract_resource
 """Generated Python boundaries preserve canonical wire values before coercion."""
 from copy import deepcopy
 import importlib
@@ -49,7 +50,7 @@ def test_diagnostic_corpus_preserves_registry_and_generated_code_path_profile():
     import json
     from contracts.registry import validate_contract
     from jsonschema import ValidationError as SchemaError
-    corpus=json.loads((ROOT/'contracts/fixtures/diagnostics.json').read_text())
+    corpus=json.loads((contract_resource('fixtures/diagnostics.json')).read_text())
     for case in corpus['cases']:
         if case.get('valid'):
             assert validate_contract(case['contract'],case['value'],case['profile'])==case['value']

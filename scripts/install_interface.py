@@ -54,14 +54,14 @@ def extract_product(contents, directory):
         if not any(member.name.removeprefix('./')=='package.json' and member.isfile() for member in members):
             raise ValueError('The Interface product must contain package.json at its archive root.')
         manifest=next(member for member in members if member.name.removeprefix('./')=='package.json')
-        if json.loads(archive.extractfile(manifest).read()).get('version')!='0.1.0-m2.0':
-            raise ValueError('Expected the reviewed Interface product version 0.1.0-m2.0.')
+        if json.loads(archive.extractfile(manifest).read()).get('version')!='0.1.1':
+            raise ValueError('Expected the reviewed Interface product version 0.1.1.')
         metadata=next((member for member in members if member.name.removeprefix('./')=='interface-artifact.json' and member.isfile()),None)
         if metadata is None:raise ValueError('The Interface source product requires interface-artifact.json at its archive root.')
         identity=json.loads(archive.extractfile(metadata).read())
         if (identity.get('schema')!=1 or identity.get('name')!='netcircuit-interface'
-                or identity.get('version')!='0.1.0-m2.0' or identity.get('kind')!='source'
-                or identity.get('contractsVersion')!='1.0.1'
+                or identity.get('version')!='0.1.1' or identity.get('kind')!='source'
+                or identity.get('contractsVersion')!='0.1.1'
                 or not re.fullmatch('[0-9a-f]{64}',identity.get('sourceFingerprint',''))):
             raise ValueError('The Interface source product metadata does not match the reviewed version and Contracts set.')
         source=identity.get('source',{})
@@ -70,8 +70,8 @@ def extract_product(contents, directory):
         if (repository.scheme!='https' or not repository.hostname or repository.username or repository.password
                 or not repository.path.endswith('.git') or repository.query or repository.fragment
                 or not re.fullmatch('[0-9a-f]{40}',source.get('revision',''))
-                or type(source.get('uncommittedMigration')) is not bool):
-            raise ValueError('Interface source provenance requires an exact repository, revision and migration state.')
+                or source.get('uncommittedMigration') is not False):
+            raise ValueError('Interface source provenance requires an exact repository, committed revision and migration state false.')
         fingerprint=hashlib.sha256()
         files=sorted((PurePosixPath(member.name).as_posix(),member) for member in members if member.isfile())
         for name,member in files:

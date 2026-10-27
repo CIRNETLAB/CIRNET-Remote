@@ -15,15 +15,25 @@ except ModuleNotFoundError:
     from artifact_download import download_artifact
 
 
+def artifact_directory(*args, **kwargs):
+    # DEV bootstrap must be usable before the allocator distribution exists.
+    try:
+        from scripts.artifact_paths import artifact_directory as allocate
+    except ModuleNotFoundError:
+        from artifact_paths import artifact_directory as allocate
+    return allocate(*args, **kwargs)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--manifest')
-    parser.add_argument('--wheel')
+    source = parser.add_mutually_exclusive_group()
+    source.add_argument('--manifest')
+    source.add_argument('--wheel')
+    source.add_argument('--url')
     parser.add_argument('--sha256')
-    parser.add_argument('--url', default=os.environ.get('NETCIRCUIT_CONTRACTS_WHEEL_URL'))
     parser.add_argument('--npm-url', default=os.environ.get('NETCIRCUIT_CONTRACTS_NPM_URL'))
     parser.add_argument('--npm-sha256', default=os.environ.get('NETCIRCUIT_CONTRACTS_NPM_SHA256'))
-    parser.add_argument('--filename', default=os.environ.get('NETCIRCUIT_CONTRACTS_WHEEL_FILENAME'))
+    parser.add_argument('--filename')
     parser.add_argument('--npm-filename', default=os.environ.get('NETCIRCUIT_CONTRACTS_NPM_FILENAME'))
     parser.add_argument('--dev-only', action='store_true', help='Bootstrap only independent DEV tooling; no runtime Contracts dependency.')
     parser.add_argument('--with-dev', action='store_true')
@@ -39,14 +49,23 @@ def main(argv=None):
         bootstrap(wheel=args.dev_wheel, digest=args.dev_sha256, url=args.dev_url, manifest=args.manifest)
         if args.dev_only:
             return 0
-    args.sha256 = args.sha256 or os.environ.get('NETCIRCUIT_CONTRACTS_WHEEL_SHA256')
+    if args.manifest is not None:
+        if not args.manifest or args.sha256 is not None or args.filename is not None:
+            parser.error('--manifest cannot be combined with --sha256 or --filename.')
+    elif args.wheel is not None or args.url is not None:
+        if not (args.wheel or args.url) or not args.sha256:
+            parser.error('Explicit --wheel or --url requires an explicit --sha256.')
+        if args.wheel and args.filename is not None:
+            parser.error('--filename applies only to --url.')
+    else:
+        if args.sha256 is not None or args.filename is not None:
+            parser.error('--sha256 and --filename require --wheel or --url.')
+        args.url = os.environ.get('NETCIRCUIT_CONTRACTS_WHEEL_URL')
+        args.sha256 = os.environ.get('NETCIRCUIT_CONTRACTS_WHEEL_SHA256')
+        args.filename = os.environ.get('NETCIRCUIT_CONTRACTS_WHEEL_FILENAME')
     if args.url and not args.wheel:
         if urlparse(args.url).scheme != 'https' or not args.sha256:
             parser.error('Artifact download requires an explicit HTTPS URL and SHA256.')
-        try:
-            from scripts.artifact_paths import artifact_directory
-        except ModuleNotFoundError:
-            from artifact_paths import artifact_directory
         directory = artifact_directory('contracts-download')
         name = args.filename or Path(urlparse(args.url).path).name
         if Path(name).name != name or '/' in name or '\\' in name or not name.endswith('.whl'):
@@ -59,25 +78,19 @@ def main(argv=None):
         wheel, digest = verify_wheel(args.wheel, args.sha256), args.sha256.lower()
     else:
         wheel, digest = selected_wheel_details(args.manifest)
-    try:
-        from scripts.artifact_paths import artifact_directory
-    except ModuleNotFoundError:
-        from artifact_paths import artifact_directory
     cache = str(artifact_directory('pip-cache'))
-    subprocess.run([sys.executable, '-m', 'pip', 'install', '--cache-dir', cache, str(wheel) + '[rpc]'], check=True)
+    temporary = str(artifact_directory('contracts-install-temp'))
+    environment = {**os.environ, 'TMP': temporary, 'TEMP': temporary, 'TMPDIR': temporary, 'PIP_CACHE_DIR': cache}
+    subprocess.run([sys.executable, '-m', 'pip', 'install', '--cache-dir', cache, str(wheel) + '[rpc]'], check=True, env=environment)
     # Pip otherwise skips an explicitly selected candidate with the same public
     # version. Resolve dependencies first, then replace only this distribution.
     subprocess.run([sys.executable, '-m', 'pip', 'install', '--force-reinstall', '--no-deps',
-                    '--cache-dir', cache, str(wheel)], check=True)
+                    '--cache-dir', cache, str(wheel)], check=True, env=environment)
     verify_selected_install(wheel, digest, python=sys.executable)
     # Consumer metadata may still pin the previous Contracts version here.
     # CI and release gates run global pip check after all consumers are updated.
     # The same verified wheel is available to later installed-package checks.
     if args.wheel:
-        try:
-            from scripts.artifact_paths import artifact_directory
-        except ModuleNotFoundError:
-            from artifact_paths import artifact_directory
         manifest = artifact_directory('contracts-download') / 'artifacts.json'
         manifest_value = {'schemaVersion': 1, 'python': {'path': str(wheel), 'sha256': args.sha256}}
         if args.npm_url:

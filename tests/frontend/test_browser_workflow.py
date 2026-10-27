@@ -1,11 +1,12 @@
+from tests.support.release_inputs import interface_root
 """Release CI must exercise the owned real-process browser harness."""
 import json
 from pathlib import Path
 
 import yaml
+from tests.support.ci_release import assert_interface_release_job
 
 ROOT = Path(__file__).resolve().parents[2]
-WEB = ROOT / 'apps/web'
 
 
 def workflow(name):
@@ -17,6 +18,7 @@ def commands(job):
 
 
 def assert_interface_bootstrap_ownership(job):
+    assert_interface_release_job(job)
     steps=job['steps']
     bootstrap=next(step for step in steps if 'bootstrap-contracts.mjs' in step.get('run',''))
     assert bootstrap.get('env',{}).get('NETCIRCUIT_ARTIFACTS_TOKEN')=='${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}'
@@ -29,8 +31,8 @@ def assert_interface_bootstrap_ownership(job):
 def test_frontend_checks_shared_generation_and_every_dependency_trigger():
     document = workflow('frontend.yml')
     events = document.get('on', document.get(True))
-    shared = {'apps/web/**', 'contracts/**', 'scripts/**', 'device-library/**', 'services/api/**',
-              'simulator/circuit-simulator/**', 'pyproject.toml', 'requirements-codegen.txt', 'requirements-verification.txt', 'requirements-benchmark.txt', 'setup.py', 'MANIFEST.in', 'Makefile'}
+    shared = {'scripts/**', 'services/api/**', 'integration/**', 'tests/frontend/**',
+              'pyproject.toml', 'requirements-codegen.txt', 'requirements-verification.txt', 'requirements-benchmark.txt', 'setup.py', 'MANIFEST.in', 'Makefile'}
     for event in ('push', 'pull_request'):
         assert shared <= set(events[event]['paths'])
     steps = commands(document['jobs']['build'])
@@ -43,6 +45,7 @@ def test_frontend_checks_shared_generation_and_every_dependency_trigger():
 
 
 def test_browser_ci_installs_pinned_runner_and_all_real_services_then_runs_every_case():
+    WEB = interface_root()
     document = workflow('browser-e2e.yml')
     job = document['jobs']['chromium']
     assert_interface_bootstrap_ownership(job)
@@ -96,6 +99,5 @@ def test_browser_ci_installs_pinned_runner_and_all_real_services_then_runs_every
     assert '.test-build' not in steps
     events = document.get('on', document.get(True))
     for event in ('push', 'pull_request'):
-        assert {'contracts/**', 'scripts/**', 'services/api/**', 'services/hardware-service/**',
-                'simulator/circuit-simulator/**', 'pyproject.toml', 'requirements-codegen.txt', 'setup.py',
-                'Makefile', 'apps/web/**'} <= set(events[event]['paths'])
+        assert {'scripts/**', 'services/api/**', 'integration/**', 'tests/frontend/**', 'tests/integration/**', 'tests/support/**',
+                'pyproject.toml', 'requirements-codegen.txt', 'setup.py', 'Makefile'} <= set(events[event]['paths'])

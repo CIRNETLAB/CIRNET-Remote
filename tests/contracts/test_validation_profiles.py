@@ -1,3 +1,4 @@
+from tests.support.release_inputs import contract_resource
 """Shared validation profiles preserve documents and constrain transport explicitly."""
 from copy import deepcopy
 import json
@@ -133,7 +134,7 @@ def test_memory_semantics_apply_at_the_named_registry_boundary():
 
 
 def test_shared_fixture_corpus_covers_structural_and_semantic_boundaries():
-    corpus = json.loads((ROOT / "contracts/fixtures/conformance.json").read_text(encoding="utf-8"))
+    corpus = json.loads((contract_resource('fixtures/conformance.json')).read_text(encoding="utf-8"))
     assert corpus["version"] == "1.0"
     assert len(corpus["cases"]) >= 25
     for case in corpus["cases"]:

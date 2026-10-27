@@ -1,3 +1,4 @@
+from tests.support.release_inputs import contract_resource
 """Shaped rigid metal shares physical collision rules with flexible metal."""
 from copy import deepcopy
 import math
@@ -91,7 +92,7 @@ def test_separate_rigid_bodies_cannot_place_their_fanout_tips_through_each_other
 
 
 def test_rigid_fanout_and_flexible_wire_cannot_intersect_away_from_both_bodies():
-    corpus = json.loads((Path(__file__).resolve().parents[2]/'contracts/design-models/fixtures/sealed-package-parity.json').read_text())
+    corpus = json.loads((contract_resource('design-models/fixtures/sealed-package-parity.json')).read_text())
     case = next(case for case in corpus['cases'] if case['id'] == 'sealed-generic_led-14')
     graph = deepcopy(case['graph'])
     graph['modules'][0].update(position=dict(x=0, y=0, z=0), rotation=0)
@@ -105,7 +106,7 @@ def test_rigid_fanout_and_flexible_wire_cannot_intersect_away_from_both_bodies()
 
 def test_shared_rigid_lead_station_and_collision_fixture_matches_canonical_python():
     from contracts.rigid_leads import fixed_package_lead_path, rigid_lead_stations_mm, rigid_lead_segments_mm
-    fixture = json.loads((Path(__file__).resolve().parents[2]/'contracts/design-models/fixtures/rigid-leads-parity.json').read_text())
+    fixture = json.loads((contract_resource('design-models/fixtures/rigid-leads-parity.json')).read_text())
     for item in fixture['geometry']:
         package = get_physical_part(item['type'], item['descriptor'])['package']
         for expected in item['pins']:

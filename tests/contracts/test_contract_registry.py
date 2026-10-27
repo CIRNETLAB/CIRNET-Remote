@@ -1,3 +1,4 @@
+from tests.support.release_inputs import contract_resource
 """The manifest is the offline, packaged authority for contract identities."""
 from copy import deepcopy
 import json
@@ -13,7 +14,7 @@ def test_manifest_covers_every_canonical_schema_and_def():
     from contracts.registry import entries, check_manifest
     check_manifest()
     names = {entry['id'] for entry in entries()}
-    lab = json.loads((ROOT / 'contracts/physical-lab/lab.schema.json').read_text())
+    lab = json.loads((contract_resource('physical-lab/lab.schema.json')).read_text())
     assert set(lab['$defs']) <= names
     assert {'CircuitGraph', 'CircuitModule', 'MountBinding', 'MemoryImage', 'WireVisual'} <= names
     private = next(entry for entry in entries() if entry['id'] == 'InstrumentationExecutionPlan')

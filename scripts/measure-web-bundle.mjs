@@ -6,7 +6,8 @@ import {getArtifactDirectory} from './artifact-paths.mjs'
 
 const label=process.argv[2]??'current'
 if(!/^[a-z0-9-]+$/i.test(label))throw new Error('Use an alphanumeric measurement label.')
-const distribution=resolve('apps/web/dist')
+if(!process.env.NETCIRCUIT_INTERFACE_ROOT)throw new Error('Select the independent Interface artifact with NETCIRCUIT_INTERFACE_ROOT.')
+const distribution=resolve(process.env.NETCIRCUIT_INTERFACE_ROOT,'dist')
 const manifest=JSON.parse(readFileSync(join(distribution,'.vite/manifest.json'),'utf8'))
 const visited=new Set()
 function walk(key){if(visited.has(key))return;visited.add(key);for(const dependency of manifest[key]?.imports??[])walk(dependency)}

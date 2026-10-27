@@ -1,3 +1,4 @@
+from tests.support.release_inputs import contract_resource
 """Conservative version anchors fail closed on changed supported public wires."""
 from copy import deepcopy
 import json
@@ -11,13 +12,14 @@ ROOT=Path(__file__).resolve().parents[2]
 
 
 def sources():
-    return (json.loads((ROOT/'contracts/api/openapi.json').read_text(encoding='utf-8')),
-            json.loads((ROOT/'contracts/capture/layout.json').read_text(encoding='utf-8')))
+    return (json.loads((contract_resource('api/openapi.json')).read_text(encoding='utf-8')),
+            json.loads((contract_resource('capture/layout.json')).read_text(encoding='utf-8')))
 
 
 def test_current_public_operations_schemas_and_ncap_versions_match_supported_unpublished_baseline():
     api,layout=sources()
-    baseline=json.loads((ROOT/'contracts/compatibility/2026-10-16/public-wire-baseline.json').read_text(encoding='utf-8'))
+    assert api['info']['version'] == '0.1.1'
+    baseline=json.loads((contract_resource('compatibility/2026-10-16/public-wire-baseline.json')).read_text(encoding='utf-8'))
     check_compatibility(api,layout,baseline)
 
 

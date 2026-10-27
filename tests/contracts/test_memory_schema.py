@@ -1,10 +1,11 @@
+from tests.support.release_inputs import contract_resource
 import json
 from pathlib import Path
 import pytest
 from jsonschema import Draft202012Validator, ValidationError
 
 ROOT = Path(__file__).resolve().parents[2]
-VALIDATOR = Draft202012Validator(json.loads((ROOT / 'contracts/memory/memory-image.schema.json').read_text()))
+VALIDATOR = Draft202012Validator(json.loads((contract_resource('memory/memory-image.schema.json')).read_text()))
 
 
 def test_local_memory_image_contract_accepts_explicit_byte_boundaries():

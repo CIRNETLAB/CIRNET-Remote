@@ -1,3 +1,4 @@
+from tests.support.release_inputs import contract_resource
 import copy
 import json
 from pathlib import Path
@@ -29,7 +30,7 @@ def test_design_validation_rejects_invalid_canonical_component_properties(module
 
 def test_design_properties_survive_typed_api_serialization_without_mount_or_wire_changes():
     from contracts.component_properties import normalize_design_properties
-    fixture = json.loads((Path(__file__).resolve().parents[2] / 'contracts/design-models/fixtures/legacy-component-properties.json').read_text(encoding='utf-8'))
+    fixture = json.loads((contract_resource('design-models/fixtures/legacy-component-properties.json')).read_text(encoding='utf-8'))
     resistor = next(m for m in fixture['modules'] if m['type'] == 'RESISTOR_AXIAL')
     original = copy.deepcopy(fixture)
     normalized = normalize_design_properties(fixture)

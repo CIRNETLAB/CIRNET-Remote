@@ -34,8 +34,8 @@ def verify_wheel(path, digest):
     if value['Name'] != NAME or value['Version'] != VERSION:
         raise ValueError(f'Expected {NAME}=={VERSION}; got {value["Name"]}=={value["Version"]}.')
     dependencies = [entry.replace(' ', '') for entry in value.get_all('Requires-Dist', []) if ';' not in entry]
-    if sorted(dependencies) != ['grpcio==1.84.0', 'jsonschema==4.26.0', 'netcircuit-contracts==1.0.1', 'netcircuit-simulator==0.2.0', 'protobuf==7.36.2']:
-        raise ValueError('Hardware must pin Contracts 1.0.1, Simulator 0.2.0, grpcio 1.84.0, protobuf 7.36.2 and jsonschema 4.26.0.')
+    if sorted(dependencies) != ['grpcio==1.84.0', 'jsonschema==4.26.0', 'netcircuit-contracts==0.1.1', 'netcircuit-simulator==0.1.1', 'protobuf==7.36.2']:
+        raise ValueError('Hardware must pin Contracts 0.1.1, Simulator 0.1.1, grpcio 1.84.0, protobuf 7.36.2 and jsonschema 4.26.0.')
     if missing:
         raise ValueError('Hardware wheel is missing runtime modules: ' + ', '.join(missing))
     if runtime != {'hardware_service/' + module for module in MODULES}:

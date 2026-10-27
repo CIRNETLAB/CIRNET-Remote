@@ -1,3 +1,4 @@
+from tests.support.release_inputs import contract_resource
 """Public NCAP format authority and shared binary corpus, independent of hardware."""
 import json
 import hashlib
@@ -9,11 +10,11 @@ from contracts.registry import validate_contract
 from jsonschema import ValidationError
 
 ROOT=Path(__file__).resolve().parents[2]
-CORPUS=ROOT/'contracts/fixtures/capture/conformance.json'
+CORPUS=contract_resource('fixtures/capture/conformance.json')
 
 
 def test_capture_layout_is_a_single_checked_source_for_python_and_browser():
-    path=ROOT/'contracts/capture/layout.json'
+    path=contract_resource('capture/layout.json')
     assert path.is_file(), 'The versioned NCAP layout authority is missing.'
     from contracts.capture_layout import CAPTURE_LAYOUT
     from contracts.boundary.capture_layout import CAPTURE_LAYOUT as GENERATED_LAYOUT
@@ -24,7 +25,7 @@ def test_capture_layout_is_a_single_checked_source_for_python_and_browser():
 
 
 def test_digital_and_sampled_codecs_share_committed_valid_and_malformed_corpus():
-    path=ROOT/'contracts/fixtures/capture/conformance.json'
+    path=contract_resource('fixtures/capture/conformance.json')
     assert path.is_file(), 'Python and browser need the same committed NCAP golden corpus.'
     corpus=json.loads(path.read_text(encoding='utf-8'))
     assert {case['version'] for case in corpus['cases']}=={1,2}

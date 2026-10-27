@@ -1,3 +1,5 @@
+from tests.support.release_inputs import sdk_resource
+from tests.support.release_inputs import contract_resource, interface_root
 import json
 from pathlib import Path
 
@@ -5,10 +7,10 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_breadboard_model_is_shared_with_frontend_and_has_declared_intrinsic_nodes():
-    canonical = ROOT / 'contracts/design-models/breadboards.json'
+    canonical = contract_resource('design-models/breadboards.json')
     assert canonical.exists(), 'Explicit breadboard topology is missing'
     data = json.loads(canonical.read_text(encoding='utf-8'))
-    assert data == json.loads((ROOT / 'apps/web/src/data/breadboardTopologies.json').read_text(encoding='utf-8'))
+    assert data == json.loads((sdk_resource('data/breadboardTopologies.json')).read_text(encoding='utf-8'))
     from contracts.breadboard_topology import get_breadboard_topology, get_breadboard_contact
     for kind, count, nodes in [('BREADBOARD', 830, 130), ('BREADBOARD_630', 630, 126), ('BREADBOARD_100', 100, 2)]:
         board = get_breadboard_topology(kind)

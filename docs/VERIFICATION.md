@@ -48,6 +48,10 @@ export NETCIRCUIT_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"
 
 From another working directory use the script's absolute path, or the appropriate relative path to it. Allocation itself is independent of the caller's working directory.
 
+## M6 current release setup
+
+The current six-product release line is 0.1.1. Use the exact system release manifest and [clean-machine runbook](../deployment/multi-repo-release.md). Installed Contracts resources and explicit Interface/FPGA artifacts replace frozen-reference fixtures. Standalone producer repositories own deterministic generation, unit/AST, backend, RPC and RTL gates; Remote owns the full integrated release groups. Historical M1–M5 measurements remain separately dated. Initial Python entrypoints must suppress source bytecode before importing helper modules, and all child temp/cache paths must belong to the canonical session. Applying a child bootstrap does not change the parent shell; import its recorded environment before continuing.
+
 ## Checks and evidence
 
 Choose gates from real package scripts and workflows. Run at root:

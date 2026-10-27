@@ -1,3 +1,4 @@
+from tests.support.release_inputs import contract_resource, release_resource
 from pathlib import Path
 import subprocess
 import sys
@@ -15,11 +16,13 @@ def artifacts(folder):
 
 
 def test_generation_is_byte_deterministic_and_public_only(tmp_path):
+    import json
     for folder in ('one','two'):
         result = run('--output-root',tmp_path/folder)
         assert result.returncode == 0, result.stdout+result.stderr
     first = artifacts(tmp_path/'one')
     assert first == artifacts(tmp_path/'two')
+    assert json.loads(first['contracts/api/openapi.json'])['info']['version'] == '0.1.1'
     assert 'contracts/boundary/models.py' in first
     dto = first['apps/web/src/contracts/generated/dto.ts'].decode()
     assert 'export interface ContractMap' in dto
@@ -42,11 +45,11 @@ def test_check_never_repairs_drift(tmp_path):
 def test_supported_baseline_remains_byte_exact():
     import hashlib
     import json
-    baseline=ROOT/'contracts/compatibility/2026-10-16'
+    baseline=contract_resource('compatibility/2026-10-16')
     index=json.loads((baseline/'baseline.json').read_text())
     for path,digest in index['sha256'].items():
         assert hashlib.sha256((baseline/path.removeprefix('contracts/')).read_bytes()).hexdigest()==digest
-        assert hashlib.sha256((ROOT/path).read_bytes().replace(b'\r\n',b'\n')).hexdigest()==digest
+        assert hashlib.sha256(release_resource(path).read_bytes().replace(b'\r\n',b'\n')).hexdigest()==digest
 
 
 def test_publication_failure_rolls_back_prior_artifacts(tmp_path, monkeypatch):

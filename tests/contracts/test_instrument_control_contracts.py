@@ -1,3 +1,4 @@
+from tests.support.release_inputs import contract_resource
 from copy import deepcopy
 import pytest
 from jsonschema import ValidationError
@@ -22,7 +23,7 @@ def test_shared_python_browser_instrument_control_corpus():
     import json
     from pathlib import Path
     from contracts.semantic_profiles import validation_issues
-    cases=json.loads((Path(__file__).resolve().parents[2]/'contracts/fixtures/instrument-control-conformance.json').read_text(encoding='utf-8'))['cases']
+    cases=json.loads((contract_resource('fixtures/instrument-control-conformance.json')).read_text(encoding='utf-8'))['cases']
     for case in cases:
         if case['valid']:assert validate_contract(case['contract'],case['value'],profile='transport')==case['value']
         else:

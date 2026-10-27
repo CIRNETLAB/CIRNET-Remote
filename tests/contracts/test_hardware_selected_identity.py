@@ -53,7 +53,7 @@ def test_same_version_hardware_candidate_replaces_payload_and_rejects_stale_sele
     root = tmp_path / 'venv'
     venv.EnvBuilder(with_pip=True).create(root)
     python = root / ('Scripts/python.exe' if sys.platform == 'win32' else 'bin/python')
-    dependencies = ('netcircuit-contracts==1.0.1', 'netcircuit-simulator==0.2.0',
+    dependencies = ('netcircuit-contracts==0.1.1', 'netcircuit-simulator==0.1.1',
         'grpcio==1.84.0', 'protobuf==7.36.2', 'jsonschema==4.26.0')
     dependency_root = tmp_path / 'dependencies'
     for item in dependencies:

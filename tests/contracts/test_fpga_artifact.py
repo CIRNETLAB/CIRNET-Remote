@@ -16,8 +16,8 @@ ROOT = Path(__file__).resolve().parents[2]
 def archive(tmp_path, *, identity_change=None, payload_change=None, extra=None, omit=None):
     payload = {'README.md': b'scaffold\n', 'fpga/experiment-controller/rtl/top.v': b'module top; endmodule\n'}
     files = {name: hashlib.sha256(data).hexdigest() for name, data in payload.items()}
-    identity = {'schemaVersion': 1, 'name': 'netcircuit-fpga-scaffold', 'version': '0.1.0',
-        'kind': 'source', 'contractsVersion': '1.0.1', 'logicalProtocolVersion': '1.0-scaffold',
+    identity = {'schemaVersion': 1, 'name': 'netcircuit-fpga-scaffold', 'version': '0.1.1',
+        'kind': 'source', 'contractsVersion': '0.1.1', 'logicalProtocolVersion': '1.0-scaffold',
         'registerMapVersion': '1.0-reserved', 'physicalAvailable': False, 'files': files,
         'sourceFingerprint': hashlib.sha256(''.join(f'{files[name]}  {name}\n' for name in sorted(files)).encode()).hexdigest(),
         'source': {'repository': 'https://github.com/TINIHI-Labs/net-Circuit-FPGA.git', 'revision': 'a'*40,
@@ -28,7 +28,7 @@ def archive(tmp_path, *, identity_change=None, payload_change=None, extra=None, 
     if extra: payload.update(extra)
     if omit: payload.pop(omit)
     payload['fpga-artifact.json'] = json.dumps(identity).encode()
-    target = tmp_path / 'netcircuit-fpga-scaffold-0.1.0.tar.gz'
+    target = tmp_path / 'netcircuit-fpga-scaffold-0.1.1.tar.gz'
     with tarfile.open(target, 'w:gz') as output:
         for name, contents in payload.items():
             member = tarfile.TarInfo(name); member.size = len(contents)
@@ -51,7 +51,7 @@ def test_exact_source_archive_and_manifest_are_required(tmp_path, monkeypatch):
     target, digest = archive(tmp_path)
     selected = manifest(tmp_path, target, digest)
     assert consumer().selected_source_details(selected) == (target, digest)
-    assert consumer().verify_archive(target, digest)['identity']['version'] == '0.1.0'
+    assert consumer().verify_archive(target, digest)['identity']['version'] == '0.1.1'
     monkeypatch.delenv('NETCIRCUIT_FPGA_ARTIFACT_MANIFEST', raising=False)
     with pytest.raises(ValueError, match='explicit'): consumer().selected_source_details()
     with pytest.raises(ValueError, match='SHA256'): consumer().verify_archive(target, '0'*64)
@@ -59,7 +59,7 @@ def test_exact_source_archive_and_manifest_are_required(tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize('change', [
-    {'version': '0.2.0'}, {'contractsVersion': '1.0.0'}, {'logicalProtocolVersion': '2.0-scaffold'},
+    {'version': '0.1.0'}, {'contractsVersion': '1.0.0'}, {'logicalProtocolVersion': '2.0-scaffold'},
     {'registerMapVersion': '2.0'}, {'physicalAvailable': True}, {'source': {}}, {'sourceFingerprint': '0'*64}])
 def test_wrong_identity_or_source_fingerprint_is_rejected(tmp_path, change):
     target, digest = archive(tmp_path, identity_change=change)
@@ -98,7 +98,7 @@ def test_selected_product_checks_every_file_against_selected_archive(tmp_path, m
     target, digest = archive(tmp_path); selected = manifest(tmp_path, target, digest)
     monkeypatch.setattr(consumer(), 'artifact_directory', lambda *args: tmp_path / 'products')
     product = consumer().extract_product(target, digest)
-    assert consumer().source_product(product, selected)['identity']['version'] == '0.1.0'
+    assert consumer().source_product(product, selected)['identity']['version'] == '0.1.1'
     (product / 'README.md').write_text('tampered')
     with pytest.raises(ValueError, match='payload'): consumer().source_product(product, selected)
     monkeypatch.delenv('NETCIRCUIT_FPGA_ROOT', raising=False)
@@ -119,7 +119,7 @@ def test_checker_rejects_wrong_installed_contracts_before_schema_validation(tmp_
     monkeypatch.setattr(consumer(), 'artifact_directory', lambda *args: tmp_path / 'products')
     product = consumer().extract_product(target, digest)
     monkeypatch.setattr(check_fpga_consumer, 'installed_provenance', lambda: {'version': '1.0.0'})
-    with pytest.raises(ValueError, match='Contracts 1.0.1'): check_fpga_consumer.check(product, selected)
+    with pytest.raises(ValueError, match='Contracts 0.1.1'): check_fpga_consumer.check(product, selected)
 
 
 def test_manifest_rejects_unsupported_schema_and_relative_archive(tmp_path):

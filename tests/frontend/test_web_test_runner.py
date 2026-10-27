@@ -1,3 +1,4 @@
+from tests.support.release_inputs import interface_root
 """The real Node test harness must stay bounded on small CI runners."""
 import json
 import os
@@ -6,7 +7,7 @@ import shutil
 import subprocess
 
 ROOT=Path(__file__).resolve().parents[2]
-RUNNER=ROOT/'apps/web/scripts/test.mjs'
+RUNNER=interface_root() / 'scripts/test.mjs'
 
 
 def run_fixtures(directory,count,*,failing=False):

@@ -1,9 +1,27 @@
 {
-  "status": "LOCAL_UNPUBLISHED",
-  "python": { "name": "netcircuit-simulator", "version": "0.2.0" },
-  "contracts": { "name": "netcircuit-contracts", "version": "1.0.1" },
+  "status": "PINNED_ARTIFACT_INPUTS",
+  "python": {
+    "name": "netcircuit-simulator",
+    "version": "0.1.1"
+  },
+  "contracts": {
+    "name": "netcircuit-contracts",
+    "version": "0.1.1"
+  },
   "namespace": "netcircuit_sim",
-  "backends": { "default": "legacy", "available": ["legacy"], "reservedUnavailable": ["ngspice"] },
-  "graphVersions": ["1.0", "1.1", "1.2"],
+  "backends": {
+    "default": "legacy",
+    "available": [
+      "legacy"
+    ],
+    "reservedUnavailable": [
+      "ngspice"
+    ]
+  },
+  "graphVersions": [
+    "1.0",
+    "1.1",
+    "1.2"
+  ],
   "virtualAnalog": false
 }

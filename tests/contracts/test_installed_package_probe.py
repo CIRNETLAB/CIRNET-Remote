@@ -1,3 +1,4 @@
+from tests.support.release_inputs import contract_resource
 """Package verification must physically leave the source checkout."""
 import importlib.util
 import copy
@@ -64,7 +65,7 @@ def catalog_fingerprint(parts):
 @pytest.mark.parametrize('extended',[False,True],ids=['current-catalog','extended-catalog'])
 def test_installed_catalog_probe_accepts_complete_source_inventory_without_a_fixed_count(monkeypatch,extended):
     from contracts import physical_mounting
-    parts=json.loads((ROOT/'contracts/design-models/physical-parts.v1.json').read_text(encoding='utf-8'))['parts']
+    parts=json.loads((contract_resource('design-models/physical-parts.v1.json')).read_text(encoding='utf-8'))['parts']
     if extended:
         added=copy.deepcopy(parts[-1]);added['id']='ADDITIONAL-PART';added['editorType']='ADDITIONAL_PART'
         parts.append(added)
@@ -76,7 +77,7 @@ def test_installed_catalog_probe_accepts_complete_source_inventory_without_a_fix
 @pytest.mark.parametrize('corruption',['missing','extra','changed'])
 def test_installed_catalog_probe_rejects_truncated_extra_or_altered_parts(monkeypatch,corruption):
     from contracts import physical_mounting
-    source=json.loads((ROOT/'contracts/design-models/physical-parts.v1.json').read_text(encoding='utf-8'))['parts']
+    source=json.loads((contract_resource('design-models/physical-parts.v1.json')).read_text(encoding='utf-8'))['parts']
     installed=copy.deepcopy(source)
     if corruption=='missing':installed.pop()
     elif corruption=='extra':installed.append(copy.deepcopy(installed[-1]))

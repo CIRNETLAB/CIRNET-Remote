@@ -11,6 +11,7 @@ import tomllib
 from zipfile import ZipFile
 
 import pytest
+from tests.support.release_inputs import installed_distribution
 
 ROOT = Path(__file__).resolve().parents[2]
 MODULES = ('__init__.py', 'analog.py', 'backends.py', 'circuit.py', 'dispatch.py', 'engine.py', 'logic.py', 'nets.py', 'waveform.py')
@@ -25,13 +26,13 @@ def consumer():
     return module
 
 
-def wheel(tmp_path, *, name='netcircuit-simulator', version='0.2.0', contracts='1.0.1', missing=None):
-    path = tmp_path / 'netcircuit_simulator-0.2.0-py3-none-any.whl'
+def wheel(tmp_path, *, name='netcircuit-simulator', version='0.1.1', contracts='0.1.1', missing=None):
+    path = tmp_path / 'netcircuit_simulator-0.1.1-py3-none-any.whl'
     with ZipFile(path, 'w') as archive:
         for module in MODULES:
             if module != missing:
                 archive.writestr('netcircuit_sim/' + module, '')
-        archive.writestr('netcircuit_simulator-0.2.0.dist-info/METADATA',
+        archive.writestr('netcircuit_simulator-0.1.1.dist-info/METADATA',
             f'Metadata-Version: 2.1\nName: {name}\nVersion: {version}\nRequires-Dist: netcircuit-contracts=={contracts}\nRequires-Dist: jsonschema==4.26.0\n')
     return path, hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -48,7 +49,7 @@ def test_manifest_selects_exact_identity_digest_and_dependency(tmp_path, monkeyp
 
 @pytest.mark.parametrize('change,reason', [
     ({'name': 'different'}, 'netcircuit-simulator'),
-    ({'version': '0.1.1'}, '0.2.0'),
+    ({'version': '0.1.0'}, '0.1.1'),
     ({'contracts': '1.0.0'}, 'Contracts'),
     ({'missing': 'engine.py'}, 'engine.py'),
 ])
@@ -70,7 +71,7 @@ def test_selection_has_no_latest_or_source_fallback_and_checks_digest(tmp_path, 
         selected.verify_wheel(Path(artifact.name), digest)
 
 
-def fake_install(tmp_path, *, version='0.2.0', editable=False, tampered=False, source_metadata=False):
+def fake_install(tmp_path, *, version='0.1.1', editable=False, tampered=False, source_metadata=False):
     installed = tmp_path / 'site'
     package = installed / 'netcircuit_sim'
     package.mkdir(parents=True)
@@ -114,11 +115,11 @@ def installed_probe(tmp_path, installed, *, shadow=False):
 def test_installed_wheel_passes_real_metadata_record_and_import_checks(tmp_path):
     result = installed_probe(tmp_path, fake_install(tmp_path))
     assert result.returncode == 0, result.stdout + result.stderr
-    assert '0.2.0' in result.stdout
+    assert '0.1.1' in result.stdout
 
 
 @pytest.mark.parametrize('options,shadow,reason', [
-    ({'version': '0.1.1'}, False, '0.2.0'),
+    ({'version': '0.1.0'}, False, '0.1.1'),
     ({'editable': True}, False, 'editable'),
     ({'tampered': True}, False, 'RECORD'),
     ({'source_metadata': True}, False, 'source egg-info'),
@@ -131,14 +132,15 @@ def test_old_editable_tampered_or_shadowed_installation_fails(tmp_path, options,
 
 
 def test_consumers_pin_one_simulator_and_default_collection_excludes_retained_units():
-    for relative in ('pyproject.toml', 'services/api/pyproject.toml', 'services/hardware-service/pyproject.toml'):
+    for relative in ('pyproject.toml', 'services/api/pyproject.toml'):
         metadata = tomllib.loads((ROOT / relative).read_text(encoding='utf-8'))
-        assert 'netcircuit-simulator==0.2.0' in metadata['project']['dependencies'], relative
+        assert 'netcircuit-simulator==0.1.1' in metadata['project']['dependencies'], relative
+    assert 'netcircuit-simulator==0.1.1' in installed_distribution('netcircuit-hardware-service').requires
     root = tomllib.loads((ROOT / 'pyproject.toml').read_text(encoding='utf-8'))
     assert 'simulator/circuit-simulator' in root['tool']['pytest']['ini_options']['norecursedirs']
     lock = json.loads((ROOT / 'integration/simulator-version.json').read_text(encoding='utf-8'))
-    assert lock['python'] == {'name': 'netcircuit-simulator', 'version': '0.2.0'}
-    assert lock['contracts'] == {'name': 'netcircuit-contracts', 'version': '1.0.1'}
+    assert lock['python'] == {'name': 'netcircuit-simulator', 'version': '0.1.1'}
+    assert lock['contracts'] == {'name': 'netcircuit-contracts', 'version': '0.1.1'}
 
 
 def test_default_pytest_discovery_never_imports_the_retained_simulator_tree(tmp_path):

@@ -36,7 +36,7 @@ def without_schema_annotations(value):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--manifest', default=os.environ.get('NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST'))
-    parser.add_argument('--reference-root', type=Path, default=ROOT)
+    parser.add_argument('--reference-root', type=Path, help='Optional explicit independent compatibility reference; no frozen-source default.')
     args = parser.parse_args(argv)
     if not args.manifest:
         parser.error('An explicit Contracts artifact manifest is required.')
@@ -79,9 +79,10 @@ def main(argv=None):
             if not original.name.endswith('.json'):
                 continue
             canonical = json.loads(original.read_text(encoding='utf-8'))
-            legacy = args.reference_root / 'contracts/fixtures' / original.name
-            if not legacy.is_file() or json.loads(legacy.read_text(encoding='utf-8')) != canonical:
-                raise ValueError(f'Shared fixture baseline changed or disappeared: {original.name}')
+            if args.reference_root is not None:
+                legacy = args.reference_root / 'contracts/fixtures' / original.name
+                if not legacy.is_file() or json.loads(legacy.read_text(encoding='utf-8')) != canonical:
+                    raise ValueError(f'Shared fixture baseline changed or disappeared: {original.name}')
             public = json.loads(json.dumps(canonical))
             if isinstance(public, dict) and 'cases' in public:
                 baseline_cases += len(public['cases'])
@@ -147,7 +148,10 @@ type PrivateStation=ContractMap['StationCapabilities'];
 import type {StationCapabilities} from '@tinihi-labs/contracts';
 void graph;
 """, encoding='utf-8')
-    compiler = ROOT / 'apps/web/node_modules/typescript/bin/tsc'
+    interface = os.environ.get('NETCIRCUIT_INTERFACE_ROOT')
+    if not interface or not Path(interface).is_absolute():
+        raise ValueError('NETCIRCUIT_INTERFACE_ROOT must select the independent Interface artifact for TypeScript verification.')
+    compiler = Path(interface) / 'node_modules/typescript/bin/tsc'
     subprocess.run(['node', str(compiler), '--noEmit', '--strict', '--target', 'ES2022',
                     '--module', 'NodeNext', '--moduleResolution', 'NodeNext', str(target / 'types.ts')], cwd=target, check=True)
     print(f'Installed npm SDK conformance PASS: {baseline_cases} retained baseline cases; {len(expected)} public shape/profile checks including implicit history, and public/private type boundary.')

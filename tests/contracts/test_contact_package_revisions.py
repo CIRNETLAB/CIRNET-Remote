@@ -1,3 +1,4 @@
+from tests.support.release_inputs import contract_resource, device_resource
 """Source dimensions are separate from virtual formed-lead and insertion choices."""
 from copy import deepcopy
 import hashlib
@@ -14,15 +15,15 @@ def digest(value):
 
 
 def test_all_prechange_parts_and_mechanical_profiles_remain_content_exact():
-    baseline = json.loads((ROOT/'contracts/design-models/fixtures/contact-models-2026-10-18-baseline.json').read_text(encoding='utf-8'))
-    registry = json.loads((ROOT/'device-library/parts/physical-parts.json').read_text(encoding='utf-8'))
+    baseline = json.loads((contract_resource('design-models/fixtures/contact-models-2026-10-18-baseline.json')).read_text(encoding='utf-8'))
+    registry = json.loads((device_resource('parts/physical-parts.json')).read_text(encoding='utf-8'))
     parts = {(part['id'], part['revision']): part for part in [*registry['parts'], *registry['historicalParts']]}
     for item in baseline['parts']:
         original = parts[item['id'], item['revision']]
         assert digest(original) == item['sha256'], (item['id'], item['revision'])
         pinned = dict(partId=original['id'], partRevision=original['revision'], packageId=original['package']['id'], packageRevision=original['package']['revision'])
         assert get_physical_part(original['editorType'], pinned) == original
-    mechanics = json.loads((ROOT/'contracts/design-models/flexible-mechanics.json').read_text(encoding='utf-8'))
+    mechanics = json.loads((contract_resource('design-models/flexible-mechanics.json')).read_text(encoding='utf-8'))
     profiles = {(profile['id'], profile['revision']): profile for profile in mechanics['profiles']}
     for item in baseline['profiles']:
         assert digest(profiles[item['id'], item['revision']]) == item['sha256']

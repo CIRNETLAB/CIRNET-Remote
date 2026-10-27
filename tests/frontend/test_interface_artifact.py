@@ -21,15 +21,15 @@ def installer():
 def archive_bytes(name='package.json',*,symlink=False,metadata_changes=None):
     output=io.BytesIO()
     with tarfile.open(fileobj=output,mode='w:gz') as archive:
-        contents=b'{"version":"0.1.0-m2.0"}'
+        contents=b'{"version":"0.1.1"}'
         member=tarfile.TarInfo(name)
         if symlink:member.type=tarfile.SYMTYPE;member.linkname='../outside'
         else:member.size=len(contents)
         archive.addfile(member,None if symlink else io.BytesIO(contents))
         if name=='package.json' and not symlink:
-            identity={'schema':1,'name':'netcircuit-interface','version':'0.1.0-m2.0',
-                'kind':'source','contractsVersion':'1.0.1',
-                'source':{'repository':'https://github.com/example/interface.git','revision':'7'*40,'uncommittedMigration':True},
+            identity={'schema':1,'name':'netcircuit-interface','version':'0.1.1',
+                'kind':'source','contractsVersion':'0.1.1',
+                'source':{'repository':'https://github.com/example/interface.git','revision':'7'*40,'uncommittedMigration':False},
                 'sourceFingerprint':hashlib.sha256((hashlib.sha256(contents).hexdigest()+'  package.json\n').encode()).hexdigest()}
             identity.update(metadata_changes or {})
             identity=json.dumps(identity).encode()
@@ -90,7 +90,8 @@ def test_partial_extraction_removes_only_its_new_owned_product(tmp_path,monkeypa
     assert not (tmp_path/'product').exists() and sibling.read_text()=='keep'
 
 
-@pytest.mark.parametrize('changes',[{'source':{}},{'sourceFingerprint':'f'*64},{'contractsVersion':'2.0.0'},{'kind':'static'}])
+@pytest.mark.parametrize('changes',[{'source':{}},{'sourceFingerprint':'f'*64},{'contractsVersion':'2.0.0'},{'kind':'static'},
+    {'source':{'repository':'https://github.com/example/interface.git','revision':'7'*40,'uncommittedMigration':True}}])
 def test_interface_product_checks_source_identity_and_actual_fingerprint(tmp_path,changes):
     module=installer()
     with pytest.raises(ValueError):module.extract_product(archive_bytes(metadata_changes=changes),tmp_path/'product')

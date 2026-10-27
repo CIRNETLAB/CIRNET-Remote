@@ -25,7 +25,7 @@ def consumer():
     return module
 
 
-def wheel(tmp_path, *, name='netcircuit-hardware-service', version='0.1.1', contracts='1.0.1', simulator='0.2.0', grpcio='1.84.0', protobuf='7.36.2', jsonschema='4.26.0', missing=None):
+def wheel(tmp_path, *, name='netcircuit-hardware-service', version='0.1.1', contracts='0.1.1', simulator='0.1.1', grpcio='1.84.0', protobuf='7.36.2', jsonschema='4.26.0', missing=None):
     path = tmp_path / 'netcircuit_hardware_service-0.1.1-py3-none-any.whl'
     with ZipFile(path, 'w') as archive:
         for module in MODULES:
@@ -51,7 +51,7 @@ def test_manifest_selects_exact_identity_digest_and_dependency(tmp_path, monkeyp
     ({'version': '0.1.0'}, '0.1.1'),
     ({'contracts': '1.0.0'}, 'Contracts'),
     ({'missing': 'rpc.py'}, 'rpc.py'),
-    ({'simulator': '0.1.1'}, 'Simulator'),
+    ({'simulator': '0.1.0'}, 'Simulator'),
     ({'grpcio': '1.83.0'}, 'grpcio'),
     ({'protobuf': '7.35.0'}, 'protobuf'),
     ({'jsonschema': '4.25.0'}, 'jsonschema'),
@@ -143,8 +143,8 @@ def test_consumers_pin_one_hardware_and_default_collection_excludes_retained_uni
     assert 'services/hardware-service' in root['tool']['pytest']['ini_options']['norecursedirs']
     lock = json.loads((ROOT / 'integration/hardware-version.json').read_text(encoding='utf-8'))
     assert lock['python'] == {'name': 'netcircuit-hardware-service', 'version': '0.1.1'}
-    assert lock['contracts'] == {'name': 'netcircuit-contracts', 'version': '1.0.1'}
-    assert lock['simulator'] == {'name': 'netcircuit-simulator', 'version': '0.2.0'}
+    assert lock['contracts'] == {'name': 'netcircuit-contracts', 'version': '0.1.1'}
+    assert lock['simulator'] == {'name': 'netcircuit-simulator', 'version': '0.1.1'}
     api = tomllib.loads((ROOT / 'services/api/pyproject.toml').read_text(encoding='utf-8'))
     assert not any(value.startswith('netcircuit-hardware') for value in api['project']['dependencies'])
 

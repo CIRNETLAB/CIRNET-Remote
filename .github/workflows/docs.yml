@@ -1,5 +1,6 @@
 name: Documentation Context
 env:
+  PYTHONDONTWRITEBYTECODE: '1'
   NETCIRCUIT_CONTRACTS_DEV_WHEEL_URL: ${{ vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_URL }}
   NETCIRCUIT_CONTRACTS_DEV_WHEEL_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_SHA256 }}
 on:
@@ -32,9 +33,16 @@ jobs:
           export NETCIRCUIT_ARTIFACTS_SESSION
           echo "NETCIRCUIT_ARTIFACTS_SESSION=$NETCIRCUIT_ARTIFACTS_SESSION" >> "$GITHUB_ENV"
           ci_runtime="$(node scripts/artifact-paths.mjs ci-runtime)"
+          mkdir -p "$ci_runtime/tmp" "$ci_runtime/pip-cache" "$ci_runtime/npm-cache"
           {
             echo "NETCIRCUIT_DATABASE_URL=sqlite:///$ci_runtime/default.sqlite"
             echo "NETCIRCUIT_CAPTURE_DIR=$ci_runtime/captures"
+            echo "TMP=$ci_runtime/tmp"
+            echo "TEMP=$ci_runtime/tmp"
+            echo "TMPDIR=$ci_runtime/tmp"
+            echo "PIP_CACHE_DIR=$ci_runtime/pip-cache"
+            echo "npm_config_cache=$ci_runtime/npm-cache"
+            echo "PYTHONDONTWRITEBYTECODE=1"
           } >> "$GITHUB_ENV"
       - name: Validate workflow syntax and GitHub expression contexts
         shell: bash

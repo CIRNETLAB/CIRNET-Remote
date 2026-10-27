@@ -1,3 +1,4 @@
+from tests.support.release_inputs import contract_resource
 """Flexible assemblies are versioned design data, never inferred electrical nets."""
 from copy import deepcopy
 import json
@@ -139,7 +140,7 @@ def test_flexible_lead_may_touch_expanded_obstacle_boundary_without_penetrating(
 
 
 def test_shared_flexible_parity_corpus_covers_graph_and_local_geometry():
-    corpus=json.loads((Path(__file__).resolve().parents[2]/'contracts/design-models/fixtures/flexible-mounting-parity.json').read_text(encoding='utf-8'))
+    corpus=json.loads((contract_resource('design-models/fixtures/flexible-mounting-parity.json')).read_text(encoding='utf-8'))
     for case in corpus['cases']:
         if case['valid']:validate_design_graph(case['graph'])
         else:
@@ -148,7 +149,7 @@ def test_shared_flexible_parity_corpus_covers_graph_and_local_geometry():
 
 def test_version_two_shared_curves_have_identical_numeric_lengths_points_and_radii():
     from contracts.flexible_mounting import resolve_flexible_geometry,MM_TO_WORLD
-    corpus=json.loads((Path(__file__).resolve().parents[2]/'contracts/design-models/fixtures/flexible-mounting-parity.json').read_text(encoding='utf-8'))
+    corpus=json.loads((contract_resource('design-models/fixtures/flexible-mounting-parity.json')).read_text(encoding='utf-8'))
     for case in corpus['cases']:
         if 'expectedGeometry' not in case:continue
         module=next(module for module in case['graph']['modules'] if 'mount' in module)
@@ -163,7 +164,7 @@ def test_version_two_shared_curves_have_identical_numeric_lengths_points_and_rad
 
 def test_new_geometry_rejects_separate_component_lead_crossing_away_from_both_bodies():
     from contracts.flexible_mounting import resolve_flexible_geometry
-    corpus=json.loads((Path(__file__).resolve().parents[2]/'contracts/design-models/fixtures/flexible-mounting-parity.json').read_text(encoding='utf-8'))
+    corpus=json.loads((contract_resource('design-models/fixtures/flexible-mounting-parity.json')).read_text(encoding='utf-8'))
     graph=next(case['graph'] for case in corpus['cases'] if case['id']=='automatic-v2-invalid-component-lead')
     board=graph['modules'][0]
     for module in graph['modules'][1:]:resolve_flexible_geometry(module,get_physical_part(module['type'],module['mount']),board)

@@ -33,6 +33,20 @@ def checked_destination(root, relative):
 
 
 def export(*, check=False, output_root=None, select=lambda path: True):
+    if check and output_root is None:
+        # Generation is a producer gate. Remote validates the selected installed
+        # distribution, never a retained monorepo projection or source fallback.
+        from contracts.registry import check_manifest
+        try:
+            from scripts.contracts_artifact import installed_provenance
+        except ModuleNotFoundError:
+            from contracts_artifact import installed_provenance
+        installed_provenance()
+        check_manifest()
+        values = {path: value for path, value in generated_artifacts().items() if select(path)}
+        if not values or any(not value for value in values.values()):
+            raise ValueError('Selected Contracts artifact has missing or empty generated resources.')
+        return values
     target = Path(output_root or ROOT).resolve() if check else external_output(output_root)
     values = {path: value for path, value in generated_artifacts().items() if select(path)}
     destinations = {relative: target / relative if check else checked_destination(target, relative)
@@ -47,5 +61,5 @@ def export(*, check=False, output_root=None, select=lambda path: True):
             output.parent.mkdir(parents=True, exist_ok=True)
             output.write_bytes(value)
     if stale:
-        raise ValueError('Stale retained projections differ from the selected artifact: ' + ', '.join(stale))
+        raise ValueError('Stale exported projections differ from the selected artifact: ' + ', '.join(stale))
     return values

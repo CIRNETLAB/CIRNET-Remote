@@ -21,7 +21,7 @@ function invoke(args = [], options = {}) {
 test('default output is external, writable and independent of working directory', () => {
   const sessions = []
   try {
-    for (const cwd of [root, join(root, 'apps/web')]) {
+    for (const cwd of [root, join(root, 'services/api')]) {
       const result = invoke(['screenshots'], { cwd })
       assert.equal(result.status, 0, result.stderr)
       const directory = result.stdout.trim(); const session = dirname(directory)

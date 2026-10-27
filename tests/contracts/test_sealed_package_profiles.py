@@ -1,3 +1,4 @@
+from tests.support.release_inputs import contract_resource
 """New shaped-package mechanics agree across Python and the browser solver."""
 from copy import deepcopy
 import json
@@ -22,7 +23,7 @@ def test_sealed_shape_contract_and_conservative_section_envelopes():
 
 
 def test_sealed_package_browser_python_parity_includes_round_square_and_nondefault_spans():
-    corpus = json.loads((ROOT / 'contracts/design-models/fixtures/sealed-package-parity.json').read_text())
+    corpus = json.loads((contract_resource('design-models/fixtures/sealed-package-parity.json')).read_text())
     assert len(corpus['cases']) == 24
     for case in corpus['cases']:
         graph = case['graph']

@@ -21,7 +21,7 @@ def test_verification_toolchain_satisfies_every_no_isolation_build_requirement()
     pinned={requirement.name:next(iter(requirement.specifier)).version
             for requirement in requirements(ROOT/'requirements-verification.txt')
             if len(requirement.specifier)==1 and next(iter(requirement.specifier)).operator=='=='}
-    for project in ('.','services/api','services/hardware-service'):
+    for project in ('.','services/api'):
         metadata=tomllib.loads((ROOT/project/'pyproject.toml').read_text(encoding='utf-8'))
         for value in metadata['build-system']['requires']:
             requirement=Requirement(value)
@@ -39,7 +39,7 @@ def test_remote_metapackage_does_not_package_or_generate_contracts(tmp_path):
         files=set(archive.namelist())
         assert not any(name.startswith('contracts/') for name in files)
         metadata=archive.read(next(name for name in files if name.endswith('/METADATA'))).decode()
-    assert 'Requires-Dist: netcircuit-contracts==1.0.1' in metadata
+    assert 'Requires-Dist: netcircuit-contracts==0.1.1' in metadata
 
 
 def test_selected_contract_artifact_contains_rpc_and_offline_resources():

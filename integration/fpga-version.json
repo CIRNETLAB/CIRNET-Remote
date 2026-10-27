@@ -1,7 +1,14 @@
 {
-  "status": "LOCAL_UNPUBLISHED",
-  "source": {"name": "netcircuit-fpga-scaffold", "version": "0.1.0", "kind": "source"},
-  "contracts": {"name": "netcircuit-contracts", "version": "1.0.1"},
+  "status": "PINNED_ARTIFACT_INPUTS",
+  "source": {
+    "name": "netcircuit-fpga-scaffold",
+    "version": "0.1.1",
+    "kind": "source"
+  },
+  "contracts": {
+    "name": "netcircuit-contracts",
+    "version": "0.1.1"
+  },
   "logicalProtocolVersion": "1.0-scaffold",
   "registerMapVersion": "1.0-reserved",
   "physicalAvailable": false,

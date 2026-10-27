@@ -1,7 +1,8 @@
+from tests.support.release_inputs import device_resource, interface_root
 from pathlib import Path
 import re
 ROOT=Path(__file__).resolve().parents[2]
-WEB=ROOT/'apps/web'
+WEB=interface_root()
 # Two detailed authored instrument SVGs are intentionally kept as vectors.
 # Keep a repository-wide cap that still catches accidental multi-MB assets.
 MAX_COMMITTED_ICON_BYTES = 256_000
@@ -108,5 +109,5 @@ def test_browser_device_metadata_matches_authoritative_device_library():
     import json
     snapshot = json.loads((WEB/'src/data/deviceMetadata.json').read_text(encoding='utf-8'))
     for relative in ['logic-ic/74hc08.json', 'breadboards/generic-full-size.json']:
-        original = json.loads((ROOT/'device-library'/relative).read_text(encoding='utf-8'))
+        original = json.loads((device_resource('')/relative).read_text(encoding='utf-8'))
         assert snapshot[original['id']] == original

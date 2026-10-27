@@ -1,10 +1,11 @@
+from tests.support.release_inputs import contract_resource
 import json
 from pathlib import Path
 import pytest
 from jsonschema import ValidationError
 from contracts.registry import validate_contract
 
-CASES=json.loads((Path(__file__).resolve().parents[2]/'contracts/fixtures/assignment-v2-conformance.json').read_text(encoding='utf-8'))['cases']
+CASES=json.loads((contract_resource('fixtures/assignment-v2-conformance.json')).read_text(encoding='utf-8'))['cases']
 
 @pytest.mark.parametrize('case',CASES,ids=lambda case:case['id'])
 def test_shared_assignment_v2_contract_cases(case):
