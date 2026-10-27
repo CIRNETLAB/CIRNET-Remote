@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "netcircuit-api"
-version = "0.1.0"
+version = "0.1.1"
 description = "Application backend for net*CIRCUIT Remote"
 requires-python = ">=3.11"
 dependencies = [
-  "netcircuit-contracts==1.0.1",
-  "netcircuit-simulator==0.2.0",
+  "netcircuit-contracts==0.1.1",
+  "netcircuit-simulator==0.1.1",
   "grpcio==1.84.0",
   "protobuf==7.36.2",
   "psycopg[binary]==3.3.6",

@@ -114,7 +114,7 @@ def create_app(*,repository=None,gateway=None,submit=None,configuration=None,cap
                 if close: close()
                 repo.close()
 
-    application=FastAPI(title="net*CIRCUIT Remote API",version="0.2.0",lifespan=lifespan)
+    application=FastAPI(title="net*CIRCUIT Remote API",version="0.1.1",lifespan=lifespan)
     application.state.events=hub
     application.state.configuration=config
     application.state.initialize=initialize
