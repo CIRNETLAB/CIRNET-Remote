@@ -93,7 +93,7 @@ jobs:
         run: |
           python scripts/install_fpga.py
       - run: python -m scripts.check_fpga_consumer
-      - run: python -m pytest -q tests/integration tests/contracts tests/frontend tests/deployment tests/test_docs_baseline.py tests/test_root_config.py --basetemp "$NETCIRCUIT_ARTIFACTS_SESSION/pytest"
+      - run: python scripts/check_release.py --group python
       - name: Clean the owned external verification session
         if: always() && env.NETCIRCUIT_ARTIFACTS_SESSION != ''
         shell: bash
