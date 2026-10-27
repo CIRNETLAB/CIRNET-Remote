@@ -1,12 +1,47 @@
-from tests.support.release_inputs import interface_root, installed_distribution
+from tests.support.release_inputs import interface_root, installed_distribution, sdk_resource
 import importlib
 import json
 from pathlib import Path
 import re
 import tomllib
+import pytest
 import yaml
 
 ROOT=Path(__file__).resolve().parents[2]
+INTERFACE_CONTRACT_ADAPTERS = {'labelValidation.ts', 'structural.ts', 'validation.ts'}
+
+
+def assert_interface_has_no_python_runtimes(interface):
+    source = interface / 'src'
+    for package in ('netcircuit_sim', 'hardware_service'):
+        assert not (source / package).exists(), f'Interface contains foreign runtime {package}'
+    assert not any(path.suffix.lower() in {'.py', '.pyc', '.pyo', '.pyd', '.so'}
+                   for path in source.rglob('*') if path.is_file()), 'Interface contains Python runtime payload'
+    # These are Interface-owned semantic TypeScript adapters, not the Python
+    # Contracts distribution. Copied runtime/proto/generated files still fail.
+    adapters = source / 'contracts'
+    assert {path.relative_to(adapters).as_posix() for path in adapters.rglob('*') if path.is_file()} == INTERFACE_CONTRACT_ADAPTERS
+
+
+def interface_adapter_tree(tmp_path):
+    directory = tmp_path / 'src/contracts'; directory.mkdir(parents=True)
+    for name in INTERFACE_CONTRACT_ADAPTERS:
+        (directory / name).write_text('export {}\n', encoding='utf-8')
+    return tmp_path
+
+
+def test_interface_boundary_accepts_owned_typescript_contract_adapters(tmp_path):
+    assert_interface_has_no_python_runtimes(interface_adapter_tree(tmp_path))
+
+
+@pytest.mark.parametrize('relative', ['contracts/__init__.py', 'contracts/rpc.proto',
+    'netcircuit_sim/__init__.py', 'hardware_service/rpc.py', 'private/runtime.py', 'contracts/native.pyd'])
+def test_interface_boundary_rejects_copied_python_or_private_contract_payload(tmp_path, relative):
+    interface = interface_adapter_tree(tmp_path)
+    injected = interface / 'src' / relative; injected.parent.mkdir(parents=True, exist_ok=True)
+    injected.write_bytes(b'# copied runtime\n')
+    with pytest.raises(AssertionError):
+        assert_interface_has_no_python_runtimes(interface)
 
 
 def test_six_product_owners_are_explicit_and_installed_packages_do_not_cross_boundaries():
@@ -29,7 +64,19 @@ def test_six_product_owners_are_explicit_and_installed_packages_do_not_cross_bou
     interface = interface_root()
     identity = json.loads((interface / 'interface-artifact.json').read_text(encoding='utf-8'))
     assert identity['name'] == 'netcircuit-interface'
-    assert not any((interface / 'src' / package).exists() for package in owners.values())
+    assert_interface_has_no_python_runtimes(interface)
+    package = json.loads((interface / 'package.json').read_text(encoding='utf-8'))
+    sdk_lock = json.loads((interface / 'integration/contracts-artifacts.json').read_text(encoding='utf-8'))
+    assert package['dependencies']['@tinihi-labs/contracts'] == 'file:.artifacts/' + sdk_lock['npm']['filename']
+    structural = (interface / 'src/contracts/structural.ts').read_text(encoding='utf-8')
+    validation = (interface / 'src/contracts/validation.ts').read_text(encoding='utf-8')
+    assert "from '@tinihi-labs/contracts/dto'" in validation
+    for export, resource in [('dto', 'dto.d.ts'), ('validators.core', 'validators.core.js'),
+                             ('validators.editor.core', 'validators.editor.core.js'),
+                             ('validators.structural.core', 'validators.structural.core.js'),
+                             ('public-contract-names', 'publicContractNames.js')]:
+        assert "from '@tinihi-labs/contracts/" + export + "'" in structural
+        assert sdk_resource(resource).is_file()  # archive SHA256 and installed bytes are checked
     from scripts.fpga_artifact import source_product
     fpga = source_product()
     assert fpga['identity']['name'] == 'netcircuit-fpga-scaffold'

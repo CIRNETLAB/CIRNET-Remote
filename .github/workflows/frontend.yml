@@ -37,14 +37,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: pip
-          cache-dependency-path: |
-            requirements-codegen.txt
-            requirements-verification.txt
-            requirements-benchmark.txt
-            pyproject.toml
-            services/api/pyproject.toml
-            integration/simulator-version.json
       - name: Bootstrap the pinned independent DEV allocator
         env:
           NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
