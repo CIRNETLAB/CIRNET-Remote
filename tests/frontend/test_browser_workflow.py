@@ -2,6 +2,8 @@ from tests.support.release_inputs import interface_root
 """Release CI must exercise the owned real-process browser harness."""
 import json
 from pathlib import Path
+import shlex
+import tomllib
 
 import yaml
 from tests.support.ci_release import assert_interface_release_job
@@ -50,8 +52,26 @@ def test_browser_ci_installs_pinned_runner_and_all_real_services_then_runs_every
     job = document['jobs']['chromium']
     assert_interface_bootstrap_ownership(job)
     steps = commands(job)
-    for package in ('install_contracts.py', 'install_simulator.py', './services/api[test]', 'install_hardware.py'):
+    for package in ('install_contracts.py', 'install_simulator.py', 'install_hardware.py'):
         assert package in steps
+    service_install=next(step['run'] for step in job['steps']
+                         if 'python -m build' in step.get('run',''))
+    service_commands=[shlex.split(line) for line in service_install.splitlines() if line.strip()]
+    api_dist='$NETCIRCUIT_ARTIFACTS_SESSION/api-dist'
+    build=['python','-m','build','--no-isolation','--wheel','--outdir',api_dist,'./services/api']
+    install=['python','-m','pip','install',api_dist+'/netcircuit_api-0.1.1-py3-none-any.whl']
+    verification=['python','-m','pip','install','-r','requirements-verification.txt']
+    assert service_commands.index(verification)<service_commands.index(build)<service_commands.index(install)
+    assert service_commands.index(install)<service_commands.index(['python','-m','pip','check'])
+    # The old source test extra is supplied explicitly by the verification lock
+    # before installing the built product. Keep both dependencies exactly pinned.
+    test_extra=tomllib.loads((ROOT/'services/api/pyproject.toml').read_text(encoding='utf-8'))['project']['optional-dependencies']['test']
+    requirements=(ROOT/'requirements-verification.txt').read_text(encoding='utf-8').splitlines()
+    assert set(test_extra)=={'pytest==9.1.1','httpx==0.28.1'}
+    assert set(test_extra)<=set(requirements)
+    for command in service_commands:
+        if command[:4]==['python','-m','pip','install']:
+            assert not {'-e','--editable','./services/api','./services/api[test]'} & set(command[4:])
     for check in ('npm ci', 'scripts.check_contract_consumer', 'generate_contracts.py --check',
                   'export_openapi.py --check', 'npm run check:boundaries', 'npm run build',
                   'npm run test:e2e:install -- --with-deps', 'node scripts/e2e-interface.mjs --reporter=line,junit'):

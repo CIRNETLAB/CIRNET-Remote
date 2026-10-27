@@ -14,6 +14,8 @@ env:
   NETCIRCUIT_CONTRACTS_WHEEL_URL: ${{ vars.NETCIRCUIT_CONTRACTS_WHEEL_URL }}
   NETCIRCUIT_CONTRACTS_WHEEL_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_WHEEL_SHA256 }}
   NETCIRCUIT_CONTRACTS_NPM_URL: ${{ vars.NETCIRCUIT_CONTRACTS_NPM_URL }}
+  NETCIRCUIT_CONTRACTS_SDIST_URL: ${{ vars.NETCIRCUIT_CONTRACTS_SDIST_URL }}
+  NETCIRCUIT_ARTIFACT_PATHS_NPM_URL: ${{ vars.NETCIRCUIT_ARTIFACT_PATHS_NPM_URL }}
   NETCIRCUIT_CONTRACTS_NPM_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_NPM_SHA256 }}
 on:
   push:
@@ -68,6 +70,20 @@ jobs:
           python -m pip check
           python -m scripts.check_simulator_consumer
           python -m scripts.check_hardware_consumer
+      - name: Download the explicit reviewed Interface product
+        env:
+          NETCIRCUIT_INTERFACE_ARTIFACT_URL: ${{ vars.NETCIRCUIT_INTERFACE_ARTIFACT_URL }}
+          NETCIRCUIT_INTERFACE_ARTIFACT_SHA256: ${{ vars.NETCIRCUIT_INTERFACE_ARTIFACT_SHA256 }}
+          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+        run: python -m scripts.install_interface --github-env "$GITHUB_ENV"
+      - name: Bootstrap Interface SDK from exact reviewed artifacts
+        env:
+          NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST: ''
+          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+        run: node "$NETCIRCUIT_INTERFACE_ROOT/scripts/bootstrap-contracts.mjs" --github-env "$GITHUB_ENV"
+      - name: Install independent Interface verification tools
+        working-directory: ${{ env.NETCIRCUIT_INTERFACE_ROOT }}
+        run: npm ci --no-audit --no-fund
       - name: Verify installed Contracts RPC provenance
         run: python -m scripts.check_contract_consumer
       - run: python -m pytest -q tests/contracts/test_hardware_artifact.py tests/contracts/test_hardware_installer.py tests/integration/test_capture_rpc_data_plane.py tests/integration/test_instrument_path_rpc.py tests/integration/test_virtual_lab_execution.py tests/integration/test_simulation_backend_selection.py --basetemp "$NETCIRCUIT_ARTIFACTS_SESSION/pytest"
