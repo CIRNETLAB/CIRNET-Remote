@@ -3,6 +3,8 @@ from tests.support.release_inputs import interface_root
 import json
 from pathlib import Path
 import shlex
+import subprocess
+import sys
 import tomllib
 
 import yaml
@@ -74,7 +76,7 @@ def test_browser_ci_installs_pinned_runner_and_all_real_services_then_runs_every
             assert not {'-e','--editable','./services/api','./services/api[test]'} & set(command[4:])
     for check in ('npm ci', 'scripts.check_contract_consumer', 'generate_contracts.py --check',
                   'export_openapi.py --check', 'npm run check:boundaries', 'npm run build',
-                  'npm run test:e2e:install -- --with-deps', 'node scripts/e2e-interface.mjs --reporter=line,junit'):
+                  'npm run test:e2e:install -- --with-deps', 'python scripts/check_release.py --group browser'):
         assert check in steps
     # The real browser product is selected by reviewed release bytes. Retained
     # Web remains a historical source input, never an integrated runner fallback.
@@ -89,7 +91,12 @@ def test_browser_ci_installs_pinned_runner_and_all_real_services_then_runs_every
     target=(ROOT/'scripts/e2e-interface-target.mjs').read_text(encoding='utf-8')
     assert "manifest.devDependencies?.['@playwright/test']!=='1.64.1'" in target
     assert 'npx tsc --noEmit -p tsconfig.e2e.json' in steps
-    assert '--forbid-only' in steps
+    planned=subprocess.run([sys.executable,'-B','scripts/check_release.py','--show-plan','--group','browser'],cwd=ROOT,capture_output=True,text=True,check=True)
+    browser_steps=json.loads(planned.stdout)
+    assert [step['command'][-2:] for step in browser_steps[:2]]==[
+        ['-m','scripts.check_simulator_consumer'],['-m','scripts.check_hardware_consumer']]
+    assert len(browser_steps)==3 and browser_steps[-1]['command'][-3:]==[
+        'scripts/e2e-interface.mjs','--reporter=line,junit','--forbid-only']
     assert job['env']['NETCIRCUIT_E2E_PYTHON'] == 'python'
     allocation = next(step for step in job['steps'] if 'artifact_session=' in step.get('run', ''))
     assert allocation.get('env', {}).get('NETCIRCUIT_ARTIFACTS_DIR') == '${{ runner.temp }}/netcircuit-artifacts/${{ github.run_id }}-${{ github.run_attempt }}', 'runner.temp is available in step env, not job env'

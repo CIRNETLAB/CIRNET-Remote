@@ -77,22 +77,22 @@
     "Interface": {
       "repository": "https://github.com/TINIHI-Labs/net-Circuit-Interface",
       "version": "0.1.1",
-      "sourceRevision": "bac9b0b41ee9b8fa4a987378b98c062fe33b20a7",
+      "sourceRevision": "4cbbee16a158a16c432b0571f19b42bfd940ea9e",
       "releaseTag": "v0.1.1",
       "artifacts": {
         "source": {
           "filename": "netcircuit-interface-0.1.1-source.tar.gz",
-          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Interface/releases/assets/682354864",
-          "sha256": "95e4eee907e328752106c22e677a3f9916915539793d0f2514c0ccfcc8e9bcff",
-          "size": 2387805,
-          "assetId": 682354864
+          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Interface/releases/assets/682835101",
+          "sha256": "f88b727b15d3f847f4096dddc3062e0113fbdbed1a9de66c2ae69f31e393b796",
+          "size": 2394405,
+          "assetId": 682835101
         },
         "static": {
           "filename": "netcircuit-interface-0.1.1-static.tar.gz",
-          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Interface/releases/assets/682355016",
-          "sha256": "6628f421bb05f9bd0a4a36d2d32f22daa8b2c9930f04d923dfcc81f430fae8bf",
-          "size": 2200740,
-          "assetId": 682355016
+          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Interface/releases/assets/682835223",
+          "sha256": "d324eb77f71ff1fe9804965ea91231ea2c163651c88fa58a8b90567cf4c5b3a2",
+          "size": 2201522,
+          "assetId": 682835223
         }
       }
     },
@@ -357,6 +357,13 @@
       "sha256": "adb5c00cac6afe1270aa4428e54fa69b04b033049ac98f161d03f782c35be70b",
       "bytes": 12302,
       "assetId": 682446200
+    },
+    "DevTooling": {
+      "filename": "netcircuit-artifact-paths-1.0.0a1-build-recipe.tar.gz",
+      "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Contracts/releases/assets/682460861",
+      "sha256": "87e230ec4f14b1e0af36bec1f9b94f8b1e791a0bece30b9417773c92445d0ade",
+      "bytes": 2062,
+      "assetId": 682460861
     }
   },
   "sourceRevisionMeaning": "Exact artifact build revision. A release tag/master may additionally contain verified CI, release-manifest or verification documentation changes; package input differences must be reviewed."

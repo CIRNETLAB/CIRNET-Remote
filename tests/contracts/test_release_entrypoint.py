@@ -48,7 +48,7 @@ def test_browser_release_uses_remote_orchestration_without_retained_web_fallback
     assert len(steps)==3 and all(step['cwd']=='.' for step in steps)
     assert steps[0]['command'][-2:]==['-m','scripts.check_simulator_consumer']
     assert steps[1]['command'][-2:]==['-m','scripts.check_hardware_consumer']
-    assert steps[2]['command'][-2:]==['scripts/e2e-interface.mjs','--forbid-only']
+    assert steps[2]['command'][-3:]==['scripts/e2e-interface.mjs','--reporter=line,junit','--forbid-only']
 
 
 def test_web_release_checks_the_explicit_interface_product_without_retained_source():

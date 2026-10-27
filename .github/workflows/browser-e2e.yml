@@ -31,7 +31,8 @@ concurrency:
 jobs:
   chromium:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Full native suite measured 49 minutes on Windows; per-test budgets stay pinned.
+    timeout-minutes: 90
     env:
       # The harness owns a real SQLite database, API and virtual Hardware Service.
       # Its temporary accounts and opaque cookies are created locally for this run.
@@ -108,7 +109,7 @@ jobs:
         run: |
           set -o pipefail
           artifact_session="$(node scripts/artifact-paths.mjs)"
-          node scripts/e2e-interface.mjs --reporter=line,junit --forbid-only 2>&1 | tee "$artifact_session/e2e.log"
+          python scripts/check_release.py --group browser 2>&1 | tee "$artifact_session/e2e.log"
       - name: Browser failure evidence and JUnit results
         if: always()
         uses: actions/upload-artifact@v4

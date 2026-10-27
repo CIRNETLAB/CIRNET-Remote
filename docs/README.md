@@ -23,6 +23,7 @@ Current authority is [Lab-First v3.1](ARCHITECTURE.md). Historical plans, measur
 | M4 Hardware extraction | [Execution plan](superpowers/plans/2026-10-27-multi-repo-migration-m4.md), [verification/rollback](verification/2026-10-27-multi-repo-migration-m4.md), [history mapping](verification/2026-10-27-hardware-history.md); independent service with versioned Contracts/Simulator and Remote-owned integrated acceptance |
 | M5 FPGA extraction | [Execution plan](superpowers/plans/2026-10-27-multi-repo-migration-m5.md), [verification/rollback](verification/2026-10-27-multi-repo-migration-m5.md), [history mapping](verification/2026-10-27-fpga-history.md); versioned source scaffold, installed Contracts and mandatory pinned RTL verification |
 | M6 integrated release | [Execution ledger](superpowers/plans/2026-10-27-multi-repo-migration-m6.md), [verification/release identities](verification/2026-10-27-multi-repo-migration-m6.md), [artifact installation and rollback](../deployment/multi-repo-release.md); all products 0.1.1 |
+| Private CI artifact credentials | [Selected-repository read access and rotation](ci-artifact-access.md); workflow permissions and separate secret scopes are distinct |
 | Full Markdown audit and legacy evidence inventory | [Documentation/artifact audit](verification/2026-10-19-documentation-artifact-audit.md) |
 
 ## Source map

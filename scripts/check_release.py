@@ -61,7 +61,7 @@ def release_plan(groups,package_temporary_root=None):
         if not {'contracts','python'} & selected:
             python('browser','-m','scripts.check_simulator_consumer')
             python('browser','-m','scripts.check_hardware_consumer')
-        add('browser',[shutil.which('node') or 'node','scripts/e2e-interface.mjs','--forbid-only'])
+        add('browser',[shutil.which('node') or 'node','scripts/e2e-interface.mjs','--reporter=line,junit','--forbid-only'])
     if 'package' in selected:
         command=[sys.executable,'scripts/check_contract_package.py']
         if package_temporary_root:command.extend(['--temporary-root',package_temporary_root])

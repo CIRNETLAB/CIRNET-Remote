@@ -52,6 +52,14 @@ From another working directory use the script's absolute path, or the appropriat
 
 The current six-product release line is 0.1.1. Use the exact system release manifest and [clean-machine runbook](../deployment/multi-repo-release.md). Installed Contracts resources and explicit Interface/FPGA artifacts replace frozen-reference fixtures. Standalone producer repositories own deterministic generation, unit/AST, backend, RPC and RTL gates; Remote owns the full integrated release groups. Historical M1–M5 measurements remain separately dated. Initial Python entrypoints must suppress source bytecode before importing helper modules, and all child temp/cache paths must belong to the canonical session. Applying a child bootstrap does not change the parent shell; import its recorded environment before continuing.
 
+The current [M6 verification record](verification/2026-10-27-multi-repo-migration-m6.md)
+records the native depth-observer equivalence proof and unchanged DPR 2 gate.
+Those focused results do not replace complete browser and hosted-master acceptance.
+
+Private CI downloads use the [selected-repository read credential](ci-artifact-access.md).
+Workflow `contents: read` does not narrow the scope of a separate Actions secret.
+After credential rotation, verify actual selected private asset downloads again.
+
 ## Checks and evidence
 
 Choose gates from real package scripts and workflows. Run at root:
