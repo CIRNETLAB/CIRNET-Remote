@@ -30,7 +30,10 @@ concurrency:
   cancel-in-progress: true
 jobs:
   chromium:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
     # Full native suite measured 49 minutes on Windows; per-test budgets stay pinned.
     timeout-minutes: 90
     env:
@@ -73,6 +76,9 @@ jobs:
           python -m pip check
           python -m scripts.check_simulator_consumer
           python -m scripts.check_hardware_consumer
+      - name: Record native runner resources
+        run: |
+          python -c "import json,os,platform,psutil; print(json.dumps({'platform':platform.platform(),'python':platform.python_version(),'cpuCount':os.cpu_count(),'cpuAffinity':psutil.Process().cpu_affinity(),'memoryBytes':psutil.virtual_memory().total},sort_keys=True))"
       - name: Download the explicit reviewed Interface product
         env:
           NETCIRCUIT_INTERFACE_ARTIFACT_URL: ${{ vars.NETCIRCUIT_INTERFACE_ARTIFACT_URL }}
@@ -101,7 +107,7 @@ jobs:
         run: |
           npx tsc --noEmit -p tsconfig.e2e.json
           npm run build
-      - name: Install the pinned Chromium revision and Linux dependencies
+      - name: Install the pinned Chromium revision and platform dependencies
         working-directory: ${{ env.NETCIRCUIT_INTERFACE_ROOT }}
         run: npm run test:e2e:install -- --with-deps
       - name: Real API, SQLite, Hardware Service and Chromium suite

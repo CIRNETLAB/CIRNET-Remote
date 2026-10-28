@@ -82,6 +82,16 @@ Master fast-forwards and six immutable tags/releases are done, but full hosted m
 
 The remaining three execution rows stay unchecked. A final docs-only Remote descendant, applicable documentation/Integration CI and its recoverable handoff bundle may be recorded separately; that documentation handoff cannot close the failed native/M6 gates. Current external-session cleanup is not yet claimed complete. Exact artifacts and matching database/capture rollback, quarantine and no Start replay remain in the [release/rollback runbook](../../deployment/multi-repo-release.md). W0–W8 and Safety-gated ownership/compatibility constraints below remain unchanged.
 
+## Browser CI repair: unchanged released products
+
+The user then requested continuing publication while fixing Browser. Six immutable releases and the 17 anonymous-download proof remain unchanged. No native result is promoted by this new instruction.
+
+Both completed hosted Linux attempts retain 50 PASS / seven FAIL / one optional historical NOT_RUN. New trace decoding showed physical-preflight Cancel existed until the real 10-second API deadline expired during slow UI toggles; the flexible TOP preset completed after its assertion deadline. A renderer-double CPU probe took 17 ms for 20 drawer/frame operations and 8.78 ms for 20 camera/frame operations; this isolates the local CPU control logic and is not native performance acceptance. Actual native stage profiling found both GPU-draining readbacks and, in the PSU closeup, repeated foreground raycasts. Concurrent local Docker preparation limits absolute timing comparisons. These diagnoses do not prove a bad graph, incorrect pixel result or a lost execution owner.
+
+The bounded CI candidate changes only the browser job to `windows-latest`, explicitly defaults its run steps to Bash and renames platform dependency installation. A sanitized resource stdout step records actual OS/Python/CPU affinity/memory so future runner claims have measured context. Existing Python/Node/Playwright pins, versioned Interface source artifact, 58 test bodies, DPR, deadlines, retries, single worker, full-list command, real loopback API/RPC services, safe restart/shutdown and owned browser/runtime evidence policy remain unchanged. The already recorded complete Windows baseline is a reason to test this environment, not a claim that the new hosted Windows gate passed. Production Linux service compatibility retains its independent Linux backend/Contracts/Web/integration coverage and separately recorded full local Linux browser result.
+
+At this candidate checkpoint, hosted Windows native acceptance is NOT_RUN. No published artifact/tag is overwritten, no new product version is introduced, no baseline/assertion is weakened and no migration branch is deleted. This workflow change does not rebuild the API/deployment packages or change the canonical system manifest. Fresh workflow syntax/policy checks and exact-master hosted results follow before any full M6 acceptance claim.
+
 ## Historical execution chronology
 
 Earlier stops, pending statements, inventories and measurements retain their recorded scope; this publication checkpoint supersedes only their publication disposition.
