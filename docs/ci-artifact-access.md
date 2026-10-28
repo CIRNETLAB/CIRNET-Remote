@@ -38,8 +38,9 @@ a fresh virtualenv, invokes the actual complete system installer, verifies all
 15 selected archives and rollback bytes, checks installed origins/versions and
 retains a sanitized receipt. The receipt explicitly leaves credential minimum
 scope unverified: record the provisioned credential permissions separately.
-The current uncommitted workflow has local policy/behavioral evidence; its hosted
-execution is NOT_RUN under the user's instruction to stop further Git promotion.
+The committed workflow has local policy/behavioral evidence. Hosted acceptance
+is recorded per source revision in the M6 verification report; a download receipt
+does not replace confirmation of the provisioned token's repository/permission scope.
 
 Renew the token before its expiration under the organization's policy and
 replace the same secret in all six repositories. A failed authentication or

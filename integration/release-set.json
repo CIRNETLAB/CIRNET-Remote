@@ -5,37 +5,36 @@
     "Remote": {
       "repository": "https://github.com/TINIHI-Labs/net-Circuit-Remote",
       "version": "0.1.1",
-      "sourceRevision": "dbd44eb53fda3efcd77577816e63cec41cf26df1",
-      "releaseTag": "v0.1.1",
+      "sourceRevision": "82ca15bec250894c39c2849ab4a3eaaeb7712b05",
       "artifacts": {
         "python": {
           "filename": "netcircuit_api-0.1.1-py3-none-any.whl",
-          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Remote/releases/assets/682388199",
-          "sha256": "6e2d581daa3c1c55b38bc0841e175a4803aa139e06c4556022562d2cc8b23c6f",
-          "size": 100262,
-          "assetId": 682388199
+          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Remote/releases/assets/684944254",
+          "sha256": "50d3d2610ceaa0d00d926c83e4d4a9b5039ecc2a67fa8d19d979d28f051a1906",
+          "size": 100223,
+          "assetId": 684944254
         },
         "sdist": {
           "filename": "netcircuit_api-0.1.1.tar.gz",
-          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Remote/releases/assets/682388290",
-          "sha256": "2aa61caead5c57e8d27908554e2949a7641af6373115b089375101183e07c717",
-          "size": 157549,
-          "assetId": 682388290
+          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Remote/releases/assets/684944433",
+          "sha256": "badc2f9308d3f3e48ff79ec73ac20e2337b22a3c7cfbc779029444599d43feba",
+          "size": 152026,
+          "assetId": 684944433
         },
         "deployment": {
           "filename": "netcircuit-remote-0.1.1-deployment.tar.gz",
-          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Remote/releases/assets/682388377",
-          "sha256": "14ae1ffd885b6fc3275daf7b60b7287b77a49904af71833f2849eccbf6acc016",
-          "size": 21574,
-          "assetId": 682388377
+          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Remote/releases/assets/684944615",
+          "sha256": "0c4af2a06a9a03f0a662862aa934db7a026ffe4b4b01a30593f3518d9c2d179d",
+          "size": 21587,
+          "assetId": 684944615
         }
-      }
+      },
+      "releaseTag": "v0.1.1"
     },
     "Contracts": {
       "repository": "https://github.com/TINIHI-Labs/net-Circuit-Contracts",
       "version": "0.1.1",
-      "sourceRevision": "c39c95cbea2228bd9f5f04e3c8e78b40e4761b22",
-      "releaseTag": "v0.1.1",
+      "sourceRevision": "54ef9f6a11f4906c11ec9789de47cf06d5100734",
       "artifacts": {
         "python": {
           "filename": "netcircuit_contracts-0.1.1-py3-none-any.whl",
@@ -72,88 +71,89 @@
           "size": 17527,
           "assetId": 682226570
         }
-      }
+      },
+      "releaseTag": "v0.1.1"
     },
     "Interface": {
       "repository": "https://github.com/TINIHI-Labs/net-Circuit-Interface",
       "version": "0.1.1",
-      "sourceRevision": "4cbbee16a158a16c432b0571f19b42bfd940ea9e",
-      "releaseTag": "v0.1.1",
+      "sourceRevision": "7a266d15b510d840ad3146515a3699760564ed32",
       "artifacts": {
         "source": {
           "filename": "netcircuit-interface-0.1.1-source.tar.gz",
-          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Interface/releases/assets/682835101",
-          "sha256": "f88b727b15d3f847f4096dddc3062e0113fbdbed1a9de66c2ae69f31e393b796",
-          "size": 2394405,
-          "assetId": 682835101
+          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Interface/releases/assets/684942791",
+          "sha256": "bd3f529454dd129d90a27ce7ee76c84400481f1cc6452150d32233973c42c4b4",
+          "size": 2396605,
+          "assetId": 684942791
         },
         "static": {
           "filename": "netcircuit-interface-0.1.1-static.tar.gz",
-          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Interface/releases/assets/682835223",
-          "sha256": "d324eb77f71ff1fe9804965ea91231ea2c163651c88fa58a8b90567cf4c5b3a2",
-          "size": 2201522,
-          "assetId": 682835223
+          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Interface/releases/assets/684942968",
+          "sha256": "f7e87d32b314982503a7e9bd1f213812c6a927914276f98825983191ac924055",
+          "size": 2191934,
+          "assetId": 684942968
         }
-      }
+      },
+      "releaseTag": "v0.1.1"
     },
     "Simulator": {
       "repository": "https://github.com/TINIHI-Labs/net-Circuit-Simulator",
       "version": "0.1.1",
       "sourceRevision": "ff63616a7a8c5d3f65e60cdb85db2b4b4ab42fa7",
-      "releaseTag": "v0.1.1",
       "artifacts": {
         "python": {
           "filename": "netcircuit_simulator-0.1.1-py3-none-any.whl",
-          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Simulator/releases/assets/682243875",
-          "sha256": "2d70d1c4a92ff5814f6c90c122cff4d11ad78757ad307f0ba3c384f721443de0",
-          "size": 33295,
-          "assetId": 682243875
+          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Simulator/releases/assets/684943145",
+          "sha256": "78b857369baec88800d08e37977afacca3321decd05b6cd50ea925c033ea7b89",
+          "size": 33159,
+          "assetId": 684943145
         },
         "sdist": {
           "filename": "netcircuit_simulator-0.1.1.tar.gz",
-          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Simulator/releases/assets/682243978",
-          "sha256": "9ae34f5be6c25eda46eea7ca2642a20ef8da5ac81ef8c03ca1521ce5ba4cc956",
-          "size": 78210,
-          "assetId": 682243978
+          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Simulator/releases/assets/684943330",
+          "sha256": "6afd1b9a68768f527fd5ee1f864287c88d56b6a97c0a7fd7b2b7bd560bb0cfd2",
+          "size": 76733,
+          "assetId": 684943330
         }
-      }
+      },
+      "releaseTag": "v0.1.1"
     },
     "Hardware": {
       "repository": "https://github.com/TINIHI-Labs/net-Circuit-Hardware",
       "version": "0.1.1",
       "sourceRevision": "de65db8b89d0dfa6dd4c430a41397555bc77111d",
-      "releaseTag": "v0.1.1",
       "artifacts": {
         "python": {
           "filename": "netcircuit_hardware_service-0.1.1-py3-none-any.whl",
-          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Hardware/releases/assets/682262875",
-          "sha256": "0c6fa8530c1adf551b2971e501542fd2b8d18661792909ad5c1db1c7542d1e3d",
-          "size": 29169,
-          "assetId": 682262875
+          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Hardware/releases/assets/684943575",
+          "sha256": "f6fc643bc40130a0f8b4136db8db4f8abe1b0b366efaffa8c1866786429d9e9b",
+          "size": 29105,
+          "assetId": 684943575
         },
         "sdist": {
           "filename": "netcircuit_hardware_service-0.1.1.tar.gz",
-          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Hardware/releases/assets/682262956",
-          "sha256": "ba94fb08c5f82d0c2f3785ffc9426c165a79da5c1a2fe6ffe70410e44eda773e",
-          "size": 73774,
-          "assetId": 682262956
+          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Hardware/releases/assets/684943851",
+          "sha256": "3754bfc3338cc6c17dd66b16788c502cdd414e2b4e01a1e2c0ffaed24b0060fb",
+          "size": 71564,
+          "assetId": 684943851
         }
-      }
+      },
+      "releaseTag": "v0.1.1"
     },
     "FPGA": {
       "repository": "https://github.com/TINIHI-Labs/net-Circuit-FPGA",
       "version": "0.1.1",
       "sourceRevision": "24ade35eade5382efd42f784008280c0fbb768c3",
-      "releaseTag": "v0.1.1",
       "artifacts": {
         "source": {
           "filename": "netcircuit-fpga-scaffold-0.1.1.tar.gz",
-          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-FPGA/releases/assets/682282018",
-          "sha256": "4a275a924700bf8f395ecd84e92e2bef545a8bd0e2ee2a1f84733c4c9b8bf7b1",
-          "size": 56584,
-          "assetId": 682282018
+          "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-FPGA/releases/assets/684944031",
+          "sha256": "b82edb4167b821f55d98331304d0c49d2f37638d972fc9c167287bb6368908ca",
+          "size": 56247,
+          "assetId": 684944031
         }
-      }
+      },
+      "releaseTag": "v0.1.1"
     }
   },
   "compatibility": {
@@ -343,7 +343,8 @@
     "preserveQuarantine": true,
     "automaticStartReplay": false
   },
-  "reproducibility": {
+  "sourceRevisionMeaning": "Exact artifact build revision. A release tag/master may additionally contain verified CI, release-manifest or verification documentation changes; package input differences must be reviewed.",
+  "historicalReproducibility": {
     "Contracts": {
       "filename": "netcircuit-contracts-0.1.1-build-recipe.tar.gz",
       "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Contracts/releases/assets/682445990",
@@ -366,5 +367,15 @@
       "assetId": 682460861
     }
   },
-  "sourceRevisionMeaning": "Exact artifact build revision. A release tag/master may additionally contain verified CI, release-manifest or verification documentation changes; package input differences must be reviewed."
+  "reproducibility": {
+    "ReviewedLocalBuildInputs": {
+      "filename": "m6-reproducibility-inputs-0.1.1-82ca15b.zip",
+      "url": "https://api.github.com/repos/TINIHI-Labs/net-Circuit-Remote/releases/assets/684944690",
+      "sha256": "9dc5886ee214bc6e535ffe13965a44a2c9d504f67e4cd9fef5c6a9ee3cb974dc",
+      "size": 75180,
+      "assetId": 684944690,
+      "sourceRevision": "82ca15bec250894c39c2849ab4a3eaaeb7712b05",
+      "limitations": "Reviewed build/archive profiles and recipes; historical absolute paths require remapping. Not a portable automated pipeline; native Interface/FPGA builders remain in their recorded source commits."
+    }
+  }
 }

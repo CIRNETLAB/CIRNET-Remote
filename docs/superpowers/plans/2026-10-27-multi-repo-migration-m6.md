@@ -14,6 +14,8 @@
 
 **Local continuation:** the user requested completion of the remaining local artifact rebuild and clean-install work using this original checklist. At this continuation's start, Remote was clean at user-provided commit `82ca15bec250894c39c2849ab4a3eaaeb7712b05`, Interface at `7a266d15b510d840ad3146515a3699760564ed32`; the other four recorded producer tips were clean. Six independent clean temporary clones supplied the new builds. New consumer-tool/documentation changes remain uncommitted and are recorded here and in the existing M6 verification report, without a separate task Markdown file. Git promotion remains stopped.
 
+**Resumed publication scope, 2026-10-28:** the user explicitly requested continuing the four publication/master/branch-cleanup items, superseding the earlier stop for those operations. Commit reviewed release bindings/fixes, push ordinary fast-forward migration/master updates, publish exactly `v0.1.1` for all six private repositories, verify hosted master CI, preserve final recoverable history bundles, and delete only proven merged migration branches. The user also confirmed the selected-six-repository fine-grained Contents-read CI secret configuration; hosted authenticated downloads remain to be verified. The existing local verification and older stop records retain their historical scope. No deployment, board programming, force-push, license/visibility change or unrelated-worktree cleanup is authorized.
+
 ## Global constraints
 
 - All six product versions and release tags are exactly 0.1.1 / v0.1.1. DEV tooling remains 1.0.0a1; schema, graph, RPC, NCAP and FPGA protocol versions retain their meaning.
@@ -21,7 +23,7 @@
 - Preserve source assets, golden baselines, protected bytes, historical reports and frozen reference trees. Frozen sources cannot supply supported runtime/build/test/release dependencies.
 - Immutable artifact URLs/digests; exact dependency versions; no sibling source or editable producer installs. API registrations remain OpenAPI operation authority.
 - Shared allocator context includes all six repositories and Git families. Diagnostics and test state originate externally. Browser uses a complete physical owned runtime copy.
-- Release gates must execute freshly; blocked/unrun gates cannot count as PASS. The original merge/push/publication/branch-cleanup authorization is superseded by the current scope override above.
+- Release gates must execute freshly; blocked/unrun gates cannot count as PASS. The latest resumed scope above governs Git promotion; every remaining publication/CI/history-cleanup gate must pass before completion.
 
 ## Review focus
 
@@ -41,19 +43,19 @@
 - [x] Replace frozen-source fixtures/assertions and directory-dependent tooling with installed artifact/resource coverage.
 - [x] Connect extracted ancestry on each product migration branch without changing its product tree.
 - [x] Before the scope override, commit producer changes and build independently from recorded clean revisions; preserve their hashes/provenance and standalone tests. New working-copy corrections remain uncommitted.
-- [ ] NOT_RUN under the revised scope: publish durable 0.1.1 dependency artifacts; configure exact authenticated consumer downloads/CI.
+- [ ] IN_PROGRESS under the resumed publication scope: publish durable 0.1.1 dependency artifacts; configure exact authenticated consumer downloads/CI.
 - [x] Build Interface source/static and FPGA scaffold independently from the recorded committed revisions; verify repeated artifact identities and mandatory pinned RTL execution.
 - [x] Complete the current selected-artifact native browser gate: 57 mandatory PASS, one optional historical NOT_RUN, zero failures, in 35.7 minutes. Standard order, one worker, zero Playwright retries and original assertions/deadlines were preserved. The earlier interrupted 43/58 run and failed gallery timeout remain separate evidence.
 - [x] Rebuild the current six-product 0.1.1 local set, retain exact commits/digests and verify a new artifact-only clean install. Fifteen newly built artifacts and two actual clean installations passed; the old published/draft selection remains separate and unchanged.
 - [x] Verify the current clean artifact-only Remote Contracts, Python, Web and real PostgreSQL groups after inspecting the 18-command plan: 1,410 Python PASS (two Windows symlink NOT_RUN), 1,461 Web tests plus nine bootstrap checks PASS, and 18 PostgreSQL tests PASS. Current browser/package acceptance is tracked separately above/below; the earlier complete Windows baseline remains historical evidence.
 - [x] Rehearse exact artifact rollback with matching database/capture backup and safe lifecycle semantics.
 - [x] Review source corrections and update canonical docs/onboarding/deployment and verification evidence; final documentation/cleanup handoff checks are recorded separately.
-- [ ] NOT_RUN under the revised scope: integrate verified revisions into all six master branches, publish v0.1.1 tags/releases and verify hosted master CI.
-- [ ] NOT_RUN under the revised scope: prove migration/filtered tips reachable from origin/master and verified backup; delete only those merged migration branches.
-- [ ] NOT_RUN under the revised scope: leave six clean master checkouts synchronized to origin/master and hand off promoted release/CI/master identities.
+- [ ] IN_PROGRESS under the resumed publication scope: integrate verified revisions into all six master branches, publish v0.1.1 tags/releases and verify hosted master CI.
+- [ ] IN_PROGRESS under the resumed publication scope: prove migration/filtered tips reachable from origin/master and verified backup; delete only those merged migration branches.
+- [ ] IN_PROGRESS under the resumed publication scope: leave six clean master checkouts synchronized to origin/master and hand off promoted release/CI/master identities.
 - [x] Complete the current local installed-package gate, final documentation/source checks, inspected evidence cleanup and exact working-copy/artifact handoff without Git promotion. All mandatory local groups passed across the separately recorded invocations; five owned sessions were canonically cleaned, six HEADs/indexes preserved, and the retained manifest is bound to exact producer revisions/digests.
 
-**Local outcome, 2026-10-28:** all currently authorized local checklist items are complete. The four publication/master/promotion/branch-cleanup rows remain explicitly NOT_RUN under the user's scope override. Final build/install/test/rollback identities, the earlier failed attempts and cleanup limits are recorded in the existing [M6 verification report](../../verification/2026-10-27-multi-repo-migration-m6.md). No new task Markdown or Git promotion was created.
+**Historical local-only outcome, 2026-10-28:** all currently authorized local checklist items are complete. The four publication/master/promotion/branch-cleanup rows remain explicitly NOT_RUN under the user's scope override. Final build/install/test/rollback identities, the earlier failed attempts and cleanup limits are recorded in the existing [M6 verification report](../../verification/2026-10-27-multi-repo-migration-m6.md). No new task Markdown or Git promotion was created.
 
 ## Initial state and rulings
 

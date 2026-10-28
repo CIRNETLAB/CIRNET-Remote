@@ -150,8 +150,17 @@ def test_receipt_cannot_pass_with_incomplete_or_unverified_real_inputs(tmp_path,
         program['create_receipt'](state, manifest, installed, authenticated_request=authenticated)
 
 
-def test_actual_isolated_probe_ignores_checkout_shadowing_and_rejects_wrong_wheel_digest(tmp_path):
-    from importlib.metadata import distribution
+@pytest.mark.parametrize('checkout_metadata', [False, True], ids=['installed-metadata', 'checkout-egg-info'])
+def test_actual_isolated_probe_ignores_checkout_shadowing_and_rejects_wrong_wheel_digest(tmp_path, monkeypatch, checkout_metadata):
+    from importlib.metadata import Distribution, distribution
+    import sysconfig
+    if checkout_metadata:
+        checkout = tmp_path / 'checkout'
+        metadata = checkout / 'netcircuit_api.egg-info'
+        metadata.mkdir(parents=True)
+        (metadata / 'PKG-INFO').write_text('Metadata-Version: 2.1\nName: netcircuit-api\nVersion: 0.1.1\n', encoding='utf-8')
+        monkeypatch.syspath_prepend(str(checkout))
+        assert distribution('netcircuit-api').read_text('direct_url.json') is None
     program = receipt_program()
     probe = program['ORIGIN_PROBE']
     assert 'sys.flags.isolated' in probe
@@ -162,8 +171,10 @@ def test_actual_isolated_probe_ignores_checkout_shadowing_and_rejects_wrong_whee
     assert 'archive_info' in probe
     assert "'-I', '-B', '-c', ORIGIN_PROBE" in program['__source__']
     selected = []
+    # API builds leave checkout egg-info; fixture hashes must come from wheels.
+    installed_roots = list(dict.fromkeys(sysconfig.get_paths()[key] for key in ('purelib', 'platlib')))
     for name, module, version, component, kind in program['PACKAGES']:
-        metadata = distribution(name)
+        metadata = next(Distribution.discover(name=name, path=installed_roots))
         direct = json.loads(metadata.read_text('direct_url.json'))
         archive = direct['archive_info']
         digest = archive.get('hashes', {}).get('sha256') or archive['hash'].removeprefix('sha256=')
@@ -189,6 +200,7 @@ def test_cleanup_after_allocated_dev_pip_failure_uses_published_canonical_cli(tm
     from importlib.metadata import distribution
     from scripts import bootstrap_contract_tools as bootstrap
 
+    monkeypatch.delenv('npm_config_cache', raising=False)
     bash = Path('C:/Program Files/Git/bin/bash.exe') if os.name == 'nt' else Path(shutil.which('bash') or '')
     assert bash.is_file(), 'The workflow cleanup regression requires Git Bash/bash'
     consumer = tmp_path / 'fresh-consumer'
@@ -226,7 +238,11 @@ def test_cleanup_after_allocated_dev_pip_failure_uses_published_canonical_cli(tm
                     'NETCIRCUIT_ARTIFACTS_DIR', 'GITHUB_ENV', 'TMP', 'TEMP', 'TMPDIR',
                     'PIP_CACHE_DIR', 'npm_config_cache', 'PYTHONDONTWRITEBYTECODE'):
             if key in os.environ: local.setenv(key, os.environ[key])
-            else: local.delenv(key, raising=False)
+            else:
+                # Register absence before restoring it; deleting a missing key
+                # alone would not undo bootstrap's subsequent direct writes.
+                local.setenv(key, '')
+                local.delenv(key)
         local.delenv('NETCIRCUIT_ARTIFACTS_SESSION', raising=False)
         local.delenv('NETCIRCUIT_ARTIFACTS_CLI', raising=False)
         local.setenv('NETCIRCUIT_ARTIFACTS_DIR', str(parent))
