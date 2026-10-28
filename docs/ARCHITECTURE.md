@@ -1,4 +1,4 @@
-# net*CIRCUIT Remote — Lab-First v3.1
+# CIRNET Remote — Lab-First v3.1
 
 This is the single canonical architecture authority. The original v3 proposal/audit are provenance; archived specs/prompts, source analyses and verification reports are history. This document governs conflicts.
 
@@ -143,6 +143,15 @@ Future EP4CE10E22C8N + external SDRAM: Logic Analyzer, Scope 2CH + ADC/AFE, Gene
 
 ## Current multi-repo release boundary
 
+The current GitHub organization is [CIRNETLAB](https://github.com/CIRNETLAB).
+The six repositories are `CIRNET-Remote`, `CIRNET-Contracts`, `CIRNET-Interface`,
+`CIRNET-Simulator`, `CIRNET-Hardware` and `CIRNET-FPGA`; the
+[repository map](README.md#current-repositories-and-release-selection) records
+their canonical URLs/owners. Organization ID 333715068 and the six repository
+IDs are preserved. Historical names/URLs remain provenance, including unchanged
+immutable release notes and source archives. Current installation paths use the
+canonical URLs rather than depending on those redirects.
+
 M6 uses independent Contracts, Interface, Simulator, Hardware, FPGA and Remote products at **0.1.1**. `integration/release-set.json` records exact committed sources, immutable artifact locations/digests, compatibility and rollback. API application-info and API/root metadata align at 0.1.1. CircuitGraph 1.0/1.1/1.2, Hardware RPC 2.0, NCAP1/2, FPGA logical 1.0-scaffold and register-map 1.0-reserved retain their meaning; DEV tooling keeps its independent pins.
 
 Contracts is the sole schema/catalog/protocol/SDK owner. FastAPI registrations remain operation authority and final-wheel OpenAPI equality is mandatory. Interface owns editor/assets/browser assertions; Simulator owns the existing engine/backend boundary; Hardware owns local-only RPC/stations/private transport; FPGA owns scaffold/RTL/toolchain. Remote owns auth/persistence, one scheduler process, orchestration, deployment and integrated acceptance. Supported gates use installed artifacts/resources, without sibling/frozen source dependencies or editable producers. Retained monorepo source is historical reference only.
@@ -151,11 +160,13 @@ Keep same-origin Web/API/WebSocket and unavailable native/physical capabilities.
 
 ## Migration execution history
 
-M0–M5 versions and dispositions below describe their recorded stages; the current release boundary supersedes temporary package/workflow setup.
+M0–M5 versions and dispositions below describe their recorded stages; the current release boundary supersedes temporary package/workflow setup. Contracts 1.0.1, Simulator 0.2.0 and FPGA scaffold 0.1.0 below are historical extraction identities; current product selections are all 0.1.1. These old stage numbers are not current installation pins.
 
 ## Execution discipline
 
 Current verification and artifact storage rules are in [VERIFICATION.md](VERIFICATION.md), with the short Codex policy in root [AGENTS.md](../AGENTS.md). Temporary screenshots, video, traces, image-bearing HTML reports and raw diagnostic artifacts must be created outside every repository/worktree and Git directory. Retained repository evidence is Markdown; dated reports preserve their original results and do not authorize rerunning historical checklists. Product assets and approved regression fixtures keep their own roles.
+
+### Historical extraction-stage ownership
 
 M1 transfers canonical Contracts/Device Library ownership and generation to the independent net-Circuit-Contracts repository. Remote consumes the pinned netcircuit-contracts 1.0.1 wheel; retained root contracts/device-library files are frozen references, with a strict installed-distribution adapter and no old-source fallback. The installed manifest/registry owns identities and offline schema resolution. JSON Schema 2020-12 produces Python boundary models, browser DTOs and standalone validators in Contracts; FastAPI registrations remain the public-operation authority through a reviewed OpenAPI export/final-artifact equality gate. Root `scripts/generate_contracts.py --check` and catalog wrappers compare installed projections without regenerating retained source. Structural/editor/transport profiles preserve legacy storage and explicit browser/RPC numeric limits. Pure contract errors have no HTTP dependency; property alias normalization remains a named document/API adaptation. Browser exports exclude private execution plans/routing resources. See `contracts/README.md`, the [M1 ledger](superpowers/plans/2026-10-24-multi-repo-migration-m1.md) and `verification/2026-10-16-contract-decisions.md` for scope, compatibility and package rules.
 

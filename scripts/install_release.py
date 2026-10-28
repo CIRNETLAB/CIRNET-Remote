@@ -21,10 +21,10 @@ import uuid
 from zipfile import ZipFile
 
 try:
-    from scripts.system_release_manifest import load_manifest, local_artifact_bytes, VERSION
+    from scripts.system_release_manifest import load_manifest, local_artifact_bytes, repository_urls, VERSION
     from scripts.artifact_download import download_artifact
 except ModuleNotFoundError:
-    from system_release_manifest import load_manifest, local_artifact_bytes, VERSION
+    from system_release_manifest import load_manifest, local_artifact_bytes, repository_urls, VERSION
     from artifact_download import download_artifact
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -104,8 +104,9 @@ def _checked_tar(contents):
 def _check_source(identity, component, value):
     selected = value['repositories'][component]
     source = identity.get('source', {})
-    repository = selected['repository'].removesuffix('.git')
-    if (source.get('repository') not in (repository, repository + '.git')
+    if (selected['repository'].removesuffix('.git') not in repository_urls(component)
+            or not isinstance(source.get('repository'), str)
+            or source['repository'].removesuffix('.git') not in repository_urls(component)
             or source.get('revision') != selected['sourceRevision'] or source.get('uncommittedMigration') is not False):
         raise ValueError(component + ' source provenance differs from the exact committed release lock.')
 

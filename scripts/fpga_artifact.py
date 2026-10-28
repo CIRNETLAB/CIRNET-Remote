@@ -11,8 +11,10 @@ import uuid
 
 try:
     from scripts.artifact_paths import artifact_directory
+    from scripts.system_release_manifest import repository_urls
 except ModuleNotFoundError:
     from artifact_paths import artifact_directory
+    from system_release_manifest import repository_urls
 
 MAX_MEMBERS = 10_000
 MAX_EXPANDED_BYTES = 128 * 1024 * 1024
@@ -21,7 +23,7 @@ IDENTITY = 'fpga-artifact.json'
 PINS = {'schemaVersion': 1, 'name': 'netcircuit-fpga-scaffold', 'version': '0.1.1',
     'kind': 'source', 'contractsVersion': '0.1.1', 'logicalProtocolVersion': '1.0-scaffold',
     'registerMapVersion': '1.0-reserved', 'physicalAvailable': False}
-REPOSITORY = 'https://github.com/TINIHI-Labs/net-Circuit-FPGA.git'
+REPOSITORY = 'https://github.com/CIRNETLAB/CIRNET-FPGA.git'
 ORIGINAL_REPOSITORY = 'https://github.com/net-Circuit-Remote/net-Circuit-Remote.git'
 ORIGINAL_REVISION = 'f43f92c7730d40040e717bf1bacd3a3773e2a131'
 
@@ -69,7 +71,8 @@ def _identity(identity, contents):
             or identity[key] != value for key, value in PINS.items()):
         raise ValueError('FPGA source identity must match source 0.1.1 and Contracts 0.1.1/logical 1.0-scaffold pins.')
     source = identity.get('source')
-    if (not isinstance(source, dict) or source.get('repository') != REPOSITORY
+    if (not isinstance(source, dict) or not isinstance(source.get('repository'), str)
+            or source['repository'].removesuffix('.git') not in repository_urls('FPGA')
             or source.get('originalRepository') != ORIGINAL_REPOSITORY
             or source.get('originalRevision') != ORIGINAL_REVISION
             or not isinstance(source.get('revision'), str) or not re.fullmatch('[0-9a-f]{40}', source['revision'])

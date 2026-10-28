@@ -1,9 +1,17 @@
 # Release assets and CI access
 
-All six net-Circuit repositories are public. Published release assets support
+All six `CIRNETLAB/CIRNET-*` repositories are public. Published release assets support
 anonymous downloads through the exact numeric GitHub URLs in the release
 manifest. Retain authenticated access for draft assets, CI and API rate limits.
 Test the selected URLs with the actual intended consumer identity.
+The organization rename retains account ID 333715068 and all six repository
+IDs. Current API asset paths use `/repos/CIRNETLAB/CIRNET-<product>/releases/assets/<id>`
+with the existing selected asset IDs/filenames/digests. Sixty existing CI URL
+variables were rebound and read back under the new names; unrelated variables,
+secrets, package versions and immutable artifact bytes were preserved. A new
+hosted run at the final source commit is still required for CI acceptance.
+Historical namespace links in published notes/provenance remain historical;
+successful redirected downloads alone do not establish current CI compatibility.
 
 Current workflows still bootstrap with `NETCIRCUIT_ARTIFACTS_READ_TOKEN`, and the
 `system-artifact-access` job requires it. Public release availability does not
@@ -14,15 +22,15 @@ Keep GitHub workflow permissions at `contents: read`. This controls the job's
 secret.
 
 Use an expiring fine-grained personal access token with resource owner
-`TINIHI-Labs`, only these selected repositories, and `Contents: Read-only` plus
+`CIRNETLAB`, only these selected repositories, and `Contents: Read-only` plus
 the automatic metadata-read permission:
 
-- `net-Circuit-Remote`
-- `net-Circuit-Contracts`
-- `net-Circuit-Interface`
-- `net-Circuit-Simulator`
-- `net-Circuit-Hardware`
-- `net-Circuit-FPGA`
+- `CIRNET-Remote`
+- `CIRNET-Contracts`
+- `CIRNET-Interface`
+- `CIRNET-Simulator`
+- `CIRNET-Hardware`
+- `CIRNET-FPGA`
 
 Store it as `NETCIRCUIT_ARTIFACTS_READ_TOKEN` in each repository's Actions
 secrets. Keep the credential used for local Git pushes and release publication

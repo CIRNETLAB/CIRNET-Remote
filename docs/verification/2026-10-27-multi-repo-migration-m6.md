@@ -1,14 +1,215 @@
 # M6 verification and release ledger
 
-Started: 2026-10-27; verified 2026-10-28, Asia/Saigon. Status: M6_PUBLISHED_NATIVE_CI_FAILED_CLEANUP_PENDING. Successful baseline measurements, subsequent hosted failures and verified fixes have separate scopes below. This record does not replace historical M0–M5 observations. No production deployment or board programming is part of M6.
+Started: 2026-10-27; current update: 2026-10-29, Asia/Saigon (evidence collected 2026-10-28 UTC). Status: M6_CIRNET_RENAME_REVALIDATION_IN_PROGRESS_NATIVE_NOT_ACCEPTED. Successful baseline measurements, subsequent hosted failures and verified fixes have separate scopes below. This record does not replace historical M0–M5 observations. No production deployment or board programming is part of M6.
 
-## Current publication checkpoint
+## Current CIRNET rename and release disposition
 
-**M6 remains incomplete: published; hosted native CI failed; migration-branch cleanup NOT_RUN.** The user explicitly instructed “Đừng chờ nữa hãy thực hiện publication”. That decision authorized publication now without counting native CI as PASS; it did not waive the cleanup/acceptance gates. All six existing v0.1.1 releases are now published and immutable. All repositories became public by the user's action; the agent changed no visibility or license. No deployment, board programming, runtime fix, new product version or artifact rebuild was performed in this checkpoint.
+**M6 remains incomplete.** Published immutable 0.1.1 releases and the completed
+history-only branch cleanup are preserved. The latest user attachment authorizes
+current source/tests/CI/docs/manifests, origin updates, commits and ordinary
+master pushes across all six renamed repositories. It does not authorize
+overwriting immutable artifacts, moving v0.1.1 tags, choosing a new version,
+changing licenses/visibility, force-pushing, production deployment or board
+programming. A release replacement decision is conditional on the concrete
+build comparison after independent work is complete.
+
+The user confirmed “Đúng, dùng CIRNETLAB/CIRNET-* cho cả sáu repo”. Organization
+account ID **333715068** and all six repository IDs are unchanged. Current
+repository/release links are:
+
+| Owner | Current repository | Existing immutable 0.1.1 release |
+| --- | --- | --- |
+| Remote | [CIRNET-Remote](https://github.com/CIRNETLAB/CIRNET-Remote) | [v0.1.1](https://github.com/CIRNETLAB/CIRNET-Remote/releases/tag/v0.1.1) |
+| Contracts | [CIRNET-Contracts](https://github.com/CIRNETLAB/CIRNET-Contracts) | [v0.1.1](https://github.com/CIRNETLAB/CIRNET-Contracts/releases/tag/v0.1.1) |
+| Interface | [CIRNET-Interface](https://github.com/CIRNETLAB/CIRNET-Interface) | [v0.1.1](https://github.com/CIRNETLAB/CIRNET-Interface/releases/tag/v0.1.1) |
+| Simulator | [CIRNET-Simulator](https://github.com/CIRNETLAB/CIRNET-Simulator) | [v0.1.1](https://github.com/CIRNETLAB/CIRNET-Simulator/releases/tag/v0.1.1) |
+| Hardware | [CIRNET-Hardware](https://github.com/CIRNETLAB/CIRNET-Hardware) | [v0.1.1](https://github.com/CIRNETLAB/CIRNET-Hardware/releases/tag/v0.1.1) |
+| FPGA | [CIRNET-FPGA](https://github.com/CIRNETLAB/CIRNET-FPGA) | [v0.1.1](https://github.com/CIRNETLAB/CIRNET-FPGA/releases/tag/v0.1.1) |
+
+Final-name audit SHA-256 `1cd3c5d388d727b70b33c773f8f8497a419449f3acba8c3437cd59c0c996d918`
+verified final names, repository/organization IDs, six public/admin states,
+unchanged masters/tags/policies/notes, all 31 immutable asset IDs/names/sizes/digests
+and LICENSE. Origin receipt `5381dce919166a231176bbd049127e6d07e445850a1cba81b4b508faba9d2866`
+binds six canonical origin updates and recoverable config backups under
+`C:/Users/trann/.codex/migration-release-backups/m6-promotion-20261028-f79860e8/cirnet-rename-before-source-66099e0f/`.
+Sixty existing selected-artifact CI URL variables were changed/read back; receipt
+`5b320afedbf6feaf0c17fc85aa53bf738872c750522235a7e843a3e43fcc6c38`
+preserves fingerprints of all other variable values. No secret, package version,
+asset ID, filename, digest, release/tag or visibility changed in this rebind.
+These readbacks do not constitute new exact-master hosted CI acceptance.
+
+The current Git [system manifest](../../integration/release-set.json) changes
+only 26 repository/asset URL fields to CIRNETLAB/CIRNET-*; all 15 selected asset
+IDs, original build revisions, versions, filenames, digests and compatibility/
+rollback pins stay unchanged. The historical immutable system-manifest asset
+`684998628` and published notes remain byte-preserved. Current source validators
+accept coherent exact historical or current repository provenance while rejecting
+mixed transport and unrelated identities. The 132 focused working-copy tests
+passed; final integrated clean-install/hosted evidence is still required.
+
+### Completed history backup and merged-branch cleanup
+
+The user explicitly instructed: “Trong lúc đợi phản hồi từ Github hãy hoàn tất
+backup lịch sử và dọn các nhánh migration đã merge.” Decision SHA-256
+`04b2d7d9e6dc333679df20bb1d6402a6dbbd5fd357788d368a78e1bd7e5922e2`
+authorizes history backup/cleanup while native remains a separate gate. The
+history-only authorization receipt is
+`07f18d762af00b614ab93b403491dbc717773d61ee8853ddf81c479837424d25`,
+using helper `68e25bc2bbad26759b54230565faee1a7c2738c3dd7ddc857fe5df17364777ff`
+and bounded cleanup adapter
+`e8856280fb817a83fb3a9a437de5b04df2e08ceecbd46194c5a21e4e0bb4efd6`.
+
+All six complete bundles were actually restored into fresh mirrors, named
+refs/HEAD/master/immutable tags/auxiliary worktree HEADs checked, and full strict
+fsck passed. Durable inventory:
+`C:/Users/trann/.codex/migration-release-backups/m6-promotion-20261028-f79860e8/m6-postpublication-browser-repair/BACKUP_INVENTORY.json`,
+SHA-256 `a56a651cc837143cfc6a7db62ee0cc38dad687cde6a6fb279ca1b4fd90d53698`.
+These backups capture Remote 23ca0827 and the five original publication targets,
+before the later rename commits; a later final-source handoff is still required.
+
+| Complete pre-cleanup bundle | SHA-256 |
+| --- | --- |
+| Remote | `fd2eebdc2b8bf192cf430881b75e22b01bd31712cf2582dedcad215a07db9c59` |
+| Contracts | `0eb2369cc5d24e058a904c23bf8849c29581cba59eedaf174b7c1da5d9a25ff2` |
+| Interface | `4181ad14791b5befec48454672087366362619b083dafe2f02ca09cd976e3cf7` |
+| Simulator | `0276c22dde3db515ffba985e432051626a3a545f43cdce1ba7f0fbd785737e6d` |
+| Hardware | `04c09ce45d15cb43869c6da6335220c5c455eaf244c6c13639f5d33e3d5b977e` |
+| FPGA | `ed02b4cae7a17e9869413e93e031c206459ca16784fe4d188fe0a8aa5ec4d3a1` |
+
+Actual deletion is **PASS: exactly 11 remote and 16 local migration branches**,
+with all 27 named tips proven reachable. Terminal receipt
+`4b6fc6dfe984653f665584c61a50cda04587763e1b67e9b60501a016dec4531a`,
+wrapper `43585e58d1f3627de5057de1cda9982a5a866e6bca4e12e28d4d43bab02d2507`,
+operations journal `895b2231a080839f3596dbd7db0b2bcb1f85c3d792f780a5e9a702853d6778e6`.
+All six remote deletion guards validated before the first deletion; ordinary
+push old-OID checks and normal local branch deletion were used, with no force,
+reset or prune. Source/master/tag/LICENSE/hooks/config/ignored files and unrelated
+refs/worktrees, including `Multi-Repo` and `refactor` at 295797c, were preserved.
+The wrapper intentionally says `nativeCountedAsPass: false` and
+`fullM6Acceptance: false`; the later browser result does not rewrite this history.
+
+### Rename-source builds and unpublished candidates
+
+Four reviewed producer commits are now pushed master commits with actual exact-head
+hosted CI PASS, observed 2026-10-28 18:20 UTC. Their four complete pre-push bundles
+were actually restored/fsck-checked, with original tags preserved; durable promotion
+receipt `a30b302afd0ddf5025bd337da25da793b1edd8af5c79e94c250265fb3e5b49d2`
+is under `C:/Users/trann/.codex/migration-release-backups/m6-promotion-20261028-f79860e8/cirnet-four-leaf-before-push-e8a55c5e/`.
+Interface's 14-file rename is now pushed and synchronized at 631d41b, with exact-head
+Standalone Interface CI PASS. Its complete pre-push bundle was restored/fsck-checked,
+with the original tag preserved; promotion receipt
+`17335b36bb3027a49fa41ed5b005f10df4772bec4357a9c0ba658a9e36488da7`
+is under `C:/Users/trann/.codex/migration-release-backups/m6-promotion-20261028-f79860e8/cirnet-interface-before-push-d53ca688/`.
+All five producer masters now have exact-head hosted CI PASS. Remote source/
+manifest/docs are being integrated. Local source folders retain net-Circuit-*.
+
+| Owner | Rename source checkpoint | Actual local evidence / remaining scope |
+| --- | --- | --- |
+| Contracts | `41dd34510bf39b9fe6093738965f81ac7d64f2b4` | Clean committed export; 500 primary + one CI + 15 Node + two Python allocator tests PASS; generation/compatibility, wheel/sdist/public SDK, independent sdist wheel and fresh isolated resources/RPC/OpenAPI probes PASS. Hosted [40742625944 PASS](https://github.com/CIRNETLAB/CIRNET-Contracts/actions/runs/40742625944) at this exact master |
+| Simulator | `dfa5fbe1ce5ff7fe4f3a5f033e419adcf656a488` | Committed rename metadata; isolated baseline/candidate checks PASS; hosted [40742637237 PASS](https://github.com/CIRNETLAB/CIRNET-Simulator/actions/runs/40742637237) at this exact master |
+| Hardware | `4d7e75389d3671476e2aabbf0359681f057e9704` | Committed rename metadata; isolated baseline/candidate checks PASS; hosted [40742650852 PASS](https://github.com/CIRNETLAB/CIRNET-Hardware/actions/runs/40742650852) at this exact master |
+| FPGA | `0ccca05baafc85289459ecfd20c8f4a163a8596f` | Clean committed export; 19 tests PASS in 89.89s, pinned actual RTL with both PASS markers, repeated source artifact byte-identical. Hosted [40742663529 PASS](https://github.com/CIRNETLAB/CIRNET-FPGA/actions/runs/40742663529) at this exact master |
+| Interface | `631d41b36f0cdbaf1aafe6510baf2ddd514f306c` pushed/synchronized master | 1,461 unit/type tests, 22 script tests and build PASS locally; hosted [40744519633 PASS](https://github.com/CIRNETLAB/CIRNET-Interface/actions/runs/40744519633) at this exact master. External performance experiments are not adopted native evidence |
+| Remote | Working copy over `23ca0827` | 132 focused selection/manifest tests PASS; committed build, complete integration/clean install and exact-final-master hosted/native acceptance still open |
+
+The bounded external PSU memo experiment retained exact parity but showed 61s to
+64s with only 0.87% hits; it was not adopted. This single scoped measurement does
+not establish a performance improvement or replace the complete native gate.
+The box hypothesis was also rejected. A separate external six-case prototype
+reproduced five RED failures before six GREEN results; it has not been adopted,
+and no original-source performance patch is active at this checkpoint.
+
+Contracts retained all committed export inputs, package identities/versions,
+schemas, protocols and source LICENSE bytes. Raw candidate-vs-published wheel
+comparison finds 93 changed members: **92 CRLF-only differences, including the
+packaged license formatting, plus verified RECORD hashes**. Sdist comparison
+finds 148: 146 CRLF-only and README/package description. Public npm differs only
+README/package.json; every `dist/` runtime/resource byte is identical. Both
+wheel RECORD inventories/hashes were checked, and the independent sdist wheel
+is byte-identical to the direct candidate wheel. Comparison normalization is
+read-only; no source, license, baseline or artifact bytes were rewritten. The
+initial external comparison stopped on an overly strict byte-equality assumption
+after every command passed; receipt
+`cf08df364e468430dd9beef5b37e0d173211e1d614cfe1b0e9c0473b2bede528`
+is preserved. Final classification receipt:
+`6babcfd320f74eede41e743f038298b9e845f79df84e023546e48cf0de836f5f`.
+
+FPGA's exact repository allowlist rejects unrelated provenance before an archive
+is written. Its new archive records the current canonical URL and committed
+revision while preserving originalRepository/originalRevision and the historical
+input file. The changed members are exactly five source files plus
+`fpga-artifact.json`; LICENSE, all RTL and historical migration provenance remain
+byte-identical to the published archive. Actual pyslang 12.0.0 and digest-pinned
+OSS CAD Suite 2026-10-26 Icarus/vvp emitted `LAB_FIRST_RTL_PASS` and
+`PERMIT_MATRIX_RTL_PASS`. Receipt
+`13a4a4b62a3c50861f9cb2af8a864f8d12c155a9adb6e644a3077ce70ba44d32`
+does not imply synthesis, pinout, timing closure, electrical safety or a board run.
+
+| UNPUBLISHED candidate | Committed source | SHA-256 |
+| --- | --- | --- |
+| Contracts wheel | `41dd34510bf39b9fe6093738965f81ac7d64f2b4` | `a86e30faa6f3c0a0ee3b83c3d5061177928a67c71620918d20d8b000e07397e1` |
+| Contracts sdist | `41dd34510bf39b9fe6093738965f81ac7d64f2b4` | `02d5492810dca67e3c9300d191d3529141d389e100790343f2d654b73c29bd1b` |
+| Public SDK npm | `41dd34510bf39b9fe6093738965f81ac7d64f2b4` | `2cdcfae6f617746c95c94827868b6e7e5a077c467dcb48f639394b638ca042b1` |
+| FPGA source | `0ccca05baafc85289459ecfd20c8f4a163a8596f` | `ba96307b148ca62a3fd6a73920f338e926246cb367273ae98d790bb3317bcc83` |
+
+Four candidates and seven sanitized receipts were retained under
+`C:/Users/trann/.codex/migration-release-artifacts/cirnet-rename-candidates-20261029-41dd345-0ccca05/`,
+inventory SHA-256 `acf429ac3963ba22ea488db4e87883e7fdbfac45713bd2040bcf825b8d9c7caf`.
+Raw logs/images/diagnostic archives were not copied into that durable product set.
+Clean-export/original-source integrity receipt
+`a47d1aee4de9bb3e1a2068e88dbf8bdc0ff5da548a0ba4585e14bc1ba71d72bd`
+checks every committed input after build/tests and both original clean masters/
+empty indexes. Six actual selected Contracts/DEV/FPGA downloads through final
+canonical URLs matched existing digests; anonymous download receipt
+`df224e1c41df577ec7e53a261adb7b3791371ce9b80de7e636dc9a12f01c0d08`.
+None of these new candidates has been uploaded, selected as a released build,
+used to move v0.1.1, or assigned a new product version.
+
+### Hosted Windows baseline and remaining gates
+
+Run [40725519551](https://github.com/CIRNETLAB/CIRNET-Remote/actions/runs/40725519551),
+job 122947595339, remains **CANCELLED / HOSTED_WINDOWS_NATIVE_NOT_PASS** at
+baseline source `23ca0827d94d54bff34ffd2d47286d414553bf26`, not the new rename
+sources. It reached the unchanged 90-minute job envelope; the inspected partial
+log records 39 completed passes/eight failures. No final JUnit path was present,
+so no complete 58-case or 57-mandatory-pass result is claimed. Receipt
+`2effc3c6124ffee4d77dfcec4fd82f478a21a083ff150dad7855e9e7d2dd22ee`,
+actual log `195a76b38c481dd5e273c92928526bed7557da11a234acf2e3faa891fb8654f9`,
+downloaded partial artifact ZIP
+`e7c3f06ecd0bcd96fb2ce89f3e8e1405cca27288dcbcb8ed14c84d31526501d1`.
+Actual sanitized stdout measured Windows Server 2025/Python 3.12.10,
+four CPUs/affinity [0,1,2,3], memory 17,174,360,064 bytes. These observations do
+not prove the scheduling cause or establish target Mini PC/physical capacity.
+Earlier Linux 50-pass/seven-failure runs and local complete 57-pass observations
+retain their separate scopes; none substitutes for new hosted acceptance.
+
+The external Linux profiling environments were canonically cleaned with receipt
+`91897bf9bd8a0e0227344caf809931f33a6af667a741e0f74f602cb433e0002e`;
+bounded profiling/renderer-double results are diagnoses, not full native passes.
+The original current-session owner `m6-promotion-20261028-f79860e8` and six-root
+context remain in force across the local date change. Cleanup of that whole
+current session is still pending inspection/process exit/durable retention.
+
+- [x] Six canonical names/origins, unchanged immutable identities, 60 CI URL variable readbacks and preserved selected artifact pins.
+- [x] Actual six-bundle restores and exact 11 remote / 16 local merged-branch cleanup with all 27 tips reachable; no native acceptance inferred.
+- [x] All five producer rename commits pushed with exact-master hosted CI PASS; clean committed Contracts/FPGA build/test/comparison proofs and durable unpublished candidates.
+- [ ] Finish Remote source review and all final committed producer/integration/clean-install gates without changing assertions/deadlines/retries/baselines.
+- [ ] Resolve artifact selection truthfully: retain/revalidate the original immutable 0.1.1 sources/bytes, or obtain a concrete user release decision before any required replacement/tag movement; no automatic version bump.
+- [ ] Complete normal final master pushes, verify live exact source/hosted CI including a real complete native result, retain final recoverable history bundles and close the current documentation/session handoff.
+
+The earlier full95/final-docs-only helpers bind their recorded 23ca/65 source
+scope and cannot be reused as acceptance of these broader rename-source changes.
+Current physical/native solver capabilities, W0–W8, same-origin deployment,
+versioned Contracts, quarantine and no Start replay remain unchanged. The task
+continues; **publication, cleanup or local unit/build passes alone do not close M6**.
+
+## Historical publication checkpoint, 2026-10-28
+
+**Historical checkpoint:** releases were published, hosted native CI failed and migration-branch cleanup was then NOT_RUN. The user explicitly instructed “Đừng chờ nữa hãy thực hiện publication”. That decision authorized publication now without counting native CI as PASS; it did not waive the cleanup/acceptance gates. All six existing v0.1.1 releases are now published and immutable. All repositories became public by the user's action; the agent changed no visibility or license. No deployment, board programming, runtime fix, new product version or artifact rebuild was performed in this checkpoint.
 
 Publication journal SHA-256 `1eb5efddc58171259aaf0cf1575055a839dfea757d3565a4bc205ddd71e9db20` binds `explicitUserPublicationDecision` (decision SHA-256 `089d2d7645b6c96b16d10f8fcd422ab33bc173967de2c513cf4b457e5262021e`), `nativeCountedAsPass: false`, and 13 other required master workflows. This publication-only binding and release notes deliberately differ from the original all-pass guard; they cannot satisfy its full-M6/branch-cleanup acceptance. The original guard was not weakened.
 
-| Repository | Runtime master / immutable v0.1.1 target | Exact artifact build source | Published release |
+| Repository | Publication-time master / immutable v0.1.1 target | Exact artifact build source | Published release |
 | --- | --- | --- | --- |
 | Remote | `065179ead7c7cf4f44483b74edca99bb84f8f2a5` | `82ca15bec250894c39c2849ab4a3eaaeb7712b05` | [v0.1.1](https://github.com/TINIHI-Labs/net-Circuit-Remote/releases/tag/v0.1.1) |
 | Contracts | `54ef9f6a11f4906c11ec9789de47cf06d5100734` | `54ef9f6a11f4906c11ec9789de47cf06d5100734` | [v0.1.1](https://github.com/TINIHI-Labs/net-Circuit-Contracts/releases/tag/v0.1.1) |
@@ -19,7 +220,7 @@ Publication journal SHA-256 `1eb5efddc58171259aaf0cf1575055a839dfea757d3565a4bc2
 
 System manifest SHA-256 `a2f9c5eb10ad8fc7ee41f26246d802bed782881e5b69b323b7a84e939a313e10` (asset `684998628`); verified 31-asset inventory SHA-256 `a55a06d7722e341ac5aa24765085a0ea34154ed232379340d13e8d1392970373`. Fifteen selected artifacts, ten archived old payloads, rollback and auxiliary assets remain preserved. Remote API/deployment artifacts retain build source `82ca15bec250894c39c2849ab4a3eaaeb7712b05`; the deployment archive includes its historical runbook. A later docs-only Remote master descendant does not move or relabel immutable v0.1.1.
 
-### Hosted master results: 13 PASS, native FAIL
+### Publication-time hosted master results: 13 PASS, native FAIL
 
 | Repository / workflow | Actual result |
 | --- | --- |
@@ -38,9 +239,9 @@ System manifest SHA-256 `a2f9c5eb10ad8fc7ee41f26246d802bed782881e5b69b323b7a84e9
 | FPGA / FPGA source and RTL | [PASS](https://github.com/TINIHI-Labs/net-Circuit-FPGA/actions/runs/40689627688) at `24ade35eade5382efd42f784008280c0fbb768c3` |
 | Remote / Real browser release gate | [FAIL](https://github.com/TINIHI-Labs/net-Circuit-Remote/actions/runs/40705352207) at `065179ead7c7cf4f44483b74edca99bb84f8f2a5`: 50 PASS / seven FAIL / one optional historical NOT_RUN |
 
-Current public native run `40705352207` completed in `4791.228` seconds, with 50 PASS, seven FAIL and the sole optional `depth-artifacts.spec.ts` / `retained pre-fix native WebGL evidence` NOT_RUN. Original assertions, deadlines and retries were unchanged. Native receipt SHA-256 `f4ecde5d8181f2f9e88be7c4c18c51cd824548763e54c5745c8699673df27e6b`, ZIP `de5ec679a7224303159a4825de1d40d8fb9ed242535b69a3cd2654d8318cf93c`, log `4470c9f52c8e8914847be9b01f363669fa1be2269eaadf39712c6ec1e70c3245`, JUnit `c72bb7bc631511b9d47f7ccd7eeb00676456d1972b38355cabe2b3be575cc0be`. Actual runner CPU/memory were not logged; public repository visibility is not causal proof.
+At this historical checkpoint, public native run `40705352207` completed in `4791.228` seconds, with 50 PASS, seven FAIL and the sole optional `depth-artifacts.spec.ts` / `retained pre-fix native WebGL evidence` NOT_RUN. Original assertions, deadlines and retries were unchanged. Native receipt SHA-256 `f4ecde5d8181f2f9e88be7c4c18c51cd824548763e54c5745c8699673df27e6b`, ZIP `de5ec679a7224303159a4825de1d40d8fb9ed242535b69a3cd2654d8318cf93c`, log `4470c9f52c8e8914847be9b01f363669fa1be2269eaadf39712c6ec1e70c3245`, JUnit `c72bb7bc631511b9d47f7ccd7eeb00676456d1972b38355cabe2b3be575cc0be`. Actual runner CPU/memory were not logged; public repository visibility is not causal proof.
 
-| Current failed native case | Seconds |
+| Failed native case at that checkpoint | Seconds |
 | --- | --- |
 | `contacts-wires-gallery.spec.ts` / contact and continuous-wire gallery retains native closeups, cavity evidence and stable GPU resources across ten cycles | 461.432 |
 | `depth-artifacts.spec.ts` / native WebGL hidden-layer regression DPR 2 | 365.011 |
@@ -76,13 +277,18 @@ After publication, all **17 anonymous downloads PASS**: 15 selected artifacts, r
 | Hardware / sdist | `de65db8b89d0dfa6dd4c430a41397555bc77111d` | [netcircuit_hardware_service-0.1.1.tar.gz](https://api.github.com/repos/TINIHI-Labs/net-Circuit-Hardware/releases/assets/684943851) | `3754bfc3338cc6c17dd66b16788c502cdd414e2b4e01a1e2c0ffaed24b0060fb` |
 | FPGA / source | `24ade35eade5382efd42f784008280c0fbb768c3` | [netcircuit-fpga-scaffold-0.1.1.tar.gz](https://api.github.com/repos/TINIHI-Labs/net-Circuit-FPGA/releases/assets/684944031) | `b82edb4167b821f55d98331304d0c49d2f37638d972fc9c167287bb6368908ca` |
 
-### Remaining acceptance and history gates
+### Disposition after the historical publication checkpoint
 
-Master fast-forwards and six immutable tags/releases are done, but full hosted master acceptance is **FAIL** because native CI failed. Final six tagged backup/restore acceptance and migration-branch deletion remain **NOT_RUN**; no migration branches are claimed deleted. `Multi-Repo`, `refactor`, their worktrees and all other unrelated history remain preserved. Existing verified pre-promotion/history backups remain available; they are not relabelled as final post-publication backups.
+The subsequent explicit history-only authorization and actual 11/16 cleanup are
+recorded in the current section above. The old publication binding remains
+unchanged and does not establish native acceptance. Earlier statements about
+pending cleanup describe their historical observation, not the current state.
+Current rename-source integration/hosted/native acceptance and a new final
+recoverable handoff remain open. `Multi-Repo`, `refactor` and their worktrees
+remain preserved. No production restore, deployment or board programming is
+claimed.
 
-The remaining three execution rows stay unchecked. A final docs-only Remote descendant, applicable documentation/Integration CI and its recoverable handoff bundle may be recorded separately; that documentation handoff cannot close the failed native/M6 gates. Current external-session cleanup is not yet claimed complete. Exact artifacts and matching database/capture rollback, quarantine and no Start replay remain in the [release/rollback runbook](../../deployment/multi-repo-release.md). W0–W8 and Safety-gated ownership/compatibility constraints below remain unchanged.
-
-## Browser CI repair: unchanged released products
+## Historical browser CI environment candidate at 23ca0827
 
 The user then requested continuing publication while fixing Browser. Six immutable releases and the 17 anonymous-download proof remain unchanged. No native result is promoted by this new instruction.
 
@@ -90,7 +296,7 @@ Both completed hosted Linux attempts retain 50 PASS / seven FAIL / one optional 
 
 The bounded CI candidate changes only the browser job to `windows-latest`, explicitly defaults its run steps to Bash and renames platform dependency installation. A sanitized resource stdout step records actual OS/Python/CPU affinity/memory so future runner claims have measured context. Existing Python/Node/Playwright pins, versioned Interface source artifact, 58 test bodies, DPR, deadlines, retries, single worker, full-list command, real loopback API/RPC services, safe restart/shutdown and owned browser/runtime evidence policy remain unchanged. The already recorded complete Windows baseline is a reason to test this environment, not a claim that the new hosted Windows gate passed. Production Linux service compatibility retains its independent Linux backend/Contracts/Web/integration coverage and separately recorded full local Linux browser result.
 
-At this candidate checkpoint, hosted Windows native acceptance is NOT_RUN. No published artifact/tag is overwritten, no new product version is introduced, no baseline/assertion is weakened and no migration branch is deleted. This workflow change does not rebuild the API/deployment packages or change the canonical system manifest. Fresh workflow syntax/policy checks and exact-master hosted results follow before any full M6 acceptance claim.
+At the initial candidate checkpoint, hosted Windows native acceptance was NOT_RUN; its later actual cancelled result is recorded in the current section above. No published artifact/tag is overwritten, no new product version is introduced, no baseline/assertion is weakened and no migration branch is deleted. This workflow change does not rebuild the API/deployment packages or change the canonical system manifest. Fresh workflow syntax/policy checks and exact-master hosted results follow before any full M6 acceptance claim.
 
 ## Historical execution chronology
 

@@ -1,8 +1,18 @@
-# net*CIRCUIT Remote
+# CIRNET Remote
 
 [English](#english) | [Tiếng Việt](#tiếng-việt)
 
 ## English
+
+Current repository: [CIRNETLAB/CIRNET-Remote](https://github.com/CIRNETLAB/CIRNET-Remote).
+All six repositories now use `CIRNETLAB/CIRNET-*`; local `net-Circuit-*`
+directory names, Python/npm identities and `NETCIRCUIT_*` settings stay compatible.
+Historical `TINIHI-Labs/net-Circuit-*` and the original Remote URL identify the
+same preserved repositories. Current consumers use the canonical URLs in the
+system manifest; the rename does not rebuild or retag immutable 0.1.1 artifacts.
+The [M6 ledger](docs/verification/2026-10-27-multi-repo-migration-m6.md) separates
+published artifact sources, current source commits, unpublished candidates and
+pending hosted/native acceptance.
 
 A Web-first, Safety-gated, Lab-First remote electronics laboratory. Canonical authority: [Lab-First v3.1](docs/ARCHITECTURE.md). Safety allows execution; real student wiring produces behavior; software observes and evaluates. SAFETY != CORRECTNESS.
 
@@ -28,7 +38,7 @@ Post-R7 H0–H6: observed pin/net evidence resolves arbitrary student placement 
 
 Repository: apps/web, services/api, services/hardware-service, simulator/circuit-simulator, contracts, device-library, fpga, deployment, docs, tests, scripts. Source analyses, DEV_LOG/CHANGELOG and docs/verification preserve implementation history. Superseded architecture/prompts are in docs/archive/legacy-v1.
 
-M5 FPGA verification uses the independent `netcircuit-fpga-scaffold` source artifact `0.1.0`, selected by manifest/SHA256; it is not an API runtime dependency or board image. Original `fpga/` and `tests/fpga/` are frozen references. Pure RTL acceptance belongs to net-Circuit-FPGA and requires pinned parser/compiler/runtime without skips. Remote release checks require the selected FPGA artifact root; see the [M5 plan](docs/superpowers/plans/2026-10-27-multi-repo-migration-m5.md) and [consumer setup](contracts/README.md). Logical 1.0-scaffold remains independent of source version and unavailable physical firmware.
+Historical M5 verification used the independent `netcircuit-fpga-scaffold` source artifact `0.1.0`, selected by manifest/SHA256; it is not an API runtime dependency or board image. Original `fpga/` and `tests/fpga/` are frozen references. Current M6 selects scaffold 0.1.1. Pure RTL acceptance belongs to CIRNET-FPGA and requires pinned parser/compiler/runtime without skips. Remote release checks require the selected FPGA artifact root; see the [M5 plan](docs/superpowers/plans/2026-10-27-multi-repo-migration-m5.md) and [consumer setup](contracts/README.md). Logical 1.0-scaffold remains independent of source version and unavailable physical firmware.
 
 ## Tiếng Việt
 
@@ -38,10 +48,10 @@ Giữ nguyên workbench Vue/TypeScript/Pinia/Three.js và editor 3D. CircuitGrap
 
 Triển khai mục tiêu: Linux Mini PC Intel Xeon W-1370, RAM 16 GB, SSD 256 GB; Nginx, systemd, FastAPI, Hardware Service riêng và PostgreSQL production. EP4CE6 nguyên mẫu → EP4CE10 + SDRAM ngoài trong tương lai; Scope/Generator mục tiêu 2 kênh mỗi loại. Analog vật lý V1 chưa hỗ trợ. Driver, bảo vệ điện, ADC/DAC/AFE và đo đạc phải có bằng chứng thật trước khi báo hoạt động.
 
-[Xem ledger R0–R7](docs/MIGRATION_LAB_FIRST.md), [an toàn vật lý](docs/PHYSICAL_LAB_SAFETY.md), [lộ trình](docs/ROADMAP.md), [chạy API](services/api/README.md), [Interface/M2](docs/superpowers/plans/2026-10-24-multi-repo-migration-m2.md), [Mini PC](deployment/mini-pc/README.md). Kiểm thử root: `python scripts/check_context.py` và `python scripts/check_release.py --group python`; frontend: bootstrap Contracts rồi `npm ci`, `npm test` / `npm run build` tại net-Circuit-Interface; đặt `NETCIRCUIT_INTERFACE_ROOT` cho release gates của Remote. `apps/web` giữ làm bản tham chiếu/rollback M1. Vite, FastAPI và Hardware Service chạy ở ba process riêng. [Mục lục tài liệu](docs/README.md), [AGENTS.md](AGENTS.md) và [quy trình verification](docs/VERIFICATION.md) quy định screenshot/trace/artifact chẩn đoán chỉ tạo ngoài repository, bằng chứng giữ lại trong repository ở dạng Markdown. Tài liệu/verification lịch sử được giữ; prompt/kiến trúc cũ lưu trong docs/archive/legacy-v1.
+[Xem ledger R0–R7](docs/MIGRATION_LAB_FIRST.md), [an toàn vật lý](docs/PHYSICAL_LAB_SAFETY.md), [lộ trình](docs/ROADMAP.md), [chạy API](services/api/README.md), [Interface/M2](docs/superpowers/plans/2026-10-24-multi-repo-migration-m2.md), [Mini PC](deployment/mini-pc/README.md). Kiểm thử root: `python scripts/check_context.py` và `python scripts/check_release.py --group python`; frontend: bootstrap Contracts rồi `npm ci`, `npm test` / `npm run build` tại CIRNET-Interface (giữ nguyên tên thư mục local nếu đang dùng `net-Circuit-Interface`); đặt `NETCIRCUIT_INTERFACE_ROOT` cho release gates của Remote. `apps/web` giữ làm bản tham chiếu/rollback M1. Vite, FastAPI và Hardware Service chạy ở ba process riêng. [Mục lục tài liệu](docs/README.md), [AGENTS.md](AGENTS.md) và [quy trình verification](docs/VERIFICATION.md) quy định screenshot/trace/artifact chẩn đoán chỉ tạo ngoài repository, bằng chứng giữ lại trong repository ở dạng Markdown. Tài liệu/verification lịch sử được giữ; prompt/kiến trúc cũ lưu trong docs/archive/legacy-v1.
 
 Đợt H0–H6 bổ sung ánh xạ chân/net và vị trí sinh viên trước khi compiler định tuyến hạ tầng; node tham chiếu không phải node thực tế. Capture lớn lưu riêng, SQL/WebSocket chỉ giữ metadata; scheduler dùng số slot thật và worker simulation cấu hình được với spawn. Inspector hiển thị SAFETY/TOPOLOGY/FUNCTION độc lập, confidence và tín hiệu kỳ vọng/quan sát; chấm bài không quyết định quyền cấp điện. Xem ledger để đối chiếu từng commit và giới hạn phần cứng.
 
-Đợt Web/Contracts W0–W8 bổ sung đăng nhập/RBAC, lưu Project/Circuit có revision/CAS, khôi phục bản nháp theo principal, bài thực hành có publication ổn định, reconnect/history không replay Run, cấu hình instrument có ACK và quản lý capture. Xem [ledger](docs/verification/2026-10-16-web-contracts.md), [ma trận nghiệm thu](docs/verification/2026-10-16-acceptance-matrix.md) và lệnh `python scripts/check_release.py --show-plan`. Vite, API và Hardware Service là ba process riêng. Branch refactor được giữ để review; không tự push, merge hoặc deploy. Kết quả commit bị chặn bởi quyền Git được ghi riêng trong ledger.
+Đợt Web/Contracts W0–W8 bổ sung đăng nhập/RBAC, lưu Project/Circuit có revision/CAS, khôi phục bản nháp theo principal, bài thực hành có publication ổn định, reconnect/history không replay Run, cấu hình instrument có ACK và quản lý capture. Xem [ledger](docs/verification/2026-10-16-web-contracts.md), [ma trận nghiệm thu](docs/verification/2026-10-16-acceptance-matrix.md) và lệnh `python scripts/check_release.py --show-plan`. Vite, API và Hardware Service là ba process riêng. Bàn giao W0–W8 lịch sử giữ branch refactor để review và khi đó chưa cho phép push/merge/deploy; lượt đổi tên hiện tại cho phép commit/push master theo các gate, vẫn không triển khai production. Kết quả commit bị chặn bởi quyền Git được ghi riêng trong ledger.
 
 Đợt WC20 (20-10-2026) củng cố vòng đời xác thực, giới hạn tài nguyên và tách biệt điều khiển, validation/diagnostics, tải validator, lưu dữ liệu do người dùng soạn và khôi phục quan sát yêu cầu chưa rõ kết quả. [Hồ sơ WC20 hiện hành](docs/verification/2026-10-20-web-contracts-closure.md) ghi đúng source, kết quả các gate, trạng thái trình duyệt và giới hạn còn lại. Kết quả phần mềm cục bộ không chứng minh hosted CI, năng lực Mini PC đích hay khả năng phần cứng vật lý.

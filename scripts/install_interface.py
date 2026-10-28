@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 import tarfile
 from scripts.artifact_download import download_artifact
 from scripts.artifact_paths import artifact_directory
+from scripts.system_release_manifest import repository_urls
 
 
 MAX_MEMBERS=10_000
@@ -68,7 +69,7 @@ def extract_product(contents, directory):
         if not isinstance(source,dict):raise ValueError('Interface source provenance is required.')
         repository=urlparse(source.get('repository',''))
         if (repository.scheme!='https' or not repository.hostname or repository.username or repository.password
-                or not (repository.path.endswith('.git') or source.get('repository')=='https://github.com/TINIHI-Labs/net-Circuit-Interface')
+                or not (repository.path.endswith('.git') or source.get('repository') in repository_urls('Interface'))
                 or repository.query or repository.fragment
                 or not re.fullmatch('[0-9a-f]{40}',source.get('revision',''))
                 or source.get('uncommittedMigration') is not False):

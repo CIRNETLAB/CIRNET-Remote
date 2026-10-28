@@ -12,7 +12,7 @@ from zipfile import ZipFile
 import pytest
 
 
-def release():
+def release(*, historical=False):
     kinds = {'Remote': {'python': 'netcircuit_api-0.1.1-py3-none-any.whl', 'sdist': 'netcircuit_api-0.1.1.tar.gz', 'deployment': 'netcircuit-remote-0.1.1-deployment.tar.gz'},
              'Contracts': {'python': 'netcircuit_contracts-0.1.1-py3-none-any.whl', 'sdist': 'netcircuit_contracts-0.1.1.tar.gz', 'npm': 'tinihi-labs-contracts-0.1.1.tgz', 'dev': 'netcircuit_artifact_paths-1.0.0a1-py3-none-any.whl', 'dev_npm': 'tinihi-labs-artifact-paths-1.0.0-m1.0.tgz'},
              'Simulator': {'python': 'netcircuit_simulator-0.1.1-py3-none-any.whl', 'sdist': 'netcircuit_simulator-0.1.1.tar.gz'},
@@ -22,7 +22,7 @@ def release():
     repositories = {}
     asset = 100
     for component, entries in kinds.items():
-        repository = 'TINIHI-Labs/net-Circuit-' + component
+        repository = ('TINIHI-Labs/net-Circuit-' if historical else 'CIRNETLAB/CIRNET-') + component
         artifacts = {}
         for kind, filename in entries.items():
             asset += 1
@@ -31,7 +31,7 @@ def release():
     old = {'Remote': '0.1.0', 'Contracts': '1.0.1', 'Interface': '0.1.0-m2.0', 'Simulator': '0.2.0', 'Hardware': '0.1.1', 'FPGA': '0.1.0'}
     return {'schemaVersion': 1, 'releaseVersion': '0.1.1', 'repositories': repositories,
             'compatibility': {'contractsVersion': '0.1.1', 'hardwareRpcVersion': '2.0', 'fpgaLogicalProtocolVersion': '1.0-scaffold', 'fpgaRegisterMapVersion': '1.0-reserved', 'sameOrigin': True, 'apiSchedulerProcesses': 1, 'hardwareRpcScope': 'local-only'},
-            'rollback': {'source': {'filename': 'netcircuit-system-rollback-pre-m6.tar.gz', 'url': 'https://api.github.com/repos/TINIHI-Labs/net-Circuit-Remote/releases/assets/999', 'sha256': 'c' * 64},
+            'rollback': {'source': {'filename': 'netcircuit-system-rollback-pre-m6.tar.gz', 'url': f'https://api.github.com/repos/{"TINIHI-Labs/net-Circuit-Remote" if historical else "CIRNETLAB/CIRNET-Remote"}/releases/assets/999', 'sha256': 'c' * 64},
                          'artifactSet': [{'component': name, 'version': version, 'sourceRevision': 'd' * 40, 'artifacts': {'archive': {'filename': f'{name}-{version}.tar.gz', 'sha256': 'e' * 64}}} for name, version in old.items()],
                          'priorPublishedRelease': None, 'provenance': 'reviewed-pre-m6-local-set', 'matchingDatabaseBackupRequired': True, 'matchingCaptureBackupRequired': True, 'preserveQuarantine': True, 'automaticStartReplay': False}}
 
@@ -42,6 +42,29 @@ def test_complete_system_release_retains_independent_tool_versions_and_old_rollb
     assert validate_manifest(value) == value
     assert value['repositories']['Contracts']['artifacts']['dev']['filename'].startswith('netcircuit_artifact_paths-1.0.0a1-')
     assert value['rollback']['artifactSet'][1]['version'] == '1.0.1'
+
+
+def test_historical_release_manifest_preserves_its_original_repository_provenance():
+    from scripts.system_release_manifest import validate_manifest
+    value = release(historical=True)
+    recorded = json.dumps(value, sort_keys=True)
+    assert validate_manifest(value) is value
+    assert json.dumps(value, sort_keys=True) == recorded
+
+
+@pytest.mark.parametrize('location', ['repository', 'asset', 'rollback'])
+def test_release_cannot_mix_current_and_historical_repository_names(location):
+    from scripts.system_release_manifest import validate_manifest
+    value = release()
+    old = release(historical=True)
+    if location == 'repository':
+        value['repositories']['Contracts'] = old['repositories']['Contracts']
+    elif location == 'asset':
+        value['repositories']['Contracts']['artifacts']['npm'] = old['repositories']['Contracts']['artifacts']['npm']
+    else:
+        value['rollback']['source'] = old['rollback']['source']
+    with pytest.raises(ValueError):
+        validate_manifest(value)
 
 
 @pytest.mark.parametrize('failure', ['missing-owner', 'wrong-version', 'missing-artifact', 'wrong-revision', 'legacy-namespace', 'latest-url', 'tag-url', 'wrong-asset-owner', 'credential-url', 'query-url', 'missing-digest', 'path-filename', 'wrong-filename', 'unsafe-compatibility', 'unsafe-rollback', 'missing-rollback-owner'])
@@ -136,11 +159,12 @@ def test_api_wheel_requires_actual_version_and_keeps_hardware_out_of_process(tmp
             assert verify_api_wheel(path, digest) == path
 
 
-def test_static_product_requires_exact_committed_source_identity(tmp_path):
+@pytest.mark.parametrize('historical_source', [False, True])
+def test_static_product_requires_exact_committed_source_identity(tmp_path, historical_source):
     from scripts.install_release import _extract_static
     value = release()
     identity = {'name': 'netcircuit-interface', 'kind': 'static', 'version': '0.1.1', 'contractsVersion': '0.1.1', 'sourceFingerprint': 'f' * 64,
-                'source': {'repository': value['repositories']['Interface']['repository'] + '.git', 'revision': 'a' * 40, 'uncommittedMigration': False}}
+                'source': {'repository': release(historical=historical_source)['repositories']['Interface']['repository'] + '.git', 'revision': 'a' * 40, 'uncommittedMigration': False}}
     path = tmp_path / 'static.tar.gz'
     pages = [(name, b'<html>real release page</html>') for name in ('index.html', 'oscilloscope-preview.html', 'function-generator-preview.html')]
     path.write_bytes(archive_bytes([*pages, ('interface-artifact.json', json.dumps(identity).encode())]))

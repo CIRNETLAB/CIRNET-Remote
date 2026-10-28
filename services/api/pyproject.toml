@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "netcircuit-api"
 version = "0.1.1"
-description = "Application backend for net*CIRCUIT Remote"
+description = "Application backend for CIRNET Remote"
 requires-python = ">=3.11"
 dependencies = [
   "netcircuit-contracts==0.1.1",

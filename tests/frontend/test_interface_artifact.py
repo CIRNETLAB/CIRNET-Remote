@@ -54,9 +54,10 @@ def test_interface_product_requires_root_manifest_and_released_product_identity(
         module.extract_product(archive_bytes('nested/package.json'),tmp_path/'nested-product')
 
 
+@pytest.mark.parametrize('repository',['CIRNETLAB/CIRNET-Interface','TINIHI-Labs/net-Circuit-Interface'])
 @pytest.mark.parametrize('suffix',['','.git'])
-def test_interface_product_accepts_canonical_repository_urls_from_native_builder(tmp_path,suffix):
-    source={'repository':'https://github.com/TINIHI-Labs/net-Circuit-Interface'+suffix,
+def test_interface_product_accepts_canonical_repository_urls_from_native_builder(tmp_path,suffix,repository):
+    source={'repository':'https://github.com/'+repository+suffix,
             'revision':'7'*40,'uncommittedMigration':False}
     installer().extract_product(archive_bytes(metadata_changes={'source':source}),tmp_path/'product')
     assert (tmp_path/'product/package.json').is_file()

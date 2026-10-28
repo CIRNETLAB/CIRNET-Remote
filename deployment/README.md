@@ -1,4 +1,4 @@
-# Production deployment templates
+# CIRNET production deployment templates
 
 Authority remains [Lab-First v3.1](../docs/ARCHITECTURE.md). These are reviewable Linux/Nginx/systemd templates for the intended Mini PC; they have not been installed or executed on that target during this task. Local tests verify configuration invariants, SQLite/PostgreSQL migrations and real software flows. They do not verify target TLS, firewall, service-manager configuration, hardware or production capacity.
 
@@ -6,7 +6,14 @@ Use one API process/worker. Its FIFO scheduler, event hub and directory quotas a
 
 ## Installation and configuration
 
-Build the API wheel using repository verification entrypoints; select the independently built Hardware Service 0.1.1 wheel, Contracts 0.1.1 wheel, Simulator 0.1.1 wheel and net-Circuit-Interface static bundle by reviewed version/digest. Do not build Hardware, Contracts, Simulator or Web from retained Remote reference trees. Install Contracts + simulator + API wheels into `/opt/netcircuit/venv-api`, and Contracts + simulator + Hardware Service wheels into `/opt/netcircuit/venv-hardware`. Install only runtime dependencies; production does not need editable checkouts, DEV allocator, Node generators or a source-tree working directory. Extract the selected Interface static artifact into `/opt/netcircuit/web`, preserving `/models`, `/api/` and `/ws/` on the existing origin. Keep the previously approved static artifact and compatibility set for rollback. The exact M6 artifact set and publication/CI disposition are recorded in the system manifest and M6 verification. Production target installation remains separate; see [the release runbook](multi-repo-release.md).
+Current source repositories are under `CIRNETLAB/CIRNET-*`. Select the exact
+0.1.1 artifacts through [the system manifest](../integration/release-set.json).
+The rename keeps old immutable artifact bytes and recorded build sources;
+newly built same-version candidates remain unpublished until release selection
+and any required user decision are complete. Local `net-Circuit-*` checkout
+names and deployed `/opt/netcircuit`/`NETCIRCUIT_*` identities remain compatible.
+
+Build the API wheel using repository verification entrypoints; select the independently built Hardware Service 0.1.1 wheel, Contracts 0.1.1 wheel, Simulator 0.1.1 wheel and CIRNET-Interface static bundle by reviewed version/digest. Do not build Hardware, Contracts, Simulator or Web from retained Remote reference trees. Install Contracts + simulator + API wheels into `/opt/netcircuit/venv-api`, and Contracts + simulator + Hardware Service wheels into `/opt/netcircuit/venv-hardware`. Install only runtime dependencies; production does not need editable checkouts, DEV allocator, Node generators or a source-tree working directory. Extract the selected Interface static artifact into `/opt/netcircuit/web`, preserving `/models`, `/api/` and `/ws/` on the existing origin. Keep the previously approved static artifact and compatibility set for rollback. The exact M6 artifact set and publication/CI disposition are recorded in the system manifest and M6 verification. Production target installation remains separate; see [the release runbook](multi-repo-release.md).
 
 Set `NETCIRCUIT_SIMULATION_BACKEND=legacy` in the shared API/Hardware environment to retain current digital and bounded DC behavior. Both processes snapshot the setting at startup; restart both when changing it. `ngspice` is a reserved unavailable backend in Simulator 0.1.1: document validation/storage still work, but preview/execution cannot produce captures. Unknown or empty IDs fail configuration. This setting does not install or launch ngspice, discover plugins, or change physical safety authority.
 

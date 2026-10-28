@@ -20,7 +20,7 @@ def archive(tmp_path, *, identity_change=None, payload_change=None, extra=None, 
         'kind': 'source', 'contractsVersion': '0.1.1', 'logicalProtocolVersion': '1.0-scaffold',
         'registerMapVersion': '1.0-reserved', 'physicalAvailable': False, 'files': files,
         'sourceFingerprint': hashlib.sha256(''.join(f'{files[name]}  {name}\n' for name in sorted(files)).encode()).hexdigest(),
-        'source': {'repository': 'https://github.com/TINIHI-Labs/net-Circuit-FPGA.git', 'revision': 'a'*40,
+        'source': {'repository': 'https://github.com/CIRNETLAB/CIRNET-FPGA.git', 'revision': 'a'*40,
             'originalRepository': 'https://github.com/net-Circuit-Remote/net-Circuit-Remote.git',
             'originalRevision': 'f43f92c7730d40040e717bf1bacd3a3773e2a131', 'uncommittedMigration': True}}
     if identity_change: identity.update(identity_change)
@@ -56,6 +56,14 @@ def test_exact_source_archive_and_manifest_are_required(tmp_path, monkeypatch):
     with pytest.raises(ValueError, match='explicit'): consumer().selected_source_details()
     with pytest.raises(ValueError, match='SHA256'): consumer().verify_archive(target, '0'*64)
     with pytest.raises(ValueError, match='absolute'): consumer().verify_archive(Path(target.name), digest)
+
+
+def test_published_fpga_provenance_is_accepted_without_rewriting_its_repository(tmp_path):
+    source = {'repository': 'https://github.com/TINIHI-Labs/net-Circuit-FPGA.git', 'revision': 'a'*40,
+              'originalRepository': 'https://github.com/net-Circuit-Remote/net-Circuit-Remote.git',
+              'originalRevision': 'f43f92c7730d40040e717bf1bacd3a3773e2a131', 'uncommittedMigration': False}
+    target, digest = archive(tmp_path, identity_change={'source': source})
+    assert consumer().verify_archive(target, digest)['identity']['source'] == source
 
 
 @pytest.mark.parametrize('change', [

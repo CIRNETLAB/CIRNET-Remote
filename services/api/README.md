@@ -1,10 +1,18 @@
-# Application Backend
+# CIRNET Application Backend
 
 FastAPI modular-monolith Lab-First laboratory. Authority: ../../docs/ARCHITECTURE.md. The application includes durable authentication/RBAC, owned Project/Circuit revisions, published assignments, experiments/history, verification, captures and FIFO/lease lifecycle. PostgreSQL is required in production; SQLite is for tests/development. Public contracts and all typed routes: ../../contracts/api/README.md.
 
-Install the reviewed `netcircuit-contracts==1.0.1` wheel into both service environments using the M1 artifact manifest (`python scripts/install_contracts.py --with-dev --manifest ABSOLUTE_MANIFEST` from Remote root for development). Both services also install the same reviewed `netcircuit-simulator==0.2.0` wheel using `python scripts/install_simulator.py --manifest ABSOLUTE_SIMULATOR_MANIFEST`; no retained Simulator source or editable install is required. API also needs grpcio/protobuf and psycopg (declared dependencies). RPC bindings and offline resources come from that wheel; `python scripts/generate_hardware_rpc.py --check` verifies them without writing retained source. Production needs neither source Contracts nor DEV tools. Start hardware_service.server in its own process on localhost50051. An absent gateway reports unavailable; the virtual station executes the existing real digital simulator.
+Install the reviewed `netcircuit-contracts==0.1.1` wheel into both service environments using the current versioned artifact manifest (`python scripts/install_contracts.py --with-dev --manifest ABSOLUTE_MANIFEST` from Remote root for development). Both services also install the same reviewed `netcircuit-simulator==0.1.1` wheel using `python scripts/install_simulator.py --manifest ABSOLUTE_SIMULATOR_MANIFEST`; no retained Simulator source or editable install is required. API also needs grpcio/protobuf and psycopg (declared dependencies). RPC bindings and offline resources come from that wheel; `python scripts/generate_hardware_rpc.py --check` verifies them without writing retained source. Production needs neither source Contracts nor DEV tools. Start hardware_service.server in its own process on localhost50051. An absent gateway reports unavailable; the virtual station executes the existing real digital simulator.
 
 Use one API worker; do not start multiple scheduler workers against the same stations. SQLAlchemy persists definitions/results/sessions/leases and FIFO order; versioned migrations through 0007 upgrade new and legacy databases, including indexed runtime state and bounded auth maintenance. Restart recovers active leases and quarantines failed safe cleanup. Actual PostgreSQL migration/backup/restore and independent-writer tests have run locally; target production deployment remains unverified. Durable principals, server sessions, Argon2id passwords, CSRF/exact-origin and role/object authorization protect HTTP/WebSocket. Follow [auth setup](../../docs/architecture/auth-and-migrations.md) for administrator bootstrap, and the [production guide](../../deployment/README.md) for installed wheels, migration checks, TLS/origins, persistent data and maintenance. Development guests are explicit; production disables them.
+
+Current source owner: [CIRNETLAB/CIRNET-Remote](https://github.com/CIRNETLAB/CIRNET-Remote).
+All six product selections are 0.1.1; Python/npm/import/environment identities
+remain compatible. Earlier M1–M5 pins in dated reports are historical. Use the
+current [system installer/runbook](../../deployment/multi-repo-release.md) for
+artifact-only clean installation; the editable API commands below are owner-local
+development setup. Existing immutable packages retain their recorded source SHA,
+and unpublished rename candidates are not selected implicitly.
 
 ## Post-R7 execution and data plane
 
@@ -46,7 +54,7 @@ python scripts/check_release.py --group python
 python scripts/check_release.py --show-plan
 ```
 
-Hardware is installed as the reviewed `netcircuit-hardware-service==0.1.1` wheel using `scripts/install_hardware.py`; the retained service source is a frozen reference. Runtime RPC bindings come from Contracts, so RPC tests do not generate code or require Hardware dev extras. Root generator verification dependencies remain in requirements-codegen.txt. Full release verification also selects FPGA source/scaffold 0.1.0 as shown above; API local runtime needs no FPGA artifact. Mandatory native RTL acceptance belongs to net-Circuit-FPGA; missing pinned tools fail that gate, and software/compiler results do not establish physical safety.
+Hardware is installed as the reviewed `netcircuit-hardware-service==0.1.1` wheel using `scripts/install_hardware.py`; the retained service source is a frozen reference. Runtime RPC bindings come from Contracts, so RPC tests do not generate code or require Hardware dev extras. Root generator verification dependencies remain in requirements-codegen.txt. Full release verification also selects FPGA source/scaffold 0.1.1 as shown above; API local runtime needs no FPGA artifact. Mandatory native RTL acceptance belongs to CIRNET-FPGA; missing pinned tools fail that gate, and software/compiler results do not establish physical safety.
 
 ## Local run
 
@@ -57,7 +65,7 @@ does not start it.
 
 ### Windows PowerShell
 
-First-time setup from the Remote repository root, with Python 3.12 (package minimum 3.11). Select the reviewed M1 artifact manifest before installing consumer packages:
+First-time setup from the Remote repository root, with Python 3.12 (package minimum 3.11). Select the reviewed current 0.1.1 artifact manifest before installing consumer packages:
 
 ```powershell
 py -3.12 -m venv services/api/.venv
@@ -110,7 +118,7 @@ Invoke-RestMethod http://127.0.0.1:8000/api/health
 ```
 
 Start Vite in a separate terminal from an explicitly selected, prepared
-net-Circuit-Interface product. Its own README and the [M2 ledger](../../docs/superpowers/plans/2026-10-24-multi-repo-migration-m2.md)
+CIRNET-Interface product (its local directory may still be named `net-Circuit-Interface`). Its own README and the [M2 ledger](../../docs/superpowers/plans/2026-10-24-multi-repo-migration-m2.md)
 cover the digest-verified artifact bootstrap and locked install:
 
 ```powershell
