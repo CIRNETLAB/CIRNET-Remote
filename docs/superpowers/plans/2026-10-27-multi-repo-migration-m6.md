@@ -12,6 +12,8 @@
 
 **Current execution scope, 2026-10-28:** the later instruction “Không cần commit và push và merge” stops further Git promotion/publication. Continue source repair, independent build/test and working-copy handoff; keep new changes uncommitted. Earlier authorized commits and refs are preserved. Master/tag/publication/branch-cleanup steps below describe the original target and are not executed under this revised scope. The Windows 4cbbee baseline passed; the later Linux run recorded 18 failures before cancellation, so hosted browser acceptance remains unresolved while working-copy fixes are tested.
 
+**Local continuation:** the user requested completion of the remaining local artifact rebuild and clean-install work using this original checklist. At this continuation's start, Remote was clean at user-provided commit `82ca15bec250894c39c2849ab4a3eaaeb7712b05`, Interface at `7a266d15b510d840ad3146515a3699760564ed32`; the other four recorded producer tips were clean. Six independent clean temporary clones supplied the new builds. New consumer-tool/documentation changes remain uncommitted and are recorded here and in the existing M6 verification report, without a separate task Markdown file. Git promotion remains stopped.
+
 ## Global constraints
 
 - All six product versions and release tags are exactly 0.1.1 / v0.1.1. DEV tooling remains 1.0.0a1; schema, graph, RPC, NCAP and FPGA protocol versions retain their meaning.
@@ -39,14 +41,19 @@
 - [x] Replace frozen-source fixtures/assertions and directory-dependent tooling with installed artifact/resource coverage.
 - [x] Connect extracted ancestry on each product migration branch without changing its product tree.
 - [x] Before the scope override, commit producer changes and build independently from recorded clean revisions; preserve their hashes/provenance and standalone tests. New working-copy corrections remain uncommitted.
-- [ ] Publish durable 0.1.1 dependency artifacts; configure exact authenticated consumer downloads/CI.
-- [ ] Build Interface source/static and FPGA scaffold from committed revisions; run mandatory native browser/RTL gates.
-- [x] Run Remote contracts, python, web, postgres, browser and package groups from clean artifact-only Windows environment after inspecting the 18-command plan; subsequent Linux browser failure remains an open acceptance gate.
+- [ ] NOT_RUN under the revised scope: publish durable 0.1.1 dependency artifacts; configure exact authenticated consumer downloads/CI.
+- [x] Build Interface source/static and FPGA scaffold independently from the recorded committed revisions; verify repeated artifact identities and mandatory pinned RTL execution.
+- [x] Complete the current selected-artifact native browser gate: 57 mandatory PASS, one optional historical NOT_RUN, zero failures, in 35.7 minutes. Standard order, one worker, zero Playwright retries and original assertions/deadlines were preserved. The earlier interrupted 43/58 run and failed gallery timeout remain separate evidence.
+- [x] Rebuild the current six-product 0.1.1 local set, retain exact commits/digests and verify a new artifact-only clean install. Fifteen newly built artifacts and two actual clean installations passed; the old published/draft selection remains separate and unchanged.
+- [x] Verify the current clean artifact-only Remote Contracts, Python, Web and real PostgreSQL groups after inspecting the 18-command plan: 1,410 Python PASS (two Windows symlink NOT_RUN), 1,461 Web tests plus nine bootstrap checks PASS, and 18 PostgreSQL tests PASS. Current browser/package acceptance is tracked separately above/below; the earlier complete Windows baseline remains historical evidence.
 - [x] Rehearse exact artifact rollback with matching database/capture backup and safe lifecycle semantics.
 - [x] Review source corrections and update canonical docs/onboarding/deployment and verification evidence; final documentation/cleanup handoff checks are recorded separately.
-- [ ] Integrate verified revisions into all six master branches, publish v0.1.1 tags/releases and verify hosted master CI.
-- [ ] Prove migration/filtered tips reachable from origin/master and verified backup; delete only those merged migration branches.
-- [ ] Leave six clean master checkouts synchronized to origin/master; inspect and clean owned diagnostics; hand off exact release/CI/master identities.
+- [ ] NOT_RUN under the revised scope: integrate verified revisions into all six master branches, publish v0.1.1 tags/releases and verify hosted master CI.
+- [ ] NOT_RUN under the revised scope: prove migration/filtered tips reachable from origin/master and verified backup; delete only those merged migration branches.
+- [ ] NOT_RUN under the revised scope: leave six clean master checkouts synchronized to origin/master and hand off promoted release/CI/master identities.
+- [x] Complete the current local installed-package gate, final documentation/source checks, inspected evidence cleanup and exact working-copy/artifact handoff without Git promotion. All mandatory local groups passed across the separately recorded invocations; five owned sessions were canonically cleaned, six HEADs/indexes preserved, and the retained manifest is bound to exact producer revisions/digests.
+
+**Local outcome, 2026-10-28:** all currently authorized local checklist items are complete. The four publication/master/promotion/branch-cleanup rows remain explicitly NOT_RUN under the user's scope override. Final build/install/test/rollback identities, the earlier failed attempts and cleanup limits are recorded in the existing [M6 verification report](../../verification/2026-10-27-multi-repo-migration-m6.md). No new task Markdown or Git promotion was created.
 
 ## Initial state and rulings
 
@@ -57,6 +64,8 @@ Initial ruling, before the later scope override: execute the then-authorized rel
 Ruling: Retain Remote's unrelated `Multi-Repo` and `refactor` worktrees/branches — deletion is not authorized for unrelated work — these do not supply the supported release path.
 
 Ruling: Use the local Git credential identity for GitHub REST operations unsupported by the connector — connector repository lookup returns 404, while the existing Git identity has explicit access — credentials remain in memory only.
+
+Local-continuation ruling: provide explicit local artifact transport with exact file names, absolute paths, SHA-256, committed producer revisions and unchanged compatibility/rollback checks. Published mode must continue requiring canonical numeric GitHub asset URLs and reject local/mixed transport. This enables the requested local install without publication or private-token provisioning. Runtime/deployment artifacts use clean committed inputs; any new integration-tool code is separately identified as uncommitted in verification exports.
 
 ## Progress
 

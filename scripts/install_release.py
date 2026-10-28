@@ -21,10 +21,10 @@ import uuid
 from zipfile import ZipFile
 
 try:
-    from scripts.system_release_manifest import load_manifest, VERSION
+    from scripts.system_release_manifest import load_manifest, local_artifact_bytes, VERSION
     from scripts.artifact_download import download_artifact
 except ModuleNotFoundError:
-    from system_release_manifest import load_manifest, VERSION
+    from system_release_manifest import load_manifest, local_artifact_bytes, VERSION
     from artifact_download import download_artifact
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -32,13 +32,19 @@ PROCESS_PATH_KEYS = ('TMP', 'TEMP', 'TMPDIR', 'PIP_CACHE_DIR', 'npm_config_cache
 PROCESS_ENVIRONMENT_KEYS = {*PROCESS_PATH_KEYS, 'PYTHONDONTWRITEBYTECODE'}
 
 
-def _bootstrap(value):
+def _bootstrap(value, *, local_artifacts=False):
     try:
         from scripts.bootstrap_contract_tools import bootstrap
     except ModuleNotFoundError:
         from bootstrap_contract_tools import bootstrap
     selected = value['repositories']['Contracts']['artifacts']['dev']
+    if local_artifacts:
+        return bootstrap(wheel=selected['path'], digest=selected['sha256'])
     return bootstrap(url=selected['url'], digest=selected['sha256'])
+
+
+def _artifact_bytes(artifact, *, local_artifacts=False):
+    return local_artifact_bytes(artifact) if local_artifacts else download_artifact(artifact['url'], artifact['sha256'])
 
 
 def _owned_environment_file(path, session):
@@ -280,8 +286,9 @@ def _install_components(value, local, environment, directory):
     return json.loads(probe.stdout)
 
 
-def install(manifest, environment_file):
-    value = load_manifest(manifest)  # Complete lock validation precedes all side effects.
+def install(manifest, environment_file, *, local_artifacts=False):
+    # Complete lock/byte validation precedes all local or network side effects.
+    value = load_manifest(manifest, local_artifacts=True) if local_artifacts else load_manifest(manifest)
     if not Path(environment_file).is_absolute() and (Path(environment_file).name != str(environment_file) or str(environment_file) in ('', '.', '..')):
         raise ValueError('--environment-file must be an explicit owned path or a single session-local filename.')
     if sys.prefix == sys.base_prefix:
@@ -289,7 +296,7 @@ def install(manifest, environment_file):
     github_env = os.environ.pop('GITHUB_ENV', None)
     try:
         with redirect_stdout(io.StringIO()):
-            allocated = _bootstrap(value)
+            allocated = _bootstrap(value, local_artifacts=True) if local_artifacts else _bootstrap(value)
     finally:
         if github_env is not None: os.environ['GITHUB_ENV'] = github_env
     try:
@@ -309,10 +316,10 @@ def install(manifest, environment_file):
         local[component] = {}
         for kind, artifact in product['artifacts'].items():
             path = destination / artifact['filename']
-            path.write_bytes(download_artifact(artifact['url'], artifact['sha256']))
+            path.write_bytes(_artifact_bytes(artifact, local_artifacts=local_artifacts))
             local[component][kind] = path
     rollback = value['rollback']['source']; rollback_path = directory / rollback['filename']
-    rollback_path.write_bytes(download_artifact(rollback['url'], rollback['sha256']))
+    rollback_path.write_bytes(_artifact_bytes(rollback, local_artifacts=local_artifacts))
     rollback_files = verify_rollback_bundle(rollback_path, value)
     for component, name in (('Remote', 'netcircuit-api'), ('Contracts', 'netcircuit-contracts'), ('Simulator', 'netcircuit-simulator'), ('Hardware', 'netcircuit-hardware-service')):
         verify_package_archive(local[component]['sdist'], name, VERSION)
@@ -343,7 +350,7 @@ def install(manifest, environment_file):
     for component, kinds in names.items():
         for kind, prefix in kinds.items():
             for field, suffix in (('url', 'URL'), ('sha256', 'SHA256'), ('filename', 'FILENAME')):
-                exports[prefix + '_' + suffix] = value['repositories'][component]['artifacts'][kind][field]
+                exports[prefix + '_' + suffix] = '' if local_artifacts and field == 'url' else value['repositories'][component]['artifacts'][kind][field]
     temporary = directory / 'tmp'; temporary.mkdir()
     cache = directory / 'pip-cache'; cache.mkdir()
     npm_cache = directory / 'npm-cache'; npm_cache.mkdir()
@@ -362,6 +369,8 @@ def install(manifest, environment_file):
              'manifestSha256': hashlib.sha256(snapshot.read_bytes()).hexdigest(), 'environment': exports, 'processEnvironment': process_environment,
              'artifacts': {name: {kind: str(path) for kind, path in paths.items()} for name, paths in local.items()},
              'apiVerification': verification, 'rollback': {'archive': str(rollback_path), 'verifiedPreservedArtifacts': rollback_files, 'rehearsalStatus': 'NOT_RUN'}}
+    if local_artifacts:
+        state['distribution'] = 'local'
     target.parent.mkdir(parents=True, exist_ok=True)
     temporary_state = target.with_name(target.name + '.' + uuid.uuid4().hex + '.tmp')
     temporary_state.write_text(json.dumps(state, indent=2) + '\n', encoding='utf-8'); temporary_state.replace(target)
@@ -372,8 +381,9 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--manifest', required=True, type=Path)
     parser.add_argument('--environment-file', required=True, type=Path)
+    parser.add_argument('--local-artifacts', action='store_true', help='Explicitly install a distribution: local set of digest-verified package files; no GitHub transport fallback.')
     args = parser.parse_args(argv)
-    state = install(args.manifest, args.environment_file)
+    state = install(args.manifest, args.environment_file, local_artifacts=args.local_artifacts)
     print(json.dumps({'releaseVersion': state['releaseVersion'], 'environmentFile': state['environmentFile'], 'manifest': state['manifest'], 'apiVersion': state['apiVerification']['version'], 'rollbackRehearsal': 'NOT_RUN'}))
     return 0
 

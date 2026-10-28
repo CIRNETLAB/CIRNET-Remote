@@ -45,14 +45,15 @@ def verification_plan(temporary_root):
     ]
 
 
-def load_environment(path):
+def load_environment(path, *, local_artifacts=False):
     state = json.loads(Path(path).read_text(encoding='utf-8'))
     if state.get('schemaVersion') != 1 or state.get('releaseVersion') != VERSION or Path(state.get('python', '')).resolve() != Path(sys.executable).resolve():
         raise ValueError('Use the selected release installation and its invoking virtualenv.')
     manifest = Path(state['manifest'])
     if hashlib.sha256(manifest.read_bytes()).hexdigest() != state.get('manifestSha256'):
         raise ValueError('Installed release manifest snapshot differs from its verified digest.')
-    load_manifest(manifest)
+    if local_artifacts: load_manifest(manifest, local_artifacts=True)
+    else: load_manifest(manifest)
     exports = state.get('environment')
     if not isinstance(exports, dict) or any(not key.startswith('NETCIRCUIT_') or any(marker in key for marker in ('TOKEN', 'PASSWORD', 'SECRET'))
             or not isinstance(value, str) or '\n' in value or '\r' in value for key, value in exports.items()):
@@ -66,8 +67,8 @@ def load_environment(path):
     return state
 
 
-def run(environment_file):
-    state = load_environment(environment_file)
+def run(environment_file, *, local_artifacts=False):
+    state = load_environment(environment_file, local_artifacts=True) if local_artifacts else load_environment(environment_file)
     if not os.environ.get('NETCIRCUIT_TEST_POSTGRES_URL'):
         raise ValueError('NETCIRCUIT_TEST_POSTGRES_URL must select an isolated real PostgreSQL test database; this gate is never skipped.')
     # Configure the selected allocator context before importing its bridge.
@@ -106,17 +107,20 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--manifest', type=Path)
     parser.add_argument('--environment-file', type=Path)
+    parser.add_argument('--local-artifacts', action='store_true', help='Explicitly verify a distribution: local set of digest-checked files; published release policy remains the default.')
     modes = parser.add_mutually_exclusive_group(required=True)
     modes.add_argument('--show-plan', action='store_true')
     modes.add_argument('--run', action='store_true')
     args = parser.parse_args(argv)
     if args.show_plan:
-        if args.manifest: load_manifest(args.manifest)
+        if args.manifest:
+            if args.local_artifacts: load_manifest(args.manifest, local_artifacts=True)
+            else: load_manifest(args.manifest)
         print(json.dumps({'gates': verification_plan(Path('ALLOCATOR_OWNED_RUNTIME')), 'executionStatus': 'NOT_RUN', 'fullPriorArtifactRollbackRehearsal': 'NOT_RUN'}, indent=2))
         return 0
     if not args.environment_file: parser.error('--run requires --environment-file from install_release.py.')
     if args.manifest: parser.error('--manifest is for --show-plan; --run uses the digest-bound installation environment file.')
-    report, path = run(args.environment_file)
+    report, path = run(args.environment_file, local_artifacts=True) if args.local_artifacts else run(args.environment_file)
     print(json.dumps({'gateStatus': report['gateStatus'], 'report': str(path), 'fullPriorArtifactRollbackRehearsal': 'NOT_RUN'}))
     return 0 if report['gateStatus'] == 'PASS' else 1
 

@@ -1,5 +1,6 @@
 """Validate the complete immutable six-owner 0.1.1 release and rollback lock."""
 import json
+import hashlib
 from pathlib import Path
 import re
 from urllib.parse import urlparse
@@ -27,8 +28,8 @@ def _object(pairs):
     return result
 
 
-def load_manifest(path):
-    return validate_manifest(json.loads(Path(path).read_text(encoding='utf-8'), object_pairs_hook=_object))
+def load_manifest(path, *, local_artifacts=False):
+    return validate_manifest(json.loads(Path(path).read_text(encoding='utf-8'), object_pairs_hook=_object), local_artifacts=local_artifacts)
 
 
 def _sha(value):
@@ -43,12 +44,31 @@ def _filename(value):
     return isinstance(value, str) and re.fullmatch('[A-Za-z0-9][A-Za-z0-9_.-]*', value) is not None and value not in ('.', '..')
 
 
-def _artifact(value, component, expected=None, *, released=True):
+def local_artifact_bytes(value):
+    """Read exact local package bytes; never fall back to a URL."""
+    if not isinstance(value, dict) or 'url' in value or not isinstance(value.get('path'), str):
+        raise ValueError('Local artifacts require an explicit path without a URL.')
+    path = Path(value['path'])
+    if (not path.is_absolute() or path.name != value.get('filename') or path.is_symlink()
+            or not path.is_file() or not _sha(value.get('sha256'))):
+        raise ValueError('Local artifacts require an absolute regular package file with the exact filename and SHA256.')
+    contents = path.read_bytes()
+    if hashlib.sha256(contents).hexdigest() != value['sha256']:
+        raise ValueError('Local artifact SHA256 does not match the selected set.')
+    return contents
+
+
+def _artifact(value, component, expected=None, *, released=True, local_artifacts=False):
     if not isinstance(value, dict) or not _filename(value.get('filename')) or not _sha(value.get('sha256')):
         raise ValueError('Each artifact requires a safe exact filename and SHA256: ' + component)
     if expected is not None and value['filename'] != expected:
         raise ValueError('Unexpected versioned artifact filename for ' + component)
     if released:
+        if local_artifacts:
+            local_artifact_bytes(value)
+            return
+        if 'path' in value:
+            raise ValueError('Published artifacts cannot contain a local path: ' + component)
         url = value.get('url')
         if not isinstance(url, str):
             raise ValueError('An immutable GitHub release asset URL is required: ' + component)
@@ -59,9 +79,13 @@ def _artifact(value, component, expected=None, *, released=True):
             raise ValueError('Artifact URL must identify a canonical immutable GitHub API asset: ' + component)
 
 
-def validate_manifest(value):
+def validate_manifest(value, *, local_artifacts=False):
     if not isinstance(value, dict) or type(value.get('schemaVersion')) is not int or value['schemaVersion'] != 1 or value.get('releaseVersion') != VERSION:
         raise ValueError('The system release must use schemaVersion 1 and releaseVersion 0.1.1.')
+    if type(local_artifacts) is not bool or (local_artifacts and value.get('distribution') != 'local'):
+        raise ValueError('Local artifact mode requires an explicit distribution: local manifest.')
+    if not local_artifacts and value.get('distribution') not in (None, 'github-release'):
+        raise ValueError('Local artifact manifests require explicit --local-artifacts mode.')
     repositories = value.get('repositories')
     if not isinstance(repositories, dict) or set(repositories) != set(FILENAMES):
         raise ValueError('The release must identify exactly all six repository owners.')
@@ -76,10 +100,11 @@ def validate_manifest(value):
         if not isinstance(artifacts, dict) or set(artifacts) != set(filenames):
             raise ValueError('The product artifact set is incomplete or unknown: ' + component)
         for kind, filename in filenames.items():
-            _artifact(artifacts[kind], component, filename)
-            if artifacts[kind]['url'] in urls:
-                raise ValueError('A release asset URL cannot identify multiple artifacts.')
-            urls.add(artifacts[kind]['url'])
+            _artifact(artifacts[kind], component, filename, local_artifacts=local_artifacts)
+            location = str(Path(artifacts[kind]['path']).resolve()) if local_artifacts else artifacts[kind]['url']
+            if location in urls:
+                raise ValueError('An artifact location cannot identify multiple artifacts.')
+            urls.add(location)
     compatibility = value.get('compatibility')
     if not isinstance(compatibility, dict) or any(type(compatibility.get(key)) is not type(expected) or compatibility[key] != expected for key, expected in COMPATIBILITY.items()):
         raise ValueError('Release compatibility must preserve the reviewed protocol and runtime boundaries.')
@@ -89,7 +114,7 @@ def validate_manifest(value):
             or rollback.get('provenance') != 'reviewed-pre-m6-local-set' or 'priorPublishedRelease' not in rollback
             or rollback['priorPublishedRelease'] is not None):
         raise ValueError('Rollback must identify the reviewed pre-M6 set and preserve paired backups, quarantine and no replay.')
-    _artifact(rollback.get('source'), 'Remote', 'netcircuit-system-rollback-pre-m6.tar.gz')
+    _artifact(rollback.get('source'), 'Remote', 'netcircuit-system-rollback-pre-m6.tar.gz', local_artifacts=local_artifacts)
     artifact_set = rollback.get('artifactSet')
     if (not isinstance(artifact_set, list) or len(artifact_set) != len(ROLLBACK_VERSIONS)
             or any(not isinstance(item, dict) for item in artifact_set)

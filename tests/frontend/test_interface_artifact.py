@@ -54,6 +54,28 @@ def test_interface_product_requires_root_manifest_and_released_product_identity(
         module.extract_product(archive_bytes('nested/package.json'),tmp_path/'nested-product')
 
 
+@pytest.mark.parametrize('suffix',['','.git'])
+def test_interface_product_accepts_canonical_repository_urls_from_native_builder(tmp_path,suffix):
+    source={'repository':'https://github.com/TINIHI-Labs/net-Circuit-Interface'+suffix,
+            'revision':'7'*40,'uncommittedMigration':False}
+    installer().extract_product(archive_bytes(metadata_changes={'source':source}),tmp_path/'product')
+    assert (tmp_path/'product/package.json').is_file()
+
+
+@pytest.mark.parametrize('repository',[
+    'http://github.com/TINIHI-Labs/net-Circuit-Interface',
+    'https://github.com/TINIHI-Labs/net-Circuit-Interface?ref=master',
+    'https://github.com/TINIHI-Labs/net-Circuit-Interface#master',
+    'https://user@github.com/TINIHI-Labs/net-Circuit-Interface',
+    'https://github.com/TINIHI-Labs/net-Circuit-Interface-other',
+])
+def test_interface_product_rejects_aliases_of_unsuffixed_canonical_repository(tmp_path,repository):
+    source={'repository':repository,'revision':'7'*40,'uncommittedMigration':False}
+    with pytest.raises(ValueError,match='provenance'):
+        installer().extract_product(archive_bytes(metadata_changes={'source':source}),tmp_path/'product')
+    assert not (tmp_path/'product').exists()
+
+
 @pytest.mark.parametrize('names',[['same','same'],['A','a'],['A/one','a/two'],['parent','parent/child'],['parent/child','parent'],['NUL.txt'],['trailing.']])
 def test_interface_product_rejects_duplicate_case_alias_and_file_directory_targets(tmp_path,names):
     module=installer(); output=io.BytesIO()

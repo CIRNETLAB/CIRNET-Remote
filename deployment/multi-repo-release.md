@@ -36,6 +36,14 @@ if ($LASTEXITCODE -ne 0) { throw 'The selected package set is inconsistent.' }
 
 Invoke the installer once and retain the resulting JSON state for reuse. Python tooling and Interface dependencies are verification prerequisites, separate from runtime installation. All package-manager caches and temporary paths in this recipe inherit owned external directories. The browser installation cache is inside the external exported product; actual browser launches use separate complete owned copies. Set `NETCIRCUIT_TEST_POSTGRES_URL` to an isolated test database and `NETCIRCUIT_TEST_PG_BIN` to the matching tools before PostgreSQL gates.
 
+For an explicitly local rebuild, use a separate `distribution: "local"` system manifest and add `--local-artifacts`. Every selected artifact, including the preserved rollback bundle, must have its exact versioned filename, absolute regular-file `path` and SHA-256; local entries cannot contain `url`. Keep the six committed producer revisions and the same compatibility/rollback inventory. The installer validates the complete selection before bootstrap and checks the bytes again when copying. It retains all archive identity, package provenance and installed-origin checks. Local mode performs no GitHub artifact downloads; third-party Python/npm dependencies still follow their pinned package requirements. The default published mode rejects local manifests/paths and continues requiring immutable numeric GitHub asset URLs.
+
+```text
+python -B scripts/install_release.py --local-artifacts --manifest ABSOLUTE_LOCAL_RELEASE_MANIFEST --environment-file release-env.json
+```
+
+Store the local manifest with its retained artifacts outside Git. Its absolute paths identify that machine's local set; it does not replace `integration/release-set.json` or establish a published release. Apply both returned environment blocks and prepare verification prerequisites exactly as above. Record any uncommitted integration-tool overlay separately from the clean committed product inputs.
+
 ```text
 python scripts/check_release.py --show-plan
 python scripts/check_release.py --group contracts --group python --group web --group postgres --group browser --group package
@@ -50,3 +58,5 @@ Before changing a deployed set, stop new admissions and preserve the matching da
 Rollback selects the reviewed pre-M6 bundle recorded in the system manifest and verifies its archive hash and every contained artifact. Recreate the old virtual environments from those exact artifacts; never reuse a higher-version package cache. Restore the corresponding database and capture backup as one set, verify ownership/migrations/capture hashes and quarantine, then start services with normal recovery. Do not replay Start, Apply, Run or other uncertain commands, and do not erase quarantine to make startup succeed. Retain the failed set and its diagnostic evidence for review.
 
 `python scripts/check_release_rollback.py --show-plan` lists the software/restore gates; `--run` executes them against isolated test state. Its output distinguishes those gates from a complete prior-artifact rehearsal. Only the dated M6 evidence can establish that the complete exact-set rehearsal actually ran. No command in this runbook authorizes a live production restore or board programming.
+
+For the explicitly local set, also pass `--local-artifacts` to `check_release_rollback.py --show-plan --manifest ABSOLUTE_LOCAL_RELEASE_MANIFEST` or `--run --environment-file ABSOLUTE_INSTALLATION_STATE`. The rollback checker still binds the saved manifest digest, invoking virtualenv and canonical output ownership. Its default mode rejects a local selection; passing these registered software gates alone still does not establish a complete old-artifact reinstall and paired database/capture restore.
