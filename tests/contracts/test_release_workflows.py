@@ -44,7 +44,7 @@ def assert_owned_test_runtime(job):
     index,step=cleanup
     assert index>max(index for index,_ in writers)
     assert step.get('if')=="always() && env.NETCIRCUIT_ARTIFACTS_SESSION != ''",'cleanup must run after failures'
-    assert 'node scripts/artifact-paths.mjs --cleanup "$NETCIRCUIT_ARTIFACTS_SESSION"' in step['run']
+    assert 'node scripts/cleanup-artifact-session.mjs --cleanup "$NETCIRCUIT_ARTIFACTS_SESSION"' in step['run']
     assert not step.get('continue-on-error',False)
 
 

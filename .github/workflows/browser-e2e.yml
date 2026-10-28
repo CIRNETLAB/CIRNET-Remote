@@ -126,4 +126,4 @@ jobs:
       - name: Clean the owned external artifact session after upload
         if: always()
         shell: bash
-        run: node scripts/artifact-paths.mjs --cleanup "$NETCIRCUIT_ARTIFACTS_SESSION"
+        run: node scripts/cleanup-artifact-session.mjs --cleanup "$NETCIRCUIT_ARTIFACTS_SESSION"

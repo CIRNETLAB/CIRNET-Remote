@@ -91,4 +91,4 @@ jobs:
       - name: Clean the owned external verification session
         if: always() && env.NETCIRCUIT_ARTIFACTS_SESSION != ''
         shell: bash
-        run: node scripts/artifact-paths.mjs --cleanup "$NETCIRCUIT_ARTIFACTS_SESSION"
+        run: node scripts/cleanup-artifact-session.mjs --cleanup "$NETCIRCUIT_ARTIFACTS_SESSION"

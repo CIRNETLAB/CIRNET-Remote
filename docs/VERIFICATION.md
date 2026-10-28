@@ -146,6 +146,17 @@ CI allocates in `runner.temp`, uploads external evidence when needed, then clean
 
 The backend, hardware-service, frontend, repository integration, PostgreSQL migration and canonical Contracts jobs allocate a fresh session through `scripts/artifact-paths.mjs` before verification. They publish its ownership before allocating application defaults, set the default database and captures inside that session, pass its `pytest` child as `--basetemp` for direct pytest commands, and run the allocator's guarded cleanup with `always()` after failures as well as success. The migration job retains its PostgreSQL 18 service and explicit `NETCIRCUIT_TEST_POSTGRES_URL`; the isolated SQLite default applies only to incidental default-app imports and does not replace PostgreSQL validation. Local workflow policy tests check this configuration; hosted CI execution is separate evidence.
 
+Root CI cleanup uses `scripts/cleanup-artifact-session.mjs`. Bootstrap can publish
+an owned session before DEV pip installation succeeds, while the repository
+adapter cache does not exist yet. The cleanup helper verifies the published
+allocator CLI against the tracked DEV Node SHA-256 and delegates the explicit
+session/context to that canonical implementation. A designated missing or altered
+CLI fails closed; adapter fallback applies only when no external CLI was
+published. This adds no second ownership/path algorithm. The complete artifact
+access job in Integration invokes the real system installer and retains only its
+sanitized receipt/log before cleanup; a successful download does not establish
+that the separate secret has minimum permissions.
+
 ## Archive and missing evidence
 
 Keep historical results, incomplete plans, ADRs, LICENSE/NOTICE and provenance. The R0–R7 archived prompt is byte-locked by `tests/test_post_r7_provenance.py`; required architecture/context/history markers are checked by existing tests. Add an external status note instead of editing locked bytes or weakening tests.

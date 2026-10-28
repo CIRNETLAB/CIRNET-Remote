@@ -31,6 +31,16 @@ Draft release visibility must be tested separately with the replacement
 credential; access using a broader publication credential does not establish
 that the read-only consumer can download a private draft.
 
+The working Integration workflow adds a `system-artifact-access` job and manual
+`workflow_dispatch`. Once this workflow is present on the chosen revision, it can
+be rerun after a secret rotation without changing that source commit. It creates
+a fresh virtualenv, invokes the actual complete system installer, verifies all
+15 selected archives and rollback bytes, checks installed origins/versions and
+retains a sanitized receipt. The receipt explicitly leaves credential minimum
+scope unverified: record the provisioned credential permissions separately.
+The current uncommitted workflow has local policy/behavioral evidence; its hosted
+execution is NOT_RUN under the user's instruction to stop further Git promotion.
+
 Renew the token before its expiration under the organization's policy and
 replace the same secret in all six repositories. A failed authentication or
 missing artifact must fail closed; no `latest`, sibling source or editable
