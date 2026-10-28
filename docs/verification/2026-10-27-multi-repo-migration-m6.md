@@ -1,10 +1,94 @@
 # M6 verification and release ledger
 
-Started: 2026-10-27; verified 2026-10-28, Asia/Saigon. Status: M6_PUBLICATION_IN_PROGRESS. Successful baseline measurements, subsequent hosted failures and verified fixes have separate scopes below. This record does not replace historical M0–M5 observations. No production deployment or board programming is part of M6.
+Started: 2026-10-27; verified 2026-10-28, Asia/Saigon. Status: M6_PUBLISHED_NATIVE_CI_FAILED_CLEANUP_PENDING. Successful baseline measurements, subsequent hosted failures and verified fixes have separate scopes below. This record does not replace historical M0–M5 observations. No production deployment or board programming is part of M6.
 
-**Current scope, 2026-10-28:** the user subsequently instructed “Không cần commit và push và merge”. New source changes are retained uncommitted for build/test and review. Further commits, pushes, merges, tags/releases and branch cleanup are stopped; earlier authorized history/refs remain preserved. The successful Windows baseline below belongs to committed Interface 4cbbee16, while its later Linux failures and subsequent working-copy fixes have their own scope. No release completion is claimed.
+## Current publication checkpoint
 
-## Resumed publication and master integration
+**M6 remains incomplete: published; hosted native CI failed; migration-branch cleanup NOT_RUN.** The user explicitly instructed “Đừng chờ nữa hãy thực hiện publication”. That decision authorized publication now without counting native CI as PASS; it did not waive the cleanup/acceptance gates. All six existing v0.1.1 releases are now published and immutable. All repositories became public by the user's action; the agent changed no visibility or license. No deployment, board programming, runtime fix, new product version or artifact rebuild was performed in this checkpoint.
+
+Publication journal SHA-256 `1eb5efddc58171259aaf0cf1575055a839dfea757d3565a4bc205ddd71e9db20` binds `explicitUserPublicationDecision` (decision SHA-256 `089d2d7645b6c96b16d10f8fcd422ab33bc173967de2c513cf4b457e5262021e`), `nativeCountedAsPass: false`, and 13 other required master workflows. This publication-only binding and release notes deliberately differ from the original all-pass guard; they cannot satisfy its full-M6/branch-cleanup acceptance. The original guard was not weakened.
+
+| Repository | Runtime master / immutable v0.1.1 target | Exact artifact build source | Published release |
+| --- | --- | --- | --- |
+| Remote | `065179ead7c7cf4f44483b74edca99bb84f8f2a5` | `82ca15bec250894c39c2849ab4a3eaaeb7712b05` | [v0.1.1](https://github.com/TINIHI-Labs/net-Circuit-Remote/releases/tag/v0.1.1) |
+| Contracts | `54ef9f6a11f4906c11ec9789de47cf06d5100734` | `54ef9f6a11f4906c11ec9789de47cf06d5100734` | [v0.1.1](https://github.com/TINIHI-Labs/net-Circuit-Contracts/releases/tag/v0.1.1) |
+| Interface | `7a266d15b510d840ad3146515a3699760564ed32` | `7a266d15b510d840ad3146515a3699760564ed32` | [v0.1.1](https://github.com/TINIHI-Labs/net-Circuit-Interface/releases/tag/v0.1.1) |
+| Simulator | `ff63616a7a8c5d3f65e60cdb85db2b4b4ab42fa7` | `ff63616a7a8c5d3f65e60cdb85db2b4b4ab42fa7` | [v0.1.1](https://github.com/TINIHI-Labs/net-Circuit-Simulator/releases/tag/v0.1.1) |
+| Hardware | `de65db8b89d0dfa6dd4c430a41397555bc77111d` | `de65db8b89d0dfa6dd4c430a41397555bc77111d` | [v0.1.1](https://github.com/TINIHI-Labs/net-Circuit-Hardware/releases/tag/v0.1.1) |
+| FPGA | `24ade35eade5382efd42f784008280c0fbb768c3` | `24ade35eade5382efd42f784008280c0fbb768c3` | [v0.1.1](https://github.com/TINIHI-Labs/net-Circuit-FPGA/releases/tag/v0.1.1) |
+
+System manifest SHA-256 `a2f9c5eb10ad8fc7ee41f26246d802bed782881e5b69b323b7a84e939a313e10` (asset `684998628`); verified 31-asset inventory SHA-256 `a55a06d7722e341ac5aa24765085a0ea34154ed232379340d13e8d1392970373`. Fifteen selected artifacts, ten archived old payloads, rollback and auxiliary assets remain preserved. Remote API/deployment artifacts retain build source `82ca15bec250894c39c2849ab4a3eaaeb7712b05`; the deployment archive includes its historical runbook. A later docs-only Remote master descendant does not move or relabel immutable v0.1.1.
+
+### Hosted master results: 13 PASS, native FAIL
+
+| Repository / workflow | Actual result |
+| --- | --- |
+| Remote / Integration | [PASS](https://github.com/TINIHI-Labs/net-Circuit-Remote/actions/runs/40690833573) at `065179ead7c7cf4f44483b74edca99bb84f8f2a5` |
+| Remote / Contracts | [PASS](https://github.com/TINIHI-Labs/net-Circuit-Remote/actions/runs/40690833432) at `065179ead7c7cf4f44483b74edca99bb84f8f2a5` |
+| Remote / Frontend | [PASS](https://github.com/TINIHI-Labs/net-Circuit-Remote/actions/runs/40690833441) at `065179ead7c7cf4f44483b74edca99bb84f8f2a5` |
+| Remote / FPGA source artifact acceptance | [PASS](https://github.com/TINIHI-Labs/net-Circuit-Remote/actions/runs/40690833270) at `065179ead7c7cf4f44483b74edca99bb84f8f2a5` |
+| Remote / Backend | [PASS](https://github.com/TINIHI-Labs/net-Circuit-Remote/actions/runs/40690833448) at `065179ead7c7cf4f44483b74edca99bb84f8f2a5` |
+| Remote / Documentation Context | [PASS](https://github.com/TINIHI-Labs/net-Circuit-Remote/actions/runs/40690833252) at `065179ead7c7cf4f44483b74edca99bb84f8f2a5` |
+| Remote / Simulator artifact consumer | [PASS](https://github.com/TINIHI-Labs/net-Circuit-Remote/actions/runs/40690833579) at `065179ead7c7cf4f44483b74edca99bb84f8f2a5` |
+| Remote / Hardware artifact consumer | [PASS](https://github.com/TINIHI-Labs/net-Circuit-Remote/actions/runs/40690833318) at `065179ead7c7cf4f44483b74edca99bb84f8f2a5` |
+| Contracts / Standalone Contracts | [PASS](https://github.com/TINIHI-Labs/net-Circuit-Contracts/actions/runs/40689553293) at `54ef9f6a11f4906c11ec9789de47cf06d5100734` |
+| Interface / Standalone Interface | [PASS](https://github.com/TINIHI-Labs/net-Circuit-Interface/actions/runs/40689573154) at `7a266d15b510d840ad3146515a3699760564ed32` |
+| Simulator / Simulator | [PASS](https://github.com/TINIHI-Labs/net-Circuit-Simulator/actions/runs/40689590781) at `ff63616a7a8c5d3f65e60cdb85db2b4b4ab42fa7` |
+| Hardware / Hardware Service | [PASS](https://github.com/TINIHI-Labs/net-Circuit-Hardware/actions/runs/40689610481) at `de65db8b89d0dfa6dd4c430a41397555bc77111d` |
+| FPGA / FPGA source and RTL | [PASS](https://github.com/TINIHI-Labs/net-Circuit-FPGA/actions/runs/40689627688) at `24ade35eade5382efd42f784008280c0fbb768c3` |
+| Remote / Real browser release gate | [FAIL](https://github.com/TINIHI-Labs/net-Circuit-Remote/actions/runs/40705352207) at `065179ead7c7cf4f44483b74edca99bb84f8f2a5`: 50 PASS / seven FAIL / one optional historical NOT_RUN |
+
+Current public native run `40705352207` completed in `4791.228` seconds, with 50 PASS, seven FAIL and the sole optional `depth-artifacts.spec.ts` / `retained pre-fix native WebGL evidence` NOT_RUN. Original assertions, deadlines and retries were unchanged. Native receipt SHA-256 `f4ecde5d8181f2f9e88be7c4c18c51cd824548763e54c5745c8699673df27e6b`, ZIP `de5ec679a7224303159a4825de1d40d8fb9ed242535b69a3cd2654d8318cf93c`, log `4470c9f52c8e8914847be9b01f363669fa1be2269eaadf39712c6ec1e70c3245`, JUnit `c72bb7bc631511b9d47f7ccd7eeb00676456d1972b38355cabe2b3be575cc0be`. Actual runner CPU/memory were not logged; public repository visibility is not causal proof.
+
+| Current failed native case | Seconds |
+| --- | --- |
+| `contacts-wires-gallery.spec.ts` / contact and continuous-wire gallery retains native closeups, cavity evidence and stable GPU resources across ten cycles | 461.432 |
+| `depth-artifacts.spec.ts` / native WebGL hidden-layer regression DPR 2 | 365.011 |
+| `flexible-placement.spec.ts` / generic property drafts and native drag-drop produce compact forms and actual multiview visual evidence at both viewport sizes | 294.994 |
+| `labels-contact-interaction.spec.ts` / native Label placement, Unicode edit, transforms, duplicate/delete and cancelled previews retain history and persistence | 242.843 |
+| `ribbon-shell.spec.ts` / native pending physical preflight keeps one owner across tab/collapse changes (Cancel) | 36.559 |
+| `ribbon-shell.spec.ts` / native pending physical preflight keeps one owner across tab/collapse changes (release) | 41.222 |
+| `sealed-package-models.spec.ts` / sealed package gallery retains actual native renders of every family and molded-lead closeups | 185.880 |
+
+Earlier native run [40690833525](https://github.com/TINIHI-Labs/net-Circuit-Remote/actions/runs/40690833525) separately remains 50 PASS / seven FAIL / one optional NOT_RUN; its trace diagnosis SHA-256 is `5274772e570523326106aa4341883ccac07d2f9f6d54cb42caf4b88a3a9d2660`. Neither failure is replaced by earlier Windows/local Linux acceptance. Tag pushes may trigger 14 additional workflows; no blanket tag-CI success is claimed.
+
+Hosted authenticated [Integration / system-artifact-access](https://github.com/TINIHI-Labs/net-Circuit-Remote/actions/runs/40690833573) passed actual selected private/draft downloads, digest checks, clean installation, pip checks and isolated origins; original receipt SHA-256 `c96f5739d8f88656ad6707397cbeb3ccd9802a5efe6c6dd72aea6f974a3ea7c7`. The selected-six Contents-read PAT configuration is user-attested, while receipt `credentialScopeVerification: NOT_VERIFIED` does not establish least privilege. Workflow `contents: read` and secret scope are separate; current authenticated bootstrap remains required.
+
+After publication, all **17 anonymous downloads PASS**: 15 selected artifacts, rollback and the system manifest, with no Authorization header and exact digest verification. Receipt SHA-256 `7c475688fadbb6843d1f2591caf1d0cb4b21e5fa490051848bd5a6374259f7d3`. This proves public binary transport, separately from the authenticated clean-install receipt.
+
+### Published selected artifacts
+
+| Owner / role | Exact build source | Asset | Full SHA-256 |
+| --- | --- | --- | --- |
+| Remote / python | `82ca15bec250894c39c2849ab4a3eaaeb7712b05` | [netcircuit_api-0.1.1-py3-none-any.whl](https://api.github.com/repos/TINIHI-Labs/net-Circuit-Remote/releases/assets/684944254) | `50d3d2610ceaa0d00d926c83e4d4a9b5039ecc2a67fa8d19d979d28f051a1906` |
+| Remote / sdist | `82ca15bec250894c39c2849ab4a3eaaeb7712b05` | [netcircuit_api-0.1.1.tar.gz](https://api.github.com/repos/TINIHI-Labs/net-Circuit-Remote/releases/assets/684944433) | `badc2f9308d3f3e48ff79ec73ac20e2337b22a3c7cfbc779029444599d43feba` |
+| Remote / deployment | `82ca15bec250894c39c2849ab4a3eaaeb7712b05` | [netcircuit-remote-0.1.1-deployment.tar.gz](https://api.github.com/repos/TINIHI-Labs/net-Circuit-Remote/releases/assets/684944615) | `0c4af2a06a9a03f0a662862aa934db7a026ffe4b4b01a30593f3518d9c2d179d` |
+| Contracts / python | `54ef9f6a11f4906c11ec9789de47cf06d5100734` | [netcircuit_contracts-0.1.1-py3-none-any.whl](https://api.github.com/repos/TINIHI-Labs/net-Circuit-Contracts/releases/assets/682226130) | `5dd663c6bfe6b9dd39b5f4b86ffd24eeed8bed9b2898aaedb35f99debb0cbcc2` |
+| Contracts / sdist | `54ef9f6a11f4906c11ec9789de47cf06d5100734` | [netcircuit_contracts-0.1.1.tar.gz](https://api.github.com/repos/TINIHI-Labs/net-Circuit-Contracts/releases/assets/682226235) | `9e15850d42ddc61311979cec2df95f5e55d07699e7cbfd83a8f24f0b988b4e07` |
+| Contracts / npm | `54ef9f6a11f4906c11ec9789de47cf06d5100734` | [tinihi-labs-contracts-0.1.1.tgz](https://api.github.com/repos/TINIHI-Labs/net-Circuit-Contracts/releases/assets/682226359) | `3bfc8b6f84b645cd6b7864bd1391de1d5efdc6ee4ba653cb92e145a3ddd2bc83` |
+| Contracts / dev | `54ef9f6a11f4906c11ec9789de47cf06d5100734` | [netcircuit_artifact_paths-1.0.0a1-py3-none-any.whl](https://api.github.com/repos/TINIHI-Labs/net-Circuit-Contracts/releases/assets/682226469) | `ff76532c69b2115338edb641660c966c5459dd40cb806f52a1e2e8c379c70a1f` |
+| Contracts / dev_npm | `54ef9f6a11f4906c11ec9789de47cf06d5100734` | [tinihi-labs-artifact-paths-1.0.0-m1.0.tgz](https://api.github.com/repos/TINIHI-Labs/net-Circuit-Contracts/releases/assets/682226570) | `53190cceb3eee6bb92e91edf1eda0c01043e0ea095cbba1e745a0f7103e6f6df` |
+| Interface / source | `7a266d15b510d840ad3146515a3699760564ed32` | [netcircuit-interface-0.1.1-source.tar.gz](https://api.github.com/repos/TINIHI-Labs/net-Circuit-Interface/releases/assets/684942791) | `bd3f529454dd129d90a27ce7ee76c84400481f1cc6452150d32233973c42c4b4` |
+| Interface / static | `7a266d15b510d840ad3146515a3699760564ed32` | [netcircuit-interface-0.1.1-static.tar.gz](https://api.github.com/repos/TINIHI-Labs/net-Circuit-Interface/releases/assets/684942968) | `f7e87d32b314982503a7e9bd1f213812c6a927914276f98825983191ac924055` |
+| Simulator / python | `ff63616a7a8c5d3f65e60cdb85db2b4b4ab42fa7` | [netcircuit_simulator-0.1.1-py3-none-any.whl](https://api.github.com/repos/TINIHI-Labs/net-Circuit-Simulator/releases/assets/684943145) | `78b857369baec88800d08e37977afacca3321decd05b6cd50ea925c033ea7b89` |
+| Simulator / sdist | `ff63616a7a8c5d3f65e60cdb85db2b4b4ab42fa7` | [netcircuit_simulator-0.1.1.tar.gz](https://api.github.com/repos/TINIHI-Labs/net-Circuit-Simulator/releases/assets/684943330) | `6afd1b9a68768f527fd5ee1f864287c88d56b6a97c0a7fd7b2b7bd560bb0cfd2` |
+| Hardware / python | `de65db8b89d0dfa6dd4c430a41397555bc77111d` | [netcircuit_hardware_service-0.1.1-py3-none-any.whl](https://api.github.com/repos/TINIHI-Labs/net-Circuit-Hardware/releases/assets/684943575) | `f6fc643bc40130a0f8b4136db8db4f8abe1b0b366efaffa8c1866786429d9e9b` |
+| Hardware / sdist | `de65db8b89d0dfa6dd4c430a41397555bc77111d` | [netcircuit_hardware_service-0.1.1.tar.gz](https://api.github.com/repos/TINIHI-Labs/net-Circuit-Hardware/releases/assets/684943851) | `3754bfc3338cc6c17dd66b16788c502cdd414e2b4e01a1e2c0ffaed24b0060fb` |
+| FPGA / source | `24ade35eade5382efd42f784008280c0fbb768c3` | [netcircuit-fpga-scaffold-0.1.1.tar.gz](https://api.github.com/repos/TINIHI-Labs/net-Circuit-FPGA/releases/assets/684944031) | `b82edb4167b821f55d98331304d0c49d2f37638d972fc9c167287bb6368908ca` |
+
+### Remaining acceptance and history gates
+
+Master fast-forwards and six immutable tags/releases are done, but full hosted master acceptance is **FAIL** because native CI failed. Final six tagged backup/restore acceptance and migration-branch deletion remain **NOT_RUN**; no migration branches are claimed deleted. `Multi-Repo`, `refactor`, their worktrees and all other unrelated history remain preserved. Existing verified pre-promotion/history backups remain available; they are not relabelled as final post-publication backups.
+
+The remaining three execution rows stay unchecked. A final docs-only Remote descendant, applicable documentation/Integration CI and its recoverable handoff bundle may be recorded separately; that documentation handoff cannot close the failed native/M6 gates. Current external-session cleanup is not yet claimed complete. Exact artifacts and matching database/capture rollback, quarantine and no Start replay remain in the [release/rollback runbook](../../deployment/multi-repo-release.md). W0–W8 and Safety-gated ownership/compatibility constraints below remain unchanged.
+
+## Historical execution chronology
+
+Earlier stops, pending statements, inventories and measurements retain their recorded scope; this publication checkpoint supersedes only their publication disposition.
+
+**Historical stopped scope, 2026-10-28:** the user subsequently instructed “Không cần commit và push và merge”. New source changes are retained uncommitted for build/test and review. Further commits, pushes, merges, tags/releases and branch cleanup are stopped; earlier authorized history/refs remain preserved. The successful Windows baseline below belongs to committed Interface 4cbbee16, while its later Linux failures and subsequent working-copy fixes have their own scope. No release completion is claimed.
+
+## Historical resumed publication preparation
 
 The user subsequently explicitly authorized continuing the four publication/master/branch-cleanup items. This supersedes the previous Git stop for this resumed phase; the local-only chronology below retains its original results and limits. All six checkouts/indexes were clean at resumption. Remote is now user-committed/pushed `1b567336d5b23de3bd827e0f992be791dd1bab2b`; Interface's verified `7a266d15` remains local ahead of its published migration branch. All six live masters still match the earlier recorded master tips, all current tips preserve the required extracted ancestry, and no live `v0.1.1` tag exists. Existing releases are drafts. Ordinary master fast-forward remains feasible; branch deletion requires new final bundles and fresh live reachability checks.
 
@@ -22,7 +106,7 @@ Five producer masters have been fast-forwarded/pushed without changing their tre
 
 The hosted fixture defect was reproduced RED with actual temporary checkout egg-info and repaired by constraining expected hash discovery to the executing virtualenv's purelib/platlib metadata. The production isolated-origin probe, checkout-shadow rejection and wrong-wheel-digest assertions are unchanged. A subsequent unfiltered local file run recorded 26 PASS / one FAIL: the existing cleanup fixture failed to undo `npm_config_cache` when initially absent. A deterministic absent-cache regression reproduced that failure; registering/restoring absent environment keys repaired the fixture without changing bootstrap behavior or its complete environment-equality assertion. Focused metadata (two cases) and cleanup (four states) GREEN, then the complete unfiltered file PASS: 27 tests, zero skips, 510.81 seconds. The earlier failed attempts remain failed. Separate release/local-mode/workflow/documentation/provenance/link verification PASS: 106 tests in 155.09 seconds. Fresh static review found no actionable findings in the test/manifest changes. No API, Interface, Simulator, Hardware or RTL behavior changed in this resumed repair.
 
-## Local continuation at clean producer tips
+## Historical local continuation at clean producer tips
 
 The user subsequently requested completing the remaining local checklist in the original M6 plan, without another task Markdown file. At this continuation's start all six original worktrees and indexes were clean. The following commits were already present; this continuation created no commits or branches. Independent temporary clones with canonical LF checkout bytes supplied the new builds. The approved LICENSE Git blob remains `f288702d2fa16d3cdf0035b15a9fcbc552cd88e7` in all six repositories; original checkout assets, historical evidence and original ignored files are preserved.
 
@@ -77,7 +161,7 @@ Actual new gallery/LED PNGs were inspected, together with the failed PNG/trace a
 
 Fresh read-only local history checks also passed: six pre-M6 migration tips, six existing master tips and five filtered tips remain ancestors of the current six HEADs (17 checks). The six history joins, including both Hardware joins, preserve their first-parent trees. Local master and cached `origin/master` refs match the durable preflight; this is not a new remote-live or post-promotion reachability claim.
 
-### Current local acceptance and handoff
+### Historical local acceptance and handoff
 
 All mandatory local release groups now PASS across the explicitly separated invocations above. The independent browser/package runner exited zero: four commands in 2,393.9 seconds (outer preparation/wrapper elapsed 2,411.163 seconds). The standard installed-package gate builds API from the unchanged consumer API source and selects the reviewed Contracts/Simulator/Hardware wheels; its isolated probes passed migrations through `0007_auth_maintenance`, administrative/capture CLIs, domain invariants, NCAP v1/v2, actual spawned Simulator and loopback Hardware RPC, unsafe-bind rejection, shutdown and `pip check`. The selected producer API wheel was separately installed and checked by both actual system installations; the package gate's locally built API wheel is not relabelled as that selected archive.
 
@@ -329,7 +413,7 @@ The selected committed Interface candidate is revision `4cbbee16a158a16c432b0571
 
 The read-only credential audit found the existing encrypted Actions secret is the push-capable GCM OAuth credential (`gist, repo, workflow`). This has not been represented as least-privilege read access. The user was asked asynchronously to provision the [selected-repository Contents-read credential](../ci-artifact-access.md), and responded by stopping commit/push/merge. No replacement or credential exception was inferred. Token values were not retained in diagnostics or source. Actual replacement downloads and any private-draft visibility constraint must be tested before minimum-scope access is claimed in a future release.
 
-## Working-copy handoff
+## Historical working-copy handoff
 
 Final Root documentation/context/protected-baseline/Markdown/system-release checks passed: 54 tests, zero failures, with actionlint 1.7.12 and worktree/index artifact guard. The combined command sequence exited 0 in 74.04 seconds. Interface's 16 managed Markdown documents passed the same shared path/anchor policy; the shared artifact guard against its worktree/index and its diff whitespace check also passed. The initial attempt to invoke an Interface-local guard entrypoint failed because that script is Remote-owned; the successful check used its supported `--root` interface, without adding a duplicate policy.
 

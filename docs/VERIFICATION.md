@@ -58,9 +58,12 @@ The current [M6 verification record](verification/2026-10-27-multi-repo-migratio
 records the native depth-observer equivalence proof and unchanged DPR 2 gate.
 Those focused results do not replace complete browser and hosted-master acceptance.
 
-Private CI downloads use the [selected-repository read credential](ci-artifact-access.md).
+Published assets from the six public repositories support anonymous downloads.
+Current CI still uses the [selected-repository read credential](ci-artifact-access.md)
+for bootstrap and authenticated asset checks; draft access must be verified separately.
 Workflow `contents: read` does not narrow the scope of a separate Actions secret.
-After credential rotation, verify actual selected private asset downloads again.
+Record user provisioning attestations separately from the receipt's `NOT_VERIFIED`
+credential scope. After rotation, verify actual selected asset downloads again.
 
 ## Checks and evidence
 

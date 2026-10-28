@@ -1,8 +1,8 @@
 # Multi-repo release and rollback
 
-Use `integration/release-set.json` as the exact six-product selection. Every product is 0.1.1; DEV tooling, third-party dependencies and wire protocols have separate versions. Download URLs identify private GitHub release asset IDs and require a credential with access to the canonical repositories. Never use `latest`, editable producer installs or sibling checkouts as fallback.
+Use `integration/release-set.json` as the exact six-product selection. Every product is 0.1.1; DEV tooling, third-party dependencies and wire protocols have separate versions. Download URLs identify exact numeric GitHub release asset IDs. After publication, assets from the six public repositories permit anonymous downloads; retain authenticated access for drafts, CI and API rate limits. Never use `latest`, editable producer installs or sibling checkouts as fallback.
 
-Install Git, Node 22 and Python 3.12+ first. Create an external virtual environment, activate it, and privately set `NETCIRCUIT_ARTIFACTS_TOKEN`. From a clean Remote checkout run:
+Install Git, Node 22 and Python 3.12+ first. Create an external virtual environment and activate it. For authenticated access, privately set `NETCIRCUIT_ARTIFACTS_TOKEN` using the [selected-repository read credential](../docs/ci-artifact-access.md); it can remain unset for public published assets. Current CI workflows still require `NETCIRCUIT_ARTIFACTS_READ_TOKEN`. From a clean Remote checkout run:
 
 ```text
 python -B scripts/install_release.py --manifest integration/release-set.json --environment-file release-env.json
