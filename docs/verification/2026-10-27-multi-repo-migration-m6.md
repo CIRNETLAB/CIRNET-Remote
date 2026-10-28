@@ -1,8 +1,89 @@
 # M6 verification and release ledger
 
-Started: 2026-10-27; current update: 2026-10-29, Asia/Saigon (evidence collected 2026-10-28 UTC). Status: M6_CIRNET_RENAME_REVALIDATION_IN_PROGRESS_NATIVE_NOT_ACCEPTED. Successful baseline measurements, subsequent hosted failures and verified fixes have separate scopes below. This record does not replace historical M0–M5 observations. No production deployment or board programming is part of M6.
+Started: 2026-10-27; current update: 2026-10-29, Asia/Saigon (evidence collected 2026-10-28 UTC). Status: M6_COMPATIBLE_LOCAL_NATIVE_PASS_OLD_HOSTED_NOT_PASS_RELEASE_HANDOFF_PENDING. Successful baseline measurements, subsequent hosted failures and verified fixes have separate scopes below. This record does not replace historical M0–M5 observations. No production deployment or board programming is part of M6.
 
 ## Current CIRNET rename and release disposition
+
+### Current six-master and artifact-selection checkpoint
+
+Accepted runtime/integration source and hosted-CI baselines are: Remote
+`28221a5ca19d04225e9399895764a12149188681`, Contracts
+`41dd34510bf39b9fe6093738965f81ac7d64f2b4`, Interface
+`461b0870dbe7975d6bfdf336c6d5ef87e72c8970`, Simulator
+`dfa5fbe1ce5ff7fe4f3a5f033e419adcf656a488`, Hardware
+`4d7e75389d3671476e2aabbf0359681f057e9704`, FPGA
+`0ccca05baafc85289459ecfd20c8f4a163a8596f`. All five producer workflows pass at
+those exact source heads; Interface runtime run 40749926343 passed at 461b087.
+Interface master is now the pushed docs-only descendant
+`a7de79a938a0df910641421e97607d71bcefcb8c`; its new Standalone run
+[40760666418](https://github.com/CIRNETLAB/CIRNET-Interface/actions/runs/40760666418)
+now passes at this exact docs-only head; artifact source remains 461b087.
+Remote's nine observed
+non-browser workflows pass at 28221a5 (eight release workflows plus a separate
+dependency-graph update). Hosted evidence includes 1,421 Python tests, 18 real
+PostgreSQL cases in 7.33s and authenticated verification/installation of all
+15 published selections. The Contracts group passed 12 commands in 73.9s,
+including 784 Python tests in 63.59s and installed SDK 88 baseline/89 public
+conformance cases; its separate installed-packages job also passed. Artifact
+installation receipt
+`b8b14dfad9bdeec9cb834cf643c4a0e08de89a0ddbe6d1019122f7142c7ad330`.
+The browser workflow 40748387829 used the original published Interface 7a266d15
+and is now CANCELLED / NOT_PASS: 55 of 58 cases started, ten numbered failure
+headers, no final JUnit and no known PASS total. Its result is resolved; hosted
+acceptance is blocked, and non-browser/local-candidate PASS does not replace it.
+
+Six published release titles/notes were updated only as metadata after fresh
+body/title/tag/31-asset/policy guards. Original bodies remain exact prefixes,
+all immutable assets/tags/states/latest IDs are unchanged, and the original
+publication journal is untouched. Receipt
+`7c044d3583ad89ec3157f08a01a6111d4141e343afa024be8439f9401b314208`.
+The current Git manifest at 28221a5 has LF SHA-256
+`7b6e0ee9ba09d6b13d5f73cd0bf783f3f001422a424a84477622cfdb08232a2e`;
+its Windows CRLF serialization is `5e6c396e1fe1b7cac102ce59045b6a5be877d92ec3fab09f89c9db10e91952fe`.
+The immutable system-manifest asset 684998628 still has old namespace/history
+and unchanged SHA-256 `a2f9c5eb10ad8fc7ee41f26246d802bed782881e5b69b323b7a84e939a313e10`.
+Current CI uses direct canonical URLs, preserving all 15 selected original build
+sources/digests; API build 82ca15b, Remote tag 065179e and master 28221a5 are
+different identities.
+
+Thirteen candidate archives from all six new committed sources are durably
+retained, rehashed and **UNPUBLISHED**; inventory receipt
+`7098ad0ba242a20a878c8ed4975f2727208202adc6ad83bd3fba1696c22566f5`.
+They were not installed as one all-new set. The compatible full-browser local
+selection is new API 28221a5 plus new Interface 461b087, with the exact published
+Contracts/SDK/Simulator/Hardware/FPGA/DEV and unchanged rollback pins. In
+particular, new Contracts npm candidate `2cdcfae6…ca042b1` must not silently replace
+Interface's published SDK pin `3bfc8b6f…dd2bc83` (and sdist `9e15850d…8b4e07`).
+The explicit compatible API/Interface selection now passes the original full
+native gate: **57 PASS, zero FAIL, 58 collected**, with only the original
+`retained pre-fix native WebGL evidence` optional case NOT_RUN. Exact case IDs
+and order match. The original three-command gate took 2,281.0s; browser JUnit
+records 2,166.553819s. Local manifest SHA-256 is
+`e9c753fb68bd2d4fde327f7f641184b0ac627ab4f6cf717d5cc143c680e8e7bf`;
+durable browser verification receipt
+`e304d9921863d6373c385f2a10c87316c5a97ffc1a9fa2a1e187ce7dbb9ba5ef`
+binds the inspected native result. API artifact source remains 28221a5 and
+Interface artifact source remains 461b087, including after docs-only descendants.
+This is local compatible-candidate acceptance, without replacing immutable
+0.1.1 bytes or claiming hosted four-CPU acceptance or a measured hover speedup.
+
+Local clean 28221a5 verification independently reinstalled the original published
+15 artifacts plus rollback anonymously in 216.469s and passed the registered
+installed-package group in 124.7s. That package group builds API from committed
+source and selects published Contracts/Simulator/Hardware; it does not establish
+an all-candidate install or a browser/production result. Receipt
+`c38507bca5409379eb5ab6f1567f2b9e9230d37341f2cb5db9591365e622c765`.
+
+- [x] Commit/push the six reviewed source baselines; verify their five producer workflows and nine observed Remote non-browser workflows. Later docs-only master CI is tracked separately.
+- [x] Revalidate the original published selection through canonical URLs and complete the separate clean-install/registered-package probes.
+- [x] Preserve all published 0.1.1 bytes/tags and exact old-note history while updating only six release titles/notes.
+- [x] Build/retain/rehash 13 unpublished candidates from six committed sources, with explicit compatibility differences and original rollback retained.
+- [x] Complete/inspect the actual original full local native gate for the explicit compatible new API/Interface set: 57 PASS, zero FAIL and the sole historical optional NOT_RUN.
+- [x] Collect/inspect the resolved original published-set hosted result: run40748387829 CANCELLED / NOT_PASS, without inventing a final PASS total.
+- [ ] Resolve blocked hosted/release acceptance for the intended artifact selection; the separate local candidate PASS does not close that gate or authorize new immutable bytes.
+- [ ] Resolve any required new artifact/tag/version decision with the user using the concrete comparison; no immutable overwrite, retag or automatic 0.1.2 selection.
+- [ ] Finish the applicable current documentation/CI/recoverable-bundle and inspected owned-session handoff. M6 remains incomplete until its actual remaining gates are satisfied.
+
 
 **M6 remains incomplete.** Published immutable 0.1.1 releases and the completed
 history-only branch cleanup are preserved. The latest user attachment authorizes
@@ -42,10 +123,9 @@ The current Git [system manifest](../../integration/release-set.json) changes
 only 26 repository/asset URL fields to CIRNETLAB/CIRNET-*; all 15 selected asset
 IDs, original build revisions, versions, filenames, digests and compatibility/
 rollback pins stay unchanged. The historical immutable system-manifest asset
-`684998628` and published notes remain byte-preserved. Current source validators
+`684998628` remains byte-preserved; current release-note metadata appends preserve the original bodies as exact prefixes. Current source validators
 accept coherent exact historical or current repository provenance while rejecting
-mixed transport and unrelated identities. The 132 focused working-copy tests
-passed; final integrated clean-install/hosted evidence is still required.
+mixed transport and unrelated identities. The earlier 132 focused working-copy tests preceded current committed-source non-browser/clean-install/package PASS evidence; full native acceptance remains separate.
 
 ### Completed history backup and merged-branch cleanup
 
@@ -95,29 +175,29 @@ hosted CI PASS, observed 2026-10-28 18:20 UTC. Their four complete pre-push bund
 were actually restored/fsck-checked, with original tags preserved; durable promotion
 receipt `a30b302afd0ddf5025bd337da25da793b1edd8af5c79e94c250265fb3e5b49d2`
 is under `C:/Users/trann/.codex/migration-release-backups/m6-promotion-20261028-f79860e8/cirnet-four-leaf-before-push-e8a55c5e/`.
-Interface's 14-file rename is now pushed and synchronized at 631d41b, with exact-head
-Standalone Interface CI PASS. Its complete pre-push bundle was restored/fsck-checked,
+The initial Interface rename at 631d41b passed hosted CI; current Interface `461b0870dbe7975d6bfdf336c6d5ef87e72c8970` adds the bounded hover invalidation correction and is pushed/synchronized with [40749926343 PASS](https://github.com/CIRNETLAB/CIRNET-Interface/actions/runs/40749926343). The initial 631d41b checkpoint's complete pre-push bundle was restored/fsck-checked,
 with the original tag preserved; promotion receipt
 `17335b36bb3027a49fa41ed5b005f10df4772bec4357a9c0ba658a9e36488da7`
 is under `C:/Users/trann/.codex/migration-release-backups/m6-promotion-20261028-f79860e8/cirnet-interface-before-push-d53ca688/`.
-All five producer masters now have exact-head hosted CI PASS. Remote source/
-manifest/docs are being integrated. Local source folders retain net-Circuit-*.
+The current 461b087 checkpoint has its own full pre-push bundle/actual mirror
+restore/strict fsck proof, preserving the original tag:
+`C:/Users/trann/.codex/migration-release-backups/m6-promotion-20261028-f79860e8/cirnet-interface-hover-before-push-85edce1b/PROMOTION_RECEIPT.json`,
+SHA-256 `9029e8428a0b983d4256b8942eb17c4b6ff1f23e0d2e84b6d7db68ca8ca6aa08`.
+All five accepted producer runtime/source baselines have exact-head hosted CI PASS; Interface docs-only master a7de79a also has exact-head CI PASS. Remote `28221a5ca19d04225e9399895764a12149188681` is also pushed/synchronized with nine observed non-browser workflows PASS; the published-7a browser job is resolved CANCELLED / NOT_PASS. Local source folders retain net-Circuit-*.
 
 | Owner | Rename source checkpoint | Actual local evidence / remaining scope |
 | --- | --- | --- |
 | Contracts | `41dd34510bf39b9fe6093738965f81ac7d64f2b4` | Clean committed export; 500 primary + one CI + 15 Node + two Python allocator tests PASS; generation/compatibility, wheel/sdist/public SDK, independent sdist wheel and fresh isolated resources/RPC/OpenAPI probes PASS. Hosted [40742625944 PASS](https://github.com/CIRNETLAB/CIRNET-Contracts/actions/runs/40742625944) at this exact master |
-| Simulator | `dfa5fbe1ce5ff7fe4f3a5f033e419adcf656a488` | Committed rename metadata; isolated baseline/candidate checks PASS; hosted [40742637237 PASS](https://github.com/CIRNETLAB/CIRNET-Simulator/actions/runs/40742637237) at this exact master |
-| Hardware | `4d7e75389d3671476e2aabbf0359681f057e9704` | Committed rename metadata; isolated baseline/candidate checks PASS; hosted [40742650852 PASS](https://github.com/CIRNETLAB/CIRNET-Hardware/actions/runs/40742650852) at this exact master |
+| Simulator | `dfa5fbe1ce5ff7fe4f3a5f033e419adcf656a488` | Clean committed export; 110 tests and baseline/candidate comparison checks PASS; hosted [40742637237 PASS](https://github.com/CIRNETLAB/CIRNET-Simulator/actions/runs/40742637237) at this exact master |
+| Hardware | `4d7e75389d3671476e2aabbf0359681f057e9704` | Clean committed export; 108 tests and baseline/candidate comparison checks PASS; hosted [40742650852 PASS](https://github.com/CIRNETLAB/CIRNET-Hardware/actions/runs/40742650852) at this exact master |
 | FPGA | `0ccca05baafc85289459ecfd20c8f4a163a8596f` | Clean committed export; 19 tests PASS in 89.89s, pinned actual RTL with both PASS markers, repeated source artifact byte-identical. Hosted [40742663529 PASS](https://github.com/CIRNETLAB/CIRNET-FPGA/actions/runs/40742663529) at this exact master |
-| Interface | `631d41b36f0cdbaf1aafe6510baf2ddd514f306c` pushed/synchronized master | 1,461 unit/type tests, 22 script tests and build PASS locally; hosted [40744519633 PASS](https://github.com/CIRNETLAB/CIRNET-Interface/actions/runs/40744519633) at this exact master. External performance experiments are not adopted native evidence |
-| Remote | Working copy over `23ca0827` | 132 focused selection/manifest tests PASS; committed build, complete integration/clean install and exact-final-master hosted/native acceptance still open |
+| Interface | Runtime/artifact source `461b0870dbe7975d6bfdf336c6d5ef87e72c8970`; docs-only pushed master `a7de79a938a0df910641421e97607d71bcefcb8c` | 1,467 unit/type tests, 22 scripts, 10 Contracts checks, types/boundaries/build and runtime hosted [40749926343 PASS](https://github.com/CIRNETLAB/CIRNET-Interface/actions/runs/40749926343). Compatible local full native 57 PASS / zero FAIL / one historical optional NOT_RUN. Docs-only [40760666418 PASS](https://github.com/CIRNETLAB/CIRNET-Interface/actions/runs/40760666418) is at this exact master |
+| Remote | `28221a5ca19d04225e9399895764a12149188681` pushed/synchronized master | Nine observed non-browser workflows PASS, 1,421 Python tests, 18 PostgreSQL cases, authenticated 15-artifact installation; separate anonymous clean install and registered-package group PASS. Compatible local native passes as scoped below; old-set hosted result CANCELLED / NOT_PASS; hosted/release acceptance and full M6 remain open |
 
 The bounded external PSU memo experiment retained exact parity but showed 61s to
 64s with only 0.87% hits; it was not adopted. This single scoped measurement does
 not establish a performance improvement or replace the complete native gate.
-The box hypothesis was also rejected. A separate external six-case prototype
-reproduced five RED failures before six GREEN results; it has not been adopted,
-and no original-source performance patch is active at this checkpoint.
+The box hypothesis was also rejected. A separate external six-case prototype reproduced five RED failures before six GREEN results. The bounded three-runtime-file hover invalidation correction and six regressions are now committed at 461b087; assertions, deadlines, retries, DPR and baselines remain unchanged. Seventeen focused native SceneManager RGBA checks pass. A representative full 2560x1440 gizmo-enter PNG was inspected (preview resizing affected display only); parity assertions used full raw RGBA. These focused results do not establish the full 58-case native gate.
 
 Contracts retained all committed export inputs, package identities/versions,
 schemas, protocols and source LICENSE bytes. Raw candidate-vs-published wheel
@@ -165,13 +245,212 @@ canonical URLs matched existing digests; anonymous download receipt
 None of these new candidates has been uploaded, selected as a released build,
 used to move v0.1.1, or assigned a new product version.
 
+### Existing published selection through current canonical URLs
+
+These are the **15 reused published artifacts**, not the new candidates. Every
+source revision below is the artifact's original build source. Current repository
+master, immutable tag target and artifact build revision remain distinct.
+The exact Git manifest is linked at commit
+[`28221a5`](https://github.com/CIRNETLAB/CIRNET-Remote/blob/28221a5ca19d04225e9399895764a12149188681/integration/release-set.json),
+LF SHA-256 `7b6e0ee9ba09d6b13d5f73cd0bf783f3f001422a424a84477622cfdb08232a2e`.
+
+| Owner / role | Original artifact build source | Filename / canonical numeric asset | SHA-256 |
+| --- | --- | --- | --- |
+| Remote / python | `82ca15bec250894c39c2849ab4a3eaaeb7712b05` | [netcircuit_api-0.1.1-py3-none-any.whl](https://api.github.com/repos/CIRNETLAB/CIRNET-Remote/releases/assets/684944254) (ID 684944254) | `50d3d2610ceaa0d00d926c83e4d4a9b5039ecc2a67fa8d19d979d28f051a1906` |
+| Remote / sdist | `82ca15bec250894c39c2849ab4a3eaaeb7712b05` | [netcircuit_api-0.1.1.tar.gz](https://api.github.com/repos/CIRNETLAB/CIRNET-Remote/releases/assets/684944433) (ID 684944433) | `badc2f9308d3f3e48ff79ec73ac20e2337b22a3c7cfbc779029444599d43feba` |
+| Remote / deployment | `82ca15bec250894c39c2849ab4a3eaaeb7712b05` | [netcircuit-remote-0.1.1-deployment.tar.gz](https://api.github.com/repos/CIRNETLAB/CIRNET-Remote/releases/assets/684944615) (ID 684944615) | `0c4af2a06a9a03f0a662862aa934db7a026ffe4b4b01a30593f3518d9c2d179d` |
+| Contracts / python | `54ef9f6a11f4906c11ec9789de47cf06d5100734` | [netcircuit_contracts-0.1.1-py3-none-any.whl](https://api.github.com/repos/CIRNETLAB/CIRNET-Contracts/releases/assets/682226130) (ID 682226130) | `5dd663c6bfe6b9dd39b5f4b86ffd24eeed8bed9b2898aaedb35f99debb0cbcc2` |
+| Contracts / sdist | `54ef9f6a11f4906c11ec9789de47cf06d5100734` | [netcircuit_contracts-0.1.1.tar.gz](https://api.github.com/repos/CIRNETLAB/CIRNET-Contracts/releases/assets/682226235) (ID 682226235) | `9e15850d42ddc61311979cec2df95f5e55d07699e7cbfd83a8f24f0b988b4e07` |
+| Contracts / npm | `54ef9f6a11f4906c11ec9789de47cf06d5100734` | [tinihi-labs-contracts-0.1.1.tgz](https://api.github.com/repos/CIRNETLAB/CIRNET-Contracts/releases/assets/682226359) (ID 682226359) | `3bfc8b6f84b645cd6b7864bd1391de1d5efdc6ee4ba653cb92e145a3ddd2bc83` |
+| Contracts / dev | `54ef9f6a11f4906c11ec9789de47cf06d5100734` | [netcircuit_artifact_paths-1.0.0a1-py3-none-any.whl](https://api.github.com/repos/CIRNETLAB/CIRNET-Contracts/releases/assets/682226469) (ID 682226469) | `ff76532c69b2115338edb641660c966c5459dd40cb806f52a1e2e8c379c70a1f` |
+| Contracts / dev_npm | `54ef9f6a11f4906c11ec9789de47cf06d5100734` | [tinihi-labs-artifact-paths-1.0.0-m1.0.tgz](https://api.github.com/repos/CIRNETLAB/CIRNET-Contracts/releases/assets/682226570) (ID 682226570) | `53190cceb3eee6bb92e91edf1eda0c01043e0ea095cbba1e745a0f7103e6f6df` |
+| Interface / source | `7a266d15b510d840ad3146515a3699760564ed32` | [netcircuit-interface-0.1.1-source.tar.gz](https://api.github.com/repos/CIRNETLAB/CIRNET-Interface/releases/assets/684942791) (ID 684942791) | `bd3f529454dd129d90a27ce7ee76c84400481f1cc6452150d32233973c42c4b4` |
+| Interface / static | `7a266d15b510d840ad3146515a3699760564ed32` | [netcircuit-interface-0.1.1-static.tar.gz](https://api.github.com/repos/CIRNETLAB/CIRNET-Interface/releases/assets/684942968) (ID 684942968) | `f7e87d32b314982503a7e9bd1f213812c6a927914276f98825983191ac924055` |
+| Simulator / python | `ff63616a7a8c5d3f65e60cdb85db2b4b4ab42fa7` | [netcircuit_simulator-0.1.1-py3-none-any.whl](https://api.github.com/repos/CIRNETLAB/CIRNET-Simulator/releases/assets/684943145) (ID 684943145) | `78b857369baec88800d08e37977afacca3321decd05b6cd50ea925c033ea7b89` |
+| Simulator / sdist | `ff63616a7a8c5d3f65e60cdb85db2b4b4ab42fa7` | [netcircuit_simulator-0.1.1.tar.gz](https://api.github.com/repos/CIRNETLAB/CIRNET-Simulator/releases/assets/684943330) (ID 684943330) | `6afd1b9a68768f527fd5ee1f864287c88d56b6a97c0a7fd7b2b7bd560bb0cfd2` |
+| Hardware / python | `de65db8b89d0dfa6dd4c430a41397555bc77111d` | [netcircuit_hardware_service-0.1.1-py3-none-any.whl](https://api.github.com/repos/CIRNETLAB/CIRNET-Hardware/releases/assets/684943575) (ID 684943575) | `f6fc643bc40130a0f8b4136db8db4f8abe1b0b366efaffa8c1866786429d9e9b` |
+| Hardware / sdist | `de65db8b89d0dfa6dd4c430a41397555bc77111d` | [netcircuit_hardware_service-0.1.1.tar.gz](https://api.github.com/repos/CIRNETLAB/CIRNET-Hardware/releases/assets/684943851) (ID 684943851) | `3754bfc3338cc6c17dd66b16788c502cdd414e2b4e01a1e2c0ffaed24b0060fb` |
+| FPGA / source | `24ade35eade5382efd42f784008280c0fbb768c3` | [netcircuit-fpga-scaffold-0.1.1.tar.gz](https://api.github.com/repos/CIRNETLAB/CIRNET-FPGA/releases/assets/684944031) (ID 684944031) | `b82edb4167b821f55d98331304d0c49d2f37638d972fc9c167287bb6368908ca` |
+
+Authenticated hosted installation at 28221a5 verified these 15 selected files,
+versions, installed origins and package closure; receipt
+`b8b14dfad9bdeec9cb834cf643c4a0e08de89a0ddbe6d1019122f7142c7ad330`.
+Credential scope remains NOT_VERIFIED; successful downloads do not prove least
+privilege. The separate anonymous clean install and registered package probes
+are bound by `c38507bca5409379eb5ab6f1567f2b9e9230d37341f2cb5db9591365e622c765`,
+published selection state `fc5a7be9ee963fd185d9a9d3e370d2217ec9e1275bc87fbebc4893ea6a778a47`
+and verification `4b58ad71941f5b1b79ad1b46b33f4fdf83c45aebdb75726ed01c6774f6c64bf4`.
+The installed published API is `50d3d261…a1906`, with all 69 owned application
+files verified; the new candidate API is not implicitly selected by that install.
+
+### All 13 UNPUBLISHED candidates from six committed sources
+
+All rows below are independently built/retained candidates, not replacements of
+the immutable artifacts above. Four durable inventories and the combined rehash
+receipt `7098ad0ba242a20a878c8ed4975f2727208202adc6ad83bd3fba1696c22566f5`
+bind exact source, filename, byte count and full digest. No all-new candidate set
+has been installed together. Contracts SDK candidate metadata changes cannot
+silently replace the old SDK/sdist pins still required by the new Interface.
+
+| Owner / candidate filename | Committed build source | SHA-256 | Bytes / disposition |
+| --- | --- | --- | --- |
+| Contracts: `netcircuit_contracts-0.1.1-py3-none-any.whl` | `41dd34510bf39b9fe6093738965f81ac7d64f2b4` | `a86e30faa6f3c0a0ee3b83c3d5061177928a67c71620918d20d8b000e07397e1` | 1277120; UNPUBLISHED |
+| Contracts: `netcircuit_contracts-0.1.1.tar.gz` | `41dd34510bf39b9fe6093738965f81ac7d64f2b4` | `02d5492810dca67e3c9300d191d3529141d389e100790343f2d654b73c29bd1b` | 1287191; UNPUBLISHED |
+| Contracts: `tinihi-labs-contracts-0.1.1.tgz` | `41dd34510bf39b9fe6093738965f81ac7d64f2b4` | `2cdcfae6f617746c95c94827868b6e7e5a077c467dcb48f639394b638ca042b1` | 823983; UNPUBLISHED |
+| FPGA: `netcircuit-fpga-scaffold-0.1.1.tar.gz` | `0ccca05baafc85289459ecfd20c8f4a163a8596f` | `ba96307b148ca62a3fd6a73920f338e926246cb367273ae98d790bb3317bcc83` | 56973; UNPUBLISHED |
+| Hardware: `netcircuit_hardware_service-0.1.1-py3-none-any.whl` | `4d7e75389d3671476e2aabbf0359681f057e9704` | `3d88031382cdbe3b3648507a6c00c946d7473b6c9a60c1ebb461be24e66de5de` | 29587; UNPUBLISHED |
+| Hardware: `netcircuit_hardware_service-0.1.1.tar.gz` | `4d7e75389d3671476e2aabbf0359681f057e9704` | `9c559177149d519352fe1783bf57d1284d90ce253d95f5cc9b67f6a0067f48c8` | 76203; UNPUBLISHED |
+| Interface: `netcircuit-interface-0.1.1-source.tar.gz` | `461b0870dbe7975d6bfdf336c6d5ef87e72c8970` | `4d80590440cae2fe6fbab9e8f9a73e3c76c1cd0b40e494974f98d6e160ea790f` | 2400348; UNPUBLISHED |
+| Interface: `netcircuit-interface-0.1.1-static.tar.gz` | `461b0870dbe7975d6bfdf336c6d5ef87e72c8970` | `a6e4d528e0eee5b34be9f4802d80cfb6552ceee89ad33f75d8ccbb5388e7e2eb` | 2192776; UNPUBLISHED |
+| Remote: `netcircuit-remote-0.1.1-deployment.tar.gz` | `28221a5ca19d04225e9399895764a12149188681` | `3c47f719293a124b4061464ce4f6e7ae8c2d35b9672067be0951394e73ea12fa` | 22950; UNPUBLISHED |
+| Remote: `netcircuit_api-0.1.1-py3-none-any.whl` | `28221a5ca19d04225e9399895764a12149188681` | `193f1ea85a959e649d6949240bef53b439d4100a71bd1c79c5a53c515538fc5c` | 100218; UNPUBLISHED |
+| Remote: `netcircuit_api-0.1.1.tar.gz` | `28221a5ca19d04225e9399895764a12149188681` | `4cc3dd42e3629ddbbbd32780f04f40b3bac8cd539694c9b246feef666480e7b1` | 157348; UNPUBLISHED |
+| Simulator: `netcircuit_simulator-0.1.1-py3-none-any.whl` | `dfa5fbe1ce5ff7fe4f3a5f033e419adcf656a488` | `546b1f3a738a45a0d4a01fdf52e427cd42a15e3e46268ba8fc370c28c6b234a9` | 33630; UNPUBLISHED |
+| Simulator: `netcircuit_simulator-0.1.1.tar.gz` | `dfa5fbe1ce5ff7fe4f3a5f033e419adcf656a488` | `831456d5639bb637ac8afd2a3c21b779ebf7d41d1bbb9365903e49834315c713` | 81084; UNPUBLISHED |
+
+Current compatible browser validation selects **new API 28221a5 + new Interface
+461b087**, with the original published Contracts wheel, SDK `3bfc8b6f…dd2bc83`,
+sdist `9e15850d…8b4e07`, Simulator ff63616, Hardware de65db8, FPGA 24ade35,
+DEV wheel/npm and unchanged rollback. It is an explicit local artifact selection,
+not sibling source, `latest`, or a mix of all 13 candidates. Its complete original 58-case native result is now adjudicated and inspected:
+57 PASS / zero FAIL / the sole original historical optional NOT_RUN, bound to
+local manifest `e9c753fb68bd2d4fde327f7f641184b0ac627ab4f6cf717d5cc143c680e8e7bf`
+and durable browser verification
+`e304d9921863d6373c385f2a10c87316c5a97ffc1a9fa2a1e187ce7dbb9ba5ef`. The registered runner uses the existing
+58-case order/assertions/deadlines/retries/DPR/worker settings; only the owned
+external output-directory adapter supplies its output location. No local
+compatible-set or metadata proof grants
+physical/native-solver/deployment capability or authorizes immutable replacement.
+
+### Release-note metadata update and URL audit
+
+GitHub explicitly permits editing immutable release titles/notes while assets and
+associated tags stay locked: [immutable release policy](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases).
+Exactly six approved name/body-only PATCHes were performed. New titles/notes
+retain each old body as an exact prefix and explicitly distinguish current Git
+manifest LF bytes from the historical immutable system-manifest asset. Fresh
+readback preserves all 31 assets/digests/tag objects, draft/prerelease/immutable
+policy/latest IDs. Durable operation receipt
+`7c044d3583ad89ec3157f08a01a6111d4141e343afa024be8439f9401b314208`;
+original publication journal `1eb5efdd…9db20` remains untouched. This is a metadata
+and URL/provenance revalidation, not a newly published 0.1.1 build or M6/native PASS.
+
+The read-only six-tree URL audit at current masters reviewed 126 matches in
+29 files. Remaining old URLs are pinned/history/model provenance, synthetic
+negative/301 tests, explicit exact historical-artifact aliases or documented name
+mappings; there are no unexplained active old URL defaults. Current workflow
+selection and the 15 Git-manifest URLs are direct canonical CIRNET paths.
+Audit receipt `f989e7396a521f7ecfcc4208297d9d7343224f0db9e9f22081bd3427bacf333c`.
+No historical source/asset/baseline or technical package/import/environment/
+protocol/local-folder identity was rewritten by that audit.
+Independent final scope review receipt
+`bd0a91137b6b3770f3593941bfd4f8455e3a3013a070d1ea9105757faa83f37f`
+also verifies unchanged LICENSE/RTL/assets/baselines/browser harness and exact
+published SDK/sdist/DEV pins across current source changes. Contracts candidate
+raw wheel members include the recorded line-ending/RECORD changes; its payload
+must not be described as raw byte-identical to the published wheel.
+
+### Accepted local browser result and current handoff
+
+The exact API282/Interface461 artifact selection completed the original
+three-command native gate in **2,281.0s**, with all commands exiting zero.
+JUnit records **57 PASS, zero FAIL, 58 collected**, with the sole optional
+`depth-artifacts.spec.ts` / `retained pre-fix native WebGL evidence` NOT_RUN,
+and 2,166.553819s. Exact original case IDs/order match SHA-256
+`14e7610cddd366751da0ea9cd90028434b928c285bee600cdff31ef81c37358b`.
+The unchanged DPR2 hidden-layer test completed all 30 poses with zero leaks
+in 128.492s. This case directly drives the depth harness and does not exercise
+the pointer-hover scheduling fix; these measurements do not establish a hover
+wall-clock gain. The existing assertions, deadlines, retries, DPR, renderer
+flags, worker, runtime locks and baselines stay unchanged.
+
+The actual native runtime is the owned Playwright 1.64.1 Chromium copy,
+executable SHA-256 `f77d8e27c8db1e4ac0399459a00e0c97bb9417adc393474cabaffebe2314ecb0`,
+with local Node 24.20.0/Python 3.12.12, 16 logical CPUs and
+34,049,417,216 bytes physical memory. This is not the hosted four-CPU runner
+and does not turn earlier hosted failures/cancellation into a PASS. The old
+published-set hosted browser run 40748387829 is resolved CANCELLED / NOT_PASS
+as recorded below; it is separate from this accepted local compatible set.
+
+Sanitized proofs are durably retained under
+`C:/Users/trann/.codex/migration-release-artifacts/cirnet-compatible-current-browser-20261029-28221a5-461b0870-0cb4f345/`:
+
+| Proof | SHA-256 |
+| --- | --- |
+| `BROWSER_VERIFICATION.json` | `e304d9921863d6373c385f2a10c87316c5a97ffc1a9fa2a1e187ce7dbb9ba5ef` |
+| Full JUnit | `1787018335722eb9299a8cc1d9264771b75009f319bbb2fab321645e757918c0` |
+| Full native adjudication | `a7ef9d245cadd3cae59ebc8c2693e74d668d47e08fc0597fd7147c0db35f41b3` |
+| Post-run inspection/process closure | `943a0d9b2c7baa3cc2c47e739012c44be74570971dbc373a54f8c740411ee2f9` |
+| Original Interface source preservation guard | `1422b38fbd5a734531a16ed8a6c2fb8e515e3dd438a6882cb5d1424c5aecfeb2` |
+| Durable proof inventory | `b3dffae3d65bb92bdf2636698f079cbcf4ac367d0af51b72092159a187ed48e2` |
+
+Actual full-workspace Label text and molded DIP/wire images were inspected.
+All owned full-run processes exited and service ports 18181/15151/14173 closed;
+all selected API 69 application files and Interface export inputs remain exact.
+The source guard checks clean tracked source/index, tags, LICENSE, worktrees
+and the original 7,569 ignored-path inventory. The old promotion baseline only
+contains ignored path hashes, so historical ignored-content equality is not
+claimed. This scoped process closure does not mean the entire session is cleaned.
+
+Interface's later documentation-only master
+`a7de79a938a0df910641421e97607d71bcefcb8c` is an ordinary descendant of 461b087;
+it was pushed after a complete all-ref bundle/actual mirror restore/strict fsck,
+with promotion receipt `899e2c8f881e56e79c13d43745486b52ec41e7020b14d4320c3a808204531bed`.
+Its new hosted Standalone run 40760666418 now passes at this exact docs-only head. The accepted artifacts
+are still built from 461b087/28221a5, never from this docs-only descendant.
+
+Remote's GitHub About description alone was changed from net*CIRCUIT to CIRNET;
+receipt `6a1d4538e593084390cfe867ac5665a61239563b2bce936c1434defe877f00f5`
+preserves all other selected repository settings and records zero source/tag/
+release-asset mutations. A separate minimal tail session was prepared with the
+same owner/six-root context, receipt
+`625c88a127a64b2118619d08d62ae0e08ba3287fdcc8d801d64534f81a054b2a`;
+its interpreter is outside the original session. Canonical cleanup of the original six-root session is now **PASS**, bound by
+`fcce9feef17bc4ea1a3d551eb52a934573941b9cc250978a643082a9220788c0`. Durable native proof retains the
+actual JUnit/plain gate log plus sanitized metrics outside Git; screenshots,
+traces, database files and browser caches were not copied into that proof set.
+No claim is made that all historical/raw evidence elsewhere has been deleted.
+Final current documentation CI, recoverable history bundles, applicable hosted
+acceptance and any user release-selection decision must finish before closing M6.
+
+### Resolved old published-set hosted cancellation
+
+Hosted [run 40748387829](https://github.com/CIRNETLAB/CIRNET-Remote/actions/runs/40748387829),
+job 123028168080 at Root source28221a5, is **CANCELLED / NOT_PASS** after
+5,441s (90m41s). Its explicitly logged selected Interface is the old published
+source `7a266d15b510d840ad3146515a3699760564ed32`, archive SHA-256
+`bd3f529454dd129d90a27ce7ee76c84400481f1cc6452150d32233973c42c4b4`.
+The partial run started 55 of 58 case ordinals and contains ten explicit
+numbered failure headers. No final JUnit exists; PASS total is unknown (`null`).
+Started ordinals include the original optional case and do not imply completed
+passes. The inspected terminal receipt is
+`3b00b73ee201a48ab7453cc7aff208d63948009b0f5bf41dbf151e1d34da6285`.
+
+Actual stdout measured Windows Server2025/Python3.12.10, four CPUs/affinity
+[0,1,2,3] and 17,174,360,064 memory bytes. The 671,401,228-byte diagnostic ZIP
+has SHA-256 `20523b89559b71e2bb42287157b9582a67bbe7c5bf56f3df1d0335864a1b00d5`;
+231 members passed safe extraction checks. A genuine old-shell failure image
+was inspected and showed an API timeout; that image does not represent the
+accepted new Interface461 candidate. The collector exited with no owned
+collector processes remaining. Raw ZIP/screenshots/traces were not copied into
+the durable current-candidate proof directories.
+
+This resolves observation of the old job, **without satisfying hosted release
+acceptance**. Existing immutable0.1.1 artifacts remain their original old-source
+builds and cannot be called fixed/rebuilt from current master. The separate
+API282/Interface461 local result remains 57 PASS / zero FAIL / one original
+historical optional NOT_RUN. Publishing the new Interface bytes requires the
+user's explicit release/version choice after the remaining independent cleanup,
+documentation commit/push and recoverable handoff work; no version is selected
+automatically and no existing asset/tag is overwritten. Original shared-session cleanup has now completed canonically; final metadata
+handoff/independent-tail cleanup is tracked separately below.
+
 ### Hosted Windows baseline and remaining gates
 
 Run [40725519551](https://github.com/CIRNETLAB/CIRNET-Remote/actions/runs/40725519551),
 job 122947595339, remains **CANCELLED / HOSTED_WINDOWS_NATIVE_NOT_PASS** at
 baseline source `23ca0827d94d54bff34ffd2d47286d414553bf26`, not the new rename
-sources. It reached the unchanged 90-minute job envelope; the inspected partial
-log records 39 completed passes/eight failures. No final JUnit path was present,
+sources. It reached the unchanged 90-minute job envelope; the inspected partial log contains eight failure headers and shows 55 of 58 cases started. No final JUnit path was present,
 so no complete 58-case or 57-mandatory-pass result is claimed. Receipt
 `2effc3c6124ffee4d77dfcec4fd82f478a21a083ff150dad7855e9e7d2dd22ee`,
 actual log `195a76b38c481dd5e273c92928526bed7557da11a234acf2e3faa891fb8654f9`,
@@ -192,10 +471,10 @@ current session is still pending inspection/process exit/durable retention.
 
 - [x] Six canonical names/origins, unchanged immutable identities, 60 CI URL variable readbacks and preserved selected artifact pins.
 - [x] Actual six-bundle restores and exact 11 remote / 16 local merged-branch cleanup with all 27 tips reachable; no native acceptance inferred.
-- [x] All five producer rename commits pushed with exact-master hosted CI PASS; clean committed Contracts/FPGA build/test/comparison proofs and durable unpublished candidates.
-- [ ] Finish Remote source review and all final committed producer/integration/clean-install gates without changing assertions/deadlines/retries/baselines.
+- [x] All six reviewed source baselines pushed/synchronized, five source producer workflows and nine observed Remote non-browser workflows PASS; committed comparisons/all 13 candidates retained. Interface docs-only descendant also has exact-head CI PASS.
+- [x] Complete and inspect the original compatible local native gate: 57 PASS / zero FAIL / one original historical optional NOT_RUN. Hosted old-set acceptance and any release-selection decision remain separate.
 - [ ] Resolve artifact selection truthfully: retain/revalidate the original immutable 0.1.1 sources/bytes, or obtain a concrete user release decision before any required replacement/tag movement; no automatic version bump.
-- [ ] Complete normal final master pushes, verify live exact source/hosted CI including a real complete native result, retain final recoverable history bundles and close the current documentation/session handoff.
+- [ ] Complete remaining native CI, retain the final current documentation/recoverable bundle and close inspected owned-session cleanup; normal current master pushes are complete.
 
 The earlier full95/final-docs-only helpers bind their recorded 23ca/65 source
 scope and cannot be reused as acceptance of these broader rename-source changes.
@@ -297,6 +576,22 @@ Both completed hosted Linux attempts retain 50 PASS / seven FAIL / one optional 
 The bounded CI candidate changes only the browser job to `windows-latest`, explicitly defaults its run steps to Bash and renames platform dependency installation. A sanitized resource stdout step records actual OS/Python/CPU affinity/memory so future runner claims have measured context. Existing Python/Node/Playwright pins, versioned Interface source artifact, 58 test bodies, DPR, deadlines, retries, single worker, full-list command, real loopback API/RPC services, safe restart/shutdown and owned browser/runtime evidence policy remain unchanged. The already recorded complete Windows baseline is a reason to test this environment, not a claim that the new hosted Windows gate passed. Production Linux service compatibility retains its independent Linux backend/Contracts/Web/integration coverage and separately recorded full local Linux browser result.
 
 At the initial candidate checkpoint, hosted Windows native acceptance was NOT_RUN; its later actual cancelled result is recorded in the current section above. No published artifact/tag is overwritten, no new product version is introduced, no baseline/assertion is weakened and no migration branch is deleted. This workflow change does not rebuild the API/deployment packages or change the canonical system manifest. Fresh workflow syntax/policy checks and exact-master hosted results follow before any full M6 acceptance claim.
+
+### Original shared-session cleanup and final metadata handoff
+
+The original six-root session was canonically removed after native/collector
+process closure and evidence inspection. Cleanup receipt SHA-256
+`fcce9feef17bc4ea1a3d551eb52a934573941b9cc250978a643082a9220788c0`
+records exit zero, the original session absent and all six HEADs, refs,
+worktree/status snapshots, LICENSE bytes and ignored-path inventories unchanged.
+The original owner/six-root context was retained. Durable Git bundles, selected
+release artifacts, all 13 candidates and inspected native proof remain separate.
+The independent tail session uses a global Python base and pinned DEV allocator;
+its final metadata checks, normal documentation promotion/backup and cleanup
+are recorded in the durable final handoff inventory outside Git. These later
+metadata-only steps do not relabel API282/Interface461 artifact build sources.
+Hosted old-set acceptance remains NOT_PASS, and a new artifact release requires
+the user's explicit version/release choice; no immutable asset or tag is replaced.
 
 ## Historical execution chronology
 
