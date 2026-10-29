@@ -70,7 +70,56 @@ all other 0.1.1 products/DEV/rollback and records the integration revision
 separately. Actual CI-secret draft access, new selected browser and final master
 CI are still pending; historical local 57/0/1 is not acceptance of this set.
 
-Started: 2026-10-27; current update: 2026-10-29, Asia/Saigon. Status: M6_V012_SELECTED_VERIFICATION_IN_PROGRESS. The records below retain their historical scope. No production deployment or board programming is part of M6.
+The first bound commit `794ab06` passed selected-secret installation and real
+PostgreSQL, but Frontend (76 PASS/one FAIL) and Integration (1,455 PASS/one FAIL)
+both exposed the same Remote static branding expectation. Interface's approved
+rename `631d41b` changed its accessible title to `CIRNET Remote`; Remote still
+expected the historical title. The existing test reproduced RED (one FAIL/eight
+PASS), then the exact accessible-title correction passed all 77 frontend tests.
+Only that Python fixture changed at `64c9f85e2a854cfb2c8f625e51076a49bc829881`.
+No native browser case/assertion/configuration/baseline changed.
+
+The new normal push cancelled old browser `40793008672` through its existing
+concurrency rule: cases 1–7 started, no final PASS count; **CANCELLED / NOT_PASS**.
+Replacement [40793753335](https://github.com/CIRNETLAB/CIRNET-Remote/actions/runs/40793753335)
+is executing the actual selected-set suite, not reusing historical local results.
+At `64c9f85`, Frontend `40793753351`, Contracts `40793753310`, Documentation
+`40793753315` and Integration `40793753434` pass. Integration's actual named
+CI-secret receipt verifies source asset `686766559`, static `686766692`, all
+15 archives/rollback and isolated installed origins against manifest SHA-256
+`1354dbe58cf77491ccfd8a5c771b23bf1ca310741bc9ba707bab08d77a214be1`.
+Credential scope remains `NOT_VERIFIED`; no permissions/secrets were expanded.
+
+New local PostgreSQL 18.6 passes all 18 cases in 24.90 seconds on the fresh
+loopback-only 15432 cluster. Exact selected FPGA 0.1.1 source `24ade35`/archive
+`b82edb4167b821f55d98331304d0c49d2f37638d972fc9c167287bb6368908ca` passes
+19 tests with zero skips plus mandatory RTL in 47.175 seconds. Both behavioral
+PASS markers and 372 authenticated support files were inspected; all 37 source
+payloads remain unchanged. RTL receipt SHA-256
+`e6a45f6462fe606c190e6ef41cd314ca6ed236cbaae48f058019df564b65652c`.
+Initial sandbox native execution/loopback/junction restrictions and one external
+test-helper missing toolroot are retained as failed attempts; the unchanged full
+final gates pass with the authorized environment. Two Remote cleanup tests also
+failed because sandbox Git Bash could not create its MSYS object; unchanged
+authorized rerun passes both. These are distinct from code fixes and native PASS.
+
+The separate exact committed-source acceptance has 1,231 payloads equal to Git
+`64c9f85`; only the branding fixture differs from initial `794ab06` export.
+Installer and manifest bytes are identical. Its new clean virtualenv installation
+passes in 193.281 seconds; full registered groups/browser and software rollback
+verification are running. Source/static preparation is separately complete:
+24 script + 10 Contracts + 1,467 runtime tests, AST 229 modules and E2E types,
+all PASS with zero skips. Preparation receipt SHA-256
+`57a439840b192e3383b590e9fc33243493b1945d8344047ef520b2a8a94c6c81`.
+The original sandbox test attempts remain separately recorded.
+
+Remote Integration draft `427329840` holds exactly the Git manifest from
+`794ab06` (identical at `64c9f85`), asset `686803664`, filename
+`netcircuit-system-0.1.2-release-set.json`, SHA-256 `1354dbe5…214be1`.
+Before publication its tag target will be bound to the final validated descendant;
+runtime `3c3c36a` and retained API `82ca15b` provenance remain distinct.
+
+Started: 2026-10-27; current update: 2026-10-29, Asia/Saigon. Status: M6_V012_NATIVE_IN_PROGRESS. The records below retain their historical scope. No production deployment or board programming is part of M6.
 
 ## Current CIRNET rename and release disposition
 

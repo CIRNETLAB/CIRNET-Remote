@@ -80,6 +80,28 @@ Fresh Python 3.12.13 builds reproduced both retained archives byte-for-byte.
 The canonical lock now selects these exact IDs/digests and records the separate
 integration revision above, preserving every other artifact and rollback pin.
 
+The first bound-source CI at `794ab06` exposed one stale Remote Python shell
+branding fixture; Frontend and Integration failed on that exact assertion.
+The selected Interface's approved rename commit `631d41b` already declares
+`aria-label="CIRNET Remote"`. The unchanged fixture reproduced RED (one failure,
+eight passes), then the corrected exact accessible-title expectation passed all
+77 frontend contract tests. Commit `64c9f85e2a854cfb2c8f625e51076a49bc829881`
+contains only this static fixture correction; native cases/assertions, DPR,
+budgets, retries, traces and baselines are unchanged. Its normal push caused the
+older browser `40793008672` to be CANCELLED / NOT_PASS after cases 1–7 started,
+with no final PASS total. The replacement actual browser run is `40793753335`.
+
+Current Frontend, Contracts, Documentation and Integration hosted workflows
+PASS at `64c9f85`; real CI-secret installation verifies both new draft Interface
+assets, all 15 selected archives, rollback and installed origins. Successful
+access does not establish minimum credential scope. Local PostgreSQL passes
+18/18; exact selected FPGA 0.1.1 passes 19/19 and both mandatory RTL benches.
+Fresh committed-export complete browser/other registered groups and actual
+hosted browser acceptance remain in progress before master promotion/publication.
+Remote Integration draft `427329840` retains manifest asset `686803664`, SHA-256
+`1354dbe58cf77491ccfd8a5c771b23bf1ca310741bc9ba707bab08d77a214be1`;
+its bytes equal the Git manifest at both binding and fixture commits.
+
 ## Historical rename scope, 2026-10-29 (Asia/Saigon)
 
 The new user attachment authorizes source/tests/CI/current documentation and
