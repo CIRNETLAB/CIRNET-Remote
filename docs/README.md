@@ -32,7 +32,7 @@ Current authority is [Lab-First v3.1](ARCHITECTURE.md). Historical plans, measur
 | --- | --- | --- |
 | Remote | [CIRNETLAB/CIRNET-Remote](https://github.com/CIRNETLAB/CIRNET-Remote) | API/deployment 0.1.1; approved system/integration 0.1.2 |
 | Contracts | [CIRNETLAB/CIRNET-Contracts](https://github.com/CIRNETLAB/CIRNET-Contracts) | 0.1.1; schemas, catalog, protocols, Python resources and public SDK |
-| Interface | [CIRNETLAB/CIRNET-Interface](https://github.com/CIRNETLAB/CIRNET-Interface) | approved 0.1.2; Web/editor/assets and browser assertions; publication follows actual hosted acceptance |
+| Interface | [CIRNETLAB/CIRNET-Interface](https://github.com/CIRNETLAB/CIRNET-Interface) | approved 0.1.2; Web/editor/assets and browser assertions; publication follows actual full local Ubuntu acceptance under the latest M6 sequencing decision |
 | Simulator | [CIRNETLAB/CIRNET-Simulator](https://github.com/CIRNETLAB/CIRNET-Simulator) | 0.1.1; existing engine and replaceable backend boundary |
 | Hardware | [CIRNETLAB/CIRNET-Hardware](https://github.com/CIRNETLAB/CIRNET-Hardware) | 0.1.1; local RPC, station lifecycle and private transport |
 | FPGA | [CIRNETLAB/CIRNET-FPGA](https://github.com/CIRNETLAB/CIRNET-FPGA) | 0.1.1 source scaffold; pinned RTL verification |

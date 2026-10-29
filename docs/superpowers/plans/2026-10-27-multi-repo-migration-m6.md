@@ -2,6 +2,27 @@
 
 ## Approved 0.1.2 continuation — 2026-10-29
 
+Latest user sequencing supersedes earlier hosted-master waiting requirements:
+after actual repaired local Ubuntu acceptance, commit, ordinary merge/push,
+publish and clean only merged owned codex branches with verified recoverable
+backups. Do not wait for further Actions, and retain their true pending/failed
+outcomes. Original native assertions/cases/DPR/deadlines/retries/traces/baselines
+remain required. Preserve all immutable 0.1.1 assets/tags and unrelated worktrees.
+
+- [x] Inspect final hosted Ubuntu `40804305386`: 52 PASS/five FAIL/one original
+  optional NOT_RUN; retain failures and exact case identity.
+- [x] Reject the full Chromium channel-only workaround after its unchanged
+  singleton also failed the LED export deadline.
+- [x] Commit reviewed Interface repair at `a14d0950`: unchanged wire-edit hover
+  no longer schedules a redundant draw. Focused RED/GREEN, all unit cases across
+  recorded invocations, AST, E2E types and preservation checks are verified.
+- [x] Rebuild corrected committed Interface 0.1.2 twice, replace only unpublished
+  draft candidates and bind the exact corrected artifact selection.
+- [ ] Pass the original complete Ubuntu native gate using fresh artifact-only
+  installation; record its actual scope independently of Actions.
+- [ ] Commit final bindings/evidence, ordinary master promotion/push/publication,
+  fresh recoverable backups and merged owned codex cleanup without Actions wait.
+
 The user explicitly approved Interface **0.1.2** and Remote **integration release
 0.1.2**, retaining API, Contracts, Simulator, Hardware and FPGA **0.1.1** and DEV
 tooling **1.0.0a1**. Existing immutable v0.1.1 tags/assets remain unchanged.

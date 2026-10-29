@@ -77,21 +77,21 @@
     "Interface": {
       "repository": "https://github.com/CIRNETLAB/CIRNET-Interface",
       "version": "0.1.2",
-      "sourceRevision": "f6c8d2735f71de5c1d292476a49aa3a35551a048",
+      "sourceRevision": "a14d0950e71a997e2219a32f7268fd0e9d6502b3",
       "artifacts": {
         "source": {
           "filename": "netcircuit-interface-0.1.2-source.tar.gz",
-          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Interface/releases/assets/686766559",
-          "sha256": "ba0fd15607961204cdce5b50536cc62d7f06fc88251fb69d760cbb9ac5afcf3f",
-          "size": 2402693,
-          "assetId": 686766559
+          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Interface/releases/assets/687308869",
+          "sha256": "2362d98a62a2db0ab3405e76bb6d2a7fba2835aa4d5bd4d2da46fffef3078f82",
+          "size": 2404660,
+          "assetId": 687308869
         },
         "static": {
           "filename": "netcircuit-interface-0.1.2-static.tar.gz",
-          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Interface/releases/assets/686766692",
-          "sha256": "b06b8021509aa8ad5eeb063039179c9170f41f49a9ca2c5ed764955f8b00d4b7",
-          "size": 2192776,
-          "assetId": 686766692
+          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Interface/releases/assets/687308906",
+          "sha256": "d766c46de69739ebae07be0652e0305bbd74b6ed0ed259e0482385e0a716c0ee",
+          "size": 2192026,
+          "assetId": 687308906
         }
       },
       "releaseTag": "v0.1.2"

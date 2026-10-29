@@ -2,6 +2,79 @@
 
 ## Approved 0.1.2 continuation — 2026-10-29
 
+### Latest sequencing decision: local Ubuntu acceptance, no Actions wait
+
+The user explicitly requests commit, ordinary merge/push, publication and
+recoverable cleanup of merged auxiliary codex branches after repairing Ubuntu
+native execution, without waiting for further Actions. This supersedes the
+earlier requirement to await final hosted-master success. Genuine local Ubuntu
+acceptance of the original full gate remains required; pending, cancelled and
+failed hosted runs are never relabelled PASS. No force-push, immutable 0.1.1
+change, unrelated worktree removal, deployment or board programming is included.
+
+The original Ubuntu hosted run
+[40804305386](https://github.com/CIRNETLAB/CIRNET-Remote/actions/runs/40804305386)
+at `f5a84da` completed **58 collected / 52 PASS / five FAIL / one unchanged
+optional historical NOT_RUN**. Failures cover DPR2's existing 360s budget, two
+held-preflight Cancel flows, sealed-gallery export's existing 10s poll and a
+component-closeup camera-settle deadline. All 30 completed depth measurements
+reported `changed=0`; this timing failure does not establish a pixel leak.
+JUnit SHA-256 `481d044d87049292f45772b238e16b63adedc27a50fef8e20e8dde121d9740d9`.
+The four other triggered workflows at that source passed. These outcomes retain
+their original artifact selection and do not accept the corrected candidate.
+
+An unchanged singleton using pinned full Chromium revision 1248 also failed the
+LED export boundary: File click 10,778ms, Export 52ms, process exit 1. The full
+channel is therefore not adopted as a fix. Diagnostic summary SHA-256
+`50182b8b472be2206c3928d0efa17989f14c0f4122d295128eed2e31297b4ae0`.
+
+Interface commit `a14d0950e71a997e2219a32f7268fd0e9d6502b3` repairs an actual
+redundant draw: canvas leave called `hoverWireEdit(null)` and unconditionally
+scheduled a frame even when wire/handle/segment state did not change. All three
+WireLayer updates still run; only the unchanged draw request is removed. Four
+focused regressions were RED before repair; all nine pass afterward, including
+real transitions, selection resets and pending graph/camera frames. Independent
+review found no blocker. Original browser cases/config, assertions, DPR,
+deadlines, retries, traces and baselines remain unchanged.
+
+Type/unit execution collected 1,470 cases: 1,463 PASS, six loopback `EACCES`
+failures and one directory-symlink privilege skip in the sandbox. The unchanged
+three affected files then passed all 19 cases with zero skips outside those
+restrictions. All cases are covered across the recorded invocations; the first
+run remains failed. AST 229 modules, E2E types, 16 Interface Markdown files and
+the worktree/index artifact guard pass. Original ignored inventory (7,569 files)
+is unchanged. Focused GREEN log SHA-256
+`f18c84b89ba5e60ea1b78e9796a736e7bde82cc0d4537ab5ab196d248ce16c06`;
+native-prerequisite rerun `88ca3fa01bd45478d34271c0c88ce73cf1fce6f5ab7ea1811c40cd6e05b10715`.
+Fresh committed builds take 87.250s and 88.687s and produce byte-identical
+archives. All 571 source payloads independently equal Git blobs. Candidate
+inventory SHA-256 `9651145d9c3cba032242edccc14f5d866ee0603f9f8b0708db069ce2b4439a75`.
+The corrected unpublished draft now contains source asset `687308869`, SHA-256
+`2362d98a62a2db0ab3405e76bb6d2a7fba2835aa4d5bd4d2da46fffef3078f82`,
+2,404,660 bytes, and static `687308906`, SHA-256
+`d766c46de69739ebae07be0652e0305bbd74b6ed0ed259e0482385e0a716c0ee`,
+2,192,026 bytes. The old unpublished candidate/metadata remain recoverable.
+All six immutable 0.1.1 snapshots remain exact before/after replacement.
+
+The corrected canonical lock SHA-256 is
+`f56895573b37000ffa4349922d77ad190dc2ffc0ded69723895e72df0a68659a`;
+only its Interface selection changes. Actual digest-verified downloads of both
+new draft assets pass using the existing local Git identity. The prior actual
+CI-secret receipt retains its old asset IDs/selection scope; a corrected-ID CI
+check is NOT_RUN under the explicit no-Actions-wait decision, and minimum
+credential scope remains NOT_VERIFIED. No permission or secret was expanded.
+Fresh local Ubuntu artifact installation and full native acceptance are pending.
+
+Independent corrected-binding review confirms every other product, runtime,
+DEV and rollback field is exact. Focused external-copy validation has 139 PASS
+and one existing repository-negative fixture failure because its export is not
+a Git checkout; the unchanged exact parameter passes in the actual Remote
+checkout (one PASS/10.05s). Both outcomes remain recorded. Review receipt SHA-256
+`0efbd96c3d320e110a53934ce96ed2010289a06c508bf16a25f6f3c152a1cf4e`;
+actual-Git control `5125a23e0fec394825493cf04d4e5ace53467493df8d145b3898c5d80c15a95e`.
+The five changed Markdown files and canonical context pass; all 15,463 original
+Remote ignored files retain their recorded size/mtime inventory.
+
 The user explicitly approved Interface **0.1.2** and Remote **integration release
 0.1.2**, retaining API, Contracts, Simulator, Hardware and FPGA **0.1.1** and DEV
 tooling **1.0.0a1**. Existing immutable v0.1.1 tags/assets remain unchanged.
