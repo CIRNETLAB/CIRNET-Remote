@@ -31,7 +31,7 @@ def test_app_declares_project_title_and_hardware_status_supports_simulation():
     app=(WEB/'src/components/workbench/AppTitleBar.vue').read_text(encoding='utf-8')
     status=(WEB/'src/components/HardwareStatus.vue').read_text()
     store=(WEB/'src/stores/station.ts').read_text()
-    assert 'net*CIRCUIT Remote' in app
+    assert 'aria-label="CIRNET Remote"' in app
     assert 'Simulation' in status
     assert "mode: 'simulation'" in store
 
