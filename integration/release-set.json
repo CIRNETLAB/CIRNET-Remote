@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "0.1.1",
+  "releaseVersion": "0.1.2",
   "repositories": {
     "Remote": {
       "repository": "https://github.com/CIRNETLAB/CIRNET-Remote",
@@ -76,25 +76,25 @@
     },
     "Interface": {
       "repository": "https://github.com/CIRNETLAB/CIRNET-Interface",
-      "version": "0.1.1",
-      "sourceRevision": "7a266d15b510d840ad3146515a3699760564ed32",
+      "version": "0.1.2",
+      "sourceRevision": "f6c8d2735f71de5c1d292476a49aa3a35551a048",
       "artifacts": {
         "source": {
-          "filename": "netcircuit-interface-0.1.1-source.tar.gz",
-          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Interface/releases/assets/684942791",
-          "sha256": "bd3f529454dd129d90a27ce7ee76c84400481f1cc6452150d32233973c42c4b4",
-          "size": 2396605,
-          "assetId": 684942791
+          "filename": "netcircuit-interface-0.1.2-source.tar.gz",
+          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Interface/releases/assets/686766559",
+          "sha256": "ba0fd15607961204cdce5b50536cc62d7f06fc88251fb69d760cbb9ac5afcf3f",
+          "size": 2402693,
+          "assetId": 686766559
         },
         "static": {
-          "filename": "netcircuit-interface-0.1.1-static.tar.gz",
-          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Interface/releases/assets/684942968",
-          "sha256": "f7e87d32b314982503a7e9bd1f213812c6a927914276f98825983191ac924055",
-          "size": 2191934,
-          "assetId": 684942968
+          "filename": "netcircuit-interface-0.1.2-static.tar.gz",
+          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Interface/releases/assets/686766692",
+          "sha256": "b06b8021509aa8ad5eeb063039179c9170f41f49a9ca2c5ed764955f8b00d4b7",
+          "size": 2192776,
+          "assetId": 686766692
         }
       },
-      "releaseTag": "v0.1.1"
+      "releaseTag": "v0.1.2"
     },
     "Simulator": {
       "repository": "https://github.com/CIRNETLAB/CIRNET-Simulator",
@@ -377,5 +377,10 @@
       "sourceRevision": "82ca15bec250894c39c2849ab4a3eaaeb7712b05",
       "limitations": "Reviewed build/archive profiles and recipes; historical absolute paths require remapping. Not a portable automated pipeline; native Interface/FPGA builders remain in their recorded source commits."
     }
+  },
+  "integration": {
+    "version": "0.1.2",
+    "repository": "https://github.com/CIRNETLAB/CIRNET-Remote",
+    "sourceRevision": "3c3c36a96daf31b7b25bf797431e76e4534076bc"
   }
 }

@@ -22,7 +22,7 @@ Current authority is [Lab-First v3.1](ARCHITECTURE.md). Historical plans, measur
 | M3B replaceable simulation backends | [ngspice analysis and backend design](superpowers/specs/2026-10-27-simulator-backends-design.md), [execution plan](superpowers/plans/2026-10-27-simulator-backends.md), [verification/rollback](verification/2026-10-27-simulator-backends.md); preparation for native cores, current legacy behavior retained |
 | M4 Hardware extraction | [Execution plan](superpowers/plans/2026-10-27-multi-repo-migration-m4.md), [verification/rollback](verification/2026-10-27-multi-repo-migration-m4.md), [history mapping](verification/2026-10-27-hardware-history.md); independent service with versioned Contracts/Simulator and Remote-owned integrated acceptance |
 | M5 FPGA extraction | [Execution plan](superpowers/plans/2026-10-27-multi-repo-migration-m5.md), [verification/rollback](verification/2026-10-27-multi-repo-migration-m5.md), [history mapping](verification/2026-10-27-fpga-history.md); versioned source scaffold, installed Contracts and mandatory pinned RTL verification |
-| M6 integrated release | [Execution ledger](superpowers/plans/2026-10-27-multi-repo-migration-m6.md), [verification/release identities](verification/2026-10-27-multi-repo-migration-m6.md), [artifact installation and rollback](../deployment/multi-repo-release.md); all products 0.1.1 |
+| M6 integrated release | [Execution ledger](superpowers/plans/2026-10-27-multi-repo-migration-m6.md), [verification/release identities](verification/2026-10-27-multi-repo-migration-m6.md), [artifact installation and rollback](../deployment/multi-repo-release.md); approved system/Interface 0.1.2 with retained API and other products 0.1.1 |
 | Release assets and CI credentials | [Public downloads and scoped CI access](ci-artifact-access.md); workflow permissions and separate secret scopes are distinct |
 | Full Markdown audit and legacy evidence inventory | [Documentation/artifact audit](verification/2026-10-19-documentation-artifact-audit.md) |
 
@@ -30,16 +30,16 @@ Current authority is [Lab-First v3.1](ARCHITECTURE.md). Historical plans, measur
 
 | Product | Current repository | Version / ownership |
 | --- | --- | --- |
-| Remote | [CIRNETLAB/CIRNET-Remote](https://github.com/CIRNETLAB/CIRNET-Remote) | 0.1.1; API, persistence, scheduler, deployment and integration |
+| Remote | [CIRNETLAB/CIRNET-Remote](https://github.com/CIRNETLAB/CIRNET-Remote) | API/deployment 0.1.1; approved system/integration 0.1.2 |
 | Contracts | [CIRNETLAB/CIRNET-Contracts](https://github.com/CIRNETLAB/CIRNET-Contracts) | 0.1.1; schemas, catalog, protocols, Python resources and public SDK |
-| Interface | [CIRNETLAB/CIRNET-Interface](https://github.com/CIRNETLAB/CIRNET-Interface) | 0.1.1; Web/editor/assets and browser assertions |
+| Interface | [CIRNETLAB/CIRNET-Interface](https://github.com/CIRNETLAB/CIRNET-Interface) | approved 0.1.2; Web/editor/assets and browser assertions; publication follows actual hosted acceptance |
 | Simulator | [CIRNETLAB/CIRNET-Simulator](https://github.com/CIRNETLAB/CIRNET-Simulator) | 0.1.1; existing engine and replaceable backend boundary |
 | Hardware | [CIRNETLAB/CIRNET-Hardware](https://github.com/CIRNETLAB/CIRNET-Hardware) | 0.1.1; local RPC, station lifecycle and private transport |
 | FPGA | [CIRNETLAB/CIRNET-FPGA](https://github.com/CIRNETLAB/CIRNET-FPGA) | 0.1.1 source scaffold; pinned RTL verification |
 
 The repository/organization rename preserves GitHub repository IDs and history.
 Use the current [release selection](../integration/release-set.json) and
-[release runbook](../deployment/multi-repo-release.md). The selected immutable
+[release runbook](../deployment/multi-repo-release.md). The reused immutable
 0.1.1 artifacts retain their original build revisions/digests; rename candidates
 and new master commits are tracked separately in the M6 report. Old extraction
 versions and URLs in dated reports retain their historical meaning. Technical

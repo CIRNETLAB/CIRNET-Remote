@@ -1,10 +1,12 @@
 # CIRNET multi-repo release and rollback
 
-Use `integration/release-set.json` as the exact six-product selection. Every product is 0.1.1; DEV tooling, third-party dependencies and wire protocols have separate versions. Download URLs identify exact numeric GitHub release asset IDs. After publication, assets from the six public repositories permit anonymous downloads; retain authenticated access for drafts, CI and API rate limits. Never use `latest`, editable producer installs or sibling checkouts as fallback.
+Use `integration/release-set.json` as the exact six-product selection. The approved system/integration release is 0.1.2 with Interface 0.1.2; API, Contracts, Simulator, Hardware and FPGA retain their original 0.1.1 artifacts and DEV tooling remains 1.0.0a1. Draft access and actual selected-artifact hosted browser acceptance must pass before publication. Download URLs identify exact numeric GitHub release asset IDs. After publication, assets from the six public repositories permit anonymous downloads; retain authenticated access for drafts, CI and API rate limits. Never use `latest`, editable producer installs or sibling checkouts as fallback.
 
 Current repositories use `CIRNETLAB/CIRNET-*`. Current manifest URLs name those
-repositories directly while retaining all 15 selected numeric asset IDs,
-filenames, versions, source revisions and digests. An existing published artifact
+repositories directly. Only the approved Interface source/static selection changes;
+all reused artifact IDs, filenames, versions, source revisions and digests stay exact.
+The integration revision is recorded separately from retained API build provenance.
+An existing published artifact
 is still built from its recorded earlier source, even when the current repository
 master has later rename/CI/documentation changes. Published immutable v0.1.1 tags,
 notes and bytes remain preserved; the current Git manifest is a canonical-URL
@@ -18,7 +20,7 @@ retain its original bytes/tag/build provenance and verify downloads/install/run
 through the new URLs. If replacing an asset or moving v0.1.1 is necessary, retain
 the candidate, exact comparison and rollback set, finish independent work, and
 obtain the user's release decision. Do not overwrite immutable assets, delete a
-release, retag or introduce 0.1.2 automatically.
+release or retag. The explicit 0.1.2 approval does not authorize changes to immutable 0.1.1 releases.
 
 Install Git, Node 22 and Python 3.12+ first. Create an external virtual environment and activate it. For authenticated access, privately set `NETCIRCUIT_ARTIFACTS_TOKEN` using the [selected-repository read credential](../docs/ci-artifact-access.md); it can remain unset for public published assets. Current CI workflows still require `NETCIRCUIT_ARTIFACTS_READ_TOKEN`. From a clean Remote checkout run:
 

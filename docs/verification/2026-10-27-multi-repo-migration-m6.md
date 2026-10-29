@@ -1,6 +1,76 @@
 # M6 verification and release ledger
 
-Started: 2026-10-27; current update: 2026-10-29, Asia/Saigon (evidence collected 2026-10-28 UTC). Status: M6_COMPATIBLE_LOCAL_NATIVE_PASS_OLD_HOSTED_NOT_PASS_RELEASE_HANDOFF_PENDING. Successful baseline measurements, subsequent hosted failures and verified fixes have separate scopes below. This record does not replace historical M0–M5 observations. No production deployment or board programming is part of M6.
+## Approved 0.1.2 continuation — 2026-10-29
+
+The user explicitly approved Interface **0.1.2** and Remote **integration release
+0.1.2**, retaining API, Contracts, Simulator, Hardware and FPGA **0.1.1** and DEV
+tooling **1.0.0a1**. Existing immutable v0.1.1 tags/assets remain unchanged.
+The current continuation prepares strict mixed-version validation, a new clean
+committed Interface build, exact selected-artifact installation and actual
+hosted browser acceptance before new publication. This approval closes the
+version-choice gate; it does not turn an unrun gate into PASS.
+
+Remote's retained product entry denotes API/deployment 0.1.1 with original
+source provenance. The new system lock records its integration revision
+separately; Interface source/static must come from a fresh committed 0.1.2 build.
+Previously inspected local 57/0/1 and cancelled old-artifact hosted evidence
+remain historical results, separate from the new selection.
+
+- [x] Obtain explicit approval for Interface/system 0.1.2 only.
+- [x] Verify six clean synchronized masters and preserve fresh all-ref bundles;
+  actual mirror restoration and strict fsck pass for all six.
+- [ ] Build and verify the new exact artifact selection and clean installation.
+- [ ] Pass the actual selected-artifact hosted browser gate and publish the
+  approved releases without replacing immutable v0.1.1 assets.
+- [ ] Complete final master CI, current documentation and owned-session handoff.
+
+### Current renamed-directory execution
+
+The fresh session uses owner `cirnet-m6-release-20261029` with all six actual
+`CIRNET-*` roots. Python 3.12.13 and the verification virtualenv were newly
+installed externally; cleaned old session paths/runtimes were not reused.
+Initial state matched the handoff: Remote `181f84b` with 17 unstaged paths,
+Interface `f6c8d273` clean. All other producer masters remain synchronized with
+exact-head successful hosted CI and immutable 0.1.1 releases.
+
+Both linked worktrees were repaired using Git, remain clean at `295797c` and
+retain branches `Multi-Repo`/`refactor`. The initial sandbox temp backup failed
+with access denied, and nonterminating PowerShell errors allowed repair before
+backup. Pre-repair gitfile text is reconstructed from the inspected readback,
+not byte-certified prebackup. Subsequent complete metadata/all-ref backups were
+actually restored and passed strict fsck: 27 refs, eight worktree HEADs, 819
+independently checked checksums. Receipt SHA-256
+`8edab2c9b6a009ec042d7db7bc341002ac3d0d984ae0a087221cfbeda1c65dfe`.
+
+Interface inventory SHA-256 `96c0e881…ce431b` rehashes exactly. Independent
+comparison confirms all 571 source payloads equal committed `f6c8d273` and
+fingerprint `52b29bc9004cb8abc1be054a0c404a5ebcdf37e5f22520129284d36a72709818`.
+Two new clean builds with Python 3.12.13/zlib 1.3.1 reproduce source SHA-256
+`ba0fd15607961204cdce5b50536cc62d7f06fc88251fb69d760cbb9ac5afcf3f` and static
+`b06b8021509aa8ad5eeb063039179c9170f41f49a9ca2c5ed764955f8b00d4b7` exactly.
+Build receipts: `666f8e622df08a6f9ed52881cd47df13d9540af365934e6f65371d6590f8368f`.
+The unchanged 24 script tests and 229-module AST check pass; full unit/type
+results are tracked separately from build identity and integrated browser.
+
+Draft Interface release `427320878` holds exactly source `686766559` and static
+`686766692`, with those same filenames, sizes and digests. It is not published.
+All immutable v0.1.1 metadata/assets were compared before/after and unchanged.
+The fresh 15-artifact plus rollback clean install passed in 216.853 seconds;
+API remains 0.1.1 with selected immutable SHA-256 `50d3d261…` and isolated
+installed-byte/import provenance. This installation used the reviewed working
+tooling before its commit; final committed-source gates remain explicit.
+
+Runtime/tooling is now committed at `3c3c36a96daf31b7b25bf797431e76e4534076bc`.
+The dependency-selection hole reproduced as two failing regressions; six focused
+tests then passed, and 57 selected compatibility tests passed. All 12 CI jobs
+bind DEV/Contracts/Simulator/Hardware/FPGA from the validated system lock before
+bootstrap; all six Interface downloads are manifest-bound. Independent review
+found no remaining blocker. The new lock retains API build revision `82ca15b`,
+all other 0.1.1 products/DEV/rollback and records the integration revision
+separately. Actual CI-secret draft access, new selected browser and final master
+CI are still pending; historical local 57/0/1 is not acceptance of this set.
+
+Started: 2026-10-27; current update: 2026-10-29, Asia/Saigon. Status: M6_V012_SELECTED_VERIFICATION_IN_PROGRESS. The records below retain their historical scope. No production deployment or board programming is part of M6.
 
 ## Current CIRNET rename and release disposition
 

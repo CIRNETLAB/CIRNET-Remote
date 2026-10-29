@@ -1,5 +1,29 @@
 # Multi-Repo M6 Release Implementation Plan
 
+## Approved 0.1.2 continuation — 2026-10-29
+
+The user explicitly approved Interface **0.1.2** and Remote **integration release
+0.1.2**, retaining API, Contracts, Simulator, Hardware and FPGA **0.1.1** and DEV
+tooling **1.0.0a1**. Existing immutable v0.1.1 tags/assets remain unchanged.
+The current continuation prepares strict mixed-version validation, a new clean
+committed Interface build, exact selected-artifact installation and actual
+hosted browser acceptance before new publication. This approval closes the
+version-choice gate; it does not turn an unrun gate into PASS.
+
+Remote's retained product entry denotes API/deployment 0.1.1 with original
+source provenance. The new system lock records its integration revision
+separately; Interface source/static must come from a fresh committed 0.1.2 build.
+Previously inspected local 57/0/1 and cancelled old-artifact hosted evidence
+remain historical results, separate from the new selection.
+
+- [x] Obtain explicit approval for Interface/system 0.1.2 only.
+- [x] Verify six clean synchronized masters and preserve fresh all-ref bundles;
+  actual mirror restoration and strict fsck pass for all six.
+- [ ] Build and verify the new exact artifact selection and clean installation.
+- [ ] Pass the actual selected-artifact hosted browser gate and publish the
+  approved releases without replacing immutable v0.1.1 assets.
+- [ ] Complete final master CI, current documentation and owned-session handoff.
+
 > **For agentic workers:** Use subagent-driven-development and verification-before-completion. This ledger records execution of the explicitly authorized six-repository release, without changing historical M0–M5 reports.
 
 **Goal:** Complete M2/browser and artifact-only release acceptance under CIRNETLAB/CIRNET-*; integrate reviewed changes on all six masters while preserving existing immutable 0.1.1 release history and bytes.
@@ -18,7 +42,45 @@
 
 **Historical resumed publication scope, 2026-10-28:** the user explicitly requested continuing the four publication/master/branch-cleanup items, superseding the earlier stop for those operations. Commit reviewed release bindings/fixes, push ordinary fast-forward migration/master updates, publish exactly `v0.1.1` for all six private repositories, verify hosted master CI, preserve final recoverable history bundles, and delete only proven merged migration branches. The user also confirmed the selected-six-repository fine-grained Contents-read CI secret configuration; hosted authenticated downloads remain to be verified. The existing local verification and older stop records retain their historical scope. No deployment, board programming, force-push, license/visibility change or unrelated-worktree cleanup is authorized.
 
-## Current rename scope, 2026-10-29 (Asia/Saigon)
+## Current renamed-directory continuation, 2026-10-29 (Asia/Saigon)
+
+The latest request authorizes completing committed builds, fresh exact-selection
+verification, normal Git promotion and Interface/system 0.1.2 publication after
+actual hosted acceptance. All six local folders are now `CIRNET-*`. The original
+17 Remote changes were preserved and reviewed before continuation; no reset,
+clean, force-push or immutable 0.1.1 change is authorized or performed.
+
+The two unrelated linked worktrees were repaired with `git worktree repair`;
+both remain clean at `295797c581acc3935f5e128fd3d23674c728ca65` on `Multi-Repo`
+and `refactor`. The first backup attempt failed because a sandbox-specific temp
+directory was inaccessible in the next process; nonterminating PowerShell
+errors allowed repair to proceed. Original gitfile text was retained from the
+pre-repair readback, explicitly not a byte-certified backup. Complete postrepair
+metadata and six all-ref bundles were then preserved, actually restored and
+strict-fsck verified: 27 refs/eight worktree HEADs, inventory receipt
+`8edab2c9b6a009ec042d7db7bc341002ac3d0d984ae0a087221cfbeda1c65dfe`.
+
+Ruling: retain this existing plan/report as the execution ledger, without a new
+task Markdown or in-Git scratch/evidence workspace, as explicitly requested.
+The new external shared session has owner `cirnet-m6-release-20261029` and all
+six current absolute roots; none of the cleaned historical sessions is reused.
+
+Runtime/tooling commit `3c3c36a96daf31b7b25bf797431e76e4534076bc` separates
+integration provenance from retained API `82ca15b`/SHA `50d3d261…`.
+Two dependency-selection regressions were observed RED, then six focused tests
+and 57 selected compatibility tests passed. All 12 CI bootstrap jobs derive
+dependency selections from the validated lock before installation, and all six
+Interface download steps use the manifest. Independent code review found no
+remaining blocker; actual CI-identity draft access and hosted browser remain
+required before publication/master promotion.
+
+Interface draft `427320878` contains exactly source asset `686766559` and static
+asset `686766692`, from committed `f6c8d2735f71de5c1d292476a49aa3a35551a048`.
+Fresh Python 3.12.13 builds reproduced both retained archives byte-for-byte.
+The canonical lock now selects these exact IDs/digests and records the separate
+integration revision above, preserving every other artifact and rollback pin.
+
+## Historical rename scope, 2026-10-29 (Asia/Saigon)
 
 The new user attachment authorizes source/tests/CI/current documentation and
 manifest updates, canonical origins, commits and ordinary master pushes for all
@@ -176,7 +238,7 @@ an all-candidate install or a browser/production result. Receipt
 
 ## Global constraints
 
-- All six product versions and release tags are exactly 0.1.1 / v0.1.1. DEV tooling remains 1.0.0a1; schema, graph, RPC, NCAP and FPGA protocol versions retain their meaning.
+- The approved patch line is Interface/system integration 0.1.2; API, Contracts, Simulator, Hardware and FPGA remain 0.1.1. Existing immutable v0.1.1 tags/assets are preserved. DEV tooling remains 1.0.0a1; schema, graph, RPC, NCAP and FPGA protocol versions retain their meaning.
 - Ordinary history merges only; no force-push, published history rewrite, reset/clean, license/visibility changes, production deployment or board programming.
 - Preserve source assets, golden baselines, protected bytes, historical reports and frozen reference trees. Frozen sources cannot supply supported runtime/build/test/release dependencies.
 - Immutable artifact URLs/digests; exact dependency versions; no sibling source or editable producer installs. API registrations remain OpenAPI operation authority.
