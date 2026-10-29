@@ -119,8 +119,8 @@ def _extract_static(path, directory, value, source_identity):
         if not required <= files.keys():
             raise ValueError('Interface static release is missing production entrypoints or metadata.')
         identity = json.load(archive.extractfile(files['interface-artifact.json']))
-        if (identity.get('name') != 'netcircuit-interface' or identity.get('version') != VERSION
-                or identity.get('kind') != 'static' or identity.get('contractsVersion') != VERSION
+        if (identity.get('name') != 'netcircuit-interface' or identity.get('version') != value['repositories']['Interface']['version']
+                or identity.get('kind') != 'static' or identity.get('contractsVersion') != value['compatibility']['contractsVersion']
                 or identity.get('sourceFingerprint') != source_identity['sourceFingerprint']):
             raise ValueError('Interface static release does not match the selected source product.')
         _check_source(identity, 'Interface', value)
@@ -323,15 +323,15 @@ def install(manifest, environment_file, *, local_artifacts=False):
     rollback_path.write_bytes(_artifact_bytes(rollback, local_artifacts=local_artifacts))
     rollback_files = verify_rollback_bundle(rollback_path, value)
     for component, name in (('Remote', 'netcircuit-api'), ('Contracts', 'netcircuit-contracts'), ('Simulator', 'netcircuit-simulator'), ('Hardware', 'netcircuit-hardware-service')):
-        verify_package_archive(local[component]['sdist'], name, VERSION)
-    verify_package_archive(local['Contracts']['npm'], '@tinihi-labs/contracts', VERSION, npm=True)
+        verify_package_archive(local[component]['sdist'], name, value['repositories'][component]['version'])
+    verify_package_archive(local['Contracts']['npm'], '@tinihi-labs/contracts', value['repositories']['Contracts']['version'], npm=True)
     verify_package_archive(local['Contracts']['dev_npm'], '@tinihi-labs/artifact-paths', '1.0.0-m1.0', npm=True)
     verify_api_wheel(local['Remote']['python'], value['repositories']['Remote']['artifacts']['python']['sha256'])
     deployment, deployment_members = _checked_tar(local['Remote']['deployment'].read_bytes())
     with deployment:
         if not any(member.isfile() for member in deployment_members):
             raise ValueError('Deployment release material cannot be an empty archive.')
-    interface = extract_product(local['Interface']['source'].read_bytes(), directory / 'interface-source')
+    interface = extract_product(local['Interface']['source'].read_bytes(), directory / 'interface-source', expected_version=value['repositories']['Interface']['version'], expected_source=value['repositories']['Interface'])
     identity = json.loads((interface / 'interface-artifact.json').read_text(encoding='utf-8'))
     _check_source(identity, 'Interface', value)
     static = _extract_static(local['Interface']['static'], directory / 'interface-static', value, identity)
@@ -366,7 +366,7 @@ def install(manifest, environment_file, *, local_artifacts=False):
     environment.update(exports)
     verification = _install_components(value, local, environment, directory)
     snapshot = directory / 'release-set.json'; snapshot.write_text(json.dumps(value, indent=2) + '\n', encoding='utf-8')
-    state = {'schemaVersion': 1, 'releaseVersion': VERSION, 'python': sys.executable, 'environmentFile': str(target), 'manifest': str(snapshot),
+    state = {'schemaVersion': 1, 'releaseVersion': value['releaseVersion'], 'python': sys.executable, 'environmentFile': str(target), 'manifest': str(snapshot),
              'manifestSha256': hashlib.sha256(snapshot.read_bytes()).hexdigest(), 'environment': exports, 'processEnvironment': process_environment,
              'artifacts': {name: {kind: str(path) for kind, path in paths.items()} for name, paths in local.items()},
              'apiVerification': verification, 'rollback': {'archive': str(rollback_path), 'verifiedPreservedArtifacts': rollback_files, 'rehearsalStatus': 'NOT_RUN'}}

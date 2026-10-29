@@ -10,6 +10,7 @@ import tarfile
 
 ROOT = Path(__file__).resolve().parents[2]
 VERSION = '0.1.1'
+INTERFACE_VERSIONS = ('0.1.1', '0.1.2')
 
 
 def _relative(path):
@@ -55,11 +56,11 @@ def interface_root():
         raise RuntimeError('Interface acceptance requires an exported artifact, not a Git checkout.')
     identity = json.loads((root / 'interface-artifact.json').read_text(encoding='utf-8'))
     package = json.loads((root / 'package.json').read_text(encoding='utf-8'))
-    if (identity.get('name') != 'netcircuit-interface' or identity.get('version') != VERSION
+    if (identity.get('name') != 'netcircuit-interface' or identity.get('version') not in INTERFACE_VERSIONS
             or identity.get('contractsVersion') != VERSION or identity.get('kind') != 'source'
-            or package.get('version') != VERSION or identity.get('source', {}).get('uncommittedMigration') is not False
+            or package.get('version') != identity.get('version') or identity.get('source', {}).get('uncommittedMigration') is not False
             or not re.fullmatch('[0-9a-f]{40}', identity.get('source', {}).get('revision', ''))):
-        raise RuntimeError('Interface source identity must select the committed 0.1.1 release set.')
+        raise RuntimeError('Interface source identity must select a reviewed committed product version with Contracts 0.1.1.')
     excluded = {'.git', 'node_modules', '.artifacts', '.runtime', '.build', '.test-build', '.benchmark-build', 'dist'}
     fingerprint = hashlib.sha256()
     paths = []

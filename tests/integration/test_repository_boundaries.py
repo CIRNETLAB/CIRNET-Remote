@@ -83,7 +83,7 @@ def test_six_product_owners_are_explicit_and_installed_packages_do_not_cross_bou
     assert fpga['identity']['version'] == '0.1.1'
     remote = tomllib.loads((ROOT / 'pyproject.toml').read_text(encoding='utf-8'))['project']
     api = tomllib.loads((ROOT / 'services/api/pyproject.toml').read_text(encoding='utf-8'))['project']
-    assert remote['name'] == 'netcircuit-remote-dev' and remote['version'] == '0.1.1'
+    assert remote['name'] == 'netcircuit-remote-dev' and remote['version'] == '0.1.2'
     assert api['name'] == 'netcircuit-api' and api['version'] == '0.1.1'
     assert 'netcircuit-contracts==0.1.1' in api['dependencies']
     assert 'netcircuit-simulator==0.1.1' in api['dependencies']

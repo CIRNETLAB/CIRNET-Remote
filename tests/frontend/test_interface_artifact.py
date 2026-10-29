@@ -18,16 +18,16 @@ def installer():
     return module
 
 
-def archive_bytes(name='package.json',*,symlink=False,metadata_changes=None):
+def archive_bytes(name='package.json',*,symlink=False,metadata_changes=None,version='0.1.1'):
     output=io.BytesIO()
     with tarfile.open(fileobj=output,mode='w:gz') as archive:
-        contents=b'{"version":"0.1.1"}'
+        contents=json.dumps({'version':version}).encode()
         member=tarfile.TarInfo(name)
         if symlink:member.type=tarfile.SYMTYPE;member.linkname='../outside'
         else:member.size=len(contents)
         archive.addfile(member,None if symlink else io.BytesIO(contents))
         if name=='package.json' and not symlink:
-            identity={'schema':1,'name':'netcircuit-interface','version':'0.1.1',
+            identity={'schema':1,'name':'netcircuit-interface','version':version,
                 'kind':'source','contractsVersion':'0.1.1',
                 'source':{'repository':'https://github.com/example/interface.git','revision':'7'*40,'uncommittedMigration':False},
                 'sourceFingerprint':hashlib.sha256((hashlib.sha256(contents).hexdigest()+'  package.json\n').encode()).hexdigest()}
@@ -36,6 +36,53 @@ def archive_bytes(name='package.json',*,symlink=False,metadata_changes=None):
             member=tarfile.TarInfo('interface-artifact.json');member.size=len(identity)
             archive.addfile(member,io.BytesIO(identity))
     return output.getvalue()
+
+
+def test_patch_product_is_independent_from_contracts_and_bound_to_selected_version(tmp_path):
+    module=installer()
+    contents=archive_bytes(version='0.1.2')
+    module.extract_product(contents,tmp_path/'patch',expected_version='0.1.2')
+    assert json.loads((tmp_path/'patch/package.json').read_text())['version']=='0.1.2'
+    for selected,body in [('0.1.1',contents),('0.1.2',archive_bytes()),('0.1.3',archive_bytes(version='0.1.3'))]:
+        with pytest.raises(ValueError):module.extract_product(body,tmp_path/selected,expected_version=selected)
+    with pytest.raises(ValueError):
+        module.extract_product(archive_bytes(version='0.1.2',metadata_changes={'contractsVersion':'0.1.2'}),tmp_path/'wrong-contracts',expected_version='0.1.2')
+
+
+def test_patch_product_rejects_identity_and_package_version_mismatch(tmp_path):
+    with pytest.raises(ValueError):
+        installer().extract_product(archive_bytes(version='0.1.2',metadata_changes={'version':'0.1.1'}),tmp_path/'wrong')
+
+
+@pytest.mark.parametrize('field',['URL','SHA256'])
+def test_selected_lock_rejects_stale_interface_variables_before_download(tmp_path,monkeypatch,field):
+    from tests.contracts.test_system_release import patch_release
+    module=installer();value=patch_release()
+    path=tmp_path/'release.json';path.write_text(json.dumps(value))
+    selected=value['repositories']['Interface']['artifacts']['source']
+    monkeypatch.setenv('NETCIRCUIT_INTERFACE_ARTIFACT_URL',selected['url'])
+    monkeypatch.setenv('NETCIRCUIT_INTERFACE_ARTIFACT_SHA256',selected['sha256'])
+    monkeypatch.setenv('NETCIRCUIT_INTERFACE_ARTIFACT_'+field,'stale-variable')
+    monkeypatch.setattr(module,'download_artifact',lambda *args:pytest.fail('stale Interface selection reached download'))
+    with pytest.raises(ValueError,match='selection'):
+        module.main(['--manifest',str(path)])
+
+
+def test_selected_interface_requires_exact_source_revision_before_extraction(tmp_path):
+    module=installer()
+    selected={'repository':'https://github.com/CIRNETLAB/CIRNET-Interface','sourceRevision':'8'*40}
+    source={'repository':selected['repository'],'revision':'7'*40,'uncommittedMigration':False}
+    with pytest.raises(ValueError,match='provenance'):
+        module.extract_product(archive_bytes(version='0.1.2',metadata_changes={'source':source}),tmp_path/'wrong',expected_version='0.1.2',expected_source=selected)
+    assert not (tmp_path/'wrong').exists()
+
+
+@pytest.mark.parametrize('suffix',['','.git'])
+def test_selected_interface_preserves_known_manifest_repository_suffixes(tmp_path,suffix):
+    selected={'repository':'https://github.com/CIRNETLAB/CIRNET-Interface'+suffix,'sourceRevision':'7'*40}
+    source={'repository':'https://github.com/CIRNETLAB/CIRNET-Interface.git','revision':'7'*40,'uncommittedMigration':False}
+    installer().extract_product(archive_bytes(version='0.1.2',metadata_changes={'source':source}),tmp_path/'product',expected_version='0.1.2',expected_source=selected)
+    assert (tmp_path/'product/package.json').is_file()
 
 
 @pytest.mark.parametrize('name,symlink',[('../escape',False),('/absolute',False),('.git/config',False),('.GIT/HEAD',False),('.Git/config',False),('alias',True)])

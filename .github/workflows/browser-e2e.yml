@@ -48,6 +48,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Select exact dependency artifacts from the system lock
+        run: python scripts/select_ci_release.py --manifest integration/release-set.json --github-env "$GITHUB_ENV"
       - name: Bootstrap the pinned independent DEV allocator
         env:
           NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
@@ -71,8 +73,21 @@ jobs:
           python scripts/install_contracts.py
           python scripts/install_simulator.py
           python scripts/install_hardware.py
-          python -m build --no-isolation --wheel --outdir "$NETCIRCUIT_ARTIFACTS_SESSION/api-dist" ./services/api
-          python -m pip install "$NETCIRCUIT_ARTIFACTS_SESSION/api-dist/netcircuit_api-0.1.1-py3-none-any.whl"
+          python - <<'PY'
+          import subprocess
+          import sys
+          from scripts.artifact_download import download_artifact
+          from scripts.artifact_paths import artifact_directory
+          from scripts.install_release import API_INSTALL_PROBE, verify_api_wheel
+          from scripts.system_release_manifest import load_manifest
+          selected = load_manifest('integration/release-set.json')['repositories']['Remote']['artifacts']['python']
+          wheel = artifact_directory('selected-api') / selected['filename']
+          wheel.write_bytes(download_artifact(selected['url'], selected['sha256']))
+          verify_api_wheel(wheel, selected['sha256'])
+          subprocess.run([sys.executable, '-m', 'pip', 'install', str(wheel)], check=True)
+          subprocess.run([sys.executable, '-m', 'pip', 'install', '--force-reinstall', '--no-deps', str(wheel)], check=True)
+          subprocess.run([sys.executable, '-I', '-c', API_INSTALL_PROBE, str(wheel), selected['sha256']], check=True)
+          PY
           python -m pip check
           python -m scripts.check_simulator_consumer
           python -m scripts.check_hardware_consumer
@@ -81,10 +96,8 @@ jobs:
           python -c "import json,os,platform,psutil; print(json.dumps({'platform':platform.platform(),'python':platform.python_version(),'cpuCount':os.cpu_count(),'cpuAffinity':psutil.Process().cpu_affinity(),'memoryBytes':psutil.virtual_memory().total},sort_keys=True))"
       - name: Download the explicit reviewed Interface product
         env:
-          NETCIRCUIT_INTERFACE_ARTIFACT_URL: ${{ vars.NETCIRCUIT_INTERFACE_ARTIFACT_URL }}
-          NETCIRCUIT_INTERFACE_ARTIFACT_SHA256: ${{ vars.NETCIRCUIT_INTERFACE_ARTIFACT_SHA256 }}
           NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
-        run: python -m scripts.install_interface --github-env "$GITHUB_ENV"
+        run: python -m scripts.install_interface --manifest integration/release-set.json --github-env "$GITHUB_ENV"
       - name: Bootstrap Interface artifacts before its clean install
         env:
           NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST: ''

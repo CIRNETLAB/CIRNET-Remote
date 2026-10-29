@@ -12,14 +12,15 @@ from urllib.parse import urlparse
 import tarfile
 from scripts.artifact_download import download_artifact
 from scripts.artifact_paths import artifact_directory
-from scripts.system_release_manifest import repository_urls
+from scripts.system_release_manifest import repository_urls, load_manifest
 
 
 MAX_MEMBERS=10_000
 MAX_EXPANDED_BYTES=128*1024*1024
+INTERFACE_VERSIONS=frozenset(('0.1.1','0.1.2'))
 
 
-def extract_product(contents, directory):
+def extract_product(contents, directory, *, expected_version=None, expected_source=None):
     directory=Path(directory)
     with tarfile.open(fileobj=io.BytesIO(contents),mode='r:gz') as archive:
         members=[]; expanded=0; targets={}; spelling={}; required_directories=set()
@@ -55,13 +56,14 @@ def extract_product(contents, directory):
         if not any(member.name.removeprefix('./')=='package.json' and member.isfile() for member in members):
             raise ValueError('The Interface product must contain package.json at its archive root.')
         manifest=next(member for member in members if member.name.removeprefix('./')=='package.json')
-        if json.loads(archive.extractfile(manifest).read()).get('version')!='0.1.1':
-            raise ValueError('Expected the reviewed Interface product version 0.1.1.')
+        version=json.loads(archive.extractfile(manifest).read()).get('version')
+        if version not in INTERFACE_VERSIONS or (expected_version is not None and version!=expected_version):
+            raise ValueError('Expected the explicitly reviewed Interface product version (0.1.1 or 0.1.2).')
         metadata=next((member for member in members if member.name.removeprefix('./')=='interface-artifact.json' and member.isfile()),None)
         if metadata is None:raise ValueError('The Interface source product requires interface-artifact.json at its archive root.')
         identity=json.loads(archive.extractfile(metadata).read())
         if (identity.get('schema')!=1 or identity.get('name')!='netcircuit-interface'
-                or identity.get('version')!='0.1.1' or identity.get('kind')!='source'
+                or identity.get('version')!=version or identity.get('kind')!='source'
                 or identity.get('contractsVersion')!='0.1.1'
                 or not re.fullmatch('[0-9a-f]{64}',identity.get('sourceFingerprint',''))):
             raise ValueError('The Interface source product metadata does not match the reviewed version and Contracts set.')
@@ -74,6 +76,12 @@ def extract_product(contents, directory):
                 or not re.fullmatch('[0-9a-f]{40}',source.get('revision',''))
                 or source.get('uncommittedMigration') is not False):
             raise ValueError('Interface source provenance requires an exact repository, committed revision and migration state false.')
+        if expected_source is not None:
+            aliases=repository_urls('Interface')
+            if (expected_source.get('repository','').removesuffix('.git') not in aliases
+                    or source.get('repository') not in (*aliases,*(url+'.git' for url in aliases))
+                    or source.get('revision')!=expected_source.get('sourceRevision')):
+                raise ValueError('Interface source provenance differs from the exact selected release.')
         fingerprint=hashlib.sha256()
         files=sorted((PurePosixPath(member.name).as_posix(),member) for member in members if member.isfile())
         for name,member in files:
@@ -100,15 +108,24 @@ def extract_product(contents, directory):
 def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--github-env',type=Path)
+    parser.add_argument('--manifest',type=Path,help='Bind URL, digest, product version and source revision to the exact system release lock.')
     arguments=parser.parse_args(argv)
     url=os.environ.get('NETCIRCUIT_INTERFACE_ARTIFACT_URL')
     digest=os.environ.get('NETCIRCUIT_INTERFACE_ARTIFACT_SHA256')
+    selected=None
+    if arguments.manifest:
+        selected=load_manifest(arguments.manifest)['repositories']['Interface']
+        artifact=selected['artifacts']['source']
+        if (url and url!=artifact['url']) or (digest and digest!=artifact['sha256']):
+            raise ValueError('Interface environment selection differs from the exact system release lock.')
+        url,digest=artifact['url'],artifact['sha256']
     if not url or not digest:
         parser.error('Configure exact NETCIRCUIT_INTERFACE_ARTIFACT_URL/SHA256 for a reviewed exported Interface product; no retained-source fallback is allowed.')
     # HTTPS redirect/authentication and exact SHA256 verification are shared
     # with the existing immutable Contracts consumer, before any extraction.
     contents=download_artifact(url,digest)
-    directory=extract_product(contents,artifact_directory('interface-products')/('product-'+uuid.uuid4().hex))
+    directory=extract_product(contents,artifact_directory('interface-products')/('product-'+uuid.uuid4().hex),
+                              expected_version=selected['version'] if selected else None,expected_source=selected)
     if arguments.github_env:
         with arguments.github_env.open('a',encoding='utf-8') as output:
             output.write('NETCIRCUIT_INTERFACE_ROOT='+str(directory)+'\n')

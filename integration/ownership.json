@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
-  "productVersion": "0.1.1",
+  "productVersion": "0.1.2",
+  "productVersions": {"Remote": "0.1.1", "Contracts": "0.1.1", "Interface": "0.1.2", "Simulator": "0.1.1", "Hardware": "0.1.1", "FPGA": "0.1.1"},
   "owners": {
     "Remote": ["FastAPI/auth/persistence", "scheduler/orchestration", "API OpenAPI registrations/export", "deployment", "integrated acceptance", "system release/rollback manifest"],
     "Contracts": ["canonical schemas/registry/manifest", "CircuitGraph and catalog/Device Library", "Protobuf/logical protocols", "validators/code generation", "Python/public TypeScript SDK", "compatibility baselines", "independently versioned DEV tooling"],

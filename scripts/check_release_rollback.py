@@ -16,10 +16,10 @@ import subprocess
 from xml.etree import ElementTree
 
 try:
-    from scripts.system_release_manifest import load_manifest, VERSION
+    from scripts.system_release_manifest import load_manifest, RELEASE_PROFILES
     from scripts.install_release import validate_process_environment
 except ModuleNotFoundError:
-    from system_release_manifest import load_manifest, VERSION
+    from system_release_manifest import load_manifest, RELEASE_PROFILES
     from install_release import validate_process_environment
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -47,13 +47,15 @@ def verification_plan(temporary_root):
 
 def load_environment(path, *, local_artifacts=False):
     state = json.loads(Path(path).read_text(encoding='utf-8'))
-    if state.get('schemaVersion') != 1 or state.get('releaseVersion') != VERSION or Path(state.get('python', '')).resolve() != Path(sys.executable).resolve():
+    if (state.get('schemaVersion') != 1 or not isinstance(state.get('releaseVersion'), str) or state['releaseVersion'] not in RELEASE_PROFILES
+            or Path(state.get('python', '')).resolve() != Path(sys.executable).resolve()):
         raise ValueError('Use the selected release installation and its invoking virtualenv.')
     manifest = Path(state['manifest'])
     if hashlib.sha256(manifest.read_bytes()).hexdigest() != state.get('manifestSha256'):
         raise ValueError('Installed release manifest snapshot differs from its verified digest.')
-    if local_artifacts: load_manifest(manifest, local_artifacts=True)
-    else: load_manifest(manifest)
+    selected = load_manifest(manifest, local_artifacts=True) if local_artifacts else load_manifest(manifest)
+    if state['releaseVersion'] != selected['releaseVersion']:
+        raise ValueError('Installed release state version differs from its validated manifest.')
     exports = state.get('environment')
     if not isinstance(exports, dict) or any(not key.startswith('NETCIRCUIT_') or any(marker in key for marker in ('TOKEN', 'PASSWORD', 'SECRET'))
             or not isinstance(value, str) or '\n' in value or '\r' in value for key, value in exports.items()):
@@ -97,7 +99,7 @@ def run(environment_file, *, local_artifacts=False):
                 successful = successful and skipped == 0
         results[index] = {'gate': gate['gate'], 'status': 'PASS' if successful else 'FAIL', 'exitCode': completed.returncode, 'skippedTests': skipped, 'log': str(log)}
         if not successful: break
-    report = {'releaseVersion': VERSION, 'registeredGates': results, 'gateStatus': 'PASS' if len(results) == 3 and all(item['status'] == 'PASS' for item in results) else 'FAIL',
+    report = {'releaseVersion': state['releaseVersion'], 'registeredGates': results, 'gateStatus': 'PASS' if len(results) == 3 and all(item['status'] == 'PASS' for item in results) else 'FAIL',
               'fullPriorArtifactRollbackRehearsal': 'NOT_RUN', 'limitation': 'These gates do not reinstall the old artifact set or restore an operator database/capture backup pair.'}
     path = temporary / 'result.json'; path.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
     return report, path

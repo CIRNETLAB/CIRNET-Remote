@@ -1,4 +1,4 @@
-"""Validate the complete immutable six-owner 0.1.1 release and rollback lock."""
+"""Validate exact approved integration/product versions and their rollback lock."""
 import json
 import hashlib
 from pathlib import Path
@@ -6,6 +6,11 @@ import re
 from urllib.parse import urlparse
 
 VERSION = '0.1.1'
+RELEASE_PROFILES = {
+    '0.1.1': {component: '0.1.1' for component in ('Remote', 'Contracts', 'Interface', 'Simulator', 'Hardware', 'FPGA')},
+    '0.1.2': {'Remote': '0.1.1', 'Contracts': '0.1.1', 'Interface': '0.1.2',
+              'Simulator': '0.1.1', 'Hardware': '0.1.1', 'FPGA': '0.1.1'},
+}
 FILENAMES = {
     'Remote': {'python': 'netcircuit_api-0.1.1-py3-none-any.whl', 'sdist': 'netcircuit_api-0.1.1.tar.gz', 'deployment': 'netcircuit-remote-0.1.1-deployment.tar.gz'},
     'Contracts': {'python': 'netcircuit_contracts-0.1.1-py3-none-any.whl', 'sdist': 'netcircuit_contracts-0.1.1.tar.gz', 'npm': 'tinihi-labs-contracts-0.1.1.tgz', 'dev': 'netcircuit_artifact_paths-1.0.0a1-py3-none-any.whl', 'dev_npm': 'tinihi-labs-artifact-paths-1.0.0-m1.0.tgz'},
@@ -45,6 +50,26 @@ def _object(pairs):
 
 def load_manifest(path, *, local_artifacts=False):
     return validate_manifest(json.loads(Path(path).read_text(encoding='utf-8'), object_pairs_hook=_object), local_artifacts=local_artifacts)
+
+
+def ci_environment(value):
+    """Select CI dependencies from the reviewed lock, independent of Actions variables."""
+    validate_manifest(value)
+    environment = {}
+    for component, kind, prefix in (
+        ('Contracts', 'python', 'NETCIRCUIT_CONTRACTS_WHEEL'),
+        ('Contracts', 'dev', 'NETCIRCUIT_CONTRACTS_DEV_WHEEL'),
+        ('Contracts', 'npm', 'NETCIRCUIT_CONTRACTS_NPM'),
+        ('Contracts', 'sdist', 'NETCIRCUIT_CONTRACTS_SDIST'),
+        ('Contracts', 'dev_npm', 'NETCIRCUIT_ARTIFACT_PATHS_NPM'),
+        ('Simulator', 'python', 'NETCIRCUIT_SIMULATOR_WHEEL'),
+        ('Hardware', 'python', 'NETCIRCUIT_HARDWARE_WHEEL'),
+        ('FPGA', 'source', 'NETCIRCUIT_FPGA_ARTIFACT'),
+    ):
+        artifact = value['repositories'][component]['artifacts'][kind]
+        for key in ('url', 'sha256', 'filename'):
+            environment[prefix + '_' + key.upper()] = artifact[key]
+    return environment
 
 
 def _sha(value):
@@ -95,8 +120,10 @@ def _artifact(value, component, expected=None, *, released=True, local_artifacts
 
 
 def validate_manifest(value, *, local_artifacts=False):
-    if not isinstance(value, dict) or type(value.get('schemaVersion')) is not int or value['schemaVersion'] != 1 or value.get('releaseVersion') != VERSION:
-        raise ValueError('The system release must use schemaVersion 1 and releaseVersion 0.1.1.')
+    if (not isinstance(value, dict) or type(value.get('schemaVersion')) is not int or value['schemaVersion'] != 1
+            or not isinstance(value.get('releaseVersion'), str) or value['releaseVersion'] not in RELEASE_PROFILES):
+        raise ValueError('The system release must use schemaVersion 1 and an explicitly reviewed releaseVersion (0.1.1 or 0.1.2).')
+    versions = RELEASE_PROFILES[value['releaseVersion']]
     if type(local_artifacts) is not bool or (local_artifacts and value.get('distribution') != 'local'):
         raise ValueError('Local artifact mode requires an explicit distribution: local manifest.')
     if not local_artifacts and value.get('distribution') not in (None, 'github-release'):
@@ -108,9 +135,10 @@ def validate_manifest(value, *, local_artifacts=False):
     repository_prefix = None
     for component, filenames in FILENAMES.items():
         product = repositories[component]
-        if (not isinstance(product, dict) or product.get('version') != VERSION
+        version = versions[component]
+        if (not isinstance(product, dict) or product.get('version') != version
                 or not _revision(product.get('sourceRevision'))):
-            raise ValueError('Each current product requires canonical repository, version 0.1.1 and exact sourceRevision: ' + component)
+            raise ValueError('Each product requires its reviewed version and exact sourceRevision: ' + component)
         selected_prefix = _repository_prefix(product.get('repository'), component)
         if repository_prefix is not None and repository_prefix != selected_prefix:
             raise ValueError('A release cannot mix current and historical repository namespaces.')
@@ -119,11 +147,19 @@ def validate_manifest(value, *, local_artifacts=False):
         if not isinstance(artifacts, dict) or set(artifacts) != set(filenames):
             raise ValueError('The product artifact set is incomplete or unknown: ' + component)
         for kind, filename in filenames.items():
+            if component == 'Interface':
+                filename = filename.replace('0.1.1', version)
             _artifact(artifacts[kind], component, filename, local_artifacts=local_artifacts, repository_prefix=repository_prefix)
             location = str(Path(artifacts[kind]['path']).resolve()) if local_artifacts else artifacts[kind]['url']
             if location in urls:
                 raise ValueError('An artifact location cannot identify multiple artifacts.')
             urls.add(location)
+    if value['releaseVersion'] == '0.1.2':
+        integration = value.get('integration')
+        if (not isinstance(integration, dict) or integration.get('version') != value['releaseVersion']
+                or integration.get('repository') != repositories['Remote']['repository']
+                or not _revision(integration.get('sourceRevision'))):
+            raise ValueError('System patch integration requires its own exact Remote source revision, distinct from retained API provenance.')
     compatibility = value.get('compatibility')
     if not isinstance(compatibility, dict) or any(type(compatibility.get(key)) is not type(expected) or compatibility[key] != expected for key, expected in COMPATIBILITY.items()):
         raise ValueError('Release compatibility must preserve the reviewed protocol and runtime boundaries.')

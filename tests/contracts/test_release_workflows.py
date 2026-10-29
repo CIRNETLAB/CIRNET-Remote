@@ -54,6 +54,19 @@ def workflow(name):
     return yaml.safe_load(path.read_text(encoding='utf-8'))
 
 
+def test_every_ci_bootstrap_derives_dependencies_from_the_committed_system_lock():
+    for path in sorted((ROOT / '.github/workflows').glob('*.yml')):
+        for name, job in workflow(path.name).get('jobs', {}).items():
+            steps = job.get('steps', [])
+            bootstrap = next((index for index, step in enumerate(steps)
+                              if 'scripts/install_contracts.py --dev-only' in step.get('run', '')), None)
+            if bootstrap is None:
+                continue
+            selection = [index for index, step in enumerate(steps)
+                         if 'scripts/select_ci_release.py --manifest integration/release-set.json --github-env "$GITHUB_ENV"' in step.get('run', '')]
+            assert len(selection) == 1 and selection[0] < bootstrap, (path.name, name)
+
+
 def assert_shared_coverage(data,name):
     events=data.get('on',data.get(True))
     for event in ('push','pull_request'):
@@ -86,7 +99,8 @@ def test_contract_workflow_checks_artifacts_compatibility_and_outside_packages()
 def test_interface_release_gate_rejects_missing_digest_frozen_source_and_early_install(failure):
     job=deepcopy(workflow('contracts.yml')['jobs']['canonical-boundaries'])
     if failure=='missing-digest':
-        next(step for step in job['steps'] if 'scripts.install_interface' in step.get('run',''))['env'].pop('NETCIRCUIT_INTERFACE_ARTIFACT_SHA256')
+        download=next(step for step in job['steps'] if 'scripts.install_interface' in step.get('run',''))
+        download['run']=download['run'].replace(' --manifest integration/release-set.json','')
     elif failure=='frozen-directory':
         next(step for step in job['steps'] if 'npm test' in step.get('run',''))['working-directory']='apps/web'
     else:
@@ -115,6 +129,26 @@ def test_api_consumer_installs_the_versioned_simulator_and_uses_compatible_wire_
         assert 'netcircuit-simulator==0.1.1' in dependencies
     api=tomllib.loads((ROOT/'services/api/pyproject.toml').read_text(encoding='utf-8'))
     assert 'fastapi==0.143.0' in api['project']['dependencies']
+
+
+def test_browser_release_uses_exact_selected_api_archive_and_isolated_byte_provenance():
+    commands='\n'.join(step.get('run','') for step in workflow('browser-e2e.yml')['jobs']['chromium']['steps'])
+    assert "load_manifest('integration/release-set.json')" in commands
+    assert 'download_artifact' in commands and 'verify_api_wheel' in commands
+    assert 'API_INSTALL_PROBE' in commands and "'-I'" in commands
+    assert '--force-reinstall' in commands and '--no-deps' in commands
+    assert 'python -m build' not in commands,'Release browser must use the selected API bytes rather than a new same-version build.'
+    assert 'scripts.install_interface --manifest integration/release-set.json' in commands
+
+
+def test_interface_release_gate_accepts_manifest_bound_download_and_rejects_unlocked_variant():
+    job=deepcopy(workflow('browser-e2e.yml')['jobs']['chromium'])
+    download=next(step for step in job['steps'] if 'scripts.install_interface' in step.get('run',''))
+    for name in ('NETCIRCUIT_INTERFACE_ARTIFACT_URL','NETCIRCUIT_INTERFACE_ARTIFACT_SHA256'):
+        download['env'].pop(name,None)
+    assert_interface_release_job(job)
+    download['run']=download['run'].replace(' --manifest integration/release-set.json','')
+    with pytest.raises(AssertionError):assert_interface_release_job(job)
 
 
 def test_postgres_workflow_executes_the_explicit_no_skip_migration_and_race_suite():

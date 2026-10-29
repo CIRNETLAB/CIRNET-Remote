@@ -19,6 +19,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
+      - name: Select exact dependency artifacts from the system lock
+        run: python scripts/select_ci_release.py --manifest integration/release-set.json --github-env "$GITHUB_ENV"
       - name: Bootstrap the pinned independent DEV allocator
         env:
           NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification

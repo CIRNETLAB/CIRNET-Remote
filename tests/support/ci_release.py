@@ -6,8 +6,12 @@ def assert_interface_release_job(job):
     download = next((index for index, step in enumerate(steps)
                      if 'scripts.install_interface' in step.get('run', '')), None)
     assert download is not None, 'Interface must be downloaded as an explicit release artifact'
-    for name in ('NETCIRCUIT_INTERFACE_ARTIFACT_URL', 'NETCIRCUIT_INTERFACE_ARTIFACT_SHA256'):
-        assert steps[download].get('env', {}).get(name) == '${{ vars.' + name + ' }}', name
+    if 'scripts.install_interface --manifest integration/release-set.json' in steps[download]['run']:
+        assert not any(name in steps[download].get('env', {}) for name in
+            ('NETCIRCUIT_INTERFACE_ARTIFACT_URL', 'NETCIRCUIT_INTERFACE_ARTIFACT_SHA256')), 'Manifest-bound selection must come from the committed lock.'
+    else:
+        for name in ('NETCIRCUIT_INTERFACE_ARTIFACT_URL', 'NETCIRCUIT_INTERFACE_ARTIFACT_SHA256'):
+            assert steps[download].get('env', {}).get(name) == '${{ vars.' + name + ' }}', name
     assert steps[download]['env'].get('NETCIRCUIT_ARTIFACTS_TOKEN') == '${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}'
     assert '--github-env "$GITHUB_ENV"' in steps[download]['run']
     bootstrap = next((index for index, step in enumerate(steps)

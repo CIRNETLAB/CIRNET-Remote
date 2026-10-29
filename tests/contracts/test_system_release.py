@@ -12,6 +12,34 @@ from zipfile import ZipFile
 import pytest
 
 
+def test_ci_selection_overrides_stale_same_version_variables(monkeypatch):
+    from scripts import system_release_manifest
+    selected = release()
+    monkeypatch.setenv('NETCIRCUIT_CONTRACTS_WHEEL_URL', 'https://example.invalid/stale.whl')
+    monkeypatch.setenv('NETCIRCUIT_HARDWARE_WHEEL_SHA256', 'f' * 64)
+    select = getattr(system_release_manifest, 'ci_environment', None)
+    assert callable(select), 'CI dependencies must derive from the committed system lock before bootstrap.'
+    environment = select(selected)
+    for component, kind, prefix in (
+        ('Contracts', 'python', 'NETCIRCUIT_CONTRACTS_WHEEL'),
+        ('Contracts', 'dev', 'NETCIRCUIT_CONTRACTS_DEV_WHEEL'),
+        ('Contracts', 'npm', 'NETCIRCUIT_CONTRACTS_NPM'),
+        ('Contracts', 'sdist', 'NETCIRCUIT_CONTRACTS_SDIST'),
+        ('Contracts', 'dev_npm', 'NETCIRCUIT_ARTIFACT_PATHS_NPM'),
+        ('Simulator', 'python', 'NETCIRCUIT_SIMULATOR_WHEEL'),
+        ('Hardware', 'python', 'NETCIRCUIT_HARDWARE_WHEEL'),
+        ('FPGA', 'source', 'NETCIRCUIT_FPGA_ARTIFACT'),
+    ):
+        artifact = selected['repositories'][component]['artifacts'][kind]
+        assert environment[prefix + '_URL'] == artifact['url']
+        assert environment[prefix + '_SHA256'] == artifact['sha256']
+        assert environment[prefix + '_FILENAME'] == artifact['filename']
+    invalid = release()
+    invalid['repositories']['Hardware']['artifacts']['python']['url'] = 'https://example.invalid/stale.whl'
+    with pytest.raises(ValueError):
+        select(invalid)
+
+
 def release(*, historical=False):
     kinds = {'Remote': {'python': 'netcircuit_api-0.1.1-py3-none-any.whl', 'sdist': 'netcircuit_api-0.1.1.tar.gz', 'deployment': 'netcircuit-remote-0.1.1-deployment.tar.gz'},
              'Contracts': {'python': 'netcircuit_contracts-0.1.1-py3-none-any.whl', 'sdist': 'netcircuit_contracts-0.1.1.tar.gz', 'npm': 'tinihi-labs-contracts-0.1.1.tgz', 'dev': 'netcircuit_artifact_paths-1.0.0a1-py3-none-any.whl', 'dev_npm': 'tinihi-labs-artifact-paths-1.0.0-m1.0.tgz'},
@@ -50,6 +78,96 @@ def test_historical_release_manifest_preserves_its_original_repository_provenanc
     recorded = json.dumps(value, sort_keys=True)
     assert validate_manifest(value) is value
     assert json.dumps(value, sort_keys=True) == recorded
+
+
+def patch_release():
+    value = release()
+    value['releaseVersion'] = '0.1.2'
+    value['integration'] = {'repository': value['repositories']['Remote']['repository'],
+                            'version': '0.1.2', 'sourceRevision': 'f' * 40}
+    interface = value['repositories']['Interface']
+    interface['version'] = '0.1.2'
+    for artifact in interface['artifacts'].values():
+        artifact['filename'] = artifact['filename'].replace('0.1.1', '0.1.2')
+    return value
+
+
+def test_system_patch_selects_interface_patch_without_relabeling_retained_packages():
+    from scripts.system_release_manifest import validate_manifest
+    value = patch_release()
+    before = release()
+    assert validate_manifest(value) is value
+    for component in ('Remote', 'Contracts', 'Simulator', 'Hardware', 'FPGA'):
+        assert value['repositories'][component] == before['repositories'][component]
+    assert value['compatibility'] == before['compatibility']
+    assert value['rollback'] == before['rollback']
+
+
+@pytest.mark.parametrize('component', ['Remote', 'Contracts', 'Simulator', 'Hardware', 'FPGA'])
+def test_system_patch_rejects_unapproved_package_bumps(component):
+    from scripts.system_release_manifest import validate_manifest
+    value = patch_release()
+    value['repositories'][component]['version'] = '0.1.2'
+    with pytest.raises(ValueError):
+        validate_manifest(value)
+
+
+@pytest.mark.parametrize('failure', ['old-interface', 'old-filename', 'unknown-system', 'missing-integration', 'wrong-integration-version', 'wrong-integration-revision', 'wrong-integration-owner'])
+def test_system_patch_requires_exact_approved_selection_and_integration_source(failure):
+    from scripts.system_release_manifest import validate_manifest
+    value = patch_release()
+    if failure == 'old-interface': value['repositories']['Interface'] = release()['repositories']['Interface']
+    elif failure == 'old-filename': value['repositories']['Interface']['artifacts']['source']['filename'] = 'netcircuit-interface-0.1.1-source.tar.gz'
+    elif failure == 'unknown-system': value['releaseVersion'] = '0.1.3'
+    elif failure == 'missing-integration': value.pop('integration')
+    elif failure == 'wrong-integration-version': value['integration']['version'] = '0.1.1'
+    elif failure == 'wrong-integration-revision': value['integration']['sourceRevision'] = 'master'
+    elif failure == 'wrong-integration-owner': value['integration']['repository'] = value['repositories']['Contracts']['repository']
+    with pytest.raises(ValueError):
+        validate_manifest(value)
+
+
+def test_original_system_lock_cannot_silently_select_patch_interface():
+    from scripts.system_release_manifest import validate_manifest
+    value = patch_release()
+    value['releaseVersion'] = '0.1.1'
+    with pytest.raises(ValueError):
+        validate_manifest(value)
+
+
+def test_static_patch_keeps_contracts_version_and_matches_selected_product(tmp_path):
+    from scripts.install_release import _extract_static
+    value = patch_release()
+    identity = {'name': 'netcircuit-interface', 'kind': 'static', 'version': '0.1.2', 'contractsVersion': '0.1.1',
+                'sourceFingerprint': 'f' * 64, 'source': {'repository': value['repositories']['Interface']['repository'],
+                'revision': value['repositories']['Interface']['sourceRevision'], 'uncommittedMigration': False}}
+    path = tmp_path / 'static.tar.gz'
+    pages = [(name, b'<html>real release page</html>') for name in ('index.html', 'oscilloscope-preview.html', 'function-generator-preview.html')]
+    def write(): path.write_bytes(archive_bytes([*pages, ('interface-artifact.json', json.dumps(identity).encode())]))
+    write()
+    assert _extract_static(path, tmp_path / 'product', value, identity) == tmp_path / 'product'
+    for field in ('version', 'contractsVersion'):
+        before = identity[field]
+        identity[field] = '0.1.1' if field == 'version' else '0.1.2'
+        write()
+        with pytest.raises(ValueError):
+            _extract_static(path, tmp_path / ('wrong-' + field), value, identity)
+        identity[field] = before
+
+
+@pytest.mark.parametrize('state_version,manifest_version', [('0.1.2', '0.1.2'), ('0.1.1', '0.1.2'), ('0.1.2', '0.1.1')])
+def test_rollback_state_is_bound_to_exact_system_release_version(tmp_path, state_version, manifest_version):
+    from scripts.check_release_rollback import load_environment
+    state, path = saved_environment(tmp_path)
+    state['releaseVersion'] = state_version
+    manifest = Path(state['manifest'])
+    manifest.write_text(json.dumps(patch_release() if manifest_version == '0.1.2' else release()), encoding='utf-8')
+    state['manifestSha256'] = hashlib.sha256(manifest.read_bytes()).hexdigest()
+    path.write_text(json.dumps(state), encoding='utf-8')
+    if state_version == manifest_version:
+        assert load_environment(path)['releaseVersion'] == state_version
+    else:
+        with pytest.raises(ValueError): load_environment(path)
 
 
 @pytest.mark.parametrize('location', ['repository', 'asset', 'rollback'])
@@ -226,7 +344,7 @@ def test_rollback_gate_cannot_count_a_skipped_database_test_as_pass(tmp_path, mo
                'npm_config_cache': str(tmp_path / 'npm-cache'), 'PYTHONDONTWRITEBYTECODE': '1'}
     for key in process:
         monkeypatch.setenv(key, 'inherited-output-must-be-replaced')
-    monkeypatch.setattr(check_release_rollback, 'load_environment', lambda path: {'environment': {}, 'processEnvironment': process})
+    monkeypatch.setattr(check_release_rollback, 'load_environment', lambda path: {'releaseVersion': '0.1.2', 'environment': {}, 'processEnvironment': process})
     monkeypatch.setattr(artifact_paths, 'artifact_directory', lambda child: tmp_path)
     def skipped(command, **kwargs):
         child_environment = {key.casefold(): value for key, value in kwargs['env'].items()}
@@ -238,6 +356,7 @@ def test_rollback_gate_cannot_count_a_skipped_database_test_as_pass(tmp_path, mo
     monkeypatch.setattr(check_release_rollback.subprocess, 'run', skipped)
     report, path = check_release_rollback.run(tmp_path / 'unused-environment.json')
     assert report['gateStatus'] == 'FAIL'
+    assert report['releaseVersion'] == '0.1.2'
     assert [gate['status'] for gate in report['registeredGates']] == ['FAIL', 'NOT_RUN', 'NOT_RUN']
     assert report['registeredGates'][0]['skippedTests'] == 1
     assert report['fullPriorArtifactRollbackRehearsal'] == 'NOT_RUN'

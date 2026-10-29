@@ -37,6 +37,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Select exact dependency artifacts from the system lock
+        run: python scripts/select_ci_release.py --manifest integration/release-set.json --github-env "$GITHUB_ENV"
       - name: Bootstrap the pinned independent DEV allocator
         env:
           NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
@@ -78,10 +80,8 @@ jobs:
           python -m scripts.check_simulator_consumer
       - name: Download the explicit reviewed Interface product
         env:
-          NETCIRCUIT_INTERFACE_ARTIFACT_URL: ${{ vars.NETCIRCUIT_INTERFACE_ARTIFACT_URL }}
-          NETCIRCUIT_INTERFACE_ARTIFACT_SHA256: ${{ vars.NETCIRCUIT_INTERFACE_ARTIFACT_SHA256 }}
           NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
-        run: python -m scripts.install_interface --github-env "$GITHUB_ENV"
+        run: python -m scripts.install_interface --manifest integration/release-set.json --github-env "$GITHUB_ENV"
       - name: Bootstrap Interface artifacts before its clean install
         env:
           NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST: ''
