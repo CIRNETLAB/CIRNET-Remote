@@ -102,6 +102,37 @@ Remote Integration draft `427329840` retains manifest asset `686803664`, SHA-256
 `1354dbe58cf77491ccfd8a5c771b23bf1ca310741bc9ba707bab08d77a214be1`;
 its bytes equal the Git manifest at both binding and fixture commits.
 
+### Approved Ubuntu native acceptance
+
+The user explicitly confirmed that Windows is not mandatory and that the full
+original gate may be accepted on Ubuntu. The supported browser job now uses
+`ubuntu-latest`; its 58 cases/order, assertions, DPR, 90-minute job envelope,
+individual deadlines, zero retries, traces, baselines, launch arguments and
+selected artifact bytes remain unchanged. This is a runner-platform choice,
+not a PASS for the failed Windows runs. Runtime/tool provenance remains
+`3c3c36a`; this verified CI-only descendant does not rebuild/relabel API or UI.
+
+Windows local full acceptance is NOT_PASS: 56 PASS/one FAIL/one original
+historical skip. The sealed gallery failed its original 10-second export poll
+after a correct LED import; File click took 10,534.5 ms. An idle unchanged
+singleton reproduced the same boundary at 11,213.5 ms. DOM snapshot collection
+is only 1–7 ms. No source mutation, principal cancellation or graph mismatch was
+demonstrated; CDP/render scheduling remains under a bounded diagnostic.
+Do not retry an unfiltered Windows suite blindly or alter its assertions.
+
+Hosted Windows `40793753335` is CANCELLED / NOT_PASS at its original 90-minute
+envelope: 54/58 cases started and seven numbered failures; no final PASS count.
+Fresh local installed Web/PG/package pass; registered software rollback passes
+all three subgates on an unchanged serialized rerun after its earlier RPC worker
+timeout. Local Contracts is 809 PASS/one export-context FAIL/two Windows file
+symlink skips; the exact failed policy case passes in a real Git checkout.
+Authoritative exact-source hosted Contracts/full Python passes. Avoid duplicate
+local collections; retain every attempt with its actual scope.
+
+Remaining release gate: actual full selected-set Ubuntu hosted acceptance, then
+normal master promotion/exact-master CI and immutable publication. The original
+v0.1.1 releases and both v0.1.2 drafts remain unchanged while this gate is open.
+
 ## Historical rename scope, 2026-10-29 (Asia/Saigon)
 
 The new user attachment authorizes source/tests/CI/current documentation and

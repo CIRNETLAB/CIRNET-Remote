@@ -119,7 +119,68 @@ Remote Integration draft `427329840` holds exactly the Git manifest from
 Before publication its tag target will be bound to the final validated descendant;
 runtime `3c3c36a` and retained API `82ca15b` provenance remain distinct.
 
-Started: 2026-10-27; current update: 2026-10-29, Asia/Saigon. Status: M6_V012_NATIVE_IN_PROGRESS. The records below retain their historical scope. No production deployment or board programming is part of M6.
+### Approved Ubuntu continuation after Windows native results
+
+The user explicitly chose: “Không bắt buộc Windows; có thể nghiệm thu toàn bộ
+gate gốc trên Ubuntu”. The browser workflow changes only `runs-on` to
+`ubuntu-latest`. Original case collection/order, assertions, DPR, individual
+deadlines, 90-minute job envelope, retries 0, traces, baselines and browser
+arguments remain unchanged. Artifact/source identities and manifest SHA-256
+`1354dbe5…214be1` remain exact; a CI-only descendant does not relabel the
+retained API build or rebuild Interface.
+
+The actual Windows full local result is **56 PASS/one FAIL/one unchanged optional
+historical skip**, 58 collected in original order. Receipt SHA-256
+`1531aeb34cea20ed9151eae030b3201f0dad07b9b5f9bbc6392740252df2e3e8`.
+The failure is sealed-package gallery: an LED graph had visibly imported and
+rendered correctly, but File click took 10,534.5 ms, exceeding the existing
+10-second poll before a graph comparison completed. Visibility/enabled/stability
+checks were about 15 ms. An unchanged idle singleton reproduced 11,213.5 ms at
+the same boundary; concurrent verification is therefore not a sufficient cause.
+All 1,312 DOM snapshots collected in 1–7 ms. Source review found no evidence
+that principal protection dropped this successful import or a late server route
+overwrote it. A bounded profiler remains diagnostic, not acceptance or a source
+fix. Two initial control launches were NOT_RUN (ownership admission and zero
+matching cases); neither is a gallery result.
+
+Hosted Windows [40793753335](https://github.com/CIRNETLAB/CIRNET-Remote/actions/runs/40793753335)
+is **CANCELLED / NOT_PASS**. The actual annotation says the job exceeded its
+maximum 1h30m. Native ran 00:30:18–01:54:07 UTC; 54/58 cases started. Seven
+failure headers cover gallery camera settle, DPR2 depth, responsive Ribbon DPR2,
+two pending-preflight Cancel flows, sealed gallery and component closeups.
+No final PASS total is inferred. Exact API wheel/source/Interface selection and
+actual draft access passed before this native step. The artifact is inspected
+separately; no credential blocker or permission expansion is claimed.
+
+Fresh installed-product Web passes AST 229 modules, 10 Contracts and 1,467 runtime
+tests with zero skips/failures plus production build. All 34 generated files
+equal selected static payloads; all 572 source payloads remain exact. Registered
+local PostgreSQL passes 18 cases; package isolation passes migrations, CLI,
+domain/NCAP1+2/RPC/resources. The registered rollback first failed its nested
+RPC worker's original 10-second bound, then its complete unchanged serialized
+rerun passed all three subgates in 229.031 seconds. Retry receipt SHA-256
+`a4f4967a29655801c49f34d18bfa9cca4dcb6f2003fd5b7b0ab89ae2c8b1329d`.
+This remains software/restore/replay/package coverage, not a full prior-artifact
+reinstall rehearsal. Initial failure is retained.
+
+Local Contracts completes 809 PASS/one FAIL/two file-symlink capability skips.
+The failed negative test assumed `ROOT` was a Git checkout, but its source export
+is a safe allocator-owned non-Git directory. The unchanged test passes in the
+actual Git checkout (one PASS/15.06s; log SHA-256 `28de3a8869…9e42e`). No
+production/test source was altered for this result. Exact-source hosted
+Contracts/full Python passes; the redundant local full-Python collection was
+not started. Consolidated acceptance evidence SHA-256
+`e6a0e68d82169af4b8a3eef095dcfcbc2d2523b454fe6c8569810128e8c03fe8`
+retains these scopes and verifies all selected assets/API/source payloads.
+
+All six source checkouts and both linked worktrees remain clean with unchanged
+ignored inventories, LICENSE/assets/fixtures/baselines; all six v0.1.1 releases,
+tag objects and 31 asset metadata records remain exact. Preservation receipt
+SHA-256 `207b5bbafed6648ea0d04caa3e2020528409b90e6f8c0fbf8cd52c7698fa65c0`.
+Master promotion/publication remains pending actual full Ubuntu native acceptance
+and final exact-master CI; Windows failure/cancellation is not promoted to PASS.
+
+Started: 2026-10-27; current update: 2026-10-29, Asia/Saigon. Status: M6_V012_UBUNTU_NATIVE_PENDING. The records below retain their historical scope. No production deployment or board programming is part of M6.
 
 ## Current CIRNET rename and release disposition
 
