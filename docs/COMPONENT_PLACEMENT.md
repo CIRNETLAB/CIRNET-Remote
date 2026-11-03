@@ -99,7 +99,7 @@ using one bounded cache and shared renderer, with geometry/profile/color in cach
 Source ownership: `apps/web/src/editor/FlexiblePlacementController.ts` owns the two-click
 draft; `apps/web/src/composables/useFlexibleAuthoring.ts` owns pointer previews/capture;
 `apps/web/src/electrical/flexibleGeometry.ts` and `contracts/flexible_mounting.py` own
-geometry validation. The [flexible contract](../contracts/design-models/flexible-placement.md)
+geometry validation. The [flexible contract](https://github.com/CIRNETLAB/CIRNET-Contracts/blob/54ef9f6a11f4906c11ec9789de47cf06d5100734/contracts/design-models/flexible-placement.md)
 is the canonical persistence/mechanics specification. Dated reports in `verification/`
 record their own observed results. New checks follow [VERIFICATION.md](VERIFICATION.md);
 screenshots and reference-derived diagnostic contact sheets are created outside the

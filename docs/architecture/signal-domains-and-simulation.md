@@ -90,7 +90,7 @@ explicit trusted registry composition, including in each worker; service
 configuration currently selects only the two built-ins. Real ngspice integration
 will require graph/netlist and model mapping, native artifact provenance,
 analog result contracts, time/unit alignment and bounded lifecycle tests. See
-the [analysis and design](../superpowers/specs/2026-10-27-simulator-backends-design.md).
+the [analysis and design](https://github.com/CIRNETLAB/CIRNET-Remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/superpowers/specs/2026-10-27-simulator-backends-design.md).
 
 VirtualHardwareStation admits supported CircuitGraph 1.0/1.1/1.2 through this
 provider boundary, then executes through the existing Lab lifecycle, RPC, bounded

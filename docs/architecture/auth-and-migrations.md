@@ -137,7 +137,7 @@ Keep capture files and their metadata together. Downgrade intentionally refuses
 to delete identities; rollback means restoring the verified pre-upgrade database
 and matching capture backup while writers remain stopped.
 
-The [2026-10-16 release evidence](../verification/2026-10-16-w8-release.md) records
+The [2026-10-16 release evidence](https://github.com/CIRNETLAB/CIRNET-Remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/verification/2026-10-16-w8-release.md) records
 SQLite migration/restart and 16 actual PostgreSQL 18.6 cases, including
 backup/restore and independent-writer/authorization/recovery races. Those are
 historical results, not commands rerun during a later documentation edit. They

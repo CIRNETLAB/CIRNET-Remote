@@ -1,6 +1,6 @@
 # Điều khiển Power Supply 3D
 
-Hướng dẫn này mô tả `POWER_SUPPLY` trực quan cũ. `DC_SUPPLY` vật lý là type riêng: dùng thuộc tính `voltage`, terminal PLUS/MINUS và mô hình DC giới hạn; núm giới hạn dòng không hoạt động. Xem [registry](../device-library/parts/README.md) và `apps/web/src/three/PowerSupplyModel.ts`; không suy ra giới hạn hay số đo phần cứng từ các núm.
+Hướng dẫn này mô tả `POWER_SUPPLY` trực quan cũ. `DC_SUPPLY` vật lý là type riêng: dùng thuộc tính `voltage`, terminal PLUS/MINUS và mô hình DC giới hạn; núm giới hạn dòng không hoạt động. Xem [registry](https://github.com/CIRNETLAB/CIRNET-Remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/device-library/parts/README.md) và `apps/web/src/three/PowerSupplyModel.ts`; không suy ra giới hạn hay số đo phần cứng từ các núm.
 
 - Chọn **Select**, giữ chuột trái trên núm **Voltage** hoặc **Ampe** rồi kéo lên/phải để tăng, xuống/trái để giảm. Núm, rãnh grip và vạch chỉ thị xoay đồng thời, cập nhật ngay khi kéo; hành trình giới hạn 270°.
 - Núm nhỏ hơn khoảng 14% so với phiên bản cũ. Thang số quanh núm: **Voltage 0–15 V**, **Ampe 0–5 A**; vạch chỉ thị khớp thang 270°. Giá trị đặt thay đổi theo bước 0,01 V/A.

@@ -1,6 +1,6 @@
 # Lab-First R0–R7 migration ledger
 
-Current Web/Contracts hardening WC20 (2026-10-20), its source identity, executed gates and remaining limits are recorded in the [WC20 closure](verification/2026-10-20-web-contracts-closure.md). The R/H/W phase rows below retain their original history and are not current gate results.
+Current Web/Contracts hardening WC20 (2026-10-20), its source identity, executed gates and remaining limits are recorded in the [WC20 closure](https://github.com/CIRNETLAB/CIRNET-Remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/verification/2026-10-20-web-contracts-closure.md). The R/H/W phase rows below retain their original history and are not current gate results.
 
 > Historical migration ledger — 2026-10-19 audit: phase instructions, Git states, counts and hashes below record the original R/H/W sessions; they are not instructions to repeat phases, stage or commit now. [ARCHITECTURE.md](ARCHITECTURE.md) remains current authority and [VERIFICATION.md](VERIFICATION.md) governs new evidence. The archived R0–R7 prompt is hash-locked and remains byte-for-byte unchanged.
 
@@ -49,7 +49,7 @@ Supported `.audit-runtime` includes `grpcio-tools`; native/localhost tests run w
 
 Only local tool skip: `test_iverilog_safety_behavior_when_available`, because Icarus/vvp are absent. Static RTL/testbench parsing/type checking/elaboration passed with pyslang; behavioral simulation remains required in configured FPGA CI. Remaining warnings: Starlette/httpx deprecation and pre-existing Vite chunk-size advisory; no dependency upgrade or bundle redesign added to this pass. RefResolver warning removed by bounded registry migration; four CircuitGraph tests and provenance test pass with DeprecationWarning treated as errors.
 
-Independent source review covered `f5df5ac..a0bbbb2` plus H6 docs; no Critical or Minor findings, three reproduced Important findings fixed by the author with RED→GREEN and the full final matrix. H6's final architecture-review commit includes these bounded source/RPC fixes so prior phase/user commits remain intact. Details and the 20 required regression mappings: [final hardening report](verification/2026-10-13-post-r7-hardening.md).
+Independent source review covered `f5df5ac..a0bbbb2` plus H6 docs; no Critical or Minor findings, three reproduced Important findings fixed by the author with RED→GREEN and the full final matrix. H6's final architecture-review commit includes these bounded source/RPC fixes so prior phase/user commits remain intact. Details and the 20 required regression mappings: [final hardening report](https://github.com/CIRNETLAB/CIRNET-Remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/verification/2026-10-13-post-r7-hardening.md).
 
 Ruling H6: Preserve H0–H4 and user `6bbd1b4` history; finish H5 and record bounded final-review corrections in the single H6 commit — no rewrite/repeated phases — cost if wrong: reviewer must assess the H6 source diff alongside its documentation.
 Ruling H6: Select proven observed-net aliases jointly with resource matching, sharing the pure allocator with the compiler — never reconstruct student wiring — cost if wrong: revisit actual profile resources/net evidence, not reference connections.

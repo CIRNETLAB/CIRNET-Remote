@@ -13,7 +13,7 @@ and `/api/v2/assignments` reuse the same ownership, immutable revisions,
 publication CAS and redaction authority. The Web explicitly opts into this
 version when attaching a 1.2 reference; opening/saving an old definition does not
 retag it. Legacy reads/mutations reject a selected V2 definition with
-`UNSUPPORTED_DOCUMENT_VERSION` before changing it. See the [flexible contract](../../contracts/design-models/flexible-placement.md).
+`UNSUPPORTED_DOCUMENT_VERSION` before changing it. See the [flexible contract](https://github.com/CIRNETLAB/CIRNET-Contracts/blob/54ef9f6a11f4906c11ec9789de47cf06d5100734/contracts/design-models/flexible-placement.md).
 
 Instructors author their own assignments. Admin access to another author's
 assignment is explicit and audited on reads, edits, publication and execution

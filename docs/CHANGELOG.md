@@ -6,12 +6,12 @@ All notable project changes will be documented in this file. The project follows
 
 ### Fixed — 2026-10-21 GitHub Actions runtime fixture
 
-- Size synthetic runtime-copy paths from the actual external allocator root, replacing fixed padding that failed on shorter Linux CI paths. Boundary regressions now prove successful copying at 259 characters and rejection at 260 before publishing files, preserving production launch limits. [Latest hosted failures and verification](verification/2026-10-21-github-actions.md).
+- Size synthetic runtime-copy paths from the actual external allocator root, replacing fixed padding that failed on shorter Linux CI paths. Boundary regressions now prove successful copying at 259 characters and rejection at 260 before publishing files, preserving production launch limits. [Latest hosted failures and verification](https://github.com/CIRNETLAB/CIRNET-Remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/verification/2026-10-21-github-actions.md).
 
 ### Fixed — 2026-10-20 GitHub Actions
 
 - Place runner-dependent artifact paths at execution steps, where the GitHub Actions `runner` context is available; preserve isolated application defaults, owned evidence and cleanup.
-- Invoke Documentation tests through `python -m pytest` so clean CI can import repository tools without editable-install side effects. Workflow validation and isolated Python-startup regressions accompany the fixes; [actual failure and repair evidence](verification/2026-10-20-github-actions.md) separates local checks from future hosted runs.
+- Invoke Documentation tests through `python -m pytest` so clean CI can import repository tools without editable-install side effects. Workflow validation and isolated Python-startup regressions accompany the fixes; [actual failure and repair evidence](https://github.com/CIRNETLAB/CIRNET-Remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/verification/2026-10-20-github-actions.md) separates local checks from future hosted runs.
 
 ### Added and changed — 2026-10-20 Web/Contracts hardening WC20
 
@@ -21,7 +21,7 @@ All notable project changes will be documented in this file. The project follows
 - Generated operation status/media/error validation, field-level canonical diagnostics and lazy complete validator profiles with synchronous generated cores.
 - Authored momentary-input projection, per-draft/principal save bindings and bounded unknown-operation observations across reload; cross-tab Web Locks and Stop/cancellation fences preserve no-replay control semantics.
 - AST coverage for all application controllers, isolated release/CI state and current Contracts/FPGA conformance mapping with physical gates still open.
-- Exact executed gates, production measurements, native status and recorded output-policy deviations: [WC20 closure](verification/2026-10-20-web-contracts-closure.md). This unreleased entry does not establish hosted CI, target deployment or new hardware capability.
+- Exact executed gates, production measurements, native status and recorded output-policy deviations: [WC20 closure](https://github.com/CIRNETLAB/CIRNET-Remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/verification/2026-10-20-web-contracts-closure.md). This unreleased entry does not establish hosted CI, target deployment or new hardware capability.
 
 ### Documentation — 2026-10-19 Audit and external verification artifacts
 

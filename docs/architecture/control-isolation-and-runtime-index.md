@@ -1,7 +1,7 @@
 # Scheduler control isolation and bounded persistence
 
 Status: IMPLEMENTED. Verification scope is recorded in the dated
-[WC20 control evidence](../verification/2026-10-20-wc20-control.md).
+[WC20 control evidence](https://github.com/CIRNETLAB/CIRNET-Remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/verification/2026-10-20-wc20-control.md).
 The supported deployment has one API scheduler process. Database reservations
 protect station/slot uniqueness; they do not establish multi-process scheduler
 ownership or distributed FIFO.

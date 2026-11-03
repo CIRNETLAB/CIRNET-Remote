@@ -21,7 +21,7 @@ accept `AnySupportedCircuitGraph`, including 1.2 flexible assemblies and explici
 free physical descriptors. A legacy read/list/save that selects a 1.2 document
 returns `UNSUPPORTED_DOCUMENT_VERSION`; the Web chooses v2 before writes and
 retries a read only after that explicit version error. Mutation requests are
-never replayed. See [flexible placement](../../contracts/design-models/flexible-placement.md).
+never replayed. See [flexible placement](https://github.com/CIRNETLAB/CIRNET-Contracts/blob/54ef9f6a11f4906c11ec9789de47cf06d5100734/contracts/design-models/flexible-placement.md).
 
 Projects and documents have revisions and timestamps. A save supplies
 `base_revision`, `name`, and the canonical `graph`. The database updates the

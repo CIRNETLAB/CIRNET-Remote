@@ -30,7 +30,7 @@ Projects/circuits use saved revisions and database CAS, with session fences agai
 
 Additive `/api/v2` placement/document/experiment and assignment routes accept Graph
 1.2 while legacy public shapes stay frozen. They share the existing ownership, CAS,
-publication and immutable admission authority; see [versioned placement](../../contracts/design-models/flexible-placement.md).
+publication and immutable admission authority; see [versioned placement](https://github.com/CIRNETLAB/CIRNET-Contracts/blob/54ef9f6a11f4906c11ec9789de47cf06d5100734/contracts/design-models/flexible-placement.md).
 New verification follows [VERIFICATION.md](../../docs/VERIFICATION.md), with raw/visual
 diagnostics created outside the checkout and retained reports in Markdown. Earlier
 test/deployment claims describe their dated evidence, not a rerun during a doc edit.
@@ -118,7 +118,7 @@ Invoke-RestMethod http://127.0.0.1:8000/api/health
 ```
 
 Start Vite in a separate terminal from an explicitly selected, prepared
-CIRNET-Interface product (its local directory may still be named `net-Circuit-Interface`). Its own README and the [M2 ledger](../../docs/superpowers/plans/2026-10-24-multi-repo-migration-m2.md)
+CIRNET-Interface product (its local directory may still be named `net-Circuit-Interface`). Its own README and the [M2 ledger](https://github.com/CIRNETLAB/CIRNET-Remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/superpowers/plans/2026-10-24-multi-repo-migration-m2.md)
 cover the digest-verified artifact bootstrap and locked install:
 
 ```powershell
@@ -175,12 +175,10 @@ cd "$NETCIRCUIT_INTERFACE_ROOT"
 npm run dev
 ```
 
-Remote keeps historical Web documentation and artwork under `apps/web`. Current
-Web development and release checks use Interface; integrated browser verification
-uses `node scripts/e2e-interface.mjs --interface-root ABSOLUTE_PRODUCT --forbid-only`
+Web development and release checks use the [selected Interface source](https://github.com/CIRNETLAB/CIRNET-Interface/blob/a14d0950e71a997e2219a32f7268fd0e9d6502b3/README.md). Integrated browser verification uses `node scripts/e2e-interface.mjs --interface-root ABSOLUTE_PRODUCT --forbid-only`
 from Remote root and the [shared external-output policy](../../docs/VERIFICATION.md).
 
-Core execution endpoints (the [generated API reference](../../contracts/api/README.md) lists the complete typed surface):
+Core execution endpoints (the [generated API reference](https://github.com/CIRNETLAB/CIRNET-Contracts/blob/54ef9f6a11f4906c11ec9789de47cf06d5100734/contracts/api/README.md) lists the complete typed surface):
 
 - `GET /api/health`
 - `POST /api/circuits/validate`
