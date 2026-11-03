@@ -56,7 +56,7 @@ function Wait-Ready($process, [string]$name, [scriptblock]$probe) {
     $deadline = (Get-Date).AddSeconds(60)
     do {
         if (Test-StopRequested) { throw [OperationCanceledException]::new() }
-        if ($process.HasExited) { throw "$name exited with code $($process.ExitCode)." }
+        if ($process.HasExited) { throw "[ERROR] $name exited with code $($process.ExitCode)." }
         try {
             if (& $probe) { return }
         } catch {
@@ -64,7 +64,7 @@ function Wait-Ready($process, [string]$name, [scriptblock]$probe) {
         }
     } while (-not $stopSignal.WaitOne(300) -and (Get-Date) -lt $deadline)
     if (Test-StopRequested) { throw [OperationCanceledException]::new() }
-    throw "$name did not become ready within 60 seconds."
+    throw "[ERROR] $name did not become ready within 60 seconds."
 }
 
 function Start-ServiceProcess($exe, $arguments, $directory, $name) {
@@ -87,18 +87,18 @@ try {
     if ($env:CIRNET_DEV_HOME) { $dev = $env:CIRNET_DEV_HOME }
     $dev = [IO.Path]::GetFullPath($dev)
     if ($dev -eq [IO.Path]::GetPathRoot($dev)) {
-        throw 'CIRNET_DEV_HOME must be a directory below the drive root.'
+        throw '[ERROR] CIRNET_DEV_HOME must be a directory below the drive root.'
     }
     $dev = $dev.TrimEnd('\')
     if ($dev.Equals($repo, 'OrdinalIgnoreCase') -or $dev.StartsWith("$repo\", 'OrdinalIgnoreCase')) {
-        throw 'CIRNET_DEV_HOME must be outside the repository.'
+        throw '[ERROR] CIRNET_DEV_HOME must be outside the repository.'
     }
     $lockPath = Join-Path $dev 'launcher.lock'
     $signalName = 'Local\CIRNET-Stop-' + (Get-Sha256 ([Text.Encoding]::UTF8.GetBytes($dev.ToUpperInvariant())))
     if ($Action -eq 'stop') {
         try { $stopSignal = [Threading.EventWaitHandle]::OpenExisting($signalName) }
         catch [Threading.WaitHandleCannotBeOpenedException] {
-            Write-Host 'No active CIRNET launcher was found.'
+            Write-Host '[ERROR] No active CIRNET launcher was found.'
             exit 0
         }
         [void]$stopSignal.Set()
@@ -109,13 +109,13 @@ try {
             try {
                 $lock = [IO.File]::Open($lockPath, 'Open', 'ReadWrite', 'None')
                 $lock.Dispose()
-                Write-Host 'CIRNET launcher has stopped.'
+                Write-Host '[ERROR] CIRNET launcher has stopped.'
                 exit 0
             } catch [IO.IOException] {
                 Start-Sleep -Milliseconds 200
             }
         } while ((Get-Date) -lt $deadline)
-        throw 'Stop was requested. The launcher is still finishing; check its window for details.'
+        throw "[ERROR] Stop was requested. The launcher is still finishing; check its window for details."
     }
 
     Get-Command git.exe -CommandType Application | Out-Null
@@ -125,7 +125,7 @@ try {
     try {
         Get-Content -LiteralPath $manifest -Raw | ConvertFrom-Json | Out-Null
     } catch {
-        throw "Invalid JSON in $manifest. $($_.Exception.Message)"
+        throw "[ERROR] Invalid JSON in $manifest. $($_.Exception.Message)"
     }
     $manifestHash = Get-Sha256 ([IO.File]::ReadAllBytes($manifest))
     New-Item -ItemType Directory -Path $dev -Force | Out-Null
@@ -135,7 +135,7 @@ try {
     foreach ($port in @(50051, 8000, 5173)) {
         $listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, $port)
         try { $listener.Start() }
-        catch { throw "Port $port is busy. Close the CIRNET process already using it and try again." }
+        catch { throw "[ERROR] Port $port is busy. Close the CIRNET process already using it and try again." }
         finally { $listener.Stop() }
     }
 
@@ -143,9 +143,9 @@ try {
     if (-not (Test-Path -LiteralPath $python -PathType Leaf)) {
         $basePython = (Get-Command python.exe -CommandType Application | Select-Object -First 1).Source
         & $basePython -c 'import sys; raise SystemExit(sys.version_info < (3, 12))'
-        if ($LASTEXITCODE -ne 0) { throw 'Install Python 3.12 or newer and add it to PATH.' }
+        if ($LASTEXITCODE -ne 0) { throw "[ERROR] Install Python 3.12 or newer and add it to PATH." }
         & $basePython -m venv (Join-Path $dev '.venv')
-        if ($LASTEXITCODE -ne 0) { throw 'Could not create the Python environment.' }
+        if ($LASTEXITCODE -ne 0) { throw "[ERROR] Could not create the Python environment." }
     }
 
     $env:NETCIRCUIT_ARTIFACTS_DIR = $dev
@@ -167,7 +167,7 @@ try {
                 }
             }
         } catch {
-            Write-Host 'Previous setup is incomplete. Preparing a fresh selection.'
+            Write-Host '[ERROR] Previous setup is incomplete. Preparing a fresh selection.'
         }
     }
 
@@ -175,7 +175,7 @@ try {
         Write-Host '[1/4] Installing pinned Python dependencies and downloading Interface. This can take several minutes.'
         $summaryJson = & $python -B scripts/install_release.py --manifest $manifest --environment-file release-env.json
         if ($LASTEXITCODE -ne 0) {
-            throw "Release setup failed. Check the error above and the latest system-release installation logs under $dev."
+            throw "[ERROR] Release setup failed. Check the error above and the latest system-release installation logs under $dev."
         }
         $summary = $summaryJson | ConvertFrom-Json
         $state = Get-Content -LiteralPath $summary.environmentFile -Raw | ConvertFrom-Json
@@ -233,7 +233,7 @@ try {
     Write-Host '[3/4] Starting Hardware Service and Remote API.'
     $hardware = Start-ServiceProcess $python @('-B','-m','hardware_service.server') $repo 'hardware'
     $children += $hardware
-    Wait-Ready $hardware 'Hardware Service' {
+    Wait-Ready $hardware '[ERROR] Hardware Service' {
         $client = [Net.Sockets.TcpClient]::new()
         try { $client.Connect('127.0.0.1', 50051); return $client.Connected }
         finally { $client.Dispose() }
@@ -241,34 +241,34 @@ try {
 
     $api = Start-ServiceProcess $python @('-B','-m','uvicorn','app.main:app','--app-dir','services/api','--host','127.0.0.1','--port','8000') $repo 'api'
     $children += $api
-    Wait-Ready $api 'Remote API' { Test-ApiHealth 'http://127.0.0.1:8000/api/health' }
+    Wait-Ready $api '[ERROR] Remote API' { Test-ApiHealth 'http://127.0.0.1:8000/api/health' }
 
     Write-Host '[4/4] Starting Interface.'
     $web = Start-ServiceProcess $node @('node_modules/vite/bin/vite.js','--host','127.0.0.1','--port','5173','--strictPort') $env:NETCIRCUIT_INTERFACE_ROOT 'web'
     $children += $web
     $url = 'http://127.0.0.1:5173'
-    Wait-Ready $web 'Interface' {
+    Wait-Ready $web '[ERROR] Interface' {
         (Invoke-WebRequest -UseBasicParsing -Uri $url -TimeoutSec 2).StatusCode -eq 200 -and
             (Invoke-WebRequest -UseBasicParsing -Uri "$url/src/main.ts" -TimeoutSec 2).StatusCode -eq 200 -and
             (Test-ApiHealth "$url/api/health")
     }
 
-    Write-Host "CIRNET is ready: $url"
+    Write-Host "[OK] CIRNET is ready: $url"
     if (-not $Check) {
         if (-not $NoBrowser) {
             try { Start-Process $url } catch { Write-Host "Open $url in your browser." }
         }
-        Write-Host 'Focus this terminal and press Enter or Ctrl+C to stop.'
-        Write-Host 'You can also run run-cirnet.bat stop in another terminal.'
+        Write-Host '[CANCEL] Press Enter or Ctrl+C to stop'
+        Write-Host '[!] If that does not work, run the command run-cirnet.bat stop in a separate terminal window'
         while (-not $stopSignal.WaitOne(150) -and -not (Test-StopRequested)) {
             foreach ($child in $children) {
-                if ($child.HasExited) { throw "A CIRNET service stopped with exit code $($child.ExitCode)." }
+                if ($child.HasExited) { throw "[ERROR] A CIRNET service stopped with exit code $($child.ExitCode)." }
             }
         }
-        Write-Host 'Stopping CIRNET...'
+        Write-Host '[!] Stopping CIRNET...'
     }
 } catch [OperationCanceledException] {
-    Write-Host 'Stopping CIRNET...'
+    Write-Host '[!] Stopping CIRNET...'
 } catch {
     [Console]::Error.WriteLine($_.Exception.Message)
     if ($logDir) { [Console]::Error.WriteLine("See logs in $logDir") }
