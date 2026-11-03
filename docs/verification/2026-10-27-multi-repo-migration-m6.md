@@ -63,7 +63,20 @@ new draft assets pass using the existing local Git identity. The prior actual
 CI-secret receipt retains its old asset IDs/selection scope; a corrected-ID CI
 check is NOT_RUN under the explicit no-Actions-wait decision, and minimum
 credential scope remains NOT_VERIFIED. No permission or secret was expanded.
-Fresh local Ubuntu artifact installation and full native acceptance are pending.
+On October 29, the fresh Ubuntu 24.04 Docker install verified all 15 selected
+artifacts and the 15 payloads in the retained rollback archive. The installed
+API matched all 69 owned files of the selected API 0.1.1 wheel. The original
+three-command browser group then exited 0 in 2,195.4s against Remote
+`d49c8046f14cce0ff0ea6ffa3b722e9742ab0eb7` and Interface `a14d0950`. JUnit has
+**58 collected, 57 PASS, zero failures/errors and one original optional skip**
+(`retained pre-fix native WebGL evidence`). The API shut down with exit 0.
+JUnit SHA-256 `f0774c693ebaadc44a1c4d686301760bf97e2f95d9ffc4afb25a53818019205d`.
+Gate log SHA-256 `3b9493b8274bae84ad6f4b7d82729b44957e7e3a1c41919045d2cff23c6c7e82`.
+The sealed-gallery LED closeup was inspected. The run used 8 CPU, 8 GiB RAM,
+Node 22.23.3, Python 3.12.3 and Playwright 1.64.1 with Chromium headless shell
+revision 1248. The full original case list, one worker, zero retries and original
+assertions, DPR, deadlines, traces and baselines were retained. The earlier
+hosted failure above remains scoped to its own artifact selection.
 
 Independent corrected-binding review confirms every other product, runtime,
 DEV and rollback field is exact. Focused external-copy validation has 139 PASS
@@ -253,7 +266,8 @@ SHA-256 `207b5bbafed6648ea0d04caa3e2020528409b90e6f8c0fbf8cd52c7698fa65c0`.
 Master promotion/publication remains pending actual full Ubuntu native acceptance
 and final exact-master CI; Windows failure/cancellation is not promoted to PASS.
 
-Started: 2026-10-27; current update: 2026-10-29, Asia/Saigon. Status: M6_V012_UBUNTU_NATIVE_PENDING. The records below retain their historical scope. No production deployment or board programming is part of M6.
+Started on October 27, 2026. Updated on November 3, 2026 (Asia/Saigon).
+Status: M6_V012_LOCAL_UBUNTU_ACCEPTED. The records below retain their historical scope.
 
 ## Current CIRNET rename and release disposition
 

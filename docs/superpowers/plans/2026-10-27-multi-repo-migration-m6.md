@@ -18,8 +18,10 @@ remain required. Preserve all immutable 0.1.1 assets/tags and unrelated worktree
   recorded invocations, AST, E2E types and preservation checks are verified.
 - [x] Rebuild corrected committed Interface 0.1.2 twice, replace only unpublished
   draft candidates and bind the exact corrected artifact selection.
-- [ ] Pass the original complete Ubuntu native gate using fresh artifact-only
-  installation; record its actual scope independently of Actions.
+- [x] Pass the original complete Ubuntu native gate using fresh artifact-only
+  installation. The October 29 run at Remote `d49c8046` and Interface `a14d0950`
+  collected all 58 cases, passed 57 and skipped only the original optional
+  historical case. The gate and API shutdown both exited 0.
 - [ ] Commit final bindings/evidence, ordinary master promotion/push/publication,
   fresh recoverable backups and merged owned codex cleanup without Actions wait.
 
