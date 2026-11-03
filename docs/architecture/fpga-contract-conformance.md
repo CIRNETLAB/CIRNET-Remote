@@ -2,7 +2,7 @@
 
 Status: IMPLEMENTED mapping and software conformance checks; OPEN-HARDWARE.
 Authority is [Lab-First v3.1](../ARCHITECTURE.md), with schema identity/visibility
-from [manifest.json](../../contracts/manifest.json). The retained
+from [manifest.json](https://github.com/CIRNETLAB/CIRNET-Remote/blob/989954f95c1c6b1d224e31a53fb33f125f0a81a9/contracts/manifest.json). The retained
 FPGA proposal revision 2.1 (`docs/Hardware/net-Circuit-Remote_FPGA_Architecture_Lab-First_v2.md`)
 remains PROPOSED / NEEDS_REVIEW. This current mapping does not rewrite its
 historical statement about which inputs were supplied when it was drafted.

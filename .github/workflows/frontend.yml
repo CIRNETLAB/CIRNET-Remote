@@ -16,9 +16,9 @@ env:
   NETCIRCUIT_ARTIFACT_PATHS_NPM_URL: ${{ vars.NETCIRCUIT_ARTIFACT_PATHS_NPM_URL }}
 on:
   push:
-    paths: ['apps/web/**', 'tests/frontend/**', 'contracts/**', 'device-library/**', 'scripts/**', 'services/api/**', 'simulator/circuit-simulator/**', 'integration/**', 'pyproject.toml', 'requirements-codegen.txt', 'requirements-verification.txt', 'requirements-benchmark.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
+    paths: ['tests/frontend/**', 'contracts/**', 'scripts/**', 'services/api/**', 'integration/**', 'pyproject.toml', 'requirements-codegen.txt', 'requirements-verification.txt', 'requirements-benchmark.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
   pull_request:
-    paths: ['apps/web/**', 'tests/frontend/**', 'contracts/**', 'device-library/**', 'scripts/**', 'services/api/**', 'simulator/circuit-simulator/**', 'integration/**', 'pyproject.toml', 'requirements-codegen.txt', 'requirements-verification.txt', 'requirements-benchmark.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
+    paths: ['tests/frontend/**', 'contracts/**', 'scripts/**', 'services/api/**', 'integration/**', 'pyproject.toml', 'requirements-codegen.txt', 'requirements-verification.txt', 'requirements-benchmark.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
   workflow_dispatch:
 permissions:
   contents: read

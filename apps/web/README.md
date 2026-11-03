@@ -1,5 +1,7 @@
 # Web Frontend — Interactive Single Workspace
 
+> Historical reference. The former local files and commands below describe the [pre-cleanup revision](https://github.com/CIRNETLAB/CIRNET-Remote/tree/989954f95c1c6b1d224e31a53fb33f125f0a81a9/apps/web). Use the selected producer artifacts for current integration.
+
 Current authority: [Lab-First v3.1](../../docs/ARCHITECTURE.md). Vue 3, TypeScript, Pinia and Three.js share one mounted workbench and one mutable circuit document. Public REST/WebSocket boundaries use generated DTOs and runtime validators. Authentication, private projects/recovery, assignment authoring/publication, execution history/queues and virtual digital captures use the real application services. Graph 1.2 flexible assemblies and pinned free physical descriptors use additive versioned operations; legacy Graph 1.0/1.1 files retain their meaning. Historical source reports remain useful for editor interaction details; they do not override the current architecture or capability declarations.
 
 ## Run and verify

@@ -76,9 +76,37 @@ def assert_shared_coverage(data,name):
             assert patterns is None or any(fnmatchcase(path,pattern) for pattern in patterns),(name,event,path)
 
 
-@pytest.mark.parametrize('name',['contracts.yml','backend.yml','hardware-service.yml','simulator.yml','frontend.yml','integration.yml','fpga.yml'])
+@pytest.mark.parametrize('name',['contracts.yml','backend.yml','hardware-service.yml','simulator.yml','frontend.yml','integration.yml','fpga.yml','browser-e2e.yml'])
 def test_shared_changes_trigger_the_contract_gate_and_every_consumer(name):
     assert_shared_coverage(workflow(name),name)
+
+
+@pytest.mark.parametrize('name,active_paths', [
+    ('backend.yml', ('services/api/app/main.py',)),
+    ('browser-e2e.yml', ('tests/frontend/test_frontend_shell.py', 'tests/integration/test_repository_boundaries.py')),
+    ('contracts.yml', ('tests/contracts/test_artifact_consumer.py', 'tests/frontend/test_frontend_shell.py')),
+    ('fpga.yml', ('tests/contracts/test_fpga_artifact.py', 'tests/integration/test_fpga_compatibility.py')),
+    ('frontend.yml', ('tests/frontend/test_frontend_shell.py',)),
+    ('hardware-service.yml', ('tests/contracts/test_hardware_artifact.py', 'tests/integration/test_virtual_lab_execution.py')),
+    ('simulator.yml', ('tests/contracts/test_simulator_artifact.py', 'tests/integration/test_virtual_lab_execution.py')),
+])
+def test_consumer_triggers_cover_active_inputs_and_exclude_retired_source(name, active_paths):
+    retired_paths = (
+        'apps/web/src/App.vue',
+        'device-library/editor/components.json',
+        'simulator/circuit-simulator/netcircuit_sim/engine.py',
+        'services/hardware-service/hardware_service/server.py',
+        'fpga/experiment-controller/rtl/top.v',
+        'tests/fpga/test_lab_first_control.py',
+    )
+    data = workflow(name)
+    events = data.get('on', data.get(True))
+    for event in ('push', 'pull_request'):
+        patterns = events[event]['paths']
+        for path in ('contracts/__init__.py', 'contracts/fixtures/conformance.json', *active_paths):
+            assert any(fnmatchcase(path, pattern) for pattern in patterns), (name, event, path)
+        for path in retired_paths:
+            assert not any(fnmatchcase(path, pattern) for pattern in patterns), (name, event, path)
 
 
 def test_contract_workflow_checks_artifacts_compatibility_and_outside_packages():

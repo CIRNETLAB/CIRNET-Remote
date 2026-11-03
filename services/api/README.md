@@ -54,7 +54,7 @@ python scripts/check_release.py --group python
 python scripts/check_release.py --show-plan
 ```
 
-Hardware is installed as the reviewed `netcircuit-hardware-service==0.1.1` wheel using `scripts/install_hardware.py`; the retained service source is a frozen reference. Runtime RPC bindings come from Contracts, so RPC tests do not generate code or require Hardware dev extras. Root generator verification dependencies remain in requirements-codegen.txt. Full release verification also selects FPGA source/scaffold 0.1.1 as shown above; API local runtime needs no FPGA artifact. Mandatory native RTL acceptance belongs to CIRNET-FPGA; missing pinned tools fail that gate, and software/compiler results do not establish physical safety.
+Hardware is installed as the reviewed `netcircuit-hardware-service==0.1.1` wheel using `scripts/install_hardware.py`; the old service implementation is available in Git history. Runtime RPC bindings come from Contracts, so RPC tests do not generate code or require Hardware dev extras. Root generator verification dependencies remain in requirements-codegen.txt. Full release verification also selects FPGA source/scaffold 0.1.1 as shown above; API local runtime needs no FPGA artifact. Mandatory native RTL acceptance belongs to CIRNET-FPGA; missing pinned tools fail that gate, and software/compiler results do not establish physical safety.
 
 ## Local run
 
@@ -175,7 +175,7 @@ cd "$NETCIRCUIT_INTERFACE_ROOT"
 npm run dev
 ```
 
-Remote retains `apps/web` as a frozen compatibility/rollback reference. Current
+Remote keeps historical Web documentation and artwork under `apps/web`. Current
 Web development and release checks use Interface; integrated browser verification
 uses `node scripts/e2e-interface.mjs --interface-root ABSOLUTE_PRODUCT --forbid-only`
 from Remote root and the [shared external-output policy](../../docs/VERIFICATION.md).

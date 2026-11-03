@@ -22,9 +22,9 @@ env:
   NETCIRCUIT_CONTRACTS_NPM_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_NPM_SHA256 }}
 on:
   push:
-    paths: ['contracts/**', 'device-library/**', 'scripts/**', 'tests/contracts/**', 'tests/frontend/**', 'services/**', 'simulator/**', 'apps/web/**', 'integration/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
+    paths: ['contracts/**', 'scripts/**', 'tests/contracts/**', 'tests/frontend/**', 'services/api/**', 'integration/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
   pull_request:
-    paths: ['contracts/**', 'device-library/**', 'scripts/**', 'tests/contracts/**', 'tests/frontend/**', 'services/**', 'simulator/**', 'apps/web/**', 'integration/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
+    paths: ['contracts/**', 'scripts/**', 'tests/contracts/**', 'tests/frontend/**', 'services/api/**', 'integration/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
 jobs:
   canonical-boundaries:
     runs-on: ubuntu-latest

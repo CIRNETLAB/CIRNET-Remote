@@ -19,9 +19,9 @@ env:
   NETCIRCUIT_CONTRACTS_NPM_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_NPM_SHA256 }}
 on:
   push:
-    paths: ['tests/integration/**', 'tests/contracts/**', 'tests/support/**', 'services/api/**', 'simulator/**', 'contracts/**', 'device-library/**', 'scripts/**', 'integration/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/simulator.yml']
+    paths: ['tests/integration/**', 'tests/contracts/**', 'tests/support/**', 'services/api/**', 'contracts/**', 'scripts/**', 'integration/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/simulator.yml']
   pull_request:
-    paths: ['tests/integration/**', 'tests/contracts/**', 'tests/support/**', 'services/api/**', 'simulator/**', 'contracts/**', 'device-library/**', 'scripts/**', 'integration/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/simulator.yml']
+    paths: ['tests/integration/**', 'tests/contracts/**', 'tests/support/**', 'services/api/**', 'contracts/**', 'scripts/**', 'integration/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/simulator.yml']
 jobs:
   test:
     runs-on: ubuntu-latest

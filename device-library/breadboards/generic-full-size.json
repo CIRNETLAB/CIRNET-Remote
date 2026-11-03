@@ -1,9 +1,0 @@
-{
-  "schema_version": "0.1-dev",
-  "id": "generic-full-size",
-  "category": "breadboard",
-  "physical_contacts": null,
-  "electrical_node_map": null,
-  "routing_channels": null,
-  "notes": "Do not infer routing channel count from physical hole count. Populate topology only after the exact breadboard and routing hardware are selected."
-}

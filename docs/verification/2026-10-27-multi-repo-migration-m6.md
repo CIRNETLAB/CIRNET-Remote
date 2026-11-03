@@ -1,5 +1,30 @@
 # M6 verification and release ledger
 
+## Removal of superseded producer source on November 4, 2026
+
+The cleanup starts from Remote `989954f`. It removes the frozen Web,
+Contracts/catalog, Simulator, Hardware and FPGA implementation copies from the
+current Git tree. The original commit remains the reference for historical code
+links. The Contracts wheel shim, consumer guards, API, integration code, approved
+artwork, Markdown and contract fixture/baseline data remain available.
+
+The cleanup removed 593 tracked implementation, configuration and old test
+files. Seven workflows changed only their path filters. Historical links to
+removed code point to `989954f`. The OpenAPI injection regression now reads the
+model fixture from the installed Contracts wheel. Its original rejection and
+no-output assertions passed after the fixture change.
+
+Fresh installation verified the 16 downloads in the published selection and
+rollback archive. The combined Contracts/Python gate passed all 12 commands,
+including 1,462 pytest passes and two skips. Gate log SHA-256
+`b2cfa232f31200352ddcdae8cd94ffad46ec2102b9eb23fed91a80104b580183`.
+The 13 Node cases passed across the initial run and a focused rerun of the
+specialized configuration check with the required Interface artifact selected.
+Markdown passed for 196 files, and actionlint passed for nine workflows.
+The gate exercised the installed consumers and real API orchestration. The
+published manifest, producer artifacts and API runtime source are byte-identical
+to the pre-cleanup selection.
+
 ## Approved 0.1.2 continuation — 2026-10-29
 
 ### Publication and branch closeout on November 3, 2026

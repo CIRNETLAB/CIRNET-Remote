@@ -1,4 +1,5 @@
 """Public HTTP shapes are explicit, conforming, and exclude hardware-private data."""
+from importlib.resources import files
 from pathlib import Path
 import json
 import subprocess
@@ -142,7 +143,7 @@ def test_generated_browser_operations_follow_route_methods_paths_and_binary_medi
 
 def test_openapi_export_rejects_staged_model_injection(tmp_path):
     models=tmp_path/'models.py'
-    models.write_bytes((ROOT/'contracts/boundary/models.py').read_bytes())
+    models.write_bytes(files('contracts').joinpath('boundary', 'models.py').read_bytes())
     result=subprocess.run([sys.executable,str(ROOT/'scripts/export_openapi.py'),'--models',str(models),
                            '--output',str(tmp_path/'openapi.json'),'--operations',str(tmp_path/'operations.ts')],
                           cwd=ROOT,capture_output=True,text=True)

@@ -165,7 +165,7 @@ Giữ route authority ở Remote. Không chỉnh tay snapshot để che route dr
 | B06 | Tests dùng `sys.path`, relative fixtures và root codegen scripts | M2–M5: package resources/versioned fixture exports |
 | B07 | Web E2E launcher phụ thuộc root Python harness/runtime layout | M2/M6: Interface nhận explicit target, Remote chạy integrated harness |
 | B08 | [Allocator](../../../scripts/artifact-paths.mjs) gắn repository/ownership vào vị trí module | M1: explicit roots/context/session owner qua Node/Python/children/cleanup |
-| B09 | [Camera](../../../apps/web/playwright.camera.config.ts) và [depth](../../../apps/web/playwright.depth.config.ts) configs còn output trong checkout | M2: sửa containment trước khi chạy các gates này |
+| B09 | [Camera](https://github.com/CIRNETLAB/CIRNET-Remote/blob/989954f95c1c6b1d224e31a53fb33f125f0a81a9/apps/web/playwright.camera.config.ts) và [depth](https://github.com/CIRNETLAB/CIRNET-Remote/blob/989954f95c1c6b1d224e31a53fb33f125f0a81a9/apps/web/playwright.depth.config.ts) configs còn output trong checkout | M2: sửa containment trước khi chạy các gates này |
 | B10 | [Boundary tests](../../../tests/integration/test_repository_boundaries.py) đòi đủ subsystem trong cùng checkout | M6: artifact/dependency assertions tương đương; không chỉ xóa coverage |
 | B11 | Publish/download/CI ACL, đặc biệt cross-organization, chưa xác minh | Trước release: authenticated consumer download và controlled publish permissions |
 | B12 | Target example ghi FPGA `2.0-scaffold`, [version authority](../../../contracts/fpga-protocol/versions.md) ghi `1.0-scaffold` | M1 review/M5 gate: explicit compatibility ruling; không âm thầm normalize |

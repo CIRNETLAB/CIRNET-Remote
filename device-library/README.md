@@ -1,5 +1,7 @@
 # Device Library
 
+> Historical reference. The former local files and commands below describe the [pre-cleanup revision](https://github.com/CIRNETLAB/CIRNET-Remote/tree/989954f95c1c6b1d224e31a53fb33f125f0a81a9/device-library). Use the selected producer artifacts for current integration.
+
 Declarative metadata for virtual and physical devices.
 
 M1 status: this retained tree is a frozen reference. Canonical registry and catalog generation belong to net-Circuit-Contracts. Change and release them there, then select the reviewed versioned artifact in Remote. The commands below describe the retained pre-extraction layout; Remote commands now check installed artifacts and never update these inputs.

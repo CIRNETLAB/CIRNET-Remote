@@ -20,9 +20,9 @@ env:
   NETCIRCUIT_CONTRACTS_NPM_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_NPM_SHA256 }}
 on:
   push:
-    paths: ['fpga/**', 'contracts/**', 'device-library/**', 'tests/contracts/**', 'tests/integration/**', 'tests/fpga/**', 'integration/**', 'scripts/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/fpga.yml']
+    paths: ['contracts/**', 'tests/contracts/**', 'tests/integration/**', 'integration/**', 'scripts/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/fpga.yml']
   pull_request:
-    paths: ['fpga/**', 'contracts/**', 'device-library/**', 'tests/contracts/**', 'tests/integration/**', 'tests/fpga/**', 'integration/**', 'scripts/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/fpga.yml']
+    paths: ['contracts/**', 'tests/contracts/**', 'tests/integration/**', 'integration/**', 'scripts/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/fpga.yml']
 jobs:
   syntax:
     runs-on: ubuntu-latest

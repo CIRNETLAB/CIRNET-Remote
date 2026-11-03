@@ -1,5 +1,7 @@
 # Lab-First Hardware Service
 
+> Historical reference. The former local files and commands below describe the [pre-cleanup revision](https://github.com/CIRNETLAB/CIRNET-Remote/tree/989954f95c1c6b1d224e31a53fb33f125f0a81a9/services/hardware-service). Use the selected producer artifacts for current integration.
+
 Local-only process on the Mini PC, behind FastAPI. Authority: ../../docs/ARCHITECTURE.md. HardwareStation abstracts Virtual/Physical; physical start requires scan/safety, typed plan, routing and guarded power-up. Unavailable hardware never returns a physical success.
 
 RPC 2.0 is packaged from net-Circuit-Contracts (`hardware/v2/rpc_v2.proto`); parent v1 protos are deprecated. From Remote root, install the reviewed wheel and DEV tools with `python scripts/install_contracts.py --with-dev --manifest ABSOLUTE_MANIFEST`, select Simulator `0.2.0` with `python scripts/install_simulator.py --manifest ABSOLUTE_SIMULATOR_MANIFEST`, then `pip install -e './services/hardware-service[dev]'`. `python scripts/generate_hardware_rpc.py --check` checks installed bindings; both processes use the versioned wheel rather than generating retained source. R3 registers lifecycle handlers. Bind only loopback/Unix.

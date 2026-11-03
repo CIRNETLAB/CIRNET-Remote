@@ -48,10 +48,11 @@ unchanged.
 
 ## Source map
 
-- `apps/web/`: retained frozen Web rollback/reference tree after M2. Current UI, stores, workbench commands, Three.js rendering and browser assertions belong to CIRNET-Interface; current release gates consume its explicit product/artifact.
-- `contracts/` and `device-library/`: retained frozen migration references. Runtime `contracts` imports/resources forward to the independent 0.1.1 wheel; canonical inputs/generation live in CIRNET-Contracts. Root synchronization commands are installed-artifact consumer adapters.
-- `services/api/`: FastAPI auth, persistence and execution orchestration; `services/hardware-service/`: frozen M4 rollback/reference, with current hardware RPC/virtual/physical station/transport ownership in CIRNET-Hardware. `simulator/circuit-simulator/`: frozen M3 reference; current simulation belongs to CIRNET-Simulator. Current integration consumes both as exact versioned wheels.
-- `fpga/` and original `tests/fpga/`: frozen M5 references. Current RTL/scaffold/toolchain and pure tests belong to CIRNET-FPGA, with explicit source-artifact compatibility acceptance in Remote. A scaffold or proposed hardware design does not establish physical availability.
+- `services/api/` owns FastAPI auth, persistence and execution orchestration. Remote owns deployment and integration tests.
+- `contracts/__init__.py` forwards imports and resources to the exact installed Contracts wheel. CIRNET-Contracts owns canonical schemas, catalogs and generation. Remote retains compatibility baselines, fixtures and reference documentation.
+- CIRNET-Interface owns the Web implementation and browser assertions. Remote consumes its selected source and static artifacts. `apps/web/` retains historical documentation and artwork.
+- CIRNET-Hardware and CIRNET-Simulator own their implementations. Remote integration uses their exact versioned wheels. CIRNET-FPGA owns RTL, tooling and standalone tests. Remote checks compatibility against its selected source artifact.
+- The pre-cleanup implementations are available at the [historical Remote revision](https://github.com/CIRNETLAB/CIRNET-Remote/tree/989954f95c1c6b1d224e31a53fb33f125f0a81a9).
 - `scripts/`, `.github/workflows/`, `tests/`: actual generation, verification, CI and repository conformance entrypoints. [Deployment](../deployment/README.md) contains deployment templates, not proof of a live deployment.
 
 ## Reading status
