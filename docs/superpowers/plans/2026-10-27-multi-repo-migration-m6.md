@@ -22,8 +22,10 @@ remain required. Preserve all immutable 0.1.1 assets/tags and unrelated worktree
   installation. The October 29 run at Remote `d49c8046` and Interface `a14d0950`
   collected all 58 cases, passed 57 and skipped only the original optional
   historical case. The gate and API shutdown both exited 0.
-- [ ] Commit final bindings/evidence, ordinary master promotion/push/publication,
-  fresh recoverable backups and merged owned codex cleanup without Actions wait.
+- [x] Commit final bindings and evidence. Fast-forward and push both masters,
+  publish both v0.1.2 releases, verify fresh recovery bundles and remove both
+  merged codex branches locally and on GitHub. The November 3 closeout used the
+  accepted local Ubuntu result under the user's no-Actions-wait decision.
 
 The user explicitly approved Interface **0.1.2** and Remote **integration release
 0.1.2**, retaining API, Contracts, Simulator, Hardware and FPGA **0.1.1** and DEV

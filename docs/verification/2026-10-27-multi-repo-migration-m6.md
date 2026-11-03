@@ -2,6 +2,43 @@
 
 ## Approved 0.1.2 continuation — 2026-10-29
 
+### Publication and branch closeout on November 3, 2026
+
+Both masters were fast-forwarded and pushed normally after the original local
+Ubuntu gate passed. The immutable Interface v0.1.2 tag resolves to `a14d0950`.
+The immutable Remote Integration v0.1.2 tag resolves to `17ac2739`, which adds
+the acceptance record to tested Remote source `d49c8046`. The subsequent
+master commit records this closeout in the two existing M6 documents.
+[Interface release](https://github.com/CIRNETLAB/CIRNET-Interface/releases/tag/v0.1.2)
+and [Integration release](https://github.com/CIRNETLAB/CIRNET-Remote/releases/tag/v0.1.2).
+
+All three published assets were downloaded anonymously and matched the exact
+manifest digests and sizes. Publication receipt SHA-256
+`dec6fd5e2c67427d9681ce42107efc65be8a117423863645ae6fefeff26e728f`.
+The independent Ubuntu audit verified source, static and installed API bytes,
+the captured Chromium executable and 30 depth evidence rows at each DPR.
+Audit SHA-256 `402f70a5aa9945b07a542c3cad85e43877f49c7479dbaab8c9c0042b8e128ec6`.
+The user approved proceeding without waiting for Actions. The result above is
+the local Ubuntu acceptance result.
+
+Before the fast-forward, strict fsck found that both local `origin/HEAD`
+pointers still referenced the removed `origin/main`. The original pointer bytes
+were saved. GitHub's default `master` and its tip were verified before repairing
+both local pointers. Metadata receipt SHA-256
+`2e678373adfd57d39a688ff507dc0d0e98dc3111d5532544ee41e82ef2c546e2`.
+
+Both codex branches were deleted locally and on GitHub after actual mirror
+restores passed strict fsck and matched the saved refs and worktree heads. The
+Remote bundle contains local branch tip `17ac2739` and remote branch tip
+`d49c8046`. Interface bundle SHA-256
+`d18672e88061437ac302b60b857eb0d1c83694872a79e0cf3acd31cac2f67b88`.
+Remote bundle SHA-256
+`fd886a54a935eeb66d8e25a5387a0f456d52cbf22b2760824b544ff46c1fafc0`.
+All six immutable v0.1.1 snapshots matched the baseline. The unrelated linked
+worktrees matched their recorded heads, branches, indexes and repaired pointers.
+Preservation receipt SHA-256
+`e1aca86fcf73a902b46c47d58a451d34ee41f7f107b4fd9e3624e5dfb466a2b7`.
+
 ### Latest sequencing decision: local Ubuntu acceptance, no Actions wait
 
 The user explicitly requests commit, ordinary merge/push, publication and
@@ -267,7 +304,7 @@ Master promotion/publication remains pending actual full Ubuntu native acceptanc
 and final exact-master CI; Windows failure/cancellation is not promoted to PASS.
 
 Started on October 27, 2026. Updated on November 3, 2026 (Asia/Saigon).
-Status: M6_V012_LOCAL_UBUNTU_ACCEPTED. The records below retain their historical scope.
+Status: M6_V012_PUBLISHED_AND_MERGED. The records below retain their historical scope.
 
 ## Current CIRNET rename and release disposition
 
