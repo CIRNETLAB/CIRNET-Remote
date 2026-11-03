@@ -56,7 +56,7 @@ function Wait-Ready($process, [string]$name, [scriptblock]$probe) {
     $deadline = (Get-Date).AddSeconds(60)
     do {
         if (Test-StopRequested) { throw [OperationCanceledException]::new() }
-        if ($process.HasExited) { throw "[ERROR] $name exited with code $($process.ExitCode)." }
+        if ($process.HasExited) { throw "$name exited during startup (exit code $($process.ExitCode))." }
         try {
             if (& $probe) { return }
         } catch {
@@ -64,7 +64,7 @@ function Wait-Ready($process, [string]$name, [scriptblock]$probe) {
         }
     } while (-not $stopSignal.WaitOne(300) -and (Get-Date) -lt $deadline)
     if (Test-StopRequested) { throw [OperationCanceledException]::new() }
-    throw "[ERROR] $name did not become ready within 60 seconds."
+    throw "Timed out waiting 60 seconds for $name to become ready."
 }
 
 function Start-ServiceProcess($exe, $arguments, $directory, $name) {
@@ -87,18 +87,18 @@ try {
     if ($env:CIRNET_DEV_HOME) { $dev = $env:CIRNET_DEV_HOME }
     $dev = [IO.Path]::GetFullPath($dev)
     if ($dev -eq [IO.Path]::GetPathRoot($dev)) {
-        throw '[ERROR] CIRNET_DEV_HOME must be a directory below the drive root.'
+        throw 'Set CIRNET_DEV_HOME to a directory below the drive root.'
     }
     $dev = $dev.TrimEnd('\')
     if ($dev.Equals($repo, 'OrdinalIgnoreCase') -or $dev.StartsWith("$repo\", 'OrdinalIgnoreCase')) {
-        throw '[ERROR] CIRNET_DEV_HOME must be outside the repository.'
+        throw 'Set CIRNET_DEV_HOME to a directory outside the repository.'
     }
     $lockPath = Join-Path $dev 'launcher.lock'
     $signalName = 'Local\CIRNET-Stop-' + (Get-Sha256 ([Text.Encoding]::UTF8.GetBytes($dev.ToUpperInvariant())))
     if ($Action -eq 'stop') {
         try { $stopSignal = [Threading.EventWaitHandle]::OpenExisting($signalName) }
         catch [Threading.WaitHandleCannotBeOpenedException] {
-            Write-Host '[ERROR] No active CIRNET launcher was found.'
+            Write-Host '[INFO] No active CIRNET launcher was found.'
             exit 0
         }
         [void]$stopSignal.Set()
@@ -109,13 +109,13 @@ try {
             try {
                 $lock = [IO.File]::Open($lockPath, 'Open', 'ReadWrite', 'None')
                 $lock.Dispose()
-                Write-Host '[ERROR] CIRNET launcher has stopped.'
+                Write-Host '[OK] CIRNET launcher has stopped.'
                 exit 0
             } catch [IO.IOException] {
                 Start-Sleep -Milliseconds 200
             }
         } while ((Get-Date) -lt $deadline)
-        throw "[ERROR] Stop was requested. The launcher is still finishing; check its window for details."
+        throw 'A stop request was sent, but the launcher did not exit within 20 seconds. Check the launcher window for details.'
     }
 
     Get-Command git.exe -CommandType Application | Out-Null
@@ -125,7 +125,7 @@ try {
     try {
         Get-Content -LiteralPath $manifest -Raw | ConvertFrom-Json | Out-Null
     } catch {
-        throw "[ERROR] Invalid JSON in $manifest. $($_.Exception.Message)"
+        throw "Could not load the JSON release manifest at '$manifest'. $($_.Exception.Message)"
     }
     $manifestHash = Get-Sha256 ([IO.File]::ReadAllBytes($manifest))
     New-Item -ItemType Directory -Path $dev -Force | Out-Null
@@ -135,7 +135,9 @@ try {
     foreach ($port in @(50051, 8000, 5173)) {
         $listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, $port)
         try { $listener.Start() }
-        catch { throw "[ERROR] Port $port is busy. Close the CIRNET process already using it and try again." }
+        catch {
+            throw "Could not bind to 127.0.0.1 on port $port. Check whether another process is using the port. $($_.Exception.GetBaseException().Message)"
+        }
         finally { $listener.Stop() }
     }
 
@@ -143,9 +145,9 @@ try {
     if (-not (Test-Path -LiteralPath $python -PathType Leaf)) {
         $basePython = (Get-Command python.exe -CommandType Application | Select-Object -First 1).Source
         & $basePython -c 'import sys; raise SystemExit(sys.version_info < (3, 12))'
-        if ($LASTEXITCODE -ne 0) { throw "[ERROR] Install Python 3.12 or newer and add it to PATH." }
+        if ($LASTEXITCODE -ne 0) { throw 'Python 3.12 or newer is required. Install it and make sure python.exe is on PATH.' }
         & $basePython -m venv (Join-Path $dev '.venv')
-        if ($LASTEXITCODE -ne 0) { throw "[ERROR] Could not create the Python environment." }
+        if ($LASTEXITCODE -ne 0) { throw "Could not create the Python environment in '$dev' (exit code $LASTEXITCODE)." }
     }
 
     $env:NETCIRCUIT_ARTIFACTS_DIR = $dev
@@ -167,30 +169,30 @@ try {
                 }
             }
         } catch {
-            Write-Host '[ERROR] Previous setup is incomplete. Preparing a fresh selection.'
+            Write-Host '[WARN] Saved setup could not be loaded. Reinstalling dependencies.'
         }
     }
 
     if (-not $state) {
-        Write-Host '[1/4] Installing pinned Python dependencies and downloading Interface. This can take several minutes.'
+        Write-Host '[1/4] Installing pinned Python dependencies and downloading CIRNET-Interface. This can take several minutes.'
         $summaryJson = & $python -B scripts/install_release.py --manifest $manifest --environment-file release-env.json
         if ($LASTEXITCODE -ne 0) {
-            throw "[ERROR] Release setup failed. Check the error above and the latest system-release installation logs under $dev."
+            throw "Release setup failed (exit code $LASTEXITCODE). Check the installer output and the latest system-release logs under '$dev'."
         }
         $summary = $summaryJson | ConvertFrom-Json
         $state = Get-Content -LiteralPath $summary.environmentFile -Raw | ConvertFrom-Json
         Import-ProcessEnvironment $state.environment
         Import-ProcessEnvironment $state.processEnvironment
 
-        Write-Host '[2/4] Preparing and installing Web dependencies.'
+        Write-Host '[2/4] Preparing Contracts and installing Web dependencies.'
         Push-Location -LiteralPath $env:NETCIRCUIT_INTERFACE_ROOT
         try {
             $bootstrapJson = & $node scripts/bootstrap-contracts.mjs --manifest $env:NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST
-            if ($LASTEXITCODE -ne 0) { throw 'Interface Contracts bootstrap failed.' }
+            if ($LASTEXITCODE -ne 0) { throw "Could not prepare Contracts for CIRNET-Interface (exit code $LASTEXITCODE). See the output above." }
             $bootstrap = $bootstrapJson | ConvertFrom-Json
             Import-ProcessEnvironment $bootstrap.environment
             & $npm ci --no-audit --no-fund
-            if ($LASTEXITCODE -ne 0) { throw 'Interface npm ci failed.' }
+            if ($LASTEXITCODE -ne 0) { throw "Web dependency installation failed (npm ci exit code $LASTEXITCODE). See the output above." }
         } finally {
             Pop-Location
         }
@@ -198,7 +200,7 @@ try {
         @{manifestHash = $manifestHash; repo = $repo; environmentFile = $summary.environmentFile} |
             ConvertTo-Json -Compress | Set-Content -LiteralPath $cacheFile -Encoding UTF8
     } else {
-        Write-Host '[1-2/4] Reusing dependencies from the previous setup.'
+        Write-Host '[1-2/4] Reusing the installed Python and Web dependencies.'
         Import-ProcessEnvironment $state.environment
         Import-ProcessEnvironment $state.processEnvironment
     }
@@ -208,7 +210,7 @@ try {
     # Keep service keyboard readers (including Vite shortcuts) off the launcher console.
     $serviceInput = Join-Path $logDir 'stdin.empty'
     [IO.File]::WriteAllBytes($serviceInput, [byte[]]@())
-    Write-Host "Logs: $logDir"
+    Write-Host "[INFO] Service logs: $logDir"
 
     $env:NETCIRCUIT_ENV = 'development'
     $env:NETCIRCUIT_HARDWARE_MODE = 'simulation'
@@ -233,7 +235,7 @@ try {
     Write-Host '[3/4] Starting Hardware Service and Remote API.'
     $hardware = Start-ServiceProcess $python @('-B','-m','hardware_service.server') $repo 'hardware'
     $children += $hardware
-    Wait-Ready $hardware '[ERROR] Hardware Service' {
+    Wait-Ready $hardware 'Hardware Service' {
         $client = [Net.Sockets.TcpClient]::new()
         try { $client.Connect('127.0.0.1', 50051); return $client.Connected }
         finally { $client.Dispose() }
@@ -241,13 +243,13 @@ try {
 
     $api = Start-ServiceProcess $python @('-B','-m','uvicorn','app.main:app','--app-dir','services/api','--host','127.0.0.1','--port','8000') $repo 'api'
     $children += $api
-    Wait-Ready $api '[ERROR] Remote API' { Test-ApiHealth 'http://127.0.0.1:8000/api/health' }
+    Wait-Ready $api 'Remote API' { Test-ApiHealth 'http://127.0.0.1:8000/api/health' }
 
-    Write-Host '[4/4] Starting Interface.'
+    Write-Host '[4/4] Starting CIRNET-Interface.'
     $web = Start-ServiceProcess $node @('node_modules/vite/bin/vite.js','--host','127.0.0.1','--port','5173','--strictPort') $env:NETCIRCUIT_INTERFACE_ROOT 'web'
     $children += $web
     $url = 'http://127.0.0.1:5173'
-    Wait-Ready $web '[ERROR] Interface' {
+    Wait-Ready $web 'CIRNET-Interface' {
         (Invoke-WebRequest -UseBasicParsing -Uri $url -TimeoutSec 2).StatusCode -eq 200 -and
             (Invoke-WebRequest -UseBasicParsing -Uri "$url/src/main.ts" -TimeoutSec 2).StatusCode -eq 200 -and
             (Test-ApiHealth "$url/api/health")
@@ -256,22 +258,22 @@ try {
     Write-Host "[OK] CIRNET is ready: $url"
     if (-not $Check) {
         if (-not $NoBrowser) {
-            try { Start-Process $url } catch { Write-Host "Open $url in your browser." }
+            try { Start-Process $url } catch { Write-Host "[WARN] Could not open the browser. Open $url manually." }
         }
-        Write-Host '[CANCEL] Press Enter or Ctrl+C to stop'
-        Write-Host '[!] If that does not work, run the command run-cirnet.bat stop in a separate terminal window'
+        Write-Host '[INFO] To stop CIRNET, focus this terminal and press Enter or Ctrl+C.'
+        Write-Host '[INFO] You can also run .\run-cirnet.bat stop from the repository directory in another terminal.'
         while (-not $stopSignal.WaitOne(150) -and -not (Test-StopRequested)) {
             foreach ($child in $children) {
-                if ($child.HasExited) { throw "[ERROR] A CIRNET service stopped with exit code $($child.ExitCode)." }
+                if ($child.HasExited) { throw "A CIRNET service exited unexpectedly (exit code $($child.ExitCode))." }
             }
         }
-        Write-Host '[!] Stopping CIRNET...'
+        Write-Host '[INFO] Stopping CIRNET...'
     }
 } catch [OperationCanceledException] {
-    Write-Host '[!] Stopping CIRNET...'
+    Write-Host '[INFO] Stopping CIRNET...'
 } catch {
-    [Console]::Error.WriteLine($_.Exception.Message)
-    if ($logDir) { [Console]::Error.WriteLine("See logs in $logDir") }
+    [Console]::Error.WriteLine("[ERROR] $($_.Exception.Message)")
+    if ($logDir) { [Console]::Error.WriteLine("        See service logs in '$logDir'.") }
     $result = 1
 } finally {
     try {
@@ -280,7 +282,7 @@ try {
             if (-not $child.HasExited) {
                 & "$env:SystemRoot\System32\taskkill.exe" /PID $child.Id /T /F | Out-Null
                 if (-not $child.WaitForExit(5000)) {
-                    [Console]::Error.WriteLine("Could not stop CIRNET process $($child.Id).")
+                    [Console]::Error.WriteLine("[ERROR] Could not stop CIRNET process $($child.Id).")
                     $result = 1
                 }
             }
