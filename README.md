@@ -42,6 +42,15 @@ Historical M5 verification used the independent `netcircuit-fpga-scaffold` sourc
 
 ## Tiếng Việt
 
+Trên Windows, mở [run-cirnet.bat](run-cirnet.bat) để chạy chế độ mô phỏng.
+Cài Git, Python 3.12+ và Node.js 22 trước. Lần đầu, launcher tải các gói
+được pin trong manifest, sau đó tự mở trình duyệt tại `http://127.0.0.1:5173`.
+Giữ cửa sổ launcher mở. Để dừng, chuyển về cửa sổ đó và nhấn **Enter** hoặc
+**Ctrl+C**. Nếu terminal giữ phím tắt hoặc bạn đã chuyển sang cửa sổ khác,
+mở PowerShell mới tại thư mục repo và chạy `.\run-cirnet.bat stop`.
+Launcher dừng Web, API và Hardware Service. Dữ liệu SQLite phát triển và
+capture nằm trong `%USERPROFILE%\CIRNET-Dev`.
+
 Nền tảng phòng thí nghiệm điện tử từ xa Web-first, Safety-gated, Lab-First. [Kiến trúc Lab-First v3.1](docs/ARCHITECTURE.md) là authority duy nhất. Kiểm tra an toàn cho phép chạy; IC/jumper sinh viên quyết định kết quả vật lý; phần mềm quan sát và chấm. SAFETY != CORRECTNESS. Sai topology/IC nhưng an toàn không tự động chặn Run.
 
 Giữ nguyên workbench Vue/TypeScript/Pinia/Three.js và editor 3D. CircuitGraph 1.0/1.1 và 1.2 bổ sung là nguồn thiết kế; `/api/v2` hỗ trợ tài liệu/tham chiếu bài thực hành 1.2, giữ nguyên wire cũ. DetectedTopologyGraph mô tả mạch vật lý quan sát được. Compiler chỉ định tuyến hạ tầng nguồn/input/clock/instrument/sense, không nối lại dây nội bộ để sửa bài.

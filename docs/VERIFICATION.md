@@ -79,6 +79,12 @@ credential scope. After rotation, verify actual selected asset downloads again.
 
 ## Checks and evidence
 
+On Windows, run `.\run-cirnet.bat -Check` to start the local simulation stack,
+check the Hardware listener, API health, and Vite proxy, then stop the services.
+For launcher changes, also run `.\run-cirnet.bat -NoBrowser` in a terminal and
+exercise Enter, Ctrl+C, and `.\run-cirnet.bat stop` from a second terminal on
+separate runs. Check that ports 50051, 8000, and 5173 are available after each stop.
+
 Choose gates from real package scripts and workflows. Run at root:
 
 ```text
