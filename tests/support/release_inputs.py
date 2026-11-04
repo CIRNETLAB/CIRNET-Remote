@@ -8,6 +8,8 @@ from pathlib import Path, PurePosixPath
 import re
 import tarfile
 
+from scripts.contracts_artifact import installed_contracts
+
 ROOT = Path(__file__).resolve().parents[2]
 VERSION = '0.1.1'
 INTERFACE_VERSIONS = ('0.1.1', '0.1.2')
@@ -31,7 +33,9 @@ def installed_distribution(name):
 
 
 def contract_resource(path):
-    product = installed_distribution('netcircuit-contracts')
+    product = installed_contracts()
+    if product.version != VERSION or 'dir_info' in json.loads(product.read_text('direct_url.json') or '{}'):
+        raise RuntimeError('CIRNET Contracts must be an installed immutable 0.1.1 wheel.')
     relative = _relative(path)
     resource = Path(files('contracts').joinpath(*relative.parts)).resolve(strict=True)
     package = Path(product.locate_file('contracts')).resolve(strict=True)

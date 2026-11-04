@@ -33,7 +33,7 @@ def wheel(tmp_path, *, name='netcircuit-simulator', version='0.1.1', contracts='
             if module != missing:
                 archive.writestr('netcircuit_sim/' + module, '')
         archive.writestr('netcircuit_simulator-0.1.1.dist-info/METADATA',
-            f'Metadata-Version: 2.1\nName: {name}\nVersion: {version}\nRequires-Dist: netcircuit-contracts=={contracts}\nRequires-Dist: jsonschema==4.26.0\n')
+            f'Metadata-Version: 2.1\nName: {name}\nVersion: {version}\nRequires-Dist: cirnet-contracts=={contracts}\nRequires-Dist: jsonschema==4.26.0\n')
     return path, hashlib.sha256(path.read_bytes()).hexdigest()
 
 
@@ -140,7 +140,7 @@ def test_consumers_pin_one_simulator_and_default_collection_excludes_retained_un
     assert 'simulator/circuit-simulator' in root['tool']['pytest']['ini_options']['norecursedirs']
     lock = json.loads((ROOT / 'integration/simulator-version.json').read_text(encoding='utf-8'))
     assert lock['python'] == {'name': 'netcircuit-simulator', 'version': '0.1.1'}
-    assert lock['contracts'] == {'name': 'netcircuit-contracts', 'version': '0.1.1'}
+    assert lock['contracts'] == {'name': 'cirnet-contracts', 'version': '0.1.1'}
 
 
 def test_default_pytest_discovery_never_imports_the_retained_simulator_tree(tmp_path):

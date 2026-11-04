@@ -24,12 +24,12 @@ def tool(name):
 
 def candidate(directory,marker):
     directory.mkdir()
-    path=directory/'netcircuit_contracts-0.1.1-py3-none-any.whl'
-    metadata='netcircuit_contracts-0.1.1.dist-info'
+    path=directory/'cirnet_contracts-0.1.1-py3-none-any.whl'
+    metadata='cirnet_contracts-0.1.1.dist-info'
     entries={
         'contracts/__init__.py':f'VALUE={marker!r}\n'.encode(),
         'contracts/manifest.json':f'{{"candidate":"{marker}"}}'.encode(),
-        metadata+'/METADATA':b'Metadata-Version: 2.1\nName: netcircuit-contracts\nVersion: 0.1.1\nProvides-Extra: rpc\n',
+        metadata+'/METADATA':b'Metadata-Version: 2.1\nName: cirnet-contracts\nVersion: 0.1.1\nProvides-Extra: rpc\n',
         metadata+'/WHEEL':b'Wheel-Version: 1.0\nGenerator: identity-regression\nRoot-Is-Purelib: true\nTag: py3-none-any\n',
     }
     records=[f'{name},sha256={base64.urlsafe_b64encode(hashlib.sha256(value).digest()).rstrip(b"=").decode()},{len(value)}' for name,value in entries.items()]
@@ -109,12 +109,12 @@ def test_core_install_allows_consumer_metadata_to_be_upgraded_afterward(tmp_path
     stale.mkdir()
     metadata=stale/'METADATA'
     header='Metadata-Version: 2.1\nName: transition-consumer\nVersion: 0.0.1\n'
-    metadata.write_text(header+'Requires-Dist: netcircuit-contracts==1.0.0\n')
+    metadata.write_text(header+'Requires-Dist: cirnet-contracts==1.0.0\n')
     (stale/'RECORD').write_text('')
     wheel,digest=candidate(tmp_path/'selected','selected')
     assert installer.main(['--wheel',str(wheel),'--sha256',digest,'--npm-url',''])==0
     pending=subprocess.run([str(python),'-I','-m','pip','check'],capture_output=True,text=True)
     assert pending.returncode!=0 and 'transition-consumer' in pending.stdout
-    metadata.write_text(header+'Requires-Dist: netcircuit-contracts==0.1.1\n')
+    metadata.write_text(header+'Requires-Dist: cirnet-contracts==0.1.1\n')
     completed=subprocess.run([str(python),'-I','-m','pip','check'],capture_output=True,text=True)
     assert completed.returncode==0,completed.stdout+completed.stderr

@@ -23,9 +23,8 @@ Use the current [release selection](../integration/release-set.json) and
 [release runbook](../deployment/multi-repo-release.md). The reused immutable
 0.1.1 artifacts retain their original build revisions/digests; rename candidates
 and new master commits are tracked separately in the M6 report. Old extraction
-versions and URLs in dated reports retain their historical meaning. Technical
-package/import/environment/protocol names and local checkout directories remain
-unchanged.
+versions and URLs in dated reports retain their historical meaning. Python source builds use `cirnet-contracts`. The published selection retains
+the original distribution, and the `contracts` import remains compatible.
 
 ## Source map
 

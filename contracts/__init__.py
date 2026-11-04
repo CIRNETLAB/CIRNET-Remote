@@ -1,7 +1,7 @@
 """Compatibility entrypoint forwarding exclusively to the selected Contracts wheel.
 
-The sibling files are retained migration references. They are never runtime
-fallbacks; package modules and importlib.resources use the wheel's full spec.
+Package modules and importlib.resources use the selected wheel's full spec.
+The published legacy wheel and the renamed wheel share this import namespace.
 """
 from importlib.metadata import PackageNotFoundError, distribution
 from importlib.util import module_from_spec, spec_from_file_location
@@ -11,12 +11,19 @@ import sys
 
 _EXPECTED_VERSION = '0.1.1'
 _legacy = Path(__file__).resolve().parent
-try:
-    _distribution = distribution('netcircuit-contracts')
-except PackageNotFoundError as error:
-    raise ImportError('netcircuit-contracts==0.1.1 is not installed; install the pinned wheel before starting Remote.') from error
+_installed_distributions = []
+for _name in ('cirnet-contracts', 'netcircuit-contracts'):
+    try:
+        _installed_distributions.append(distribution(_name))
+    except PackageNotFoundError:
+        pass
+if not _installed_distributions:
+    raise ImportError('CIRNET Contracts is not installed; install the selected wheel before starting Remote.')
+if len(_installed_distributions) != 1:
+    raise ImportError('Both CIRNET Contracts distributions are installed. Use a fresh environment for the selected wheel.')
+_distribution, = _installed_distributions
 if _distribution.version != _EXPECTED_VERSION:
-    raise ImportError(f'Remote requires netcircuit-contracts=={_EXPECTED_VERSION}; found {_distribution.version}.')
+    raise ImportError(f'Remote requires CIRNET Contracts {_EXPECTED_VERSION}; found {_distribution.version}.')
 _direct = _distribution.read_text('direct_url.json')
 if _direct and 'dir_info' in json.loads(_direct):
     raise ImportError('Remote requires a versioned Contracts wheel; source-directory/editable installs are unsupported.')

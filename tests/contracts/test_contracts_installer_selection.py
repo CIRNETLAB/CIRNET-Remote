@@ -17,12 +17,12 @@ class ReachedInstaller(Exception):
 
 @pytest.fixture
 def candidate(tmp_path, monkeypatch):
-    wheel = tmp_path / 'netcircuit_contracts-0.1.1-py3-none-any.whl'
+    wheel = tmp_path / 'cirnet_contracts-0.1.1-py3-none-any.whl'
     with ZipFile(wheel, 'w') as archive:
         for module in MODULES:
             archive.writestr('contracts/' + module, '')
-        archive.writestr('netcircuit_contracts-0.1.1.dist-info/METADATA',
-            'Name: netcircuit-contracts\nVersion: 0.1.1\n'
+        archive.writestr('cirnet_contracts-0.1.1.dist-info/METADATA',
+            'Name: cirnet-contracts\nVersion: 0.1.1\n'
             'Provides-Extra: rpc\nRequires-Dist: jsonschema==4.26.0\n')
     digest = hashlib.sha256(wheel.read_bytes()).hexdigest()
     manifest = tmp_path / 'selected.json'

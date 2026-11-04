@@ -123,7 +123,7 @@ for name in ('contracts','app','netcircuit_sim','hardware_service'):
     module=importlib.import_module(name)
     assert module.__file__ and not any(Path(module.__file__).resolve().is_relative_to(root) for root in checkout_roots),name
 assert version('netcircuit-simulator')=='0.1.1'
-assert version('netcircuit-contracts')=='0.1.1'
+assert version('cirnet-contracts')=='0.1.1'
 assert version('netcircuit-hardware-service')=='0.1.1'
 
 from contracts.registry import check_manifest,validate_contract
@@ -265,7 +265,7 @@ if __name__=='__main__':
     from contracts.generated import rpc_v2_pb2 as pb
     from contracts.validation import validate
     assert version('netcircuit-hardware-service')=='0.1.1'
-    assert version('netcircuit-contracts')=='0.1.1'
+    assert version('cirnet-contracts')=='0.1.1'
     assert version('netcircuit-simulator')=='0.1.1'
     assert Path(hardware_service.__file__).resolve().is_relative_to(Path(sys.prefix).resolve())
     for address in ('0.0.0.0:50051','[::]:50051','192.0.2.1:50051'):

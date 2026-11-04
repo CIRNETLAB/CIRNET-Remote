@@ -2,7 +2,7 @@
 
 FastAPI modular-monolith Lab-First laboratory. Authority: ../../docs/ARCHITECTURE.md. The application includes durable authentication/RBAC, owned Project/Circuit revisions, published assignments, experiments/history, verification, captures and FIFO/lease lifecycle. PostgreSQL is required in production; SQLite is for tests/development. Public contracts and all typed routes: ../../contracts/api/README.md.
 
-Install the reviewed `netcircuit-contracts==0.1.1` wheel into both service environments using the current versioned artifact manifest (`python scripts/install_contracts.py --with-dev --manifest ABSOLUTE_MANIFEST` from Remote root for development). Both services also install the same reviewed `netcircuit-simulator==0.1.1` wheel using `python scripts/install_simulator.py --manifest ABSOLUTE_SIMULATOR_MANIFEST`; no retained Simulator source or editable install is required. API also needs grpcio/protobuf and psycopg (declared dependencies). RPC bindings and offline resources come from that wheel; `python scripts/generate_hardware_rpc.py --check` verifies them without writing retained source. Production needs neither source Contracts nor DEV tools. Start hardware_service.server in its own process on localhost50051. An absent gateway reports unavailable; the virtual station executes the existing real digital simulator.
+For source builds, install `cirnet-contracts==0.1.1` and the matching rebuilt Simulator and Hardware wheels into fresh service environments using the current versioned artifact manifest (`python scripts/install_contracts.py --with-dev --manifest ABSOLUTE_MANIFEST` from Remote root for development). Both services also install the same reviewed `netcircuit-simulator==0.1.1` wheel using `python scripts/install_simulator.py --manifest ABSOLUTE_SIMULATOR_MANIFEST`; no retained Simulator source or editable install is required. API also needs grpcio/protobuf and psycopg (declared dependencies). RPC bindings and offline resources come from that wheel; `python scripts/generate_hardware_rpc.py --check` verifies them without writing retained source. Production needs neither source Contracts nor DEV tools. Start hardware_service.server in its own process on localhost50051. An absent gateway reports unavailable; the virtual station executes the existing real digital simulator.
 
 Use one API worker; do not start multiple scheduler workers against the same stations. SQLAlchemy persists definitions/results/sessions/leases and FIFO order; versioned migrations through 0007 upgrade new and legacy databases, including indexed runtime state and bounded auth maintenance. Restart recovers active leases and quarantines failed safe cleanup. Actual PostgreSQL migration/backup/restore and independent-writer tests have run locally; target production deployment remains unverified. Durable principals, server sessions, Argon2id passwords, CSRF/exact-origin and role/object authorization protect HTTP/WebSocket. Follow [auth setup](../../docs/architecture/auth-and-migrations.md) for administrator bootstrap, and the [production guide](../../deployment/README.md) for installed wheels, migration checks, TLS/origins, persistent data and maintenance. Development guests are explicit; production disables them.
 
@@ -65,7 +65,7 @@ does not start it.
 
 ### Windows PowerShell
 
-First-time setup from the Remote repository root, with Python 3.12 (package minimum 3.11). Select the reviewed current 0.1.1 artifact manifest before installing consumer packages:
+First-time setup from the Remote repository root, with Python 3.12 (package minimum 3.11). Select the local renamed Contracts wheel and matching rebuilt Simulator and Hardware wheels in the explicit 0.1.1 manifests before installing consumer packages:
 
 ```powershell
 py -3.12 -m venv services/api/.venv
@@ -88,7 +88,7 @@ therefore lack newly declared dependencies even if `pip check` still passes.
 For example, `argon2-cffi` supplies `argon2`, and authentication also requires
 Alembic; both are declared by the API package.
 
-Keep the existing environment. From Remote root, rerun the reviewed Contracts,
+Use a fresh environment when switching from the published `netcircuit-contracts` distribution to `cirnet-contracts`, because both own the `contracts` import namespace. For subsequent updates within the same distribution, rerun the reviewed Contracts,
 Simulator and Hardware installers when selecting an updated artifact set, then rerun the consumer
 installation and `pip check` commands above using this same interpreter.
 Restart both local services after updating their compatibility set. RPC bindings

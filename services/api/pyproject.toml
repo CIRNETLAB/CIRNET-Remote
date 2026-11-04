@@ -8,7 +8,7 @@ version = "0.1.1"
 description = "Application backend for CIRNET Remote"
 requires-python = ">=3.11"
 dependencies = [
-  "netcircuit-contracts==0.1.1",
+  "cirnet-contracts==0.1.1",
   "netcircuit-simulator==0.1.1",
   "grpcio==1.84.0",
   "protobuf==7.36.2",

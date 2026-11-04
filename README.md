@@ -6,7 +6,7 @@
 
 Current repository: [CIRNETLAB/CIRNET-Remote](https://github.com/CIRNETLAB/CIRNET-Remote).
 All six repositories now use `CIRNETLAB/CIRNET-*`; local `net-Circuit-*`
-directory names, Python/npm identities and `NETCIRCUIT_*` settings stay compatible.
+directory names, Python imports, npm identities and `NETCIRCUIT_*` settings stay compatible. Source builds now depend on the `cirnet-contracts` Python distribution. The published 0.1.2 system selection still uses the original wheels.
 Historical `TINIHI-Labs/net-Circuit-*` and the original Remote URL identify the
 same preserved repositories. Current consumers use the canonical URLs in the
 system manifest; the published 0.1.1 artifacts retain their original revisions and digests.

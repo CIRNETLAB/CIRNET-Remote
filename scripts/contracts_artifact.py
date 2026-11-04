@@ -2,7 +2,7 @@
 import base64
 from email.parser import Parser
 import hashlib
-from importlib.metadata import distribution
+from importlib.metadata import PackageNotFoundError, distribution
 from importlib.resources import files
 import json
 import os
@@ -12,7 +12,31 @@ import subprocess
 from zipfile import ZipFile
 
 VERSION = '0.1.1'
-NAME = 'netcircuit-contracts'
+NAME = 'cirnet-contracts'
+LEGACY_NAME = 'netcircuit-contracts'
+SUPPORTED_NAMES = (NAME, LEGACY_NAME)
+
+
+def installed_contracts():
+    installed = []
+    for name in SUPPORTED_NAMES:
+        try:
+            installed.append(distribution(name))
+        except PackageNotFoundError:
+            continue
+    if not installed:
+        raise PackageNotFoundError(NAME)
+    if len(installed) != 1:
+        raise ValueError('Both CIRNET Contracts distributions are installed. Use a fresh environment for the selected wheel.')
+    return installed[0]
+
+
+def wheel_metadata(path):
+    with ZipFile(path) as archive:
+        metadata = [name for name in archive.namelist() if name.endswith('.dist-info/METADATA')]
+        if len(metadata) != 1:
+            raise ValueError('Expected one wheel distribution metadata file.')
+        return Parser().parsestr(archive.read(metadata[0]).decode('utf-8'))
 
 
 def verify_wheel(path, digest):
@@ -21,13 +45,9 @@ def verify_wheel(path, digest):
         raise ValueError('Contracts artifact path must be absolute.')
     if len(digest) != 64 or hashlib.sha256(path.read_bytes()).hexdigest() != digest.lower():
         raise ValueError('Contracts artifact SHA256 does not match the selected manifest.')
-    with ZipFile(path) as archive:
-        metadata = [name for name in archive.namelist() if name.endswith('.dist-info/METADATA')]
-        if len(metadata) != 1:
-            raise ValueError('Expected one wheel distribution metadata file.')
-        value = Parser().parsestr(archive.read(metadata[0]).decode('utf-8'))
-    if value['Name'] != NAME or value['Version'] != VERSION:
-        raise ValueError(f'Expected {NAME}=={VERSION}; got {value["Name"]}=={value["Version"]}.')
+    value = wheel_metadata(path)
+    if value['Name'] not in SUPPORTED_NAMES or value['Version'] != VERSION:
+        raise ValueError(f'Expected a supported CIRNET Contracts {VERSION} wheel; got {value["Name"]}=={value["Version"]}.')
     return path
 
 
@@ -47,13 +67,14 @@ def selected_wheel(manifest=None):
 
 
 SELECTED_INSTALL_PROBE = r'''
-from importlib.metadata import distribution
+from importlib.metadata import distribution, distributions
 import json
 from pathlib import Path
 import sys
 from zipfile import ZipFile
-wheel,digest=sys.argv[1:]
-artifact=distribution('netcircuit-contracts')
+wheel,digest,name,other=sys.argv[1:]
+assert not list(distributions(name=other)), 'both Contracts distributions are installed'
+artifact=distribution(name)
 assert artifact.version=='0.1.1','selected archive version differs from the installation'
 direct=json.loads(artifact.read_text('direct_url.json') or '{}')
 archive_info=direct.get('archive_info',{})
@@ -75,8 +96,10 @@ print(json.dumps({'selected_sha256':digest,'selected_files':len(expected)}))
 
 def verify_selected_install(wheel, digest, *, python=None):
     wheel = verify_wheel(wheel, digest)
+    name = wheel_metadata(wheel)['Name']
+    other = LEGACY_NAME if name == NAME else NAME
     result = subprocess.run([str(python or sys.executable), '-I', '-c', SELECTED_INSTALL_PROBE,
-                             str(wheel), digest.lower()], capture_output=True, text=True)
+                             str(wheel), digest.lower(), name, other], capture_output=True, text=True)
     if result.returncode:
         raise RuntimeError('Installed payload does not match the selected archive: ' + result.stderr.strip())
     return json.loads(result.stdout)
@@ -84,7 +107,7 @@ def verify_selected_install(wheel, digest, *, python=None):
 
 def installed_provenance(*, verify_hashes=True):
     import contracts
-    artifact = distribution(NAME)
+    artifact = installed_contracts()
     if artifact.version != VERSION:
         raise ValueError(f'Expected {NAME}=={VERSION}; found {artifact.version}.')
     direct = artifact.read_text('direct_url.json')
@@ -118,7 +141,7 @@ def installed_provenance(*, verify_hashes=True):
             origin = getattr(module, '__file__', None)
             if origin and not Path(origin).resolve().is_relative_to(root):
                 raise ValueError(f'Contracts submodule shadowed by source: {name}: {origin}')
-    result = {'name': NAME, 'version': VERSION, 'package_root': str(root), 'owned_files': checked}
+    result = {'name': artifact.metadata['Name'], 'version': VERSION, 'package_root': str(root), 'owned_files': checked}
     if os.environ.get('NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST'):
         selected, digest = selected_wheel_details()
         result.update(verify_selected_install(selected, digest))

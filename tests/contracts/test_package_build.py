@@ -39,7 +39,7 @@ def test_remote_metapackage_does_not_package_or_generate_contracts(tmp_path):
         files=set(archive.namelist())
         assert not any(name.startswith('contracts/') for name in files)
         metadata=archive.read(next(name for name in files if name.endswith('/METADATA'))).decode()
-    assert 'Requires-Dist: netcircuit-contracts==0.1.1' in metadata
+    assert 'Requires-Dist: cirnet-contracts==0.1.1' in metadata
 
 
 def test_selected_contract_artifact_contains_rpc_and_offline_resources():

@@ -46,7 +46,7 @@ def test_interface_boundary_rejects_copied_python_or_private_contract_payload(tm
 
 def test_six_product_owners_are_explicit_and_installed_packages_do_not_cross_boundaries():
     owners = {
-        'netcircuit-contracts': 'contracts',
+        'cirnet-contracts': 'contracts',
         'netcircuit-simulator': 'netcircuit_sim',
         'netcircuit-hardware-service': 'hardware_service',
     }
@@ -85,7 +85,7 @@ def test_six_product_owners_are_explicit_and_installed_packages_do_not_cross_bou
     api = tomllib.loads((ROOT / 'services/api/pyproject.toml').read_text(encoding='utf-8'))['project']
     assert remote['name'] == 'netcircuit-remote-dev' and remote['version'] == '0.1.2'
     assert api['name'] == 'netcircuit-api' and api['version'] == '0.1.1'
-    assert 'netcircuit-contracts==0.1.1' in api['dependencies']
+    assert 'cirnet-contracts==0.1.1' in api['dependencies']
     assert 'netcircuit-simulator==0.1.1' in api['dependencies']
     assert not any(value.startswith('netcircuit-hardware') for value in api['dependencies'])
 

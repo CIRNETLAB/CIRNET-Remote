@@ -1,6 +1,7 @@
 """Install only an explicitly selected, identity/digest-verified Contracts wheel."""
 import argparse
 import hashlib
+from importlib.metadata import PackageNotFoundError
 import json
 import os
 from pathlib import Path
@@ -8,10 +9,10 @@ import subprocess
 import sys
 from urllib.parse import urlparse
 try:
-    from scripts.contracts_artifact import selected_wheel_details, verify_wheel, verify_selected_install
+    from scripts.contracts_artifact import installed_contracts, selected_wheel_details, verify_wheel, verify_selected_install, wheel_metadata
     from scripts.artifact_download import download_artifact
 except ModuleNotFoundError:
-    from contracts_artifact import selected_wheel_details, verify_wheel, verify_selected_install
+    from contracts_artifact import installed_contracts, selected_wheel_details, verify_wheel, verify_selected_install, wheel_metadata
     from artifact_download import download_artifact
 
 
@@ -78,6 +79,13 @@ def main(argv=None):
         wheel, digest = verify_wheel(args.wheel, args.sha256), args.sha256.lower()
     else:
         wheel, digest = selected_wheel_details(args.manifest)
+    try:
+        current = installed_contracts()
+    except PackageNotFoundError:
+        pass
+    else:
+        if current.metadata['Name'] != wheel_metadata(wheel)['Name']:
+            raise ValueError('The other CIRNET Contracts distribution is installed. Use a fresh environment for the selected wheel.')
     cache = str(artifact_directory('pip-cache'))
     temporary = str(artifact_directory('contracts-install-temp'))
     environment = {**os.environ, 'TMP': temporary, 'TEMP': temporary, 'TMPDIR': temporary, 'PIP_CACHE_DIR': cache}

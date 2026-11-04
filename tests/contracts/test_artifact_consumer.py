@@ -11,7 +11,7 @@ from tests.support.release_inputs import installed_distribution
 ROOT = Path(os.environ.get('NETCIRCUIT_CONSUMER_SOURCE_ROOT', Path(__file__).resolve().parents[2]))
 
 
-def environment(tmp_path, *, version='0.1.1', editable=False, missing=False):
+def environment(tmp_path, *, name='cirnet-contracts', version='0.1.1', editable=False, missing=False):
     shadow = tmp_path / 'remote'
     package = shadow / 'contracts'
     package.mkdir(parents=True)
@@ -26,9 +26,9 @@ def environment(tmp_path, *, version='0.1.1', editable=False, missing=False):
         (actual / '__init__.py').write_text('from .marker import IDENTITY\n')
         (actual / 'marker.py').write_text("IDENTITY = 'wheel'\n")
         (actual / 'resource.json').write_text('{"origin":"wheel"}')
-        metadata = installed / f'netcircuit_contracts-{version}.dist-info'
+        metadata = installed / f'{name.replace("-", "_")}-{version}.dist-info'
         metadata.mkdir()
-        (metadata / 'METADATA').write_text(f'Metadata-Version: 2.1\nName: netcircuit-contracts\nVersion: {version}\n')
+        (metadata / 'METADATA').write_text(f'Metadata-Version: 2.1\nName: {name}\nVersion: {version}\n')
         (metadata / 'RECORD').write_text('contracts/__init__.py,,\ncontracts/marker.py,,\ncontracts/resource.json,,\n')
         if editable:
             (metadata / 'direct_url.json').write_text(json.dumps({'url': actual.as_uri(), 'dir_info': {'editable': True}}))
@@ -42,8 +42,9 @@ def probe(shadow, installed, body):
         cwd=shadow, env=clean, capture_output=True, text=True)
 
 
-def test_root_import_and_resources_use_only_the_installed_distribution(tmp_path):
-    shadow, installed = environment(tmp_path)
+@pytest.mark.parametrize('name', ['cirnet-contracts', 'netcircuit-contracts'])
+def test_root_import_and_resources_use_only_the_installed_distribution(tmp_path, name):
+    shadow, installed = environment(tmp_path, name=name)
     result = probe(shadow, installed,
         "import contracts,json; from importlib.resources import files; "
         "from pathlib import Path; assert contracts.IDENTITY=='wheel'; "
@@ -86,15 +87,25 @@ def test_distribution_metadata_cannot_redirect_to_retained_source(tmp_path):
     assert 'retained Remote source' in result.stderr
 
 
+def test_both_distribution_names_cannot_own_the_same_import(tmp_path):
+    shadow, installed = environment(tmp_path)
+    metadata = installed / 'netcircuit_contracts-0.1.1.dist-info'
+    metadata.mkdir()
+    (metadata / 'METADATA').write_text('Name: netcircuit-contracts\nVersion: 0.1.1\n')
+    result = probe(shadow, installed, 'import contracts')
+    assert result.returncode != 0
+    assert 'Both CIRNET Contracts distributions are installed' in result.stderr
+
+
 def test_consumer_metadata_pins_the_same_artifact_version():
     import tomllib
     for relative in ('pyproject.toml', 'services/api/pyproject.toml'):
         metadata = tomllib.loads((ROOT / relative).read_text(encoding='utf-8'))
-        assert 'netcircuit-contracts==0.1.1' in metadata['project']['dependencies'], relative
-    assert 'netcircuit-contracts==0.1.1' in installed_distribution('netcircuit-hardware-service').requires
+        assert 'cirnet-contracts==0.1.1' in metadata['project']['dependencies'], relative
+    assert 'cirnet-contracts==0.1.1' in installed_distribution('netcircuit-hardware-service').requires
     assert tomllib.loads((ROOT / 'pyproject.toml').read_text())['project']['name'] == 'netcircuit-remote-dev'
     lock = json.loads((ROOT / 'integration/contracts-version.json').read_text())
-    assert lock['python'] == {'name': 'netcircuit-contracts', 'version': '0.1.1'}
+    assert lock['python'] == {'name': 'cirnet-contracts', 'version': '0.1.1'}
     assert lock['npm'] == {'name': '@tinihi-labs/contracts', 'version': '0.1.1'}
     simulator = json.loads((ROOT / 'integration/simulator-version.json').read_text(encoding='utf-8'))
     assert simulator['contracts'] == lock['python']

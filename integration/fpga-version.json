@@ -6,7 +6,7 @@
     "kind": "source"
   },
   "contracts": {
-    "name": "netcircuit-contracts",
+    "name": "cirnet-contracts",
     "version": "0.1.1"
   },
   "logicalProtocolVersion": "1.0-scaffold",

@@ -32,7 +32,7 @@ def wheel(tmp_path, *, name='netcircuit-hardware-service', version='0.1.1', cont
             if module != missing:
                 archive.writestr('hardware_service/' + module, '')
         archive.writestr('netcircuit_hardware_service-0.1.1.dist-info/METADATA',
-            f'Metadata-Version: 2.1\nName: {name}\nVersion: {version}\nRequires-Dist: netcircuit-contracts=={contracts}\nRequires-Dist: netcircuit-simulator=={simulator}\nRequires-Dist: grpcio=={grpcio}\nRequires-Dist: protobuf=={protobuf}\nRequires-Dist: jsonschema=={jsonschema}\n')
+            f'Metadata-Version: 2.1\nName: {name}\nVersion: {version}\nRequires-Dist: cirnet-contracts=={contracts}\nRequires-Dist: netcircuit-simulator=={simulator}\nRequires-Dist: grpcio=={grpcio}\nRequires-Dist: protobuf=={protobuf}\nRequires-Dist: jsonschema=={jsonschema}\n')
     return path, hashlib.sha256(path.read_bytes()).hexdigest()
 
 
@@ -143,7 +143,7 @@ def test_consumers_pin_one_hardware_and_default_collection_excludes_retained_uni
     assert 'services/hardware-service' in root['tool']['pytest']['ini_options']['norecursedirs']
     lock = json.loads((ROOT / 'integration/hardware-version.json').read_text(encoding='utf-8'))
     assert lock['python'] == {'name': 'netcircuit-hardware-service', 'version': '0.1.1'}
-    assert lock['contracts'] == {'name': 'netcircuit-contracts', 'version': '0.1.1'}
+    assert lock['contracts'] == {'name': 'cirnet-contracts', 'version': '0.1.1'}
     assert lock['simulator'] == {'name': 'netcircuit-simulator', 'version': '0.1.1'}
     api = tomllib.loads((ROOT / 'services/api/pyproject.toml').read_text(encoding='utf-8'))
     assert not any(value.startswith('netcircuit-hardware') for value in api['project']['dependencies'])

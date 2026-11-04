@@ -1,7 +1,7 @@
 {
   "status": "PINNED_ARTIFACT_INPUTS",
   "python": {
-    "name": "netcircuit-contracts",
+    "name": "cirnet-contracts",
     "version": "0.1.1"
   },
   "npm": {

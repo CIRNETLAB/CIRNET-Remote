@@ -205,6 +205,12 @@ try {
         Import-ProcessEnvironment $state.processEnvironment
     }
 
+    $allocatorCache = Join-Path $repo '.build\contracts-tools'
+    if (-not (Test-Path -LiteralPath (Join-Path $allocatorCache 'allocator.json')) -or
+        -not (Test-Path -LiteralPath (Join-Path $allocatorCache 'allocator.mjs'))) {
+        & $python -B -c 'from scripts.bootstrap_contract_tools import materialize_allocator; materialize_allocator()'
+        if ($LASTEXITCODE -ne 0) { throw 'Could not restore the pinned DEV allocator cache.' }
+    }
     $logDir = & $node scripts/artifact-paths.mjs ("launcher-" + [Guid]::NewGuid().ToString('N'))
     if ($LASTEXITCODE -ne 0 -or -not $logDir) { throw 'Could not allocate launcher logs.' }
     # Keep service keyboard readers (including Vite shortcuts) off the launcher console.
