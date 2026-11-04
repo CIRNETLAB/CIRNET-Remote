@@ -10,8 +10,8 @@ from tests.support.ci_release import assert_interface_release_job
 
 ROOT=Path(__file__).resolve().parents[2]
 SHARED=('integration/contracts-version.json','integration/simulator-version.json','integration/hardware-version.json',
-    'integration/fpga-version.json','scripts/contract_exports.py','scripts/check_contract_sdk.py','pyproject.toml','requirements-codegen.txt',
-    'requirements-verification.txt','requirements-benchmark.txt','setup.py','MANIFEST.in','Makefile','.gitattributes')
+    'integration/fpga-version.json','scripts/contract_exports.py','scripts/check_contract_sdk.py','pyproject.toml',
+    'requirements-verification.txt','setup.py','MANIFEST.in','Makefile','.gitattributes')
 
 OWNED_PYTEST_JOBS=(('backend.yml','test'),('hardware-service.yml','test'),('frontend.yml','build'),
     ('integration.yml','repository-contracts'),('integration.yml','postgresql-migrations'),
@@ -196,9 +196,8 @@ def test_negative_shared_file_removal_is_detected_by_trigger_coverage():
 
 
 def test_shared_verification_installs_benchmark_process_cleanup_dependency():
-    verification=(ROOT/'requirements-verification.txt').read_text(encoding='utf-8')
-    assert '-r requirements-benchmark.txt' in verification
-    assert 'psutil==7.2.2' in (ROOT/'requirements-benchmark.txt').read_text(encoding='utf-8')
+    verification=(ROOT/'requirements-verification.txt').read_text(encoding='utf-8').splitlines()
+    assert 'psutil==7.2.2' in verification
 
 
 @pytest.mark.parametrize('name,job_id',OWNED_PYTEST_JOBS)

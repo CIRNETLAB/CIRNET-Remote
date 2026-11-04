@@ -1,7 +1,7 @@
 """Bounded local smoke: real accounts, HTTP, SQLite, Hardware RPC and virtual jobs.
 
 This is an observed workload, not a production capacity or physical execution claim.
-Install requirements-benchmark.txt in the configured application/test environment.
+Install requirements-verification.txt in the configured application/test environment.
 """
 import argparse
 from collections import Counter,defaultdict,deque

@@ -36,7 +36,7 @@ def test_frontend_checks_shared_generation_and_every_dependency_trigger():
     document = workflow('frontend.yml')
     events = document.get('on', document.get(True))
     shared = {'scripts/**', 'services/api/**', 'integration/**', 'tests/frontend/**',
-              'pyproject.toml', 'requirements-codegen.txt', 'requirements-verification.txt', 'requirements-benchmark.txt', 'setup.py', 'MANIFEST.in', 'Makefile'}
+              'pyproject.toml', 'requirements-verification.txt', 'setup.py', 'MANIFEST.in', 'Makefile'}
     for event in ('push', 'pull_request'):
         assert shared <= set(events[event]['paths'])
     steps = commands(document['jobs']['build'])
@@ -128,4 +128,4 @@ def test_browser_ci_installs_pinned_runner_and_all_real_services_then_runs_every
     events = document.get('on', document.get(True))
     for event in ('push', 'pull_request'):
         assert {'scripts/**', 'services/api/**', 'integration/**', 'tests/frontend/**', 'tests/integration/**', 'tests/support/**',
-                'pyproject.toml', 'requirements-codegen.txt', 'setup.py', 'Makefile'} <= set(events[event]['paths'])
+                'pyproject.toml', 'requirements-verification.txt', 'setup.py', 'Makefile'} <= set(events[event]['paths'])

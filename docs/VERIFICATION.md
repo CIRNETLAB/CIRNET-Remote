@@ -79,6 +79,10 @@ credential scope. After rotation, verify actual selected asset downloads again.
 
 ## Checks and evidence
 
+Install the pinned Python tools for local and CI verification with
+`python -m pip install -r requirements-verification.txt`. This file includes
+build, contract verification, benchmark monitoring and test tools.
+
 On Windows, run `.\run-cirnet.bat -Check` to start the local simulation stack,
 check the Hardware listener, API health, and Vite proxy, then stop the services.
 For launcher changes, also run `.\run-cirnet.bat -NoBrowser` in a terminal and
