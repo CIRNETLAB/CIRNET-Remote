@@ -1,12 +1,13 @@
 import {existsSync,readFileSync,realpathSync} from 'node:fs'
 import {isAbsolute,resolve,relative} from 'node:path'
 import {getArtifactDirectory,getArtifactContext} from './artifact-paths.mjs'
+import {exportEnvironment} from './environment.mjs'
 
 /** An exported Interface product is executable input, never an implicit sibling. */
 export function interfaceProduct(environment=process.env) {
-  const configured=environment.NETCIRCUIT_INTERFACE_ROOT
-  if(!configured)throw new Error('NETCIRCUIT_INTERFACE_ROOT must explicitly select an extracted Interface product; retained apps/web is not a fallback.')
-  if(!isAbsolute(configured))throw new Error('NETCIRCUIT_INTERFACE_ROOT must be an absolute product path.')
+  const configured=exportEnvironment(environment).CIRNET_INTERFACE_ROOT
+  if(!configured)throw new Error('CIRNET_INTERFACE_ROOT must explicitly select an extracted Interface product; retained apps/web is not a fallback.')
+  if(!isAbsolute(configured))throw new Error('CIRNET_INTERFACE_ROOT must be an absolute product path.')
   const directory=realpathSync(configured)
   const manifest=JSON.parse(readFileSync(resolve(directory,'package.json'),'utf8'))
   if(manifest.devDependencies?.['@playwright/test']!=='1.64.1')throw new Error('The Interface product must retain pinned Playwright 1.64.1.')
@@ -16,6 +17,7 @@ export function interfaceProduct(environment=process.env) {
 
 /** Admit input under its inherited context before selecting new output. */
 export function prepareInterfaceRun(args) {
+  Object.assign(process.env,exportEnvironment())
   let output
   for(let index=0;index<args.length;) {
     const argument=args[index]
@@ -30,15 +32,16 @@ export function prepareInterfaceRun(args) {
   const product=interfaceProduct(),context=getArtifactContext()
   // A released product in the verified input session stays admitted even when
   // all new runtime state is directed to a different session.
-  const inherited=process.env.NETCIRCUIT_ARTIFACTS_SESSION?getArtifactDirectory():undefined
+  const inherited=process.env.CIRNET_ARTIFACTS_SESSION?getArtifactDirectory():undefined
   if(!context.roots.includes(product)) {
     const position=inherited?relative(inherited,product):'..'
     if(isAbsolute(position)||position==='..'||position.startsWith('../')||position.startsWith('..\\'))
-      throw new Error('Include the Interface checkout in NETCIRCUIT_ARTIFACTS_CONTEXT before allocating the integrated session.')
+      throw new Error('Include the Interface checkout in CIRNET_ARTIFACTS_CONTEXT before allocating the integrated session.')
   }
   const session=output===undefined?getArtifactDirectory():getArtifactDirectory('',{directory:output})
-  process.env.NETCIRCUIT_ARTIFACTS_SESSION=session
-  process.env.NETCIRCUIT_ARTIFACTS_CONTEXT=JSON.stringify(context)
+  process.env.CIRNET_ARTIFACTS_SESSION=session
+  process.env.CIRNET_ARTIFACTS_CONTEXT=JSON.stringify(context)
+  Object.assign(process.env,exportEnvironment())
   const temporary=getArtifactDirectory('tmp')
   process.env.TMP=temporary;process.env.TEMP=temporary;process.env.TMPDIR=temporary
   process.env.npm_config_cache=getArtifactDirectory('npm-cache')

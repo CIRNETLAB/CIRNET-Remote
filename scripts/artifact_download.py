@@ -1,6 +1,11 @@
 """Download pinned release bytes with authentication confined to GitHub's API."""
 import hashlib
 import os
+try:
+    from scripts.environment import getenv, export_environment
+except ModuleNotFoundError:
+    from environment import getenv, export_environment
+
 import re
 from urllib.parse import urljoin, urlparse
 from urllib.request import HTTPRedirectHandler, Request, build_opener
@@ -17,12 +22,12 @@ def checked_https(url):
 
 def artifact_request(url, *, token=None):
     parsed = checked_https(url)
-    headers = {'User-Agent': 'netcircuit-artifact-consumer'}
+    headers = {'User-Agent': 'cirnet-artifact-consumer'}
     private_asset = (parsed.hostname == 'api.github.com' and parsed.port in (None, 443)
         and re.fullmatch(r'/repos/[^/]+/[^/]+/releases/assets/[0-9]+', parsed.path) is not None)
     if private_asset:
         headers['Accept'] = 'application/octet-stream'
-        credential = token if token is not None else os.environ.get('NETCIRCUIT_ARTIFACTS_TOKEN')
+        credential = token if token is not None else getenv('CIRNET_ARTIFACTS_TOKEN')
         if credential:
             headers['Authorization'] = 'Bearer ' + credential
     return Request(url, headers=headers)

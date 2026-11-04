@@ -4,6 +4,11 @@ import hashlib
 from importlib.metadata import PackageNotFoundError
 import json
 import os
+try:
+    from scripts.environment import getenv, export_environment, append_environment
+except ModuleNotFoundError:
+    from environment import getenv, export_environment, append_environment
+
 from pathlib import Path
 import subprocess
 import sys
@@ -32,10 +37,10 @@ def main(argv=None):
     source.add_argument('--wheel')
     source.add_argument('--url')
     parser.add_argument('--sha256')
-    parser.add_argument('--npm-url', default=os.environ.get('NETCIRCUIT_CONTRACTS_NPM_URL'))
-    parser.add_argument('--npm-sha256', default=os.environ.get('NETCIRCUIT_CONTRACTS_NPM_SHA256'))
+    parser.add_argument('--npm-url', default=getenv('CIRNET_CONTRACTS_NPM_URL'))
+    parser.add_argument('--npm-sha256', default=getenv('CIRNET_CONTRACTS_NPM_SHA256'))
     parser.add_argument('--filename')
-    parser.add_argument('--npm-filename', default=os.environ.get('NETCIRCUIT_CONTRACTS_NPM_FILENAME'))
+    parser.add_argument('--npm-filename', default=getenv('CIRNET_CONTRACTS_NPM_FILENAME'))
     parser.add_argument('--dev-only', action='store_true', help='Bootstrap only independent DEV tooling; no runtime Contracts dependency.')
     parser.add_argument('--with-dev', action='store_true')
     parser.add_argument('--dev-wheel')
@@ -61,9 +66,9 @@ def main(argv=None):
     else:
         if args.sha256 is not None or args.filename is not None:
             parser.error('--sha256 and --filename require --wheel or --url.')
-        args.url = os.environ.get('NETCIRCUIT_CONTRACTS_WHEEL_URL')
-        args.sha256 = os.environ.get('NETCIRCUIT_CONTRACTS_WHEEL_SHA256')
-        args.filename = os.environ.get('NETCIRCUIT_CONTRACTS_WHEEL_FILENAME')
+        args.url = getenv('CIRNET_CONTRACTS_WHEEL_URL')
+        args.sha256 = getenv('CIRNET_CONTRACTS_WHEEL_SHA256')
+        args.filename = getenv('CIRNET_CONTRACTS_WHEEL_FILENAME')
     if args.url and not args.wheel:
         if urlparse(args.url).scheme != 'https' or not args.sha256:
             parser.error('Artifact download requires an explicit HTTPS URL and SHA256.')
@@ -115,8 +120,7 @@ def main(argv=None):
             manifest_value['npm'] = {'path': str(npm_path), 'sha256': args.npm_sha256}
         manifest.write_text(json.dumps(manifest_value), encoding='utf-8')
         if os.environ.get('GITHUB_ENV'):
-            with Path(os.environ['GITHUB_ENV']).open('a', encoding='utf-8') as output:
-                output.write(f'NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST={manifest}\n')
+            append_environment({'CIRNET_CONTRACTS_ARTIFACT_MANIFEST': str(manifest)}, os.environ['GITHUB_ENV'])
     return 0
 
 

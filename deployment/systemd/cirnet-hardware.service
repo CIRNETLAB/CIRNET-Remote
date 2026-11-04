@@ -1,0 +1,22 @@
+[Unit]
+Description=CIRNET Remote Hardware Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=cirnet
+Group=cirnet
+StateDirectory=cirnet-hardware
+WorkingDirectory=/var/lib/cirnet-hardware
+EnvironmentFile=/etc/cirnet/cirnet.env
+ExecStart=/opt/cirnet/venv-hardware/bin/python -m hardware_service.server 127.0.0.1:50051
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
+Alias=netcircuit-hardware.service

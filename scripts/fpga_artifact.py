@@ -3,6 +3,11 @@ import hashlib
 import io
 import json
 import os
+try:
+    from scripts.environment import getenv, export_environment
+except ModuleNotFoundError:
+    from environment import getenv, export_environment
+
 from pathlib import Path, PurePosixPath
 import re
 import shutil
@@ -20,7 +25,8 @@ MAX_MEMBERS = 10_000
 MAX_EXPANDED_BYTES = 128 * 1024 * 1024
 MAX_ARCHIVE_BYTES = 128 * 1024 * 1024
 IDENTITY = 'fpga-artifact.json'
-PINS = {'schemaVersion': 1, 'name': 'netcircuit-fpga-scaffold', 'version': '0.1.1',
+NAMES = ('cirnet-fpga-scaffold', 'netcircuit-fpga-scaffold')
+PINS = {'schemaVersion': 1, 'name': 'cirnet-fpga-scaffold', 'version': '0.1.1',
     'kind': 'source', 'contractsVersion': '0.1.1', 'logicalProtocolVersion': '1.0-scaffold',
     'registerMapVersion': '1.0-reserved', 'physicalAvailable': False}
 REPOSITORY = 'https://github.com/CIRNETLAB/CIRNET-FPGA.git'
@@ -67,8 +73,9 @@ def _check_ancestors(path):
 
 
 def _identity(identity, contents):
-    if not isinstance(identity, dict) or any(type(identity.get(key)) is not type(value)
-            or identity[key] != value for key, value in PINS.items()):
+    if (not isinstance(identity, dict) or identity.get('name') not in NAMES
+            or any(type(identity.get(key)) is not type(value) or identity[key] != value
+                   for key, value in PINS.items() if key != 'name')):
         raise ValueError('FPGA source identity must match source 0.1.1 and Contracts 0.1.1/logical 1.0-scaffold pins.')
     source = identity.get('source')
     if (not isinstance(source, dict) or not isinstance(source.get('repository'), str)
@@ -141,8 +148,8 @@ def verify_archive(path, digest):
 
 
 def selected_source_details(manifest=None):
-    selected = manifest if manifest is not None else os.environ.get('NETCIRCUIT_FPGA_ARTIFACT_MANIFEST')
-    if not selected: raise ValueError('Select an explicit NETCIRCUIT_FPGA_ARTIFACT_MANIFEST; no source/latest fallback is allowed.')
+    selected = manifest if manifest is not None else getenv('CIRNET_FPGA_ARTIFACT_MANIFEST')
+    if not selected: raise ValueError('Select an explicit CIRNET_FPGA_ARTIFACT_MANIFEST; no source/latest fallback is allowed.')
     path = Path(selected)
     if not path.is_absolute(): raise ValueError('FPGA manifest path must be absolute.')
     value = read_json(path.read_text(encoding='utf-8'))
@@ -177,8 +184,8 @@ def extract_product(archive, digest):
 
 
 def source_product(root=None, manifest=None):
-    selected = root if root is not None else os.environ.get('NETCIRCUIT_FPGA_ROOT')
-    if not selected: raise ValueError('Select an explicit NETCIRCUIT_FPGA_ROOT; retained fpga is not a fallback.')
+    selected = root if root is not None else getenv('CIRNET_FPGA_ROOT')
+    if not selected: raise ValueError('Select an explicit CIRNET_FPGA_ROOT; retained fpga is not a fallback.')
     directory = Path(selected)
     if not directory.is_absolute(): raise ValueError('FPGA product root must be absolute.')
     _check_ancestors(directory)

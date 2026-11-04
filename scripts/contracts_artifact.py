@@ -6,6 +6,11 @@ from importlib.metadata import PackageNotFoundError, distribution
 from importlib.resources import files
 import json
 import os
+try:
+    from scripts.environment import getenv, export_environment
+except ModuleNotFoundError:
+    from environment import getenv, export_environment
+
 from pathlib import Path
 import sys
 import subprocess
@@ -52,9 +57,9 @@ def verify_wheel(path, digest):
 
 
 def selected_wheel_details(manifest=None):
-    selected = manifest or os.environ.get('NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST')
+    selected = manifest or getenv('CIRNET_CONTRACTS_ARTIFACT_MANIFEST')
     if not selected:
-        raise ValueError('Set NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST to an explicit artifact manifest; no source or latest fallback is allowed.')
+        raise ValueError('Set CIRNET_CONTRACTS_ARTIFACT_MANIFEST to an explicit artifact manifest; no source or latest fallback is allowed.')
     manifest_value = json.loads(Path(selected).read_text(encoding='utf-8'))
     if manifest_value.get('schemaVersion', 1) != 1:
         raise ValueError('Unsupported Contracts artifact manifest schemaVersion.')
@@ -142,7 +147,7 @@ def installed_provenance(*, verify_hashes=True):
             if origin and not Path(origin).resolve().is_relative_to(root):
                 raise ValueError(f'Contracts submodule shadowed by source: {name}: {origin}')
     result = {'name': artifact.metadata['Name'], 'version': VERSION, 'package_root': str(root), 'owned_files': checked}
-    if os.environ.get('NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST'):
+    if getenv('CIRNET_CONTRACTS_ARTIFACT_MANIFEST'):
         selected, digest = selected_wheel_details()
         result.update(verify_selected_install(selected, digest))
     return result

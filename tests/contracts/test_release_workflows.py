@@ -23,14 +23,14 @@ def assert_owned_test_runtime(job):
     steps=job['steps']
     allocation=next((index for index,step in enumerate(steps) if 'ci_runtime=' in step.get('run','')),None)
     assert allocation is not None,'job must allocate owned application defaults before verification'
-    assert steps[allocation].get('env',{}).get('NETCIRCUIT_ARTIFACTS_DIR','').startswith('${{ runner.temp }}/'), 'allocator parent must be runner.temp in step env; job env cannot use runner context'
+    assert steps[allocation].get('env',{}).get('CIRNET_ARTIFACTS_DIR','').startswith('${{ runner.temp }}/'), 'allocator parent must be runner.temp in step env; job env cannot use runner context'
     command=steps[allocation]['run']
-    assert 'NETCIRCUIT_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"\n' in command
-    assert 'export NETCIRCUIT_ARTIFACTS_SESSION\n' in command
-    assert 'export NETCIRCUIT_ARTIFACTS_SESSION=' not in command,'export must not mask allocator failure'
-    session_export='echo "NETCIRCUIT_ARTIFACTS_SESSION=$NETCIRCUIT_ARTIFACTS_SESSION" >> "$GITHUB_ENV"'
+    assert 'CIRNET_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"\n' in command
+    assert 'export CIRNET_ARTIFACTS_SESSION\n' in command
+    assert 'export CIRNET_ARTIFACTS_SESSION=' not in command,'export must not mask allocator failure'
+    session_export='echo "CIRNET_ARTIFACTS_SESSION=$CIRNET_ARTIFACTS_SESSION" >> "$GITHUB_ENV"'
     assert command.index(session_export)<command.index('ci_runtime='),'publish ownership before any later allocation can fail'
-    for variable in ('NETCIRCUIT_ARTIFACTS_SESSION','NETCIRCUIT_DATABASE_URL','NETCIRCUIT_CAPTURE_DIR'):
+    for variable in ('CIRNET_ARTIFACTS_SESSION','CIRNET_DATABASE_URL','CIRNET_CAPTURE_DIR'):
         assert 'echo "'+variable+'=' in command and '"$GITHUB_ENV"' in command,variable
     assert 'sqlite:///$ci_runtime/default.sqlite' in command and '$ci_runtime/captures' in command
     assert any(index<allocation and step.get('uses','').startswith('actions/setup-node@')
@@ -39,13 +39,13 @@ def assert_owned_test_runtime(job):
         for marker in ('pytest -q','check_release.py --group','npm test'))]
     assert writers and all(index>allocation for index,_ in writers),'verification ran before isolated defaults'
     for _,run in writers:
-        if 'pytest -q' in run:assert '--basetemp "$NETCIRCUIT_ARTIFACTS_SESSION/pytest"' in run,'pytest must use the owned session'
+        if 'pytest -q' in run:assert '--basetemp "$CIRNET_ARTIFACTS_SESSION/pytest"' in run,'pytest must use the owned session'
     cleanup=next(((index,step) for index,step in enumerate(steps) if '--cleanup' in step.get('run','')),None)
     assert cleanup is not None,'owned session cleanup is missing'
     index,step=cleanup
     assert index>max(index for index,_ in writers)
-    assert step.get('if')=="always() && env.NETCIRCUIT_ARTIFACTS_SESSION != ''",'cleanup must run after failures'
-    assert 'node scripts/cleanup-artifact-session.mjs --cleanup "$NETCIRCUIT_ARTIFACTS_SESSION"' in step['run']
+    assert step.get('if')=="always() && env.CIRNET_ARTIFACTS_SESSION != ''",'cleanup must run after failures'
+    assert 'node scripts/cleanup-artifact-session.mjs --cleanup "$CIRNET_ARTIFACTS_SESSION"' in step['run']
     assert not step.get('continue-on-error',False)
 
 
@@ -93,9 +93,10 @@ def test_source_api_jobs_install_pinned_source_wheels(name, job_id, components):
     api_build = next(i for i, line in enumerate(api_commands) if 'python -m build' in line)
     for component in components:
         installer = f'python scripts/install_{component.lower()}.py'
-        wheel = f'NETCIRCUIT_CI_{component.upper()}_WHEEL'
+        wheel = f'CIRNET_CI_{component.upper()}_WHEEL'
         assert [line for line in api_commands[:api_build] if line.startswith(installer)] == [
-            f'{installer} --wheel "${wheel}" --sha256 "${wheel}_SHA256"'
+            f'{installer} --manifest "$CIRNET_CI_CONTRACTS_ARTIFACT_MANIFEST"' if component == 'Contracts'
+            else f'{installer} --wheel "${wheel}" --sha256 "${wheel}_SHA256"'
         ]
 
 
@@ -107,7 +108,7 @@ def test_source_api_jobs_install_pinned_source_wheels(name, job_id, components):
 def test_release_jobs_keep_published_selection(name, job_id, release_command):
     commands = '\n'.join(step.get('run', '') for step in workflow(name)['jobs'][job_id]['steps'])
     assert 'scripts/build_ci_dependency.py' not in commands
-    assert 'NETCIRCUIT_CI_CONTRACTS_WHEEL' not in commands
+    assert 'CIRNET_CI_CONTRACTS_WHEEL' not in commands
     assert 'integration/release-set.json' in commands
     assert release_command in commands
 
@@ -139,7 +140,7 @@ def test_consumer_triggers_cover_active_inputs_and_exclude_retired_source(name, 
     retired_paths = (
         'apps/web/src/App.vue',
         'device-library/editor/components.json',
-        'simulator/circuit-simulator/netcircuit_sim/engine.py',
+        'simulator/circuit-simulator/cirnet_sim/engine.py',
         'services/hardware-service/hardware_service/server.py',
         'fpga/experiment-controller/rtl/top.v',
         'tests/fpga/test_lab_first_control.py',
@@ -164,8 +165,8 @@ def test_contract_workflow_checks_artifacts_compatibility_and_outside_packages()
     assert any('npm test' in step.get('run','') for step in job['steps'])
     assert_interface_release_job(workflow('integration.yml')['jobs']['repository-contracts'])
     for document in (data, workflow('integration.yml')):
-        for name in ('NETCIRCUIT_CONTRACTS_SDIST_URL', 'NETCIRCUIT_ARTIFACT_PATHS_NPM_URL'):
-            assert document.get('env', {}).get(name) == '${{ vars.' + name + ' }}', name
+        for name in ('CIRNET_CONTRACTS_SDIST_URL', 'CIRNET_ARTIFACT_PATHS_NPM_URL'):
+            assert document.get('env', {}).get(name) == '${{ vars.' + name + ' || vars.' + name.replace('CIRNET_', 'NETCIRCUIT_', 1) + ' }}', name
 
 
 @pytest.mark.parametrize('failure', ['missing-digest', 'frozen-directory', 'early-npm-install'])
@@ -196,10 +197,10 @@ def test_api_consumer_installs_the_versioned_simulator_and_uses_compatible_wire_
     assert 'install_simulator.py' in commands
     assert 'simulator/circuit-simulator' not in commands
     api=tomllib.loads((ROOT/'services/api/pyproject.toml').read_text(encoding='utf-8'))
-    for dependencies in (api['project']['dependencies'], installed_distribution('netcircuit-hardware-service').requires):
+    for dependencies in (api['project']['dependencies'], installed_distribution('cirnet-hardware-service').requires):
         assert 'grpcio==1.84.0' in dependencies
         assert 'protobuf==7.36.2' in dependencies
-        assert 'netcircuit-simulator==0.1.1' in dependencies
+        assert 'cirnet-simulator==0.1.1' in dependencies
     api=tomllib.loads((ROOT/'services/api/pyproject.toml').read_text(encoding='utf-8'))
     assert 'fastapi==0.143.0' in api['project']['dependencies']
 
@@ -217,7 +218,7 @@ def test_browser_release_uses_exact_selected_api_archive_and_isolated_byte_prove
 def test_interface_release_gate_accepts_manifest_bound_download_and_rejects_unlocked_variant():
     job=deepcopy(workflow('browser-e2e.yml')['jobs']['chromium'])
     download=next(step for step in job['steps'] if 'scripts.install_interface' in step.get('run',''))
-    for name in ('NETCIRCUIT_INTERFACE_ARTIFACT_URL','NETCIRCUIT_INTERFACE_ARTIFACT_SHA256'):
+    for name in ('CIRNET_INTERFACE_ARTIFACT_URL','CIRNET_INTERFACE_ARTIFACT_SHA256'):
         download['env'].pop(name,None)
     assert_interface_release_job(job)
     download['run']=download['run'].replace(' --manifest integration/release-set.json','')
@@ -230,7 +231,7 @@ def test_postgres_workflow_executes_the_explicit_no_skip_migration_and_race_suit
     assert candidates,'The real PostgreSQL gate is missing.'
     commands='\n'.join(step.get('run','') for job in candidates for step in job['steps'])
     assert 'postgres_cases.py' in commands and 'postgresql-client-18' in commands
-    assert any('NETCIRCUIT_TEST_POSTGRES_URL' in job.get('env',{}) for job in candidates)
+    assert any('CIRNET_TEST_POSTGRES_URL' in job.get('env',{}) for job in candidates)
 
 
 def test_negative_shared_file_removal_is_detected_by_trigger_coverage():
@@ -254,8 +255,8 @@ def test_owned_runtime_gate_rejects_missing_capture_default_and_success_only_cle
     job=workflow('backend.yml')['jobs']['test']
     missing=deepcopy(job)
     allocation=next(step for step in missing['steps'] if 'ci_runtime=' in step.get('run',''))
-    allocation['run']='\n'.join(line for line in allocation['run'].splitlines() if 'NETCIRCUIT_CAPTURE_DIR' not in line)
-    with pytest.raises(AssertionError,match='NETCIRCUIT_CAPTURE_DIR'):assert_owned_test_runtime(missing)
+    allocation['run']='\n'.join(line for line in allocation['run'].splitlines() if 'CIRNET_CAPTURE_DIR' not in line)
+    with pytest.raises(AssertionError,match='CIRNET_CAPTURE_DIR'):assert_owned_test_runtime(missing)
     unsafe=deepcopy(job)
     next(step for step in unsafe['steps'] if '--cleanup' in step.get('run',''))['if']='success()'
     with pytest.raises(AssertionError,match='cleanup must run after failures'):assert_owned_test_runtime(unsafe)
@@ -264,19 +265,19 @@ def test_owned_runtime_gate_rejects_missing_capture_default_and_success_only_cle
 def test_owned_runtime_gate_rejects_runner_context_at_job_scope():
     job=deepcopy(workflow('backend.yml')['jobs']['test'])
     allocation=next(step for step in job['steps'] if 'ci_runtime=' in step.get('run',''))
-    job.setdefault('env',{})['NETCIRCUIT_ARTIFACTS_DIR']=allocation.pop('env',{}).get(
-        'NETCIRCUIT_ARTIFACTS_DIR','${{ runner.temp }}/netcircuit-verification')
+    job.setdefault('env',{})['CIRNET_ARTIFACTS_DIR']=allocation.pop('env',{}).get(
+        'CIRNET_ARTIFACTS_DIR','${{ runner.temp }}/cirnet-verification')
     with pytest.raises(AssertionError,match='job env cannot use runner context'):
         assert_owned_test_runtime(job)
 
 
 def test_postgres_job_keeps_real_database_gate_while_isolating_only_application_defaults():
     job=workflow('integration.yml')['jobs']['postgresql-migrations']
-    assert job['env']['NETCIRCUIT_TEST_POSTGRES_URL'].startswith('postgresql+psycopg://')
+    assert job['env']['CIRNET_TEST_POSTGRES_URL'].startswith('postgresql+psycopg://')
     assert 'postgres:18.6' in {service['image'] for service in job['services'].values()}
     commands='\n'.join(step.get('run','') for step in job['steps'])
     assert 'services/api/tests/postgres_cases.py' in commands
-    assert 'NETCIRCUIT_TEST_POSTGRES_URL=' not in commands
+    assert 'CIRNET_TEST_POSTGRES_URL=' not in commands
 
 
 def test_contract_consumer_jobs_install_verified_artifacts_and_never_root_contracts_source():
@@ -304,7 +305,7 @@ def test_dev_bootstrap_precedes_every_consumer_and_docs_allocator_invocation():
             assert bootstrap<allocation,(name,job_name,'allocator ran before independent DEV bootstrap')
             assert any(index<bootstrap and step.get('uses','').startswith('actions/setup-node@') for index,step in enumerate(steps))
             assert any(index<bootstrap and step.get('uses','').startswith('actions/setup-python@') for index,step in enumerate(steps))
-            assert steps[bootstrap].get('env',{}).get('NETCIRCUIT_ARTIFACTS_TOKEN')=='${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}'
+            assert steps[bootstrap].get('env',{}).get('CIRNET_ARTIFACTS_TOKEN')=='${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}'
 
 
 def test_hardware_consuming_jobs_select_installed_artifacts_and_never_frozen_units():
@@ -318,7 +319,7 @@ def test_hardware_consuming_jobs_select_installed_artifacts_and_never_frozen_uni
         assert "-e './services/hardware-service" not in commands,(name,job_id)
         assert 'pytest -q services/hardware-service/tests' not in commands,(name,job_id)
         assert 'services/hardware-service/tests/test_' not in commands,(name,job_id)
-        assert 'NETCIRCUIT_HARDWARE_WHEEL_SHA256' in workflow(name).get('env',{})
+        assert 'CIRNET_HARDWARE_WHEEL_SHA256' in workflow(name).get('env',{})
 
 
 def test_fpga_acceptance_uses_explicit_source_artifact_and_mandatory_owned_rtl():
@@ -331,8 +332,8 @@ def test_fpga_acceptance_uses_explicit_source_artifact_and_mandatory_owned_rtl()
         assert marker in commands, marker
     assert 'iverilog -g2012 -tnull fpga/' not in commands
     assert 'pytest -q tests/fpga' not in commands
-    assert 'NETCIRCUIT_FPGA_ARTIFACT_SHA256' in document['env']
-    assert document['env']['NETCIRCUIT_FPGA_ARTIFACT_FILENAME'] == 'netcircuit-fpga-scaffold-0.1.1.tar.gz'
+    assert 'CIRNET_FPGA_ARTIFACT_SHA256' in document['env']
+    assert document['env']['CIRNET_FPGA_ARTIFACT_FILENAME'] == 'netcircuit-fpga-scaffold-0.1.1.tar.gz'
     for name, job_id in (('contracts.yml', 'canonical-boundaries'), ('integration.yml', 'repository-contracts')):
         commands = '\n'.join(step.get('run', '') for step in workflow(name)['jobs'][job_id]['steps'])
         assert 'install_fpga.py' in commands and 'scripts.check_fpga_consumer' in commands, name

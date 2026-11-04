@@ -137,6 +137,7 @@ function Test-CirnetDoctorReleaseCache {
         if ($cache.repo -ine $Configuration.RepositoryRoot -or ([string]$cache.manifestHash).Replace('-', '').ToLowerInvariant() -cne $expectedHash) { throw 'The cache belongs to another repository or release manifest.' }
         $environmentFile = Assert-CirnetDoctorOwnedPath $cache.environmentFile $Configuration.DevHome -File
         $state = Read-CirnetDoctorJson $environmentFile
+        $state.environment = ConvertTo-CirnetEnvironment $state.environment
         if ($state.schemaVersion -ne 1 -or $state.releaseVersion -cne $manifest.releaseVersion -or $state.environmentFile -ine $environmentFile) { throw 'The saved release environment schema or version is invalid.' }
         $python = Join-Path $Configuration.DevHome '.venv\Scripts\python.exe'
         if ($state.python -ine $python) { throw 'The saved interpreter is not the selected launcher virtual environment.' }
@@ -144,11 +145,13 @@ function Test-CirnetDoctorReleaseCache {
         $venvConfig = Assert-CirnetDoctorOwnedPath (Join-Path $Configuration.DevHome '.venv\pyvenv.cfg') $Configuration.DevHome -File
         $venvContents = Get-Content -LiteralPath $venvConfig -Raw -ErrorAction Stop
         if ($venvContents -notmatch '(?m)^version\s*=\s*(\d+\.\d+(?:\.\d+)?)\s*$' -or [version]$Matches[1] -lt [version]'3.12') { throw 'The cached virtual environment does not declare a compatible Python 3.12+ version.' }
-        $session = Assert-CirnetDoctorOwnedPath $state.environment.NETCIRCUIT_ARTIFACTS_SESSION $Configuration.DevHome -Directory
+        $session = Assert-CirnetDoctorOwnedPath $state.environment.CIRNET_ARTIFACTS_SESSION $Configuration.DevHome -Directory
         $null = Assert-CirnetDoctorOwnedPath $environmentFile $session -File
-        $markerFile = Assert-CirnetDoctorOwnedPath (Join-Path $session '.netcircuit-artifact-session.json') $session -File
+        $markerPath = Join-Path $session '.cirnet-artifact-session.json'
+        if (-not (Test-Path -LiteralPath $markerPath -PathType Leaf)) { $markerPath = Join-Path $session '.netcircuit-artifact-session.json' }
+        $markerFile = Assert-CirnetDoctorOwnedPath $markerPath $session -File
         $marker = Read-CirnetDoctorJson $markerFile
-        $context = $state.environment.NETCIRCUIT_ARTIFACTS_CONTEXT | ConvertFrom-Json -ErrorAction Stop
+        $context = $state.environment.CIRNET_ARTIFACTS_CONTEXT | ConvertFrom-Json -ErrorAction Stop
         if ($marker.version -ne 2 -or $marker.directory -ine $session -or $marker.context.version -ne 1 -or
             $marker.context.owner -ine ('git:' + $Configuration.RepositoryRoot) -or $context.version -ne 1 -or
             $context.owner -ine $marker.context.owner -or @($context.roots) -notcontains $Configuration.RepositoryRoot -or
@@ -167,7 +170,7 @@ function Test-CirnetDoctorReleaseCache {
             }
         }
         foreach ($componentName in @('Contracts','Simulator','Hardware','FPGA')) {
-            $key = 'NETCIRCUIT_' + $componentName.ToUpperInvariant() + '_ARTIFACT_MANIFEST'
+            $key = 'CIRNET_' + $componentName.ToUpperInvariant() + '_ARTIFACT_MANIFEST'
             $selectedPath = Assert-CirnetDoctorOwnedPath ([string]$state.environment.$key) $session -File
             $selected = Read-CirnetDoctorJson $selectedPath
             if ($selected.schemaVersion -ne 1) { throw 'A selected artifact manifest has an invalid schema.' }
@@ -177,10 +180,10 @@ function Test-CirnetDoctorReleaseCache {
                     $selected.$kind.sha256 -cne $manifest.repositories.$componentName.artifacts.$kind.sha256) { throw 'A selected artifact manifest differs from the pinned archive paths or digests.' }
             }
         }
-        foreach ($key in @('NETCIRCUIT_INTERFACE_ROOT','NETCIRCUIT_INTERFACE_STATIC_ROOT','NETCIRCUIT_FPGA_ROOT')) {
+        foreach ($key in @('CIRNET_INTERFACE_ROOT','CIRNET_INTERFACE_STATIC_ROOT','CIRNET_FPGA_ROOT')) {
             $null = Assert-CirnetDoctorOwnedPath ([string]$state.environment.$key) $session -Directory
         }
-        $interface = $state.environment.NETCIRCUIT_INTERFACE_ROOT
+        $interface = $state.environment.CIRNET_INTERFACE_ROOT
         $identityPath = Assert-CirnetDoctorOwnedPath (Join-Path $interface 'interface-artifact.json') $session -File
         $identity = Read-CirnetDoctorJson $identityPath
         if ($identity.version -cne $manifest.repositories.Interface.version -or $identity.source.revision -cne $manifest.repositories.Interface.sourceRevision) { throw 'The cached Interface source identity differs from the release lock.' }
@@ -260,9 +263,14 @@ while pending:
         pending.append((requirement.name, frozenset(requirement.extras)))
 print(json.dumps({'python': sys.version.split()[0], 'packages': versions}))
 '@
-        $expected = [ordered]@{'netcircuit-api'=$Cache.Manifest.repositories.Remote.version; 'netcircuit-contracts'=$Cache.Manifest.repositories.Contracts.version;
-            'netcircuit-simulator'=$Cache.Manifest.repositories.Simulator.version; 'netcircuit-hardware-service'=$Cache.Manifest.repositories.Hardware.version;
-            'netcircuit-artifact-paths'='1.0.0a1'; 'uvicorn'=''; 'fastapi'=''; 'grpcio'=''; 'pip'=''}
+        $expected = [ordered]@{'uvicorn'=''; 'fastapi'=''; 'grpcio'=''; 'pip'=''}
+        foreach ($component in @('Remote','Contracts','Simulator','Hardware')) {
+            $product = $Cache.Manifest.repositories.$component
+            $name = ($product.artifacts.python.filename -split ('-' + [regex]::Escape($product.version) + '-'),2)[0].Replace('_','-')
+            $expected[$name] = $product.version
+        }
+        $devName = ($Cache.Manifest.repositories.Contracts.artifacts.dev.filename -split '-1.0.0a1-',2)[0].Replace('_','-')
+        $expected[$devName] = '1.0.0a1'
         $probe = Invoke-CirnetDoctorProcess -FilePath $python -Arguments @('-I','-S','-B','-c',$code,$site,($expected | ConvertTo-Json -Compress)) -TimeoutMilliseconds 6000
         if ($probe.ExitCode -ne 0) { throw 'The cached interpreter or required distribution metadata did not pass the isolated read-only probe.' }
         $versions = $probe.Output | ConvertFrom-Json -ErrorAction Stop
@@ -279,7 +287,7 @@ function Get-CirnetDoctorWebDependencies {
     if ($Cache.Status -ne 'INSTALLED') {
         return New-CirnetDoctorCheck 'Cached Web dependencies' $true 'NOT VERIFIED' '' '' 'The release cache must pass validation before Web dependencies can be inspected.' $repair
     }
-    $interface = $Cache.State.environment.NETCIRCUIT_INTERFACE_ROOT
+    $interface = $Cache.State.environment.CIRNET_INTERFACE_ROOT
     $node = Find-CirnetDoctorCommand @('node.exe')
     if (-not $node) { return New-CirnetDoctorCheck 'Cached Web dependencies' $true 'NOT VERIFIED' '' $interface 'Node.js is required for the read-only lockfile inspection.' $repair }
     # Only Node built-ins run. No package entrypoint, native binary, npm command,
@@ -393,7 +401,7 @@ function Get-CirnetDoctorAllocatorCache {
         $pin = (Read-CirnetDoctorJson $pinPath).dev
         $metadata = Read-CirnetDoctorJson $metadataPath
         if ($pin.node_sha256 -notmatch '^[a-fA-F0-9]{64}$' -or $metadata.name -cne $pin.name -or $metadata.version -cne $pin.version -or
-            $metadata.resource -cne 'netcircuit_artifact_paths/artifact-paths.mjs' -or $metadata.sha256 -cne $pin.node_sha256 -or
+            $metadata.resource -cne ($pin.name.Replace('-','_') + '/artifact-paths.mjs') -or $metadata.sha256 -cne $pin.node_sha256 -or
             (Get-CirnetDoctorHash $resource) -cne $pin.node_sha256) { throw 'The DEV allocator cache metadata or resource SHA256 differs from the pinned tooling.' }
         return New-CirnetDoctorCheck 'DEV allocator cache' $true 'INSTALLED' $pin.version $resource 'Allocator identity and resource SHA256 match integration/contracts-version.json.' ''
     } catch {

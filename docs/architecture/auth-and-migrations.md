@@ -33,7 +33,7 @@ reads return `UNAUTHENTICATED`. Supplied stale cookies retain the established
 `SESSION_EXPIRED` policy, including health, and never install a cookie. Legacy
 reads reuse one revocable internal context per proof. Only explicit bootstrap
 allocates new credentials: creation is limited to 30 per client address per
-60 seconds by default (`NETCIRCUIT_BOOTSTRAP_LIMIT`); valid credential reuse is
+60 seconds by default (`CIRNET_BOOTSTRAP_LIMIT`); valid credential reuse is
 not counted. Login retains separate address and account admission limits.
 An expired or revoked internal legacy context returns 401 on ordinary reads,
 even if the original proof has a longer remaining lifetime. It is not refreshed
@@ -44,7 +44,7 @@ The application monitor performs one maintenance batch at most every minute,
 independently of the scheduler lock. An indexed batch removes at most 100
 credentials whose nominal expiry is at least one day old, including revoked
 credentials; it also removes at most 100 rate buckets older than one day.
-`NETCIRCUIT_AUTH_RETENTION_SECONDS` and `NETCIRCUIT_AUTH_MAINTENANCE_BATCH`
+`CIRNET_AUTH_RETENTION_SECONDS` and `CIRNET_AUTH_MAINTENANCE_BATCH`
 configure retention and batch size. A failed batch leaves the next monitor
 iteration able to retry. Principals, users, ownership, operations and audit rows
 are retained; session deletion cannot delete evidence or an owned document.
@@ -61,12 +61,12 @@ from simulation workers. A contended execution configuration is retried by the
 monitor rather than delaying another station's Stop. Stop ACK bookkeeping does
 not release a lease; worker cleanup still requires the real safe-state outcome.
 
-Set `NETCIRCUIT_ALLOW_GUEST=false` in production and provide explicit HTTPS
-`NETCIRCUIT_TRUSTED_ORIGINS`. Production also requires PostgreSQL. Insecure
+Set `CIRNET_ALLOW_GUEST=false` in production and provide explicit HTTPS
+`CIRNET_TRUSTED_ORIGINS`. Production also requires PostgreSQL. Insecure
 production combinations fail configuration validation. Development guest mode
 is unsuitable for an Internet deployment. No default administrator exists.
-`NETCIRCUIT_ENV` accepts exactly `development`, `test`, or `production`;
-`NETCIRCUIT_ALLOW_GUEST` accepts exactly `true` or `false`. Misspelled values fail
+`CIRNET_ENV` accepts exactly `development`, `test`, or `production`;
+`CIRNET_ALLOW_GUEST` accepts exactly `true` or `false`. Misspelled values fail
 startup rather than falling back to anonymous development behavior.
 
 After installing the API, migrate and bootstrap from a private terminal:
@@ -78,7 +78,7 @@ python -m app.bootstrap_admin --username instructor-admin
 ```
 
 The bootstrap command prompts without echo, or reads
-`NETCIRCUIT_BOOTSTRAP_PASSWORD` for deployment provisioning. Remove that variable
+`CIRNET_BOOTSTRAP_PASSWORD` for deployment provisioning. Remove that variable
 after provisioning. It refuses when an administrator already exists. Only an
 authenticated Admin may create accounts or change roles and active status; the
 last active administrator cannot be disabled or demoted. These changes are

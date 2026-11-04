@@ -8,6 +8,7 @@ from contracts.registry import validate_contract
 from app.services.auth import AuthError
 from app.services.events import SubscriptionLimit
 from app.services.request_limits import MutationAdmission,json_complexity
+from app.compatibility import session_cookie
 
 router=APIRouter()
 
@@ -24,7 +25,7 @@ async def events_socket(websocket:WebSocket):
             await asyncio.to_thread(websocket.app.state.initialize)
             auth=websocket.app.state.auth
             auth.verify_origin(websocket.headers.get('origin'))
-            context=await asyncio.to_thread(auth.current,websocket.cookies.get('netcircuit_session'))
+            context=await asyncio.to_thread(auth.current,session_cookie(websocket.cookies))
     except AuthError:
         await close(4403); return
     except TimeoutError:

@@ -12,7 +12,7 @@ from argon2.exceptions import VerifyMismatchError, VerificationError, InvalidHas
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.exc import IntegrityError
 
-COOKIE_NAME='netcircuit_session'
+COOKIE_NAME='cirnet_session'
 ROLES=('STUDENT','INSTRUCTOR','ADMIN')
 _PASSWORD_WORKERS=BoundedSemaphore(4)
 
@@ -190,6 +190,8 @@ class AuthService:
                 else:
                     # One revocable read context for each still-valid legacy
                     # proof; repeated ordinary reads do not mint credentials.
+                    # Persisted revocation identities are immutable across the
+                    # branding change; a new seed would bypass old tombstones.
                     internal=uuid.uuid5(uuid.NAMESPACE_URL,'netcircuit-legacy-read:'+cookie).hex
                     current=self._resolve(db,session_id=internal)
                     if current: return current,None

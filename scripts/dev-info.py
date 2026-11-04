@@ -4,7 +4,7 @@ import platform
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-print("net*CIRCUIT Remote development info")
+print("CIRNET Remote development info")
 print(f"root: {ROOT}")
 print(f"python: {sys.version.split()[0]}")
 print(f"platform: {platform.platform()}")

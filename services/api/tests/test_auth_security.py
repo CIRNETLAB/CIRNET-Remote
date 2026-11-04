@@ -33,7 +33,7 @@ def login(client, username='alice', password=None):
     response = client.post('/api/auth/login', headers=browser_headers(client),
                            json={'username': username, 'password': password or username + ' secure password'})
     assert response.status_code == 200, response.text
-    return client.app.state.auth.current(client.cookies.get('netcircuit_session'))
+    return client.app.state.auth.current(client.cookies.get('cirnet_session'))
 
 
 def create_experiment(client, *, key=None):
@@ -50,7 +50,7 @@ def test_session_bootstrap_exposes_csrf_without_returning_the_session_secret(sec
         response = client.get('/api/auth/session')
         assert response.status_code == 200
         assert isinstance(response.json()['csrf_token'], str) and response.json()['csrf_token']
-        cookie = client.cookies.get('netcircuit_session')
+        cookie = client.cookies.get('cirnet_session')
         assert cookie and cookie not in response.text
 
 
@@ -103,9 +103,9 @@ def test_valid_csrf_never_authorizes_an_untrusted_origin(security_application, o
 def test_login_rotation_invalidates_previous_cookie_and_csrf(security_application):
     with TestClient(security_application) as client:
         old_headers = browser_headers(client)
-        old_cookie = client.cookies.get('netcircuit_session')
+        old_cookie = client.cookies.get('cirnet_session')
         login(client)
-        assert client.cookies.get('netcircuit_session') != old_cookie
+        assert client.cookies.get('cirnet_session') != old_cookie
         assert security_application.state.auth.current(old_cookie) is None
         response = client.post('/api/auth/logout', json={}, headers=old_headers)
         assert response.status_code == 403 and response.json()['code'] == 'CSRF_REJECTED'
@@ -260,7 +260,7 @@ def test_browser_preflight_allows_published_patch_operations_from_trusted_origin
 
 def test_production_cookie_flags_and_no_guest_access_with_an_injected_test_database():
     from app.config import Settings
-    configuration = Settings(environment='production', database_url='postgresql://db.example/netcircuit',
+    configuration = Settings(environment='production', database_url='postgresql://db.example/cirnet',
                              allow_guest=False, trusted_origins=('https://lab.example',))
     application = create_app(repository=Repository('sqlite://'), gateway=LabGateway(),
                              submit=DeferredJobs(), configuration=configuration)
@@ -289,7 +289,7 @@ def test_production_cookie_flags_and_no_guest_access_with_an_injected_test_datab
 ])
 def test_production_settings_fail_closed_without_private_explicit_configuration(overrides):
     from app.config import Settings
-    values = {'environment': 'production', 'database_url': 'postgresql://db.example/netcircuit',
+    values = {'environment': 'production', 'database_url': 'postgresql://db.example/cirnet',
               'allow_guest': False, 'trusted_origins': ('https://lab.example',), **overrides}
     with pytest.raises(ValueError): Settings(**values)
 

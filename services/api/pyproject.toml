@@ -3,13 +3,13 @@ requires = ["setuptools==84.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "netcircuit-api"
+name = "cirnet-api"
 version = "0.1.1"
 description = "Application backend for CIRNET Remote"
 requires-python = ">=3.11"
 dependencies = [
   "cirnet-contracts==0.1.1",
-  "netcircuit-simulator==0.1.1",
+  "cirnet-simulator==0.1.1",
   "grpcio==1.84.0",
   "protobuf==7.36.2",
   "psycopg[binary]==3.3.6",

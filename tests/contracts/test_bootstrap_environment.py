@@ -34,7 +34,7 @@ def test_bootstrap_contains_actual_pip_child_temporary_output(tmp_path, monkeypa
         outside = tmp_path/('inherited-'+key)
         outside.mkdir()
         monkeypatch.setenv(key,str(outside))
-    for key in ('NETCIRCUIT_ARTIFACTS_SESSION','NETCIRCUIT_ARTIFACTS_CONTEXT'):
+    for key in ('CIRNET_ARTIFACTS_SESSION','CIRNET_ARTIFACTS_CONTEXT'):
         monkeypatch.setenv(key,os.environ.get(key,''))
     monkeypatch.setenv('PYTHONDONTWRITEBYTECODE','0')
     real_run = subprocess.run

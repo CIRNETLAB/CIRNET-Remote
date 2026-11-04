@@ -58,9 +58,9 @@ def test_failed_actual_filesystem_cleanup_keeps_tombstone_and_retries_when_expir
 
 def test_installed_cli_is_bounded_and_dry_run_never_initializes_hardware(tmp_path):
     repo,_,database,directory=seeded(tmp_path)
-    environment={**os.environ,'NETCIRCUIT_ENV':'test','NETCIRCUIT_ALLOW_GUEST':'true',
-        'NETCIRCUIT_DATABASE_URL':'sqlite:///'+database.as_posix(),'NETCIRCUIT_CAPTURE_DIR':str(directory),
-        'NETCIRCUIT_CAPTURE_RETENTION_SECONDS':'1','NETCIRCUIT_HARDWARE_GRPC_TARGET':'not-a-loopback-hardware-target:1'}
+    environment={**os.environ,'CIRNET_ENV':'test','CIRNET_ALLOW_GUEST':'true',
+        'CIRNET_DATABASE_URL':'sqlite:///'+database.as_posix(),'CIRNET_CAPTURE_DIR':str(directory),
+        'CIRNET_CAPTURE_RETENTION_SECONDS':'1','CIRNET_HARDWARE_GRPC_TARGET':'not-a-loopback-hardware-target:1'}
     def invoke(*arguments):
         result=subprocess.run([sys.executable,'-m','app.capture_maintenance',*arguments],cwd=ROOT,env=environment,capture_output=True,text=True,timeout=20)
         assert result.returncode==0,'The isolated maintenance CLI failed.'

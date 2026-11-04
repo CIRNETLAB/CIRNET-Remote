@@ -2,6 +2,43 @@ import json
 from tests.launcher.support import REPO, run_ps
 
 
+def test_environment_aliases_prefer_current_names_without_mutating_the_source_or_process():
+    result = run_ps(r"""
+Import-Module ./scripts/launcher/Common.psm1 -Force
+$env:CIRNET_LAUNCHER_TEST_ONLY = 'parent-current'
+$env:NETCIRCUIT_LAUNCHER_TEST_ONLY = 'parent-legacy'
+$before = [Environment]::GetEnvironmentVariables('Process') | ConvertTo-Json -Compress
+$source = [pscustomobject]@{CIRNET_LAUNCHER_TEST_ONLY='current'; NETCIRCUIT_LAUNCHER_TEST_ONLY='legacy';
+    NETCIRCUIT_LAUNCHER_TEST_LEGACY='old-only'; CIRNET_LAUNCHER_TEST_CURRENT='new-only'; OTHER='retained'}
+$original = $source | ConvertTo-Json -Compress
+$normalized = ConvertTo-CirnetEnvironment $source
+if (($source | ConvertTo-Json -Compress) -cne $original) { throw 'The saved environment was changed.' }
+if (([Environment]::GetEnvironmentVariables('Process') | ConvertTo-Json -Compress) -cne $before) { throw 'Normalization changed the process environment.' }
+$dictionary = ConvertTo-CirnetEnvironment @{NETCIRCUIT_LAUNCHER_TEST_ONLY='legacy'; CIRNET_LAUNCHER_TEST_ONLY='current'}
+if ($dictionary.NETCIRCUIT_LAUNCHER_TEST_ONLY -cne 'current') { throw 'Dictionary values did not use current-name precedence.' }
+$normalized | ConvertTo-Json -Compress
+""")
+    assert result.returncode == 0, result.stderr
+    values = json.loads(result.stdout)
+    assert values["CIRNET_LAUNCHER_TEST_ONLY"] == values["NETCIRCUIT_LAUNCHER_TEST_ONLY"] == "current"
+    assert values["CIRNET_LAUNCHER_TEST_LEGACY"] == values["NETCIRCUIT_LAUNCHER_TEST_LEGACY"] == "old-only"
+    assert values["CIRNET_LAUNCHER_TEST_CURRENT"] == values["NETCIRCUIT_LAUNCHER_TEST_CURRENT"] == "new-only"
+    assert values["OTHER"] == "retained"
+
+
+def test_import_environment_synchronizes_aliases_and_normalizes_the_existing_process():
+    result = run_ps(r"""
+Import-Module ./scripts/launcher/Common.psm1 -Force
+Import-CirnetEnvironment @{NETCIRCUIT_LAUNCHER_TEST_ONLY='legacy-only'; OTHER_LAUNCHER_TEST='retained'}
+if ($env:CIRNET_LAUNCHER_TEST_ONLY -cne 'legacy-only' -or $env:NETCIRCUIT_LAUNCHER_TEST_ONLY -cne 'legacy-only') { throw 'A legacy saved environment was not imported.' }
+$env:CIRNET_LAUNCHER_TEST_ONLY = 'current'
+Import-CirnetEnvironment
+if ($env:NETCIRCUIT_LAUNCHER_TEST_ONLY -cne 'current') { throw 'The current process did not prefer the current variable.' }
+if ($env:OTHER_LAUNCHER_TEST -cne 'retained') { throw 'An unrelated saved variable was lost.' }
+""")
+    assert result.returncode == 0, result.stderr
+
+
 def test_runtime_configuration_preserves_stop_identity_and_rejects_repository_state(tmp_path):
     script = r"""
 Import-Module ./scripts/launcher/Common.psm1 -Force

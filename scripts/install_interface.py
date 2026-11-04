@@ -4,6 +4,11 @@ import hashlib
 import io
 import json
 import os
+try:
+    from scripts.environment import getenv, export_environment
+except ModuleNotFoundError:
+    from environment import getenv, export_environment
+
 from pathlib import Path, PurePosixPath
 import re
 import shutil
@@ -18,6 +23,7 @@ from scripts.system_release_manifest import repository_urls, load_manifest
 MAX_MEMBERS=10_000
 MAX_EXPANDED_BYTES=128*1024*1024
 INTERFACE_VERSIONS=frozenset(('0.1.1','0.1.2'))
+INTERFACE_NAMES=('cirnet-interface','netcircuit-interface')
 
 
 def extract_product(contents, directory, *, expected_version=None, expected_source=None):
@@ -62,7 +68,7 @@ def extract_product(contents, directory, *, expected_version=None, expected_sour
         metadata=next((member for member in members if member.name.removeprefix('./')=='interface-artifact.json' and member.isfile()),None)
         if metadata is None:raise ValueError('The Interface source product requires interface-artifact.json at its archive root.')
         identity=json.loads(archive.extractfile(metadata).read())
-        if (identity.get('schema')!=1 or identity.get('name')!='netcircuit-interface'
+        if (identity.get('schema')!=1 or identity.get('name') not in INTERFACE_NAMES
                 or identity.get('version')!=version or identity.get('kind')!='source'
                 or identity.get('contractsVersion')!='0.1.1'
                 or not re.fullmatch('[0-9a-f]{64}',identity.get('sourceFingerprint',''))):
@@ -110,8 +116,8 @@ def main(argv=None):
     parser.add_argument('--github-env',type=Path)
     parser.add_argument('--manifest',type=Path,help='Bind URL, digest, product version and source revision to the exact system release lock.')
     arguments=parser.parse_args(argv)
-    url=os.environ.get('NETCIRCUIT_INTERFACE_ARTIFACT_URL')
-    digest=os.environ.get('NETCIRCUIT_INTERFACE_ARTIFACT_SHA256')
+    url=getenv('CIRNET_INTERFACE_ARTIFACT_URL')
+    digest=getenv('CIRNET_INTERFACE_ARTIFACT_SHA256')
     selected=None
     if arguments.manifest:
         selected=load_manifest(arguments.manifest)['repositories']['Interface']
@@ -120,7 +126,7 @@ def main(argv=None):
             raise ValueError('Interface environment selection differs from the exact system release lock.')
         url,digest=artifact['url'],artifact['sha256']
     if not url or not digest:
-        parser.error('Configure exact NETCIRCUIT_INTERFACE_ARTIFACT_URL/SHA256 for a reviewed exported Interface product; no retained-source fallback is allowed.')
+        parser.error('Configure exact CIRNET_INTERFACE_ARTIFACT_URL/SHA256 for a reviewed exported Interface product; no retained-source fallback is allowed.')
     # HTTPS redirect/authentication and exact SHA256 verification are shared
     # with the existing immutable Contracts consumer, before any extraction.
     contents=download_artifact(url,digest)
@@ -128,6 +134,7 @@ def main(argv=None):
                               expected_version=selected['version'] if selected else None,expected_source=selected)
     if arguments.github_env:
         with arguments.github_env.open('a',encoding='utf-8') as output:
+            output.write('CIRNET_INTERFACE_ROOT='+str(directory)+'\n')
             output.write('NETCIRCUIT_INTERFACE_ROOT='+str(directory)+'\n')
     print(json.dumps({'interfaceRoot':str(directory)}))
     return 0

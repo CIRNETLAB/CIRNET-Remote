@@ -9,6 +9,11 @@ from contextlib import contextmanager
 import hashlib
 import json
 import os
+try:
+    from scripts.environment import getenv, export_environment
+except ModuleNotFoundError:
+    from environment import getenv, export_environment
+
 from pathlib import Path
 import shutil
 import subprocess
@@ -82,12 +87,12 @@ def external_workspace(base=None):
     if base==session or not base.is_relative_to(session):
         raise ValueError('Installed package temporary root must be a child of the owned artifact session.')
     base.mkdir(parents=True,exist_ok=True)
-    owned=TemporaryDirectory(prefix='netcircuit-wheel-check-',dir=base)
+    owned=TemporaryDirectory(prefix='cirnet-wheel-check-',dir=base)
     target=verify_external_path(owned.name)
     try:yield target
     finally:
         resolved=Path(owned.name).resolve()
-        if resolved.parent!=base or resolved!=target or not resolved.name.startswith('netcircuit-wheel-check-'):
+        if resolved.parent!=base or resolved!=target or not resolved.name.startswith('cirnet-wheel-check-'):
             raise RuntimeError('Refusing cleanup outside the explicitly owned package workspace.')
         owned.cleanup()
 
@@ -111,20 +116,21 @@ import os
 from pathlib import Path
 import secrets
 import sys
+from contracts.runtime_config import getenv
 
 checkout=Path(sys.argv[1]).resolve()
-checkout_roots=[checkout,*map(lambda value:Path(value).resolve(),json.loads(os.environ.get('NETCIRCUIT_ARTIFACTS_CONTEXT','{}')).get('roots',[]))]
+checkout_roots=[checkout,*map(lambda value:Path(value).resolve(),json.loads(getenv('CIRNET_ARTIFACTS_CONTEXT','{}')).get('roots',[]))]
 assert sys.flags.isolated==1
 assert not Path.cwd().resolve().is_relative_to(checkout)
 assert not Path(sys.prefix).resolve().is_relative_to(checkout)
 for path in sys.path:
     if path:assert not any(Path(path).resolve().is_relative_to(root) for root in checkout_roots),path
-for name in ('contracts','app','netcircuit_sim','hardware_service'):
+for name in ('contracts','app','cirnet_sim','hardware_service'):
     module=importlib.import_module(name)
     assert module.__file__ and not any(Path(module.__file__).resolve().is_relative_to(root) for root in checkout_roots),name
-assert version('netcircuit-simulator')=='0.1.1'
+assert version('cirnet-simulator')=='0.1.1'
 assert version('cirnet-contracts')=='0.1.1'
-assert version('netcircuit-hardware-service')=='0.1.1'
+assert version('cirnet-hardware-service')=='0.1.1'
 
 from contracts.registry import check_manifest,validate_contract
 from contracts.boundary.models import CircuitGraph,SimulationRequest,AnySupportedCircuitGraph
@@ -170,7 +176,7 @@ for case in corpus['cases']:
     assert result['samples']==case['expected']['samples']
 assert versions=={1,2}
 
-from netcircuit_sim.dispatch import SimulationDispatcher
+from cirnet_sim.dispatch import SimulationDispatcher
 request=SimulationRequest.model_validate({'schema_version':'1.0','graph':graph,'capture_config':{'signals':['D.OUT'],'duration_ns':20}})
 assert SimulationDispatcher().simulate(request).model_dump(exclude_unset=True)['capture']['samples']==[{'signal':'D.OUT','time_ns':0,'value':1}]
 from hardware_service.station.virtual import VirtualHardwareStation
@@ -219,21 +225,21 @@ from pathlib import Path
 import sys
 
 def execute(plan):
-    import netcircuit_sim
-    from netcircuit_sim.backends import run_plan
-    return {'origin':netcircuit_sim.__file__,'prefix':sys.prefix,'version':version('netcircuit-simulator'),
+    import cirnet_sim
+    from cirnet_sim.backends import run_plan
+    return {'origin':cirnet_sim.__file__,'prefix':sys.prefix,'version':version('cirnet-simulator'),
             'method':multiprocessing.get_start_method(),
             'capture':run_plan(plan,{'signals':['D.OUT'],'duration_ns':20})}
 
 if __name__=='__main__':
     import os
-    from netcircuit_sim.backends import compile_graph
+    from cirnet_sim.backends import compile_graph
     graph={'schema_version':'1.0','circuit_id':'installed-spawn','modules':[{'id':'D','type':'DIGITAL_SWITCH','properties':{'state':True}}],'connections':[]}
     plan=compile_graph(graph,backend_id='legacy')
-    os.environ['NETCIRCUIT_SIMULATION_BACKEND']='ngspice'
+    os.environ['CIRNET_SIMULATION_BACKEND']='ngspice'
     with ProcessPoolExecutor(max_workers=1,mp_context=multiprocessing.get_context('spawn')) as pool:
         first=pool.submit(execute,plan).result(timeout=30)
-        os.environ['NETCIRCUIT_SIMULATION_BACKEND']='unknown-after-start'
+        os.environ['CIRNET_SIMULATION_BACKEND']='unknown-after-start'
         second=pool.submit(execute,plan).result(timeout=30)
     assert first==second,'installed worker capture or provenance was nondeterministic'
     assert first['method']=='spawn' and first['version']=='0.1.1'
@@ -255,8 +261,8 @@ import sys
 
 if __name__=='__main__':
     assert sys.flags.isolated==1
-    os.environ['NETCIRCUIT_SIMULATION_BACKEND']='legacy'
-    os.environ['NETCIRCUIT_SIMULATION_WORKERS']='1'
+    os.environ['CIRNET_SIMULATION_BACKEND']='legacy'
+    os.environ['CIRNET_SIMULATION_WORKERS']='1'
     import hardware_service
     import hardware_service.station.virtual as virtual
     from hardware_service.server import build_server, serve
@@ -264,9 +270,9 @@ if __name__=='__main__':
     from contracts.capture_codec import decode_digital
     from contracts.generated import rpc_v2_pb2 as pb
     from contracts.validation import validate
-    assert version('netcircuit-hardware-service')=='0.1.1'
+    assert version('cirnet-hardware-service')=='0.1.1'
     assert version('cirnet-contracts')=='0.1.1'
-    assert version('netcircuit-simulator')=='0.1.1'
+    assert version('cirnet-simulator')=='0.1.1'
     assert Path(hardware_service.__file__).resolve().is_relative_to(Path(sys.prefix).resolve())
     for address in ('0.0.0.0:50051','[::]:50051','192.0.2.1:50051'):
         try:serve(address)
@@ -363,7 +369,7 @@ def main(argv=None):
                         f'Command: {command!r}\nWorking directory: {cwd}\n'
                         f'Last command output (up to 16000 bytes):\n{output}\nFull log: {log_path}')
         environment={key:value for key,value in os.environ.items() if key not in {'PYTHONPATH','PYTHONHOME','PYTHONUSERBASE','VIRTUAL_ENV','PIP_TARGET','PIP_PREFIX'}}
-        environment.update(TMP=str(target),TEMP=str(target),TMPDIR=str(target),NETCIRCUIT_ENV='test',NETCIRCUIT_ALLOW_GUEST='true')
+        environment.update(TMP=str(target),TEMP=str(target),TMPDIR=str(target),CIRNET_ENV='test',CIRNET_ALLOW_GUEST='true')
         for project in WHEEL_PROJECTS:
             staged=stage_project(project,build/'source'/('contracts' if project=='.' else Path(project).name))
             checked([sys.executable,'-m','build','--wheel','--no-isolation','--outdir',str(dist)],cwd=staged)
@@ -371,7 +377,7 @@ def main(argv=None):
         if len(wheels)!=len(WHEEL_PROJECTS):raise ValueError('Expected exactly one local API wheel.')
         wheels.extend((contracts,simulator,hardware))
         verify_contract_wheel(contracts)
-        api=next(wheel for wheel in wheels if wheel.name.startswith('netcircuit_api-'))
+        api=next(wheel for wheel in wheels if wheel.name.startswith('cirnet_api-'))
         with ZipFile(api) as archive:
             for resource in ('app/migrations/versions/0005_captures.py','app/migrations/schema_v0005.py','app/db/schema.py','app/migrate.py','app/bootstrap_admin.py','app/capture_maintenance.py'):
                 if resource not in archive.namelist():raise ValueError('API wheel resource missing: '+resource)
@@ -391,8 +397,8 @@ def main(argv=None):
         hardware_probe=target/'installed_hardware_rpc.py';hardware_probe.write_text(HARDWARE_RPC_PROBE,encoding='utf-8')
         checked([str(python),'-I',str(hardware_probe)],cwd=target)
         checked([str(python),'-I','-m','pip','check'],cwd=target)
-        environment['NETCIRCUIT_DATABASE_URL']='sqlite:///'+(target/'installed-cli.sqlite').as_posix()
-        environment['NETCIRCUIT_CAPTURE_DIR']=str(target/'cli-captures')
+        environment['CIRNET_DATABASE_URL']='sqlite:///'+(target/'installed-cli.sqlite').as_posix()
+        environment['CIRNET_CAPTURE_DIR']=str(target/'cli-captures')
         for arguments in (['app.migrate'],['app.migrate','--check'],['app.bootstrap_admin','--help'],['app.capture_maintenance','--dry-run','--limit','1']):
             checked([str(python),'-I','-m',*arguments],cwd=target)
         print(f'Clean installed wheels PASS: isolated Python, cwd and venv outside checkout ({target.parent}); migrations/CLI/domain/NCAP1+2/RPC/resources. Log: {log_path}')

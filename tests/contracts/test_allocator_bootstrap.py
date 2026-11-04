@@ -8,7 +8,7 @@ from zipfile import ZipFile
 
 import pytest
 
-ROOT = Path(os.environ.get('NETCIRCUIT_CONSUMER_SOURCE_ROOT', Path(__file__).resolve().parents[2]))
+ROOT = Path(os.environ.get('CIRNET_CONSUMER_SOURCE_ROOT', Path(__file__).resolve().parents[2]))
 
 
 def helper():
@@ -23,10 +23,10 @@ def helper():
 def payload(version='1.0.0a1', *, resource=True):
     buffer = io.BytesIO()
     with ZipFile(buffer, 'w') as archive:
-        archive.writestr(f'netcircuit_artifact_paths-{version}.dist-info/METADATA',
-                         f'Name: netcircuit-artifact-paths\nVersion: {version}\n')
+        archive.writestr(f'cirnet_artifact_paths-{version}.dist-info/METADATA',
+                         f'Name: cirnet-artifact-paths\nVersion: {version}\n')
         if resource:
-            archive.writestr('netcircuit_artifact_paths/artifact-paths.mjs', 'export const pinned=true;\n')
+            archive.writestr('cirnet_artifact_paths/artifact-paths.mjs', 'export const pinned=true;\n')
     return buffer.getvalue()
 
 

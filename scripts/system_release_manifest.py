@@ -3,6 +3,10 @@ import json
 import hashlib
 from pathlib import Path
 import re
+try:
+    from scripts.environment import export_environment
+except ModuleNotFoundError:
+    from environment import export_environment
 from urllib.parse import urlparse
 
 VERSION = '0.1.1'
@@ -57,19 +61,19 @@ def ci_environment(value):
     validate_manifest(value)
     environment = {}
     for component, kind, prefix in (
-        ('Contracts', 'python', 'NETCIRCUIT_CONTRACTS_WHEEL'),
-        ('Contracts', 'dev', 'NETCIRCUIT_CONTRACTS_DEV_WHEEL'),
-        ('Contracts', 'npm', 'NETCIRCUIT_CONTRACTS_NPM'),
-        ('Contracts', 'sdist', 'NETCIRCUIT_CONTRACTS_SDIST'),
-        ('Contracts', 'dev_npm', 'NETCIRCUIT_ARTIFACT_PATHS_NPM'),
-        ('Simulator', 'python', 'NETCIRCUIT_SIMULATOR_WHEEL'),
-        ('Hardware', 'python', 'NETCIRCUIT_HARDWARE_WHEEL'),
-        ('FPGA', 'source', 'NETCIRCUIT_FPGA_ARTIFACT'),
+        ('Contracts', 'python', 'CIRNET_CONTRACTS_WHEEL'),
+        ('Contracts', 'dev', 'CIRNET_CONTRACTS_DEV_WHEEL'),
+        ('Contracts', 'npm', 'CIRNET_CONTRACTS_NPM'),
+        ('Contracts', 'sdist', 'CIRNET_CONTRACTS_SDIST'),
+        ('Contracts', 'dev_npm', 'CIRNET_ARTIFACT_PATHS_NPM'),
+        ('Simulator', 'python', 'CIRNET_SIMULATOR_WHEEL'),
+        ('Hardware', 'python', 'CIRNET_HARDWARE_WHEEL'),
+        ('FPGA', 'source', 'CIRNET_FPGA_ARTIFACT'),
     ):
         artifact = value['repositories'][component]['artifacts'][kind]
         for key in ('url', 'sha256', 'filename'):
             environment[prefix + '_' + key.upper()] = artifact[key]
-    return environment
+    return export_environment(environment)
 
 
 def _sha(value):

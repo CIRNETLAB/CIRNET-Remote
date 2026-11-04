@@ -22,8 +22,8 @@ ROOT = Path(__file__).resolve().parents[2]
 def test_ci_pytest_command_can_import_repository_scripts(workflow_name, job_name, probe, tmp_path):
     workflow = yaml.safe_load((ROOT / '.github/workflows' / workflow_name).read_text(encoding='utf-8'))
     environment = {key: value for key, value in os.environ.items() if key != 'PYTHONPATH'}
-    environment.update(NETCIRCUIT_DATABASE_URL='sqlite:///' + (tmp_path / 'default.sqlite').as_posix(),
-                       NETCIRCUIT_CAPTURE_DIR=str(tmp_path / 'captures'))
+    environment.update(CIRNET_DATABASE_URL='sqlite:///' + (tmp_path / 'default.sqlite').as_posix(),
+                       CIRNET_CAPTURE_DIR=str(tmp_path / 'captures'))
     commands = [shlex.split(step['run']) for step in workflow['jobs'][job_name]['steps']
                 if 'run' in step and ('pytest -q' in step['run'] or 'check_release.py --group' in step['run'])]
     assert len(commands) == 1, 'CI must have one complete Python collection entrypoint'

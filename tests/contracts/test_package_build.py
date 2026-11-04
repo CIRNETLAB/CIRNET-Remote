@@ -29,7 +29,7 @@ def test_remote_metapackage_does_not_package_or_generate_contracts(tmp_path):
                           cwd=ROOT,capture_output=True,text=True,
                           env={**os.environ,'TMP':str(tmp_path),'TEMP':str(tmp_path)})
     assert result.returncode==0,result.stdout+result.stderr
-    wheel=next(tmp_path.glob('netcircuit_remote_dev-*.whl'))
+    wheel=next(tmp_path.glob('cirnet_remote_dev-*.whl'))
     with ZipFile(wheel) as archive:
         files=set(archive.namelist())
         assert not any(name.startswith('contracts/') for name in files)

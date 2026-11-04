@@ -2,7 +2,7 @@
 
 FastAPI modular-monolith Lab-First laboratory. Authority: ../../docs/ARCHITECTURE.md. The application includes durable authentication/RBAC, owned Project/Circuit revisions, published assignments, experiments/history, verification, captures and FIFO/lease lifecycle. PostgreSQL is required in production; SQLite is for tests/development. Public contracts and all typed routes: ../../contracts/api/README.md.
 
-For source builds, install `cirnet-contracts==0.1.1` and the matching rebuilt Simulator and Hardware wheels into fresh service environments using the current versioned artifact manifest (`python scripts/install_contracts.py --with-dev --manifest ABSOLUTE_MANIFEST` from Remote root for development). Both services also install the same reviewed `netcircuit-simulator==0.1.1` wheel using `python scripts/install_simulator.py --manifest ABSOLUTE_SIMULATOR_MANIFEST`; no retained Simulator source or editable install is required. API also needs grpcio/protobuf and psycopg (declared dependencies). RPC bindings and offline resources come from that wheel; `python scripts/generate_hardware_rpc.py --check` verifies them without writing retained source. Production needs neither source Contracts nor DEV tools. Start hardware_service.server in its own process on localhost50051. An absent gateway reports unavailable; the virtual station executes the existing real digital simulator.
+For source builds, install `cirnet-contracts==0.1.1` and the matching rebuilt Simulator and Hardware wheels into fresh service environments using the current versioned artifact manifest (`python scripts/install_contracts.py --with-dev --manifest ABSOLUTE_MANIFEST` from Remote root for development). Both services also install the same reviewed `cirnet-simulator==0.1.1` wheel using `python scripts/install_simulator.py --manifest ABSOLUTE_SIMULATOR_MANIFEST`; no retained Simulator source or editable install is required. API also needs grpcio/protobuf and psycopg (declared dependencies). RPC bindings and offline resources come from that wheel; `python scripts/generate_hardware_rpc.py --check` verifies them without writing retained source. Production needs neither source Contracts nor DEV tools. Start hardware_service.server in its own process on localhost50051. An absent gateway reports unavailable; the virtual station executes the existing real digital simulator.
 
 Use one API worker; do not start multiple scheduler workers against the same stations. SQLAlchemy persists definitions/results/sessions/leases and FIFO order; versioned migrations through 0007 upgrade new and legacy databases, including indexed runtime state and bounded auth maintenance. Restart recovers active leases and quarantines failed safe cleanup. Actual PostgreSQL migration/backup/restore and independent-writer tests have run locally; target production deployment remains unverified. Durable principals, server sessions, Argon2id passwords, CSRF/exact-origin and role/object authorization protect HTTP/WebSocket. Follow [auth setup](../../docs/architecture/auth-and-migrations.md) for administrator bootstrap, and the [production guide](../../deployment/README.md) for installed wheels, migration checks, TLS/origins, persistent data and maintenance. Development guests are explicit; production disables them.
 
@@ -18,13 +18,13 @@ and unpublished rename candidates are not selected implicitly.
 
 Physical orchestration is scan → safety verification → TopologyResolver → topology diagnostics → pure infrastructure compilation/executability → ExecutionPolicy → apply routing/guarded power-up → capture → functional verification/assessment. `TopologyResolutionResult.endpoint_bindings` is ResolvedLabBindings; the compiler routes observed student nodes. Reference physical node != student physical node. Topology mismatch and assessment policy cannot block a safe executable circuit; missing required bindings yield BLOCK_UNEXECUTABLE.
 
-Experiment SQL JSON and `experiment.updated` contain CaptureMetadata, never sample arrays. `CaptureStore` uses immutable, atomic NCAP v1 files under `NETCIRCUIT_CAPTURE_DIR`; keep this directory durable with the database. Functional verification consumes raw stored samples and preserves X/absence. Owner/session authorization protects GET/DELETE `/api/captures/{capture_id}/payload`, including a final check after slow reads. Indexed terminal-owner retirement commits unavailable metadata/audit before file deletion; old generations remain separate and failed cleanup is retryable. Byte I/O never holds the global control lock. Stop/release retains historical captures. Default quotas are 256 MiB/4,096 files for one writer; explicit `python -m app.capture_maintenance --limit 100 --dry-run` previews the 30-day bounded policy. Retention 0 disables expiration but retries pending cleanup; active/quarantined captures are excluded. NCAP v2 sampled codecs are library adapters only and install no runtime analog producer. Restart safe cleanup still precedes legacy inline migration. Default observed_only feedback removes reference/answer diagnostics from every HTTP/event/operation snapshot while retaining complete DB evidence.
+Experiment SQL JSON and `experiment.updated` contain CaptureMetadata, never sample arrays. `CaptureStore` uses immutable, atomic NCAP v1 files under `CIRNET_CAPTURE_DIR`; keep this directory durable with the database. Functional verification consumes raw stored samples and preserves X/absence. Owner/session authorization protects GET/DELETE `/api/captures/{capture_id}/payload`, including a final check after slow reads. Indexed terminal-owner retirement commits unavailable metadata/audit before file deletion; old generations remain separate and failed cleanup is retryable. Byte I/O never holds the global control lock. Stop/release retains historical captures. Default quotas are 256 MiB/4,096 files for one writer; explicit `python -m app.capture_maintenance --limit 100 --dry-run` previews the 30-day bounded policy. Retention 0 disables expiration but retries pending cleanup; active/quarantined captures are excluded. NCAP v2 sampled codecs are library adapters only and install no runtime analog producer. Restart safe cleanup still precedes legacy inline migration. Default observed_only feedback removes reference/answer diagnostics from every HTTP/event/operation snapshot while retaining complete DB evidence.
 
-Hardware admission uses current validated capabilities.physical_execution_slots (zero means unavailable), with FIFO dispatch and station quarantine. `NETCIRCUIT_SIMULATION_WORKERS` is positive/default 4 and must match the Hardware Service setting. Keep one API scheduler process. Instrument channels are 1-based and `instrument_capabilities` is the sole authority. `/api/experiments/{id}/instruments` delegates to ExperimentManager under ownership/lease/state synchronization. Baseline generator configuration is part of the execution plan; live configuration requires RUNNING, explicit runtime support, allocation, fresh safety and profile limits. Current Scope/Generator have zero channels; no electrical bounds are invented.
+Hardware admission uses current validated capabilities.physical_execution_slots (zero means unavailable), with FIFO dispatch and station quarantine. `CIRNET_SIMULATION_WORKERS` is positive/default 4 and must match the Hardware Service setting. Keep one API scheduler process. Instrument channels are 1-based and `instrument_capabilities` is the sole authority. `/api/experiments/{id}/instruments` delegates to ExperimentManager under ownership/lease/state synchronization. Baseline generator configuration is part of the execution plan; live configuration requires RUNNING, explicit runtime support, allocation, fresh safety and profile limits. Current Scope/Generator have zero channels; no electrical bounds are invented.
 
 Typed `/instruments/access`, `/instruments/generator` and `/instruments/commands/{key}` add allocation-aware durable acknowledgement without changing the legacy instrument response. REQUESTED/unknown never replays output; ACCEPTED does not imply APPLIED. Required mutation keys and control-client headers are recorded in OpenAPI. Pre-run configuration is immutable; the server independently validates it.
 
-Set `NETCIRCUIT_SIMULATION_BACKEND=legacy` in both API and Hardware environments to preserve existing behavior. API settings freeze the selection at app creation; both physical-preview routes use that setting. The reserved `ngspice` backend returns an explicit unavailable response while structural validation and document storage remain usable. Unknown or empty selectors fail startup. Restart both services when changing this setting; no native executable/library is installed or discovered by it.
+Set `CIRNET_SIMULATION_BACKEND=legacy` in both API and Hardware environments to preserve existing behavior. API settings freeze the selection at app creation; both physical-preview routes use that setting. The reserved `ngspice` backend returns an explicit unavailable response while structural validation and document storage remain usable. Unknown or empty selectors fail startup. Restart both services when changing this setting; no native executable/library is installed or discovered by it.
 
 Projects/circuits use saved revisions and database CAS, with session fences against revoke/guest claim. Create pins the owned document revision and assignment publication. History/active endpoints are bounded and read-only; connection recovery cannot grant Run authority. Students receive only published redacted assignment views. See the architecture guides for [projects](../../docs/architecture/projects-and-revisions.md), [assignments](../../docs/architecture/assignments-and-publication.md), [capture catalog](../../docs/architecture/capture-catalog.md) and [domains](../../docs/architecture/signal-domains-and-simulation.md).
 
@@ -44,9 +44,9 @@ python scripts/install_contracts.py --with-dev --manifest ABSOLUTE_MANIFEST
 python scripts/install_simulator.py --manifest ABSOLUTE_SIMULATOR_MANIFEST
 python scripts/install_hardware.py --manifest ABSOLUTE_HARDWARE_MANIFEST
 python -m pip install -r requirements-verification.txt -e './services/api[test]'
-export NETCIRCUIT_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"
-export NETCIRCUIT_FPGA_ARTIFACT_MANIFEST=/absolute/reviewed/fpga-artifacts.json
-export NETCIRCUIT_FPGA_ROOT="$(python -B scripts/install_fpga.py --manifest "$NETCIRCUIT_FPGA_ARTIFACT_MANIFEST" | python -c 'import json,sys; print(json.load(sys.stdin)["fpgaRoot"])')"
+export CIRNET_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"
+export CIRNET_FPGA_ARTIFACT_MANIFEST=/absolute/reviewed/fpga-artifacts.json
+export CIRNET_FPGA_ROOT="$(python -B scripts/install_fpga.py --manifest "$CIRNET_FPGA_ARTIFACT_MANIFEST" | python -c 'import json,sys; print(json.load(sys.stdin)["fpgaRoot"])')"
 python scripts/generate_hardware_rpc.py --check
 python scripts/check_context.py
 python scripts/sync_lab_contracts.py --check
@@ -54,7 +54,7 @@ python scripts/check_release.py --group python
 python scripts/check_release.py --show-plan
 ```
 
-Hardware is installed as the reviewed `netcircuit-hardware-service==0.1.1` wheel using `scripts/install_hardware.py`; the old service implementation is available in Git history. Runtime RPC bindings come from Contracts, so RPC tests do not generate code or require Hardware dev extras. Root generator verification dependencies are pinned in `requirements-verification.txt`. Full release verification also selects FPGA source/scaffold 0.1.1 as shown above; API local runtime needs no FPGA artifact. Mandatory native RTL acceptance belongs to CIRNET-FPGA; missing pinned tools fail that gate, and software/compiler results do not establish physical safety.
+Hardware is installed as the reviewed `cirnet-hardware-service==0.1.1` wheel using `scripts/install_hardware.py`; the old service implementation is available in Git history. Runtime RPC bindings come from Contracts, so RPC tests do not generate code or require Hardware dev extras. Root generator verification dependencies are pinned in `requirements-verification.txt`. Full release verification also selects FPGA source/scaffold 0.1.1 as shown above; API local runtime needs no FPGA artifact. Mandatory native RTL acceptance belongs to CIRNET-FPGA; missing pinned tools fail that gate, and software/compiler results do not establish physical safety.
 
 ## Local run
 
@@ -69,11 +69,11 @@ First-time setup from the Remote repository root, with Python 3.12 (package mini
 
 ```powershell
 py -3.12 -m venv services/api/.venv
-$env:NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST = 'C:\absolute\reviewed\artifacts.json'
-.\services\api\.venv\Scripts\python.exe scripts/install_contracts.py --with-dev --manifest $env:NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST
-$env:NETCIRCUIT_SIMULATOR_ARTIFACT_MANIFEST = 'C:\absolute\reviewed\simulator-artifacts.json'
+$env:CIRNET_CONTRACTS_ARTIFACT_MANIFEST = 'C:\absolute\reviewed\artifacts.json'
+.\services\api\.venv\Scripts\python.exe scripts/install_contracts.py --with-dev --manifest $env:CIRNET_CONTRACTS_ARTIFACT_MANIFEST
+$env:CIRNET_SIMULATOR_ARTIFACT_MANIFEST = 'C:\absolute\reviewed\simulator-artifacts.json'
 .\services\api\.venv\Scripts\python.exe scripts/install_simulator.py
-$env:NETCIRCUIT_HARDWARE_ARTIFACT_MANIFEST = 'C:\absolute\reviewed\hardware-artifacts.json'
+$env:CIRNET_HARDWARE_ARTIFACT_MANIFEST = 'C:\absolute\reviewed\hardware-artifacts.json'
 .\services\api\.venv\Scripts\python.exe scripts/install_hardware.py
 .\services\api\.venv\Scripts\python.exe -m pip install -r requirements-verification.txt -e './services/api[test]'
 .\services\api\.venv\Scripts\python.exe scripts/generate_hardware_rpc.py --check
@@ -122,8 +122,8 @@ CIRNET-Interface product (its local directory may still be named `net-Circuit-In
 cover the digest-verified artifact bootstrap and locked install:
 
 ```powershell
-$env:NETCIRCUIT_INTERFACE_ROOT = 'C:\absolute\reviewed\net-Circuit-Interface'
-Set-Location -LiteralPath $env:NETCIRCUIT_INTERFACE_ROOT
+$env:CIRNET_INTERFACE_ROOT = 'C:\absolute\reviewed\CIRNET-Interface'
+Set-Location -LiteralPath $env:CIRNET_INTERFACE_ROOT
 npm run dev
 ```
 
@@ -136,7 +136,8 @@ Invoke-RestMethod http://localhost:5173/api/auth/session -SessionVariable labWeb
 Invoke-RestMethod http://localhost:5173/api/stations -WebSession $labWebSession
 ```
 
-The health response identifies `netcircuit-api`; virtual station discovery
+Current source health responses identify `cirnet-api`; compatibility with the
+immutable published Contracts wheel preserves its `netcircuit-api` identity. Virtual station discovery
 returns `virtual-station-01`. These explicit interpreter commands need no
 PowerShell activation or execution-policy changes. A physical station is not
 required for virtual execution.
@@ -147,11 +148,11 @@ Run setup from Remote root with an installed Python 3.12 interpreter:
 
 ```bash
 python3.12 -m venv services/api/.venv
-export NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST=/absolute/reviewed/artifacts.json
-services/api/.venv/bin/python scripts/install_contracts.py --with-dev --manifest "$NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST"
-export NETCIRCUIT_SIMULATOR_ARTIFACT_MANIFEST=/absolute/reviewed/simulator-artifacts.json
+export CIRNET_CONTRACTS_ARTIFACT_MANIFEST=/absolute/reviewed/artifacts.json
+services/api/.venv/bin/python scripts/install_contracts.py --with-dev --manifest "$CIRNET_CONTRACTS_ARTIFACT_MANIFEST"
+export CIRNET_SIMULATOR_ARTIFACT_MANIFEST=/absolute/reviewed/simulator-artifacts.json
 services/api/.venv/bin/python scripts/install_simulator.py
-export NETCIRCUIT_HARDWARE_ARTIFACT_MANIFEST=/absolute/reviewed/hardware-artifacts.json
+export CIRNET_HARDWARE_ARTIFACT_MANIFEST=/absolute/reviewed/hardware-artifacts.json
 services/api/.venv/bin/python scripts/install_hardware.py
 services/api/.venv/bin/python -m pip install -r requirements-verification.txt -e './services/api[test]'
 services/api/.venv/bin/python scripts/generate_hardware_rpc.py --check
@@ -170,8 +171,8 @@ services/api/.venv/bin/python -m uvicorn app.main:app --app-dir services/api --r
 In a third terminal, select the prepared independent Interface product:
 
 ```bash
-export NETCIRCUIT_INTERFACE_ROOT=/absolute/reviewed/net-Circuit-Interface
-cd "$NETCIRCUIT_INTERFACE_ROOT"
+export CIRNET_INTERFACE_ROOT=/absolute/reviewed/CIRNET-Interface
+cd "$CIRNET_INTERFACE_ROOT"
 npm run dev
 ```
 
@@ -192,3 +193,6 @@ Core execution endpoints (the [generated API reference](https://github.com/CIRNE
 - Authentication/session/admin, Project/Circuit revisions, assignment authoring/publication, bounded history/active snapshots and durable instrument commands are documented in that reference.
 
 This layer validates application intent. It does not write FPGA registers directly.
+
+Current environment and wire aliases, persisted database selection and unchanged
+published artifacts are described in [namespace compatibility](../../docs/NAMESPACE.md).

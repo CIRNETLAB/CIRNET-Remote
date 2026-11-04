@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path, PurePosixPath
 import re
+import shutil
 import subprocess
 import sys
 import tarfile
@@ -14,12 +15,13 @@ from tempfile import mkdtemp
 
 from artifact_download import download_artifact
 from artifact_paths import artifact_directory
+from environment import append_environment
 
 ROOT = Path(__file__).resolve().parents[1]
 PRODUCTS = {
     'Contracts': ('requirements-build.lock', 'cirnet_contracts-0.1.1-py3-none-any.whl'),
-    'Simulator': ('requirements-verification.lock', 'netcircuit_simulator-0.1.1-py3-none-any.whl'),
-    'Hardware': ('requirements-verification.lock', 'netcircuit_hardware_service-0.1.1-py3-none-any.whl'),
+    'Simulator': ('requirements-verification.lock', 'cirnet_simulator-0.1.1-py3-none-any.whl'),
+    'Hardware': ('requirements-verification.lock', 'cirnet_hardware_service-0.1.1-py3-none-any.whl'),
 }
 
 
@@ -60,7 +62,14 @@ def main(argv=None):
     archive_root = f'{repo}-{revision}'
     workspace = Path(mkdtemp(prefix=f'{component.lower()}-', dir=artifact_directory('ci-source-dependencies')))
     epoch = extract_source(download_artifact(url, digest), workspace, archive_root)
-    source = workspace / archive_root
+    extracted = (workspace / archive_root).resolve()
+    source = workspace / 'source'
+    # Keep native tool executable paths below Windows' process-launch limit.
+    # Both move endpoints must stay directly inside this owned workspace.
+    boundary = workspace.resolve()
+    if extracted.parent != boundary or source.resolve().parent != boundary:
+        raise ValueError('Source staging must stay inside its owned workspace.')
+    extracted.rename(source)
     build_env = workspace / 'build-env'
     dist = workspace / 'dist'
     temporary = workspace / 'tmp'
@@ -71,8 +80,8 @@ def main(argv=None):
                        PIP_CACHE_DIR=str(workspace / 'pip-cache'), SOURCE_DATE_EPOCH=str(epoch),
                        PYTHONDONTWRITEBYTECODE='1')
 
-    def run(*arguments):
-        subprocess.run(arguments, cwd=source, env=environment, stdout=sys.stderr, check=True)
+    def run(*arguments, cwd=source):
+        subprocess.run(arguments, cwd=cwd, env=environment, stdout=sys.stderr, check=True)
 
     requirements, filename = PRODUCTS[component]
     run(sys.executable, '-B', '-m', 'venv', str(build_env))
@@ -84,17 +93,38 @@ def main(argv=None):
     if list(dist.glob('*.whl')) != [wheel]:
         raise ValueError(f'{component} build did not produce the expected wheel: {filename}')
     wheel_digest = hashlib.sha256(wheel.read_bytes()).hexdigest()
-    manifest = workspace / 'artifacts.json'
-    manifest.write_text(json.dumps({
+    artifacts = {
         'schemaVersion': 1,
         'python': {'path': str(wheel), 'sha256': wheel_digest},
         'source': {'repository': f'https://github.com/CIRNETLAB/{repo}', 'revision': revision,
                    'sha256': digest},
-    }, indent=2) + '\n', encoding='utf-8')
+    }
+    if component == 'Contracts':
+        # Python resources and browser schemas must come from one source pin.
+        # The published release SDK remains a separate, immutable selection.
+        npm = shutil.which('npm.cmd' if os.name == 'nt' else 'npm')
+        if npm is None:
+            raise RuntimeError('npm is required to build the pinned Contracts public SDK.')
+        sdk = source / 'packages/public-sdk'
+        environment['npm_config_cache'] = str(workspace / 'npm-cache')
+        run(npm, 'ci', '--no-audit', '--no-fund', cwd=sdk)
+        run(npm, 'run', 'build', cwd=sdk)
+        run(npm, 'pack', '--ignore-scripts', '--pack-destination', str(dist), cwd=sdk)
+        package = dist / 'tinihi-labs-contracts-0.1.1.tgz'
+        with tarfile.open(package, 'r:gz') as archive:
+            metadata = json.load(archive.extractfile('package/package.json'))
+        if metadata.get('name') != '@tinihi-labs/contracts' or metadata.get('version') != '0.1.1':
+            raise ValueError('The source SDK must identify @tinihi-labs/contracts==0.1.1.')
+        artifacts['npm'] = {'path': str(package), 'sha256': hashlib.sha256(package.read_bytes()).hexdigest()}
+    manifest = workspace / 'artifacts.json'
+    manifest.write_text(json.dumps(artifacts, indent=2) + '\n', encoding='utf-8')
     if args.github_env is not None:
-        prefix = f'NETCIRCUIT_CI_{component.upper()}_WHEEL'
-        with args.github_env.open('a', encoding='utf-8') as output:
-            output.write(f'{prefix}={wheel}\n{prefix}_SHA256={wheel_digest}\n')
+        prefix = f'CIRNET_CI_{component.upper()}_WHEEL'
+        exports = {prefix: str(wheel), prefix + '_SHA256': wheel_digest,
+                   f'CIRNET_CI_{component.upper()}_ARTIFACT_MANIFEST': str(manifest)}
+        if component == 'Contracts':
+            exports['CIRNET_CONTRACTS_ARTIFACT_MANIFEST'] = str(manifest)
+        append_environment(exports, args.github_env)
     print(manifest)
 
 

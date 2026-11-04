@@ -55,16 +55,16 @@ def wheel(directory, name, version, package=None, marker=None, dependencies=()):
 def isolated_hardware_installer(tmp_path, monkeypatch):
     from scripts.artifact_paths import artifact_directory
     inherited = {Path(value): Path(value).read_bytes() if Path(value).exists() else None
-                 for key in ('NETCIRCUIT_HARDWARE_ARTIFACT_MANIFEST', 'GITHUB_ENV')
+                 for key in ('CIRNET_HARDWARE_ARTIFACT_MANIFEST', 'GITHUB_ENV')
                  if (value := os.environ.get(key))}
     session = artifact_directory(directory=tmp_path / 'installer-artifacts')
-    monkeypatch.setenv('NETCIRCUIT_ARTIFACTS_SESSION', str(session))
+    monkeypatch.setenv('CIRNET_ARTIFACTS_SESSION', str(session))
     for key in tuple(os.environ):
-        if key.startswith('NETCIRCUIT_HARDWARE_') or key.startswith('NETCIRCUIT_CONTRACTS_NPM_'):
+        if key.startswith('CIRNET_HARDWARE_') or key.startswith('CIRNET_CONTRACTS_NPM_'):
             monkeypatch.delenv(key)
     manifest = session / 'hardware-download/artifacts.json'
     github_env = session / 'github-env'
-    monkeypatch.setenv('NETCIRCUIT_HARDWARE_ARTIFACT_MANIFEST', str(manifest))
+    monkeypatch.setenv('CIRNET_HARDWARE_ARTIFACT_MANIFEST', str(manifest))
     monkeypatch.setenv('GITHUB_ENV', str(github_env))
     for key in ('TMP', 'TEMP', 'TMPDIR', 'PIP_CACHE_DIR'):
         directory = session / key.lower(); directory.mkdir()
@@ -88,22 +88,22 @@ def isolated_hardware_installer(tmp_path, monkeypatch):
     assert hashlib.sha256(Path(selected['python']['path']).read_bytes()).hexdigest() == selected['python']['sha256']
     assert github_env.read_text(encoding='utf-8').splitlines()
     assert set(github_env.read_text(encoding='utf-8').splitlines()) == {
-        f'NETCIRCUIT_HARDWARE_ARTIFACT_MANIFEST={manifest}'}
+        f'CIRNET_HARDWARE_ARTIFACT_MANIFEST={manifest}', f'NETCIRCUIT_HARDWARE_ARTIFACT_MANIFEST={manifest}'}
     for path, contents in inherited.items():
         assert (path.read_bytes() if path.exists() else None) == contents, f'CI state changed: {path}'
 
 
 def test_same_version_hardware_candidate_replaces_payload_and_rejects_stale_selection(tmp_path, monkeypatch, isolated_hardware_installer):
     installer, python = isolated_hardware_installer
-    dependencies = ('netcircuit-contracts==0.1.1', 'netcircuit-simulator==0.1.1',
+    dependencies = ('cirnet-contracts==0.1.1', 'cirnet-simulator==0.1.1',
         'grpcio==1.84.0', 'protobuf==7.36.2', 'jsonschema==4.26.0')
     dependency_root = tmp_path / 'dependencies'
     for item in dependencies:
         name, version = item.split('==')
         wheel(dependency_root, name, version)
-    first, first_digest = wheel(tmp_path / 'first', 'netcircuit-hardware-service', '0.1.1',
+    first, first_digest = wheel(tmp_path / 'first', 'cirnet-hardware-service', '0.1.1',
         'hardware_service', 'first', dependencies)
-    second, second_digest = wheel(tmp_path / 'second', 'netcircuit-hardware-service', '0.1.1',
+    second, second_digest = wheel(tmp_path / 'second', 'cirnet-hardware-service', '0.1.1',
         'hardware_service', 'second', dependencies)
     monkeypatch.setenv('PIP_FIND_LINKS', str(dependency_root))
     assert installer.main(['--wheel', str(first), '--sha256', first_digest]) == 0

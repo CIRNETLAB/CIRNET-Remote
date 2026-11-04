@@ -9,7 +9,7 @@ from app.config import Settings
 
 @pytest.mark.parametrize('mode', ['bogus', ''])
 def test_settings_reject_mode_outside_api_contract(mode):
-    with pytest.raises(ValueError, match='NETCIRCUIT_HARDWARE_MODE'):
+    with pytest.raises(ValueError, match='CIRNET_HARDWARE_MODE'):
         Settings(hardware_mode=mode)
 
 
@@ -26,7 +26,7 @@ def test_production_postgresql_config_does_not_need_a_running_database():
 
 @pytest.mark.parametrize('environment', ['prodution', 'Production', 'prod', ''])
 def test_unknown_environment_cannot_silently_enable_development_auth(environment):
-    with pytest.raises(ValueError,match='NETCIRCUIT_ENV'):
+    with pytest.raises(ValueError,match='CIRNET_ENV'):
         Settings(environment=environment)
 
 
@@ -37,8 +37,8 @@ def test_capture_storage_limits_are_explicit_bounded_integers(field,value):
 
 
 def test_capture_limits_use_deployment_environment_and_zero_disables_retention(monkeypatch):
-    monkeypatch.setenv('NETCIRCUIT_CAPTURE_MAX_BYTES','1024')
-    monkeypatch.setenv('NETCIRCUIT_CAPTURE_MAX_FILES','3')
-    monkeypatch.setenv('NETCIRCUIT_CAPTURE_RETENTION_SECONDS','0')
+    monkeypatch.setenv('CIRNET_CAPTURE_MAX_BYTES','1024')
+    monkeypatch.setenv('CIRNET_CAPTURE_MAX_FILES','3')
+    monkeypatch.setenv('CIRNET_CAPTURE_RETENTION_SECONDS','0')
     settings=Settings()
     assert (settings.capture_max_bytes,settings.capture_max_files,settings.capture_retention_seconds)==(1024,3,0)

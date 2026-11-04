@@ -5,12 +5,13 @@ import json
 import time
 from sqlalchemy import insert,select,update
 from sqlalchemy.exc import IntegrityError
-from contracts.registry import load_schema,validate_contract
+from contracts.registry import validate_contract
+from app.compatibility import load_schema
 from app.services.auth import AuthError,SessionContext
 from app.services.assignment_views import is_author,can_read,legacy_assignment_view
 from app.services.projects import RevisionConflict
 
-MAX_REVISION=load_schema('https://netcircuit.local/contracts/public/assignments/1.0/schema.json#/$defs/AssignmentAuthoringSave/properties/base_revision')['maximum']
+MAX_REVISION=load_schema('https://cirnet.local/contracts/public/assignments/1.0/schema.json#/$defs/AssignmentAuthoringSave/properties/base_revision')['maximum']
 MAX_ASSIGNMENT_BYTES=2_000_000
 
 class AssignmentService:

@@ -8,6 +8,11 @@ import hashlib
 from importlib.resources import files
 import json
 import os
+try:
+    from scripts.environment import getenv, export_environment
+except ModuleNotFoundError:
+    from environment import getenv, export_environment
+
 from pathlib import Path
 import shutil
 import subprocess
@@ -35,7 +40,7 @@ def without_schema_annotations(value):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--manifest', default=os.environ.get('NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST'))
+    parser.add_argument('--manifest', default=getenv('CIRNET_CONTRACTS_ARTIFACT_MANIFEST'))
     parser.add_argument('--reference-root', type=Path, help='Optional explicit independent compatibility reference; no frozen-source default.')
     args = parser.parse_args(argv)
     if not args.manifest:
@@ -148,9 +153,9 @@ type PrivateStation=ContractMap['StationCapabilities'];
 import type {StationCapabilities} from '@tinihi-labs/contracts';
 void graph;
 """, encoding='utf-8')
-    interface = os.environ.get('NETCIRCUIT_INTERFACE_ROOT')
+    interface = getenv('CIRNET_INTERFACE_ROOT')
     if not interface or not Path(interface).is_absolute():
-        raise ValueError('NETCIRCUIT_INTERFACE_ROOT must select the independent Interface artifact for TypeScript verification.')
+        raise ValueError('CIRNET_INTERFACE_ROOT must select the independent Interface artifact for TypeScript verification.')
     compiler = Path(interface) / 'node_modules/typescript/bin/tsc'
     subprocess.run(['node', str(compiler), '--noEmit', '--strict', '--target', 'ES2022',
                     '--module', 'NodeNext', '--moduleResolution', 'NodeNext', str(target / 'types.ts')], cwd=target, check=True)

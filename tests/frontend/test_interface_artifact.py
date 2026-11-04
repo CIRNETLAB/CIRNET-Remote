@@ -27,7 +27,7 @@ def archive_bytes(name='package.json',*,symlink=False,metadata_changes=None,vers
         else:member.size=len(contents)
         archive.addfile(member,None if symlink else io.BytesIO(contents))
         if name=='package.json' and not symlink:
-            identity={'schema':1,'name':'netcircuit-interface','version':version,
+            identity={'schema':1,'name':'cirnet-interface','version':version,
                 'kind':'source','contractsVersion':'0.1.1',
                 'source':{'repository':'https://github.com/example/interface.git','revision':'7'*40,'uncommittedMigration':False},
                 'sourceFingerprint':hashlib.sha256((hashlib.sha256(contents).hexdigest()+'  package.json\n').encode()).hexdigest()}
@@ -60,9 +60,9 @@ def test_selected_lock_rejects_stale_interface_variables_before_download(tmp_pat
     module=installer();value=patch_release()
     path=tmp_path/'release.json';path.write_text(json.dumps(value))
     selected=value['repositories']['Interface']['artifacts']['source']
-    monkeypatch.setenv('NETCIRCUIT_INTERFACE_ARTIFACT_URL',selected['url'])
-    monkeypatch.setenv('NETCIRCUIT_INTERFACE_ARTIFACT_SHA256',selected['sha256'])
-    monkeypatch.setenv('NETCIRCUIT_INTERFACE_ARTIFACT_'+field,'stale-variable')
+    monkeypatch.setenv('CIRNET_INTERFACE_ARTIFACT_URL',selected['url'])
+    monkeypatch.setenv('CIRNET_INTERFACE_ARTIFACT_SHA256',selected['sha256'])
+    monkeypatch.setenv('CIRNET_INTERFACE_ARTIFACT_'+field,'stale-variable')
     monkeypatch.setattr(module,'download_artifact',lambda *args:pytest.fail('stale Interface selection reached download'))
     with pytest.raises(ValueError,match='selection'):
         module.main(['--manifest',str(path)])
@@ -111,10 +111,10 @@ def test_interface_product_accepts_canonical_repository_urls_from_native_builder
 
 
 @pytest.mark.parametrize('repository',[
-    'http://github.com/TINIHI-Labs/net-Circuit-Interface',
+    'http://github.com/TINIHI-Labs/CIRNET-Interface',
     'https://github.com/TINIHI-Labs/net-Circuit-Interface?ref=master',
     'https://github.com/TINIHI-Labs/net-Circuit-Interface#master',
-    'https://user@github.com/TINIHI-Labs/net-Circuit-Interface',
+    'https://user@github.com/TINIHI-Labs/CIRNET-Interface',
     'https://github.com/TINIHI-Labs/net-Circuit-Interface-other',
 ])
 def test_interface_product_rejects_aliases_of_unsuffixed_canonical_repository(tmp_path,repository):

@@ -1,7 +1,7 @@
 {
   "status": "PINNED_ARTIFACT_INPUTS",
   "source": {
-    "name": "netcircuit-fpga-scaffold",
+    "name": "cirnet-fpga-scaffold",
     "version": "0.1.1",
     "kind": "source"
   },

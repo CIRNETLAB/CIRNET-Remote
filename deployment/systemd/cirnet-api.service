@@ -1,0 +1,24 @@
+[Unit]
+Description=CIRNET Remote Application API
+After=network-online.target postgresql.service cirnet-hardware.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=cirnet
+Group=cirnet
+StateDirectory=cirnet
+WorkingDirectory=/var/lib/cirnet
+EnvironmentFile=/etc/cirnet/cirnet.env
+Environment=CIRNET_ENV=production
+ExecStartPre=/opt/cirnet/venv-api/bin/python -m app.migrate --check
+ExecStart=/opt/cirnet/venv-api/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1 --proxy-headers --forwarded-allow-ips 127.0.0.1 --no-access-log --ws-max-size 65536 --ws-max-queue 4
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
+Alias=netcircuit-api.service

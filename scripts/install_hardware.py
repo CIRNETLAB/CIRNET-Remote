@@ -2,6 +2,11 @@
 import argparse
 import json
 import os
+try:
+    from scripts.environment import getenv, export_environment, append_environment
+except ModuleNotFoundError:
+    from environment import getenv, export_environment, append_environment
+
 from pathlib import Path
 import subprocess
 import sys
@@ -39,9 +44,9 @@ def main(argv=None):
     else:
         if args.sha256 is not None or args.filename is not None:
             parser.error('--sha256 and --filename require an explicit --wheel or --url selector.')
-        args.url = os.environ.get('NETCIRCUIT_HARDWARE_WHEEL_URL')
-        args.sha256 = os.environ.get('NETCIRCUIT_HARDWARE_WHEEL_SHA256')
-        args.filename = os.environ.get('NETCIRCUIT_HARDWARE_WHEEL_FILENAME')
+        args.url = getenv('CIRNET_HARDWARE_WHEEL_URL')
+        args.sha256 = getenv('CIRNET_HARDWARE_WHEEL_SHA256')
+        args.filename = getenv('CIRNET_HARDWARE_WHEEL_FILENAME')
     if args.url and not args.wheel:
         if urlparse(args.url).scheme != 'https' or not args.sha256:
             parser.error('Artifact download requires an explicit HTTPS URL and SHA256.')
@@ -70,9 +75,8 @@ def main(argv=None):
     manifest = artifact_directory('hardware-download') / 'artifacts.json'
     manifest.write_text(json.dumps({'schemaVersion': 1, 'python': {'path': str(wheel), 'sha256': digest}}), encoding='utf-8')
     if os.environ.get('GITHUB_ENV'):
-        with Path(os.environ['GITHUB_ENV']).open('a', encoding='utf-8') as output:
-            output.write(f'NETCIRCUIT_HARDWARE_ARTIFACT_MANIFEST={manifest}\n')
-    print(f'Installed netcircuit-hardware-service==0.1.1 from selected SHA256 {digest}; manifest: {manifest}')
+        append_environment({'CIRNET_HARDWARE_ARTIFACT_MANIFEST': str(manifest)}, os.environ['GITHUB_ENV'])
+    print(f'Installed cirnet-hardware-service==0.1.1 from selected SHA256 {digest}; manifest: {manifest}')
     return 0
 
 

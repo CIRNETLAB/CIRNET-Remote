@@ -321,6 +321,7 @@ function Get-CirnetCleanPlanState {
             if (Test-Path -LiteralPath $path) { Read-SourceTree $path }
         }
         foreach ($cache in @(@('__pycache__', 'Bytecode'), @('.pytest_cache', 'Pytest'),
+            @('.build/metadata/cirnet_remote_dev.egg-info', 'Metadata'),
             @('.build/metadata/netcircuit_remote_dev.egg-info', 'Metadata'))) {
             $path = Join-Path $root $cache[0]
             if (Test-Path -LiteralPath $path) {

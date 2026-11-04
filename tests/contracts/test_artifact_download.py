@@ -18,7 +18,7 @@ def downloader():
 
 def test_private_asset_request_uses_binary_accept_and_scoped_authentication():
     module = downloader()
-    request = module.artifact_request('https://api.github.com/repos/TINIHI-Labs/net-Circuit-Contracts/releases/assets/12345', token='fixture-secret')
+    request = module.artifact_request('https://api.github.com/repos/TINIHI-Labs/CIRNET-Contracts/releases/assets/12345', token='fixture-secret')
     assert request.get_header('Authorization') == 'Bearer fixture-secret'
     assert request.get_header('Accept') == 'application/octet-stream'
     for url in ('https://github.com/org/repo/releases/download/v0.1.1/example.whl',

@@ -218,7 +218,7 @@ def test_no_guest_application_rejects_a_persisted_development_guest_cookie():
     enabled=service(); _,cookie=enabled.ensure_session(None)
     application=create_app(repository=enabled.repo,gateway=LabGateway(),submit=DeferredJobs(),configuration=Settings(allow_guest=False))
     with TestClient(application) as client:
-        client.cookies.set('netcircuit_session',cookie,domain='testserver.local',path='/')
+        client.cookies.set('cirnet_session',cookie,domain='testserver.local',path='/')
         response=client.get('/api/stations')
         assert response.status_code==401 and response.json()['code']=='SESSION_EXPIRED'
         current=client.get('/api/auth/session')

@@ -17,21 +17,22 @@ class ReachedInstaller(Exception):
 
 @pytest.fixture
 def candidate(tmp_path, monkeypatch):
-    wheel = tmp_path / 'netcircuit_simulator-0.1.1-py3-none-any.whl'
+    wheel = tmp_path / 'cirnet_simulator-0.1.1-py3-none-any.whl'
     with ZipFile(wheel, 'w') as archive:
+        archive.writestr('netcircuit_sim/__init__.py', '')
         for module in MODULES:
-            archive.writestr('netcircuit_sim/' + module, '')
-        archive.writestr('netcircuit_simulator-0.1.1.dist-info/METADATA',
-            'Name: netcircuit-simulator\nVersion: 0.1.1\n'
-            'Requires-Dist: netcircuit-contracts==0.1.1\nRequires-Dist: jsonschema==4.26.0\n')
+            archive.writestr('cirnet_sim/' + module, '')
+        archive.writestr('cirnet_simulator-0.1.1.dist-info/METADATA',
+            'Name: cirnet-simulator\nVersion: 0.1.1\n'
+            'Requires-Dist: cirnet-contracts==0.1.1\nRequires-Dist: jsonschema==4.26.0\n')
     digest = hashlib.sha256(wheel.read_bytes()).hexdigest()
     manifest = tmp_path / 'selected.json'
     manifest.write_text(json.dumps({'schemaVersion': 1, 'python': {'path': str(wheel), 'sha256': digest}}), encoding='utf-8')
     for suffix in ('ARTIFACT_MANIFEST', 'WHEEL_URL', 'WHEEL_SHA256', 'WHEEL_FILENAME'):
-        monkeypatch.delenv('NETCIRCUIT_SIMULATOR_' + suffix, raising=False)
-    monkeypatch.setenv('NETCIRCUIT_SIMULATOR_WHEEL_URL', 'https://example.invalid/inherited-b.whl')
-    monkeypatch.setenv('NETCIRCUIT_SIMULATOR_WHEEL_SHA256', digest)
-    monkeypatch.setenv('NETCIRCUIT_SIMULATOR_WHEEL_FILENAME', 'inherited-b.whl')
+        monkeypatch.delenv('CIRNET_SIMULATOR_' + suffix, raising=False)
+    monkeypatch.setenv('CIRNET_SIMULATOR_WHEEL_URL', 'https://example.invalid/inherited-b.whl')
+    monkeypatch.setenv('CIRNET_SIMULATOR_WHEEL_SHA256', digest)
+    monkeypatch.setenv('CIRNET_SIMULATOR_WHEEL_FILENAME', 'inherited-b.whl')
 
     def directory(name):
         path = tmp_path / name
@@ -94,8 +95,8 @@ def test_explicit_url_and_hash_ignore_inherited_filename(candidate, monkeypatch)
 def test_no_cli_selector_preserves_exact_environment_download(candidate, monkeypatch):
     wheel, digest, _ = candidate
     url = 'https://example.invalid/' + wheel.name
-    monkeypatch.setenv('NETCIRCUIT_SIMULATOR_WHEEL_URL', url)
-    monkeypatch.setenv('NETCIRCUIT_SIMULATOR_WHEEL_FILENAME', wheel.name)
+    monkeypatch.setenv('CIRNET_SIMULATOR_WHEEL_URL', url)
+    monkeypatch.setenv('CIRNET_SIMULATOR_WHEEL_FILENAME', wheel.name)
     downloads = []
 
     def download(selected, actual_digest):

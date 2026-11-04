@@ -1,3 +1,4 @@
+from app.compatibility import getenv
 import uuid
 import os
 import time
@@ -12,7 +13,7 @@ from app.services.observability import log_event
 
 class CaptureService:
     def __init__(self,store=None):
-        self.store=store or FilesystemCaptureStore(os.getenv('NETCIRCUIT_CAPTURE_DIR','.runtime/captures'))
+        self.store=store or FilesystemCaptureStore(getenv('CIRNET_CAPTURE_DIR','.runtime/captures'))
         self._locks=WeakValueDictionary();self._locks_guard=RLock()
 
     @contextmanager

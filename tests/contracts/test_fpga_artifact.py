@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[2]
 def archive(tmp_path, *, identity_change=None, payload_change=None, extra=None, omit=None):
     payload = {'README.md': b'scaffold\n', 'fpga/experiment-controller/rtl/top.v': b'module top; endmodule\n'}
     files = {name: hashlib.sha256(data).hexdigest() for name, data in payload.items()}
-    identity = {'schemaVersion': 1, 'name': 'netcircuit-fpga-scaffold', 'version': '0.1.1',
+    identity = {'schemaVersion': 1, 'name': 'cirnet-fpga-scaffold', 'version': '0.1.1',
         'kind': 'source', 'contractsVersion': '0.1.1', 'logicalProtocolVersion': '1.0-scaffold',
         'registerMapVersion': '1.0-reserved', 'physicalAvailable': False, 'files': files,
         'sourceFingerprint': hashlib.sha256(''.join(f'{files[name]}  {name}\n' for name in sorted(files)).encode()).hexdigest(),
@@ -28,7 +28,7 @@ def archive(tmp_path, *, identity_change=None, payload_change=None, extra=None, 
     if extra: payload.update(extra)
     if omit: payload.pop(omit)
     payload['fpga-artifact.json'] = json.dumps(identity).encode()
-    target = tmp_path / 'netcircuit-fpga-scaffold-0.1.1.tar.gz'
+    target = tmp_path / 'cirnet-fpga-scaffold-0.1.1.tar.gz'
     with tarfile.open(target, 'w:gz') as output:
         for name, contents in payload.items():
             member = tarfile.TarInfo(name); member.size = len(contents)
@@ -52,7 +52,7 @@ def test_exact_source_archive_and_manifest_are_required(tmp_path, monkeypatch):
     selected = manifest(tmp_path, target, digest)
     assert consumer().selected_source_details(selected) == (target, digest)
     assert consumer().verify_archive(target, digest)['identity']['version'] == '0.1.1'
-    monkeypatch.delenv('NETCIRCUIT_FPGA_ARTIFACT_MANIFEST', raising=False)
+    monkeypatch.delenv('CIRNET_FPGA_ARTIFACT_MANIFEST', raising=False)
     with pytest.raises(ValueError, match='explicit'): consumer().selected_source_details()
     with pytest.raises(ValueError, match='SHA256'): consumer().verify_archive(target, '0'*64)
     with pytest.raises(ValueError, match='absolute'): consumer().verify_archive(Path(target.name), digest)
@@ -109,7 +109,7 @@ def test_selected_product_checks_every_file_against_selected_archive(tmp_path, m
     assert consumer().source_product(product, selected)['identity']['version'] == '0.1.1'
     (product / 'README.md').write_text('tampered')
     with pytest.raises(ValueError, match='payload'): consumer().source_product(product, selected)
-    monkeypatch.delenv('NETCIRCUIT_FPGA_ROOT', raising=False)
+    monkeypatch.delenv('CIRNET_FPGA_ROOT', raising=False)
     with pytest.raises(ValueError, match='explicit'): consumer().source_product(None, selected)
 
 
@@ -142,8 +142,8 @@ def test_installer_explicit_manifest_never_uses_inherited_url(tmp_path, monkeypa
     from scripts import install_fpga
     target, digest = archive(tmp_path); selected = manifest(tmp_path, target, digest)
     monkeypatch.setattr(consumer(), 'artifact_directory', lambda *args: tmp_path / 'products')
-    monkeypatch.setenv('NETCIRCUIT_FPGA_ARTIFACT_URL', 'https://invalid.example/should-not-download.tar.gz')
-    monkeypatch.setenv('NETCIRCUIT_FPGA_ARTIFACT_SHA256', '0'*64)
+    monkeypatch.setenv('CIRNET_FPGA_ARTIFACT_URL', 'https://invalid.example/should-not-download.tar.gz')
+    monkeypatch.setenv('CIRNET_FPGA_ARTIFACT_SHA256', '0'*64)
     assert install_fpga.main(['--manifest', str(selected)]) == 0
     value = json.loads(capsys.readouterr().out)
     assert Path(value['fpgaRoot']).is_dir()

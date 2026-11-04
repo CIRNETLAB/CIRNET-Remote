@@ -28,10 +28,10 @@ def candidate(tmp_path, monkeypatch):
     manifest = tmp_path / 'selected.json'
     manifest.write_text(json.dumps({'schemaVersion': 1, 'python': {'path': str(wheel), 'sha256': digest}}), encoding='utf-8')
     for suffix in ('ARTIFACT_MANIFEST', 'WHEEL_URL', 'WHEEL_SHA256', 'WHEEL_FILENAME'):
-        monkeypatch.delenv('NETCIRCUIT_CONTRACTS_' + suffix, raising=False)
-    monkeypatch.setenv('NETCIRCUIT_CONTRACTS_WHEEL_URL', 'https://example.invalid/inherited-b.whl')
-    monkeypatch.setenv('NETCIRCUIT_CONTRACTS_WHEEL_SHA256', digest)
-    monkeypatch.setenv('NETCIRCUIT_CONTRACTS_WHEEL_FILENAME', 'inherited-b.whl')
+        monkeypatch.delenv('CIRNET_CONTRACTS_' + suffix, raising=False)
+    monkeypatch.setenv('CIRNET_CONTRACTS_WHEEL_URL', 'https://example.invalid/inherited-b.whl')
+    monkeypatch.setenv('CIRNET_CONTRACTS_WHEEL_SHA256', digest)
+    monkeypatch.setenv('CIRNET_CONTRACTS_WHEEL_FILENAME', 'inherited-b.whl')
 
     def directory(name):
         path = tmp_path / name
@@ -94,8 +94,8 @@ def test_explicit_url_and_hash_ignore_inherited_filename(candidate, monkeypatch)
 def test_no_cli_selector_preserves_exact_environment_download(candidate, monkeypatch):
     wheel, digest, _ = candidate
     url = 'https://example.invalid/' + wheel.name
-    monkeypatch.setenv('NETCIRCUIT_CONTRACTS_WHEEL_URL', url)
-    monkeypatch.setenv('NETCIRCUIT_CONTRACTS_WHEEL_FILENAME', wheel.name)
+    monkeypatch.setenv('CIRNET_CONTRACTS_WHEEL_URL', url)
+    monkeypatch.setenv('CIRNET_CONTRACTS_WHEEL_FILENAME', wheel.name)
     downloads = []
 
     def download(selected, actual_digest):

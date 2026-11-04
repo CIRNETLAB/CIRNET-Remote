@@ -179,7 +179,18 @@ def install_web_runtime(interface):
     return binary
 
 
-def installed_cache(tmp_path):
+def release_manifest(prefix="netcircuit"):
+    """Select published legacy identities or explicit renamed wheel identities."""
+    manifest = json.loads((REPO / "integration/release-set.json").read_text(encoding="utf-8"))
+    names = {"Remote": "api", "Contracts": "contracts", "Simulator": "simulator", "Hardware": "hardware_service"}
+    for component, package in names.items():
+        product = manifest["repositories"][component]
+        product["artifacts"]["python"]["filename"] = f"{prefix}_{package}-{product['version']}-py3-none-any.whl"
+    manifest["repositories"]["Contracts"]["artifacts"]["dev"]["filename"] = f"{prefix}_artifact_paths-1.0.0a1-py3-none-any.whl"
+    return manifest
+
+
+def installed_cache(tmp_path, *, prefix="CIRNET"):
     """Build a disposable release selection and matching files, never executable code."""
     repository = tmp_path / "repo"
     dev = tmp_path / "dev"
@@ -191,13 +202,14 @@ def installed_cache(tmp_path):
     allocator.mkdir(parents=True)
     resource = allocator / "allocator.mjs"
     resource.write_bytes(b"owned allocator resource; never loaded")
-    pin = {"dev": {"name": "netcircuit-artifact-paths", "version": "1.0.0a1", "node_sha256": hashlib.sha256(resource.read_bytes()).hexdigest()}}
+    package_prefix = prefix.lower()
+    pin = {"dev": {"name": package_prefix + "-artifact-paths", "version": "1.0.0a1", "node_sha256": hashlib.sha256(resource.read_bytes()).hexdigest()}}
     (repository / "integration/contracts-version.json").write_text(json.dumps(pin), encoding="utf-8")
     (allocator / "allocator.json").write_text(json.dumps({
         "name": pin["dev"]["name"], "version": pin["dev"]["version"], "sha256": pin["dev"]["node_sha256"],
-        "resource": "netcircuit_artifact_paths/artifact-paths.mjs",
+        "resource": package_prefix + "_artifact_paths/artifact-paths.mjs",
     }), encoding="utf-8")
-    manifest = json.loads((REPO / "integration/release-set.json").read_text(encoding="utf-8"))
+    manifest = release_manifest(package_prefix)
     artifacts = {}
     for component, product in manifest["repositories"].items():
         directory = installation / component
@@ -220,10 +232,10 @@ def installed_cache(tmp_path):
     (dev / ".venv/Lib/site-packages").mkdir(parents=True)
     (dev / ".venv/pyvenv.cfg").write_text("version = 3.12.7\n", encoding="utf-8")
     context = {"version": 1, "owner": "git:" + str(repository), "roots": [str(repository)]}
-    (session / ".netcircuit-artifact-session.json").write_text(
+    (session / f".{package_prefix}-artifact-session.json").write_text(
         json.dumps({"version": 2, "directory": str(session), "context": context}), encoding="utf-8"
     )
-    environment = {"NETCIRCUIT_ARTIFACTS_SESSION": str(session), "NETCIRCUIT_ARTIFACTS_CONTEXT": json.dumps(context)}
+    environment = {f"{prefix}_ARTIFACTS_SESSION": str(session), f"{prefix}_ARTIFACTS_CONTEXT": json.dumps(context)}
     for component in ("CONTRACTS", "SIMULATOR", "HARDWARE", "FPGA"):
         selected = installation / (component.lower() + ".json")
         component_name = next(name for name in artifacts if name.upper() == component)
@@ -232,12 +244,12 @@ def installed_cache(tmp_path):
             kind: {"path": artifacts[component_name][kind], "sha256": manifest["repositories"][component_name]["artifacts"][kind]["sha256"]}
             for kind in kinds
         }}), encoding="utf-8")
-        environment[f"NETCIRCUIT_{component}_ARTIFACT_MANIFEST"] = str(selected)
-    for key in ("NETCIRCUIT_INTERFACE_ROOT", "NETCIRCUIT_INTERFACE_STATIC_ROOT", "NETCIRCUIT_FPGA_ROOT"):
+        environment[f"{prefix}_{component}_ARTIFACT_MANIFEST"] = str(selected)
+    for key in (f"{prefix}_INTERFACE_ROOT", f"{prefix}_INTERFACE_STATIC_ROOT", f"{prefix}_FPGA_ROOT"):
         directory = installation / key
         directory.mkdir()
         environment[key] = str(directory)
-    interface = Path(environment["NETCIRCUIT_INTERFACE_ROOT"])
+    interface = Path(environment[f"{prefix}_INTERFACE_ROOT"])
     (interface / "node_modules/vite/bin").mkdir(parents=True)
     (interface / "node_modules/vite/bin/vite.js").write_text("", encoding="utf-8")
     install_web_runtime(interface)
@@ -265,8 +277,10 @@ def installed_cache(tmp_path):
     return repository, dev, state
 
 
-def test_complete_matching_cache_can_be_ready_without_optional_tools(tmp_path):
-    repository, dev, state = installed_cache(tmp_path)
+@pytest.mark.parametrize("prefix", ["CIRNET", "NETCIRCUIT"])
+def test_complete_matching_cache_can_be_ready_without_optional_tools(tmp_path, prefix):
+    repository, dev, state = installed_cache(tmp_path, prefix=prefix)
+    before = {path: path.read_bytes() for path in tmp_path.rglob("*") if path.is_file()}
     setup = GOOD_TOOLS + r"""
 & $module {
     function script:Get-CirnetDoctorMsvc { New-CirnetDoctorCheck 'MSVC v143 (Visual Studio Build Tools)' $false 'MISSING' }
@@ -278,6 +292,17 @@ def test_complete_matching_cache_can_be_ready_without_optional_tools(tmp_path):
     assert checks(value)["Pinned release cache"]["Status"] == "INSTALLED"
     assert checks(value)["Cached Python dependencies"]["Status"] == "INSTALLED"
     assert checks(value)["MSVC v143 (Visual Studio Build Tools)"]["Status"] == "MISSING"
+    assert before == {path: path.read_bytes() for path in tmp_path.rglob("*") if path.is_file()}
+
+
+def test_cache_current_environment_wins_over_stale_legacy_values(tmp_path):
+    repository, dev, state = installed_cache(tmp_path)
+    state["environment"].update({
+        key.replace("CIRNET_", "NETCIRCUIT_", 1): "stale-legacy-path"
+        for key in tuple(state["environment"])
+    })
+    Path(state["environmentFile"]).write_text(json.dumps(state), encoding="utf-8")
+    assert report(dev, GOOD_TOOLS, repository)["Ready"]
 
 
 def test_windows_cache_repository_path_case_does_not_invalidate_identity(tmp_path):
@@ -301,10 +326,10 @@ def test_cache_corruption_is_rejected_before_cached_code(tmp_path, corruption):
     elif corruption == "interpreter":
         state["python"] = str(tmp_path / "untrusted.exe")
     elif corruption == "session_marker":
-        marker = Path(state["environment"]["NETCIRCUIT_ARTIFACTS_SESSION"]) / ".netcircuit-artifact-session.json"
+        marker = Path(state["environment"]["CIRNET_ARTIFACTS_SESSION"]) / ".cirnet-artifact-session.json"
         marker.write_text("{}", encoding="utf-8")
     elif corruption == "selected_manifest":
-        Path(state["environment"]["NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST"]).write_text("{}", encoding="utf-8")
+        Path(state["environment"]["CIRNET_CONTRACTS_ARTIFACT_MANIFEST"]).write_text("{}", encoding="utf-8")
     Path(state["environmentFile"]).write_text(json.dumps(state), encoding="utf-8")
     setup = GOOD_TOOLS + r"""
 & $module {
@@ -394,14 +419,15 @@ def cached_metadata_report(dev, manifest):
     return json.loads(result.stdout)
 
 
-@pytest.mark.parametrize("missing", ["native", "inventory"])
-def test_real_metadata_probe_rejects_missing_native_payload_and_record(tmp_path, missing):
+@pytest.mark.parametrize("missing", ["native", "inventory", "selected_identity"])
+@pytest.mark.parametrize("prefix", ["cirnet", "netcircuit"])
+def test_real_metadata_probe_enforces_selected_identity_native_payload_and_record(tmp_path, missing, prefix):
     dev = tmp_path / "d"
     site = dev / ".venv/Lib/site-packages"
     site.mkdir(parents=True)
     names = {
-        "netcircuit-api": "0.1.1", "netcircuit-contracts": "0.1.1", "netcircuit-simulator": "0.1.1",
-        "netcircuit-hardware-service": "0.1.1", "netcircuit-artifact-paths": "1.0.0a1",
+        prefix + "-api": "0.1.1", prefix + "-contracts": "0.1.1", prefix + "-simulator": "0.1.1",
+        prefix + "-hardware-service": "0.1.1", prefix + "-artifact-paths": "1.0.0a1",
         "uvicorn": "0.54.0", "fastapi": "0.143.0", "grpcio": "1.84.0", "pip": "26.0",
     }
     for name, version in names.items():
@@ -425,9 +451,14 @@ def test_real_metadata_probe_rejects_missing_native_payload_and_record(tmp_path,
             records.append(str(native.relative_to(site)).replace("\\", "/"))
             native_record = distribution / "RECORD"
         (distribution / "RECORD").write_text("".join(path + ",,\n" for path in records), encoding="utf-8")
-    manifest = REPO / "integration/release-set.json"
+    manifest = tmp_path / "selected-release.json"
+    manifest.write_text(json.dumps(release_manifest(prefix)), encoding="utf-8")
     assert cached_metadata_report(dev, manifest)["Status"] == "INSTALLED"
-    (native if missing == "native" else native_record).unlink()
+    if missing == "selected_identity":
+        other_prefix = "netcircuit" if prefix == "cirnet" else "cirnet"
+        manifest.write_text(json.dumps(release_manifest(other_prefix)), encoding="utf-8")
+    else:
+        (native if missing == "native" else native_record).unlink()
     result = cached_metadata_report(dev, manifest)
     assert result["Status"] == "INCOMPATIBLE", result
 
@@ -435,7 +466,7 @@ def test_real_metadata_probe_rejects_missing_native_payload_and_record(tmp_path,
 @pytest.mark.parametrize("missing", ["rollup", "esbuild_native"])
 def test_missing_web_runtime_dependency_blocks_readiness(tmp_path, missing):
     repository, dev, state = installed_cache(tmp_path)
-    interface = Path(state["environment"]["NETCIRCUIT_INTERFACE_ROOT"])
+    interface = Path(state["environment"]["CIRNET_INTERFACE_ROOT"])
     # These fixtures are installed files; the diagnostic must inspect them without
     # loading their code or running npm/server commands.
     binary = interface / "node_modules/@esbuild/win32-x64/esbuild.exe"

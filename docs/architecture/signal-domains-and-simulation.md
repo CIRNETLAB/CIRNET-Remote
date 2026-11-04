@@ -63,7 +63,7 @@ and unknown values without claiming to execute their behavior.
 
 ## Execution boundary
 
-`netcircuit_sim.dispatch.SimulationDispatcher` accepts generated
+`cirnet_sim.dispatch.SimulationDispatcher` accepts generated
 `SimulationRequest` or additive `SimulationRequestV2` (request schema 2.0,
 including Graph 1.2) and returns generated `SimulationResult` or
 `SimulationErrorResult`. Digital/DC execution delegates to the existing event
@@ -73,11 +73,11 @@ fabricated samples. Historical direct untyped adapter calls retain their
 RuntimeError compatibility behavior. Unsupported digital models return a typed
 rejection. There is no additional public Run or analysis endpoint.
 
-Simulator 0.2.0 adds `netcircuit_sim.backends` as a replaceable provider boundary.
+The original Simulator 0.2.0 introduced `netcircuit_sim.backends`; current source uses `cirnet_sim.backends` with a legacy import alias.
 The default `legacy` provider delegates compile/run to the unchanged dispatcher
 and engine; preview delegates directly to the existing permissive preview so
 UNSUPPORTED device states remain visible. API settings and virtual stations
-freeze `NETCIRCUIT_SIMULATION_BACKEND` at construction. Plans carry the selected
+freeze `CIRNET_SIMULATION_BACKEND` at construction. Plans carry the selected
 backend ID, adapter version, plan format and serializable provider payload;
 spawned or reused workers resolve this identity without rereading selection
 from environment. Unknown, missing or mismatched providers never fall back.

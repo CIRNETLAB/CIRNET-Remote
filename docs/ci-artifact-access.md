@@ -15,8 +15,9 @@ and final current-source handoff remain open.
 Historical namespace links in published notes/provenance remain historical;
 successful redirected downloads alone do not establish current CI compatibility.
 
-Current workflows still bootstrap with `NETCIRCUIT_ARTIFACTS_READ_TOKEN`, and the
-`system-artifact-access` job requires it. Public release availability does not
+Current workflows prefer `CIRNET_ARTIFACTS_READ_TOKEN` and accept the existing
+`NETCIRCUIT_ARTIFACTS_READ_TOKEN` secret as a fallback. The authenticated
+`system-artifact-access` job requires one of these provisioned credentials. Public release availability does not
 remove those configured CI checks.
 
 Keep GitHub workflow permissions at `contents: read`. This controls the job's
@@ -34,7 +35,7 @@ the automatic metadata-read permission:
 - `CIRNET-Hardware`
 - `CIRNET-FPGA`
 
-Store it as `NETCIRCUIT_ARTIFACTS_READ_TOKEN` in each repository's Actions
+Store new credentials as `CIRNET_ARTIFACTS_READ_TOKEN` in each repository's Actions
 secrets. Keep the credential used for local Git pushes and release publication
 separate. Never put token values in a manifest, command argument, issue, chat,
 diagnostic report or committed file. GitHub documents [fine-grained token

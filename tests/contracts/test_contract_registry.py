@@ -66,7 +66,7 @@ def test_unknown_reference_and_unknown_keyword_fail_toolchain():
     with pytest.raises(ValueError, match='keyword'):
         check_schema({'type':'object','misspelledProperties':{}})
     with pytest.raises(ValueError, match='reference'):
-        check_schema({'$ref':'https://netcircuit.local/not-installed.schema.json'})
+        check_schema({'$ref':'https://cirnet.local/not-installed.schema.json'})
 
 
 def test_boolean_combinator_schema_uses_real_dialect():
@@ -82,7 +82,7 @@ def test_boolean_combinator_schema_uses_real_dialect():
 
 def test_generation_preserves_reserved_property_names_and_annotation_values(monkeypatch):
     import contracts.registry as registry
-    uri='https://netcircuit.local/test/extension'
+    uri='https://cirnet.local/test/extension'
     entry={'id':'Extension','kind':'schema','uri':uri,'path':'ignored','pointer':'','visibility':'public'}
     schema={'type':'object','properties':{'$id':{'type':'string'},'title':{'type':'string'}},
             'default':{'$id':'literal','$defs':{'plain':'metadata'}},'additionalProperties':False}
@@ -118,12 +118,12 @@ def test_manifest_uri_cannot_alias_different_sources(monkeypatch):
 def test_schema_check_resolves_nested_relative_identity():
     from contracts.registry import check_schema
     check_schema({'type':'object','properties':{'value':{'$id':'child.json','$defs':{'text':{'type':'string'}},'$ref':'#/$defs/text'}}},
-                 base_uri='https://netcircuit.local/nested/root.json')
+                 base_uri='https://cirnet.local/nested/root.json')
 
 
 def test_generation_relocates_reused_property_subschemas_without_copying(monkeypatch):
     import contracts.registry as registry
-    uri='https://netcircuit.local/test/nested'
+    uri='https://cirnet.local/test/nested'
     sources={'Base':{'type':'object','properties':{'x/y':{'type':'integer','minimum':1}}},
              'View':{'type':'object','properties':{'value':{'$ref':uri+'#/$defs/Base/properties/x~1y'}}}}
     metadata=[{'id':name,'kind':'schema','uri':uri,'pointer':'/$defs/'+name,'visibility':'public'} for name in sources]
@@ -141,7 +141,7 @@ def test_generation_relocates_reused_property_subschemas_without_copying(monkeyp
 
 def test_generation_cannot_escape_internal_descendant_via_public_parent(monkeypatch):
     import contracts.registry as registry
-    uri='https://netcircuit.local/test/private-child'
+    uri='https://cirnet.local/test/private-child'
     metadata=[{'id':'Base','kind':'schema','uri':uri,'pointer':'','visibility':'public'},
               {'id':'Hidden','kind':'schema','uri':uri,'pointer':'/properties/private','visibility':'internal'}]
     schema={'type':'object','properties':{'private':{'type':'integer'},'view':{'$ref':'#/properties/private'}}}

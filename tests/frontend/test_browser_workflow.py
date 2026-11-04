@@ -25,11 +25,11 @@ def assert_interface_bootstrap_ownership(job):
     assert_interface_release_job(job)
     steps=job['steps']
     bootstrap=next(step for step in steps if 'bootstrap-contracts.mjs' in step.get('run',''))
-    assert bootstrap.get('env',{}).get('NETCIRCUIT_ARTIFACTS_TOKEN')=='${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}'
-    allocation=next(step for step in steps if 'NETCIRCUIT_ARTIFACTS_SESSION=' in step.get('run',''))
+    assert bootstrap.get('env',{}).get('CIRNET_ARTIFACTS_TOKEN')=='${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}'
+    allocation=next(step for step in steps if 'CIRNET_ARTIFACTS_SESSION=' in step.get('run',''))
     assert 'getArtifactContext' in allocation['run']
-    assert 'export NETCIRCUIT_ARTIFACTS_CONTEXT' in allocation['run']
-    assert 'NETCIRCUIT_ARTIFACTS_CONTEXT=$NETCIRCUIT_ARTIFACTS_CONTEXT' in allocation['run']
+    assert 'export CIRNET_ARTIFACTS_CONTEXT' in allocation['run']
+    assert 'CIRNET_ARTIFACTS_CONTEXT=$CIRNET_ARTIFACTS_CONTEXT' in allocation['run']
 
 
 def test_frontend_checks_shared_generation_and_every_dependency_trigger():
@@ -83,7 +83,7 @@ def test_browser_ci_installs_pinned_runner_and_all_real_services_then_runs_every
     for boundary in ('scripts.install_interface', 'bootstrap-contracts.mjs'):
         assert boundary in steps
     download=next(step for step in job['steps'] if 'scripts.install_interface' in step.get('run',''))
-    assert download['env']=={'NETCIRCUIT_ARTIFACTS_TOKEN':'${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}'}
+    assert download['env']=={'CIRNET_ARTIFACTS_TOKEN':'${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}'}
     assert '--manifest integration/release-set.json' in download['run']
     assert all(step.get('working-directory') != 'apps/web' for step in job['steps'])
     consumer_install=next(index for index,step in enumerate(job['steps']) if 'npm ci' in step.get('run',''))
@@ -98,11 +98,11 @@ def test_browser_ci_installs_pinned_runner_and_all_real_services_then_runs_every
         ['-m','scripts.check_simulator_consumer'],['-m','scripts.check_hardware_consumer']]
     assert len(browser_steps)==3 and browser_steps[-1]['command'][-3:]==[
         'scripts/e2e-interface.mjs','--reporter=line,junit','--forbid-only']
-    assert job['env']['NETCIRCUIT_E2E_PYTHON'] == 'python'
+    assert job['env']['CIRNET_E2E_PYTHON'] == 'python'
     allocation = next(step for step in job['steps'] if 'artifact_session=' in step.get('run', ''))
-    assert allocation.get('env', {}).get('NETCIRCUIT_ARTIFACTS_DIR') == '${{ runner.temp }}/netcircuit-artifacts/${{ github.run_id }}-${{ github.run_attempt }}', 'runner.temp is available in step env, not job env'
+    assert allocation.get('env', {}).get('CIRNET_ARTIFACTS_DIR') == '${{ runner.temp }}/cirnet-artifacts/${{ github.run_id }}-${{ github.run_attempt }}', 'runner.temp is available in step env, not job env'
     assert 'node scripts/artifact-paths.mjs' in steps
-    assert 'NETCIRCUIT_ARTIFACTS_SESSION=$artifact_session' in steps
+    assert 'CIRNET_ARTIFACTS_SESSION=$artifact_session' in steps
     assert 'tee "$artifact_session/e2e.log"' in steps
     assert not any(step.get('continue-on-error', False) for step in job['steps'])
     assert '--grep' not in steps and '--retries' not in steps
@@ -116,14 +116,14 @@ def test_browser_ci_installs_pinned_runner_and_all_real_services_then_runs_every
     assert upload['with']['retention-days'] == 7
     assert upload['with']['include-hidden-files'] is True
     assert set(upload['with']['path'].splitlines()) == {
-        '${{ env.NETCIRCUIT_ARTIFACTS_SESSION }}/playwright',
-        '${{ env.NETCIRCUIT_ARTIFACTS_SESSION }}/playwright-reporters',
-        '${{ env.NETCIRCUIT_ARTIFACTS_SESSION }}/e2e.log',
+        '${{ env.CIRNET_ARTIFACTS_SESSION }}/playwright',
+        '${{ env.CIRNET_ARTIFACTS_SESSION }}/playwright-reporters',
+        '${{ env.CIRNET_ARTIFACTS_SESSION }}/e2e.log',
     }
     cleanup = next(step for step in job['steps'] if '--cleanup' in step.get('run', ''))
     assert cleanup['if'] == 'always()'
     assert job['steps'].index(cleanup) > job['steps'].index(upload)
-    assert '--cleanup "$NETCIRCUIT_ARTIFACTS_SESSION"' in cleanup['run']
+    assert '--cleanup "$CIRNET_ARTIFACTS_SESSION"' in cleanup['run']
     assert '.test-build' not in steps
     events = document.get('on', document.get(True))
     for event in ('push', 'pull_request'):

@@ -1,4 +1,4 @@
-# CONTEXT — net*CIRCUIT Remote
+# CONTEXT — CIRNET Remote
 
 Read ARCHITECTURE.md first: canonical Lab-First v3.1. Historical evidence never overrides it.
 
@@ -19,9 +19,9 @@ Read ARCHITECTURE.md first: canonical Lab-First v3.1. Historical evidence never 
 - 30–50 sessions target, distinct from one shared physical slot with FIFO/lease/timeouts.
 - Frontend must never contain raw FPGA registers, raw MUX addresses or Linux transport identifiers.
 - Post-R7 flow: DetectedTopologyGraph → TopologyResolver → ResolvedLabBindings (`TopologyResolutionResult.endpoint_bindings`) → Lab Execution Compiler; reference physical node != student physical node. Required unresolved endpoints block executability, topology differences remain diagnostics.
-- Experiment/event JSON contains CaptureMetadata only; CaptureStore payloads live in NETCIRCUIT_CAPTURE_DIR and use owner-scoped binary fetch/deletion. Signal Monitor fetches/cache on demand; Scope has no fake analog trace.
+- Experiment/event JSON contains CaptureMetadata only; CaptureStore payloads live in CIRNET_CAPTURE_DIR and use owner-scoped binary fetch/deletion. Signal Monitor fetches/cache on demand; Scope has no fake analog trace.
 - Runtime instrument truth is instrument_capabilities; channels=0 is unavailable. Generator baseline belongs in the plan, live control needs RUNNING plus explicit runtime support, lifecycle ownership and real profile limits.
-- Hardware admission uses current physical_execution_slots; simulation uses shared positive NETCIRCUIT_SIMULATION_WORKERS (default 4) and explicit spawn workers. Multi-slot tests are scheduler evidence only.
+- Hardware admission uses current physical_execution_slots; simulation uses shared positive CIRNET_SIMULATION_WORKERS (default 4) and explicit spawn workers. Multi-slot tests are scheduler evidence only.
 - Inspector reports structured evidence/confidence, expected/observed checkpoints and separate assessment; assessment_policy never grants or denies energization.
 - Web/Contracts W0–W8 ledger: verification/2026-10-16-web-contracts.md. Manifest/offline schemas own shapes; staged Python/TS/runtime/OpenAPI generation and explicit numeric/semantic profiles preserve supported legacy documents.
 - Owned Project/Circuit revisions use CAS and immutable admission references; published assignment revisions remain stable while authors edit drafts. Local recovery and all stale async replies are scoped to durable principals.

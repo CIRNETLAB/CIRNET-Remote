@@ -1,25 +1,25 @@
 name: Integration
 env:
   PYTHONDONTWRITEBYTECODE: '1'
-  NETCIRCUIT_FPGA_ARTIFACT_FILENAME: netcircuit-fpga-scaffold-0.1.1.tar.gz
-  NETCIRCUIT_FPGA_ARTIFACT_URL: ${{ vars.NETCIRCUIT_FPGA_ARTIFACT_URL }}
-  NETCIRCUIT_FPGA_ARTIFACT_SHA256: ${{ vars.NETCIRCUIT_FPGA_ARTIFACT_SHA256 }}
-  NETCIRCUIT_HARDWARE_WHEEL_FILENAME: netcircuit_hardware_service-0.1.1-py3-none-any.whl
-  NETCIRCUIT_HARDWARE_WHEEL_URL: ${{ vars.NETCIRCUIT_HARDWARE_WHEEL_URL }}
-  NETCIRCUIT_HARDWARE_WHEEL_SHA256: ${{ vars.NETCIRCUIT_HARDWARE_WHEEL_SHA256 }}
-  NETCIRCUIT_SIMULATOR_WHEEL_FILENAME: netcircuit_simulator-0.1.1-py3-none-any.whl
-  NETCIRCUIT_SIMULATOR_WHEEL_URL: ${{ vars.NETCIRCUIT_SIMULATOR_WHEEL_URL }}
-  NETCIRCUIT_SIMULATOR_WHEEL_SHA256: ${{ vars.NETCIRCUIT_SIMULATOR_WHEEL_SHA256 }}
-  NETCIRCUIT_CONTRACTS_DEV_WHEEL_URL: ${{ vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_URL }}
-  NETCIRCUIT_CONTRACTS_DEV_WHEEL_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_SHA256 }}
-  NETCIRCUIT_CONTRACTS_WHEEL_FILENAME: netcircuit_contracts-0.1.1-py3-none-any.whl
-  NETCIRCUIT_CONTRACTS_NPM_FILENAME: tinihi-labs-contracts-0.1.1.tgz
-  NETCIRCUIT_CONTRACTS_WHEEL_URL: ${{ vars.NETCIRCUIT_CONTRACTS_WHEEL_URL }}
-  NETCIRCUIT_CONTRACTS_WHEEL_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_WHEEL_SHA256 }}
-  NETCIRCUIT_CONTRACTS_NPM_URL: ${{ vars.NETCIRCUIT_CONTRACTS_NPM_URL }}
-  NETCIRCUIT_CONTRACTS_SDIST_URL: ${{ vars.NETCIRCUIT_CONTRACTS_SDIST_URL }}
-  NETCIRCUIT_ARTIFACT_PATHS_NPM_URL: ${{ vars.NETCIRCUIT_ARTIFACT_PATHS_NPM_URL }}
-  NETCIRCUIT_CONTRACTS_NPM_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_NPM_SHA256 }}
+  CIRNET_FPGA_ARTIFACT_FILENAME: netcircuit-fpga-scaffold-0.1.1.tar.gz
+  CIRNET_FPGA_ARTIFACT_URL: ${{ vars.CIRNET_FPGA_ARTIFACT_URL || vars.NETCIRCUIT_FPGA_ARTIFACT_URL }}
+  CIRNET_FPGA_ARTIFACT_SHA256: ${{ vars.CIRNET_FPGA_ARTIFACT_SHA256 || vars.NETCIRCUIT_FPGA_ARTIFACT_SHA256 }}
+  CIRNET_HARDWARE_WHEEL_FILENAME: netcircuit_hardware_service-0.1.1-py3-none-any.whl
+  CIRNET_HARDWARE_WHEEL_URL: ${{ vars.CIRNET_HARDWARE_WHEEL_URL || vars.NETCIRCUIT_HARDWARE_WHEEL_URL }}
+  CIRNET_HARDWARE_WHEEL_SHA256: ${{ vars.CIRNET_HARDWARE_WHEEL_SHA256 || vars.NETCIRCUIT_HARDWARE_WHEEL_SHA256 }}
+  CIRNET_SIMULATOR_WHEEL_FILENAME: netcircuit_simulator-0.1.1-py3-none-any.whl
+  CIRNET_SIMULATOR_WHEEL_URL: ${{ vars.CIRNET_SIMULATOR_WHEEL_URL || vars.NETCIRCUIT_SIMULATOR_WHEEL_URL }}
+  CIRNET_SIMULATOR_WHEEL_SHA256: ${{ vars.CIRNET_SIMULATOR_WHEEL_SHA256 || vars.NETCIRCUIT_SIMULATOR_WHEEL_SHA256 }}
+  CIRNET_CONTRACTS_DEV_WHEEL_URL: ${{ vars.CIRNET_CONTRACTS_DEV_WHEEL_URL || vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_URL }}
+  CIRNET_CONTRACTS_DEV_WHEEL_SHA256: ${{ vars.CIRNET_CONTRACTS_DEV_WHEEL_SHA256 || vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_SHA256 }}
+  CIRNET_CONTRACTS_WHEEL_FILENAME: netcircuit_contracts-0.1.1-py3-none-any.whl
+  CIRNET_CONTRACTS_NPM_FILENAME: tinihi-labs-contracts-0.1.1.tgz
+  CIRNET_CONTRACTS_WHEEL_URL: ${{ vars.CIRNET_CONTRACTS_WHEEL_URL || vars.NETCIRCUIT_CONTRACTS_WHEEL_URL }}
+  CIRNET_CONTRACTS_WHEEL_SHA256: ${{ vars.CIRNET_CONTRACTS_WHEEL_SHA256 || vars.NETCIRCUIT_CONTRACTS_WHEEL_SHA256 }}
+  CIRNET_CONTRACTS_NPM_URL: ${{ vars.CIRNET_CONTRACTS_NPM_URL || vars.NETCIRCUIT_CONTRACTS_NPM_URL }}
+  CIRNET_CONTRACTS_SDIST_URL: ${{ vars.CIRNET_CONTRACTS_SDIST_URL || vars.NETCIRCUIT_CONTRACTS_SDIST_URL }}
+  CIRNET_ARTIFACT_PATHS_NPM_URL: ${{ vars.CIRNET_ARTIFACT_PATHS_NPM_URL || vars.NETCIRCUIT_ARTIFACT_PATHS_NPM_URL }}
+  CIRNET_CONTRACTS_NPM_SHA256: ${{ vars.CIRNET_CONTRACTS_NPM_SHA256 || vars.NETCIRCUIT_CONTRACTS_NPM_SHA256 }}
 on:
   push:
   pull_request:
@@ -31,7 +31,7 @@ jobs:
     permissions:
       contents: read
     env:
-      NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+      CIRNET_ARTIFACTS_TOKEN: ${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -44,27 +44,27 @@ jobs:
           node-version: '22'
       - name: Require the selected private-artifact credential
         shell: bash
-        run: ': "${NETCIRCUIT_ARTIFACTS_TOKEN:?NETCIRCUIT_ARTIFACTS_READ_TOKEN is required}"'
+        run: ': "${CIRNET_ARTIFACTS_TOKEN:?CIRNET_ARTIFACTS_READ_TOKEN is required}"'
       - name: Select exact dependency artifacts from the system lock
         run: python scripts/select_ci_release.py --manifest integration/release-set.json --github-env "$GITHUB_ENV"
       - name: Bootstrap the pinned independent DEV allocator
         env:
-          NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
-          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+          CIRNET_ARTIFACTS_DIR: ${{ runner.temp }}/cirnet-verification
+          CIRNET_ARTIFACTS_TOKEN: ${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
         run: python scripts/install_contracts.py --dev-only
       - name: Allocate owned external verification runtime
         env:
-          NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
+          CIRNET_ARTIFACTS_DIR: ${{ runner.temp }}/cirnet-verification
         shell: bash
         run: |
-          NETCIRCUIT_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"
-          export NETCIRCUIT_ARTIFACTS_SESSION
-          echo "NETCIRCUIT_ARTIFACTS_SESSION=$NETCIRCUIT_ARTIFACTS_SESSION" >> "$GITHUB_ENV"
+          CIRNET_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"
+          export CIRNET_ARTIFACTS_SESSION
+          echo "CIRNET_ARTIFACTS_SESSION=$CIRNET_ARTIFACTS_SESSION" >> "$GITHUB_ENV"
           ci_runtime="$(node scripts/artifact-paths.mjs ci-runtime)"
           mkdir -p "$ci_runtime/tmp" "$ci_runtime/pip-cache" "$ci_runtime/npm-cache"
           {
-            echo "NETCIRCUIT_DATABASE_URL=sqlite:///$ci_runtime/default.sqlite"
-            echo "NETCIRCUIT_CAPTURE_DIR=$ci_runtime/captures"
+            echo "CIRNET_DATABASE_URL=sqlite:///$ci_runtime/default.sqlite"
+            echo "CIRNET_CAPTURE_DIR=$ci_runtime/captures"
             echo "TMP=$ci_runtime/tmp"
             echo "TEMP=$ci_runtime/tmp"
             echo "TMPDIR=$ci_runtime/tmp"
@@ -177,7 +177,7 @@ jobs:
                   if (row['version'], row['selectedSha256']) != expected[row['name']]:
                       raise ValueError('Installed origin identity differs from the selected wheel.')
               return {'schemaVersion': 1, 'status': 'PASS', 'releaseVersion': manifest['releaseVersion'],
-                      'credentialSource': 'NETCIRCUIT_ARTIFACTS_READ_TOKEN',
+                      'credentialSource': 'CIRNET_ARTIFACTS_READ_TOKEN',
                       'credentialScopeVerification': 'NOT_VERIFIED',
                       'scopeLimitation': 'Successful downloads do not establish read-only or minimum credential permissions.',
                       'selectedRepositories': {name: {key: product[key] for key in ('repository', 'version', 'sourceRevision')}
@@ -186,9 +186,9 @@ jobs:
                       'pipCheck': 'PASS', 'rollbackRehearsal': 'NOT_RUN'}
 
           def main():
-              if not os.environ.get('NETCIRCUIT_ARTIFACTS_TOKEN'):
+              if not os.environ.get('CIRNET_ARTIFACTS_TOKEN'):
                   raise ValueError('The named private-artifact credential is required.')
-              state = load_environment(Path(os.environ['NETCIRCUIT_ARTIFACTS_SESSION']) / 'ci-release-env.json')
+              state = load_environment(Path(os.environ['CIRNET_ARTIFACTS_SESSION']) / 'ci-release-env.json')
               manifest = load_manifest(state['manifest'])
               if manifest != load_manifest('integration/release-set.json'):
                   raise ValueError('Installed snapshot differs from the checked-out system release lock.')
@@ -212,19 +212,19 @@ jobs:
               main()
           PY
       - name: Upload only the sanitized access receipt and actual installer log
-        if: always() && env.NETCIRCUIT_ARTIFACTS_SESSION != ''
+        if: always() && env.CIRNET_ARTIFACTS_SESSION != ''
         uses: actions/upload-artifact@v4
         with:
           name: system-artifact-access-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            ${{ env.NETCIRCUIT_ARTIFACTS_SESSION }}/system-artifact-access/receipt.json
-            ${{ env.NETCIRCUIT_ARTIFACTS_SESSION }}/system-artifact-access/installer.log
+            ${{ env.CIRNET_ARTIFACTS_SESSION }}/system-artifact-access/receipt.json
+            ${{ env.CIRNET_ARTIFACTS_SESSION }}/system-artifact-access/installer.log
           if-no-files-found: error
           retention-days: 7
       - name: Clean the owned external verification session
-        if: always() && env.NETCIRCUIT_ARTIFACTS_SESSION != ''
+        if: always() && env.CIRNET_ARTIFACTS_SESSION != ''
         shell: bash
-        run: node scripts/cleanup-artifact-session.mjs --cleanup "$NETCIRCUIT_ARTIFACTS_SESSION"
+        run: node scripts/cleanup-artifact-session.mjs --cleanup "$CIRNET_ARTIFACTS_SESSION"
   repository-contracts:
     runs-on: ubuntu-latest
     steps:
@@ -239,22 +239,22 @@ jobs:
         run: python scripts/select_ci_release.py --manifest integration/release-set.json --github-env "$GITHUB_ENV"
       - name: Bootstrap the pinned independent DEV allocator
         env:
-          NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
-          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+          CIRNET_ARTIFACTS_DIR: ${{ runner.temp }}/cirnet-verification
+          CIRNET_ARTIFACTS_TOKEN: ${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
         run: python scripts/install_contracts.py --dev-only
       - name: Allocate owned external verification runtime
         env:
-          NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
+          CIRNET_ARTIFACTS_DIR: ${{ runner.temp }}/cirnet-verification
         shell: bash
         run: |
-          NETCIRCUIT_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"
-          export NETCIRCUIT_ARTIFACTS_SESSION
-          echo "NETCIRCUIT_ARTIFACTS_SESSION=$NETCIRCUIT_ARTIFACTS_SESSION" >> "$GITHUB_ENV"
+          CIRNET_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"
+          export CIRNET_ARTIFACTS_SESSION
+          echo "CIRNET_ARTIFACTS_SESSION=$CIRNET_ARTIFACTS_SESSION" >> "$GITHUB_ENV"
           ci_runtime="$(node scripts/artifact-paths.mjs ci-runtime)"
           mkdir -p "$ci_runtime/tmp" "$ci_runtime/pip-cache" "$ci_runtime/npm-cache"
           {
-            echo "NETCIRCUIT_DATABASE_URL=sqlite:///$ci_runtime/default.sqlite"
-            echo "NETCIRCUIT_CAPTURE_DIR=$ci_runtime/captures"
+            echo "CIRNET_DATABASE_URL=sqlite:///$ci_runtime/default.sqlite"
+            echo "CIRNET_CAPTURE_DIR=$ci_runtime/captures"
             echo "TMP=$ci_runtime/tmp"
             echo "TEMP=$ci_runtime/tmp"
             echo "TMPDIR=$ci_runtime/tmp"
@@ -268,58 +268,59 @@ jobs:
           python -B scripts/build_ci_dependency.py Simulator --github-env "$GITHUB_ENV"
           python -B scripts/build_ci_dependency.py Hardware --github-env "$GITHUB_ENV"
       - env:
-          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+          CIRNET_ARTIFACTS_TOKEN: ${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
         run: |
           python -m pip install -r requirements-verification.txt
-          python scripts/install_contracts.py --wheel "$NETCIRCUIT_CI_CONTRACTS_WHEEL" --sha256 "$NETCIRCUIT_CI_CONTRACTS_WHEEL_SHA256"
-          python scripts/install_simulator.py --wheel "$NETCIRCUIT_CI_SIMULATOR_WHEEL" --sha256 "$NETCIRCUIT_CI_SIMULATOR_WHEEL_SHA256"
-          python scripts/install_hardware.py --wheel "$NETCIRCUIT_CI_HARDWARE_WHEEL" --sha256 "$NETCIRCUIT_CI_HARDWARE_WHEEL_SHA256"
-          python -m build --no-isolation --wheel --outdir "$NETCIRCUIT_ARTIFACTS_SESSION/api-dist" ./services/api
-          python -m pip install "$NETCIRCUIT_ARTIFACTS_SESSION/api-dist/netcircuit_api-0.1.1-py3-none-any.whl"
+          python scripts/install_contracts.py --manifest "$CIRNET_CI_CONTRACTS_ARTIFACT_MANIFEST"
+          python scripts/install_simulator.py --wheel "$CIRNET_CI_SIMULATOR_WHEEL" --sha256 "$CIRNET_CI_SIMULATOR_WHEEL_SHA256"
+          python scripts/install_hardware.py --wheel "$CIRNET_CI_HARDWARE_WHEEL" --sha256 "$CIRNET_CI_HARDWARE_WHEEL_SHA256"
+          python -m build --no-isolation --wheel --outdir "$CIRNET_ARTIFACTS_SESSION/api-dist" ./services/api
+          python -m pip install "$CIRNET_ARTIFACTS_SESSION/api-dist/cirnet_api-0.1.1-py3-none-any.whl"
           python -m pip check
           python -m scripts.check_simulator_consumer
           python -m scripts.check_hardware_consumer
       - name: Download the explicit reviewed Interface product
         env:
-          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+          CIRNET_ARTIFACTS_TOKEN: ${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
         run: python -m scripts.install_interface --manifest integration/release-set.json --github-env "$GITHUB_ENV"
       - name: Bootstrap Interface SDK from exact reviewed artifacts
         env:
+          CIRNET_CONTRACTS_ARTIFACT_MANIFEST: ''
           NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST: ''
-          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
-        run: node "$NETCIRCUIT_INTERFACE_ROOT/scripts/bootstrap-contracts.mjs" --github-env "$GITHUB_ENV"
+          CIRNET_ARTIFACTS_TOKEN: ${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+        run: node "$CIRNET_INTERFACE_ROOT/scripts/bootstrap-contracts.mjs" --github-env "$GITHUB_ENV"
       - name: Install independent Interface verification tools
-        working-directory: ${{ env.NETCIRCUIT_INTERFACE_ROOT }}
+        working-directory: ${{ env.CIRNET_INTERFACE_ROOT }}
         run: npm ci --no-audit --no-fund
       - name: Verify installed Contracts RPC provenance
         run: python -m scripts.check_contract_consumer
       - name: Select and verify the exact reviewed FPGA source artifact
         env:
-          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+          CIRNET_ARTIFACTS_TOKEN: ${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
         run: |
           python scripts/install_fpga.py
       - run: python -m scripts.check_fpga_consumer
       - run: python scripts/check_release.py --group python
       - name: Clean the owned external verification session
-        if: always() && env.NETCIRCUIT_ARTIFACTS_SESSION != ''
+        if: always() && env.CIRNET_ARTIFACTS_SESSION != ''
         shell: bash
-        run: node scripts/cleanup-artifact-session.mjs --cleanup "$NETCIRCUIT_ARTIFACTS_SESSION"
+        run: node scripts/cleanup-artifact-session.mjs --cleanup "$CIRNET_ARTIFACTS_SESSION"
   postgresql-migrations:
     runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:18.6
         env:
-          POSTGRES_USER: netcircuit_test
-          POSTGRES_DB: netcircuit_ci
+          POSTGRES_USER: cirnet_test
+          POSTGRES_DB: cirnet_ci
           POSTGRES_HOST_AUTH_METHOD: trust
         ports: ['5432:5432']
         options: >-
-          --health-cmd "pg_isready -U netcircuit_test -d netcircuit_ci"
+          --health-cmd "pg_isready -U cirnet_test -d cirnet_ci"
           --health-interval 10s --health-timeout 5s --health-retries 5
     env:
-      NETCIRCUIT_TEST_POSTGRES_URL: postgresql+psycopg://netcircuit_test@127.0.0.1:5432/netcircuit_ci
-      NETCIRCUIT_TEST_PG_BIN: /usr/lib/postgresql/18/bin
+      CIRNET_TEST_POSTGRES_URL: postgresql+psycopg://cirnet_test@127.0.0.1:5432/cirnet_ci
+      CIRNET_TEST_PG_BIN: /usr/lib/postgresql/18/bin
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -332,22 +333,22 @@ jobs:
         run: python scripts/select_ci_release.py --manifest integration/release-set.json --github-env "$GITHUB_ENV"
       - name: Bootstrap the pinned independent DEV allocator
         env:
-          NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
-          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+          CIRNET_ARTIFACTS_DIR: ${{ runner.temp }}/cirnet-verification
+          CIRNET_ARTIFACTS_TOKEN: ${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
         run: python scripts/install_contracts.py --dev-only
       - name: Allocate owned external verification runtime
         env:
-          NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
+          CIRNET_ARTIFACTS_DIR: ${{ runner.temp }}/cirnet-verification
         shell: bash
         run: |
-          NETCIRCUIT_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"
-          export NETCIRCUIT_ARTIFACTS_SESSION
-          echo "NETCIRCUIT_ARTIFACTS_SESSION=$NETCIRCUIT_ARTIFACTS_SESSION" >> "$GITHUB_ENV"
+          CIRNET_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"
+          export CIRNET_ARTIFACTS_SESSION
+          echo "CIRNET_ARTIFACTS_SESSION=$CIRNET_ARTIFACTS_SESSION" >> "$GITHUB_ENV"
           ci_runtime="$(node scripts/artifact-paths.mjs ci-runtime)"
           mkdir -p "$ci_runtime/tmp" "$ci_runtime/pip-cache" "$ci_runtime/npm-cache"
           {
-            echo "NETCIRCUIT_DATABASE_URL=sqlite:///$ci_runtime/default.sqlite"
-            echo "NETCIRCUIT_CAPTURE_DIR=$ci_runtime/captures"
+            echo "CIRNET_DATABASE_URL=sqlite:///$ci_runtime/default.sqlite"
+            echo "CIRNET_CAPTURE_DIR=$ci_runtime/captures"
             echo "TMP=$ci_runtime/tmp"
             echo "TEMP=$ci_runtime/tmp"
             echo "TMPDIR=$ci_runtime/tmp"
@@ -367,20 +368,20 @@ jobs:
           python -B scripts/build_ci_dependency.py Simulator --github-env "$GITHUB_ENV"
           python -B scripts/build_ci_dependency.py Hardware --github-env "$GITHUB_ENV"
       - env:
-          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+          CIRNET_ARTIFACTS_TOKEN: ${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
         run: |
           python -m pip install -r requirements-verification.txt
-          python scripts/install_contracts.py --wheel "$NETCIRCUIT_CI_CONTRACTS_WHEEL" --sha256 "$NETCIRCUIT_CI_CONTRACTS_WHEEL_SHA256"
-          python scripts/install_simulator.py --wheel "$NETCIRCUIT_CI_SIMULATOR_WHEEL" --sha256 "$NETCIRCUIT_CI_SIMULATOR_WHEEL_SHA256"
-          python scripts/install_hardware.py --wheel "$NETCIRCUIT_CI_HARDWARE_WHEEL" --sha256 "$NETCIRCUIT_CI_HARDWARE_WHEEL_SHA256"
-          python -m build --no-isolation --wheel --outdir "$NETCIRCUIT_ARTIFACTS_SESSION/api-dist" ./services/api
-          python -m pip install "$NETCIRCUIT_ARTIFACTS_SESSION/api-dist/netcircuit_api-0.1.1-py3-none-any.whl"
+          python scripts/install_contracts.py --manifest "$CIRNET_CI_CONTRACTS_ARTIFACT_MANIFEST"
+          python scripts/install_simulator.py --wheel "$CIRNET_CI_SIMULATOR_WHEEL" --sha256 "$CIRNET_CI_SIMULATOR_WHEEL_SHA256"
+          python scripts/install_hardware.py --wheel "$CIRNET_CI_HARDWARE_WHEEL" --sha256 "$CIRNET_CI_HARDWARE_WHEEL_SHA256"
+          python -m build --no-isolation --wheel --outdir "$CIRNET_ARTIFACTS_SESSION/api-dist" ./services/api
+          python -m pip install "$CIRNET_ARTIFACTS_SESSION/api-dist/cirnet_api-0.1.1-py3-none-any.whl"
           python -m pip check
           python -m scripts.check_simulator_consumer
           python -m scripts.check_hardware_consumer
       - name: Actual migrations, backup/restore and independent writer races
-        run: python -m pytest -q services/api/tests/postgres_cases.py --basetemp "$NETCIRCUIT_ARTIFACTS_SESSION/pytest"
+        run: python -m pytest -q services/api/tests/postgres_cases.py --basetemp "$CIRNET_ARTIFACTS_SESSION/pytest"
       - name: Clean the owned external verification session
-        if: always() && env.NETCIRCUIT_ARTIFACTS_SESSION != ''
+        if: always() && env.CIRNET_ARTIFACTS_SESSION != ''
         shell: bash
-        run: node scripts/cleanup-artifact-session.mjs --cleanup "$NETCIRCUIT_ARTIFACTS_SESSION"
+        run: node scripts/cleanup-artifact-session.mjs --cleanup "$CIRNET_ARTIFACTS_SESSION"

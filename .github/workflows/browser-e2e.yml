@@ -1,22 +1,22 @@
 name: Real browser release gate
 env:
   PYTHONDONTWRITEBYTECODE: '1'
-  NETCIRCUIT_HARDWARE_WHEEL_FILENAME: netcircuit_hardware_service-0.1.1-py3-none-any.whl
-  NETCIRCUIT_HARDWARE_WHEEL_URL: ${{ vars.NETCIRCUIT_HARDWARE_WHEEL_URL }}
-  NETCIRCUIT_HARDWARE_WHEEL_SHA256: ${{ vars.NETCIRCUIT_HARDWARE_WHEEL_SHA256 }}
-  NETCIRCUIT_SIMULATOR_WHEEL_FILENAME: netcircuit_simulator-0.1.1-py3-none-any.whl
-  NETCIRCUIT_SIMULATOR_WHEEL_URL: ${{ vars.NETCIRCUIT_SIMULATOR_WHEEL_URL }}
-  NETCIRCUIT_SIMULATOR_WHEEL_SHA256: ${{ vars.NETCIRCUIT_SIMULATOR_WHEEL_SHA256 }}
-  NETCIRCUIT_CONTRACTS_DEV_WHEEL_URL: ${{ vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_URL }}
-  NETCIRCUIT_CONTRACTS_DEV_WHEEL_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_SHA256 }}
-  NETCIRCUIT_CONTRACTS_WHEEL_FILENAME: netcircuit_contracts-0.1.1-py3-none-any.whl
-  NETCIRCUIT_CONTRACTS_NPM_FILENAME: tinihi-labs-contracts-0.1.1.tgz
-  NETCIRCUIT_CONTRACTS_WHEEL_URL: ${{ vars.NETCIRCUIT_CONTRACTS_WHEEL_URL }}
-  NETCIRCUIT_CONTRACTS_WHEEL_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_WHEEL_SHA256 }}
-  NETCIRCUIT_CONTRACTS_NPM_URL: ${{ vars.NETCIRCUIT_CONTRACTS_NPM_URL }}
-  NETCIRCUIT_CONTRACTS_NPM_SHA256: ${{ vars.NETCIRCUIT_CONTRACTS_NPM_SHA256 }}
-  NETCIRCUIT_CONTRACTS_SDIST_URL: ${{ vars.NETCIRCUIT_CONTRACTS_SDIST_URL }}
-  NETCIRCUIT_ARTIFACT_PATHS_NPM_URL: ${{ vars.NETCIRCUIT_ARTIFACT_PATHS_NPM_URL }}
+  CIRNET_HARDWARE_WHEEL_FILENAME: netcircuit_hardware_service-0.1.1-py3-none-any.whl
+  CIRNET_HARDWARE_WHEEL_URL: ${{ vars.CIRNET_HARDWARE_WHEEL_URL || vars.NETCIRCUIT_HARDWARE_WHEEL_URL }}
+  CIRNET_HARDWARE_WHEEL_SHA256: ${{ vars.CIRNET_HARDWARE_WHEEL_SHA256 || vars.NETCIRCUIT_HARDWARE_WHEEL_SHA256 }}
+  CIRNET_SIMULATOR_WHEEL_FILENAME: netcircuit_simulator-0.1.1-py3-none-any.whl
+  CIRNET_SIMULATOR_WHEEL_URL: ${{ vars.CIRNET_SIMULATOR_WHEEL_URL || vars.NETCIRCUIT_SIMULATOR_WHEEL_URL }}
+  CIRNET_SIMULATOR_WHEEL_SHA256: ${{ vars.CIRNET_SIMULATOR_WHEEL_SHA256 || vars.NETCIRCUIT_SIMULATOR_WHEEL_SHA256 }}
+  CIRNET_CONTRACTS_DEV_WHEEL_URL: ${{ vars.CIRNET_CONTRACTS_DEV_WHEEL_URL || vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_URL }}
+  CIRNET_CONTRACTS_DEV_WHEEL_SHA256: ${{ vars.CIRNET_CONTRACTS_DEV_WHEEL_SHA256 || vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_SHA256 }}
+  CIRNET_CONTRACTS_WHEEL_FILENAME: netcircuit_contracts-0.1.1-py3-none-any.whl
+  CIRNET_CONTRACTS_NPM_FILENAME: tinihi-labs-contracts-0.1.1.tgz
+  CIRNET_CONTRACTS_WHEEL_URL: ${{ vars.CIRNET_CONTRACTS_WHEEL_URL || vars.NETCIRCUIT_CONTRACTS_WHEEL_URL }}
+  CIRNET_CONTRACTS_WHEEL_SHA256: ${{ vars.CIRNET_CONTRACTS_WHEEL_SHA256 || vars.NETCIRCUIT_CONTRACTS_WHEEL_SHA256 }}
+  CIRNET_CONTRACTS_NPM_URL: ${{ vars.CIRNET_CONTRACTS_NPM_URL || vars.NETCIRCUIT_CONTRACTS_NPM_URL }}
+  CIRNET_CONTRACTS_NPM_SHA256: ${{ vars.CIRNET_CONTRACTS_NPM_SHA256 || vars.NETCIRCUIT_CONTRACTS_NPM_SHA256 }}
+  CIRNET_CONTRACTS_SDIST_URL: ${{ vars.CIRNET_CONTRACTS_SDIST_URL || vars.NETCIRCUIT_CONTRACTS_SDIST_URL }}
+  CIRNET_ARTIFACT_PATHS_NPM_URL: ${{ vars.CIRNET_ARTIFACT_PATHS_NPM_URL || vars.NETCIRCUIT_ARTIFACT_PATHS_NPM_URL }}
 on:
   push:
     paths: ['tests/frontend/**', 'tests/integration/**', 'tests/support/**', 'contracts/**', 'scripts/**', 'services/api/**', 'integration/**', 'pyproject.toml', 'requirements-verification.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
@@ -39,7 +39,7 @@ jobs:
     env:
       # The harness owns a real SQLite database, API and virtual Hardware Service.
       # Its temporary accounts and opaque cookies are created locally for this run.
-      NETCIRCUIT_E2E_PYTHON: python
+      CIRNET_E2E_PYTHON: python
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -52,22 +52,22 @@ jobs:
         run: python scripts/select_ci_release.py --manifest integration/release-set.json --github-env "$GITHUB_ENV"
       - name: Bootstrap the pinned independent DEV allocator
         env:
-          NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-verification
-          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+          CIRNET_ARTIFACTS_DIR: ${{ runner.temp }}/cirnet-verification
+          CIRNET_ARTIFACTS_TOKEN: ${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
         run: python scripts/install_contracts.py --dev-only
       - name: Allocate an external verification artifact session
         env:
-          NETCIRCUIT_ARTIFACTS_DIR: ${{ runner.temp }}/netcircuit-artifacts/${{ github.run_id }}-${{ github.run_attempt }}
+          CIRNET_ARTIFACTS_DIR: ${{ runner.temp }}/cirnet-artifacts/${{ github.run_id }}-${{ github.run_attempt }}
         shell: bash
         run: |
-          NETCIRCUIT_ARTIFACTS_CONTEXT="$(node --input-type=module -e "import {getArtifactContext} from './scripts/artifact-paths.mjs'; console.log(JSON.stringify(getArtifactContext()))")"
-          export NETCIRCUIT_ARTIFACTS_CONTEXT
-          echo "NETCIRCUIT_ARTIFACTS_CONTEXT=$NETCIRCUIT_ARTIFACTS_CONTEXT" >> "$GITHUB_ENV"
+          CIRNET_ARTIFACTS_CONTEXT="$(node --input-type=module -e "import {getArtifactContext} from './scripts/artifact-paths.mjs'; console.log(JSON.stringify(getArtifactContext()))")"
+          export CIRNET_ARTIFACTS_CONTEXT
+          echo "CIRNET_ARTIFACTS_CONTEXT=$CIRNET_ARTIFACTS_CONTEXT" >> "$GITHUB_ENV"
           artifact_session="$(node scripts/artifact-paths.mjs)"
-          echo "NETCIRCUIT_ARTIFACTS_SESSION=$artifact_session" >> "$GITHUB_ENV"
+          echo "CIRNET_ARTIFACTS_SESSION=$artifact_session" >> "$GITHUB_ENV"
       - name: Install all real local services and pinned contract tools
         env:
-          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+          CIRNET_ARTIFACTS_TOKEN: ${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
         run: |
           python -m pip install -r requirements-verification.txt
           python scripts/install_contracts.py
@@ -96,15 +96,16 @@ jobs:
           python -c "import json,os,platform,psutil; print(json.dumps({'platform':platform.platform(),'python':platform.python_version(),'cpuCount':os.cpu_count(),'cpuAffinity':psutil.Process().cpu_affinity(),'memoryBytes':psutil.virtual_memory().total},sort_keys=True))"
       - name: Download the explicit reviewed Interface product
         env:
-          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+          CIRNET_ARTIFACTS_TOKEN: ${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
         run: python -m scripts.install_interface --manifest integration/release-set.json --github-env "$GITHUB_ENV"
       - name: Bootstrap Interface artifacts before its clean install
         env:
+          CIRNET_CONTRACTS_ARTIFACT_MANIFEST: ''
           NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST: ''
-          NETCIRCUIT_ARTIFACTS_TOKEN: ${{ secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
-        run: node "$NETCIRCUIT_INTERFACE_ROOT/scripts/bootstrap-contracts.mjs" --github-env "$GITHUB_ENV"
+          CIRNET_ARTIFACTS_TOKEN: ${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+        run: node "$CIRNET_INTERFACE_ROOT/scripts/bootstrap-contracts.mjs" --github-env "$GITHUB_ENV"
       - name: Install locked Playwright 1.64.1 and Interface dependencies
-        working-directory: ${{ env.NETCIRCUIT_INTERFACE_ROOT }}
+        working-directory: ${{ env.CIRNET_INTERFACE_ROOT }}
         run: npm ci --no-audit --no-fund
       - name: Check pinned artifact projections and route parity
         run: |
@@ -113,15 +114,15 @@ jobs:
           python scripts/export_openapi.py --check
           python scripts/sync_editor_catalog.py --check
       - name: AST dependency boundaries
-        working-directory: ${{ env.NETCIRCUIT_INTERFACE_ROOT }}
+        working-directory: ${{ env.CIRNET_INTERFACE_ROOT }}
         run: npm run check:boundaries
       - name: Typecheck and build production entrypoints
-        working-directory: ${{ env.NETCIRCUIT_INTERFACE_ROOT }}
+        working-directory: ${{ env.CIRNET_INTERFACE_ROOT }}
         run: |
           npx tsc --noEmit -p tsconfig.e2e.json
           npm run build
       - name: Install the pinned Chromium revision and platform dependencies
-        working-directory: ${{ env.NETCIRCUIT_INTERFACE_ROOT }}
+        working-directory: ${{ env.CIRNET_INTERFACE_ROOT }}
         run: npm run test:e2e:install -- --with-deps
       - name: Real API, SQLite, Hardware Service and Chromium suite
         shell: bash
@@ -135,9 +136,9 @@ jobs:
         with:
           name: real-browser-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            ${{ env.NETCIRCUIT_ARTIFACTS_SESSION }}/playwright
-            ${{ env.NETCIRCUIT_ARTIFACTS_SESSION }}/playwright-reporters
-            ${{ env.NETCIRCUIT_ARTIFACTS_SESSION }}/e2e.log
+            ${{ env.CIRNET_ARTIFACTS_SESSION }}/playwright
+            ${{ env.CIRNET_ARTIFACTS_SESSION }}/playwright-reporters
+            ${{ env.CIRNET_ARTIFACTS_SESSION }}/e2e.log
           if-no-files-found: warn
           retention-days: 7
           # Generated evidence is created outside the checkout and retained by CI.
@@ -145,4 +146,4 @@ jobs:
       - name: Clean the owned external artifact session after upload
         if: always()
         shell: bash
-        run: node scripts/cleanup-artifact-session.mjs --cleanup "$NETCIRCUIT_ARTIFACTS_SESSION"
+        run: node scripts/cleanup-artifact-session.mjs --cleanup "$CIRNET_ARTIFACTS_SESSION"

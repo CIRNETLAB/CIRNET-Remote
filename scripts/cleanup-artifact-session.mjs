@@ -9,10 +9,10 @@ const [command,session,...extra] = process.argv.slice(2)
 if (command !== '--cleanup' || !session || extra.length) {
   throw Error('Usage: node scripts/cleanup-artifact-session.mjs --cleanup SESSION')
 }
-const context = process.env.NETCIRCUIT_ARTIFACTS_CONTEXT
+const context = process.env.CIRNET_ARTIFACTS_CONTEXT
 if (!context) throw Error('Canonical artifact context is required for cleanup.')
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const published = process.env.NETCIRCUIT_ARTIFACTS_CLI
+const published = process.env.CIRNET_ARTIFACTS_CLI
 let cli
 if (published) {
   const pin = JSON.parse(readFileSync(resolve(root, 'integration/contracts-version.json'), 'utf8')).dev.node_sha256

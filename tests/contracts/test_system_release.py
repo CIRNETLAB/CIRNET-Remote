@@ -15,20 +15,20 @@ import pytest
 def test_ci_selection_overrides_stale_same_version_variables(monkeypatch):
     from scripts import system_release_manifest
     selected = release()
-    monkeypatch.setenv('NETCIRCUIT_CONTRACTS_WHEEL_URL', 'https://example.invalid/stale.whl')
-    monkeypatch.setenv('NETCIRCUIT_HARDWARE_WHEEL_SHA256', 'f' * 64)
+    monkeypatch.setenv('CIRNET_CONTRACTS_WHEEL_URL', 'https://example.invalid/stale.whl')
+    monkeypatch.setenv('CIRNET_HARDWARE_WHEEL_SHA256', 'f' * 64)
     select = getattr(system_release_manifest, 'ci_environment', None)
     assert callable(select), 'CI dependencies must derive from the committed system lock before bootstrap.'
     environment = select(selected)
     for component, kind, prefix in (
-        ('Contracts', 'python', 'NETCIRCUIT_CONTRACTS_WHEEL'),
-        ('Contracts', 'dev', 'NETCIRCUIT_CONTRACTS_DEV_WHEEL'),
-        ('Contracts', 'npm', 'NETCIRCUIT_CONTRACTS_NPM'),
-        ('Contracts', 'sdist', 'NETCIRCUIT_CONTRACTS_SDIST'),
-        ('Contracts', 'dev_npm', 'NETCIRCUIT_ARTIFACT_PATHS_NPM'),
-        ('Simulator', 'python', 'NETCIRCUIT_SIMULATOR_WHEEL'),
-        ('Hardware', 'python', 'NETCIRCUIT_HARDWARE_WHEEL'),
-        ('FPGA', 'source', 'NETCIRCUIT_FPGA_ARTIFACT'),
+        ('Contracts', 'python', 'CIRNET_CONTRACTS_WHEEL'),
+        ('Contracts', 'dev', 'CIRNET_CONTRACTS_DEV_WHEEL'),
+        ('Contracts', 'npm', 'CIRNET_CONTRACTS_NPM'),
+        ('Contracts', 'sdist', 'CIRNET_CONTRACTS_SDIST'),
+        ('Contracts', 'dev_npm', 'CIRNET_ARTIFACT_PATHS_NPM'),
+        ('Simulator', 'python', 'CIRNET_SIMULATOR_WHEEL'),
+        ('Hardware', 'python', 'CIRNET_HARDWARE_WHEEL'),
+        ('FPGA', 'source', 'CIRNET_FPGA_ARTIFACT'),
     ):
         artifact = selected['repositories'][component]['artifacts'][kind]
         assert environment[prefix + '_URL'] == artifact['url']
@@ -339,7 +339,7 @@ def test_api_selected_archive_probe_detects_stale_same_version_bytes_and_wrong_d
 def test_rollback_gate_cannot_count_a_skipped_database_test_as_pass(tmp_path, monkeypatch):
     from scripts import check_release_rollback
     from scripts import artifact_paths
-    monkeypatch.setenv('NETCIRCUIT_TEST_POSTGRES_URL', 'postgresql://unit-test-not-contacted/unit')
+    monkeypatch.setenv('CIRNET_TEST_POSTGRES_URL', 'postgresql://unit-test-not-contacted/unit')
     process = {'TMP': str(tmp_path), 'TEMP': str(tmp_path), 'TMPDIR': str(tmp_path), 'PIP_CACHE_DIR': str(tmp_path / 'pip-cache'),
                'npm_config_cache': str(tmp_path / 'npm-cache'), 'PYTHONDONTWRITEBYTECODE': '1'}
     for key in process:
@@ -384,8 +384,8 @@ def test_generated_contracts_command_passes_the_real_selector_parser_before_pip(
     value = release()
     value['repositories']['Contracts']['artifacts']['python']['sha256'] = hashlib.sha256(path.read_bytes()).hexdigest()
     command = install_release._component_install_command('Contracts', 'install_contracts.py', value, {'Contracts': {'python': path}})
-    for name, contents in {'NETCIRCUIT_CONTRACTS_WHEEL_URL': 'https://invalid.example/inherited.whl', 'NETCIRCUIT_CONTRACTS_WHEEL_SHA256': '0' * 64,
-                           'NETCIRCUIT_CONTRACTS_WHEEL_FILENAME': 'inherited.whl', 'NETCIRCUIT_CONTRACTS_NPM_URL': 'https://invalid.example/inherited.tgz'}.items():
+    for name, contents in {'CIRNET_CONTRACTS_WHEEL_URL': 'https://invalid.example/inherited.whl', 'CIRNET_CONTRACTS_WHEEL_SHA256': '0' * 64,
+                           'CIRNET_CONTRACTS_WHEEL_FILENAME': 'inherited.whl', 'CIRNET_CONTRACTS_NPM_URL': 'https://invalid.example/inherited.tgz'}.items():
         monkeypatch.setenv(name, contents)
     monkeypatch.setattr(install_contracts, 'download_artifact', lambda *args, **kwargs: pytest.fail('local wheel selection reached network'))
     monkeypatch.setattr(install_contracts.subprocess, 'run', lambda *args, **kwargs: pytest.fail('selector test reached pip'))
@@ -406,9 +406,9 @@ def test_generated_contracts_command_passes_the_real_selector_parser_before_pip(
 
 def saved_environment(tmp_path):
     from scripts.artifact_paths import artifact_context, artifact_directory
-    if os.environ.get('NETCIRCUIT_ARTIFACTS_SESSION') and os.environ.get('NETCIRCUIT_ARTIFACTS_CONTEXT'):
-        session = Path(os.environ['NETCIRCUIT_ARTIFACTS_SESSION'])
-        context = json.loads(os.environ['NETCIRCUIT_ARTIFACTS_CONTEXT'])
+    if os.environ.get('CIRNET_ARTIFACTS_SESSION') and os.environ.get('CIRNET_ARTIFACTS_CONTEXT'):
+        session = Path(os.environ['CIRNET_ARTIFACTS_SESSION'])
+        context = json.loads(os.environ['CIRNET_ARTIFACTS_CONTEXT'])
     else:
         session = artifact_directory()
         context = artifact_context()
@@ -416,9 +416,9 @@ def saved_environment(tmp_path):
     temporary = tmp_path / 'tmp'; temporary.mkdir()
     pip_cache = tmp_path / 'pip-cache'; pip_cache.mkdir()
     npm_cache = tmp_path / 'npm-cache'; npm_cache.mkdir()
-    environment = {name: str(tmp_path / name) for name in ('NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST', 'NETCIRCUIT_SIMULATOR_ARTIFACT_MANIFEST', 'NETCIRCUIT_HARDWARE_ARTIFACT_MANIFEST',
-                   'NETCIRCUIT_FPGA_ARTIFACT_MANIFEST', 'NETCIRCUIT_INTERFACE_ROOT', 'NETCIRCUIT_FPGA_ROOT')}
-    environment.update(NETCIRCUIT_ARTIFACTS_SESSION=str(session), NETCIRCUIT_ARTIFACTS_CONTEXT=json.dumps(context))
+    environment = {name: str(tmp_path / name) for name in ('CIRNET_CONTRACTS_ARTIFACT_MANIFEST', 'CIRNET_SIMULATOR_ARTIFACT_MANIFEST', 'CIRNET_HARDWARE_ARTIFACT_MANIFEST',
+                   'CIRNET_FPGA_ARTIFACT_MANIFEST', 'CIRNET_INTERFACE_ROOT', 'CIRNET_FPGA_ROOT')}
+    environment.update(CIRNET_ARTIFACTS_SESSION=str(session), CIRNET_ARTIFACTS_CONTEXT=json.dumps(context))
     state = {'schemaVersion': 1, 'releaseVersion': '0.1.1', 'python': sys.executable, 'manifest': str(manifest), 'manifestSha256': hashlib.sha256(manifest.read_bytes()).hexdigest(),
              'environment': environment, 'processEnvironment': {'TMP': str(temporary), 'TEMP': str(temporary), 'TMPDIR': str(temporary), 'PIP_CACHE_DIR': str(pip_cache),
                                                                 'npm_config_cache': str(npm_cache), 'PYTHONDONTWRITEBYTECODE': '1'}}
@@ -440,11 +440,11 @@ def test_saved_release_environment_rejects_missing_or_escaping_process_outputs(t
     state, path = saved_environment(tmp_path)
     process = state['processEnvironment']
     if failure == 'missing': process.pop('npm_config_cache')
-    elif failure == 'extra': process['NETCIRCUIT_ARTIFACTS_TOKEN'] = 'not-a-real-credential'
+    elif failure == 'extra': process['CIRNET_ARTIFACTS_TOKEN'] = 'not-a-real-credential'
     elif failure == 'bytecode': process['PYTHONDONTWRITEBYTECODE'] = '0'
     elif failure == 'relative': process['TMP'] = 'relative-output'
     elif failure == 'repository': process['TMP'] = str(ROOT)
-    elif failure == 'outside-session': process['TMP'] = str(Path(state['environment']['NETCIRCUIT_ARTIFACTS_SESSION']).parent)
+    elif failure == 'outside-session': process['TMP'] = str(Path(state['environment']['CIRNET_ARTIFACTS_SESSION']).parent)
     elif failure == 'missing-directory': process['TMP'] = str(tmp_path / 'not-created')
     path.write_text(json.dumps(state), encoding='utf-8')
     with pytest.raises((ValueError, RuntimeError)):
@@ -454,7 +454,7 @@ def test_saved_release_environment_rejects_missing_or_escaping_process_outputs(t
 def test_manual_installer_entry_does_not_compile_own_modules_before_bootstrap(tmp_path):
     from scripts import install_release
     scripts = tmp_path / 'runtime/scripts'; scripts.mkdir(parents=True)
-    for name in ('install_release.py', 'system_release_manifest.py', 'artifact_download.py'):
+    for name in ('install_release.py', 'system_release_manifest.py', 'artifact_download.py', 'environment.py'):
         (scripts / name).write_bytes((install_release.ROOT / 'scripts' / name).read_bytes())
     environment = {name: value for name, value in os.environ.items() if name not in {'PYTHONDONTWRITEBYTECODE', 'PYTHONPATH', 'PYTHONHOME'}}
     result = subprocess.run([sys.executable, str(scripts / 'install_release.py'), '--help'], cwd=scripts.parent, env=environment, capture_output=True, text=True)

@@ -45,7 +45,7 @@ def validate_circuit(payload:Any=Body(default=None)):
 def preview_circuit(request:Request,payload:Any=Body(default=None)):
     valid,code,message=validate_supported_circuit_graph(payload)
     if not valid:return JSONResponse(status_code=422,content={'valid':False,'code':code,'message':message})
-    from netcircuit_sim.backends import preview_physical_graph,SimulationError
+    from cirnet_sim.backends import preview_physical_graph,SimulationError
     from contracts.component_properties import normalize_design_properties
     try:
         value=preview_physical_graph(normalize_design_properties(payload),

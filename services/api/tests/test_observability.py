@@ -12,19 +12,19 @@ from app.services.observability import correlation,current_correlation,log_event
 
 
 def events(caplog):
-    return [json.loads(record.getMessage()) for record in dict.fromkeys(caplog.records) if record.name=='netcircuit.api']
+    return [json.loads(record.getMessage()) for record in dict.fromkeys(caplog.records) if record.name=='cirnet.api']
 
 
 @pytest.fixture(autouse=True)
 def direct_capture(caplog):
-    logger=logging.getLogger('netcircuit.api')
+    logger=logging.getLogger('cirnet.api')
     logger.addHandler(caplog.handler)
     try:yield
     finally:logger.removeHandler(caplog.handler)
 
 
 def test_allowlisted_events_never_serialize_headers_sessions_credentials_or_payloads(caplog):
-    caplog.set_level(logging.INFO,logger='netcircuit.api')
+    caplog.set_level(logging.INFO,logger='cirnet.api')
     private='PRIVATE_CREDENTIAL_GRAPH_EVIDENCE_SENTINEL'
     with correlation(request_id='request-1',experiment_id='experiment-1',session_id=private):
         log_event('capture.sealed',capture_id='capture-1',revision=2,session_id=private,
@@ -36,7 +36,7 @@ def test_allowlisted_events_never_serialize_headers_sessions_credentials_or_payl
 
 
 def test_context_is_detached_nested_and_restored_without_cross_thread_leakage(caplog):
-    caplog.set_level(logging.INFO,logger='netcircuit.api')
+    caplog.set_level(logging.INFO,logger='cirnet.api')
     with correlation(request_id='outer'):
         changed=current_correlation();changed['request_id']='mutated'
         with correlation(experiment_id='experiment-1'):log_event('experiment.transition',state='RUNNING')
@@ -47,7 +47,7 @@ def test_context_is_detached_nested_and_restored_without_cross_thread_leakage(ca
 
 
 def test_unknown_fields_and_invalid_metadata_are_dropped_without_breaking_control(caplog):
-    caplog.set_level(logging.INFO,logger='netcircuit.api')
+    caplog.set_level(logging.INFO,logger='cirnet.api')
     log_event('http.completed',request_id='bad\nidentifier',status=200,duration_ms=float('nan'),
               route='/api/experiments/{experiment_id}',path='/private/raw/path',error_code='arbitrary-secret-text',count={'nested':'secret'})
     assert events(caplog)==[{'event':'http.completed','status':200,'route':'/api/experiments/{experiment_id}'}]
@@ -58,14 +58,14 @@ def test_http_logs_templates_and_correlation_without_raw_paths_credentials_or_un
     from app.services.persistence import Repository
     from test_lab_lifecycle import LabGateway,DeferredJobs
     from csrf_client import CsrfTestClient
-    caplog.set_level(logging.INFO,logger='netcircuit.api')
+    caplog.set_level(logging.INFO,logger='cirnet.api')
     application=create_app(repository=Repository('sqlite://'),gateway=LabGateway(),submit=DeferredJobs())
     private='PRIVATE_HTTP_PATH_PASSWORD_SENTINEL'
     with CsrfTestClient(application) as client:
         # Credentials are installed by explicit bootstrap, never an ordinary
         # read whose late response could overwrite a newer login cookie.
         assert client.get('/api/auth/session').status_code==200
-        cookie=client.cookies.get('netcircuit_session')
+        cookie=client.cookies.get('cirnet_session')
         assert isinstance(cookie,str) and cookie
         reply=client.get('/api/unknown/'+private,headers={'X-Request-ID':'trace-request'})
         assert reply.status_code==404 and reply.headers['X-Request-ID']=='trace-request'
@@ -81,7 +81,7 @@ def test_http_logs_templates_and_correlation_without_raw_paths_credentials_or_un
 
 def test_real_worker_lifecycle_correlates_create_run_operation_and_sealed_capture(tmp_path,caplog):
     from test_lab_lifecycle import setup_manager,create
-    caplog.set_level(logging.INFO,logger='netcircuit.api')
+    caplog.set_level(logging.INFO,logger='cirnet.api')
     manager,repo,_,jobs,_,_=setup_manager(tmp_path)
     try:
         with correlation(request_id='create-request'):
@@ -209,7 +209,7 @@ sys.path.insert(0,TESTS)
 import app.main as main
 import app.services.observability as observation
 assert observation._runtime is None
-assert not logging.getLogger('netcircuit.api').handlers
+assert not logging.getLogger('cirnet.api').handlers
 main.create_app(schema_only=True).openapi()
 assert observation._runtime is None
 from app.services.persistence import Repository

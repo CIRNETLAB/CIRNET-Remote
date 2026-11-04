@@ -19,8 +19,8 @@ import assert from 'node:assert/strict'
 import {readFile,readdir,writeFile,rename} from 'node:fs/promises'
 import {resolve} from 'node:path'
 import {randomUUID,createHash} from 'node:crypto'
-const data=process.env.NETCIRCUIT_E2E_DATA_DIR,target=process.env.NETCIRCUIT_E2E_API_TARGET
-const owned=process.env.NETCIRCUIT_ARTIFACTS_SESSION
+const data=process.env.CIRNET_E2E_DATA_DIR,target=process.env.CIRNET_E2E_API_TARGET
+const owned=process.env.CIRNET_ARTIFACTS_SESSION
 assert.deepEqual(process.argv.slice(2),['test','--forbid-only'],'Remote must consume output flags before child startup')
 assert.equal(resolve(data,'..'),owned)
 for(const key of ['TMP','TEMP','TMPDIR'])assert.equal(process.env[key],resolve(owned,'tmp'))
@@ -41,7 +41,7 @@ const before=JSON.parse(await readFile(resolve(data,'backend.json'),'utf8'))
 assert.equal(before.generation,1)
 assert.deepEqual((await readdir(data)).filter(name=>name.startsWith('restart-')),[],'a new invocation must not inherit restart commands')
 session=await(await request('/api/auth/session')).json()
-const login=await request('/api/auth/login',{method:'POST',body:{username:'e2e_admin',password:process.env.NETCIRCUIT_E2E_ADMIN_PASSWORD}})
+const login=await request('/api/auth/login',{method:'POST',body:{username:'e2e_admin',password:process.env.CIRNET_E2E_ADMIN_PASSWORD}})
 assert.equal(login.status,200,'fresh invocation admin credentials must authenticate')
 session=await login.json()
 assert.equal(session.authenticated,true)
@@ -69,8 +69,8 @@ const projects=await(await request('/api/projects')).json()
 assert.deepEqual(projects.items.map(item=>item.project_id),[project.project_id],'an in-run restart must preserve its database')
 await new Promise(resolve=>setTimeout(resolve,650))
 assert.equal(JSON.parse(await readFile(resolve(data,'backend.json'),'utf8')).generation,2,'processed restart commands must not replay')
-await writeFile(process.env.NETCIRCUIT_RERUN_RESULT,JSON.stringify({data,project:project.project_id,
- owned,passwordHash:createHash('sha256').update(process.env.NETCIRCUIT_E2E_ADMIN_PASSWORD).digest('hex'),before,after:reply}))
+await writeFile(process.env.CIRNET_RERUN_RESULT,JSON.stringify({data,project:project.project_id,
+ owned,passwordHash:createHash('sha256').update(process.env.CIRNET_E2E_ADMIN_PASSWORD).digest('hex'),before,after:reply}))
 '''
 
 
@@ -97,7 +97,7 @@ def run_case(directory,*,constant=False,explicit_output=False):
     # real orchestration gate to coexist with the pinned full browser ports.
     source=source.replace("const root=resolve(dirname(fileURLToPath(import.meta.url)),'..'),args=",
         'const root='+json.dumps(str(ROOT))+',args=')
-    for name in ('artifact-paths.mjs','e2e-lifecycle.mjs','e2e-interface-target.mjs'):
+    for name in ('artifact-paths.mjs','e2e-lifecycle.mjs','e2e-interface-target.mjs','environment.mjs'):
         source=source.replace("'./"+name+"'",json.dumps((ROOT/'scripts'/name).as_uri()))
     source=source.replace('18181',str(http_port)).replace('15151',str(rpc_port))
     if constant:
@@ -108,9 +108,9 @@ def run_case(directory,*,constant=False,explicit_output=False):
     results=[]
     for attempt in range(2):
         result_file=directory/f'result-{attempt}.json';log_file=directory/f'invocation-{attempt}.log'
-        environment={**os.environ,'NETCIRCUIT_INTERFACE_ROOT':str(product),
-            'NETCIRCUIT_E2E_PYTHON':sys.executable,'NETCIRCUIT_RERUN_RESULT':str(result_file)}
-        environment.pop('NETCIRCUIT_E2E_ADMIN_PASSWORD',None)
+        environment={**os.environ,'CIRNET_INTERFACE_ROOT':str(product),
+            'CIRNET_E2E_PYTHON':sys.executable,'CIRNET_RERUN_RESULT':str(result_file)}
+        environment.pop('CIRNET_E2E_ADMIN_PASSWORD',None)
         with log_file.open('w',encoding='utf-8') as output:
             output_args=['--output',str(directory/f'output-parent-{attempt}')] if explicit_output else []
             result=subprocess.run(['node',str(runner),*output_args,'--forbid-only'],cwd=ROOT,env=environment,

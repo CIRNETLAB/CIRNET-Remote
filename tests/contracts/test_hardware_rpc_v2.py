@@ -22,7 +22,7 @@ def compiled(tmp_path):
 def load_codegen_module():
     """Load the repository codegen script without depending on sys.path."""
     path = ROOT / 'scripts/generate_hardware_rpc.py'
-    spec = importlib.util.spec_from_file_location('netcircuit_generate_hardware_rpc', path)
+    spec = importlib.util.spec_from_file_location('cirnet_generate_hardware_rpc', path)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -32,7 +32,7 @@ def load_codegen_module():
 def test_v2_compiles_and_exposes_lifecycle_without_direct_raw_graph_run(tmp_path):
     module = compiled(tmp_path)
     descriptor = module.DESCRIPTOR
-    assert descriptor.package == 'netcircuit.hardware.v2'
+    assert descriptor.package == 'cirnet.hardware.v2'
     methods = descriptor.services_by_name['HardwareService'].methods_by_name
     required = {'GetCapabilities','EnterSafeState','ScanTopology','ReadRuntimeSafety',
                 'PrepareExecution','ApplyRouting','GuardedPowerUp','ConfigureInstrument',

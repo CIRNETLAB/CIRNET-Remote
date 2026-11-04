@@ -1,6 +1,6 @@
 """Explicit real-PostgreSQL gate; never silently skip an unavailable database.
 
-Run this file explicitly with NETCIRCUIT_TEST_POSTGRES_URL configured. Every
+Run this file explicitly with CIRNET_TEST_POSTGRES_URL configured. Every
 case owns fresh, strictly named schemas and never changes existing app tables.
 """
 from concurrent.futures import ThreadPoolExecutor
@@ -26,7 +26,7 @@ from app.services.auth import AuthService
 from app.services.persistence import Repository
 from app.services.projects import ProjectService,RevisionConflict
 
-PREFIX='netcircuit_test_w34_'
+PREFIX='cirnet_test_w34_'
 ROOT=Path(__file__).resolve().parents[3]
 
 
@@ -74,9 +74,9 @@ class IsolatedPostgres:
 
 @pytest.fixture
 def pg():
-    raw=os.getenv('NETCIRCUIT_TEST_POSTGRES_URL')
+    raw=os.getenv('CIRNET_TEST_POSTGRES_URL')
     if not raw:
-        pytest.fail('NETCIRCUIT_TEST_POSTGRES_URL is required for the explicit PostgreSQL gate.',pytrace=False)
+        pytest.fail('CIRNET_TEST_POSTGRES_URL is required for the explicit PostgreSQL gate.',pytrace=False)
     try:
         url=make_url(raw)
         if url.get_backend_name()!='postgresql' or not url.database: raise ValueError()
@@ -107,7 +107,7 @@ def initialized(pg):
 
 
 def tool(name):
-    directory=Path(os.getenv('NETCIRCUIT_TEST_PG_BIN',str(ROOT/'.runtime/postgresql/pgsql/bin')))
+    directory=Path(os.getenv('CIRNET_TEST_PG_BIN',str(ROOT/'.runtime/postgresql/pgsql/bin')))
     bundled=directory/(name+('.exe' if os.name=='nt' else ''))
     executable=str(bundled) if bundled.is_file() else shutil.which(name)
     if not executable: pytest.fail(f'{name} is required for the real PostgreSQL backup rehearsal.',pytrace=False)

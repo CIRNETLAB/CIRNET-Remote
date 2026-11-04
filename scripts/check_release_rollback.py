@@ -11,6 +11,11 @@ import argparse
 import hashlib
 import json
 import os
+try:
+    from scripts.environment import getenv, export_environment
+except ModuleNotFoundError:
+    from environment import getenv, export_environment
+
 from pathlib import Path
 import subprocess
 from xml.etree import ElementTree
@@ -57,22 +62,24 @@ def load_environment(path, *, local_artifacts=False):
     if state['releaseVersion'] != selected['releaseVersion']:
         raise ValueError('Installed release state version differs from its validated manifest.')
     exports = state.get('environment')
-    if not isinstance(exports, dict) or any(not key.startswith('NETCIRCUIT_') or any(marker in key for marker in ('TOKEN', 'PASSWORD', 'SECRET'))
+    if not isinstance(exports, dict) or any(not key.startswith(('CIRNET_', 'NETCIRCUIT_')) or any(marker in key for marker in ('TOKEN', 'PASSWORD', 'SECRET'))
             or not isinstance(value, str) or '\n' in value or '\r' in value for key, value in exports.items()):
-        raise ValueError('Release environment must contain only explicit non-secret NETCIRCUIT selections.')
-    required = {'NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST', 'NETCIRCUIT_SIMULATOR_ARTIFACT_MANIFEST', 'NETCIRCUIT_HARDWARE_ARTIFACT_MANIFEST',
-                'NETCIRCUIT_FPGA_ARTIFACT_MANIFEST', 'NETCIRCUIT_INTERFACE_ROOT', 'NETCIRCUIT_FPGA_ROOT', 'NETCIRCUIT_ARTIFACTS_SESSION', 'NETCIRCUIT_ARTIFACTS_CONTEXT'}
+        raise ValueError('Release environment must contain only explicit non-secret CIRNET selections or their legacy aliases.')
+    exports = export_environment(exports)
+    state['environment'] = exports
+    required = {'CIRNET_CONTRACTS_ARTIFACT_MANIFEST', 'CIRNET_SIMULATOR_ARTIFACT_MANIFEST', 'CIRNET_HARDWARE_ARTIFACT_MANIFEST',
+                'CIRNET_FPGA_ARTIFACT_MANIFEST', 'CIRNET_INTERFACE_ROOT', 'CIRNET_FPGA_ROOT', 'CIRNET_ARTIFACTS_SESSION', 'CIRNET_ARTIFACTS_CONTEXT'}
     if not required <= exports.keys():
         raise ValueError('Release environment is missing an explicit artifact selection.')
     state['processEnvironment'] = validate_process_environment(state.get('processEnvironment'),
-        session=exports['NETCIRCUIT_ARTIFACTS_SESSION'], context=exports['NETCIRCUIT_ARTIFACTS_CONTEXT'])
+        session=exports['CIRNET_ARTIFACTS_SESSION'], context=exports['CIRNET_ARTIFACTS_CONTEXT'])
     return state
 
 
 def run(environment_file, *, local_artifacts=False):
     state = load_environment(environment_file, local_artifacts=True) if local_artifacts else load_environment(environment_file)
-    if not os.environ.get('NETCIRCUIT_TEST_POSTGRES_URL'):
-        raise ValueError('NETCIRCUIT_TEST_POSTGRES_URL must select an isolated real PostgreSQL test database; this gate is never skipped.')
+    if not getenv('CIRNET_TEST_POSTGRES_URL'):
+        raise ValueError('CIRNET_TEST_POSTGRES_URL must select an isolated real PostgreSQL test database; this gate is never skipped.')
     # Configure the selected allocator context before importing its bridge.
     os.environ.update(state['environment'])
     os.environ.update(state['processEnvironment'])
@@ -82,7 +89,8 @@ def run(environment_file, *, local_artifacts=False):
         from artifact_paths import artifact_directory
     temporary = artifact_directory('rollback-verification')
     environment = {**os.environ,
-                   'NETCIRCUIT_DATABASE_URL': 'sqlite:///' + (temporary / 'default.sqlite').as_posix(), 'NETCIRCUIT_CAPTURE_DIR': str(temporary / 'captures')}
+                   'CIRNET_DATABASE_URL': 'sqlite:///' + (temporary / 'default.sqlite').as_posix(), 'CIRNET_CAPTURE_DIR': str(temporary / 'captures')}
+    environment = export_environment(environment)
     plan = verification_plan(temporary)
     results = [{'gate': gate['gate'], 'status': 'NOT_RUN'} for gate in plan]
     for index, gate in enumerate(plan):

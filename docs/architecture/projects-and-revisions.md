@@ -112,16 +112,16 @@ verified database and matching capture files while writers remain stopped.
 Live PostgreSQL migration/concurrency verification requires a running server;
 offline DDL compilation is not a substitute for that deployment gate.
 
-Run the explicit PostgreSQL gate with `NETCIRCUIT_TEST_POSTGRES_URL` set privately
+Run the explicit PostgreSQL gate with `CIRNET_TEST_POSTGRES_URL` set privately
 to a disposable test database and PostgreSQL client tools available on PATH (or
-in `NETCIRCUIT_TEST_PG_BIN`):
+in `CIRNET_TEST_PG_BIN`):
 
 ```console
 python -m pytest -q services/api/tests/postgres_cases.py
 ```
 
 Missing database configuration fails this gate. Each case creates its own random
-`netcircuit_test_w34_<uuid>` schema and removes only that registered schema. The
+`cirnet_test_w34_<uuid>` schema and removes only that registered schema. The
 suite rehearses a real `pg_dump`/`psql` restore into a separate test schema,
 upgrades the historical migration chain, verifies independent-writer CAS and
 revision foreign keys, and observes PostgreSQL lock dependencies for guest claim,

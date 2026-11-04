@@ -45,7 +45,7 @@ class ExperimentManager:
         self.dispatching=set();self.dispatch_again=set();self.control_locks=WeakValueDictionary()
         # Safety dispatch has independent, bounded capacity; running simulator
         # workers or a blocked same-execution configuration cannot occupy it.
-        self.stop_executor=ThreadPoolExecutor(max_workers=4,thread_name_prefix='netcircuit-stop')
+        self.stop_executor=ThreadPoolExecutor(max_workers=4,thread_name_prefix='cirnet-stop')
         self.stop_pending=set();self.stop_acknowledged=set();self.stop_dispatch_closed=False
         self.operations=OperationIdentity(self)
         self.simulation_workers=simulation_worker_count(simulation_workers)

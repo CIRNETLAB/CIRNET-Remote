@@ -49,7 +49,14 @@ def test_supported_baseline_remains_byte_exact():
     index=json.loads((baseline/'baseline.json').read_text())
     for path,digest in index['sha256'].items():
         assert hashlib.sha256((baseline/path.removeprefix('contracts/')).read_bytes()).hexdigest()==digest
-        assert hashlib.sha256(release_resource(path).read_bytes().replace(b'\r\n',b'\n')).hexdigest()==digest
+        current=release_resource(path).read_bytes().replace(b'\r\n',b'\n')
+        # Only explicit namespace/title substitutions may differ. Every other
+        # byte still has to match the immutable supported baseline digest.
+        restored=current.replace(b'https://cirnet.local/',b'https://netcircuit.local/').replace(
+            b'package cirnet.hardware.v2;',b'package netcircuit.hardware.v2;')
+        for title in (b'Circuit Graph',b'Connection',b'Module'):
+            restored=restored.replace(b'"title": "CIRNET '+title+b'"', b'"title": "net*CIRCUIT '+title+b'"')
+        assert hashlib.sha256(restored).hexdigest()==digest
 
 
 def test_publication_failure_rolls_back_prior_artifacts(tmp_path, monkeypatch):

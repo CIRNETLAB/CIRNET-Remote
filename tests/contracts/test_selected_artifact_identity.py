@@ -45,16 +45,16 @@ def isolated_installer(tmp_path,monkeypatch):
     # A fake candidate must never replace the job's selected real manifest or
     # append to its GitHub environment file, even under release CI selectors.
     inherited = {Path(value): Path(value).read_bytes() if Path(value).exists() else None
-                 for key in ('NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST', 'GITHUB_ENV')
+                 for key in ('CIRNET_CONTRACTS_ARTIFACT_MANIFEST', 'GITHUB_ENV')
                  if (value := os.environ.get(key))}
     session = artifact_directory(directory=tmp_path/'installer-artifacts')
-    monkeypatch.setenv('NETCIRCUIT_ARTIFACTS_SESSION',str(session))
+    monkeypatch.setenv('CIRNET_ARTIFACTS_SESSION',str(session))
     for key in tuple(os.environ):
-        if key.startswith('NETCIRCUIT_CONTRACTS_'):
+        if key.startswith('CIRNET_CONTRACTS_'):
             monkeypatch.delenv(key)
     manifest=session/'contracts-download/artifacts.json'
     github_env=session/'github-env'
-    monkeypatch.setenv('NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST',str(manifest))
+    monkeypatch.setenv('CIRNET_CONTRACTS_ARTIFACT_MANIFEST',str(manifest))
     monkeypatch.setenv('GITHUB_ENV',str(github_env))
     for key in ('TMP','TEMP','TMPDIR','PIP_CACHE_DIR'):
         directory=session/key.lower();directory.mkdir()
@@ -77,7 +77,7 @@ def isolated_installer(tmp_path,monkeypatch):
     assert Path(selected['python']['path']).is_relative_to(tmp_path)
     assert github_env.read_text(encoding='utf-8').splitlines()
     assert set(github_env.read_text(encoding='utf-8').splitlines())=={
-        f'NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST={manifest}'}
+        f'CIRNET_CONTRACTS_ARTIFACT_MANIFEST={manifest}', f'NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST={manifest}'}
     for path,contents in inherited.items():
         assert (path.read_bytes() if path.exists() else None)==contents, f'CI state changed: {path}'
 

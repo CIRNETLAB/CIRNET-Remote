@@ -21,9 +21,11 @@ import uuid
 from zipfile import ZipFile
 
 try:
+    from scripts.environment import export_environment
     from scripts.system_release_manifest import load_manifest, local_artifact_bytes, repository_urls, VERSION
     from scripts.artifact_download import download_artifact
 except ModuleNotFoundError:
+    from environment import export_environment
     from system_release_manifest import load_manifest, local_artifact_bytes, repository_urls, VERSION
     from artifact_download import download_artifact
 
@@ -240,9 +242,10 @@ def validate_process_environment(values, *, session, context):
     except ModuleNotFoundError:
         from artifact_paths import artifact_directory, validate_artifact_directory
     parsed_context = json.loads(context) if isinstance(context, str) else context
-    previous = {key: os.environ.get(key) for key in ('NETCIRCUIT_ARTIFACTS_SESSION', 'NETCIRCUIT_ARTIFACTS_CONTEXT')}
-    os.environ['NETCIRCUIT_ARTIFACTS_SESSION'] = session
-    os.environ['NETCIRCUIT_ARTIFACTS_CONTEXT'] = json.dumps(parsed_context)
+    previous = dict(os.environ)
+    os.environ['CIRNET_ARTIFACTS_SESSION'] = session
+    os.environ['CIRNET_ARTIFACTS_CONTEXT'] = json.dumps(parsed_context)
+    os.environ.update(export_environment())
     try:
         # An inherited selection is admitted only after the canonical marker,
         # owner and participating-root checks. No independent Git discovery or
@@ -261,9 +264,8 @@ def validate_process_environment(values, *, session, context):
             result[key] = str(path)
         return result
     finally:
-        for key, value in previous.items():
-            if value is None: os.environ.pop(key, None)
-            else: os.environ[key] = value
+        os.environ.clear()
+        os.environ.update(previous)
 
 
 def _install_components(value, local, environment, directory):
@@ -339,19 +341,20 @@ def install(manifest, environment_file, *, local_artifacts=False):
     _check_source(fpga_identity, 'FPGA', value)
     fpga = fpga_artifact.extract_product(local['FPGA']['source'], value['repositories']['FPGA']['artifacts']['source']['sha256'])
     selected = _write_selected_manifests(value, local, directory)
-    exports = {'NETCIRCUIT_ARTIFACTS_SESSION': str(allocated['session']), 'NETCIRCUIT_ARTIFACTS_CONTEXT': json.dumps(allocated['context']),
-               'NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST': str(selected['Contracts']), 'NETCIRCUIT_SIMULATOR_ARTIFACT_MANIFEST': str(selected['Simulator']),
-               'NETCIRCUIT_HARDWARE_ARTIFACT_MANIFEST': str(selected['Hardware']), 'NETCIRCUIT_FPGA_ARTIFACT_MANIFEST': str(selected['FPGA']),
-               'NETCIRCUIT_INTERFACE_ROOT': str(interface), 'NETCIRCUIT_INTERFACE_STATIC_ROOT': str(static), 'NETCIRCUIT_FPGA_ROOT': str(fpga)}
-    exports.update(NETCIRCUIT_DATABASE_URL='sqlite:///' + (directory / 'verification-default.sqlite').as_posix(),
-                   NETCIRCUIT_CAPTURE_DIR=str(directory / 'verification-captures'))
-    names = {'Contracts': {'python': 'NETCIRCUIT_CONTRACTS_WHEEL', 'npm': 'NETCIRCUIT_CONTRACTS_NPM', 'sdist': 'NETCIRCUIT_CONTRACTS_SDIST', 'dev': 'NETCIRCUIT_CONTRACTS_DEV_WHEEL', 'dev_npm': 'NETCIRCUIT_ARTIFACT_PATHS_NPM'},
-             'Simulator': {'python': 'NETCIRCUIT_SIMULATOR_WHEEL'}, 'Hardware': {'python': 'NETCIRCUIT_HARDWARE_WHEEL'},
-             'Interface': {'source': 'NETCIRCUIT_INTERFACE_ARTIFACT'}, 'FPGA': {'source': 'NETCIRCUIT_FPGA_ARTIFACT'}}
+    exports = {'CIRNET_ARTIFACTS_SESSION': str(allocated['session']), 'CIRNET_ARTIFACTS_CONTEXT': json.dumps(allocated['context']),
+               'CIRNET_CONTRACTS_ARTIFACT_MANIFEST': str(selected['Contracts']), 'CIRNET_SIMULATOR_ARTIFACT_MANIFEST': str(selected['Simulator']),
+               'CIRNET_HARDWARE_ARTIFACT_MANIFEST': str(selected['Hardware']), 'CIRNET_FPGA_ARTIFACT_MANIFEST': str(selected['FPGA']),
+               'CIRNET_INTERFACE_ROOT': str(interface), 'CIRNET_INTERFACE_STATIC_ROOT': str(static), 'CIRNET_FPGA_ROOT': str(fpga)}
+    exports.update(CIRNET_DATABASE_URL='sqlite:///' + (directory / 'verification-default.sqlite').as_posix(),
+                   CIRNET_CAPTURE_DIR=str(directory / 'verification-captures'))
+    names = {'Contracts': {'python': 'CIRNET_CONTRACTS_WHEEL', 'npm': 'CIRNET_CONTRACTS_NPM', 'sdist': 'CIRNET_CONTRACTS_SDIST', 'dev': 'CIRNET_CONTRACTS_DEV_WHEEL', 'dev_npm': 'CIRNET_ARTIFACT_PATHS_NPM'},
+             'Simulator': {'python': 'CIRNET_SIMULATOR_WHEEL'}, 'Hardware': {'python': 'CIRNET_HARDWARE_WHEEL'},
+             'Interface': {'source': 'CIRNET_INTERFACE_ARTIFACT'}, 'FPGA': {'source': 'CIRNET_FPGA_ARTIFACT'}}
     for component, kinds in names.items():
         for kind, prefix in kinds.items():
             for field, suffix in (('url', 'URL'), ('sha256', 'SHA256'), ('filename', 'FILENAME')):
                 exports[prefix + '_' + suffix] = '' if local_artifacts and field == 'url' else value['repositories'][component]['artifacts'][kind][field]
+    exports = export_environment(exports)
     temporary = directory / 'tmp'; temporary.mkdir()
     cache = directory / 'pip-cache'; cache.mkdir()
     npm_cache = directory / 'npm-cache'; npm_cache.mkdir()

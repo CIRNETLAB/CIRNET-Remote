@@ -79,23 +79,23 @@ def test_real_legacy_cookie_claims_only_its_data_and_operation_after_login(tmp_p
     application = create_app(repository=repository, gateway=gateway, submit=DeferredJobs(), capture_store=store)
     application.state.auth.bootstrap_admin('admin', 'administrator password')
     with TestClient(application) as owner, TestClient(application) as stranger:
-        owner.cookies.set('netcircuit_session', 'legacy-owner-cookie', domain='testserver.local', path='/')
+        owner.cookies.set('cirnet_session', 'legacy-owner-cookie', domain='testserver.local', path='/')
         assert owner.get('/api/experiments/legacy-owned').status_code == 200
-        assert owner.cookies.get('netcircuit_session') == 'legacy-owner-cookie'
+        assert owner.cookies.get('cirnet_session') == 'legacy-owner-cookie'
         with repository.engine.connect() as db:
             assert db.execute(select(repository.sessions.c.session_id)).scalar()=='legacy-owner-cookie'
         payload_path='/api/captures/'+completed['capture']['capture_id']+'/payload'
         assert owner.get(payload_path).content==store.get(completed['capture'])
-        assert owner.cookies.get('netcircuit_session')=='legacy-owner-cookie'
+        assert owner.cookies.get('cirnet_session')=='legacy-owner-cookie'
         assert owner.get('/api/auth/session').status_code==200
-        assert owner.cookies.get('netcircuit_session') != 'legacy-owner-cookie'
+        assert owner.cookies.get('cirnet_session') != 'legacy-owner-cookie'
         assert stranger.get('/api/auth/session').status_code==200
         assert stranger.get('/api/experiments/legacy-owned').status_code == 403
         login(owner, 'admin', 'administrator password')
         assert owner.get('/api/experiments/legacy-owned').status_code == 403
         response = owner.post('/api/auth/claim-guest', json={'confirm': True}, headers=browser_headers(owner))
         assert response.status_code == 200, response.text
-        principal = application.state.auth.current(owner.cookies.get('netcircuit_session')).principal_id
+        principal = application.state.auth.current(owner.cookies.get('cirnet_session')).principal_id
         assert repository.owner('legacy-owned') == principal
         assert repository.owner('legacy-orphan') == 'expired-orphan'
         assert repository.owner('legacy-quarantine') == 'quarantine-orphan'
@@ -121,7 +121,7 @@ def test_held_legacy_read_cannot_consume_claim_proof_or_overwrite_completed_logi
         return value
     monkeypatch.setattr(application.state.auth,'ensure_session',held)
     with TestClient(application) as owner,ThreadPoolExecutor(max_workers=1) as pool:
-        owner.cookies.set('netcircuit_session','legacy-owner-cookie',domain='testserver.local',path='/')
+        owner.cookies.set('cirnet_session','legacy-owner-cookie',domain='testserver.local',path='/')
         pending=pool.submit(owner.get,'/api/health')
         try:
             assert entered.wait(2),'The ordinary legacy read must defer proof consumption.'
@@ -130,15 +130,15 @@ def test_held_legacy_read_cannot_consume_claim_proof_or_overwrite_completed_logi
             current=login(owner,'admin','administrator password')
             claimed=owner.post('/api/auth/claim-guest',json={'confirm':True},headers=browser_headers(owner))
             assert claimed.status_code==200
-            installed=owner.cookies.get('netcircuit_session')
+            installed=owner.cookies.get('cirnet_session')
         finally:release.set()
         response=pending.result(timeout=5)
         assert response.status_code==200
         emitted='set-cookie' in response.headers
         assert not emitted,'A held legacy read cannot install a stale credential.'
-        unchanged=owner.cookies.get('netcircuit_session')==installed
+        unchanged=owner.cookies.get('cirnet_session')==installed
         assert unchanged,'The late legacy response must preserve the completed login/claim cookie.'
-        resolved=application.state.auth.current(owner.cookies.get('netcircuit_session'))
+        resolved=application.state.auth.current(owner.cookies.get('cirnet_session'))
         assert resolved and resolved.authenticated and resolved.principal_id==current.principal_id
         assert repository.owner('legacy-owned')==current.principal_id
         assert owner.get('/api/operations/legacy-create').status_code==200
@@ -159,20 +159,20 @@ def test_legacy_capture_read_rechecks_internal_session_after_confirmed_claim(tmp
     monkeypatch.setattr(store,'get',held)
     payload_path='/api/captures/'+completed['capture']['capture_id']+'/payload'
     with TestClient(application) as owner,ThreadPoolExecutor(max_workers=1) as pool:
-        owner.cookies.set('netcircuit_session','legacy-owner-cookie',domain='testserver.local',path='/')
+        owner.cookies.set('cirnet_session','legacy-owner-cookie',domain='testserver.local',path='/')
         pending=pool.submit(owner.get,payload_path)
         try:
             assert entered.wait(2)
             current=login(owner,'admin','administrator password')
             response=owner.post('/api/auth/claim-guest',json={'confirm':True},headers=browser_headers(owner))
             assert response.status_code==200
-            installed=owner.cookies.get('netcircuit_session')
+            installed=owner.cookies.get('cirnet_session')
         finally:release.set()
         rejected=pending.result(timeout=5)
         assert rejected.status_code==401 and rejected.json()['code']=='SESSION_EXPIRED'
         emitted='set-cookie' in rejected.headers
         assert not emitted,'Revocation during byte I/O cannot install an obsolete credential.'
-        unchanged=owner.cookies.get('netcircuit_session')==installed
+        unchanged=owner.cookies.get('cirnet_session')==installed
         assert unchanged
         assert repository.owner('legacy-owned')==current.principal_id
         assert owner.get(payload_path).content==original(completed['capture'])

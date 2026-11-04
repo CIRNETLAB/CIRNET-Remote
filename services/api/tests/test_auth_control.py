@@ -160,7 +160,7 @@ def test_websocket_rejects_untrusted_origin_even_with_valid_session(security_app
 
 def test_websocket_requires_a_real_unexpired_server_session(security_application):
     with TestClient(security_application) as client:
-        client.cookies.set('netcircuit_session', 'forged-cookie')
+        client.cookies.set('cirnet_session', 'forged-cookie')
         with pytest.raises(WebSocketDisconnect) as disconnected:
             with socket(client): pass
         assert disconnected.value.code == 4401

@@ -114,7 +114,7 @@ def create_app(*,repository=None,gateway=None,submit=None,configuration=None,cap
                 if close: close()
                 repo.close()
 
-    application=FastAPI(title="net*CIRCUIT Remote API",version="0.1.1",lifespan=lifespan)
+    application=FastAPI(title="CIRNET Remote API",version="0.1.1",lifespan=lifespan)
     application.state.events=hub
     application.state.configuration=config
     application.state.initialize=initialize
@@ -141,7 +141,8 @@ def create_app(*,repository=None,gateway=None,submit=None,configuration=None,cap
                 if request.method not in {'GET','HEAD','OPTIONS'}:
                     auth.verify_origin(request.headers.get('origin'))
                 bootstrap=request.method=='GET' and request.url.path=='/api/auth/session'
-                cookie=request.cookies.get('netcircuit_session')
+                from app.compatibility import session_cookie, csrf_header
+                cookie=session_cookie(request.cookies)
                 if bootstrap and await asyncio.to_thread(auth.current,cookie) is None:
                     await asyncio.to_thread(auth.admit_bootstrap,request.client.host if request.client else '')
                 context,rotated=await asyncio.to_thread(auth.ensure_session,cookie,
@@ -153,7 +154,7 @@ def create_app(*,repository=None,gateway=None,submit=None,configuration=None,cap
                 if context is None and request.url.path!='/api/health' and request.method!='OPTIONS':
                     raise AuthError('UNAUTHENTICATED',401)
                 if request.method not in {'GET','HEAD','OPTIONS'}:
-                    await asyncio.to_thread(auth.verify_mutation,context,request.headers.get('origin'),request.headers.get('x-csrf-token'))
+                    await asyncio.to_thread(auth.verify_mutation,context,request.headers.get('origin'),csrf_header(request.headers))
                 if request.method!='OPTIONS' and request.url.path not in {'/api/health','/api/auth/session','/api/auth/login','/api/auth/logout'} and not context.principal_id:
                     raise AuthError('UNAUTHENTICATED',401)
                 if (request.method not in {'GET','HEAD','OPTIONS'} and request.url.path not in {'/api/auth/login','/api/auth/logout'}
@@ -177,8 +178,10 @@ def create_app(*,repository=None,gateway=None,submit=None,configuration=None,cap
                 token=rotated
             if token:
                 context=request.state.auth
-                response.set_cookie('netcircuit_session',token,httponly=True,samesite='lax',path='/',
-                                    secure=config.environment=='production',max_age=config.session_ttl_seconds)
+                from app.compatibility import SESSION_COOKIE, LEGACY_SESSION_COOKIE
+                for cookie_name in (SESSION_COOKIE, LEGACY_SESSION_COOKIE):
+                    response.set_cookie(cookie_name,token,httponly=True,samesite='lax',path='/',
+                                        secure=config.environment=='production',max_age=config.session_ttl_seconds)
         route=getattr(request.scope.get('route'),'path','/unmatched')
         log_event('http.completed',method=request.method,route=route,status=response.status_code,
                   duration_ms=round((time.monotonic()-began)*1000,3))
@@ -256,7 +259,7 @@ def create_app(*,repository=None,gateway=None,submit=None,configuration=None,cap
     if config.trusted_origins:
         application.add_middleware(CORSMiddleware,allow_origins=list(config.trusted_origins),allow_credentials=True,
             allow_methods=['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
-            allow_headers=['Content-Type','X-CSRF-Token','X-Control-Client','Idempotency-Key','X-Request-ID','If-Match'],
+            allow_headers=['Content-Type','X-CIRNET-CSRF','X-CSRF-Token','X-Control-Client','Idempotency-Key','X-Request-ID','If-Match'],
             expose_headers=['ETag','X-Request-ID'])
     from app.services.api_contracts import install_openapi
     install_openapi(application)

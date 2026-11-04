@@ -12,7 +12,7 @@ def test_root_config_files_exist():
 
 def test_env_example_has_expected_keys():
     text=(ROOT/'.env.example').read_text()
-    for key in ['NETCIRCUIT_ENV','NETCIRCUIT_API_HOST','NETCIRCUIT_API_PORT','NETCIRCUIT_HARDWARE_MODE']:
+    for key in ['CIRNET_ENV','CIRNET_API_HOST','CIRNET_API_PORT','CIRNET_HARDWARE_MODE']:
         assert f'{key}=' in text
 
 

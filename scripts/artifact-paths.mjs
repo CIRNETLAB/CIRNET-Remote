@@ -7,8 +7,10 @@ import {fileURLToPath,pathToFileURL} from 'node:url'
 const root=realpathSync(resolve(dirname(fileURLToPath(import.meta.url)),'..'))
 const cache=resolve(root,'.build/contracts-tools')
 let allocator
+let allocatorPrefix
 try {
   const pin=JSON.parse(readFileSync(resolve(root,'integration/contracts-version.json'),'utf8')).dev
+  allocatorPrefix=pin.name==='netcircuit-artifact-paths'?'NETCIRCUIT_':'CIRNET_'
   const metadata=JSON.parse(readFileSync(resolve(cache,'allocator.json'),'utf8'))
   const resource=realpathSync(resolve(cache,'allocator.mjs'))
   const position=relative(cache,resource)
@@ -19,14 +21,28 @@ try {
 } catch(error) {
   throw Error(`DEV allocator unavailable or corrupt: ${error.message} Run python scripts/install_contracts.py --dev-only with the pinned DEV wheel manifest before verification.`)
 }
-const context=value=>value===undefined&&!process.env.NETCIRCUIT_ARTIFACTS_CONTEXT?{owner:`git:${root}`,roots:[root]}:value
+function synchronizeEnvironment() {
+  for(const suffix of ['ARTIFACTS_CONTEXT','ARTIFACTS_SESSION','ARTIFACTS_DIR']) {
+    const value=process.env[`CIRNET_${suffix}`]??process.env[`NETCIRCUIT_${suffix}`]
+    if(value!==undefined)process.env[`CIRNET_${suffix}`]=process.env[`NETCIRCUIT_${suffix}`]=value
+  }
+}
+const context=value=>(synchronizeEnvironment(),value===undefined&&!process.env.CIRNET_ARTIFACTS_CONTEXT?{owner:`git:${root}`,roots:[root]}:value)
 export function getArtifactContext(options={}) { return allocator.getArtifactContext({...options,context:context(options.context)}) }
-export function getArtifactDirectory(subdirectory='',options={}) { return allocator.getArtifactDirectory(subdirectory,{...options,context:context(options.context)}) }
+export function getArtifactDirectory(subdirectory='',options={}) {
+  const result=allocator.getArtifactDirectory(subdirectory,{...options,context:context(options.context)})
+  for(const suffix of ['ARTIFACTS_SESSION','ARTIFACTS_CONTEXT']){
+    const value=process.env[allocatorPrefix+suffix]
+    if(value!==undefined)process.env['CIRNET_'+suffix]=process.env['NETCIRCUIT_'+suffix]=value
+  }
+  return result
+}
 export function validateArtifactDirectory(directory,options={}) { return allocator.validateArtifactDirectory(directory,{...options,context:context(options.context)}) }
 export function cleanupArtifactSession(directory,options={}) { return allocator.cleanupArtifactSession(directory,{...options,context:context(options.context)}) }
 export function runArtifactCli(args=process.argv.slice(2)) {
+  synchronizeEnvironment()
   const selected=[...args]
-  if(!selected.includes('--context')&&!process.env.NETCIRCUIT_ARTIFACTS_CONTEXT)selected.push('--context',JSON.stringify(context()))
+  if(!selected.includes('--context')&&!process.env.CIRNET_ARTIFACTS_CONTEXT)selected.push('--context',JSON.stringify(context()))
   return allocator.runArtifactCli(selected)
 }
 export const runCli=runArtifactCli

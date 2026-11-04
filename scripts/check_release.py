@@ -6,6 +6,11 @@ and an external writable package workspace. The optional load group is explicit.
 import argparse
 import json
 import os
+try:
+    from scripts.environment import getenv, export_environment
+except ModuleNotFoundError:
+    from environment import getenv, export_environment
+
 from pathlib import Path
 import shlex
 import shutil
@@ -84,22 +89,23 @@ def main(argv=None):
     steps=release_plan(arguments.group or ['all'],arguments.package_temporary_root)
     if arguments.show_plan:
         print(json.dumps(steps,indent=2));return 0
-    if any(step['group']=='postgres' for step in steps) and not os.environ.get('NETCIRCUIT_TEST_POSTGRES_URL'):
-        parser.error('NETCIRCUIT_TEST_POSTGRES_URL must name an isolated real PostgreSQL test database; this gate is never skipped.')
+    if any(step['group']=='postgres' for step in steps) and not getenv('CIRNET_TEST_POSTGRES_URL'):
+        parser.error('CIRNET_TEST_POSTGRES_URL must name an isolated real PostgreSQL test database; this gate is never skipped.')
     # A gate can import a default application as well as explicitly isolated
     # fixtures. Never let those fallback instances open a developer database
     # or use the capture default, even when inherited from the caller's shell.
     runtime=artifact_directory('release-runtime-'+uuid.uuid4().hex)
-    environment={**os.environ,'NETCIRCUIT_E2E_PYTHON':sys.executable,
-        'NETCIRCUIT_DATABASE_URL':'sqlite:///'+(runtime/'default.sqlite').as_posix(),
-        'NETCIRCUIT_CAPTURE_DIR':str(runtime/'captures')}
+    environment={**os.environ,'CIRNET_E2E_PYTHON':sys.executable,
+        'CIRNET_DATABASE_URL':'sqlite:///'+(runtime/'default.sqlite').as_posix(),
+        'CIRNET_CAPTURE_DIR':str(runtime/'captures')}
     if arguments.interface_root:
         if not arguments.interface_root.is_absolute():parser.error('--interface-root must be absolute.')
-        environment['NETCIRCUIT_INTERFACE_ROOT']=str(arguments.interface_root)
-    for option,key in ((arguments.fpga_root,'NETCIRCUIT_FPGA_ROOT'),(arguments.fpga_manifest,'NETCIRCUIT_FPGA_ARTIFACT_MANIFEST')):
+        environment['CIRNET_INTERFACE_ROOT']=str(arguments.interface_root)
+    for option,key in ((arguments.fpga_root,'CIRNET_FPGA_ROOT'),(arguments.fpga_manifest,'CIRNET_FPGA_ARTIFACT_MANIFEST')):
         if option:
             if not option.is_absolute():parser.error('FPGA source selectors must be absolute.')
             environment[key]=str(option)
+    environment=export_environment(environment)
     began=time.perf_counter()
     for step in steps:
         print(f"[{step['group']}] {shlex.join(step['command'])}",flush=True)

@@ -10,8 +10,10 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const cli = join(root, 'scripts/artifact-paths.mjs')
 const environment = () => {
   const env = { ...process.env }
-  delete env.NETCIRCUIT_ARTIFACTS_DIR
-  delete env.NETCIRCUIT_ARTIFACTS_SESSION
+  for(const prefix of ['CIRNET_','NETCIRCUIT_']){
+    delete env[prefix+'ARTIFACTS_DIR']
+    delete env[prefix+'ARTIFACTS_SESSION']
+  }
   return env
 }
 function invoke(args = [], options = {}) {
@@ -40,22 +42,22 @@ test('default output is external, writable and independent of working directory'
 test('rejects repository, nested repository outputs and Git administration directories before writing', () => {
   const git = (flag) => execFileSync('git', ['rev-parse', flag], { cwd: root, encoding: 'utf8' }).trim()
   for (const directory of [root, join(root, 'docs/verification/new-output'), resolve(root, git('--git-dir')), resolve(root, git('--git-common-dir'))]) {
-    const result = invoke([], { env: { ...environment(), NETCIRCUIT_ARTIFACTS_DIR: directory } })
+    const result = invoke([], { env: { ...environment(), CIRNET_ARTIFACTS_DIR: directory } })
     assert.notEqual(result.status, 0, directory)
     assert.match(result.stderr, /outside|repository|Git/)
   }
 })
 
 test('canonicalizes existing symlinks, rejects traversal and shares only the inherited session', () => {
-  const external = mkdtempSync(join(tmpdir(), 'netcircuit-path-test-'))
+  const external = mkdtempSync(join(tmpdir(), 'cirnet-path-test-'))
   let session
   try {
     symlinkSync(root, join(external, 'checkout'), process.platform === 'win32' ? 'junction' : 'dir')
     assert.notEqual(invoke(['--directory', join(external, 'checkout/not-created')]).status, 0)
     assert.ok(!existsSync(join(root, 'not-created')))
-    const first = invoke([], { env: { ...environment(), NETCIRCUIT_ARTIFACTS_DIR: external } })
+    const first = invoke([], { env: { ...environment(), CIRNET_ARTIFACTS_DIR: external } })
     assert.equal(first.status, 0, first.stderr); session = first.stdout.trim()
-    const inherited = { ...environment(), NETCIRCUIT_ARTIFACTS_SESSION: session }
+    const inherited = { ...environment(), CIRNET_ARTIFACTS_SESSION: session }
     assert.equal(invoke(['screens'], { env: inherited }).stdout.trim(), join(session, 'screens'))
     assert.notEqual(invoke(['../escape'], { env: inherited }).status, 0)
     mkdirSync(join(session, 'links'))
@@ -68,7 +70,7 @@ test('canonicalizes existing symlinks, rejects traversal and shares only the inh
 })
 
 test('cleanup refuses unowned folders and symlink substitutions and preserves neighboring data', () => {
-  const external = mkdtempSync(join(tmpdir(), 'netcircuit-cleanup-test-'))
+  const external = mkdtempSync(join(tmpdir(), 'cirnet-cleanup-test-'))
   let session
   try {
     writeFileSync(join(external, 'user-data.txt'), 'keep')

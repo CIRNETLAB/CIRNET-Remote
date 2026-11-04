@@ -26,6 +26,10 @@ and new master commits are tracked separately in the M6 report. Old extraction
 versions and URLs in dated reports retain their historical meaning. Python source builds use `cirnet-contracts`. The published selection retains
 the original distribution, and the `contracts` import remains compatible.
 
+Current source identities and migration/legacy boundaries are recorded in
+[namespace compatibility](NAMESPACE.md). New operator examples use `CIRNET_*`;
+recorded historical names and published artifact bytes remain unchanged.
+
 ## Source map
 
 - `services/api/` owns FastAPI auth, persistence and execution orchestration. Remote owns deployment and integration tests.

@@ -42,7 +42,7 @@ instrument-capability tests, physical-station lifecycle/freshness tests and
 FPGA scaffold tests. These check plan naming/visibility, rejection of private
 transport fields, truthful unavailable adapters and producer separation.
 Current pure scaffold/parser/RTL behavioral acceptance belongs to
-net-Circuit-FPGA and requires its pinned slang/Icarus/vvp toolchain without
+CIRNET-FPGA and requires its pinned slang/Icarus/vvp toolchain without
 optional skips. Original `tests/fpga` files in Remote are frozen references
 excluded from current discovery; selected source-artifact/Contracts/Hardware
 compatibility remains in Remote integration tests. Passing software/RTL gates

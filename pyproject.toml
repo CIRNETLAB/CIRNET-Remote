@@ -3,11 +3,11 @@ requires = ["setuptools==84.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "netcircuit-remote-dev"
+name = "cirnet-remote-dev"
 version = "0.1.2"
-description = "Local integration dependency entrypoint for net*CIRCUIT Remote"
+description = "Local integration dependency entrypoint for CIRNET Remote"
 requires-python = ">=3.11"
-dependencies = ["cirnet-contracts==0.1.1", "netcircuit-simulator==0.1.1", "netcircuit-hardware-service==0.1.1"]
+dependencies = ["cirnet-contracts==0.1.1", "cirnet-simulator==0.1.1", "cirnet-hardware-service==0.1.1"]
 
 [tool.setuptools]
 packages = []

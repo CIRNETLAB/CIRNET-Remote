@@ -121,9 +121,9 @@ def test_clean_build_staging_excludes_ignored_rpc_and_cached_build_outputs(tmp_p
 
 @pytest.mark.parametrize('prefix',['','x'*20000],ids=['short-output','long-output'])
 def test_failed_package_command_exposes_output_and_preserves_complete_log(tmp_path,monkeypatch,prefix):
+    from tests.support.artifacts import isolated_environment, cleanup_owned_session
     checkout=tmp_path/'checkout';checkout.mkdir()
-    monkeypatch.setenv('NETCIRCUIT_ARTIFACTS_DIR',str(tmp_path))
-    monkeypatch.delenv('NETCIRCUIT_ARTIFACTS_SESSION',raising=False)
+    isolated_environment(monkeypatch,tmp_path)
     monkeypatch.setattr(checker,'ROOT',checkout)
     monkeypatch.setattr(checker,'selected_wheel',lambda manifest:tmp_path/'contracts.whl')
     monkeypatch.setattr(checker,'selected_simulator_wheel',lambda manifest:tmp_path/'simulator.whl')
@@ -144,27 +144,27 @@ def test_failed_package_command_exposes_output_and_preserves_complete_log(tmp_pa
         assert 'missing setuptools build dependency' in message and 'compiler stderr detail' in message
         assert '23' in message and '--no-isolation' in message
         assert len(message)<18000
-        artifact_session=Path(os.environ['NETCIRCUIT_ARTIFACTS_SESSION'])
+        artifact_session=Path(os.environ['CIRNET_ARTIFACTS_SESSION'])
         log_path=next((artifact_session/'package-check').glob('package-check-*.log'))
         assert artifact_session.is_relative_to(tmp_path)
         assert not log_path.is_relative_to(checkout) and not log_path.is_relative_to(ROOT)
         log=log_path.read_text(encoding='utf-8')
         assert prefix in log and 'missing setuptools build dependency' in log and 'compiler stderr detail' in log
     finally:
-        if session:=os.environ.get('NETCIRCUIT_ARTIFACTS_SESSION'):
-            cleanup_artifact_session(session)
+        if session:=os.environ.get('CIRNET_ARTIFACTS_SESSION'):
+            cleanup_owned_session(session,tmp_path)
 
 
 def test_installed_package_ci_preserves_diagnostics_when_the_probe_fails():
     workflow=yaml.safe_load((ROOT/'.github/workflows/contracts.yml').read_text(encoding='utf-8'))
     job=workflow['jobs']['installed-packages'];steps=job['steps']
-    allocation=next(step for step in steps if 'NETCIRCUIT_ARTIFACTS_SESSION=' in step.get('run',''))
-    assert allocation.get('env',{}).get('NETCIRCUIT_ARTIFACTS_DIR')=='${{ runner.temp }}/netcircuit-package-check', 'runner.temp is available in step env, not job env'
+    allocation=next(step for step in steps if 'CIRNET_ARTIFACTS_SESSION=' in step.get('run',''))
+    assert allocation.get('env',{}).get('CIRNET_ARTIFACTS_DIR')=='${{ runner.temp }}/cirnet-package-check', 'runner.temp is available in step env, not job env'
     uploads=[step for step in steps if step.get('uses','').startswith('actions/upload-artifact@')]
     upload=next(step for step in uploads if step.get('if')=='always()'
-                and step.get('with',{}).get('path')=='${{ env.NETCIRCUIT_ARTIFACTS_SESSION }}/package-check/*.log')
+                and step.get('with',{}).get('path')=='${{ env.CIRNET_ARTIFACTS_SESSION }}/package-check/*.log')
     assert upload['with']['include-hidden-files'] is True
     cleanup=next(step for step in steps if '--cleanup' in step.get('run',''))
-    assert 'always()' in cleanup['if'] and "env.NETCIRCUIT_ARTIFACTS_SESSION != ''" in cleanup['if']
-    assert '--cleanup "$NETCIRCUIT_ARTIFACTS_SESSION"' in cleanup['run']
+    assert 'always()' in cleanup['if'] and "env.CIRNET_ARTIFACTS_SESSION != ''" in cleanup['if']
+    assert '--cleanup "$CIRNET_ARTIFACTS_SESSION"' in cleanup['run']
     assert steps.index(cleanup)>steps.index(upload)

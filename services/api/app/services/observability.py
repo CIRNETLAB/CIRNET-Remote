@@ -12,7 +12,7 @@ import time
 import atexit
 import sys
 
-_context=ContextVar('netcircuit_correlation',default=None)
+_context=ContextVar('cirnet_correlation',default=None)
 _identifier=re.compile(r'[A-Za-z0-9_.:-]{1,128}')
 _event=re.compile(r'[a-z][a-z0-9_.]{0,95}')
 _route=re.compile(r'/[A-Za-z0-9_/{}/.:-]{0,255}')
@@ -58,7 +58,7 @@ def log_event(event,**fields):
     if not isinstance(event,str) or not _event.fullmatch(event):return
     record={'event':event,**current_correlation(),**_safe(fields)}
     # No exc_info, request object, format arguments or caller-controlled message.
-    logging.getLogger('netcircuit.api').info(json.dumps(record,separators=(',',':'),allow_nan=False))
+    logging.getLogger('cirnet.api').info(json.dumps(record,separators=(',',':'),allow_nan=False))
 
 
 class _BoundedHandler(QueueHandler):
@@ -67,7 +67,7 @@ class _BoundedHandler(QueueHandler):
 
     def enqueue(self,record):
         if self.dropped:
-            notice=logging.LogRecord('netcircuit.api',logging.WARNING,'',0,json.dumps({'event':'observability.dropped','dropped':self.dropped}),(),None)
+            notice=logging.LogRecord('cirnet.api',logging.WARNING,'',0,json.dumps({'event':'observability.dropped','dropped':self.dropped}),(),None)
             try:self.queue.put_nowait(notice);self.dropped=0
             except Full:self.dropped+=1;return
         try:self.queue.put_nowait(record)
@@ -83,7 +83,7 @@ def configure_logging():
         output=logging.StreamHandler(sys.__stderr__ or sys.stderr);output.setFormatter(logging.Formatter('%(message)s'))
         listener=QueueListener(queue,output,respect_handler_level=True)
         handler=_BoundedHandler(queue)
-        logger=logging.getLogger('netcircuit.api')
+        logger=logging.getLogger('cirnet.api')
         logger.addHandler(handler);logger.setLevel(logging.INFO);logger.propagate=False
         listener.start();_runtime=(queue,listener,handler)
 

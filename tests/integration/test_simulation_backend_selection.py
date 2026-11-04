@@ -25,18 +25,18 @@ def graph():
 
 
 def test_api_settings_snapshot_default_and_explicit_environment(monkeypatch):
-    monkeypatch.delenv('NETCIRCUIT_SIMULATION_BACKEND', raising=False)
+    monkeypatch.delenv('CIRNET_SIMULATION_BACKEND', raising=False)
     default = Settings()
     assert getattr(default, 'simulation_backend', None) == 'legacy'
-    monkeypatch.setenv('NETCIRCUIT_SIMULATION_BACKEND', 'ngspice')
+    monkeypatch.setenv('CIRNET_SIMULATION_BACKEND', 'ngspice')
     unavailable = Settings()
     assert default.simulation_backend == 'legacy'
     assert unavailable.simulation_backend == 'ngspice'
 
 
-@pytest.mark.parametrize('name', ['', 'unknown', 'netcircuit_sim.engine', 'Legacy'])
+@pytest.mark.parametrize('name', ['', 'unknown', 'cirnet_sim.engine', 'Legacy'])
 def test_unknown_configuration_fails_before_api_or_station_startup(monkeypatch, name):
-    monkeypatch.setenv('NETCIRCUIT_SIMULATION_BACKEND', name)
+    monkeypatch.setenv('CIRNET_SIMULATION_BACKEND', name)
     with pytest.raises(ValueError):
         Settings()
     with pytest.raises(ValueError):
@@ -58,7 +58,7 @@ def future_domain_graph():
 
 @pytest.mark.parametrize('prefix', ['/api', '/api/v2'])
 def test_unavailable_preview_keeps_future_domain_rejection_typed_and_document_storable(tmp_path, monkeypatch, prefix):
-    monkeypatch.setenv('NETCIRCUIT_SIMULATION_BACKEND', 'ngspice')
+    monkeypatch.setenv('CIRNET_SIMULATION_BACKEND', 'ngspice')
     settings = Settings(environment='test', allow_guest=True, trusted_origins=('http://testserver',),
         capture_dir=str(tmp_path / 'future-captures'))
     value = future_domain_graph()
@@ -78,7 +78,7 @@ def test_unavailable_preview_keeps_future_domain_rejection_typed_and_document_st
 
 
 def test_unavailable_station_maps_future_domain_error_to_unexecutable(monkeypatch):
-    monkeypatch.setenv('NETCIRCUIT_SIMULATION_BACKEND', 'ngspice')
+    monkeypatch.setenv('CIRNET_SIMULATION_BACKEND', 'ngspice')
     station = VirtualHardwareStation('future-domain')
     with pytest.raises(RuntimeError) as rejected:
         station.apply_circuit(future_domain_graph())
@@ -93,7 +93,7 @@ def test_rpc_experiment_sessions_inherit_the_base_station_backend(configured, am
     from hardware_service.rpc import LifecycleRpc
     station = VirtualHardwareStation('configured', backend_id=configured)
     rpc = LifecycleRpc({'configured': station}, pb)
-    monkeypatch.setenv('NETCIRCUIT_SIMULATION_BACKEND', ambient)
+    monkeypatch.setenv('CIRNET_SIMULATION_BACKEND', ambient)
     for experiment in ('first', 'after-stop'):
         target = pb.Target(station_id='configured', experiment_id=experiment)
         reply = rpc.ConfigureVirtualCircuit(pb.ConfigureVirtualRequest(target=target,
@@ -112,12 +112,12 @@ def test_rpc_experiment_sessions_inherit_the_base_station_backend(configured, am
 @pytest.mark.parametrize('prefix', ['/api', '/api/v2'])
 def test_preview_routes_use_independent_frozen_apps_and_keep_validation_available(tmp_path, monkeypatch, prefix):
     common = {'environment': 'test', 'allow_guest': True, 'trusted_origins': ('http://testserver',)}
-    monkeypatch.setenv('NETCIRCUIT_SIMULATION_BACKEND', 'legacy')
+    monkeypatch.setenv('CIRNET_SIMULATION_BACKEND', 'legacy')
     legacy = Settings(**common, capture_dir=str(tmp_path / 'legacy-captures'))
-    monkeypatch.setenv('NETCIRCUIT_SIMULATION_BACKEND', 'ngspice')
+    monkeypatch.setenv('CIRNET_SIMULATION_BACKEND', 'ngspice')
     unavailable = Settings(**common, capture_dir=str(tmp_path / 'ngspice-captures'))
     # New requests do not use mutable process environment as their selection.
-    monkeypatch.setenv('NETCIRCUIT_SIMULATION_BACKEND', 'legacy')
+    monkeypatch.setenv('CIRNET_SIMULATION_BACKEND', 'legacy')
     with client(legacy) as old, client(unavailable) as future:
         available = old.post(prefix + '/circuits/physical-preview', json=graph())
         assert available.status_code == 200, available.text
@@ -135,17 +135,17 @@ def test_preview_routes_use_independent_frozen_apps_and_keep_validation_availabl
         assert saved.status_code == 201, saved.text
         restored = future.get(prefix + '/circuits/' + saved.json()['document_id'])
         assert restored.status_code == 200 and restored.json()['graph'] == graph()
-        monkeypatch.setenv('NETCIRCUIT_SIMULATION_BACKEND', 'ngspice')
+        monkeypatch.setenv('CIRNET_SIMULATION_BACKEND', 'ngspice')
         repeated = old.post(prefix + '/circuits/physical-preview', json=graph())
         assert repeated.status_code == 200
         assert repeated.json() == available.json()
 
 
 def test_station_capabilities_are_pinned_and_ngspice_has_no_available_instruments(monkeypatch):
-    monkeypatch.setenv('NETCIRCUIT_SIMULATION_BACKEND', 'legacy')
+    monkeypatch.setenv('CIRNET_SIMULATION_BACKEND', 'legacy')
     legacy = VirtualHardwareStation('legacy')
     original = legacy.get_capabilities().to_dict()
-    monkeypatch.setenv('NETCIRCUIT_SIMULATION_BACKEND', 'ngspice')
+    monkeypatch.setenv('CIRNET_SIMULATION_BACKEND', 'ngspice')
     unavailable = VirtualHardwareStation('future')
     assert legacy.get_capabilities().to_dict() == original
     assert original['available'] is True and original['virtual_digital'] is True
@@ -180,8 +180,8 @@ def run_station(station):
 
 def test_real_spawn_and_reused_worker_execute_the_compiled_identity_after_environment_changes(monkeypatch):
     close_simulation_pool()
-    monkeypatch.setenv('NETCIRCUIT_SIMULATION_WORKERS', '1')
-    monkeypatch.setenv('NETCIRCUIT_SIMULATION_BACKEND', 'legacy')
+    monkeypatch.setenv('CIRNET_SIMULATION_WORKERS', '1')
+    monkeypatch.setenv('CIRNET_SIMULATION_BACKEND', 'legacy')
     station = VirtualHardwareStation('pinned')
     circuit = {'schema_version': '1.0', 'circuit_id': 'pinned',
         'modules': [{'id': 'X', 'type': 'DIGITAL_SWITCH', 'properties': {'state': True}}, {'id': 'L', 'type': 'LED'}],
@@ -191,11 +191,11 @@ def test_real_spawn_and_reused_worker_execute_the_compiled_identity_after_enviro
         assert getattr(station._virtual_plan, 'backend', None) is not None, 'station compiled a legacy-only plan'
         assert station._virtual_plan.backend.id == 'legacy'
         # The first worker starts with ngspice in its environment.
-        monkeypatch.setenv('NETCIRCUIT_SIMULATION_BACKEND', 'ngspice')
+        monkeypatch.setenv('CIRNET_SIMULATION_BACKEND', 'ngspice')
         first = run_station(station)
         # Parent configuration now becomes invalid; the existing station and
         # the reused worker must still execute the explicitly compiled identity.
-        monkeypatch.setenv('NETCIRCUIT_SIMULATION_BACKEND', 'unknown-after-start')
+        monkeypatch.setenv('CIRNET_SIMULATION_BACKEND', 'unknown-after-start')
         station.apply_circuit(circuit)
         second = run_station(station)
         expected = {'available': True, 'state': 'COMPLETE', 'duration_ns': 20,

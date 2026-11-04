@@ -6,6 +6,7 @@ from dataclasses import dataclass,field
 import json
 from threading import RLock
 import uuid
+from app.compatibility import health_service_name
 
 PROTOCOL_VERSION = '1.0'
 
@@ -114,7 +115,7 @@ class EventHub:
     def hello(self,token):
         with self.lock:
             subscriber=self.subscribers[token]
-            return {'type':'hello','service':'netcircuit-api','protocol_version':PROTOCOL_VERSION,
+            return {'type':'hello','service':health_service_name(),'protocol_version':PROTOCOL_VERSION,
                 'stream_id':subscriber.stream_id,'sequence':0,'resync_required':True,
                 'supported_protocol_versions':[PROTOCOL_VERSION],
                 'capabilities':{'snapshot_resync':True,'ordered_stream':True,'replay_commands':False}}

@@ -1,14 +1,14 @@
 {
   "status": "PINNED_ARTIFACT_INPUTS",
   "python": {
-    "name": "netcircuit-simulator",
+    "name": "cirnet-simulator",
     "version": "0.1.1"
   },
   "contracts": {
     "name": "cirnet-contracts",
     "version": "0.1.1"
   },
-  "namespace": "netcircuit_sim",
+  "namespace": "cirnet_sim",
   "backends": {
     "default": "legacy",
     "available": [

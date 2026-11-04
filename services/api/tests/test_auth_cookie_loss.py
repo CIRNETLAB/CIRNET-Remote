@@ -12,15 +12,15 @@ def test_late_prelogin_read_cannot_replace_a_successful_login_cookie(security_ap
         # then deliver it after the login response reached the browser jar.
         pending=client.build_request('GET','/api/health')
         current=login(client)
-        installed=client.cookies.get('netcircuit_session')
+        installed=client.cookies.get('cirnet_session')
         response=client.send(pending)
         assert response.status_code==(401 if credential=='revoked-guest' else 200)
         if credential=='revoked-guest':assert response.json()['code']=='SESSION_EXPIRED'
-        replaced=client.cookies.get('netcircuit_session')!=installed
+        replaced=client.cookies.get('cirnet_session')!=installed
         assert not replaced,'A late ordinary read replaced the newly authenticated cookie.'
         emitted_cookie='set-cookie' in response.headers
         assert not emitted_cookie,'Only explicit session bootstrap/rotation may install credentials.'
-        resolved=security_application.state.auth.current(client.cookies.get('netcircuit_session'))
+        resolved=security_application.state.auth.current(client.cookies.get('cirnet_session'))
         assert resolved is not None and resolved.authenticated and resolved.principal_id==current.principal_id
 
 
@@ -28,17 +28,17 @@ def test_late_prelogin_read_cannot_replace_a_successful_login_cookie(security_ap
 def test_revoked_cookie_signals_session_loss_even_in_guest_development(security_application,path):
     with TestClient(security_application) as client:
         context=login(client)
-        previous=client.cookies.get('netcircuit_session')
+        previous=client.cookies.get('cirnet_session')
         security_application.state.auth.logout(context)
         response=client.get(path)
         assert response.status_code==401 and response.json()['code']=='SESSION_EXPIRED'
-        unchanged=client.cookies.get('netcircuit_session')==previous
+        unchanged=client.cookies.get('cirnet_session')==previous
         assert unchanged,'Expiry rejection must leave cookie installation to explicit bootstrap.'
         assert 'set-cookie' not in response.headers
         session=client.get('/api/auth/session')
         assert session.status_code==200 and not session.json()['authenticated']
         assert session.json()['principal']['principal_id']!=context.principal_id
-        changed=client.cookies.get('netcircuit_session')!=previous
+        changed=client.cookies.get('cirnet_session')!=previous
         assert changed,'Explicit bootstrap must replace the revoked credential.'
 
 

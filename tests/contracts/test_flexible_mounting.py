@@ -75,7 +75,7 @@ def test_different_holes_on_one_strip_are_not_an_occupancy_conflict():
 
 
 def test_body_pose_does_not_change_connectivity_and_reanchor_changes_one_binding():
-    from netcircuit_sim.nets import resolve_connectivity
+    from cirnet_sim.nets import resolve_connectivity
     graph=flexible_graph();groups=resolve_connectivity(graph)
     graph['modules'][1]['mount']['bodyPose']['position']['y']+=.1
     assert resolve_connectivity(graph)==groups
@@ -115,7 +115,7 @@ def test_legacy_rigid_conversion_resolves_the_pinned_descriptor_after_default_re
 
 
 def test_versioned_typed_simulation_accepts_graph_12_without_widening_legacy_request():
-    from netcircuit_sim.dispatch import SimulationDispatcher
+    from cirnet_sim.dispatch import SimulationDispatcher
     request={'schema_version':'2.0','graph':{'schema_version':'1.2','circuit_id':'typed-flex','modules':[{'id':'S','type':'DIGITAL_SWITCH','properties':{'state':True}}],'connections':[]},
         'capture_config':{'signals':['S.OUT'],'duration_ns':10}}
     result=SimulationDispatcher().simulate(request).model_dump(exclude_unset=True)

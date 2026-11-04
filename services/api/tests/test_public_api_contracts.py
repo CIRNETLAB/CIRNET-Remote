@@ -51,7 +51,7 @@ def test_capture_openapi_declares_binary_media_and_metadata_deletion_response():
     from app.main import app
     document = app.openapi()
     payload = document['paths']['/api/captures/{capture_id}/payload']
-    assert payload['get']['responses']['200']['content']['application/vnd.netcircuit.capture; version=1']['schema'] == {
+    assert payload['get']['responses']['200']['content']['application/vnd.cirnet.capture; version=1']['schema'] == {
         'type': 'string', 'format': 'binary'}
     assert payload['delete']['responses']['200']['content']['application/json']['schema']
 
@@ -138,7 +138,10 @@ def test_generated_browser_operations_follow_route_methods_paths_and_binary_medi
     assert bindings['create']['requestContract']=='ExperimentCreate'
     assert bindings['create']['responseContract']=='ExperimentRecord'
     assert bindings['capture']['binary'] is True
-    assert bindings['capture']['responseMedia']==['application/vnd.netcircuit.capture; version=1']
+    assert bindings['capture']['responseMedia']==[
+        'application/vnd.cirnet.capture; version=1',
+        'application/vnd.netcircuit.capture; version=1',
+    ]
 
 
 def test_openapi_export_rejects_staged_model_injection(tmp_path):

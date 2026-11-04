@@ -190,7 +190,7 @@ def python_generator():
 def generator_source(monkeypatch, definition):
     from contracts import registry
     entry = {'id': 'Probe', 'kind': 'schema', 'path': 'contracts/probe.schema.json',
-             'uri': 'https://netcircuit.local/probe.schema.json', 'pointer': '', 'validator_profile': 'structural'}
+             'uri': 'https://cirnet.local/probe.schema.json', 'pointer': '', 'validator_profile': 'structural'}
     source = {'$schema': registry.DIALECT, 'type': 'object', 'properties': {'Probe': {'$ref': '#/$defs/Probe'}},
               '$defs': {'Probe': definition}}
     monkeypatch.setattr(registry, 'check_manifest', lambda: None)

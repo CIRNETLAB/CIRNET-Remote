@@ -9,6 +9,7 @@ import re
 import tarfile
 
 from scripts.contracts_artifact import installed_contracts
+from scripts.environment import getenv
 
 ROOT = Path(__file__).resolve().parents[2]
 VERSION = '0.1.1'
@@ -49,18 +50,18 @@ def device_resource(path):
 
 
 def interface_root():
-    selected = os.environ.get('NETCIRCUIT_INTERFACE_ROOT')
+    selected = getenv('CIRNET_INTERFACE_ROOT')
     if not selected:
-        raise RuntimeError('NETCIRCUIT_INTERFACE_ROOT must select a verified Interface source artifact.')
+        raise RuntimeError('CIRNET_INTERFACE_ROOT must select a verified Interface source artifact.')
     candidate = Path(selected)
     if not candidate.is_absolute():
-        raise RuntimeError('NETCIRCUIT_INTERFACE_ROOT must be absolute.')
+        raise RuntimeError('CIRNET_INTERFACE_ROOT must be absolute.')
     root = candidate.resolve(strict=True)
     if any((parent / '.git').exists() for parent in (root, *root.parents)):
         raise RuntimeError('Interface acceptance requires an exported artifact, not a Git checkout.')
     identity = json.loads((root / 'interface-artifact.json').read_text(encoding='utf-8'))
     package = json.loads((root / 'package.json').read_text(encoding='utf-8'))
-    if (identity.get('name') != 'netcircuit-interface' or identity.get('version') not in INTERFACE_VERSIONS
+    if (identity.get('name') not in ('cirnet-interface', 'netcircuit-interface') or identity.get('version') not in INTERFACE_VERSIONS
             or identity.get('contractsVersion') != VERSION or identity.get('kind') != 'source'
             or package.get('version') != identity.get('version') or identity.get('source', {}).get('uncommittedMigration') is not False
             or not re.fullmatch('[0-9a-f]{40}', identity.get('source', {}).get('revision', ''))):
@@ -90,7 +91,7 @@ def interface_root():
 
 
 def sdk_resource(path):
-    """Use the Interface's installed public SDK and verify against its pinned tarball."""
+    """Verify released Interface bytes and select explicit producer SDK resources."""
     relative = _relative(path).as_posix()
     root = interface_root()
     lock = json.loads((root / 'integration/contracts-artifacts.json').read_text(encoding='utf-8'))
@@ -107,7 +108,39 @@ def sdk_resource(path):
     with tarfile.open(archive, 'r:gz') as product:
         if resource.read_bytes() != product.extractfile('package/dist/' + relative).read():
             raise RuntimeError('Interface installed public SDK differs from the selected release bytes.')
-    return resource
+    selected_manifest = getenv('CIRNET_CONTRACTS_ARTIFACT_MANIFEST')
+    if not selected_manifest:
+        return resource
+    manifest = json.loads(Path(selected_manifest).read_text(encoding='utf-8'))
+    selected = manifest.get('npm')
+    if selected is None:
+        return resource
+    selected_archive = Path(selected['path'])
+    digest = selected['sha256']
+    if (not selected_archive.is_absolute() or not re.fullmatch('[0-9a-f]{64}', digest)
+            or hashlib.sha256(selected_archive.read_bytes()).hexdigest() != digest):
+        raise RuntimeError('Selected public SDK archive differs from its explicit digest.')
+    if digest == lock['npm']['sha256']:
+        return resource
+    with tarfile.open(selected_archive, 'r:gz') as product:
+        metadata = json.load(product.extractfile('package/package.json'))
+        if metadata.get('name') != '@tinihi-labs/contracts' or metadata.get('version') != VERSION:
+            raise RuntimeError('Selected public SDK identity differs from Contracts 0.1.1.')
+        member_name = 'package/dist/' + relative
+        members = [member for member in product.getmembers() if member.name.casefold() == member_name.casefold()]
+        if len(members) != 1 or members[0].name != member_name or not members[0].isfile():
+            raise RuntimeError('Selected public SDK resource must be a unique regular file.')
+        content = product.extractfile(members[0]).read()
+    from scripts.artifact_paths import artifact_directory
+    from scripts.contract_exports import checked_destination
+    output = checked_destination(artifact_directory('selected-sdk-' + digest), relative)
+    if output.exists():
+        if output.read_bytes() != content:
+            raise RuntimeError('Materialized public SDK differs from the selected archive.')
+    else:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_bytes(content)
+    return output
 
 
 def release_resource(path):

@@ -10,39 +10,39 @@ Source logos/icons/textures, model assets, product/design references, contract f
 
 Use `scripts/artifact-paths.mjs` from Node/TypeScript. Python tools use `scripts/artifact_paths.py`, which delegates to that same implementation. No independent path-validation algorithm is permitted in consumers.
 
-Verification harnesses require Node (CI pins Node 22) and Git in `PATH`, including Python callers of the allocator. M1 packages the canonical allocator separately as DEV tooling: `netcircuit-artifact-paths==1.0.0a1`. Bootstrap the reviewed artifact before running checks with `python scripts/install_contracts.py --with-dev --manifest ABSOLUTE_MANIFEST`. CI uses the same digest-verified bootstrap before allocation; production Contracts consumers do not need DEV tooling. Remote adapters delegate to this installed implementation and fail if it is absent or differs from `integration/contracts-version.json`.
+Verification harnesses require Node (CI pins Node 22) and Git in `PATH`, including Python callers of the allocator. M1 packages the canonical allocator separately as DEV tooling. Current source builds use `cirnet-artifact-paths==1.0.0a1`; the immutable release lock still selects `netcircuit-artifact-paths==1.0.0a1`. Both namespaces are supported by the reviewed adapters. Bootstrap the reviewed artifact before running checks with `python scripts/install_contracts.py --with-dev --manifest ABSOLUTE_MANIFEST`. CI uses the same digest-verified bootstrap before allocation; production Contracts consumers do not need DEV tooling. Remote adapters delegate to this installed implementation and fail if it is absent or differs from `integration/contracts-version.json`.
 
-For verification spanning repositories, supply `NETCIRCUIT_ARTIFACTS_CONTEXT` as JSON with an explicit owner and every participating absolute repository root before allocation (M5: Remote, FPGA, Contracts, Hardware and Simulator). Inherited children and cleanup must retain that context. The allocator expands each Git family and rejects discovered checkout/Git administration paths, including aliases. A session allocated under an earlier context must be cleaned with its original owner/root context.
+For verification spanning repositories, supply `CIRNET_ARTIFACTS_CONTEXT` as JSON with an explicit owner and every participating absolute repository root before allocation (M5: Remote, FPGA, Contracts, Hardware and Simulator). Inherited children and cleanup must retain that context. The allocator expands each Git family and rejects discovered checkout/Git administration paths, including aliases. A session allocated under an earlier context must be cleaned with its original owner/root context.
 
 M3 consumers install the reviewed Simulator artifact with `python scripts/install_simulator.py --manifest ABSOLUTE_SIMULATOR_MANIFEST` after Contracts bootstrap. `python scripts/check_simulator_consumer.py` checks exact version and installed provenance; it must reject editable, missing or shadowed source. Current Simulator units run in CIRNET-Simulator against its installed wheel; the former Remote copy is available in Git history. Remote still runs API preview, actual virtual execution/worker/RPC and installed-package integration against that same artifact. A fresh export of uncommitted reviewed files is recorded separately from a future committed clean checkout.
 
 M4 consumers install `netcircuit-hardware-service==0.1.1` with `python scripts/install_hardware.py --manifest ABSOLUTE_HARDWARE_MANIFEST` after the exact Contracts/Simulator bootstrap. `python scripts/check_hardware_consumer.py` verifies selected archive/version/RECORD/import provenance. Hardware unit tests run in CIRNET-Hardware; the former Remote copy is available in Git history. Remote retains actual API/RPC/worker/capture/safety integration.
 
-Current M6 selects FPGA source/scaffold 0.1.1 (historical M5 used 0.1.0) with `python scripts/install_fpga.py --manifest ABSOLUTE_FPGA_MANIFEST`; the manifest contains a selected source archive path and SHA256. The installed product is an immutable source export under a fresh allocator-owned child, selected through `NETCIRCUIT_FPGA_ROOT`/`NETCIRCUIT_FPGA_ARTIFACT_MANIFEST`, with complete inventory and fingerprint checks. `python scripts/check_fpga_consumer.py` validates this selected product and its compatibility with installed Contracts. The original `tests/fpga` copy is available in Git history. Remote keeps installed Hardware/FPGA compatibility assertions. Standalone FPGA acceptance requires exact pinned slang and Icarus/vvp, actual behavioral simulation with no RTL skips, externally owned outputs and recorded executable/archive identities. Use short external paths for Windows tool bundles. No FPGA Python runtime package, synthesis result or board image is implied.
+Current M6 selects FPGA source/scaffold 0.1.1 (historical M5 used 0.1.0) with `python scripts/install_fpga.py --manifest ABSOLUTE_FPGA_MANIFEST`; the manifest contains a selected source archive path and SHA256. The installed product is an immutable source export under a fresh allocator-owned child, selected through `CIRNET_FPGA_ROOT`/`CIRNET_FPGA_ARTIFACT_MANIFEST`, with complete inventory and fingerprint checks. `python scripts/check_fpga_consumer.py` validates this selected product and its compatibility with installed Contracts. The original `tests/fpga` copy is available in Git history. Remote keeps installed Hardware/FPGA compatibility assertions. Standalone FPGA acceptance requires exact pinned slang and Icarus/vvp, actual behavioral simulation with no RTL skips, externally owned outputs and recorded executable/archive identities. Use short external paths for Windows tool bundles. No FPGA Python runtime package, synthesis result or board image is implied.
 
 The installed-package gate builds only API locally, then selects the reviewed Contracts, Simulator and Hardware wheels. Its fresh venv, application state and subprocess probes live under the canonical session. Optional `scripts/check_contract_package.py --temporary-root` (or the release runner's `--package-temporary-root`) must name a child of the current owned session; an unrelated external directory is insufficient. The gate removes only its own nested temporary child, while the caller inspects retained logs and cleans the owning session afterward.
 
-`scripts/check_release.py` allocates fresh external default SQLite and capture paths for every invocation before launching child commands. It overrides inherited application defaults so a fixture that imports a default app cannot touch a developer's database or capture directory; the caller's environment stays unchanged. The real PostgreSQL gate still requires its separate `NETCIRCUIT_TEST_POSTGRES_URL`. For direct API pytest commands outside this runner, set both default database and capture paths to allocator-owned locations before importing application modules.
+`scripts/check_release.py` allocates fresh external default SQLite and capture paths for every invocation before launching child commands. It overrides inherited application defaults so a fixture that imports a default app cannot touch a developer's database or capture directory; the caller's environment stays unchanged. The real PostgreSQL gate still requires its separate `CIRNET_TEST_POSTGRES_URL`. For direct API pytest commands outside this runner, set both default database and capture paths to allocator-owned locations before importing application modules.
 
 ```js
 import { getArtifactDirectory } from './scripts/artifact-paths.mjs'
 const screenshots = getArtifactDirectory('screenshots')
 ```
 
-The allocator defaults to a unique `netcircuit-*` session in the OS temporary directory on Windows/Linux. `NETCIRCUIT_ARTIFACTS_DIR` optionally selects an **absolute external parent**, under which a fresh session is created. `NETCIRCUIT_ARTIFACTS_SESSION` is internal inherited state used by child processes/workers to share that session. `getArtifactDirectory(subdir, { directory: externalParent })` allocates a separate session under an explicit external parent. Repository/Git paths and symlink escapes are rejected before output creation. Git enumeration failures fail closed. If external writing is denied, report BLOCKED/request the needed tool permission; never fall back to source directories.
+The allocator defaults to a unique `netcircuit-*` session in the OS temporary directory on Windows/Linux. `CIRNET_ARTIFACTS_DIR` optionally selects an **absolute external parent**, under which a fresh session is created. `CIRNET_ARTIFACTS_SESSION` is internal inherited state used by child processes/workers to share that session. `getArtifactDirectory(subdir, { directory: externalParent })` allocates a separate session under an explicit external parent. Repository/Git paths and symlink escapes are rejected before output creation. Git enumeration failures fail closed. If external writing is denied, report BLOCKED/request the needed tool permission; never fall back to source directories.
 
 Pytest's `--basetemp` controls fixture files, separately from `.pytest_cache`. Root, API, Simulator and Hardware Python projects disable `cacheprovider` through their pytest configuration. Preserve that setting for nested subprocesses; if explicitly enabling the plugin, select an allocator-owned external `cache_dir` before running it. The M1 report records the earlier cache containment deviation and the follow-up regression check.
 
 For one shell session, allocate once, then export the returned root to child commands:
 
 ```powershell
-$env:NETCIRCUIT_ARTIFACTS_SESSION = node scripts/artifact-paths.mjs
-$verificationLog = Join-Path $env:NETCIRCUIT_ARTIFACTS_SESSION 'checks.log'
+$env:CIRNET_ARTIFACTS_SESSION = node scripts/artifact-paths.mjs
+$verificationLog = Join-Path $env:CIRNET_ARTIFACTS_SESSION 'checks.log'
 # Run checks and inspect evidence before cleanup.
 ```
 
 ```sh
-export NETCIRCUIT_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"
+export CIRNET_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"
 # Run checks and inspect evidence before cleanup.
 ```
 
@@ -50,8 +50,7 @@ From another working directory use the script's absolute path, or the appropriat
 
 ## M6 current release setup
 
-Current repositories use `CIRNETLAB/CIRNET-*`; local checkout paths and technical
-identifiers retain their existing names. Select the exact numeric asset URLs
+Current repositories use `CIRNETLAB/CIRNET-*`; active source uses canonical CIRNET technical identifiers and compatibility aliases described in [the namespace guide](NAMESPACE.md). Select the exact numeric asset URLs
 and digests in the current Git manifest. Historical immutable manifests/release
 notes keep their recorded source/URLs and are not silently rewritten. Record
 committed build inputs, archive SHA-256 and member-payload differences when
@@ -153,7 +152,7 @@ context availability: `${{ runner.temp }}` belongs in an execution step's `env`,
 not job-level `env`. Start repository tests with `python -m pytest` so clean CI
 has the checkout root on its import path. See the [Actions repair evidence](https://github.com/CIRNETLAB/CIRNET-Remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/verification/2026-10-20-github-actions.md).
 
-For changed Web test output plumbing after M2, bootstrap the exact reviewed artifacts and run `node --test scripts/*.test.mjs`, `npm test`, `npm run check:boundaries`, `npm run build` and `npx tsc --noEmit -p tsconfig.e2e.json` in the explicitly selected CIRNET-Interface product. Remote starts real integration with `node scripts/e2e-interface.mjs --interface-root ABSOLUTE_PRODUCT --forbid-only`; named release gates accept `--interface-root` or `NETCIRCUIT_INTERFACE_ROOT` to select the exact product. Before allocating a shared session, include all participating Git roots in `NETCIRCUIT_ARTIFACTS_CONTEXT`; an exported product inside the owned session inherits this context rather than becoming a Git root. Playwright output, explicit suite screenshots/reports, backend test state and reporter output use the shared allocator. A configured reporter/output directory inside a checkout is an error. Do not disable assertions to satisfy the policy. See [Contracts](../contracts/README.md) for release groups and external PostgreSQL/package prerequisites.
+For changed Web test output plumbing after M2, bootstrap the exact reviewed artifacts and run `node --test scripts/*.test.mjs`, `npm test`, `npm run check:boundaries`, `npm run build` and `npx tsc --noEmit -p tsconfig.e2e.json` in the explicitly selected CIRNET-Interface product. Remote starts real integration with `node scripts/e2e-interface.mjs --interface-root ABSOLUTE_PRODUCT --forbid-only`; named release gates accept `--interface-root` or `CIRNET_INTERFACE_ROOT` to select the exact product. Before allocating a shared session, include all participating Git roots in `CIRNET_ARTIFACTS_CONTEXT`; an exported product inside the owned session inherits this context rather than becoming a Git root. Playwright output, explicit suite screenshots/reports, backend test state and reporter output use the shared allocator. A configured reporter/output directory inside a checkout is an error. Do not disable assertions to satisfy the policy. See [Contracts](../contracts/README.md) for release groups and external PostgreSQL/package prerequisites.
 
 Record revision and dirty state, time/timezone, environment/browser/renderer, scenario, commands, PASS/FAIL/NOT_RUN/BLOCKED, observed results and limits in the affected Markdown report. Historical measurements are not freshly verified. State whether temporary screenshots were actually inspected; do not claim visual or hardware success from source review alone. No permanent temporary-path links are required.
 
@@ -170,7 +169,7 @@ copy of the installed Playwright browser cache into a unique `br-<8hex>` child
 of the same allocator-owned session. Before copying, verify that every copied
 Windows `.exe` destination path is at most **259 UTF-16 characters**. A longer
 path must fail with instructions to choose a shorter absolute external
-`NETCIRCUIT_ARTIFACTS_DIR` parent and allocate a fresh session; do not fall back
+`CIRNET_ARTIFACTS_DIR` parent and allocate a fresh session; do not fall back
 to the installation cache. An existing copied executable and matching hash do
 not establish that Windows can launch an overlong path. Preserve the browser binaries, resources,
 installation markers and platform helpers, including FFmpeg and Windows loader
@@ -214,7 +213,7 @@ After inspecting results, run `node scripts/artifact-paths.mjs --cleanup <sessio
 
 CI allocates in `runner.temp`, uploads external evidence when needed, then cleans its own session. Upload retention is not a reason to commit artifacts. `.gitignore` is a narrow secondary defense for known generated directories, not a blanket image-extension ban.
 
-The backend, hardware-service, frontend, repository integration, PostgreSQL migration and canonical Contracts jobs allocate a fresh session through `scripts/artifact-paths.mjs` before verification. They publish its ownership before allocating application defaults, set the default database and captures inside that session, pass its `pytest` child as `--basetemp` for direct pytest commands, and run the allocator's guarded cleanup with `always()` after failures as well as success. The migration job retains its PostgreSQL 18 service and explicit `NETCIRCUIT_TEST_POSTGRES_URL`; the isolated SQLite default applies only to incidental default-app imports and does not replace PostgreSQL validation. Local workflow policy tests check this configuration; hosted CI execution is separate evidence.
+The backend, hardware-service, frontend, repository integration, PostgreSQL migration and canonical Contracts jobs allocate a fresh session through `scripts/artifact-paths.mjs` before verification. They publish its ownership before allocating application defaults, set the default database and captures inside that session, pass its `pytest` child as `--basetemp` for direct pytest commands, and run the allocator's guarded cleanup with `always()` after failures as well as success. The migration job retains its PostgreSQL 18 service and explicit `CIRNET_TEST_POSTGRES_URL`; the isolated SQLite default applies only to incidental default-app imports and does not replace PostgreSQL validation. Local workflow policy tests check this configuration; hosted CI execution is separate evidence.
 
 Root CI cleanup uses `scripts/cleanup-artifact-session.mjs`. Bootstrap can publish
 an owned session before DEV pip installation succeeds, while the repository
@@ -232,3 +231,65 @@ that the separate secret has minimum permissions.
 Keep historical results, incomplete plans, ADRs, LICENSE/NOTICE and provenance. The R0–R7 archived prompt is byte-locked by `tests/test_post_r7_provenance.py`; required architecture/context/history markers are checked by existing tests. Add an external status note instead of editing locked bytes or weakening tests.
 
 Deletion/relocation of Markdown and old generated visual outputs requires a separate user decision. Proposals must list exact relative paths, rationale, replacement, content to retain, references to update, risk and preconditions. Missing original handover images must be labelled as absent/not inspected, separately from new temporary screenshots intentionally not retained. The [audit report](https://github.com/CIRNETLAB/CIRNET-Remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/verification/2026-10-19-documentation-artifact-audit.md) records the initial inventory and decisions.
+
+
+## CIRNET namespace acceptance — 2026-11-04
+
+Active source uses CIRNET names, with the explicit compatibility boundaries in
+[NAMESPACE.md](NAMESPACE.md). Published release/rollback bytes, historical
+provenance, protected documents, baselines and existing developer data were not
+renamed. New source jobs build the Contracts wheel and public SDK from the same
+pinned archive; the Interface release still verifies its own immutable SDK.
+
+The upstream source pins are Contracts `3dea0a64c5f79d9c2cca0400d39643135d5bc9ab`,
+Simulator `b2bfe2c0ff5ca05ede19122830de21f97a2cecd2`, and Hardware
+`61f02a482d22bb005fc21c79272505095b8ead18`. Every codeload archive member was
+verified against its corresponding Git blob before recording the SHA256.
+All three source builders passed with isolated Python 3.12 and their reviewed
+hash locks. Native Windows staging paths are shortened inside their owned
+workspace before SDK tools run. Compared with the tested candidate wheels,
+committed-source runtime payloads differ only in LF/CRLF where applicable;
+metadata/archive hashes are recorded independently.
+
+| Local verification | Result |
+| --- | --- |
+| Contracts producer | PASS: 516 tests, deterministic generation and public SDK |
+| Simulator producer, final dependency triplet | PASS: 120 tests |
+| Hardware producer, final dependency triplet | PASS: 113 tests including native RPC |
+| Interface producer | PASS: build/types, unit/native regressions and namespace migration evidence in its own guide |
+| FPGA producer | PASS: 22 parser/compiler/behavior tests; 2 additional allocator regressions |
+| Remote API | PASS: all 492 tests |
+| Remote launcher | PASS: 94 tests; 1 Windows symlink privilege skip |
+| Remote script tests | PASS: 15 Node tests |
+| Public SDK consumer | PASS: 88 retained baseline cases, 89 public shape/profile comparisons and TypeScript public/private boundary |
+| API OpenAPI handoff | PASS: exact current registration comparison |
+| Clean installed-package gate | PASS: fresh external venv/cwd, selected archives/RECORD, migrations/CLI, real spawned worker, NCAP1/2 and RPC |
+| Repository boundaries | PASS: 11 tests with both valid release/source identities |
+| Documentation/context/workflows | PASS: 34 Markdown documents, context guard, actionlint 1.7.12 |
+
+The full Remote Contracts sweep initially reported 835 PASS, 17 FAIL, 4 fixture
+ERROR and 2 Windows capability skips. Follow-up coverage passed 208 cases,
+then 46 workflow/integration cases and the final 11 boundary cases after the
+remaining failures were corrected. These were explicit alias/export expectations,
+restored dependency fixtures and selecting the matching source SDK; integrity,
+provenance, semantic, timeout and baseline assertions were retained. The real
+orchestrator verifies fresh invocations, authenticated restart persistence,
+explicit external output and EOF shutdown. Its fixed-directory reproduction
+remains a failing design, as expected.
+
+An early cleanup fixture cleared only the current session prefix and accidentally
+reused/deleted the shared diagnostic session through its legacy alias. Source and
+user data were unaffected. The fixture now clears/restores both namespaces,
+checks its disposable parent before cleanup, and the test harness restores
+namespace settings after each case. Four cleanup-isolation regressions pass;
+all earlier failing cases were rerun with independent owned sessions.
+
+Final diagnostics began outside all Git trees in the owned
+`netcircuit-cKRGky` session; producer follow-ups used their separately owned
+sessions. Only this Markdown evidence is retained in the repository. No new
+screenshots or baselines were committed. Hosted Actions were not awaited.
+Full browser, PostgreSQL, deployment-to-host and physical FPGA acceptance were
+NOT_RUN for this naming task. The launcher's complete service smoke was NOT_RUN
+because existing unrelated listeners owned its default ports; the copied legacy
+cache's Doctor/provenance/import checks passed without changing the original
+state or database.

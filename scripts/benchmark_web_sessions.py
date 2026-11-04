@@ -274,7 +274,7 @@ def workload(url,metrics,options,password):
                 if time.monotonic()>deadline:raise ValueError('VIRTUAL_EXECUTION_DEADLINE')
                 time.sleep(.05)
             metadata=result['capture'];payload=client.request('capture_payload','GET',metadata['payload_ref'])
-            if not payload.headers.get('content-type','').startswith('application/vnd.netcircuit.capture; version=1'):raise ValueError('CAPTURE_MEDIA_MISMATCH')
+            if not payload.headers.get('content-type','').startswith('application/vnd.cirnet.capture; version=1'):raise ValueError('CAPTURE_MEDIA_MISMATCH')
             count=verify_digital_evidence(metadata,payload.content)
             client.request('stop_terminal','POST',path+'/stop',headers={'Idempotency-Key':key+':stop'})
             retained=client.request('capture_after_stop','GET',metadata['payload_ref'])
@@ -297,9 +297,9 @@ def run(options):
     http_port,rpc_port=free_port(),free_port()
     while rpc_port==http_port:rpc_port=free_port()
     url=f'http://127.0.0.1:{http_port}';password=secrets.token_urlsafe(32)
-    environment={**os.environ,'NETCIRCUIT_E2E_DATA_DIR':str(directory),'NETCIRCUIT_E2E_ADMIN_PASSWORD':password,
-        'NETCIRCUIT_E2E_HTTP_PORT':str(http_port),'NETCIRCUIT_E2E_RPC_PORT':str(rpc_port),
-        'NETCIRCUIT_SIMULATION_WORKERS':'4','PYTHONUNBUFFERED':'1'}
+    environment={**os.environ,'CIRNET_E2E_DATA_DIR':str(directory),'CIRNET_E2E_ADMIN_PASSWORD':password,
+        'CIRNET_E2E_HTTP_PORT':str(http_port),'CIRNET_E2E_RPC_PORT':str(rpc_port),
+        'CIRNET_SIMULATION_WORKERS':'4','PYTHONUNBUFFERED':'1'}
     metrics=Metrics();began=time.perf_counter();monitor=None;child=None
     report={'status':'FAIL','started_at':datetime.now(timezone.utc).isoformat(),'environment':{
         'platform':platform.platform(),'python':platform.python_version(),'logical_cpus':os.cpu_count(),'host_ram_bytes':psutil.virtual_memory().total,

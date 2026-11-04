@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 PROJECTS = (ROOT, ROOT / 'services/api')
 
 
-@pytest.mark.parametrize('name', ('cirnet-contracts', 'netcircuit-simulator', 'netcircuit-hardware-service'))
+@pytest.mark.parametrize('name', ('cirnet-contracts', 'cirnet-simulator', 'cirnet-hardware-service'))
 def test_installed_producer_payloads_do_not_ship_pytest_diagnostics(name):
     product = installed_distribution(name)
     assert product.files

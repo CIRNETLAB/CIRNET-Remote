@@ -1,7 +1,7 @@
 {
   "status": "PINNED_ARTIFACT_INPUTS",
   "python": {
-    "name": "netcircuit-hardware-service",
+    "name": "cirnet-hardware-service",
     "version": "0.1.1"
   },
   "contracts": {
@@ -9,7 +9,7 @@
     "version": "0.1.1"
   },
   "simulator": {
-    "name": "netcircuit-simulator",
+    "name": "cirnet-simulator",
     "version": "0.1.1"
   },
   "namespace": "hardware_service",

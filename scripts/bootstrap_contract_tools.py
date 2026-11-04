@@ -8,10 +8,15 @@ import argparse
 import base64
 from email.parser import Parser
 import hashlib
-from importlib.metadata import distribution
+from importlib.metadata import PackageNotFoundError, distribution
 import io
 import json
 import os
+try:
+    from scripts.environment import getenv, export_environment
+except ModuleNotFoundError:
+    from environment import getenv, export_environment
+
 from pathlib import Path
 import shutil
 import subprocess
@@ -25,9 +30,15 @@ except ModuleNotFoundError:
     from artifact_download import download_artifact
 
 ROOT = Path(__file__).resolve().parents[1]
-DEV_NAME = 'netcircuit-artifact-paths'
+DEV_NAME = 'cirnet-artifact-paths'
+DEV_NAMES = (DEV_NAME, 'netcircuit-artifact-paths')
 DEV_VERSION = '1.0.0a1'
-NODE_RESOURCE = 'netcircuit_artifact_paths/artifact-paths.mjs'
+NODE_RESOURCE = 'cirnet_artifact_paths/artifact-paths.mjs'
+
+
+def dev_resource(name):
+    return name.replace('-', '_') + '/artifact-paths.mjs'
+
 
 
 def verified_dev_payload(payload, digest):
@@ -38,22 +49,27 @@ def verified_dev_payload(payload, digest):
         if len(metadata) != 1:
             raise ValueError('Expected one DEV wheel distribution metadata file.')
         value = Parser().parsestr(archive.read(metadata[0]).decode('utf-8'))
-        if value['Name'] != DEV_NAME or value['Version'] != DEV_VERSION:
+        if value['Name'] not in DEV_NAMES or value['Version'] != DEV_VERSION:
             raise ValueError(f'Expected independent {DEV_NAME}=={DEV_VERSION}.')
-        if NODE_RESOURCE not in archive.namelist():
+        resource = dev_resource(value['Name'])
+        if resource not in archive.namelist():
             raise ValueError('DEV wheel lacks the canonical Node allocator resource.')
-        return archive.read(NODE_RESOURCE)
+        return archive.read(resource)
 
 
 def materialize_allocator(cache_root=None, *, lock_root=ROOT):
     selected = json.loads((Path(lock_root) / 'integration/contracts-version.json').read_text())['dev']
-    artifact = distribution(DEV_NAME)
+    selected_name = selected.get('name', DEV_NAME)
+    if selected_name not in DEV_NAMES:
+        raise ValueError('Unsupported pinned DEV distribution.')
+    artifact = distribution(selected_name)
+    resource = dev_resource(selected_name)
     if artifact.version != DEV_VERSION:
         raise ValueError(f'Install {DEV_NAME}=={DEV_VERSION} before using verification tooling.')
     direct = artifact.read_text('direct_url.json')
     if direct and 'dir_info' in json.loads(direct):
         raise ValueError('DEV tooling must be installed from its pinned wheel, not editable source.')
-    entry = next((entry for entry in artifact.files or () if str(entry) == NODE_RESOURCE), None)
+    entry = next((entry for entry in artifact.files or () if str(entry) == resource), None)
     if entry is None or entry.hash is None or entry.hash.mode != 'sha256':
         raise ValueError('Installed DEV wheel has no RECORD-owned canonical Node allocator.')
     contents = Path(artifact.locate_file(entry)).read_bytes()
@@ -68,8 +84,8 @@ def materialize_allocator(cache_root=None, *, lock_root=ROOT):
     target.mkdir(parents=True, exist_ok=True)
     for name, content in (
         ('allocator.mjs', contents),
-        ('allocator.json', (json.dumps({'name': DEV_NAME, 'version': DEV_VERSION,
-            'resource': NODE_RESOURCE, 'sha256': digest}, sort_keys=True) + '\n').encode()),
+        ('allocator.json', (json.dumps({'name': selected_name, 'version': DEV_VERSION,
+            'resource': resource, 'sha256': digest}, sort_keys=True) + '\n').encode()),
     ):
         destination = target / name
         if destination.is_file() and destination.read_bytes() == content:
@@ -81,7 +97,7 @@ def materialize_allocator(cache_root=None, *, lock_root=ROOT):
 
 
 def bootstrap(*, wheel=None, digest=None, url=None, manifest=None, repository_root=ROOT, cache_root=None):
-    selected_manifest = manifest or os.environ.get('NETCIRCUIT_CONTRACTS_DEV_ARTIFACT_MANIFEST') or os.environ.get('NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST')
+    selected_manifest = manifest or getenv('CIRNET_CONTRACTS_DEV_ARTIFACT_MANIFEST') or getenv('CIRNET_CONTRACTS_ARTIFACT_MANIFEST')
     if not wheel and not url and selected_manifest:
         value = json.loads(Path(selected_manifest).read_text(encoding='utf-8'))
         if value.get('schemaVersion', 1) != 1:
@@ -89,8 +105,8 @@ def bootstrap(*, wheel=None, digest=None, url=None, manifest=None, repository_ro
         selected = value.get('dev')
         if selected:
             wheel, digest = selected['path'], selected['sha256']
-    url = url or os.environ.get('NETCIRCUIT_CONTRACTS_DEV_WHEEL_URL')
-    digest = digest or os.environ.get('NETCIRCUIT_CONTRACTS_DEV_WHEEL_SHA256')
+    url = url or getenv('CIRNET_CONTRACTS_DEV_WHEEL_URL')
+    digest = digest or getenv('CIRNET_CONTRACTS_DEV_WHEEL_SHA256')
     if wheel:
         if not Path(wheel).is_absolute():
             raise ValueError('DEV wheel path must be absolute.')
@@ -100,10 +116,11 @@ def bootstrap(*, wheel=None, digest=None, url=None, manifest=None, repository_ro
             raise ValueError('DEV artifact download requires an explicit HTTPS URL.')
         payload = download_artifact(url, digest)
     else:
-        raise ValueError('Provide the pinned DEV wheel/path+SHA256 or NETCIRCUIT_CONTRACTS_DEV_WHEEL_URL/SHA256 before allocating verification output.')
+        raise ValueError('Provide the pinned DEV wheel/path+SHA256 or CIRNET_CONTRACTS_DEV_WHEEL_URL/SHA256 before allocating verification output.')
     if not digest:
         raise ValueError('The DEV wheel SHA256 must be supplied explicitly.')
     node_source = verified_dev_payload(payload, digest)
+    os.environ.update(export_environment())
     lock = json.loads((ROOT / 'integration/contracts-version.json').read_text())['dev']
     if digest.lower() != lock['wheel_sha256'] or hashlib.sha256(node_source).hexdigest() != lock['node_sha256']:
         raise ValueError('DEV artifact does not match the tracked exact wheel/Node lock.')
@@ -114,7 +131,7 @@ def bootstrap(*, wheel=None, digest=None, url=None, manifest=None, repository_ro
     # duplicated here and no temporary source file is created before allocation.
     program = node_source.decode('utf-8') + '''
 const bootstrapRoot=realpathSync(process.argv[2]);
-const bootstrapContext=getArtifactContext({context:process.env.NETCIRCUIT_ARTIFACTS_CONTEXT?undefined:{owner:`git:${bootstrapRoot}`,roots:[bootstrapRoot]}});
+const bootstrapContext=getArtifactContext({context:process.env.CIRNET_ARTIFACTS_CONTEXT?undefined:{owner:`git:${bootstrapRoot}`,roots:[bootstrapRoot]}});
 const bootstrapSession=getArtifactDirectory('',{context:bootstrapContext});
 console.log(JSON.stringify({session:bootstrapSession,context:bootstrapContext}));
 '''
@@ -124,8 +141,9 @@ console.log(JSON.stringify({session:bootstrapSession,context:bootstrapContext}))
         raise RuntimeError('Canonical DEV allocator bootstrap failed: ' + result.stderr.strip())
     allocated = json.loads(result.stdout)
     session = Path(allocated['session'])
-    os.environ['NETCIRCUIT_ARTIFACTS_SESSION'] = str(session)
-    os.environ['NETCIRCUIT_ARTIFACTS_CONTEXT'] = json.dumps(allocated['context'])
+    os.environ['CIRNET_ARTIFACTS_SESSION'] = str(session)
+    os.environ['CIRNET_ARTIFACTS_CONTEXT'] = json.dumps(allocated['context'])
+    os.environ.update(export_environment())
     runtime = session / 'dev-bootstrap'
     runtime.mkdir(exist_ok=True)
     temporary = runtime / 'tmp'
@@ -140,12 +158,13 @@ console.log(JSON.stringify({session:bootstrapSession,context:bootstrapContext}))
     canonical_cli.write_bytes(node_source)
     if os.environ.get('GITHUB_ENV'):
         with Path(os.environ['GITHUB_ENV']).open('a', encoding='utf-8') as output:
-            output.write(f'NETCIRCUIT_ARTIFACTS_SESSION={session}\n')
-            output.write(f'NETCIRCUIT_ARTIFACTS_CLI={canonical_cli}\n')
-            output.write(f'NETCIRCUIT_ARTIFACTS_CONTEXT={json.dumps(allocated["context"])}\n')
+            for prefix in ('CIRNET_', 'NETCIRCUIT_'):
+                output.write(f'{prefix}ARTIFACTS_SESSION={session}\n')
+                output.write(f'{prefix}ARTIFACTS_CLI={canonical_cli}\n')
+                output.write(f'{prefix}ARTIFACTS_CONTEXT={json.dumps(allocated["context"])}\n')
             for key, value in contained_environment.items():
                 output.write(f'{key}={value}\n')
-    archive = runtime / 'netcircuit_artifact_paths-1.0.0a1-py3-none-any.whl'
+    archive = runtime / (lock.get('name', DEV_NAME).replace('-', '_') + '-1.0.0a1-py3-none-any.whl')
     archive.write_bytes(payload)
     log = runtime / 'install.log'
     with log.open('wb') as output:

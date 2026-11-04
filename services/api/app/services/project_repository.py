@@ -5,9 +5,9 @@ import json
 import time
 import uuid
 from sqlalchemy import insert, literal, select, update
-from contracts.registry import load_schema
+from app.compatibility import load_schema
 
-MAX_REVISION=load_schema('https://netcircuit.local/contracts/public/projects/1.0/schema.json#/$defs/CircuitSave/properties/base_revision')['maximum']
+MAX_REVISION=load_schema('https://cirnet.local/contracts/public/projects/1.0/schema.json#/$defs/CircuitSave/properties/base_revision')['maximum']
 
 class RevisionConflict(ValueError):
     code='REVISION_CONFLICT'

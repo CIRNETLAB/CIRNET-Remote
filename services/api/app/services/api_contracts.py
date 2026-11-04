@@ -11,8 +11,9 @@ ERROR_RESPONSES = {status: {'model': ErrorEnvelope, 'description': description} 
 
 def public_capabilities(capabilities):
     """Select only canonical browser capability fields, retaining driver data privately."""
-    from contracts.registry import load_schema, validate_contract
-    schema = load_schema('https://netcircuit.local/contracts/public/api/1.0/schema.json#/$defs/PublicStationCapabilities')
+    from contracts.registry import validate_contract
+    from app.compatibility import load_schema
+    schema = load_schema('https://cirnet.local/contracts/public/api/1.0/schema.json#/$defs/PublicStationCapabilities')
     value = {name: capabilities[name] for name in schema['properties'] if name in capabilities}
     return validate_contract('PublicStationCapabilities', value, profile='transport')
 
@@ -41,12 +42,14 @@ def install_openapi(application):
             entry=manifest[name]
             definition=profile_schema(name,definition,entry['validator_profile'])
             if isinstance(definition,dict):
-                definition['x-netcircuit-contract']={'uri':entry['uri']+('#'+entry['pointer'] if entry['pointer'] else ''),
+                definition['x-cirnet-contract']={'uri':entry['uri']+('#'+entry['pointer'] if entry['pointer'] else ''),
                                                      'version':entry['version'],'profile':entry['validator_profile']}
+                definition['x-netcircuit-contract']={**definition['x-cirnet-contract'],
+                    'uri':definition['x-cirnet-contract']['uri'].replace('https://cirnet.local/','https://netcircuit.local/',1)}
             document.setdefault('components',{}).setdefault('schemas',{})[name]=definition
         document['components']['securitySchemes']={
-            'ServerSession':{'type':'apiKey','in':'cookie','name':'netcircuit_session'},
-            'CsrfToken':{'type':'apiKey','in':'header','name':'X-CSRF-Token'}}
+            'ServerSession':{'type':'apiKey','in':'cookie','name':'cirnet_session'},
+            'CsrfToken':{'type':'apiKey','in':'header','name':'X-CIRNET-CSRF'}}
         for path,methods in document['paths'].items():
             for method,operation in methods.items():
                 if method not in {'get','post','put','patch','delete','head','options'}: continue

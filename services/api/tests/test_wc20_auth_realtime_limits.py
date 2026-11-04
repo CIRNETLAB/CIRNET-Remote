@@ -162,7 +162,7 @@ def test_socket_send_or_hello_timeout_releases_subscription(tmp_path,nonreading)
             if nonreading and message['type']=='websocket.send':await asyncio.Event().wait()
             sent.append(message)
         socket=WebSocket({'type':'websocket','path':'/ws/events','app':app,
-            'headers':[(b'origin',b'http://testserver'),(b'cookie',('netcircuit_session='+cookie).encode())]},receive,send)
+            'headers':[(b'origin',b'http://testserver'),(b'cookie',('cirnet_session='+cookie).encode())]},receive,send)
         # Starlette consumes the ASGI connection message during accept().
         connected=False
         async def incoming():
@@ -186,7 +186,7 @@ def test_legacy_read_context_ttl_does_not_insert_duplicate_or_resurrect_authorit
     now=[1000.0];auth=app.state.auth;auth.clock=lambda:now[0]
     with repo.engine.begin() as db:db.execute(insert(repo.sessions).values(session_id='legacy-proof',expires_at=4600))
     with TestClient(app) as client:
-        client.cookies.set('netcircuit_session','legacy-proof',domain='testserver.local',path='/')
+        client.cookies.set('cirnet_session','legacy-proof',domain='testserver.local',path='/')
         assert client.get('/api/health').status_code==200
         with repo.engine.connect() as db:original=dict(db.execute(select(repo.auth_sessions)).mappings().one())
         if revoked:
@@ -209,5 +209,5 @@ def test_legacy_read_context_ttl_does_not_insert_duplicate_or_resurrect_authorit
         # an ordinary failed read neither consumes it nor allocates a cookie.
         response=client.get('/api/auth/session')
         assert response.status_code==200 and response.json()['principal']['principal_id']=='legacy-proof'
-        assert client.cookies.get('netcircuit_session')!='legacy-proof'
+        assert client.cookies.get('cirnet_session')!='legacy-proof'
 

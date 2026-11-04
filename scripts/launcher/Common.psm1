@@ -1,3 +1,31 @@
+function ConvertTo-CirnetEnvironment {
+    param($Values)
+    $result = @{}
+    if ($null -eq $Values) { $Values = [Environment]::GetEnvironmentVariables('Process') }
+    if ($Values -is [Collections.IDictionary]) {
+        foreach ($key in $Values.Keys) { $result[[string]$key] = [string]$Values[$key] }
+    } else {
+        foreach ($item in $Values.PSObject.Properties) { $result[$item.Name] = [string]$item.Value }
+    }
+    foreach ($key in @($result.Keys)) {
+        if ($key -notmatch '^(CIRNET|NETCIRCUIT)_(.+)$') { continue }
+        $suffix = $Matches[2]
+        $current = 'CIRNET_' + $suffix
+        $legacy = 'NETCIRCUIT_' + $suffix
+        $value = if ($result.ContainsKey($current)) { $result[$current] } else { $result[$legacy] }
+        $result[$current] = $result[$legacy] = $value
+    }
+    return [pscustomobject]$result
+}
+
+function Import-CirnetEnvironment {
+    param($Values)
+    $normalized = ConvertTo-CirnetEnvironment $Values
+    foreach ($item in $normalized.PSObject.Properties) {
+        [Environment]::SetEnvironmentVariable($item.Name, [string]$item.Value, 'Process')
+    }
+}
+
 function Get-CirnetRuntimeConfiguration {
     param(
         [Parameter(Mandatory = $true)][string]$RepositoryRoot,
@@ -99,4 +127,4 @@ function Exit-CirnetMaintenance {
     finally { $Mutex.Dispose() }
 }
 
-Export-ModuleMember -Function Get-CirnetRuntimeConfiguration, Get-CirnetLauncherActivity, Get-CirnetPortStatus, Enter-CirnetMaintenance, Exit-CirnetMaintenance
+Export-ModuleMember -Function ConvertTo-CirnetEnvironment, Import-CirnetEnvironment, Get-CirnetRuntimeConfiguration, Get-CirnetLauncherActivity, Get-CirnetPortStatus, Enter-CirnetMaintenance, Exit-CirnetMaintenance

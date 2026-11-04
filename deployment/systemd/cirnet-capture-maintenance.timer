@@ -1,0 +1,12 @@
+[Unit]
+Description=CIRNET hourly bounded capture retention
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+RandomizedDelaySec=2m
+Unit=cirnet-capture-maintenance.service
+
+[Install]
+WantedBy=timers.target
+Alias=netcircuit-capture-maintenance.timer

@@ -1,0 +1,20 @@
+[Unit]
+Description=CIRNET bounded sealed capture retention
+After=postgresql.service
+
+[Service]
+Type=oneshot
+User=cirnet
+Group=cirnet
+StateDirectory=cirnet
+WorkingDirectory=/var/lib/cirnet
+EnvironmentFile=/etc/cirnet/cirnet.env
+Environment=CIRNET_ENV=production
+ExecStartPre=/opt/cirnet/venv-api/bin/python -m app.migrate --check
+ExecStart=/opt/cirnet/venv-api/bin/python -m app.capture_maintenance --limit 100
+NoNewPrivileges=true
+PrivateTmp=true
+UMask=0077
+
+[Install]
+Alias=netcircuit-capture-maintenance.service

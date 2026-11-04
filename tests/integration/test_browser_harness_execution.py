@@ -25,16 +25,18 @@ def available_port():
     raise AssertionError('No isolated loopback port was available.')
 
 def test_actual_browser_harness_first_worker_capture_and_eof_shutdown(monkeypatch):
-    artifact_session=artifact_directory(directory=os.environ.get('NETCIRCUIT_ARTIFACTS_DIR',tempfile.gettempdir()))
-    monkeypatch.setenv('NETCIRCUIT_ARTIFACTS_SESSION',str(artifact_session))
+    from tests.support.artifacts import isolated_environment, cleanup_owned_session
+    parent=Path(os.environ.get('CIRNET_ARTIFACTS_DIR',tempfile.gettempdir()))
+    isolated_environment(monkeypatch,parent)
+    artifact_session=artifact_directory()
     try:
         directory=artifact_directory('browser-harness-runtime')
         assert directory.is_relative_to(artifact_session) and not directory.is_relative_to(ROOT)
         http_port,rpc_port=available_port(),available_port()
         while rpc_port==http_port:rpc_port=available_port()
         password=secrets.token_urlsafe(32)
-        environment={**os.environ,'NETCIRCUIT_E2E_DATA_DIR':str(directory),
-            'NETCIRCUIT_E2E_ADMIN_PASSWORD':password,'NETCIRCUIT_E2E_HTTP_PORT':str(http_port),'NETCIRCUIT_E2E_RPC_PORT':str(rpc_port)}
+        environment={**os.environ,'CIRNET_E2E_DATA_DIR':str(directory),
+            'CIRNET_E2E_ADMIN_PASSWORD':password,'CIRNET_E2E_HTTP_PORT':str(http_port),'CIRNET_E2E_RPC_PORT':str(rpc_port)}
         with (directory/'owned-harness.log').open('w',encoding='utf-8') as output:
             process=subprocess.Popen([sys.executable,str(ROOT/'scripts/e2e_web_server.py')],cwd=ROOT,env=environment,
                 stdin=subprocess.PIPE,stdout=output,stderr=subprocess.STDOUT,
@@ -84,4 +86,4 @@ def test_actual_browser_harness_first_worker_capture_and_eof_shutdown(monkeypatc
                     raise AssertionError('The owned harness did not shut down after its parent pipe closed.\n'+(directory/'owned-harness.log').read_text(encoding='utf-8')) from None
                 assert code==0,'The owned harness failed during orderly worker shutdown.'
     finally:
-        cleanup_artifact_session(artifact_session)
+        cleanup_owned_session(artifact_session,parent)

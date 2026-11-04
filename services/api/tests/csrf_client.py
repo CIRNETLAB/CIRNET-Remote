@@ -29,7 +29,7 @@ class CsrfTestClient(TestClient):
         # protected read. Ordinary API reads no longer mint hidden guests.
         if (method.upper() in {'GET','HEAD'} and str(url).startswith('/api/')
                 and str(url).split('?')[0] not in {'/api/health','/api/auth/session'}
-                and not self.cookies.get('netcircuit_session')):
+                and not self.cookies.get('cirnet_session')):
             self.browser_headers()
         if method.upper() not in {'GET', 'HEAD', 'OPTIONS'}:
             headers = httpx.Headers(self.browser_headers())
@@ -53,7 +53,7 @@ def login_admin(client, username='fixture-admin', password='fixture admin passwo
     client.app.state.auth.bootstrap_admin(username, password)
     response = client.post('/api/auth/login', json={'username': username, 'password': password})
     assert response.status_code == 200, response.text
-    return client.app.state.auth.current(client.cookies.get('netcircuit_session'))
+    return client.app.state.auth.current(client.cookies.get('cirnet_session'))
 
 
 def publish_fixture_assignment(application, value):

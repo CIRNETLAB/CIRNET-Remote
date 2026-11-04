@@ -93,10 +93,11 @@ def test_standard_pytest_data_is_removed_but_unrecognized_files_survive(clean_re
     assert source.exists() and artifact.exists()
 
 
-def test_exact_setuptools_metadata_is_cleaned_without_removing_archives(clean_repo):
-    metadata = write(clean_repo, ".build/metadata/netcircuit_remote_dev.egg-info/PKG-INFO", b"metadata")
-    protected = [write(clean_repo, ".build/metadata/netcircuit_remote_dev.egg-info/source.py"),
-                 write(clean_repo, ".build/metadata/netcircuit_remote_dev.egg-info/release.whl"),
+@pytest.mark.parametrize("package", ["cirnet_remote_dev", "netcircuit_remote_dev"])
+def test_exact_setuptools_metadata_is_cleaned_without_removing_archives(clean_repo, package):
+    metadata = write(clean_repo, f".build/metadata/{package}.egg-info/PKG-INFO", b"metadata")
+    protected = [write(clean_repo, f".build/metadata/{package}.egg-info/source.py"),
+                 write(clean_repo, f".build/metadata/{package}.egg-info/release.whl"),
                  write(clean_repo, ".build/contracts-tools/allocator.mjs")]
     summary = invoke(clean_repo)
     assert rows(summary)[metadata]["Status"] == "Deleted"

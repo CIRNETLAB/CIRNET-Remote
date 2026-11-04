@@ -156,9 +156,7 @@ function Get-Sha256([byte[]]$bytes) {
 }
 
 function Import-ProcessEnvironment($values) {
-    foreach ($item in $values.PSObject.Properties) {
-        [Environment]::SetEnvironmentVariable($item.Name, [string]$item.Value, 'Process')
-    }
+    Import-CirnetEnvironment $values
 }
 
 function Test-ApiHealth($url) {
@@ -276,8 +274,9 @@ try {
         if ($LASTEXITCODE -ne 0) { throw "Could not create the Python environment in '$dev' (exit code $LASTEXITCODE)." }
     }
 
+    $env:CIRNET_ARTIFACTS_DIR = $dev
     $env:NETCIRCUIT_ARTIFACTS_DIR = $dev
-    Remove-Item Env:NETCIRCUIT_ARTIFACTS_SESSION,Env:NETCIRCUIT_ARTIFACTS_CONTEXT -ErrorAction SilentlyContinue
+    Remove-Item Env:CIRNET_ARTIFACTS_SESSION,Env:CIRNET_ARTIFACTS_CONTEXT,Env:NETCIRCUIT_ARTIFACTS_SESSION,Env:NETCIRCUIT_ARTIFACTS_CONTEXT -ErrorAction SilentlyContinue
 
     $cacheFile = Join-Path $dev 'launcher-state.json'
     $state = $null
@@ -286,11 +285,15 @@ try {
             $cached = Get-Content -LiteralPath $cacheFile -Raw | ConvertFrom-Json
             if ($cached.manifestHash -eq $manifestHash -and $cached.repo -eq $repo) {
                 $saved = Get-Content -LiteralPath $cached.environmentFile -Raw | ConvertFrom-Json
-                $vite = Join-Path $saved.environment.NETCIRCUIT_INTERFACE_ROOT 'node_modules\vite\bin\vite.js'
-                $sessionMarker = Join-Path $saved.environment.NETCIRCUIT_ARTIFACTS_SESSION '.netcircuit-artifact-session.json'
+                $saved.environment = ConvertTo-CirnetEnvironment $saved.environment
+                $vite = Join-Path $saved.environment.CIRNET_INTERFACE_ROOT 'node_modules\vite\bin\vite.js'
+                $sessionMarker = Join-Path $saved.environment.CIRNET_ARTIFACTS_SESSION '.cirnet-artifact-session.json'
+                if (-not (Test-Path -LiteralPath $sessionMarker -PathType Leaf)) {
+                    $sessionMarker = Join-Path $saved.environment.CIRNET_ARTIFACTS_SESSION '.netcircuit-artifact-session.json'
+                }
                 if ($saved.python -eq $python -and (Test-Path -LiteralPath $vite -PathType Leaf) -and
                     (Test-Path -LiteralPath $sessionMarker -PathType Leaf)) {
-                    & $python -I -B -c 'import uvicorn, hardware_service.server, netcircuit_sim, contracts' 2>$null
+                    & $python -I -B -c 'import importlib, importlib.util; import uvicorn, hardware_service.server, contracts; importlib.import_module(''cirnet_sim'' if importlib.util.find_spec(''cirnet_sim'') else ''netcircuit_sim'')' 2>$null
                     if ($LASTEXITCODE -eq 0) { $state = $saved }
                 }
             }
@@ -311,9 +314,9 @@ try {
         Import-ProcessEnvironment $state.processEnvironment
 
         Write-Host '[2/4] Preparing Contracts and installing Web dependencies.'
-        Push-Location -LiteralPath $env:NETCIRCUIT_INTERFACE_ROOT
+        Push-Location -LiteralPath $env:CIRNET_INTERFACE_ROOT
         try {
-            $bootstrapJson = & $node scripts/bootstrap-contracts.mjs --manifest $env:NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST
+            $bootstrapJson = & $node scripts/bootstrap-contracts.mjs --manifest $env:CIRNET_CONTRACTS_ARTIFACT_MANIFEST
             if ($LASTEXITCODE -ne 0) { throw "Could not prepare Contracts for CIRNET-Interface (exit code $LASTEXITCODE). See the output above." }
             $bootstrap = $bootstrapJson | ConvertFrom-Json
             Import-ProcessEnvironment $bootstrap.environment
@@ -344,15 +347,21 @@ try {
     [IO.File]::WriteAllBytes($serviceInput, [byte[]]@())
     Write-Host "[INFO] Service logs: $logDir"
 
-    $env:NETCIRCUIT_ENV = 'development'
-    $env:NETCIRCUIT_HARDWARE_MODE = 'simulation'
-    $env:NETCIRCUIT_HARDWARE_GRPC_TARGET = '127.0.0.1:50051'
-    $env:NETCIRCUIT_SIMULATION_BACKEND = 'legacy'
-    $env:NETCIRCUIT_ALLOW_GUEST = 'true'
-    $env:NETCIRCUIT_TRUSTED_ORIGINS = 'http://127.0.0.1:5173,http://localhost:5173'
-    $env:NETCIRCUIT_DATABASE_URL = 'sqlite:///' + $dev.Replace('\','/') + '/netcircuit-dev.sqlite'
-    $env:NETCIRCUIT_CAPTURE_DIR = Join-Path $dev 'captures'
-    $env:NETCIRCUIT_DEV_API_TARGET = 'http://127.0.0.1:8000'
+    $env:CIRNET_ENV = 'development'
+    $env:CIRNET_HARDWARE_MODE = 'simulation'
+    $env:CIRNET_HARDWARE_GRPC_TARGET = '127.0.0.1:50051'
+    $env:CIRNET_SIMULATION_BACKEND = 'legacy'
+    $env:CIRNET_ALLOW_GUEST = 'true'
+    $env:CIRNET_TRUSTED_ORIGINS = 'http://127.0.0.1:5173,http://localhost:5173'
+    $databaseName = 'cirnet-dev.sqlite'
+    if (-not (Test-Path -LiteralPath (Join-Path $dev $databaseName)) -and
+        (Test-Path -LiteralPath (Join-Path $dev 'netcircuit-dev.sqlite') -PathType Leaf)) {
+        $databaseName = 'netcircuit-dev.sqlite'
+    }
+    $env:CIRNET_DATABASE_URL = 'sqlite:///' + $dev.Replace('\','/') + '/' + $databaseName
+    $env:CIRNET_CAPTURE_DIR = Join-Path $dev 'captures'
+    $env:CIRNET_DEV_API_TARGET = 'http://127.0.0.1:8000'
+    Import-CirnetEnvironment
 
     if (-not [Console]::IsInputRedirected) {
         try {
@@ -378,7 +387,7 @@ try {
     Wait-Ready $api 'Remote API' { Test-ApiHealth 'http://127.0.0.1:8000/api/health' }
 
     Write-Host '[4/4] Starting CIRNET-Interface.'
-    $web = Start-ServiceProcess $node @('node_modules/vite/bin/vite.js','--host','127.0.0.1','--port','5173','--strictPort') $env:NETCIRCUIT_INTERFACE_ROOT 'web'
+    $web = Start-ServiceProcess $node @('node_modules/vite/bin/vite.js','--host','127.0.0.1','--port','5173','--strictPort') $env:CIRNET_INTERFACE_ROOT 'web'
     $children += $web
     $url = 'http://127.0.0.1:5173'
     Wait-Ready $web 'CIRNET-Interface' {

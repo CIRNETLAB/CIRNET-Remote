@@ -8,7 +8,7 @@ from zipfile import ZipFile
 
 import pytest
 
-ROOT = Path(os.environ.get('NETCIRCUIT_CONSUMER_SOURCE_ROOT', Path(__file__).resolve().parents[2]))
+ROOT = Path(os.environ.get('CIRNET_CONSUMER_SOURCE_ROOT', Path(__file__).resolve().parents[2]))
 
 
 def helper():
@@ -21,10 +21,10 @@ def helper():
 
 
 def wheel(tmp_path, version='0.1.1'):
-    target = tmp_path / f'netcircuit_contracts-{version}-py3-none-any.whl'
+    target = tmp_path / f'cirnet_contracts-{version}-py3-none-any.whl'
     with ZipFile(target, 'w') as archive:
-        archive.writestr(f'netcircuit_contracts-{version}.dist-info/METADATA',
-                         f'Name: netcircuit-contracts\nVersion: {version}\n')
+        archive.writestr(f'cirnet_contracts-{version}.dist-info/METADATA',
+                         f'Name: cirnet-contracts\nVersion: {version}\n')
         archive.writestr('contracts/__init__.py', '')
     return target
 

@@ -114,8 +114,8 @@ def test_rollback_local_environment_retains_digest_and_strict_admission(tmp_path
 def test_rollback_local_run_passes_verified_environment_before_database_requirement(tmp_path, monkeypatch):
     from scripts import check_release_rollback
     _state, path = saved_local_environment(tmp_path)
-    monkeypatch.delenv('NETCIRCUIT_TEST_POSTGRES_URL', raising=False)
-    with pytest.raises(ValueError, match='NETCIRCUIT_TEST_POSTGRES_URL'):
+    monkeypatch.delenv('CIRNET_TEST_POSTGRES_URL', raising=False)
+    with pytest.raises(ValueError, match='CIRNET_TEST_POSTGRES_URL'):
         check_release_rollback.run(path, local_artifacts=True)
 
 

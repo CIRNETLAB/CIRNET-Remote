@@ -114,7 +114,7 @@ def test_payload_rest_owner_check_and_delete_leave_small_unavailable_metadata(tm
         assert stranger.get(path).status_code==403
         assert stranger.delete(path).status_code==403
         reply=owner.get(path)
-        assert reply.headers['content-type'].startswith('application/vnd.netcircuit.capture')
+        assert reply.headers['content-type'].startswith('application/vnd.cirnet.capture')
         assert codec().decode_digital(reply.content)['samples']==[{'signal':'y','time_ns':0,'value':1}]
         assert owner.delete(path).status_code==200
         assert owner.get(path).json()['code']=='CAPTURE_UNAVAILABLE'

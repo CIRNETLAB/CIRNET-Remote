@@ -7,7 +7,7 @@ import { join, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 const cli = resolve(dirname(fileURLToPath(import.meta.url)), 'check-verification-artifacts.mjs')
 test('checks unstaged and staged generated evidence without rejecting product assets or Markdown', () => {
-  const repo = mkdtempSync(join(tmpdir(), 'netcircuit-artifact-git-test-'))
+  const repo = mkdtempSync(join(tmpdir(), 'cirnet-artifact-git-test-'))
   const git = (...args) => execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8' })
   const write = (path, value) => { mkdirSync(dirname(join(repo, path)), { recursive: true }); writeFileSync(join(repo, path), value) }
   const check = (...args) => spawnSync(process.execPath, [cli, '--root', repo, ...args], { encoding: 'utf8' })
