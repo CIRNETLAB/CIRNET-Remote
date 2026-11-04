@@ -80,23 +80,29 @@ def test_historical_release_manifest_preserves_its_original_repository_provenanc
     assert json.dumps(value, sort_keys=True) == recorded
 
 
-def patch_release():
+def patch_release(version='0.1.2'):
     value = release()
-    value['releaseVersion'] = '0.1.2'
+    value['releaseVersion'] = version
     value['integration'] = {'repository': value['repositories']['Remote']['repository'],
-                            'version': '0.1.2', 'sourceRevision': 'f' * 40}
+                            'version': version, 'sourceRevision': 'f' * 40}
     interface = value['repositories']['Interface']
-    interface['version'] = '0.1.2'
+    interface['version'] = version
     for artifact in interface['artifacts'].values():
-        artifact['filename'] = artifact['filename'].replace('0.1.1', '0.1.2')
+        artifact['filename'] = artifact['filename'].replace('0.1.1', version)
+        if version == '0.1.3':
+            artifact['filename'] = artifact['filename'].replace('netcircuit-interface-', 'cirnet-interface-')
     return value
 
 
-def test_system_patch_selects_interface_patch_without_relabeling_retained_packages():
+@pytest.mark.parametrize('version', ['0.1.2', '0.1.3'])
+def test_system_patch_selects_interface_patch_without_relabeling_retained_packages(version):
     from scripts.system_release_manifest import validate_manifest
-    value = patch_release()
+    value = patch_release(version)
     before = release()
     assert validate_manifest(value) is value
+    prefix = 'cirnet-interface-' if version == '0.1.3' else 'netcircuit-interface-'
+    assert {kind: artifact['filename'] for kind, artifact in value['repositories']['Interface']['artifacts'].items()} == {
+        kind: prefix + version + '-' + kind + '.tar.gz' for kind in ('source', 'static')}
     for component in ('Remote', 'Contracts', 'Simulator', 'Hardware', 'FPGA'):
         assert value['repositories'][component] == before['repositories'][component]
     assert value['compatibility'] == before['compatibility']
@@ -104,25 +110,45 @@ def test_system_patch_selects_interface_patch_without_relabeling_retained_packag
 
 
 @pytest.mark.parametrize('component', ['Remote', 'Contracts', 'Simulator', 'Hardware', 'FPGA'])
-def test_system_patch_rejects_unapproved_package_bumps(component):
+@pytest.mark.parametrize('version', ['0.1.2', '0.1.3'])
+def test_system_patch_rejects_unapproved_package_bumps(component, version):
     from scripts.system_release_manifest import validate_manifest
-    value = patch_release()
+    value = patch_release(version)
     value['repositories'][component]['version'] = '0.1.2'
     with pytest.raises(ValueError):
         validate_manifest(value)
 
 
 @pytest.mark.parametrize('failure', ['old-interface', 'old-filename', 'unknown-system', 'missing-integration', 'wrong-integration-version', 'wrong-integration-revision', 'wrong-integration-owner'])
-def test_system_patch_requires_exact_approved_selection_and_integration_source(failure):
+@pytest.mark.parametrize('version', ['0.1.2', '0.1.3'])
+def test_system_patch_requires_exact_approved_selection_and_integration_source(failure, version):
     from scripts.system_release_manifest import validate_manifest
-    value = patch_release()
+    value = patch_release(version)
     if failure == 'old-interface': value['repositories']['Interface'] = release()['repositories']['Interface']
     elif failure == 'old-filename': value['repositories']['Interface']['artifacts']['source']['filename'] = 'netcircuit-interface-0.1.1-source.tar.gz'
-    elif failure == 'unknown-system': value['releaseVersion'] = '0.1.3'
+    elif failure == 'unknown-system': value['releaseVersion'] = '0.1.4'
     elif failure == 'missing-integration': value.pop('integration')
     elif failure == 'wrong-integration-version': value['integration']['version'] = '0.1.1'
     elif failure == 'wrong-integration-revision': value['integration']['sourceRevision'] = 'master'
     elif failure == 'wrong-integration-owner': value['integration']['repository'] = value['repositories']['Contracts']['repository']
+    with pytest.raises(ValueError):
+        validate_manifest(value)
+
+
+@pytest.mark.parametrize('kind', ['source', 'static'])
+@pytest.mark.parametrize('prefix', ['netcircuit-interface-0.1.3', 'cirnet-interface-0.1.2'])
+def test_new_patch_requires_its_exact_canonical_interface_filenames(kind, prefix):
+    from scripts.system_release_manifest import validate_manifest
+    value = patch_release('0.1.3')
+    value['repositories']['Interface']['artifacts'][kind]['filename'] = prefix + '-' + kind + '.tar.gz'
+    with pytest.raises(ValueError):
+        validate_manifest(value)
+
+
+def test_new_system_patch_cannot_select_the_previous_interface_patch():
+    from scripts.system_release_manifest import validate_manifest
+    value = patch_release('0.1.3')
+    value['repositories']['Interface'] = patch_release()['repositories']['Interface']
     with pytest.raises(ValueError):
         validate_manifest(value)
 
@@ -135,10 +161,12 @@ def test_original_system_lock_cannot_silently_select_patch_interface():
         validate_manifest(value)
 
 
-def test_static_patch_keeps_contracts_version_and_matches_selected_product(tmp_path):
+@pytest.mark.parametrize('version', ['0.1.2', '0.1.3'])
+@pytest.mark.parametrize('name', ['cirnet-interface', 'netcircuit-interface'])
+def test_static_patch_keeps_contracts_version_and_matches_selected_product(tmp_path, version, name):
     from scripts.install_release import _extract_static
-    value = patch_release()
-    identity = {'name': 'netcircuit-interface', 'kind': 'static', 'version': '0.1.2', 'contractsVersion': '0.1.1',
+    value = patch_release(version)
+    identity = {'name': name, 'kind': 'static', 'version': version, 'contractsVersion': '0.1.1',
                 'sourceFingerprint': 'f' * 64, 'source': {'repository': value['repositories']['Interface']['repository'],
                 'revision': value['repositories']['Interface']['sourceRevision'], 'uncommittedMigration': False}}
     path = tmp_path / 'static.tar.gz'
@@ -146,22 +174,23 @@ def test_static_patch_keeps_contracts_version_and_matches_selected_product(tmp_p
     def write(): path.write_bytes(archive_bytes([*pages, ('interface-artifact.json', json.dumps(identity).encode())]))
     write()
     assert _extract_static(path, tmp_path / 'product', value, identity) == tmp_path / 'product'
-    for field in ('version', 'contractsVersion'):
+    for field in ('name', 'version', 'contractsVersion'):
         before = identity[field]
-        identity[field] = '0.1.1' if field == 'version' else '0.1.2'
+        identity[field] = {'name': 'unknown-interface', 'version': '0.1.1', 'contractsVersion': '0.1.2'}[field]
         write()
         with pytest.raises(ValueError):
             _extract_static(path, tmp_path / ('wrong-' + field), value, identity)
         identity[field] = before
 
 
-@pytest.mark.parametrize('state_version,manifest_version', [('0.1.2', '0.1.2'), ('0.1.1', '0.1.2'), ('0.1.2', '0.1.1')])
+@pytest.mark.parametrize('state_version,manifest_version', [('0.1.2', '0.1.2'), ('0.1.1', '0.1.2'), ('0.1.2', '0.1.1'),
+                                                         ('0.1.3', '0.1.3'), ('0.1.2', '0.1.3'), ('0.1.3', '0.1.2')])
 def test_rollback_state_is_bound_to_exact_system_release_version(tmp_path, state_version, manifest_version):
     from scripts.check_release_rollback import load_environment
     state, path = saved_environment(tmp_path)
     state['releaseVersion'] = state_version
     manifest = Path(state['manifest'])
-    manifest.write_text(json.dumps(patch_release() if manifest_version == '0.1.2' else release()), encoding='utf-8')
+    manifest.write_text(json.dumps(release() if manifest_version == '0.1.1' else patch_release(manifest_version)), encoding='utf-8')
     state['manifestSha256'] = hashlib.sha256(manifest.read_bytes()).hexdigest()
     path.write_text(json.dumps(state), encoding='utf-8')
     if state_version == manifest_version:

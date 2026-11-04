@@ -22,7 +22,7 @@ from scripts.system_release_manifest import repository_urls, load_manifest
 
 MAX_MEMBERS=10_000
 MAX_EXPANDED_BYTES=128*1024*1024
-INTERFACE_VERSIONS=frozenset(('0.1.1','0.1.2'))
+INTERFACE_VERSIONS=frozenset(('0.1.1','0.1.2','0.1.3'))
 INTERFACE_NAMES=('cirnet-interface','netcircuit-interface')
 
 
@@ -64,7 +64,7 @@ def extract_product(contents, directory, *, expected_version=None, expected_sour
         manifest=next(member for member in members if member.name.removeprefix('./')=='package.json')
         version=json.loads(archive.extractfile(manifest).read()).get('version')
         if version not in INTERFACE_VERSIONS or (expected_version is not None and version!=expected_version):
-            raise ValueError('Expected the explicitly reviewed Interface product version (0.1.1 or 0.1.2).')
+            raise ValueError('Expected the explicitly reviewed Interface product version (0.1.1, 0.1.2 or 0.1.3).')
         metadata=next((member for member in members if member.name.removeprefix('./')=='interface-artifact.json' and member.isfile()),None)
         if metadata is None:raise ValueError('The Interface source product requires interface-artifact.json at its archive root.')
         identity=json.loads(archive.extractfile(metadata).read())

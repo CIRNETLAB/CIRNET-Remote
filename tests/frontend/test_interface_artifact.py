@@ -38,26 +38,29 @@ def archive_bytes(name='package.json',*,symlink=False,metadata_changes=None,vers
     return output.getvalue()
 
 
-def test_patch_product_is_independent_from_contracts_and_bound_to_selected_version(tmp_path):
+@pytest.mark.parametrize('version',['0.1.2','0.1.3'])
+def test_patch_product_is_independent_from_contracts_and_bound_to_selected_version(tmp_path,version):
     module=installer()
-    contents=archive_bytes(version='0.1.2')
-    module.extract_product(contents,tmp_path/'patch',expected_version='0.1.2')
-    assert json.loads((tmp_path/'patch/package.json').read_text())['version']=='0.1.2'
-    for selected,body in [('0.1.1',contents),('0.1.2',archive_bytes()),('0.1.3',archive_bytes(version='0.1.3'))]:
+    contents=archive_bytes(version=version)
+    module.extract_product(contents,tmp_path/'patch',expected_version=version)
+    assert json.loads((tmp_path/'patch/package.json').read_text())['version']==version
+    for selected,body in [('0.1.1',contents),(version,archive_bytes()),('0.1.4',archive_bytes(version='0.1.4'))]:
         with pytest.raises(ValueError):module.extract_product(body,tmp_path/selected,expected_version=selected)
     with pytest.raises(ValueError):
-        module.extract_product(archive_bytes(version='0.1.2',metadata_changes={'contractsVersion':'0.1.2'}),tmp_path/'wrong-contracts',expected_version='0.1.2')
+        module.extract_product(archive_bytes(version=version,metadata_changes={'contractsVersion':'0.1.2'}),tmp_path/'wrong-contracts',expected_version=version)
 
 
-def test_patch_product_rejects_identity_and_package_version_mismatch(tmp_path):
+@pytest.mark.parametrize('version',['0.1.2','0.1.3'])
+def test_patch_product_rejects_identity_and_package_version_mismatch(tmp_path,version):
     with pytest.raises(ValueError):
-        installer().extract_product(archive_bytes(version='0.1.2',metadata_changes={'version':'0.1.1'}),tmp_path/'wrong')
+        installer().extract_product(archive_bytes(version=version,metadata_changes={'version':'0.1.1'}),tmp_path/'wrong')
 
 
 @pytest.mark.parametrize('field',['URL','SHA256'])
-def test_selected_lock_rejects_stale_interface_variables_before_download(tmp_path,monkeypatch,field):
+@pytest.mark.parametrize('version',['0.1.2','0.1.3'])
+def test_selected_lock_rejects_stale_interface_variables_before_download(tmp_path,monkeypatch,field,version):
     from tests.contracts.test_system_release import patch_release
-    module=installer();value=patch_release()
+    module=installer();value=patch_release(version)
     path=tmp_path/'release.json';path.write_text(json.dumps(value))
     selected=value['repositories']['Interface']['artifacts']['source']
     monkeypatch.setenv('CIRNET_INTERFACE_ARTIFACT_URL',selected['url'])
@@ -68,20 +71,22 @@ def test_selected_lock_rejects_stale_interface_variables_before_download(tmp_pat
         module.main(['--manifest',str(path)])
 
 
-def test_selected_interface_requires_exact_source_revision_before_extraction(tmp_path):
+@pytest.mark.parametrize('version',['0.1.2','0.1.3'])
+def test_selected_interface_requires_exact_source_revision_before_extraction(tmp_path,version):
     module=installer()
     selected={'repository':'https://github.com/CIRNETLAB/CIRNET-Interface','sourceRevision':'8'*40}
     source={'repository':selected['repository'],'revision':'7'*40,'uncommittedMigration':False}
     with pytest.raises(ValueError,match='provenance'):
-        module.extract_product(archive_bytes(version='0.1.2',metadata_changes={'source':source}),tmp_path/'wrong',expected_version='0.1.2',expected_source=selected)
+        module.extract_product(archive_bytes(version=version,metadata_changes={'source':source}),tmp_path/'wrong',expected_version=version,expected_source=selected)
     assert not (tmp_path/'wrong').exists()
 
 
 @pytest.mark.parametrize('suffix',['','.git'])
-def test_selected_interface_preserves_known_manifest_repository_suffixes(tmp_path,suffix):
+@pytest.mark.parametrize('version',['0.1.2','0.1.3'])
+def test_selected_interface_preserves_known_manifest_repository_suffixes(tmp_path,suffix,version):
     selected={'repository':'https://github.com/CIRNETLAB/CIRNET-Interface'+suffix,'sourceRevision':'7'*40}
     source={'repository':'https://github.com/CIRNETLAB/CIRNET-Interface.git','revision':'7'*40,'uncommittedMigration':False}
-    installer().extract_product(archive_bytes(version='0.1.2',metadata_changes={'source':source}),tmp_path/'product',expected_version='0.1.2',expected_source=selected)
+    installer().extract_product(archive_bytes(version=version,metadata_changes={'source':source}),tmp_path/'product',expected_version=version,expected_source=selected)
     assert (tmp_path/'product/package.json').is_file()
 
 

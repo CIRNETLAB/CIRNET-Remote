@@ -14,6 +14,8 @@ RELEASE_PROFILES = {
     '0.1.1': {component: '0.1.1' for component in ('Remote', 'Contracts', 'Interface', 'Simulator', 'Hardware', 'FPGA')},
     '0.1.2': {'Remote': '0.1.1', 'Contracts': '0.1.1', 'Interface': '0.1.2',
               'Simulator': '0.1.1', 'Hardware': '0.1.1', 'FPGA': '0.1.1'},
+    '0.1.3': {'Remote': '0.1.1', 'Contracts': '0.1.1', 'Interface': '0.1.3',
+              'Simulator': '0.1.1', 'Hardware': '0.1.1', 'FPGA': '0.1.1'},
 }
 FILENAMES = {
     'Remote': {'python': 'netcircuit_api-0.1.1-py3-none-any.whl', 'sdist': 'netcircuit_api-0.1.1.tar.gz', 'deployment': 'netcircuit-remote-0.1.1-deployment.tar.gz'},
@@ -126,7 +128,7 @@ def _artifact(value, component, expected=None, *, released=True, local_artifacts
 def validate_manifest(value, *, local_artifacts=False):
     if (not isinstance(value, dict) or type(value.get('schemaVersion')) is not int or value['schemaVersion'] != 1
             or not isinstance(value.get('releaseVersion'), str) or value['releaseVersion'] not in RELEASE_PROFILES):
-        raise ValueError('The system release must use schemaVersion 1 and an explicitly reviewed releaseVersion (0.1.1 or 0.1.2).')
+        raise ValueError('The system release must use schemaVersion 1 and an explicitly reviewed releaseVersion (0.1.1, 0.1.2 or 0.1.3).')
     versions = RELEASE_PROFILES[value['releaseVersion']]
     if type(local_artifacts) is not bool or (local_artifacts and value.get('distribution') != 'local'):
         raise ValueError('Local artifact mode requires an explicit distribution: local manifest.')
@@ -153,12 +155,14 @@ def validate_manifest(value, *, local_artifacts=False):
         for kind, filename in filenames.items():
             if component == 'Interface':
                 filename = filename.replace('0.1.1', version)
+                if version == '0.1.3':
+                    filename = filename.replace('netcircuit-interface-', 'cirnet-interface-')
             _artifact(artifacts[kind], component, filename, local_artifacts=local_artifacts, repository_prefix=repository_prefix)
             location = str(Path(artifacts[kind]['path']).resolve()) if local_artifacts else artifacts[kind]['url']
             if location in urls:
                 raise ValueError('An artifact location cannot identify multiple artifacts.')
             urls.add(location)
-    if value['releaseVersion'] == '0.1.2':
+    if value['releaseVersion'] in ('0.1.2', '0.1.3'):
         integration = value.get('integration')
         if (not isinstance(integration, dict) or integration.get('version') != value['releaseVersion']
                 or integration.get('repository') != repositories['Remote']['repository']

@@ -121,7 +121,7 @@ def _extract_static(path, directory, value, source_identity):
         if not required <= files.keys():
             raise ValueError('Interface static release is missing production entrypoints or metadata.')
         identity = json.load(archive.extractfile(files['interface-artifact.json']))
-        if (identity.get('name') != 'netcircuit-interface' or identity.get('version') != value['repositories']['Interface']['version']
+        if (identity.get('name') not in ('cirnet-interface', 'netcircuit-interface') or identity.get('version') != value['repositories']['Interface']['version']
                 or identity.get('kind') != 'static' or identity.get('contractsVersion') != value['compatibility']['contractsVersion']
                 or identity.get('sourceFingerprint') != source_identity['sourceFingerprint']):
             raise ValueError('Interface static release does not match the selected source product.')

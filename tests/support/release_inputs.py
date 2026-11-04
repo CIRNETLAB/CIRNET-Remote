@@ -13,7 +13,7 @@ from scripts.environment import getenv
 
 ROOT = Path(__file__).resolve().parents[2]
 VERSION = '0.1.1'
-INTERFACE_VERSIONS = ('0.1.1', '0.1.2')
+INTERFACE_VERSIONS = ('0.1.1', '0.1.2', '0.1.3')
 
 
 def _relative(path):

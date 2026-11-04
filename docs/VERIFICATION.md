@@ -385,3 +385,56 @@ published FPGA checker through the repaired YAML. The incomplete full Python
 and unstarted Interface gates remain explicit limitations. New hosted Actions
 are not awaited. Raw diagnostics began outside Git, were inspected, and only
 this canonical Markdown record is retained after owned-session cleanup.
+
+## Browser continuation and Interface patch 0.1.3 — 2026-11-04
+
+The browser run that was still active during the preceding repair later ended
+with 52 PASS, 5 FAIL and 1 SKIP at Remote `685c365`. Its
+[chromium job](https://github.com/CIRNETLAB/CIRNET-Remote/actions/runs/41799887701/job/126472787919)
+used the immutable Interface 0.1.2 artifact, not the later Remote `a46db65`.
+Failure archive SHA256:
+`e8cadc965011e6b70dbc1954dfb71ff09b16b708b1c7d22a4e5748b71bd50bab`.
+The traces, screenshots and contexts were inspected outside Git. They prove
+native rendering/backpressure failures, not a new namespace or geometry error.
+Two held physical preflights exceed the unchanged 10 s client timeout while
+Run-tab actions take multiple seconds. The placement/camera snapshots are
+correct after their assertion budget expires. DPR 2 exhausts its original
+360 s budget after 29 zero-leak poses.
+
+Interface fixes DOM-only drawer redraws and accelerates the depth observer's
+native triangle queries without replacing Three's intersection math. The full
+analysis reference, GPU pixels, erosion and full framebuffer/material/scissor
+restoration remain unchanged. Its native proof passes 78 cases, 11,850,288 exact
+tested pixel positions and 194,249 exact native first-hit comparisons, including
+positive controls and four restoration guards. The original four UI cases pass
+on an explicitly unpublished native candidate; final Ubuntu/committed artifact
+acceptance is recorded separately. See the current
+[Interface verification guide](https://github.com/CIRNETLAB/CIRNET-Interface/blob/master/docs/VERIFICATION.md).
+
+Remote now understands the explicit 0.1.3 system profile and canonical
+`cirnet-interface-0.1.3-source.tar.gz` / `cirnet-interface-0.1.3-static.tar.gz`
+filenames. All five other product versions, protocols and rollback data remain
+unchanged. Historical 0.1.1/0.1.2 filenames and source/static identities remain
+accepted. Unknown names/versions, mismatched versions, Contracts changes,
+uncommitted provenance, paths and digests remain rejected. TDD observed
+10 FAIL / 139 PASS before the new profile, and 2 FAIL / 2 PASS for the canonical
+static-name boundary; the final focused suite passes 173 cases with no skips.
+Independent review found no actionable issue. Preparing compatibility does not
+silently replace the selected release or an immutable existing tag/asset.
+
+The full current Interface 0.1.3 working-tree candidate passes all five original
+failures on Ubuntu 24.04.5 / Python 3.12.3 / Node 22.23.4, pinned Chromium 1248
+and a four-CPU limit. The same actual API/RPC/SQLite services and original test
+settings are used. The run exits zero with five PASS and clean API shutdown
+(2026-11-04 11:30:05–11:39:07 UTC; UTC+07 local time 18:30:05–18:39:07).
+The unchanged native DPR 2 test separately passes all 30 poses in 209.772 s
+within its original 360 s budget. These are functional-candidate results;
+committed artifact packaging and the complete original browser suite remain
+separate promotion checks.
+
+The prepared Interface source commit is
+`2fe7cba5252087af033202183ef242a4be5152cc` (version 0.1.3). Its final Node
+22.23.3 verification passes all 1,488 runtime tests, 27 script checks, unit/E2E
+types, 229-module boundaries and all three production entrypoints. Source and
+static artifacts are built from that clean commit; no same-version published
+asset is replaced.
