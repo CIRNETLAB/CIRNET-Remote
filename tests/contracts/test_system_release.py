@@ -376,6 +376,7 @@ def test_selected_contracts_manifest_hands_all_five_artifacts_to_interface(tmp_p
 
 
 def test_generated_contracts_command_passes_the_real_selector_parser_before_pip(tmp_path, monkeypatch):
+    from importlib.metadata import PackageNotFoundError
     from scripts import install_release, install_contracts
     path = tmp_path / 'netcircuit_contracts-0.1.1-py3-none-any.whl'
     with ZipFile(path, 'w') as archive:
@@ -388,6 +389,10 @@ def test_generated_contracts_command_passes_the_real_selector_parser_before_pip(
         monkeypatch.setenv(name, contents)
     monkeypatch.setattr(install_contracts, 'download_artifact', lambda *args, **kwargs: pytest.fail('local wheel selection reached network'))
     monkeypatch.setattr(install_contracts.subprocess, 'run', lambda *args, **kwargs: pytest.fail('selector test reached pip'))
+    # The release workflow invokes the generated command in a fresh venv.
+    def fresh_environment():
+        raise PackageNotFoundError
+    monkeypatch.setattr(install_contracts, 'installed_contracts', fresh_environment)
     class SelectedWheelValidated(Exception): pass
     def before_pip(subdirectory):
         assert subdirectory == 'pip-cache'

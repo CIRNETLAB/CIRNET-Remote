@@ -154,6 +154,7 @@ def test_receipt_cannot_pass_with_incomplete_or_unverified_real_inputs(tmp_path,
 def test_actual_isolated_probe_ignores_checkout_shadowing_and_rejects_wrong_wheel_digest(tmp_path, monkeypatch, checkout_metadata):
     from importlib.metadata import Distribution, distribution
     import sysconfig
+    from scripts.contracts_artifact import LEGACY_NAME, SUPPORTED_NAMES
     if checkout_metadata:
         checkout = tmp_path / 'checkout'
         metadata = checkout / 'netcircuit_api.egg-info'
@@ -174,11 +175,17 @@ def test_actual_isolated_probe_ignores_checkout_shadowing_and_rejects_wrong_whee
     # API builds leave checkout egg-info; fixture hashes must come from wheels.
     installed_roots = list(dict.fromkeys(sysconfig.get_paths()[key] for key in ('purelib', 'platlib')))
     for name, module, version, component, kind in program['PACKAGES']:
-        metadata = next(Distribution.discover(name=name, path=installed_roots))
+        # The source test environment can use renamed Contracts while the
+        # published receipt still requires its exact legacy distribution.
+        names = SUPPORTED_NAMES if name == LEGACY_NAME else (name,)
+        matches = [item for candidate in names
+                   for item in Distribution.discover(name=candidate, path=installed_roots)]
+        assert len(matches) == 1, f'Expected one installed wheel for {name}.'
+        metadata = matches[0]
         direct = json.loads(metadata.read_text('direct_url.json'))
         archive = direct['archive_info']
         digest = archive.get('hashes', {}).get('sha256') or archive['hash'].removeprefix('sha256=')
-        selected.append({'name': name, 'module': module, 'version': version, 'sha256': digest})
+        selected.append({'name': metadata.metadata['Name'], 'module': module, 'version': version, 'sha256': digest})
         shadow = tmp_path / module
         shadow.mkdir()
         (shadow / '__init__.py').write_text("raise RuntimeError('checkout shadow was imported')\n", encoding='utf-8')

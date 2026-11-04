@@ -10,7 +10,8 @@ from tests.support.ci_release import assert_interface_release_job
 
 ROOT=Path(__file__).resolve().parents[2]
 SHARED=('integration/contracts-version.json','integration/simulator-version.json','integration/hardware-version.json',
-    'integration/fpga-version.json','scripts/contract_exports.py','scripts/check_contract_sdk.py','pyproject.toml',
+    'integration/fpga-version.json','integration/ci-source-dependencies.json','scripts/build_ci_dependency.py',
+    'scripts/contract_exports.py','scripts/check_contract_sdk.py','pyproject.toml',
     'requirements-verification.txt','setup.py','MANIFEST.in','Makefile','.gitattributes')
 
 OWNED_PYTEST_JOBS=(('backend.yml','test'),('hardware-service.yml','test'),('frontend.yml','build'),
@@ -65,6 +66,50 @@ def test_every_ci_bootstrap_derives_dependencies_from_the_committed_system_lock(
             selection = [index for index, step in enumerate(steps)
                          if 'scripts/select_ci_release.py --manifest integration/release-set.json --github-env "$GITHUB_ENV"' in step.get('run', '')]
             assert len(selection) == 1 and selection[0] < bootstrap, (path.name, name)
+
+
+@pytest.mark.parametrize(('name', 'job_id', 'components'), [
+    ('backend.yml', 'test', ('Contracts', 'Simulator')),
+    ('frontend.yml', 'build', ('Contracts', 'Simulator')),
+    ('contracts.yml', 'canonical-boundaries', ('Contracts', 'Simulator', 'Hardware')),
+    ('contracts.yml', 'installed-packages', ('Contracts', 'Simulator', 'Hardware')),
+    ('hardware-service.yml', 'test', ('Contracts', 'Simulator', 'Hardware')),
+    ('integration.yml', 'repository-contracts', ('Contracts', 'Simulator', 'Hardware')),
+    ('integration.yml', 'postgresql-migrations', ('Contracts', 'Simulator', 'Hardware')),
+    ('simulator.yml', 'test', ('Contracts', 'Simulator', 'Hardware')),
+])
+def test_source_api_jobs_install_pinned_source_wheels(name, job_id, components):
+    steps = workflow(name)['jobs'][job_id]['steps']
+    commands = [step.get('run', '') for step in steps]
+    allocation = next(i for i, run in enumerate(commands) if 'node scripts/artifact-paths.mjs' in run)
+    builds = next(i for i, run in enumerate(commands) if 'scripts/build_ci_dependency.py' in run)
+    api = next(i for i, run in enumerate(commands) if 'python -m build' in run and './services/api' in run)
+    assert allocation < builds < api
+    assert commands[builds].splitlines() == [
+        f'python -B scripts/build_ci_dependency.py {component} --github-env "$GITHUB_ENV"'
+        for component in components
+    ]
+    api_commands = commands[api].splitlines()
+    api_build = next(i for i, line in enumerate(api_commands) if 'python -m build' in line)
+    for component in components:
+        installer = f'python scripts/install_{component.lower()}.py'
+        wheel = f'NETCIRCUIT_CI_{component.upper()}_WHEEL'
+        assert [line for line in api_commands[:api_build] if line.startswith(installer)] == [
+            f'{installer} --wheel "${wheel}" --sha256 "${wheel}_SHA256"'
+        ]
+
+
+@pytest.mark.parametrize(('name', 'job_id', 'release_command'), [
+    ('browser-e2e.yml', 'chromium', 'verify_api_wheel'),
+    ('fpga.yml', 'syntax', 'python scripts/install_fpga.py'),
+    ('integration.yml', 'system-artifact-access', 'scripts/install_release.py'),
+])
+def test_release_jobs_keep_published_selection(name, job_id, release_command):
+    commands = '\n'.join(step.get('run', '') for step in workflow(name)['jobs'][job_id]['steps'])
+    assert 'scripts/build_ci_dependency.py' not in commands
+    assert 'NETCIRCUIT_CI_CONTRACTS_WHEEL' not in commands
+    assert 'integration/release-set.json' in commands
+    assert release_command in commands
 
 
 def assert_shared_coverage(data,name):

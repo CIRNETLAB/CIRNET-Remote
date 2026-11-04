@@ -1,0 +1,14 @@
+{
+  "Contracts": {
+    "revision": "7227aa0355940a35dca264a1b47af691299e3a44",
+    "sha256": "e446c8e8028c4b6438829eba28aad5697b8e250e114131b9457876ef053c1ec6"
+  },
+  "Simulator": {
+    "revision": "309a3fba4e61cc45de21fe12ac3a09c39f87e8d3",
+    "sha256": "04c5047d278a4e238211eee1b0c9cd238fb2b16f96d7827af221bc1dbea228d0"
+  },
+  "Hardware": {
+    "revision": "5da53b4da5456adce273d79fe4e373ff875dfe05",
+    "sha256": "c8a7db1ce7921ec6301497bc38b91665b2e1727dda46590900f8c035ff6cf07d"
+  }
+}

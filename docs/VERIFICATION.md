@@ -62,6 +62,25 @@ Changing a published artifact/tag requires the user's separate release decision;
 an immutable release cannot be overwritten. Revalidated original 0.1.1 bytes
 retain their original build provenance.
 
+Jobs that build the API from source build the Python dependencies from the
+producer commits in [the source CI lock](../integration/ci-source-dependencies.json).
+They verify each source archive SHA-256, install the producer's hash-locked
+build tools, and pass each resulting wheel and its digest to the existing
+installers. This tests the renamed `cirnet-contracts` distribution with the
+corresponding Simulator and Hardware dependencies. Browser release, FPGA and
+system artifact access continue to select the published release set.
+
+If GitHub regenerates a source archive with different compression, verify its
+extracted files against the pinned commit before updating the archive digest.
+[GitHub source archive stability](https://docs.github.com/en/repositories/working-with-files/using-files/downloading-source-code-archives#stability-of-source-code-archives)
+
+On 2026-11-04, local Ubuntu 24.04 verification with Python 3.12 and Node 22
+passed the source wheel installs, `pip check`, and the full Remote Contracts
+gate (12 commands, 833 tests). Remote also passed 15 targeted workflow, API and
+RPC tests and its clean installed-package probe. Simulator and Hardware passed
+111 and 109 tests in their independent Ubuntu wheel gates. The clean Remote
+installed-package probe also passed on Windows with Python 3.11.
+
 The approved system/integration release is 0.1.2 with Interface 0.1.2, retaining API, Contracts, Simulator, Hardware and FPGA 0.1.1 and DEV tooling 1.0.0a1. The latest explicit M6 sequencing decision permits publication after actual full selected-artifact local Ubuntu browser acceptance without waiting for further Actions. Record prior CI-identity draft access and any new unrun identity checks separately; pending or failed Actions are not PASS. Use the exact system release manifest and [clean-machine runbook](../deployment/multi-repo-release.md). Installed Contracts resources and explicit Interface/FPGA artifacts replace frozen-reference fixtures. Standalone producer repositories own deterministic generation, unit/AST, backend, RPC and RTL gates; Remote owns the full integrated release groups. Historical M1–M5 measurements remain separately dated. Initial Python entrypoints must suppress source bytecode before importing helper modules, and all child temp/cache paths must belong to the canonical session. Applying a child bootstrap does not change the parent shell; import its recorded environment before continuing.
 
 Local-only release verification uses an explicit `distribution: "local"` manifest with `scripts/install_release.py --local-artifacts`. Retain exact absolute artifact paths, SHA-256 and committed producer revisions outside Git, including the unchanged rollback inventory. Mixed URL/path transport and implicit local fallback are rejected. This verifies a local set without publishing it or changing the canonical GitHub release selection; identify uncommitted verification-tool overlays separately.
