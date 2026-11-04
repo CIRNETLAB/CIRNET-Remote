@@ -1,5 +1,6 @@
 from copy import deepcopy
 from concurrent.futures import ThreadPoolExecutor
+from importlib.resources import files
 from threading import Barrier
 import pytest
 from sqlalchemy import select
@@ -112,10 +113,9 @@ def test_project_revision_columns_support_the_declared_safe_integer_range_in_pos
 @pytest.mark.parametrize('version',['1.0','1.1'])
 def test_saved_and_duplicated_graphs_preserve_mounts_memory_wires_leads_and_extensions(version):
     import json
-    from pathlib import Path
     repo,auth,service,owner,_=setup()
     project=service.create_project(owner,{'name':'Preservation'})
-    source=json.loads((Path(__file__).resolve().parents[3]/'contracts/circuit-schema/examples/physical-hc08-led.json').read_text())
+    source=json.loads(files('contracts').joinpath('circuit-schema/examples/physical-hc08-led.json').read_text(encoding='utf-8'))
     source['schema_version']=version
     source['modules'].append({'id':'MEM','type':'MEMORY','position':{'x':10**400,'y':1.25,'z':0},'properties':{'memory':{'version':'1.0','word_bits':8,'depth':2,'data':[0,255]},'leadProperties':{'custom':{'x':[None,True]}}},'futureModuleExtension':{'preserve':'unchanged'}})
     source['metadata']={'future':{'supported':[None,True,1,2.5]}}

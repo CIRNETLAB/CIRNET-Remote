@@ -3,7 +3,7 @@ project: CIRNET-Remote
 current_phase: repository-cleanup
 status: local-review
 last_updated: 2026-11-04
-next_task: review-documentation-cleanup
+next_task: review-source-cleanup
 hardware_mode: simulation
 fpga_development_started: true
 ---
@@ -14,9 +14,10 @@ The published system selection is 0.1.2. The M6 ledger records the Ubuntu
 browser acceptance, publication and later removal of the retired producer
 implementation copies. [M6 ledger](verification/2026-10-27-multi-repo-migration-m6.md)
 
-The local cleanup removes duplicated Interface assets and consolidates
-documentation navigation. Historical reports and handoffs are available by Git
-revision. [Documentation index](README.md) · [Previous development log](https://github.com/CIRNETLAB/CIRNET-Remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/DEV_LOG.md)
+The source cleanup removes copies of Contracts wheel resources, duplicated
+Interface icons and retired utilities. API tests read the same fixture bytes
+from the selected wheel.
+Historical reports and handoffs are available by Git revision. [Documentation index](README.md) · [Previous development log](https://github.com/CIRNETLAB/CIRNET-Remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/DEV_LOG.md)
 
 ## AI Handoff
 

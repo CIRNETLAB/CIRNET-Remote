@@ -1,6 +1,7 @@
 """The physical subset has a JSON preview without extending capture/FPGA RPC."""
 import sys
 import copy
+from importlib.resources import files
 import json
 from pathlib import Path
 
@@ -40,7 +41,7 @@ def test_physical_preview_rejects_malformed_mount_and_does_not_invent_ground():
 
 def test_shared_mounting_fixture_validates_and_roundtrips_through_typed_api_model():
     from app.models.circuit import CircuitGraph
-    fixture = json.loads((Path(__file__).resolve().parents[3]/'contracts/design-models/fixtures/physical-mounting-parity.json').read_text(encoding='utf-8'))
+    fixture = json.loads(files('contracts').joinpath('design-models/fixtures/physical-mounting-parity.json').read_text(encoding='utf-8'))
     value = fixture['graph']
     assert CircuitGraph.model_validate_json(json.dumps(value)).model_dump(exclude_unset=True) == value
     assert TestClient(app).post('/api/circuits/validate', json=value).json()['valid'] is True
@@ -51,7 +52,7 @@ def test_shared_mounting_fixture_validates_and_roundtrips_through_typed_api_mode
 
 
 def test_openable_lab_example_powers_real_mounted_ic_and_led_and_loses_light_when_off():
-    value = json.loads((Path(__file__).resolve().parents[3]/'contracts/circuit-schema/examples/physical-hc08-led.json').read_text(encoding='utf-8'))
+    value = json.loads(files('contracts').joinpath('circuit-schema/examples/physical-hc08-led.json').read_text(encoding='utf-8'))
     client = TestClient(app)
     response = client.post('/api/circuits/physical-preview', json=value)
     assert response.status_code == 200, response.json()

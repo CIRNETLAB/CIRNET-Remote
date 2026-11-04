@@ -85,9 +85,7 @@ def test_frontend_icons_are_manifested_and_reasonably_sized():
     icon_dir = WEB/'src/assets/icons'
     manifest = json.loads((icon_dir/'manifest.json').read_text(encoding='utf-8'))
 
-    # assets/icon .svg is archival storage only. CI validates the icon set that
-    # the frontend actually imports and ships; it intentionally does not compare
-    # those files with the archival copies or their hashes.
+    # Verify the icon set shipped by the selected Interface artifact.
     svg_files = sorted(path.name for path in icon_dir.glob('*.svg'))
     manifest_files = [entry['file'] for entry in manifest]
 

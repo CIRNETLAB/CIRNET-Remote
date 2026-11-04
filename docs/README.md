@@ -30,8 +30,8 @@ unchanged.
 ## Source map
 
 - `services/api/` owns FastAPI auth, persistence and execution orchestration. Remote owns deployment and integration tests.
-- `contracts/__init__.py` forwards imports and resources to the exact installed Contracts wheel. CIRNET-Contracts owns canonical schemas, catalogs and generation. Remote retains compatibility baselines and fixtures.
-- CIRNET-Interface owns the Web implementation and browser assertions. Remote consumes its selected source and static artifacts. The duplicated Web artwork is available in the selected Interface source.
+- `contracts/__init__.py` forwards imports and resources to the exact installed Contracts wheel. CIRNET-Contracts owns canonical schemas, catalogs and generation. Remote verifies compatibility using the fixtures and baselines in the installed wheel.
+- CIRNET-Interface owns the Web implementation, product icons and browser assertions. Remote consumes its selected source and static artifacts and keeps its own design references in `assets/`.
 - CIRNET-Hardware and CIRNET-Simulator own their implementations. Remote integration uses their exact versioned wheels. CIRNET-FPGA owns RTL, tooling and standalone tests. Remote checks compatibility against its selected source artifact.
 - The pre-cleanup implementations are available at the [historical Remote revision](https://github.com/CIRNETLAB/CIRNET-Remote/tree/989954f95c1c6b1d224e31a53fb33f125f0a81a9).
 - `scripts/`, `.github/workflows/`, `tests/`: actual generation, verification, CI and repository conformance entrypoints. [Deployment](../deployment/README.md) contains deployment templates, not proof of a live deployment.

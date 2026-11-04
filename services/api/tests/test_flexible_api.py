@@ -1,6 +1,6 @@
 from copy import deepcopy
+from importlib.resources import files
 import json
-from pathlib import Path
 
 from fastapi.testclient import TestClient
 
@@ -11,7 +11,7 @@ from test_project_api import headers
 
 
 def graph():
-    data=json.loads((Path(__file__).resolve().parents[3]/'contracts/design-models/fixtures/flexible-mounting-parity.json').read_text(encoding='utf-8'))
+    data=json.loads(files('contracts').joinpath('design-models/fixtures/flexible-mounting-parity.json').read_text(encoding='utf-8'))
     return deepcopy(data['cases'][0]['graph'])
 
 

@@ -103,7 +103,7 @@ def test_consumer_triggers_cover_active_inputs_and_exclude_retired_source(name, 
     events = data.get('on', data.get(True))
     for event in ('push', 'pull_request'):
         patterns = events[event]['paths']
-        for path in ('contracts/__init__.py', 'contracts/fixtures/conformance.json', *active_paths):
+        for path in ('contracts/__init__.py', 'integration/release-set.json', *active_paths):
             assert any(fnmatchcase(path, pattern) for pattern in patterns), (name, event, path)
         for path in retired_paths:
             assert not any(fnmatchcase(path, pattern) for pattern in patterns), (name, event, path)
