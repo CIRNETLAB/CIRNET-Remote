@@ -102,6 +102,30 @@ Install the pinned Python tools for local and CI verification with
 `python -m pip install -r requirements-verification.txt`. This file includes
 build, contract verification, benchmark monitoring and test tools.
 
+The Windows launcher dispatches no-argument calls to its English interactive
+menu. Explicit `start`, `stop`, `-Check` and `-NoBrowser` retain direct startup.
+Clean and Doctor use PowerShell modules under `scripts/launcher/`. Clean accepts
+`-Preview` (`-DryRun`/`-WhatIf`) and requires confirmation for deletion unless
+`-Yes` is explicit. Its whitelist covers recognized cache files and Remote
+metapackage build metadata. Unknown build trees and the allocator cache are
+reported as skipped. Start and Clean share a maintenance mutex, and cleanup
+also inspects the existing launcher lock and service ports.
+
+Run `python -B -m pytest -q tests/launcher --basetemp ABSOLUTE_OWNED_SESSION/pytest`
+on Windows PowerShell 5.1 to check menu dispatch, CLI compatibility, filesystem
+protection and Doctor diagnostics. Use an allocator-owned external session for
+all test state and captured output. Native tests skip on hosts without Windows
+PowerShell. Keep launcher diagnostic logs and Markdown verification reports in
+the external session. Doctor's normal report is console-only and creates no
+setup or report files.
+
+For real lifecycle verification, provision an owned external dev home containing
+the selected installed wheels and a separate Interface product with its own
+dependencies. Set `CIRNET_DEV_HOME` for the test process. Verify `-Check`, second
+launcher exclusion, external `stop`, Enter and Ctrl+C, and confirm that ports
+50051, 8000 and 5173 are released after every run. Preserve existing developer
+databases, captures and runtime caches during these checks.
+
 On Windows, run `.\run-cirnet.bat -Check` to start the local simulation stack,
 check the Hardware listener, API health, and Vite proxy, then stop the services.
 For launcher changes, also run `.\run-cirnet.bat -NoBrowser` in a terminal and

@@ -40,9 +40,57 @@ Remote owns services/api, deployment, docs, tests and integration scripts. The o
 
 Historical M5 verification used the independent `netcircuit-fpga-scaffold` source artifact `0.1.0`, selected by manifest/SHA256; it is not an API runtime dependency or board image. The original FPGA RTL and test copies are available in the pre-cleanup Git revision. Current M6 selects scaffold 0.1.1. Pure RTL acceptance belongs to CIRNET-FPGA and requires pinned parser/compiler/runtime without skips. Remote release checks require the selected FPGA artifact root; see the [M5 plan](https://github.com/CIRNETLAB/CIRNET-Remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/superpowers/plans/2026-10-27-multi-repo-migration-m5.md) and [consumer setup](contracts/README.md). Logical 1.0-scaffold remains independent of source version and unavailable physical firmware.
 
+## Windows launcher
+
+Open `run-cirnet.bat` to choose **Clean build files**, **Check development
+environment**, **Run CIRNET Remote**, or **Exit**. Enter a number or
+`clean`, `doctor`, `start`, or `exit`. Console prompts and results use English.
+Choosing Run uses the pinned release bootstrap and starts Hardware Service,
+Remote API and CIRNET-Interface. The first setup can take several minutes.
+
+Existing command-line usage starts directly without displaying the menu.
+
+```powershell
+.\run-cirnet.bat start
+.\run-cirnet.bat -NoBrowser
+.\run-cirnet.bat -Check
+.\run-cirnet.bat stop
+.\run-cirnet.bat doctor
+.\run-cirnet.bat clean -Preview
+.\run-cirnet.bat clean
+```
+
+`-Check` checks the real services and stops them automatically. During a normal
+run, focus the launcher terminal and press Enter or Ctrl+C to stop, or run the
+`stop` command in another terminal. Service logs are printed as an absolute
+external path. Development SQLite and captures use
+`%USERPROFILE%\CIRNET-Dev`, or the external directory selected with
+`CIRNET_DEV_HOME`.
+
+Clean previews its whitelist and asks for confirmation before deleting files.
+`-DryRun` and `-WhatIf` are aliases of `-Preview`. Use `clean -Yes` for an
+explicit noninteractive cleanup. Results include Deleted, Skipped and Failed
+counts, paths, file counts and bytes. The whitelist covers CPython-tagged
+`.pyc` files in recognized `__pycache__` locations, pytest's three cache data
+files, and the five standard files in Remote's setuptools egg-info build
+metadata. Empty cache directories are retained. Cleanup protects source, Git, documents,
+dependencies, virtual environments, databases, captures, release artifacts and
+the DEV allocator cache. It skips unrecognized output and refuses cleanup while
+a launcher or relevant service is active.
+
+Doctor inspects Git, PowerShell, Python 3.12+, pip/venv, Node.js 22, npm,
+the installed runtime, release cache and the three service ports. It reports
+`INSTALLED`, `MISSING`, `INCOMPATIBLE` or `NOT VERIFIED` with remediation.
+`READY FOR LOCAL SIMULATION` requires an installed, verified runtime and the
+required tools. On a fresh machine with the tools installed, use `start` to
+bootstrap the pinned release, then run Doctor again. CMake, Ninja, MSVC v143
+and FPGA tools are reported separately as optional. Doctor performs local
+inspection and prints its report to the console.
+
 ## Tiếng Việt
 
-Trên Windows, mở [run-cirnet.bat](run-cirnet.bat) để chạy chế độ mô phỏng.
+Trên Windows, mở [run-cirnet.bat](run-cirnet.bat), chọn **3** hoặc nhập
+`start` để chạy chế độ mô phỏng.
 Cài Git, Python 3.12+ và Node.js 22 trước. Lần đầu, launcher tải các gói
 được pin trong manifest, sau đó tự mở trình duyệt tại `http://127.0.0.1:5173`.
 Giữ cửa sổ launcher mở. Để dừng, chuyển về cửa sổ đó và nhấn **Enter** hoặc

@@ -1,15 +1,148 @@
 param(
     [Parameter(Position = 0)]
-    [ValidateSet('start', 'stop')]
-    [string]$Action = 'start',
+    [string]$Action,
     [switch]$Check,
-    [switch]$NoBrowser
+    [switch]$NoBrowser,
+    [Alias('DryRun', 'WhatIf')][switch]$Preview,
+    [switch]$Yes
 )
 
 $ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
 $repo = Split-Path -Parent $PSScriptRoot
+Import-Module (Join-Path $PSScriptRoot 'launcher\Common.psm1') -Force
+
+function Read-CirnetInput([string]$Prompt) {
+    if ([Console]::IsInputRedirected) {
+        Write-Host $Prompt -NoNewline
+        return [Console]::In.ReadLine()
+    }
+    Read-Host $Prompt.TrimEnd(':', ' ')
+}
+
+function ConvertTo-CirnetAction([string]$Value) {
+    switch ($Value.Trim().ToLowerInvariant()) {
+        { $_ -in '1', 'clean' } { return 'clean' }
+        { $_ -in '2', 'doctor' } { return 'doctor' }
+        { $_ -in '3', 'start' } { return 'start' }
+        { $_ -in '0', 'exit' } { return 'exit' }
+        'stop' { return 'stop' }
+        default { return '' }
+    }
+}
+
+function Show-CirnetCleanResult($Report) {
+    if ($Report.Preview) { Write-Host '[INFO] Cleanup preview.' }
+    foreach ($row in $Report.Results) {
+        Write-Host "[$($row.Status)] $($row.Path)"
+        if ($row.Files -gt 0) {
+            Write-Host "    $($row.Reason) ($($row.Files) files, $($row.Bytes) bytes)"
+        } else { Write-Host "    $($row.Reason)" }
+    }
+    if ($Report.Preview) {
+        $eligible = @($Report.Results | Where-Object Status -eq 'Eligible')
+        $files = ($eligible | Measure-Object -Property Files -Sum).Sum
+        $bytes = ($eligible | Measure-Object -Property Bytes -Sum).Sum
+        Write-Host "Eligible files: $([long]$files) | Eligible bytes: $([long]$bytes)"
+    }
+    Write-Host "Deleted: $($Report.Deleted) | Skipped: $($Report.Skipped) | Failed: $($Report.Failed)"
+    Write-Host "Deleted files: $($Report.Files) | Reclaimed bytes: $($Report.Bytes)"
+}
+
+function Invoke-CirnetLauncherClean {
+    Import-Module (Join-Path $PSScriptRoot 'launcher\Clean.psm1') -Force
+    $plan = Invoke-CirnetClean -RepositoryRoot $repo -Preview
+    Show-CirnetCleanResult $plan
+    if ($Preview) { return ($plan.Failed -eq 0) }
+    if (-not $Yes) {
+        $answer = Read-CirnetInput 'Delete the eligible build and cache files? [y/N]: '
+        if ($null -eq $answer -or $answer.Trim().ToLowerInvariant() -notin @('y', 'yes')) {
+            Write-Host '[INFO] Cleanup cancelled.'
+            return $true
+        }
+    }
+    $report = Invoke-CirnetClean -RepositoryRoot $repo
+    Show-CirnetCleanResult $report
+    return ($report.Failed -eq 0)
+}
+
+function Invoke-CirnetLauncherDoctor {
+    Import-Module (Join-Path $PSScriptRoot 'launcher\Doctor.psm1') -Force
+    $report = Get-CirnetEnvironmentReport -RepositoryRoot $repo
+    foreach ($required in @($true, $false)) {
+        if ($required) { Write-Host 'Required tools and runtime' }
+        else { Write-Host 'Optional native and FPGA tools' }
+        foreach ($item in @($report.Checks | Where-Object { $_.Required -eq $required })) {
+            Write-Host "[$($item.Status)] $($item.Name)"
+            if ($item.Version) { Write-Host "    Version: $($item.Version)" }
+            if ($item.Path) { Write-Host "    Path: $($item.Path)" }
+            if ($item.Detail) { Write-Host "    $($item.Detail)" }
+            if ($item.Remediation -and $item.Status -ne 'INSTALLED') {
+                Write-Host "    Action: $($item.Remediation)"
+            }
+        }
+    }
+    if ($report.Ready) { Write-Host 'READY FOR LOCAL SIMULATION' }
+    else {
+        Write-Host 'MISSING REQUIRED DEPENDENCIES'
+        foreach ($item in $report.MissingRequired) { Write-Host "    $($item.Name) [$($item.Status)]" }
+    }
+    return [bool]$report.Ready
+}
+
+function Show-CirnetLauncherMenu {
+    while ($true) {
+        Write-Host @'
+========================================
+         CIRNET REMOTE LAUNCHER
+========================================
+
+How can I help you?
+
+[1] Clean build files
+[2] Check development environment
+[3] Run CIRNET Remote
+[0] Exit
+
+'@
+        $choice = Read-CirnetInput 'Enter your choice (0-3): '
+        if ($null -eq $choice) { return 'exit' }
+        $selected = ConvertTo-CirnetAction $choice
+        try {
+            switch ($selected) {
+                'clean' { Invoke-CirnetLauncherClean | Out-Null }
+                'doctor' { Invoke-CirnetLauncherDoctor | Out-Null }
+                'start' { return 'start' }
+                'stop' { return 'stop' }
+                'exit' { return 'exit' }
+                default { Write-Host '[WARN] Invalid choice. Enter 0-3, clean, doctor, start, or exit.' }
+            }
+        } catch {
+            [Console]::Error.WriteLine("[ERROR] $($_.Exception.Message)")
+        }
+        Write-Host ''
+    }
+}
+
+try {
+    if ($PSBoundParameters.Count -eq 0) { $Action = Show-CirnetLauncherMenu }
+    elseif (-not $Action) { $Action = 'start' }
+    else { $Action = ConvertTo-CirnetAction $Action }
+    if (-not $Action) { throw 'Unknown action. Use clean, doctor, start, stop, or exit.' }
+    if (($Preview -or $Yes) -and $Action -ne 'clean') { throw 'Use -Preview or -Yes with the clean action.' }
+    switch ($Action) {
+        'clean' { if (Invoke-CirnetLauncherClean) { exit 0 }; exit 1 }
+        'doctor' { if (Invoke-CirnetLauncherDoctor) { exit 0 }; exit 1 }
+        'exit' { Write-Host '[INFO] Goodbye.'; exit 0 }
+    }
+} catch {
+    [Console]::Error.WriteLine("[ERROR] $($_.Exception.Message)")
+    exit 1
+}
+
 $children = @()
 $launcherLock = $null
+$maintenance = $null
 $stopSignal = $null
 $savedControlMode = $null
 $readConsoleKeys = $false
@@ -83,18 +216,10 @@ function Start-ServiceProcess($exe, $arguments, $directory, $name) {
 
 try {
     Set-Location -LiteralPath $repo
-    $dev = Join-Path $env:USERPROFILE 'CIRNET-Dev'
-    if ($env:CIRNET_DEV_HOME) { $dev = $env:CIRNET_DEV_HOME }
-    $dev = [IO.Path]::GetFullPath($dev)
-    if ($dev -eq [IO.Path]::GetPathRoot($dev)) {
-        throw 'Set CIRNET_DEV_HOME to a directory below the drive root.'
-    }
-    $dev = $dev.TrimEnd('\')
-    if ($dev.Equals($repo, 'OrdinalIgnoreCase') -or $dev.StartsWith("$repo\", 'OrdinalIgnoreCase')) {
-        throw 'Set CIRNET_DEV_HOME to a directory outside the repository.'
-    }
-    $lockPath = Join-Path $dev 'launcher.lock'
-    $signalName = 'Local\CIRNET-Stop-' + (Get-Sha256 ([Text.Encoding]::UTF8.GetBytes($dev.ToUpperInvariant())))
+    $configuration = Get-CirnetRuntimeConfiguration -RepositoryRoot $repo
+    $dev = $configuration.DevHome
+    $lockPath = $configuration.LockPath
+    $signalName = $configuration.SignalName
     if ($Action -eq 'stop') {
         try { $stopSignal = [Threading.EventWaitHandle]::OpenExisting($signalName) }
         catch [Threading.WaitHandleCannotBeOpenedException] {
@@ -118,6 +243,7 @@ try {
         throw 'A stop request was sent, but the launcher did not exit within 20 seconds. Check the launcher window for details.'
     }
 
+    $maintenance = Enter-CirnetMaintenance -Configuration $configuration
     Get-Command git.exe -CommandType Application | Out-Null
     $node = (Get-Command node.exe -CommandType Application | Select-Object -First 1).Source
     $npm = (Get-Command npm.cmd -CommandType Application | Select-Object -First 1).Source
@@ -297,6 +423,7 @@ try {
     } finally {
         if ($stopSignal) { $stopSignal.Dispose() }
         if ($launcherLock) { $launcherLock.Dispose() }
+        if ($maintenance) { Exit-CirnetMaintenance -Mutex $maintenance }
         if ($null -ne $savedControlMode) {
             try { [Console]::TreatControlCAsInput = $savedControlMode }
             catch [IO.IOException], [InvalidOperationException] {}
