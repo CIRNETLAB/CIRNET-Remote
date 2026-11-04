@@ -80,7 +80,7 @@ RPC tests and its clean installed-package probe. Simulator and Hardware passed
 111 and 109 tests in their independent Ubuntu wheel gates. The clean Remote
 installed-package probe also passed on Windows with Python 3.11.
 
-The approved system/integration release is 0.1.2 with Interface 0.1.2, retaining API, Contracts, Simulator, Hardware and FPGA 0.1.1 and DEV tooling 1.0.0a1. The latest explicit M6 sequencing decision permits publication after actual full selected-artifact local Ubuntu browser acceptance without waiting for further Actions. Record prior CI-identity draft access and any new unrun identity checks separately; pending or failed Actions are not PASS. Use the exact system release manifest and [clean-machine runbook](../deployment/multi-repo-release.md). Installed Contracts resources and explicit Interface/FPGA artifacts replace frozen-reference fixtures. Standalone producer repositories own deterministic generation, unit/AST, backend, RPC and RTL gates; Remote owns the full integrated release groups. Historical M1–M5 measurements remain separately dated. Initial Python entrypoints must suppress source bytecode before importing helper modules, and all child temp/cache paths must belong to the canonical session. Applying a child bootstrap does not change the parent shell; import its recorded environment before continuing.
+The approved system/integration release is 0.1.3 with Interface 0.1.3, retaining API, Contracts, Simulator, Hardware and FPGA 0.1.1 and DEV tooling 1.0.0a1. The latest explicit M6 sequencing decision permits publication after actual full selected-artifact local Ubuntu browser acceptance without waiting for further Actions. Record prior CI-identity draft access and any new unrun identity checks separately; pending or failed Actions are not PASS. Use the exact system release manifest and [clean-machine runbook](../deployment/multi-repo-release.md). Installed Contracts resources and explicit Interface/FPGA artifacts replace frozen-reference fixtures. Standalone producer repositories own deterministic generation, unit/AST, backend, RPC and RTL gates; Remote owns the full integrated release groups. Historical M1–M5 measurements remain separately dated. Initial Python entrypoints must suppress source bytecode before importing helper modules, and all child temp/cache paths must belong to the canonical session. Applying a child bootstrap does not change the parent shell; import its recorded environment before continuing.
 
 Local-only release verification uses an explicit `distribution: "local"` manifest with `scripts/install_release.py --local-artifacts`. Retain exact absolute artifact paths, SHA-256 and committed producer revisions outside Git, including the unchanged rollback inventory. Mixed URL/path transport and implicit local fallback are rejected. This verifies a local set without publishing it or changing the canonical GitHub release selection; identify uncommitted verification-tool overlays separately.
 
@@ -438,3 +438,105 @@ The prepared Interface source commit is
 types, 229-module boundaries and all three production entrypoints. Source and
 static artifacts are built from that clean commit; no same-version published
 asset is replaced.
+
+The final functional Interface input is
+`6c150f34193bb3b009046cbaa586fae0260560f4`, superseding the initial packaging
+candidates above. The complete-suite attempt on intermediate `595d25f` exposed
+one further compatibility assertion: successful login returns the immutable
+API 0.1.1's `netcircuit_session`, while the renamed test expected only
+`cirnet_session`. Trace and screenshot inspection confirmed successful login,
+guest transfer and the original HttpOnly/Lax/root-path attributes. That attempt
+was stopped normally: seven PASS, one auth FAIL, one interrupted, one original
+historical skip and 48 not run; full-suite status is NOT_COMPLETED, never PASS.
+Its JUnit SHA256 is
+`d40185ddedd50260a5ac0fad41d7ecce6545161b9e386a396ebe21d791bcdcd4`.
+
+The final test recognizes both exact session-cookie aliases and retains the
+security, JavaScript-invisibility and storage-absence assertions for every
+present cookie. Missing, duplicate, empty or conflicting credentials fail.
+The canonical-only predicate was RED (one PASS/eight FAIL); all nine regressions
+and two namespace cases pass after the repair, as do E2E types. Independent
+review found no actionable issue. API/backend code and published wheels do not
+change. The complete fresh Node 22.23.3 suite passes 1,497/1,497 runtime cases,
+ten Contracts prechecks, unit types and 184 newly compiled bundles; all 517
+compiler/source inputs remain unchanged. Final unit receipt SHA256:
+`39ba8d0ba2b0ba7c3043b31063106e6f6de68085fc5ec61f25ee33e24419d531`.
+
+Two separate official clean-export/bootstrap/locked-install/production builds
+of this final commit produce identical archives:
+
+| Interface 0.1.3 artifact | Bytes | SHA256 |
+| --- | ---: | --- |
+| `cirnet-interface-0.1.3-source.tar.gz` | 2,425,434 | `41273280dfc3934c33f7d6ae7fb5c0d4f76d92a9e8b31dd4b6c50c164449b2e3` |
+| `cirnet-interface-0.1.3-static.tar.gz` | 2,193,267 | `5a4e53f118a9195fae27f55bb9a886fef229991cff835699aaf6e257c1341089` |
+
+The exact Git payload comprises 581 files plus generated source metadata; all
+582 source/35 static members are regular and root-safe. All three production
+entrypoints and synchronized 0.1.3 product metadata are present. Source
+fingerprint:
+`b7d0c0e4485a4b8906377d920c6850b820aae063abbba07cb98c301bb2848a3a`.
+Build receipt SHA256:
+`333a1da7bbdb665e53cabf07a9ca183f793bb65bba6e183c19a9cd94037a609c`.
+Complete browser acceptance of these exact committed bytes is recorded
+separately from these unit/build results.
+
+### Complete committed-artifact Ubuntu browser acceptance
+
+The final source/static pair above passes the complete original browser group
+on Ubuntu 24.04.5, Python 3.12.3, Node 22.23.4 and four CPUs, with the exact
+published API/Contracts/Simulator/Hardware wheels and Playwright 1.64.1 / Chromium
+1248. The unchanged `check_release.py --group browser` plan executes all three
+commands: PASS, exit zero, 2,415.2 seconds. The full interval is 2026-11-04
+12:14:55–12:55:10 UTC (19:14:55–19:55:10 UTC+07), within the original 90-minute
+job envelope. One worker, zero retries, original per-test deadlines, DPR,
+rendering assertions, tracing and baselines are preserved; the reviewed cookie
+alias correction is described separately above.
+
+JUnit records 58 tests: **57 PASS, 0 FAIL, 0 ERROR, 1 SKIP**. The sole skip is the
+original optional retained pre-fix source capture; neither current DPR matrix
+is skipped or filtered. Each covers all 30 poses: DPR 1 tests 2,349,652 pixels
+and DPR 2 tests 9,399,115, with zero changes and visible interiors throughout.
+
+| Original failed browser case | Final result | Seconds |
+| --- | --- | ---: |
+| Hidden-layer DPR 2, original 360-second budget | PASS | 202.094 |
+| Flexible multiview, both viewports including 1920/View TOP | PASS | 130.932 |
+| Unselected component closeups/camera settle | PASS | 110.195 |
+| Pending physical preflight Cancel | PASS | 10.929 |
+| Pending physical preflight release | PASS | 11.327 |
+
+The real login/guest-transfer case also passes against the immutable legacy API.
+Post-run checks retain all 582 source, 35 static, 406 Remote and 69 installed API
+payload files, together with every selected archive digest. Browser execution
+uses only a complete owned copy of the pinned Chromium. API shutdown exits zero;
+no owned active services or listening test ports remain.
+
+JUnit SHA256:
+`38db5ac27ebdf66f5f526fda92c4fabc21026759deaaa4080f3e4b836c658909`.
+Full log SHA256:
+`7e0351b2005a081e4be0c7fbdd31e5eca552d671c0641b77eda5c9fdaf00dad5`.
+This is completed local software acceptance; subsequent hosted Actions, physical
+hardware and deployment are not inferred from it.
+
+Six representative success visuals were inspected, including the repaired
+multiview/closeup/preflight/depth cases. Final accepted receipt SHA256:
+`ba6f5958951219c7c8fcfd85a7e790a6a9e71bd82fa6f8a97f4e267c31f90ba2`.
+The new [Interface v0.1.3 release](https://github.com/CIRNETLAB/CIRNET-Interface/releases/tag/v0.1.3)
+is published at the frozen functional commit. Its source/static asset IDs are
+`709523575` / `709523651`. Anonymous public downloads pass their exact sizes and
+SHA256 values and the existing strict source/static extraction/provenance checks.
+The selection changes exactly 16 reviewed leaves; all five other product
+records, compatibility and rollback remain unchanged. Integration tools are
+recorded at `ea171dd950586ba104a8224220266c78861f1298`, separately from the
+unchanged API wheel's original build provenance. Later documentation-only
+commits do not replace the tested Interface source/tag or artifact bytes.
+
+After pinning the published assets, the final release/system/local-artifact and
+Interface installer regression suite passes **173/173**, no skips, in 44.57 s.
+It uses the existing verification virtualenv; an initial attempt with the
+runtime-only interpreter had no pytest and is recorded as NOT_RUN, not a code
+test failure. No package was installed into or changed in that runtime.
+Context, 34 Remote Markdown files, 17 Interface Markdown files, both artifact
+worktree/index/committed-diff guards and whitespace checks pass. Follow-up
+hosted Actions are NOT_WAITED at the user's instruction; deployment and physical
+hardware checks are NOT_RUN.

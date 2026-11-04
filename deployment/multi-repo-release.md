@@ -1,6 +1,6 @@
 # CIRNET multi-repo release and rollback
 
-Use `integration/release-set.json` as the exact six-product selection. The approved system/integration release is 0.1.2 with Interface 0.1.2; API, Contracts, Simulator, Hardware and FPGA retain their original 0.1.1 artifacts and DEV tooling remains 1.0.0a1. Under the latest explicit M6 sequencing decision, actual full selected-artifact local Ubuntu browser acceptance precedes publication, without waiting for further Actions. Keep previous CI-identity draft access and new unrun checks distinct, and retain the true hosted outcomes in the M6 ledger. Download URLs identify exact numeric GitHub release asset IDs. After publication, assets from the six public repositories permit anonymous downloads; retain authenticated access for drafts, CI and API rate limits. Never use `latest`, editable producer installs or sibling checkouts as fallback.
+Use `integration/release-set.json` as the exact six-product selection. The approved system/integration release is 0.1.3 with Interface 0.1.3; API, Contracts, Simulator, Hardware and FPGA retain their original 0.1.1 artifacts and DEV tooling remains 1.0.0a1. Under the latest explicit M6 sequencing decision, actual full selected-artifact local Ubuntu browser acceptance precedes publication, without waiting for further Actions. The complete 0.1.3 Ubuntu result is recorded in the [verification guide](../docs/VERIFICATION.md#complete-committed-artifact-ubuntu-browser-acceptance). Keep previous CI-identity draft access and new unrun checks distinct, and retain the true hosted outcomes in the M6 ledger. Download URLs identify exact numeric GitHub release asset IDs. After publication, assets from the six public repositories permit anonymous downloads; retain authenticated access for drafts, CI and API rate limits. Never use `latest`, editable producer installs or sibling checkouts as fallback.
 
 Current repositories use `CIRNETLAB/CIRNET-*`. Current manifest URLs name those
 repositories directly. Only the approved Interface source/static selection changes;
@@ -20,7 +20,7 @@ retain its original bytes/tag/build provenance and verify downloads/install/run
 through the new URLs. If replacing an asset or moving v0.1.1 is necessary, retain
 the candidate, exact comparison and rollback set, finish independent work, and
 obtain the user's release decision. Do not overwrite immutable assets, delete a
-release or retag. The explicit 0.1.2 approval does not authorize changes to immutable 0.1.1 releases.
+release or retag. Approval for a new patch permits new artifacts only; published 0.1.1 and 0.1.2 releases remain immutable.
 
 Install Git, Node 22 and Python 3.12+ first. Create an external virtual environment and activate it. For authenticated access, privately set `CIRNET_ARTIFACTS_TOKEN` using the [selected-repository read credential](../docs/ci-artifact-access.md); it can remain unset for public published assets. Current CI workflows prefer `CIRNET_ARTIFACTS_READ_TOKEN` and retain the provisioned `NETCIRCUIT_ARTIFACTS_READ_TOKEN` fallback. From a clean Remote checkout run:
 

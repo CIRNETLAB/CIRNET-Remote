@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "0.1.2",
+  "releaseVersion": "0.1.3",
   "repositories": {
     "Remote": {
       "repository": "https://github.com/CIRNETLAB/CIRNET-Remote",
@@ -76,25 +76,25 @@
     },
     "Interface": {
       "repository": "https://github.com/CIRNETLAB/CIRNET-Interface",
-      "version": "0.1.2",
-      "sourceRevision": "a14d0950e71a997e2219a32f7268fd0e9d6502b3",
+      "version": "0.1.3",
+      "sourceRevision": "6c150f34193bb3b009046cbaa586fae0260560f4",
       "artifacts": {
         "source": {
-          "filename": "netcircuit-interface-0.1.2-source.tar.gz",
-          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Interface/releases/assets/687308869",
-          "sha256": "2362d98a62a2db0ab3405e76bb6d2a7fba2835aa4d5bd4d2da46fffef3078f82",
-          "size": 2404660,
-          "assetId": 687308869
+          "filename": "cirnet-interface-0.1.3-source.tar.gz",
+          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Interface/releases/assets/709523575",
+          "sha256": "41273280dfc3934c33f7d6ae7fb5c0d4f76d92a9e8b31dd4b6c50c164449b2e3",
+          "size": 2425434,
+          "assetId": 709523575
         },
         "static": {
-          "filename": "netcircuit-interface-0.1.2-static.tar.gz",
-          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Interface/releases/assets/687308906",
-          "sha256": "d766c46de69739ebae07be0652e0305bbd74b6ed0ed259e0482385e0a716c0ee",
-          "size": 2192026,
-          "assetId": 687308906
+          "filename": "cirnet-interface-0.1.3-static.tar.gz",
+          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Interface/releases/assets/709523651",
+          "sha256": "5a4e53f118a9195fae27f55bb9a886fef229991cff835699aaf6e257c1341089",
+          "size": 2193267,
+          "assetId": 709523651
         }
       },
-      "releaseTag": "v0.1.2"
+      "releaseTag": "v0.1.3"
     },
     "Simulator": {
       "repository": "https://github.com/CIRNETLAB/CIRNET-Simulator",
@@ -379,8 +379,8 @@
     }
   },
   "integration": {
-    "version": "0.1.2",
+    "version": "0.1.3",
     "repository": "https://github.com/CIRNETLAB/CIRNET-Remote",
-    "sourceRevision": "3c3c36a96daf31b7b25bf797431e76e4534076bc"
+    "sourceRevision": "ea171dd950586ba104a8224220266c78861f1298"
   }
 }

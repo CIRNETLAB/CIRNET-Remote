@@ -11,9 +11,9 @@
 
 | Product | Current repository | Version / ownership |
 | --- | --- | --- |
-| Remote | [CIRNETLAB/CIRNET-Remote](https://github.com/CIRNETLAB/CIRNET-Remote) | API/deployment 0.1.1; published system/integration 0.1.2 |
+| Remote | [CIRNETLAB/CIRNET-Remote](https://github.com/CIRNETLAB/CIRNET-Remote) | API/deployment 0.1.1; selected system/integration 0.1.3 |
 | Contracts | [CIRNETLAB/CIRNET-Contracts](https://github.com/CIRNETLAB/CIRNET-Contracts) | 0.1.1; schemas, catalog, protocols, Python resources and public SDK |
-| Interface | [CIRNETLAB/CIRNET-Interface](https://github.com/CIRNETLAB/CIRNET-Interface) | published 0.1.2; Web/editor/assets and browser assertions |
+| Interface | [CIRNETLAB/CIRNET-Interface](https://github.com/CIRNETLAB/CIRNET-Interface) | published 0.1.3; Web/editor/assets and browser assertions |
 | Simulator | [CIRNETLAB/CIRNET-Simulator](https://github.com/CIRNETLAB/CIRNET-Simulator) | 0.1.1; existing engine and replaceable backend boundary |
 | Hardware | [CIRNETLAB/CIRNET-Hardware](https://github.com/CIRNETLAB/CIRNET-Hardware) | 0.1.1; local RPC, station lifecycle and private transport |
 | FPGA | [CIRNETLAB/CIRNET-FPGA](https://github.com/CIRNETLAB/CIRNET-FPGA) | 0.1.1 source scaffold; pinned RTL verification |

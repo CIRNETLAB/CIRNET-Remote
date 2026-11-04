@@ -8,14 +8,16 @@ Current repository: [CIRNETLAB/CIRNET-Remote](https://github.com/CIRNETLAB/CIRNE
 All six repositories use `CIRNETLAB/CIRNET-*`. Current source packages, imports,
 commands and environment settings use CIRNET names with explicit legacy aliases.
 See [source-name compatibility](docs/NAMESPACE.md). Local checkout names may retain
-their old spelling. The published 0.1.2 system selection still uses its original
-wheels and immutable artifact identities.
+their old spelling. The 0.1.3 system selection reuses the original 0.1.1 wheels
+and selects Interface 0.1.3, with immutable artifact identities.
 Historical `TINIHI-Labs/net-Circuit-*` and the original Remote URL identify the
 same preserved repositories. Current consumers use the canonical URLs in the
 system manifest; the published 0.1.1 artifacts retain their original revisions and digests.
 The [M6 ledger](docs/verification/2026-10-27-multi-repo-migration-m6.md) separates
 published artifact sources, current source commits, candidate builds and
 published 0.1.2 acceptance.
+The [current browser acceptance](docs/VERIFICATION.md#complete-committed-artifact-ubuntu-browser-acceptance)
+records the complete Ubuntu gate and the 0.1.3 repair.
 
 A Web-first, Safety-gated, Lab-First remote electronics laboratory. Canonical authority: [Lab-First v3.1](docs/ARCHITECTURE.md). Safety allows execution; real student wiring produces behavior; software observes and evaluates. SAFETY != CORRECTNESS.
 
@@ -29,7 +31,7 @@ Verification entrypoint: `python scripts/check_release.py --show-plan` and named
 
 Documentation navigation and status conventions: [documentation index](docs/README.md). Codex verification follows [AGENTS.md](AGENTS.md) and the [shared verification guide](docs/VERIFICATION.md): generated screenshots, traces and diagnostic output go directly to an external session directory; retained repository evidence is Markdown. Model textures, icons and approved fixtures remain product/test assets.
 
-The published system selection is **0.1.2** with Interface **0.1.2** and the other selected component artifacts at **0.1.1**. Remote owns API, persistence, scheduler, deployment and integrated acceptance. Contracts owns schemas/catalogs/protocols and public SDK; Interface owns Web/editor/assets/browser assertions; Simulator owns execution/backends; Hardware owns local RPC/stations/transports; FPGA owns scaffold/RTL/toolchain. The build, runtime and release gates use the selected artifacts.
+The selected system release is **0.1.3** with Interface **0.1.3** and the other selected component artifacts at **0.1.1**. Remote owns API, persistence, scheduler, deployment and integrated acceptance. Contracts owns schemas/catalogs/protocols and public SDK; Interface owns Web/editor/assets/browser assertions; Simulator owns execution/backends; Hardware owns local RPC/stations/transports; FPGA owns scaffold/RTL/toolchain. The build, runtime and release gates use the selected artifacts.
 
 Activate an external virtual environment. Set `CIRNET_ARTIFACTS_TOKEN` privately if authenticated access is needed. Run `python scripts/install_release.py --manifest integration/release-set.json --environment-file release-env.json` from the Remote root. Apply the external JSON environment before `python scripts/check_release.py --show-plan` and the named groups. The installer verifies exact artifacts; it never deploys or starts services. See the [M6 plan](https://github.com/CIRNETLAB/CIRNET-Remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/superpowers/plans/2026-10-27-multi-repo-migration-m6.md), [fresh verification](docs/verification/2026-10-27-multi-repo-migration-m6.md) and [release/rollback runbook](deployment/multi-repo-release.md).
 
