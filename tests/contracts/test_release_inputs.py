@@ -4,9 +4,19 @@ import hashlib
 import json
 
 
-def test_interface_input_requires_an_explicit_artifact_selection(monkeypatch):
+@pytest.mark.parametrize('prefixes', [('CIRNET_',), ('NETCIRCUIT_',), ('CIRNET_', 'NETCIRCUIT_')],
+                         ids=['canonical-only', 'legacy-only', 'both'])
+def test_interface_input_requires_an_explicit_artifact_selection(tmp_path, monkeypatch, prefixes):
     from tests.support.release_inputs import interface_root
+    root = product(tmp_path)
+    for prefix in ('CIRNET_', 'NETCIRCUIT_'):
+        name = prefix + 'INTERFACE_ROOT'
+        monkeypatch.delenv(name, raising=False)
+        if prefix in prefixes:
+            monkeypatch.setenv(name, str(root))
+    assert interface_root() == root.resolve()
     monkeypatch.delenv('CIRNET_INTERFACE_ROOT', raising=False)
+    monkeypatch.delenv('NETCIRCUIT_INTERFACE_ROOT', raising=False)
     with pytest.raises(RuntimeError, match='CIRNET_INTERFACE_ROOT'):
         interface_root()
 

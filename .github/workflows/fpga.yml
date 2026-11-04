@@ -87,7 +87,14 @@ jobs:
       - name: Install the source artifact's pinned native RTL toolchain
         run: python -B "$CIRNET_FPGA_ROOT/scripts/install_toolchain.py"
       - name: Mandatory parser, compiler and safety behavior from the reviewed source
-        run: python -B "$CIRNET_FPGA_ROOT/scripts/check_rtl.py" --toolchain-root "$CIRNET_FPGA_TOOLCHAIN_ROOT"
+        shell: bash
+        run: |
+          toolchain_root="${CIRNET_FPGA_TOOLCHAIN_ROOT-${NETCIRCUIT_FPGA_TOOLCHAIN_ROOT-}}"
+          if [ -z "$toolchain_root" ]; then
+            echo "::error::FPGA toolchain root was not exported by the installer."
+            exit 1
+          fi
+          python -B "$CIRNET_FPGA_ROOT/scripts/check_rtl.py" --toolchain-root "$toolchain_root"
       - name: Installed Hardware remains unavailable under the selected scaffold
         run: python -m pytest -q tests/integration/test_fpga_compatibility.py tests/contracts/test_fpga_proposal_mapping.py --basetemp "$CIRNET_ARTIFACTS_SESSION/pytest"
       - name: Clean the owned external verification session

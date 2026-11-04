@@ -47,12 +47,21 @@ def manifest(tmp_path, target, digest):
     return path
 
 
-def test_exact_source_archive_and_manifest_are_required(tmp_path, monkeypatch):
+@pytest.mark.parametrize('prefixes', [('CIRNET_',), ('NETCIRCUIT_',), ('CIRNET_', 'NETCIRCUIT_')],
+                         ids=['canonical-only', 'legacy-only', 'both'])
+def test_exact_source_archive_and_manifest_are_required(tmp_path, monkeypatch, prefixes):
     target, digest = archive(tmp_path)
     selected = manifest(tmp_path, target, digest)
+    for prefix in ('CIRNET_', 'NETCIRCUIT_'):
+        name = prefix + 'FPGA_ARTIFACT_MANIFEST'
+        monkeypatch.delenv(name, raising=False)
+        if prefix in prefixes:
+            monkeypatch.setenv(name, str(selected))
+    assert consumer().selected_source_details() == (target, digest)
     assert consumer().selected_source_details(selected) == (target, digest)
     assert consumer().verify_archive(target, digest)['identity']['version'] == '0.1.1'
     monkeypatch.delenv('CIRNET_FPGA_ARTIFACT_MANIFEST', raising=False)
+    monkeypatch.delenv('NETCIRCUIT_FPGA_ARTIFACT_MANIFEST', raising=False)
     with pytest.raises(ValueError, match='explicit'): consumer().selected_source_details()
     with pytest.raises(ValueError, match='SHA256'): consumer().verify_archive(target, '0'*64)
     with pytest.raises(ValueError, match='absolute'): consumer().verify_archive(Path(target.name), digest)
@@ -102,14 +111,23 @@ def test_archive_rejects_alias_special_duplicate_and_oversize_members(tmp_path, 
     with pytest.raises(ValueError): consumer().verify_archive(target, hashlib.sha256(target.read_bytes()).hexdigest())
 
 
-def test_selected_product_checks_every_file_against_selected_archive(tmp_path, monkeypatch):
+@pytest.mark.parametrize('prefixes', [('CIRNET_',), ('NETCIRCUIT_',), ('CIRNET_', 'NETCIRCUIT_')],
+                         ids=['canonical-only', 'legacy-only', 'both'])
+def test_selected_product_checks_every_file_against_selected_archive(tmp_path, monkeypatch, prefixes):
     target, digest = archive(tmp_path); selected = manifest(tmp_path, target, digest)
     monkeypatch.setattr(consumer(), 'artifact_directory', lambda *args: tmp_path / 'products')
     product = consumer().extract_product(target, digest)
+    for prefix in ('CIRNET_', 'NETCIRCUIT_'):
+        name = prefix + 'FPGA_ROOT'
+        monkeypatch.delenv(name, raising=False)
+        if prefix in prefixes:
+            monkeypatch.setenv(name, str(product))
+    assert consumer().source_product(None, selected)['identity']['version'] == '0.1.1'
     assert consumer().source_product(product, selected)['identity']['version'] == '0.1.1'
     (product / 'README.md').write_text('tampered')
     with pytest.raises(ValueError, match='payload'): consumer().source_product(product, selected)
     monkeypatch.delenv('CIRNET_FPGA_ROOT', raising=False)
+    monkeypatch.delenv('NETCIRCUIT_FPGA_ROOT', raising=False)
     with pytest.raises(ValueError, match='explicit'): consumer().source_product(None, selected)
 
 

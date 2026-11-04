@@ -293,3 +293,95 @@ NOT_RUN for this naming task. The launcher's complete service smoke was NOT_RUN
 because existing unrelated listeners owned its default ports; the copied legacy
 cache's Doctor/provenance/import checks passed without changing the original
 state or database.
+
+## Remote Actions compatibility repair — 2026-11-04
+
+The inspected push runs used Remote `685c365770b9831f3f0fd24cc7bae6496a79bae4`.
+Two independent namespace boundaries caused the failures:
+
+- [FPGA job](https://github.com/CIRNETLAB/CIRNET-Remote/actions/runs/41799887751/job/126472788069):
+  the unchanged published FPGA 0.1.1 installer exported only
+  `NETCIRCUIT_FPGA_TOOLCHAIN_ROOT`. The renamed workflow passed the unset
+  canonical variable as an empty argument. The older checker interpreted that
+  as the checkout directory, which the output ownership guard correctly
+  rejected. The workflow now uses the legacy value only when the canonical
+  setting is unset, and rejects an empty result before invoking the checker.
+  An explicitly empty canonical setting continues to mask its legacy alias.
+- [Contracts job](https://github.com/CIRNETLAB/CIRNET-Remote/actions/runs/41799887674/job/126472787374)
+  and [Integration job](https://github.com/CIRNETLAB/CIRNET-Remote/actions/runs/41799887559/job/126472788064):
+  three negative tests removed only the canonical FPGA manifest/root or
+  Interface root setting. CI had exported both aliases, so the valid legacy
+  selection remained active. The original totals were 3 FAIL / 853 PASS and
+  3 FAIL / 1506 PASS / 95 SKIP respectively. These fixtures now remove both
+  aliases when testing missing input. They first prove a valid selection for
+  canonical-only, legacy-only and dual-prefix environments; archive integrity,
+  tamper detection and missing-input rejection assertions remain enforced.
+
+The runtime compatibility resolver, published release bytes, dependency pins,
+RTL assertions, browser baselines and other five repositories are unchanged.
+The shell regression executes the actual YAML step with a recording consumer;
+it covers both namespaces, canonical precedence, explicit empty values, absent
+values and paths containing spaces.
+
+Before the fixture correction, the expanded local regression reproduced
+6 FAIL / 3 PASS; the corrected two-file suite passed all 49 cases. Before the
+workflow correction, its executable regression reproduced 5 FAIL / 2 PASS;
+afterwards all 7 cases passed. Six existing FPGA/release workflow policy tests
+also passed. Independent reviews found no actionable issues.
+
+Actual native acceptance also executed the current YAML block on Windows with
+only the legacy toolchain-root export present. It used Python 3.14.4, Node
+22.23.3, pyslang 12.0.0, the selected published Contracts wheel, and the selected
+FPGA archive (`b82edb4167b821f55d98331304d0c49d2f37638d972fc9c167287bb6368908ca`).
+The pinned OSS CAD Suite 2026-10-26 archive and its 372 execution files were
+authenticated. The unmodified checker exited zero after parser/compiler checks
+and both `LAB_FIRST_RTL_PASS` and `PERMIT_MATRIX_RTL_PASS` behavioral testbenches.
+This is native RTL simulation evidence; physical FPGA hardware was NOT_RUN.
+
+The Windows Node output/cleanup guard suites passed all 5 tests. Context,
+Markdown, artifact worktree/index and whitespace guards passed. The verified
+official actionlint 1.7.12 executable passed all 9 workflow files with
+`-shellcheck= -pyflakes=`.
+
+Ubuntu 24.04.5 / Python 3.12.3 / Node 22.23.4 reproduced the original three
+selector failures with real selected products and both namespaces exported
+(3 expected failures in 0.19 seconds). Source-locked Contracts, Simulator and
+Hardware wheels, the API wheel, and the reviewed Interface/FPGA products were
+installed in a fresh environment; `pip check` passed. The Contracts prechecks
+also passed, including all 88 retained SDK baseline cases and 89 public
+shape/profile comparisons.
+
+An auxiliary Contracts run used seven protected Git roots, including read-only
+Windows bootstrap checkouts. Repeated cross-filesystem Git discovery made it
+much slower than hosted CI; Docker Desktop then stopped unexpectedly before a
+complete exit result was captured. That run is NOT_COMPLETED, not PASS. Final
+acceptance uses a fresh owned single-consumer context protecting the actual
+disposable Remote Git checkout, matching the hosted job. Original repositories
+remain read-only, and physical Git/path/symlink validation is unchanged.
+
+The four documented Python documentation/provenance/link suites also passed
+all 12 cases on Windows. No screenshots or baselines were generated or changed.
+
+Final local record: 2026-11-04 17:14 UTC+07 (10:14 UTC), against the inspected
+base revision plus the four code/test changes and this verification record.
+The fresh Ubuntu runtime used the cached Playwright noble image
+`sha256:152506b22d291accd022091243beac5096b030e397ad1707e5c6ffd8c1c22fe1`;
+the image supplied the OS/runtime, not browser acceptance evidence.
+
+| Final verification | Result |
+| --- | --- |
+| Ubuntu `python scripts/check_release.py --group contracts` | PASS: all 12 commands, 869 tests, exit 0; 90.8 seconds |
+| Ubuntu `python scripts/check_release.py --group python` | NOT_COMPLETED: Docker Desktop stopped again during pytest; no complete exit result, so no PASS claim |
+| Selected Interface `npm test` | NOT_RUN: its preceding container gate was interrupted |
+| Windows selector files / YAML regression / existing workflow policy | PASS: 49 / 7 / 6 cases respectively |
+| Windows selected FPGA native YAML step | PASS: parser/compiler validation and both safety testbenches, exit 0 |
+| Actionlint / Node guards / documentation tests | PASS: 9 workflows / 5 tests / 12 tests respectively |
+| Browser, PostgreSQL, deployment and physical FPGA acceptance | NOT_RUN for this focused workflow/test repair |
+
+After the second Docker Desktop interruption, no further runtime restart was
+attempted. The completed Contracts gate includes every changed testcase and the
+actual shell-boundary regression; the separate native check executes the
+published FPGA checker through the repaired YAML. The incomplete full Python
+and unstarted Interface gates remain explicit limitations. New hosted Actions
+are not awaited. Raw diagnostics began outside Git, were inspected, and only
+this canonical Markdown record is retained after owned-session cleanup.
