@@ -87,7 +87,7 @@ function Invoke-CirnetLauncherClean {
 }
 
 function Invoke-CirnetLauncherDoctor {
-    Write-CirnetSection 'ENVIRONMENT DOCTOR'
+    Write-CirnetBanner -Title '<<<<<<<<<<< ENVIRONMENT DOCTOR >>>>>>>>>>>'
     Import-Module (Join-Path $PSScriptRoot 'launcher\Doctor.psm1') -Force
     Write-CirnetSection 'Required tools and recommended versions'
     foreach ($tool in Get-CirnetRequiredTools) {
@@ -127,13 +127,10 @@ function Invoke-CirnetLauncherDoctor {
 function Show-CirnetLauncherMenu {
     while ($true) {
         Write-CirnetBanner
-        Write-CirnetLine -Text 'How can I help you?'
-        Write-CirnetLine -Text ''
         Write-CirnetLine -Text '[1] Clean build files' -Tone Accent
         Write-CirnetLine -Text '[2] Check development environment' -Tone Accent
         Write-CirnetLine -Text '[3] Run CIRNET Remote' -Tone Accent
         Write-CirnetLine -Text '[0] Exit' -Tone Accent
-        Write-CirnetLine -Text ''
         Write-CirnetLine -Text 'Commands: clean | doctor | start | stop | exit' -Tone Muted
         $choice = Read-CirnetInput 'Enter your choice (0-3): '
         if ($null -eq $choice) { return 'exit' }
@@ -272,7 +269,7 @@ function Invoke-CirnetLauncherLifecycle([string]$Mode) {
         }
 
         $savedEnvironment = [Environment]::GetEnvironmentVariables('Process')
-        Write-CirnetBanner -Title '<<<<<<<< STARTING CIRNET REMOTE >>>>>>>>>>'
+        Write-CirnetBanner -Title '<<<<<<<<< STARTING CIRNET REMOTE >>>>>>>>>'
         $maintenance = Enter-CirnetMaintenance -Configuration $configuration
         Get-Command git.exe -CommandType Application | Out-Null
         $node = (Get-Command node.exe -CommandType Application | Select-Object -First 1).Source
@@ -449,9 +446,8 @@ function Invoke-CirnetLauncherLifecycle([string]$Mode) {
             if (-not $NoBrowser) {
                 try { Start-Process $url } catch { Write-CirnetMessage -Level WARN -Text "Could not open the browser. Open $url manually." }
             }
-            Write-CirnetMessage 'Focus this terminal and press Esc to stop and return to the launcher menu.'
+            Write-CirnetMessage 'Press Esc to stop and return to the launcher menu.'
             Write-CirnetMessage 'Press Enter or Ctrl+C to stop and exit.'
-            Write-CirnetMessage 'You can also run .\run-cirnet.bat stop from the repository directory in another terminal.'
             while (-not $stopSignal.WaitOne(150) -and -not (Test-StopRequested)) {
                 foreach ($child in $children) {
                     if ($child.HasExited) { throw "A CIRNET service exited unexpectedly (exit code $($child.ExitCode))." }
