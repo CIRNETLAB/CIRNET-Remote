@@ -334,7 +334,11 @@ def test_dev_bootstrap_precedes_every_consumer_and_docs_allocator_invocation():
             assert bootstrap<allocation,(name,job_name,'allocator ran before independent DEV bootstrap')
             assert any(index<bootstrap and step.get('uses','').startswith('actions/setup-node@') for index,step in enumerate(steps))
             assert any(index<bootstrap and step.get('uses','').startswith('actions/setup-python@') for index,step in enumerate(steps))
-            assert steps[bootstrap].get('env',{}).get('CIRNET_ARTIFACTS_TOKEN')=='${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}'
+            bootstrap_environment = steps[bootstrap].get('env', {})
+            if name == 'integration.yml' and job_name in {'selector-observation', 'selector-comparison'}:
+                assert 'CIRNET_ARTIFACTS_TOKEN' not in bootstrap_environment
+            else:
+                assert bootstrap_environment.get('CIRNET_ARTIFACTS_TOKEN')=='${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}'
 
 
 def test_hardware_and_simulator_consumers_share_one_targeted_python_run():

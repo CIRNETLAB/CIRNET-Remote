@@ -29,7 +29,7 @@ def test_ci_pytest_command_can_import_repository_scripts(workflow_name, job_name
     assert len(commands) == 1, 'CI must have one complete Python collection entrypoint'
     arguments = commands[0]
     if workflow_name == 'integration.yml':
-        assert arguments == ['python', 'scripts/check_release.py', '--group', 'python']
+        assert arguments == ['python', 'scripts/check_release.py', '--group', 'python', '--observe-pytest', 'full']
         # Inspect the real group rather than replacing the integration gate with
         # a smaller pytest selection. Only the nested import probe is narrowed.
         result = subprocess.run([sys.executable, *arguments[1:], '--show-plan'],
@@ -44,8 +44,8 @@ def test_ci_pytest_command_can_import_repository_scripts(workflow_name, job_name
         ]
         arguments = plan[-1]['command']
         assert arguments[:4] == [sys.executable, '-m', 'pytest', '-q']
-        assert arguments[4:5] == ['--basetemp'] and len(arguments) == 6
-        assert Path(arguments[-1]).is_absolute()
+        assert arguments[4] == '--basetemp' and Path(arguments[5]).is_absolute()
+        assert arguments[6:] == ['-p', 'scripts.ci_selection_pytest', '--cirnet-ci-observation=full']
     else:
         assert arguments[:5] == ['python', '-m', 'pytest', '-q', 'services/api/tests']
     # Exercise the real workflow launcher with one existing import-dependent

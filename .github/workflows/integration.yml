@@ -209,20 +209,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - &observation-python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.14'
-      - uses: actions/setup-node@v4
+      - &observation-node
+        uses: actions/setup-node@v4
         with:
           node-version: '26'
-      - name: Select exact dependency artifacts from the system lock
+      - &observation-release
+        name: Select exact dependency artifacts from the system lock
         run: python scripts/select_ci_release.py --manifest integration/release-set.json --github-env "$GITHUB_ENV"
       - name: Bootstrap the pinned independent DEV allocator
         env:
           CIRNET_ARTIFACTS_DIR: ${{ runner.temp }}/cirnet-verification
           CIRNET_ARTIFACTS_TOKEN: ${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
-        run: python scripts/install_contracts.py --dev-only
-      - name: Allocate owned external verification runtime
+        run: &observation-bootstrap python scripts/install_contracts.py --dev-only
+      - &observation-runtime
+        name: Allocate owned external verification runtime
         env:
           CIRNET_ARTIFACTS_DIR: ${{ runner.temp }}/cirnet-verification
         shell: bash
@@ -242,14 +246,15 @@ jobs:
             echo "npm_config_cache=$ci_runtime/npm-cache"
             echo "PYTHONDONTWRITEBYTECODE=1"
           } >> "$GITHUB_ENV"
-      - name: Build Python dependencies from pinned source
+      - &observation-build-dependencies
+        name: Build Python dependencies from pinned source
         run: |
           python -B scripts/build_ci_dependency.py Contracts --github-env "$GITHUB_ENV"
           python -B scripts/build_ci_dependency.py Simulator --github-env "$GITHUB_ENV"
           python -B scripts/build_ci_dependency.py Hardware --github-env "$GITHUB_ENV"
       - env:
           CIRNET_ARTIFACTS_TOKEN: ${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
-        run: |
+        run: &observation-install-python |
           python -m pip install -r requirements-verification.txt
           python scripts/install_contracts.py --manifest "$CIRNET_CI_CONTRACTS_ARTIFACT_MANIFEST"
           python scripts/install_simulator.py --wheel "$CIRNET_CI_SIMULATOR_WHEEL" --sha256 "$CIRNET_CI_SIMULATOR_WHEEL_SHA256"
@@ -262,29 +267,148 @@ jobs:
       - name: Download the explicit reviewed Interface product
         env:
           CIRNET_ARTIFACTS_TOKEN: ${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
-        run: python -m scripts.install_interface --manifest integration/release-set.json --github-env "$GITHUB_ENV"
+        run: &observation-download-interface python -m scripts.install_interface --manifest integration/release-set.json --github-env "$GITHUB_ENV"
       - name: Bootstrap Interface SDK from exact reviewed artifacts
         env:
           CIRNET_CONTRACTS_ARTIFACT_MANIFEST: ''
           NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST: ''
           CIRNET_ARTIFACTS_TOKEN: ${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
-        run: node "$CIRNET_INTERFACE_ROOT/scripts/bootstrap-contracts.mjs" --github-env "$GITHUB_ENV"
-      - name: Install independent Interface verification tools
+        run: &observation-bootstrap-interface node "$CIRNET_INTERFACE_ROOT/scripts/bootstrap-contracts.mjs" --github-env "$GITHUB_ENV"
+      - &observation-install-interface
+        name: Install independent Interface verification tools
         working-directory: ${{ env.CIRNET_INTERFACE_ROOT }}
         run: npm ci --no-audit --no-fund
-      - name: Verify installed Contracts RPC provenance
+      - &observation-contract-provenance
+        name: Verify installed Contracts RPC provenance
         run: python -m scripts.check_contract_consumer
       - name: Select and verify the exact reviewed FPGA source artifact
         env:
           CIRNET_ARTIFACTS_TOKEN: ${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
-        run: |
+        run: &observation-install-fpga |
           python scripts/install_fpga.py
-      - run: python -m scripts.check_fpga_consumer
-      - run: python scripts/check_release.py --group python
-      - name: Clean the owned external verification session
+      - &observation-fpga-provenance
+        run: python -m scripts.check_fpga_consumer
+      - run: python scripts/check_release.py --group python --observe-pytest full
+      - name: Retain the advisory full Python receipt
+        if: always() && env.CIRNET_ARTIFACTS_SESSION != ''
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-selection-full-${{ github.run_attempt }}
+          path: ${{ env.CIRNET_ARTIFACTS_SESSION }}/ci-selection/receipt.json
+          if-no-files-found: warn
+          retention-days: 7
+      - &observation-cleanup
+        name: Clean the owned external verification session
         if: always() && env.CIRNET_ARTIFACTS_SESSION != ''
         shell: bash
         run: node scripts/cleanup-artifact-session.mjs --cleanup "$CIRNET_ARTIFACTS_SESSION"
+  selector-observation:
+    if: github.ref_type != 'tag'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - *observation-python
+      - *observation-node
+      - *observation-release
+      - &observation-public-bootstrap
+        name: Bootstrap the pinned public DEV allocator
+        env:
+          CIRNET_ARTIFACTS_DIR: ${{ runner.temp }}/cirnet-verification
+        run: *observation-bootstrap
+      - *observation-runtime
+      - *observation-build-dependencies
+      - name: Install and verify the same Python inputs
+        run: *observation-install-python
+      - name: Download the explicit reviewed Interface product
+        run: *observation-download-interface
+      - name: Bootstrap Interface SDK from exact reviewed artifacts
+        env:
+          CIRNET_CONTRACTS_ARTIFACT_MANIFEST: ''
+          NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST: ''
+        run: *observation-bootstrap-interface
+      - *observation-install-interface
+      - *observation-contract-provenance
+      - name: Select and verify the exact reviewed FPGA source artifact
+        run: *observation-install-fpga
+      - *observation-fpga-provenance
+      - run: python scripts/check_release.py --group python --observe-pytest selected
+      - name: Retain the advisory selected Python receipt
+        if: always() && env.CIRNET_ARTIFACTS_SESSION != ''
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-selection-selected-${{ github.run_attempt }}
+          path: ${{ env.CIRNET_ARTIFACTS_SESSION }}/ci-selection/receipt.json
+          if-no-files-found: warn
+          retention-days: 7
+      - *observation-cleanup
+  selector-comparison:
+    needs: [repository-contracts, selector-observation]
+    if: always() && !cancelled() && github.ref_type != 'tag'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - *observation-python
+      - *observation-node
+      - *observation-release
+      - *observation-public-bootstrap
+      - name: Allocate external space for the two receipts and comparison
+        env:
+          CIRNET_ARTIFACTS_DIR: ${{ runner.temp }}/cirnet-verification
+        shell: bash
+        run: |
+          CIRNET_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"
+          export CIRNET_ARTIFACTS_SESSION
+          echo "CIRNET_ARTIFACTS_SESSION=$CIRNET_ARTIFACTS_SESSION" >> "$GITHUB_ENV"
+          receipts="$(node scripts/artifact-paths.mjs ci-selection-inputs)"
+          echo "CIRNET_CI_OBSERVATION_INPUTS=$receipts" >> "$GITHUB_ENV"
+      - name: Download the full Python receipt from this attempt
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: ci-selection-full-${{ github.run_attempt }}
+          path: ${{ env.CIRNET_CI_OBSERVATION_INPUTS }}/full
+      - name: Download the selected Python receipt from this attempt
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: ci-selection-selected-${{ github.run_attempt }}
+          path: ${{ env.CIRNET_CI_OBSERVATION_INPUTS }}/selected
+      - name: Compare exact inputs, case IDs and outcomes
+        shell: bash
+        run: |
+          printf '### Advisory test selector\n\n```\n' >> "$GITHUB_STEP_SUMMARY"
+          result=0
+          python -B -m scripts.compare_ci_selection \
+            "$CIRNET_CI_OBSERVATION_INPUTS/full/receipt.json" \
+            "$CIRNET_CI_OBSERVATION_INPUTS/selected/receipt.json" | tee -a "$GITHUB_STEP_SUMMARY" || result=$?
+          printf '```\n' >> "$GITHUB_STEP_SUMMARY"
+          exit "$result"
+      - name: Retain the advisory comparison
+        if: always() && env.CIRNET_ARTIFACTS_SESSION != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-selection-comparison-${{ github.run_attempt }}
+          path: ${{ env.CIRNET_ARTIFACTS_SESSION }}/ci-selection/comparison.json
+          if-no-files-found: warn
+          retention-days: 7
+      - *observation-cleanup
   postgresql-migrations:
     runs-on: ubuntu-latest
     services:

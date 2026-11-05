@@ -77,6 +77,35 @@ from the system release lock. Both paths run the same complete browser suite
 with the selected API, Hardware, Simulator and Contracts packages. The source
 path uses public SDK inputs and does not receive the release read credential.
 
+### CI test selector observation
+
+On pull requests and pushes to `master`, Integration runs the advisory selector
+on a separate runner alongside `repository-contracts`. Both jobs use the same
+candidate commit and reviewed inputs. The full job still runs the entire Python
+gate. PostgreSQL, Browser, RTL, artifact access and the producer workflows
+keep their existing triggers and commands. The selector's gate list records
+impact for review. It does not control any of those jobs.
+
+The initial narrow rules cover the Remote health endpoint and reviewed
+documentation paths. Unreviewed paths, security or safety changes, shared
+build and release inputs, renames, deletions and unverifiable Git ranges select
+the full Python gate in the advisory job. Producer changes reach Remote through
+reviewed locks. Producer path information without its exact candidate artifact
+also selects full coverage. Manual runs without a verified diff use the same
+fallback. Tags keep the existing release gates.
+
+`check_release.py --group python --observe-pytest full` records exact pytest
+node IDs and outcomes without deselecting tests. The `selected` mode runs only
+the applicable cases after collecting the same suite. The comparison checks
+the candidate, lock hashes, installed wheel identities and dependency versions,
+verified Interface SDK and FPGA source, toolchain versions, collected and
+executed IDs, and outcomes.
+It keeps skips and expected failures separate from passes. A missing receipt or
+different inputs gives `NOT_VERIFIED`. A failure outside the selected set is
+listed as a missed failure. The GitHub job summary and allocator-owned JSON
+receipts are advisory. Keep the full gate authoritative and review the path
+rule if a missed failure appears.
+
 Primary verification uses normal-GIL CPython 3.14 and Node 26. The explicit
 Python 3.11 installed-package gate retains the reusable packages' minimum
 compatibility check. A pinned producer archive can contain older wheel-hash

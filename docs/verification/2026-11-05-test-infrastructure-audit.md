@@ -188,3 +188,71 @@ Contracts còn một kiểm tra packed SDK trong pytest cho mỗi Python lane, g
 | Remote Python trên Windows | PASS toàn bộ sáu lệnh `check_release.py --group python`, 1.707 ca pass, ba skip do quyền file-symlink. Dùng các wheel dựng từ source pin CI và sản phẩm Interface/FPGA đã xác minh. Lần chạy trước có một lỗi Git do basetemp dài. Cùng ca và toàn bộ suite đạt ở phiên allocator ngắn hơn, giữ nguyên fixture. |
 | Remote PostgreSQL | PASS 18/18 với server 18.6 và client 18.6 thực, gồm backup/restore, migrations và writer races. Database cô lập trong mạng Docker nội bộ. |
 | Workflow và phạm vi | PASS Actionlint 1.7.12 trên 13 workflow. Đối chiếu trigger với Git baseline giữ PR/manual và hai luồng tag Remote. Spec browser, Chromium pin, viewport, DPR, assertions và cấu hình retry gốc giữ nguyên. |
+
+## 7. Triển khai P2
+
+Integration chạy thêm hai job quan sát. `selector-observation` chạy độc lập
+và song song với `repository-contracts` trên cùng commit. `selector-comparison`
+đọc hai receipt của cùng lượt chạy sau khi cả hai job kết thúc. Chỉ chế độ
+quan sát có thể loại ca pytest sau collection. Job `repository-contracts` vẫn
+chạy toàn bộ gate Python. PostgreSQL, Browser, RTL, system artifact access và
+các gate ở repo sản xuất giữ lệnh và lịch cũ. Hai job mới dùng artifact công
+khai đã khóa digest và quyền `contents: read`.
+
+Phạm vi hẹp ban đầu gồm endpoint health của Remote và các tài liệu đã duyệt.
+Corpus kiểm tra API, auth và lease, RPC Hardware, backend Simulator, schema
+và DEV của Contracts, renderer Interface, RTL FPGA, lock, build, workflow,
+chính selector, rename và đầu vào không rõ. Thay đổi chưa được duyệt, thay đổi
+liên repo thiếu artifact của ứng viên và Git range thiếu bằng chứng đều kích
+hoạt chế độ full. Thay đổi producer thực tế đi vào Remote qua các lock đã duyệt.
+Receipt ghi lý do chọn, tập case ID, kết quả theo từng ca và danh tính đầu vào.
+So sánh giữ skip riêng, liệt kê ca ngoài phạm vi và đánh dấu `FAIL` nếu bộ đầy
+đủ phát hiện lỗi mà selector bỏ sót. Receipt thiếu hoặc khác đầu vào được ghi
+`NOT_VERIFIED`. Kết quả quan sát không được dùng làm required check.
+
+Đối chiếu YAML với P1 xác nhận trigger, `system-artifact-access` và
+`postgresql-migrations` giữ nguyên. So sánh 256 tổ hợp nhóm của release runner
+xác nhận lệnh mặc định giữ nguyên. Hai chế độ quan sát thêm tham số ghi nhận
+vào đúng lệnh pytest của nhóm Python, giữ đủ năm bước kiểm tra trước đó. Hai
+bài kiểm tra cấu hình CI được cập nhật để kiểm tra chính xác lệnh full có
+telemetry và quyền tải artifact của hai job mới. Các assertion hành vi và
+deadline được giữ nguyên.
+
+Các đối chứng sau chạy trên bản export P1 cô lập với CPython 3.14.4, Node
+26.12.1, Chromium r1248, PostgreSQL 18.6 và toolchain RTL đã khóa. Mỗi gate gốc
+đạt ở bản sạch và thất bại với thay đổi được nêu, dùng assertions hiện có.
+
+| Đối chứng | Phản ứng gate |
+| --- | --- |
+| SHA-256 Contracts sai | Installer từ chối wheel dù vẫn là đúng file đã phát hành. |
+| OpenAPI không đồng bộ | `export_openapi.py --check` phát hiện tiêu đề FastAPI bị đổi. |
+| SDK công khai xuất ký hiệu riêng | Kiểm tra gói SDK phát hiện `InstrumentationExecutionPlan` trong payload. |
+| Trường RPC khác schema | Kiểm tra biên dịch v2 phát hiện `Target.experiment_id` bị đổi tên. |
+| Lease hết hạn không hủy phiên | Assertion timeout trong ca dọn trạng thái an toàn thất bại. |
+| Dùng kiểm tra SAFE cũ sau cấp điện | Ca Hardware kiểm tra SAFE sau khi vào `ARMED` thất bại với driver kiểm thử. |
+| Bỏ khóa giao dịch PostgreSQL | Cả hai ca writer race trên PostgreSQL 18.6 báo writer không đợi giao dịch giữ khóa. |
+| RTL bỏ kiểm tra permit | `tb_lab_first_control.v` báo đầu ra không tắt khi mất routing permit. |
+| Chromium thiếu WebGL | Ca technical grid báo lỗi tạo context và không đạt `data-ready='true'`. |
+
+### Kết quả chạy song song
+
+Ubuntu 24.04, CPython 3.14.6, Node 26.12.1, npm 11.19.1 và pytest 9.1.1.
+Hai lượt dùng cùng ứng viên thử nghiệm `2ece3e9647917b959f495c72e8253a3e0201664e`,
+với một comment ở endpoint health để kích hoạt rule hẹp. Hai venv, SQLite,
+captures và CPU affinity được tách riêng. Cả hai thu thập đúng 1.740 case ID
+và dùng cùng artifact đã xác minh, cùng payload API và cùng 71 phiên bản gói
+Python đã cài.
+
+| Lượt | Kết quả |
+| --- | --- |
+| `--observe-pytest full` | PASS đủ sáu lệnh trong 293,3 giây, 1.597 ca đạt và 143 skip launcher trên Ubuntu. |
+| `--observe-pytest selected` | PASS đủ sáu lệnh trong 150,5 giây, 505 ca đạt, gồm 492 ca API và 13 ca baseline tài liệu/repository. 1.235 ca được bỏ chọn trong lượt quan sát. |
+| So sánh receipt | PASS, không khác case ID đã thu thập, đầu vào hoặc kết quả ca đã chọn. Sửa bản sao của receipt thật để mô phỏng lỗi ngoài tập chọn cho `FAIL`. Đổi phiên bản dependency hoặc SHA ứng viên cho `NOT_VERIFIED`. |
+| Kiểm tra bổ sung | PASS 64 ca P2 trên Windows, 5 ca Node về allocator/artifact, Actionlint 1.7.12 trên 8 workflow Remote và kiểm tra Markdown/context. |
+
+Lượt thử ban đầu dùng chung quota bốn CPU và gặp timeout ở ca khóa stop. Ca
+đó đạt ba lần khi chạy riêng và đạt ở cả hai lượt cuối, giữ nguyên deadline.
+Lượt thử đầu cũng phát hiện `egg-info` từ checkout che metadata wheel trong
+pytest. Hồi quy mới xác nhận receipt chỉ đọc metadata từ môi trường đã cài.
+Các số thời gian là phép đo cục bộ cho một thay đổi thử. Chưa đo tác động
+trên runner GitHub.

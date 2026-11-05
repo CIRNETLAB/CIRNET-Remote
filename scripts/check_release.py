@@ -28,7 +28,7 @@ MANDATORY=('contracts','python','web','postgres','browser','package')
 GROUPS=(*MANDATORY,'load','all')
 
 
-def release_plan(groups,package_temporary_root=None):
+def release_plan(groups,package_temporary_root=None,*,observe_pytest=None):
     selected=(set(MANDATORY) if 'all' in groups else set()) | (set(groups)-{'all'})
     steps=[]
     npm=shutil.which('npm.cmd' if os.name=='nt' else 'npm') or 'npm'
@@ -37,7 +37,8 @@ def release_plan(groups,package_temporary_root=None):
     def python(group,*arguments):add(group,[sys.executable,*arguments])
     def pytest(group,*paths):
         target=artifact_directory(f'pytest-release-{group}')
-        python(group,'-m','pytest','-q',*paths,'--basetemp',target)
+        observation=('-p','scripts.ci_selection_pytest',f'--cirnet-ci-observation={observe_pytest}') if group=='python' and observe_pytest else ()
+        python(group,'-m','pytest','-q',*paths,'--basetemp',target,*observation)
     if 'contracts' in selected:
         python('contracts','scripts/check_context.py')
         python('contracts','-m','scripts.check_contract_consumer')
@@ -85,8 +86,13 @@ def main(argv=None):
     parser.add_argument('--interface-root',type=Path,help='Explicit extracted Interface product for the Remote-owned browser gate; no retained Web fallback.')
     parser.add_argument('--fpga-root',type=Path,help='Explicit verified extracted FPGA source product; no retained FPGA fallback.')
     parser.add_argument('--fpga-manifest',type=Path,help='Explicit FPGA archive path/SHA256 manifest.')
+    parser.add_argument('--observe-pytest',choices=('full','selected'),help='Record the full Python run or run its advisory CI selection.')
     arguments=parser.parse_args(argv)
-    steps=release_plan(arguments.group or ['all'],arguments.package_temporary_root)
+    groups=arguments.group or ['all']
+    if arguments.observe_pytest and groups!=['python']:
+        parser.error('--observe-pytest requires exactly --group python.')
+    plan_options={'observe_pytest':arguments.observe_pytest} if arguments.observe_pytest else {}
+    steps=release_plan(groups,arguments.package_temporary_root,**plan_options)
     if arguments.show_plan:
         print(json.dumps(steps,indent=2));return 0
     if any(step['group']=='postgres' for step in steps) and not getenv('CIRNET_TEST_POSTGRES_URL'):
