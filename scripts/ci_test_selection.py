@@ -28,7 +28,7 @@ NARROW_PATHS = {
 RISK = re.compile(r'auth|csrf|lease|control|migrat|fenc|power|policy|persist|station|runtime|postgres')
 
 
-def _full(reasons):
+def full_selection(reasons):
     return {'mode': 'full', 'targets': [], 'reasons': sorted(reasons), 'gates': list(FULL_GATES)}
 
 
@@ -77,9 +77,9 @@ def select_changes(changes):
     except (TypeError, ValueError):
         reasons.add('unverified-change-shape')
     if not reasons:
-        return _full({'empty-change-set'})
+        return full_selection({'empty-change-set'})
     if reasons - selected_reasons:
-        return _full(reasons)
+        return full_selection(reasons)
     targets = set(DOCUMENTATION_TARGETS)
     gates = {'documentation', 'integration-python'}
     if 'remote-api-health' in reasons:
@@ -116,7 +116,7 @@ def resolve_event(event_name, payload, candidate, root):
     base = None
 
     def fallback(reason):
-        return {**_full({reason}), 'candidate': candidate, 'base': base}
+        return {**full_selection({reason}), 'candidate': candidate, 'base': base}
 
     def git(*arguments):
         return subprocess.check_output(

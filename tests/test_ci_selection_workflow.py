@@ -59,6 +59,16 @@ def test_observation_uses_the_same_dependency_and_isolation_commands():
         assert job['steps'].index(upload) < job['steps'].index(command(job, 'cleanup-artifact-session.mjs'))
 
 
+def test_force_full_switch_only_reaches_the_advisory_pytest_step():
+    jobs = workflow()['jobs']
+    selected = jobs['selector-observation']
+    assert command(selected, '--observe-pytest selected')['env'] == {
+        'CIRNET_CI_SELECTOR_FORCE_FULL': '${{ vars.CIRNET_CI_SELECTOR_FORCE_FULL }}',
+    }
+    assert all('CIRNET_CI_SELECTOR_FORCE_FULL' not in str(job)
+               for name, job in jobs.items() if name != 'selector-observation')
+
+
 def test_comparison_is_advisory_and_requires_two_receipts_from_the_current_attempt():
     job = workflow()['jobs']['selector-comparison']
 

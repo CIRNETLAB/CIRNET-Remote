@@ -256,3 +256,56 @@ Lượt thử đầu cũng phát hiện `egg-info` từ checkout che metadata wh
 pytest. Hồi quy mới xác nhận receipt chỉ đọc metadata từ môi trường đã cài.
 Các số thời gian là phép đo cục bộ cho một thay đổi thử. Chưa đo tác động
 trên runner GitHub.
+
+## 8. Triển khai P3
+
+Contracts nhận 12 ca về parser số worker và một ca về protobuf presence.
+Đối chiếu AST giữ nguyên thân hàm và tham số sau khi chuẩn hóa đường import
+và fixture binding. Hardware giữ các ca số worker cấu hình thực tế, Stop
+khi hàng đợi bận, hai route gRPC, driver boundary và alias tương thích.
+
+Ma trận schema/profile ở Contracts vẫn có đúng 22 case ID của hai bộ cũ.
+Remote giữ vòng lặp conformance 51 tình huống chạy trên wheel đã cài và thêm
+kiểm tra SHA-256 của corpus cùng ba schema đã duyệt. So sánh chỉ chuẩn hóa
+CRLF. Kiểm tra nguồn cài, registry, HTTP và gRPC vẫn kiểm tra sản phẩm đã chọn.
+Hardware sở hữu kiểm tra raw NCAP với hai ca 100.000 mẫu. Remote giữ cùng
+case ID để kiểm tra gateway công khai qua gRPC thật, gồm giải mã toàn bộ mẫu,
+duration và hai ca descriptor có số đếm dạng boolean. Probe compiler →
+gateway → RPC tiếp tục nằm ở Remote.
+
+Interface có runner Chromium riêng cho Web Locks và renderer. Test Web Locks
+dùng cùng helper contention với ca tích hợp, còn ca tích hợp vẫn xác nhận
+principal từ API và kết nối WebSocket. Renderer dùng cùng spec, DPR, timeout,
+assertions, baseline và tùy chọn Chromium. Runner nền tảng dùng loopback port
+riêng và Vite chạy fixture, không cần API, Hardware hay Simulator. Browser
+release và Browser tích hợp giữ nguyên bộ ca; runner riêng được xác minh
+song song trước khi xem xét giảm lượt chạy. Mặc định Browser tích hợp vẫn
+dùng một worker và retry 0.
+
+So sánh selector giữ quyết định ban đầu để điều tra. Nếu bộ đầy đủ phát hiện
+lỗi mà selector bỏ qua, skip hoặc ghi expected failure, receipt ghi `FAIL`
+và đặt phạm vi hiệu lực thành full cho đúng ứng viên. Receipt thiếu hoặc
+lệch provenance vẫn ghi `NOT_VERIFIED` với phạm vi full. Công tắc cấu hình
+`CIRNET_CI_SELECTOR_FORCE_FULL=true` cho phép các lượt quan sát tiếp theo
+chạy full trong khi xem lại rule. Job full và các gate an toàn chạy độc lập.
+
+Các bản sao helper `build_ci_dependency.py` của Hardware và Simulator vẫn có
+kiểm thử trực tiếp trong từng repo. Chưa có chứng cứ về toàn bộ caller bên
+ngoài, nên P3 giữ helper và lịch chạy hiện có.
+
+### Kiểm chứng theo ranh giới
+
+| Phép kiểm tra | Kết quả |
+| --- | --- |
+| Contracts owner | PASS 529 ca. Collection tăng từ 516 lên 529, đúng 13 case ID mới, gồm cả các kiểm tra public SDK, wheel/sdist và probe cài cô lập. |
+| Hardware trên wheel cài cô lập | PASS 126/126 trước chuyển và 113/113 sau chuyển. Hợp với 13 case ID chuyển sang Contracts khớp collection trước. Cả tám ca raw NCAP và ca Stop khi RPC bận đều đạt. |
+| Byte của wheel trước và sau | Contracts trùng SHA-256 `ca4d89e7c093924603bb24165ae3bbe5c6c6e0b0626ca326ca88be64909bcf91`. Hardware trùng SHA-256 `7531e71d223393cb196efe6dfc977547822283f60217583d7dae075b1fc9953b`. |
+| Resource từ wheel đã cài | Contracts giữ 22/22 case ID. Remote đạt hai ca parity và 35 ca registry, HTTP, RPC và nhận dạng wheel. Tài nguyên thiếu, corpus cũ và schema yếu hơn bị phát hiện. Khác biệt chỉ ở CRLF vẫn đạt. |
+| Các đối chứng worker, protobuf và Stop | Thay default, chấp nhận zero, phá precedence canonical-empty, bỏ `optional` và bỏ phần dự trữ luồng RPC đều làm ca tương ứng thất bại trên export cô lập. |
+| NCAP và instrument RPC | Cùng sáu case ID đạt trước và sau trên wheel phát hành. Bản sau cũng đạt trên Ubuntu với các wheel dựng từ nguồn CI đã khóa. Khi gateway trả thiếu mẫu trong bản export, cả hai ca 100.000 mẫu đều thất bại đúng assertion. |
+| Browser tích hợp | Chromium r1248 thu thập 58 ca trong 17 spec. Ca Web Locks dùng API/RPC thật đạt trong 9,0 giây và đạt lại trong 9,3 giây với launcher cuối. Cả hai lượt có yêu cầu auth session và shutdown sạch. |
+| Browser platform | PASS 9 ca, một ca capture lịch sử opt-in được skip như cấu hình gốc. Ubuntu, Chromium r1248, Node 26.12.1 và quota bốn CPU. Wall 11,8 phút. DPR 1 đạt trong 136,669 giây và DPR 2 trong 298,936 giây với deadline gốc 360 giây. Mỗi ma trận có 30 tư thế và không có pixel rò. |
+| Launcher platform cuối | Web Locks và sáu tư thế QUAD DPR 2 đạt trên phiên riêng. Ba biến đầu ra cố ý trỏ sai vị trí vẫn ghi last-run JSON, Blob ZIP và Perfetto JSON vào thư mục do allocator cấp. Bỏ khóa trong ledger làm hàng đợi trả 0 thay vì 2. Tắt WebGL làm ca renderer không đạt readiness gốc. Cả hai bản tiêm lỗi được khôi phục từng byte. |
+| Interface product | PASS AST, 34 ca script, 1.500 ca runtime, kiểm tra kiểu E2E và production build trên bản nguồn Interface cuối. |
+| Bộ Python Remote đầy đủ | PASS cả sáu lệnh trong 306,4 giây trên Ubuntu 24.04 và CPython 3.14.6 với ba wheel dựng từ đúng nguồn CI đã khóa. 1.585 ca đạt, 143 skip launcher trên Ubuntu và một cảnh báo deprecation Starlette. |
+| Selector và workflow | PASS 81 ca selector, policy và release runner. Đối chứng chạy CLI trả exit 1 và ghi phạm vi `full` khi bỏ sót một lỗi. Actionlint 1.7.12 đạt trên 13 workflow. So sánh YAML xác nhận job build/export Interface và các gate Remote hiện hành giữ cấu hình tương đương. |

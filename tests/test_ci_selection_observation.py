@@ -42,6 +42,7 @@ def test_observation_compares_exact_case_ids_and_keeps_skips_separate():
     assert result['unselected'] == [CASES[2]]
     assert result['counts']['selected'] == {'PASS': 1, 'SKIP': 1}
     assert result['missedFailures'] == []
+    assert result['effectiveDecision'] == result['decision']
 
 
 def test_observation_detects_a_failure_outside_selection_and_skip_drift():
@@ -55,6 +56,25 @@ def test_observation_detects_a_failure_outside_selection_and_skip_drift():
     assert result['status'] == 'FAIL'
     assert result['missedFailures'] == [CASES[2]]
     assert result['outcomeDifferences'] == [CASES[1]]
+    assert result['decision']['mode'] == 'selected'
+    assert result['effectiveDecision']['mode'] == 'full'
+    assert result['effectiveDecision']['targets'] == []
+    assert result['effectiveDecision']['reasons'] == ['selector-missed-failures']
+    assert result['effectiveDecision']['candidate'] == full['candidate']
+
+
+@pytest.mark.parametrize('selected_outcome', ['NOT_RUN', 'SKIP', 'XFAIL'])
+def test_full_fallback_detects_a_failure_hidden_by_an_unexecuted_case(selected_outcome):
+    from scripts.compare_ci_selection import compare
+
+    full, selected = receipts()
+    full['outcomes'][CASES[1]] = {'status': 'FAIL'}
+    full['exitCode'] = 1
+    selected['outcomes'][CASES[1]] = {'status': selected_outcome}
+    result = compare(full, selected)
+    assert result['status'] == 'FAIL'
+    assert result['missedFailures'] == [CASES[1]]
+    assert result['effectiveDecision']['mode'] == 'full'
 
 
 @pytest.mark.parametrize('difference', ['commit', 'inputs', 'collection', 'missing', 'interrupted'])
@@ -72,7 +92,9 @@ def test_observation_rejects_incomparable_evidence(difference):
         selected = None
     elif difference == 'interrupted':
         selected['exitCode'] = 2
-    assert compare(full, selected)['status'] == 'NOT_VERIFIED'
+    result = compare(full, selected)
+    assert result['status'] == 'NOT_VERIFIED'
+    assert result['effectiveDecision']['mode'] == 'full'
 
 
 def test_observation_detects_an_incomplete_execution_even_with_exit_zero():
@@ -141,6 +163,34 @@ def test_observer_falls_back_to_every_case_when_one_selected_path_collects_nothi
     assert observer.collected == observer.executed == list(CASES)
     assert observer.decision['mode'] == 'full'
     assert observer.decision['candidate'] == 'a' * 40
+
+
+@pytest.mark.parametrize(('setting', 'reason'), [
+    ('true', 'selector-force-full'), ('unexpected', 'selector-force-full-invalid'),
+])
+def test_operator_fallback_keeps_every_collected_case(monkeypatch, setting, reason):
+    from scripts.ci_selection_pytest import Observation
+
+    monkeypatch.setenv('CIRNET_CI_SELECTOR_FORCE_FULL', setting)
+    observer = Observation('selected')
+    items = [SimpleNamespace(nodeid=nodeid) for nodeid in CASES]
+    observer.pytest_collection_modifyitems(None, items)
+    assert observer.collected == observer.executed == list(CASES)
+    assert observer.decision['mode'] == 'full'
+    assert observer.decision['reasons'] == [reason]
+
+
+@pytest.mark.parametrize('setting', ['', 'false'])
+def test_inactive_operator_override_still_resolves_the_candidate(monkeypatch, setting):
+    from scripts import ci_test_selection
+    from scripts.ci_selection_pytest import Observation
+
+    monkeypatch.setenv('CIRNET_CI_SELECTOR_FORCE_FULL', setting)
+    monkeypatch.setenv('GITHUB_SHA', 'a' * 40)
+    monkeypatch.delenv('GITHUB_EVENT_PATH', raising=False)
+    expected = {'mode': 'selected', 'targets': ['services/api/tests']}
+    monkeypatch.setattr(ci_test_selection, 'resolve_event', lambda *args: expected)
+    assert Observation('selected').select(SimpleNamespace(rootpath=None)) == expected
 
 
 def test_provenance_records_normalized_transitive_versions_from_installed_paths(monkeypatch):

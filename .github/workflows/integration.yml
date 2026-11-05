@@ -340,7 +340,9 @@ jobs:
       - name: Select and verify the exact reviewed FPGA source artifact
         run: *observation-install-fpga
       - *observation-fpga-provenance
-      - run: python scripts/check_release.py --group python --observe-pytest selected
+      - env:
+          CIRNET_CI_SELECTOR_FORCE_FULL: ${{ vars.CIRNET_CI_SELECTOR_FORCE_FULL }}
+        run: python scripts/check_release.py --group python --observe-pytest selected
       - name: Retain the advisory selected Python receipt
         if: always() && env.CIRNET_ARTIFACTS_SESSION != ''
         continue-on-error: true

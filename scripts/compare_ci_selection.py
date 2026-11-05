@@ -7,6 +7,8 @@ import os
 from pathlib import Path
 import re
 
+from scripts.ci_test_selection import full_selection
+
 
 OUTCOMES = {'PASS', 'FAIL', 'SKIP', 'XFAIL', 'XPASS', 'NOT_RUN'}
 
@@ -18,7 +20,8 @@ def matches_target(nodeid, target):
 
 def compare(full, selected, *, expected_candidate=None):
     def unavailable(reason):
-        return {'status': 'NOT_VERIFIED', 'reason': reason}
+        return {'status': 'NOT_VERIFIED', 'reason': reason,
+                'effectiveDecision': full_selection({'selector-evidence-unavailable'})}
 
     for kind, receipt in (('full', full), ('selected', selected)):
         if not isinstance(receipt, dict) or receipt.get('schema') != 1 or receipt.get('kind') != kind:
@@ -70,13 +73,20 @@ def compare(full, selected, *, expected_candidate=None):
         'missingSelected': sorted(expected - selected_ids),
         'unexpectedSelected': sorted(selected_ids - expected),
         'outcomeDifferences': sorted(nodeid for nodeid in full_ids & selected_ids if reference[nodeid] != actual[nodeid]),
-        'missedFailures': sorted(nodeid for nodeid in full_ids - selected_ids if reference[nodeid]['status'] in {'FAIL', 'XPASS'}),
+        'missedFailures': sorted(nodeid for nodeid, row in reference.items()
+                                 if row['status'] in {'FAIL', 'XPASS'} and
+                                 actual.get(nodeid, {}).get('status', 'NOT_RUN') in {'NOT_RUN', 'SKIP', 'XFAIL'}),
     }
     counts = {kind: dict(Counter(row['status'] for row in receipt['outcomes'].values()))
               for kind, receipt in (('full', full), ('selected', selected))}
     failed = (any(differences.values()) or full['exitCode'] != 0 or selected['exitCode'] != 0
               or any({'FAIL', 'XPASS', 'NOT_RUN'} & totals.keys() for totals in counts.values()))
+    effective = decision
+    if failed:
+        reason = 'selector-missed-failures' if differences['missedFailures'] else 'selector-comparison-failed'
+        effective = {**full_selection({reason}), 'candidate': full['candidate'], 'base': decision.get('base')}
     return {'status': 'FAIL' if failed else 'PASS', 'candidate': full['candidate'], 'decision': decision,
+            'effectiveDecision': effective,
             'counts': counts, 'unselected': sorted(collected - expected), **differences}
 
 
@@ -99,11 +109,12 @@ def main(argv=None):
     report = artifact_directory('ci-selection') / 'comparison.json'
     report.write_text(json.dumps(result, indent=2, sort_keys=True) + '\n', encoding='utf-8')
     print(f"CI selector observation: {result['status']}")
+    print(f"Effective verification scope: {result['effectiveDecision']['mode']}")
     if 'counts' in result:
         print(f"Full outcomes: {result['counts']['full']}")
         print(f"Selected outcomes: {result['counts']['selected']}")
         print(f"Cases outside selection: {len(result['unselected'])}")
-        print(f"Full-run failures absent from selection: {len(result['missedFailures'])}")
+        print(f"Full-run failures missed by selection: {len(result['missedFailures'])}")
     else:
         print(result['reason'])
     return 0 if result['status'] == 'PASS' else 1

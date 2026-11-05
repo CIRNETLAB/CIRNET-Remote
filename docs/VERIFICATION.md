@@ -18,6 +18,13 @@ M3 consumers install the reviewed Simulator artifact with `python scripts/instal
 
 The release selects `cirnet-hardware-service==0.1.2` after Contracts and Simulator bootstrap. Use `python scripts/install_hardware.py --manifest ABSOLUTE_HARDWARE_MANIFEST` and `python scripts/check_hardware_consumer.py` to verify the selected archive, version, RECORD and import provenance. Hardware unit tests run in CIRNET-Hardware. Remote retains API, RPC, worker, capture and safety integration tests.
 
+Contracts owns the canonical schema and validation profile assertions, the
+worker-count parser and generated protobuf presence. Remote runs its installed
+Contracts parity check against the reviewed corpus and schema bytes. Hardware
+owns the raw 100,000-sample NCAP wire matrix. Remote uses the public gateway
+over real gRPC to verify lossless decoding with short and long signal names,
+and separately checks rejection of malformed capture descriptors.
+
 The release selects FPGA source/scaffold 0.1.2 with `python scripts/install_fpga.py --manifest ABSOLUTE_FPGA_MANIFEST`. The manifest contains the selected archive path and SHA-256. The installed source export lives under a fresh allocator-owned child and is selected through `CIRNET_FPGA_ROOT` and `CIRNET_FPGA_ARTIFACT_MANIFEST`. `python scripts/check_fpga_consumer.py` verifies its inventory, fingerprints and compatibility with installed Contracts. Standalone FPGA acceptance requires the pinned slang and Icarus/vvp tools, behavioral simulation, externally owned outputs and recorded executable and archive identities. Use short external paths for Windows tool bundles.
 
 The installed-package gate builds only API locally, then selects the reviewed Contracts, Simulator and Hardware wheels. Its fresh venv, application state and subprocess probes live under the canonical session. Optional `scripts/check_contract_package.py --temporary-root` (or the release runner's `--package-temporary-root`) must name a child of the current owned session; an unrelated external directory is insufficient. The gate removes only its own nested temporary child, while the caller inspects retained logs and cleans the owning session afterward.
@@ -101,10 +108,17 @@ the candidate, lock hashes, installed wheel identities and dependency versions,
 verified Interface SDK and FPGA source, toolchain versions, collected and
 executed IDs, and outcomes.
 It keeps skips and expected failures separate from passes. A missing receipt or
-different inputs gives `NOT_VERIFIED`. A failure outside the selected set is
-listed as a missed failure. The GitHub job summary and allocator-owned JSON
-receipts are advisory. Keep the full gate authoritative and review the path
-rule if a missed failure appears.
+different inputs gives `NOT_VERIFIED`. A full-run failure omitted, skipped or
+marked as expected by the selected run is recorded as a missed failure. The
+comparison retains the original decision for diagnosis, reports `FAIL` and
+sets its effective scope to full. The already-executed full receipt remains
+authoritative for that candidate.
+
+Set the repository Actions variable `CIRNET_CI_SELECTOR_FORCE_FULL` to `true`
+to run the full suite in subsequent observation jobs while investigating a
+miss. Unset the variable or set it to `false` after correcting and validating
+the selection rule. An invalid nonempty value also selects the full suite.
+The variable applies only to the advisory job.
 
 Primary verification uses normal-GIL CPython 3.14 and Node 26. The explicit
 Python 3.11 installed-package gate retains the reusable packages' minimum

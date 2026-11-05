@@ -102,7 +102,12 @@ class Observation:
         self.phases = {}
 
     def select(self, config):
-        from scripts.ci_test_selection import resolve_event, select_changes
+        from scripts.ci_test_selection import full_selection, resolve_event
+
+        override = os.environ.get('CIRNET_CI_SELECTOR_FORCE_FULL', '').strip().casefold()
+        if override not in ('', 'false'):
+            reason = 'selector-force-full' if override == 'true' else 'selector-force-full-invalid'
+            return full_selection({reason})
 
         path = os.environ.get('GITHUB_EVENT_PATH')
         event = os.environ.get('GITHUB_EVENT_NAME', 'workflow_dispatch')
@@ -111,15 +116,13 @@ class Observation:
             payload = read_json(Path(path)) if path else {}
             return resolve_event(event, payload, candidate, config.rootpath)
         except (OSError, UnicodeError, ValueError, subprocess.SubprocessError):
-            decision = select_changes([])
-            decision['reasons'] = ['Could not resolve a trustworthy event diff. Run the full Python suite.']
-            return decision
+            return full_selection({'Could not resolve a trustworthy event diff. Run the full Python suite.'})
 
     @pytest.hookimpl(trylast=True)
     def pytest_collection_modifyitems(self, config, items):
         self.collected = [item.nodeid for item in items]
         if self.kind == 'selected':
-            from scripts.ci_test_selection import select_changes
+            from scripts.ci_test_selection import full_selection
             from scripts.compare_ci_selection import matches_target
 
             self.decision = self.select(config)
@@ -133,8 +136,8 @@ class Observation:
                     config.hook.pytest_deselected(items=deselected)
                     items[:] = selected
                 else:
-                    self.decision = {**self.decision, **select_changes([]),
-                                     'reasons': ['At least one selected path collected no tests. Run the full Python suite.']}
+                    self.decision = {**self.decision, **full_selection({
+                        'At least one selected path collected no tests. Run the full Python suite.'})}
         self.executed = [item.nodeid for item in items]
 
     def pytest_runtest_logreport(self, report):
