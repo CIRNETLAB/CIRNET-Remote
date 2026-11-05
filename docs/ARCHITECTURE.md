@@ -96,7 +96,7 @@ Control lifetime is separate from read access. A volatile non-secret per-tab cli
 
 Public station DTOs omit private routing resources and execution plans. Typed routes generate OpenAPI and browser operation bindings without starting runtime services. Versioned bounded event streams carry sequence/stream identity and explicit resync; reconnect never replays commands. Create/Run/Stop mutation identity is durable and principal-scoped. Run acknowledgement is distinct from later measurement completion; Stop acknowledgement requires actual safe lease release.
 
-Browser pending-observation identities survive reload in a bounded principal-scoped ledger. Reload restores observation only: backend operation/command reads reconcile unknown outcomes without resending Create/Run/Apply or recovering tab control authority. See [pending observations](architecture/pending-observations.md) for bounds, storage failure and local forgetting semantics.
+Browser pending-observation identities survive reload in a bounded principal-scoped ledger. Reload restores observation only: backend operation/command reads reconcile unknown outcomes without resending Create/Run/Apply or recovering tab control authority. See [pending observations](en/architecture/pending-observations.md) for bounds, storage failure and local forgetting semantics.
 
 Students receive published assignment views without teacher reference designs, node maps, profiles or answers. Default `observed_only` feedback exposes verification/assessment status and observed measurements, while detailed reference diagnostics remain in stored evidence. The same projection applies to HTTP lists/detail/results, operation recovery and every realtime snapshot. Assignment authors/Admin may inspect their authorized detailed evidence; an instructor may explicitly publish `detailed` feedback. Disclosure policy never changes verification algorithms or safety decisions.
 
@@ -108,7 +108,7 @@ Unified results contain execution state/decision, independent safety/topology/fu
 
 Experiment SQL JSON and `experiment.updated` carry `CaptureMetadata` only; samples live behind `CaptureStore`. Runtime `FilesystemCaptureStore` uses immutable, atomic NCAP v1 payload files in `CIRNET_CAPTURE_DIR` (default `.runtime/captures`). Owner-scoped GET/DELETE `/api/captures/{capture_id}/payload` provides the data plane. NCAP v1 losslessly preserves event order, exact timestamps and `0`/`1`/`X`. Separate versioned NCAP v2 codecs/descriptors support INT16/UINT16/FLOAT32, ordered channels, exact clock-referenced rational time, calibration, clipping, generation, gaps/invalid ranges and termination. Shared synthetic fixtures prove decoding/presentation only; runtime still has no sampled producer or default v2 network source. Display min/max envelopes retain raw evidence and cannot grade timing. See `contracts/capture/README.md`.
 
-Migration 0005 indexes sealed captures independently of the current experiment generation; ownership is derived from the parent experiment. Reading/hashing/deleting bytes never holds the global control lock or a database transaction, and reads recheck authorization/availability before disclosure. Retirement atomically marks metadata unavailable and records an audit before filesystem cleanup; failed cleanup remains pending. Active/quarantined captures are not expired. Default directory limits are 256MiB/4,096 files for one API writer; explicit bounded maintenance applies a 30-day policy. Zero disables expiration but retries pending cleanup. Stop/release never deletes historical evidence. Functional verification loads raw payloads; Signal Monitor shares/cancels owner-scoped loads. Restart safe cleanup precedes legacy inline migration. See `architecture/capture-catalog.md` and deployment maintenance templates.
+Migration 0005 indexes sealed captures independently of the current experiment generation; ownership is derived from the parent experiment. Reading/hashing/deleting bytes never holds the global control lock or a database transaction, and reads recheck authorization/availability before disclosure. Retirement atomically marks metadata unavailable and records an audit before filesystem cleanup; failed cleanup remains pending. Active/quarantined captures are not expired. Default directory limits are 256MiB/4,096 files for one API writer; explicit bounded maintenance applies a 30-day policy. Zero disables expiration but retries pending cleanup. Stop/release never deletes historical evidence. Functional verification loads raw payloads; Signal Monitor shares/cancels owner-scoped loads. Restart safe cleanup precedes legacy inline migration. See the [capture catalog](en/architecture/capture-catalog.md) and deployment maintenance templates.
 
 Hardware RPC ReadCapture also uses bounded NCAP in OperationReply.capture_payload, separate from metadata result_json. This keeps a 100k-event response below the default 4 MiB receive limit even for long signal names; the API rejects malformed binary or inconsistent descriptors instead of accepting truncated/no-response evidence.
 
@@ -144,16 +144,23 @@ Future EP4CE10E22C8N + external SDRAM: Logic Analyzer, Scope 2CH + ADC/AFE, Gene
 
 ## Current multi-repo release boundary
 
-The current GitHub organization is [CIRNETLAB](https://github.com/CIRNETLAB).
-The six repositories are `CIRNET-Remote`, `CIRNET-Contracts`, `CIRNET-Interface`,
-`CIRNET-Simulator`, `CIRNET-Hardware` and `CIRNET-FPGA`; the
+The current GitHub organization is [cirnetlab](https://github.com/cirnetlab).
+The six repositories are `cirnet-remote`, `cirnet-contracts`, `cirnet-interface`,
+`cirnet-simulator`, `cirnet-hardware` and `cirnet-fpga`. The
 [repository map](README.md#current-repositories-and-release-selection) records
 their canonical URLs/owners. Organization ID 333715068 and the six repository
 IDs are preserved. Historical names/URLs remain provenance, including unchanged
 immutable release notes and source archives. Current installation paths use the
 canonical URLs rather than depending on those redirects.
 
-The published system selection is **0.1.2** with Interface **0.1.2** and the other selected component artifacts at **0.1.1**. `integration/release-set.json` records exact committed sources, immutable artifact locations/digests, compatibility and rollback. API application-info and API/root metadata align at 0.1.1. CircuitGraph 1.0/1.1/1.2, Hardware RPC 2.0, NCAP1/2, FPGA logical 1.0-scaffold and register-map 1.0-reserved retain their meaning; DEV tooling keeps its independent pins.
+The published system selection is **0.1.4** with Interface **0.1.4** and the
+selected API, Contracts, Simulator, Hardware and FPGA source artifacts at
+**0.1.2**. The [release lock](../integration/release-set.json) records exact
+committed sources, immutable asset locations and digests, compatibility and
+rollback. CircuitGraph 1.0/1.1/1.2, Hardware RPC 2.0, NCAP v1/v2, FPGA logical
+1.0-scaffold and register map 1.0-reserved retain their meaning. DEV tooling
+has independent pins. See the paired architecture overview in
+[English](en/architecture/system.md) and [Vietnamese](vi/architecture/system.md).
 
 Contracts is the sole schema/catalog/protocol/SDK owner. FastAPI registrations remain operation authority and final-wheel OpenAPI equality is mandatory. Interface owns editor/assets/browser assertions; Simulator owns the existing engine/backend boundary; Hardware owns local-only RPC/stations/private transport; FPGA owns scaffold/RTL/toolchain. Remote owns auth/persistence, one scheduler process, orchestration, deployment and integrated acceptance. Supported gates use installed artifacts/resources, without sibling/frozen source dependencies or editable producers. Superseded monorepo implementations are available in Git history. The current tree keeps the Contracts forwarding shim, historical documents and approved artwork. Compatibility checks read fixture data from the installed Contracts wheel.
 

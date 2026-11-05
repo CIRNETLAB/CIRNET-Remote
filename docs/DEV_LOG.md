@@ -10,7 +10,7 @@ fpga_development_started: true
 
 # Development Log
 
-The published system selection is 0.1.2. The M6 ledger records the Ubuntu
+The system selection recorded on 2026-11-04 was 0.1.2. The M6 ledger records the Ubuntu
 browser acceptance, publication and later removal of the retired producer
 implementation copies. [M6 ledger](verification/2026-10-27-multi-repo-migration-m6.md)
 
@@ -21,6 +21,6 @@ Historical reports and handoffs are available by Git revision. [Documentation in
 
 ## AI Handoff
 
-Use the documentation index for current runbooks and the M6 ledger for dated
+Use the [current English documentation](en/index.md) and the M6 ledger for dated
 verification. Use the release manifest to select exact producer artifacts.
 [Release selection](../integration/release-set.json) · [Verification guide](VERIFICATION.md)

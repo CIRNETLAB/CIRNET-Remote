@@ -1,0 +1,25 @@
+# Bối cảnh làm việc của CIRNET Remote
+
+[English](../../en/architecture/context.md) · [Tài liệu bối cảnh chuẩn và các mốc kiểm tra](../../CONTEXT.md) · [Kiến trúc hệ thống](system.md)
+
+## Các nguyên tắc cần giữ khi thay đổi
+
+- Giữ một không gian làm việc theo mô hình Web-first, Safety-gated, Lab-First. Cảnh 3D hiển thị `CircuitGraph`. Giữ khả năng đọc đồ thị đã lưu phiên bản 1.0, 1.1 và 1.2, các kết nối điện tường minh, cách đặt linh kiện theo phiên bản và thay đổi người dùng đang thực hiện. Giao diện không chứa thanh ghi FPGA thô, địa chỉ MUX thô hoặc định danh truyền thông Linux.
+- Trong bài thực hành dùng breadboard đấu tay V1, dây sinh viên lắp là hiện trạng vật lý. `DetectedTopologyGraph` giữ nguyên sai sót và điểm chưa rõ. Bộ phân giải ánh xạ tham chiếu `AssignmentDefinition`/`LabEndpoint` sang nút sinh viên quan sát được. Lab Execution Compiler sinh `InstrumentationExecutionPlan` cho hạ tầng. [An toàn phòng thí nghiệm vật lý](physical-lab-safety.md)
+- Giữ độc lập `SafetyVerificationResult`, `TopologyVerificationResult` và `FunctionalVerificationResult`. `ExecutionDecision` có thể chặn công việc không an toàn hoặc không thực thi được, hoặc cho chạy thường hay có bảo vệ. `assessment_policy` chấm điểm và báo cáo kết quả quan sát. Kết quả đó không quyết định quyền cấp nguồn.
+- `HardwareStation` có thể là trạm ảo hoặc vật lý. Lần chạy vật lý phải qua vòng đời về trạng thái an toàn, quét, kiểm tra, định tuyến, cấp nguồn và chuẩn bị thu. Thiếu driver hoặc bảo vệ thì chức năng không khả dụng. Đích nguyên mẫu là EP4CE6E22C8N không có SDRAM. Đích đo đạc tương lai là EP4CE10E22C8N với SDRAM ngoài. Thông số điện chưa kiểm chứng giữ trạng thái `TBD_BY_HARDWARE_DESIGN`.
+- Năng lực khi chạy lấy từ `physical_execution_slots` và `instrument_capabilities`. Có 0 kênh nghĩa là chức năng chưa khả dụng. Số kênh hiển thị bắt đầu từ 1. Mục tiêu 30–50 phiên kết nối khác với một suất chạy vật lý dùng chung của V1. Số tiến trình mô phỏng có giới hạn. Ca thử nhiều suất chỉ kiểm tra logic nhận việc của bộ điều phối. [Cô lập điều khiển và lập chỉ mục khi chạy](control-isolation-and-runtime-index.md)
+
+## Danh tính, lưu trữ và khôi phục
+
+- Danh tính bền vững sở hữu dự án, mạch, thí nghiệm và bản thu. Origin chính xác, CSRF và phân quyền theo vai trò, đối tượng bảo vệ thao tác ghi và truy cập dữ liệu. PostgreSQL là kho production. Chế độ khách phát triển phải bật rõ ràng. Chỉ chuyển quyền sở hữu dữ liệu khách sau khi chứng minh quyền và xác nhận.
+- Lưu phiên bản Project/Circuit thuộc sở hữu bằng cơ chế so sánh rồi cập nhật (CAS). Create cố định phiên bản mạch và bản công bố bài tập đã chọn. Sửa bản nháp giữ nguyên các bản đã công bố. Chế độ mặc định `observed_only` giữ kín đáp án tham chiếu trên HTTP, sự kiện và khi khôi phục. [Dự án và phiên bản](projects-and-revisions.md) · [Công bố bài tập](assignments-and-publication.md)
+- Quyền điều khiển lần chạy phụ thuộc định danh tab điều khiển và phiên xác thực. Khôi phục chỉ đọc có thể phục hồi lịch sử, trạng thái đang chạy và hàng chờ đã cấp quyền. Tải lại giữ khóa theo dõi kết quả chưa rõ và đối soát bằng thao tác đọc. Quá trình đó không gửi lại Create/Run/Apply hay tiếp quản điều khiển. [Theo dõi kết quả đang chờ](pending-observations.md)
+- Yêu cầu thiết bị đo là đầu vào Create bất biến. Cập nhật Generator khi chạy cần quyền giữ trạm đang hiệu lực của phiên điều khiển, kênh được phân bổ và hỗ trợ, dữ liệu an toàn mới và giới hạn theo cấu hình. Chấp nhận lệnh và áp dụng lên phần cứng là hai kết quả riêng. [API ứng dụng](../api/application.md)
+- JSON sự kiện và thí nghiệm mang `CaptureMetadata`. `CIRNET_CAPTURE_DIR` lưu nội dung, với truy cập nhị phân theo quyền sở hữu. Bản thu được giữ qua Stop và chỉ loại bỏ bằng quy trình bảo trì có giới hạn và nhật ký. Quyền giữ trạm đang hiệu lực hoặc bị cách ly bảo vệ bản thu tương ứng. Codec NCAP v2 hỗ trợ định dạng lấy mẫu. Hệ thống hiện chưa có bộ thu tín hiệu tương tự khi chạy. [Danh mục bản thu](capture-catalog.md) · [Miền tín hiệu và mô phỏng](signal-domains-and-simulation.md)
+
+## Bằng chứng và duyệt thay đổi
+
+Đọc phần triển khai và kiểm thử liên quan cùng [khóa bản phát hành](../../../integration/release-set.json). Môi trường kiểm chứng chính hiện dùng Python 3.14 và Node 26. Chạy `python -B scripts/check_context.py` và chọn nhóm phù hợp của `scripts/check_release.py` theo [hướng dẫn kiểm chứng](../../VERIFICATION.md). Cấp phiên ngoài kho do mình sở hữu trước khi chạy kiểm tra sinh tệp tạm. Ghi riêng đầu vào đã thử, lỗi, ca bỏ qua và kiểm tra chưa chạy. [Quy định của kho mã](../../../AGENTS.md)
+
+[Biên bản kiểm chứng W0–W8](https://github.com/cirnetlab/cirnet-remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/verification/2026-10-16-web-contracts.md) lưu bằng chứng gốc về schema, sinh mã và nghiệm thu từng giai đoạn. [Biên bản chuyển đổi Lab-First](../../MIGRATION_LAB_FIRST.md) ghi các quyết định R0–R7. [Báo cáo phát hành cục bộ 0.1.4](../../verification/2026-11-05-cirnet-release-0.1.4.md) và [báo cáo kiểm tra hạ tầng kiểm thử](../../verification/2026-11-05-test-infrastructure-audit.md) áp dụng cho từng lần chạy được ghi riêng.

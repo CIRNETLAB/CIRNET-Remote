@@ -1,5 +1,9 @@
 # CIRNET Application Backend
 
+Start with the current API guide in [English](../../docs/en/api/application.md)
+or [Vietnamese](../../docs/vi/api/application.md). Use its current examples
+when an older example on this page refers to an earlier release.
+
 FastAPI modular-monolith Lab-First laboratory. Authority: ../../docs/ARCHITECTURE.md. The application includes durable authentication/RBAC, owned Project/Circuit revisions, published assignments, experiments/history, verification, captures and FIFO/lease lifecycle. PostgreSQL is required in production; SQLite is for tests/development. Public contracts and all typed routes: ../../contracts/api/README.md.
 
 For source builds, install `cirnet-contracts==0.1.2` and the matching rebuilt Simulator and Hardware wheels into fresh service environments using the current versioned artifact manifest (`python scripts/install_contracts.py --with-dev --manifest ABSOLUTE_MANIFEST` from Remote root for development). Both services also install the same reviewed `cirnet-simulator==0.1.2` wheel using `python scripts/install_simulator.py --manifest ABSOLUTE_SIMULATOR_MANIFEST`; no retained Simulator source or editable install is required. API also needs grpcio/protobuf and psycopg (declared dependencies). RPC bindings and offline resources come from that wheel; `python scripts/generate_hardware_rpc.py --check` verifies them without writing retained source. Production needs neither source Contracts nor DEV tools. Start hardware_service.server in its own process on localhost50051. An absent gateway reports unavailable; the virtual station executes the existing real digital simulator.
@@ -26,7 +30,7 @@ Typed `/instruments/access`, `/instruments/generator` and `/instruments/commands
 
 Set `CIRNET_SIMULATION_BACKEND=legacy` in both API and Hardware environments to preserve existing behavior. API settings freeze the selection at app creation; both physical-preview routes use that setting. The reserved `ngspice` backend returns an explicit unavailable response while structural validation and document storage remain usable. Unknown or empty selectors fail startup. Restart both services when changing this setting; no native executable/library is installed or discovered by it.
 
-Projects/circuits use saved revisions and database CAS, with session fences against revoke/guest claim. Create pins the owned document revision and assignment publication. History/active endpoints are bounded and read-only; connection recovery cannot grant Run authority. Students receive only published redacted assignment views. See the architecture guides for [projects](../../docs/architecture/projects-and-revisions.md), [assignments](../../docs/architecture/assignments-and-publication.md), [capture catalog](../../docs/architecture/capture-catalog.md) and [domains](../../docs/architecture/signal-domains-and-simulation.md).
+Projects/circuits use saved revisions and database CAS, with session fences against revoke/guest claim. Create pins the owned document revision and assignment publication. History/active endpoints are bounded and read-only; connection recovery cannot grant Run authority. Students receive only published redacted assignment views. See the architecture guides for [projects](../../docs/en/architecture/projects-and-revisions.md), [assignments](../../docs/en/architecture/assignments-and-publication.md), [capture catalog](../../docs/en/architecture/capture-catalog.md) and [domains](../../docs/en/architecture/signal-domains-and-simulation.md).
 
 Additive `/api/v2` placement/document/experiment and assignment routes accept Graph
 1.2 while legacy public shapes stay frozen. They share the existing ownership, CAS,

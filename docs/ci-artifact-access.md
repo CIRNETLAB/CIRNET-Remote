@@ -1,5 +1,10 @@
 # Release assets and CI access
 
+See current access instructions in [English](en/operations/ci-artifact-access.md)
+or [Vietnamese](vi/operations/ci-artifact-access.md). The current
+[release lock](../integration/release-set.json) selects system 0.1.4. The
+post-rename receipts on this page record earlier inputs.
+
 All six `cirnetlab/cirnet-*` repositories are public. Published release assets support
 anonymous downloads through the exact numeric GitHub URLs in the release
 manifest. Retain authenticated access for draft assets, CI and API rate limits.
@@ -71,9 +76,10 @@ closed on authentication errors or missing artifacts; no `latest`, sibling sourc
 package fallback is supported. Installation and parent-shell preparation are
 in the [release runbook](../deployment/multi-repo-release.md).
 
-## Current post-rename readback
+<a id="current-post-rename-readback"></a>
+## Historical post-rename readback
 
-Current canonical selection is
+The canonical selection at the time was
 [`integration/release-set.json` at 28221a5](https://github.com/CIRNETLAB/CIRNET-Remote/blob/28221a5ca19d04225e9399895764a12149188681/integration/release-set.json),
 exact Git LF SHA-256 `7b6e0ee9ba09d6b13d5f73cd0bf783f3f001422a424a84477622cfdb08232a2e`.
 The Windows CRLF checkout SHA is

@@ -1,5 +1,10 @@
 # CIRNET Contracts consumer boundary
 
+Use the current consumer setup in [English](../docs/en/api/contracts-consumer.md)
+or [Vietnamese](../docs/vi/api/contracts-consumer.md). Samples below that pin
+0.1.1 record an earlier selection. Current commands select system 0.1.4 and
+the 0.1.2 component artifacts from the release lock.
+
 Canonical Contracts and Device Library ownership belongs to [cirnet-contracts](https://github.com/cirnetlab/cirnet-contracts). System 0.1.4 selects \`cirnet-contracts==0.1.2\` with the Python import \`contracts\` and the \`@cirnet/contracts\` SDK. [The system manifest](../integration/release-set.json) records exact source revisions, filenames and digests. This checkout keeps the installed-wheel shim and reads compatibility fixtures from the selected wheel.
 
 JSON Schemas own shapes, FastAPI registrations in Remote own public operations, and protobuf owns local RPC fields. The installed package's manifest records identity, version, visibility, producer/consumers, profiles, artifacts and compatibility policy. Absolute URIs resolve from installed resources without network access or the current directory. Historical relative schema IDs remain readable through the registry. The root `contracts/__init__.py` is a strict adapter to the installed wheel's module/spec/resource loader, with no retained-source fallback; missing, wrong-version or editable Contracts fail explicitly.

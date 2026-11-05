@@ -2,6 +2,10 @@
 
 Status: IMPLEMENTED policy and tooling. Individual results are VERIFIED only in their dated verification report. This guide governs new verification output; retained legacy evidence is inventoried separately and has not been deleted.
 
+Use the current verification entry in [English](en/contributing/verification.md)
+or [Vietnamese](vi/contributing/verification.md). This retained guide also
+contains procedures and evidence from earlier revisions.
+
 ## Output policy
 
 Create screenshots, video, Playwright traces, HTML reports with images, raw JSON metrics, logs and other diagnostic output outside **every checkout/worktree and Git administration directory immediately**. Only Markdown verification evidence belongs in this repository. Never capture into the repository and move it out afterward, embed Base64/data URI evidence, or put temporary image links into permanent documentation.
@@ -140,11 +144,22 @@ RPC tests and its clean installed-package probe. Simulator and Hardware passed
 111 and 109 tests in their independent Ubuntu wheel gates. The clean Remote
 installed-package probe also passed on Windows with Python 3.11.
 
-The approved system/integration release is 0.1.3 with Interface 0.1.3, retaining API, Contracts, Simulator, Hardware and FPGA 0.1.1 and DEV tooling 1.0.0a1. The latest explicit M6 sequencing decision permits publication after actual full selected-artifact local Ubuntu browser acceptance without waiting for further Actions. Record prior CI-identity draft access and any new unrun identity checks separately; pending or failed Actions are not PASS. Use the exact system release manifest and [clean-machine runbook](../deployment/multi-repo-release.md). Installed Contracts resources and explicit Interface/FPGA artifacts replace frozen-reference fixtures. Standalone producer repositories own deterministic generation, unit/AST, backend, RPC and RTL gates; Remote owns the full integrated release groups. Historical M1–M5 measurements remain separately dated. Initial Python entrypoints must suppress source bytecode before importing helper modules, and all child temp/cache paths must belong to the canonical session. Applying a child bootstrap does not change the parent shell; import its recorded environment before continuing.
+The historical M6 0.1.3 selection used Interface 0.1.3, API, Contracts,
+Simulator, Hardware and FPGA 0.1.1, and DEV tooling 1.0.0a1. The publication
+sequencing decision for that release relied on its full local Ubuntu browser
+acceptance. The current [release lock](../integration/release-set.json) selects
+0.1.4. Record CI identity, local evidence and unrun gates separately. Use the
+[current release runbook](en/operations/release-and-rollback.md). Installed
+Contracts resources and explicit Interface/FPGA artifacts replace frozen-reference
+fixtures. Producers own deterministic generation, unit/AST, backend, RPC and
+RTL gates. Remote owns the integrated release groups. Historical M1–M5 results
+remain separately dated. Suppress source bytecode before importing verification
+helpers and put child temp/cache paths in the canonical session. Import the
+recorded environment into the parent shell before continuing.
 
 Local-only release verification uses an explicit `distribution: "local"` manifest with `scripts/install_release.py --local-artifacts`. Retain exact absolute artifact paths, SHA-256 and committed producer revisions outside Git, including the unchanged rollback inventory. Mixed URL/path transport and implicit local fallback are rejected. This verifies a local set without publishing it or changing the canonical GitHub release selection; identify uncommitted verification-tool overlays separately.
 
-The current [M6 verification record](verification/2026-10-27-multi-repo-migration-m6.md)
+The dated [M6 verification record](verification/2026-10-27-multi-repo-migration-m6.md)
 records the native depth-observer equivalence proof and unchanged DPR 2 gate.
 Those focused results do not replace complete browser and hosted-master acceptance.
 

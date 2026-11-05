@@ -1,5 +1,10 @@
 # CIRNET documentation index
 
+[Current English documentation](en/index.md) · [Tiếng Việt](vi/index.md)
+
+This index retains existing deep links and the historical source map.
+Use the language indexes for current instructions.
+
 | Task | Start here |
 | --- | --- |
 | Run or integrate Remote | [Repository setup](../README.md), [API](../services/api/README.md), [Contracts](../contracts/README.md) |

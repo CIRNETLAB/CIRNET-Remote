@@ -1,5 +1,9 @@
 # CIRNET multi-repo release and rollback
 
+See the current runbook in [English](../docs/en/operations/release-and-rollback.md)
+or [Vietnamese](../docs/vi/operations/release-and-rollback.md). This retained
+entry keeps links from previously published instructions working.
+
 Use `integration/release-set.json` for the exact system 0.1.4 selection.
 Interface is 0.1.4. API, Contracts, Simulator, Hardware and FPGA are 0.1.2.
 The independent allocator keeps its Python 1.0.0a1 and npm 1.0.0-m1.0 versions.
