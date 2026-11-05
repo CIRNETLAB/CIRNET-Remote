@@ -1,386 +1,186 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "0.1.3",
+  "releaseVersion": "0.1.4",
+  "distribution": "github-release",
   "repositories": {
     "Remote": {
-      "repository": "https://github.com/CIRNETLAB/CIRNET-Remote",
-      "version": "0.1.1",
-      "sourceRevision": "82ca15bec250894c39c2849ab4a3eaaeb7712b05",
+      "repository": "https://github.com/cirnetlab/cirnet-remote",
+      "version": "0.1.2",
+      "releaseTag": "v0.1.4",
+      "releaseTitle": "cirnet-remote-v0.1.4",
+      "sourceRevision": "ce84ec4cf3602ef6fd001f91877e864c8955f9c7",
       "artifacts": {
         "python": {
-          "filename": "netcircuit_api-0.1.1-py3-none-any.whl",
-          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Remote/releases/assets/684944254",
-          "sha256": "50d3d2610ceaa0d00d926c83e4d4a9b5039ecc2a67fa8d19d979d28f051a1906",
-          "size": 100223,
-          "assetId": 684944254
+          "filename": "cirnet_api-0.1.2-py3-none-any.whl",
+          "url": "https://api.github.com/repos/cirnetlab/cirnet-remote/releases/assets/712740444",
+          "sha256": "c71a2669f58ee1ba045c4bbca69543826c1356ffffcb237aa22ffb15edbe934d",
+          "size": 102481,
+          "assetId": 712740444
         },
         "sdist": {
-          "filename": "netcircuit_api-0.1.1.tar.gz",
-          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Remote/releases/assets/684944433",
-          "sha256": "badc2f9308d3f3e48ff79ec73ac20e2337b22a3c7cfbc779029444599d43feba",
-          "size": 152026,
-          "assetId": 684944433
+          "filename": "cirnet_api-0.1.2.tar.gz",
+          "url": "https://api.github.com/repos/cirnetlab/cirnet-remote/releases/assets/712740474",
+          "sha256": "c54dd89cbddb4d37df5f741b9b775264b0b6317f6b9d7d72e95e04651b25be71",
+          "size": 163197,
+          "assetId": 712740474
         },
         "deployment": {
-          "filename": "netcircuit-remote-0.1.1-deployment.tar.gz",
-          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Remote/releases/assets/684944615",
-          "sha256": "0c4af2a06a9a03f0a662862aa934db7a026ffe4b4b01a30593f3518d9c2d179d",
-          "size": 21587,
-          "assetId": 684944615
+          "filename": "cirnet-remote-0.1.2-deployment.tar.gz",
+          "url": "https://api.github.com/repos/cirnetlab/cirnet-remote/releases/assets/712740511",
+          "sha256": "88ed056ba8fc2fec7ae3ae481b78619d1e8d8691e9115fa5e7d03ba1fe655e6c",
+          "size": 10136,
+          "assetId": 712740511
         }
-      },
-      "releaseTag": "v0.1.1"
+      }
     },
     "Contracts": {
-      "repository": "https://github.com/CIRNETLAB/CIRNET-Contracts",
-      "version": "0.1.1",
-      "sourceRevision": "54ef9f6a11f4906c11ec9789de47cf06d5100734",
+      "repository": "https://github.com/cirnetlab/cirnet-contracts",
+      "version": "0.1.2",
+      "releaseTag": "v0.1.2",
+      "releaseTitle": "cirnet-contracts-v0.1.2",
+      "sourceRevision": "524cc7a5e2e65f39077feefe70c7fb2ae3a773d6",
       "artifacts": {
         "python": {
-          "filename": "netcircuit_contracts-0.1.1-py3-none-any.whl",
-          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Contracts/releases/assets/682226130",
-          "sha256": "5dd663c6bfe6b9dd39b5f4b86ffd24eeed8bed9b2898aaedb35f99debb0cbcc2",
-          "size": 1225567,
-          "assetId": 682226130
+          "filename": "cirnet_contracts-0.1.2-py3-none-any.whl",
+          "url": "https://api.github.com/repos/cirnetlab/cirnet-contracts/releases/assets/712718253",
+          "sha256": "7b092af5817b0e15f02f9f5f292a8e1b20fe1d512600f9c0260d05a58ddaaf42",
+          "size": 1233717,
+          "assetId": 712718253
         },
         "sdist": {
-          "filename": "netcircuit_contracts-0.1.1.tar.gz",
-          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Contracts/releases/assets/682226235",
-          "sha256": "9e15850d42ddc61311979cec2df95f5e55d07699e7cbfd83a8f24f0b988b4e07",
-          "size": 1270866,
-          "assetId": 682226235
+          "filename": "cirnet_contracts-0.1.2.tar.gz",
+          "url": "https://api.github.com/repos/cirnetlab/cirnet-contracts/releases/assets/712718302",
+          "sha256": "dac0dbe5f30630faee0cabbb76d4da39012805295a12581d87ade23431e6aec6",
+          "size": 2046490,
+          "assetId": 712718302
         },
         "npm": {
-          "filename": "tinihi-labs-contracts-0.1.1.tgz",
-          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Contracts/releases/assets/682226359",
-          "sha256": "3bfc8b6f84b645cd6b7864bd1391de1d5efdc6ee4ba653cb92e145a3ddd2bc83",
-          "size": 823912,
-          "assetId": 682226359
+          "filename": "cirnet-contracts-0.1.2.tgz",
+          "url": "https://api.github.com/repos/cirnetlab/cirnet-contracts/releases/assets/712718345",
+          "sha256": "b963cf4990fee8b5a9294a6aaf85cfd803ed7724efc9ad2b3ee1ec302646b3c8",
+          "size": 825291,
+          "assetId": 712718345
         },
         "dev": {
-          "filename": "netcircuit_artifact_paths-1.0.0a1-py3-none-any.whl",
-          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Contracts/releases/assets/682226469",
-          "sha256": "ff76532c69b2115338edb641660c966c5459dd40cb806f52a1e2e8c379c70a1f",
-          "size": 18574,
-          "assetId": 682226469
+          "filename": "cirnet_artifact_paths-1.0.0a1-py3-none-any.whl",
+          "url": "https://api.github.com/repos/cirnetlab/cirnet-contracts/releases/assets/712718400",
+          "sha256": "61009f539e672cd6bdd799c608d30273f2e6988ad429147b2efa8e3873d51c08",
+          "size": 19547,
+          "assetId": 712718400
         },
         "dev_npm": {
-          "filename": "tinihi-labs-artifact-paths-1.0.0-m1.0.tgz",
-          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Contracts/releases/assets/682226570",
-          "sha256": "53190cceb3eee6bb92e91edf1eda0c01043e0ea095cbba1e745a0f7103e6f6df",
-          "size": 17527,
-          "assetId": 682226570
+          "filename": "cirnet-artifact-paths-1.0.0-m1.0.tgz",
+          "url": "https://api.github.com/repos/cirnetlab/cirnet-contracts/releases/assets/712718440",
+          "sha256": "764fda1ffcb189af5c063653b8656fd3acdab1877f2f87b74182fff3269f9132",
+          "size": 18033,
+          "assetId": 712718440
         }
-      },
-      "releaseTag": "v0.1.1"
-    },
-    "Interface": {
-      "repository": "https://github.com/CIRNETLAB/CIRNET-Interface",
-      "version": "0.1.3",
-      "sourceRevision": "6c150f34193bb3b009046cbaa586fae0260560f4",
-      "artifacts": {
-        "source": {
-          "filename": "cirnet-interface-0.1.3-source.tar.gz",
-          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Interface/releases/assets/709523575",
-          "sha256": "41273280dfc3934c33f7d6ae7fb5c0d4f76d92a9e8b31dd4b6c50c164449b2e3",
-          "size": 2425434,
-          "assetId": 709523575
-        },
-        "static": {
-          "filename": "cirnet-interface-0.1.3-static.tar.gz",
-          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Interface/releases/assets/709523651",
-          "sha256": "5a4e53f118a9195fae27f55bb9a886fef229991cff835699aaf6e257c1341089",
-          "size": 2193267,
-          "assetId": 709523651
-        }
-      },
-      "releaseTag": "v0.1.3"
+      }
     },
     "Simulator": {
-      "repository": "https://github.com/CIRNETLAB/CIRNET-Simulator",
-      "version": "0.1.1",
-      "sourceRevision": "ff63616a7a8c5d3f65e60cdb85db2b4b4ab42fa7",
+      "repository": "https://github.com/cirnetlab/cirnet-simulator",
+      "version": "0.1.2",
+      "releaseTag": "v0.1.2",
+      "releaseTitle": "cirnet-simulator-v0.1.2",
+      "sourceRevision": "9ec36fa2772ba8227e15ae33fec9710943a9a775",
       "artifacts": {
         "python": {
-          "filename": "netcircuit_simulator-0.1.1-py3-none-any.whl",
-          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Simulator/releases/assets/684943145",
-          "sha256": "78b857369baec88800d08e37977afacca3321decd05b6cd50ea925c033ea7b89",
-          "size": 33159,
-          "assetId": 684943145
+          "filename": "cirnet_simulator-0.1.2-py3-none-any.whl",
+          "url": "https://api.github.com/repos/cirnetlab/cirnet-simulator/releases/assets/712729983",
+          "sha256": "f467ae9ae23657179ca9bca53d83a2306131c800853072bd525df6f1b3eea77e",
+          "size": 34282,
+          "assetId": 712729983
         },
         "sdist": {
-          "filename": "netcircuit_simulator-0.1.1.tar.gz",
-          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Simulator/releases/assets/684943330",
-          "sha256": "6afd1b9a68768f527fd5ee1f864287c88d56b6a97c0a7fd7b2b7bd560bb0cfd2",
-          "size": 76733,
-          "assetId": 684943330
+          "filename": "cirnet_simulator-0.1.2.tar.gz",
+          "url": "https://api.github.com/repos/cirnetlab/cirnet-simulator/releases/assets/712730029",
+          "sha256": "bdc8389bcbd9679faf0d28b8114188615e199e4d4c068b5813adc48a34cb92c4",
+          "size": 92291,
+          "assetId": 712730029
         }
-      },
-      "releaseTag": "v0.1.1"
+      }
     },
     "Hardware": {
-      "repository": "https://github.com/CIRNETLAB/CIRNET-Hardware",
-      "version": "0.1.1",
-      "sourceRevision": "de65db8b89d0dfa6dd4c430a41397555bc77111d",
+      "repository": "https://github.com/cirnetlab/cirnet-hardware",
+      "version": "0.1.2",
+      "releaseTag": "v0.1.2",
+      "releaseTitle": "cirnet-hardware-v0.1.2",
+      "sourceRevision": "9a8935b6a596abe2d21ce90416ba3b914e9f36be",
       "artifacts": {
         "python": {
-          "filename": "netcircuit_hardware_service-0.1.1-py3-none-any.whl",
-          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Hardware/releases/assets/684943575",
-          "sha256": "f6fc643bc40130a0f8b4136db8db4f8abe1b0b366efaffa8c1866786429d9e9b",
-          "size": 29105,
-          "assetId": 684943575
+          "filename": "cirnet_hardware_service-0.1.2-py3-none-any.whl",
+          "url": "https://api.github.com/repos/cirnetlab/cirnet-hardware/releases/assets/712738542",
+          "sha256": "eba6d43d8c998ef3d14add192398c8f3217fe17d22f1c8a2970c7a30feecaa1d",
+          "size": 29854,
+          "assetId": 712738542
         },
         "sdist": {
-          "filename": "netcircuit_hardware_service-0.1.1.tar.gz",
-          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Hardware/releases/assets/684943851",
-          "sha256": "3754bfc3338cc6c17dd66b16788c502cdd414e2b4e01a1e2c0ffaed24b0060fb",
-          "size": 71564,
-          "assetId": 684943851
+          "filename": "cirnet_hardware_service-0.1.2.tar.gz",
+          "url": "https://api.github.com/repos/cirnetlab/cirnet-hardware/releases/assets/712738611",
+          "sha256": "87c42c3bc20d551ee3b29edcddb139adf1522d751422ab2f6469d480b43a5dcc",
+          "size": 83785,
+          "assetId": 712738611
         }
-      },
-      "releaseTag": "v0.1.1"
+      }
     },
-    "FPGA": {
-      "repository": "https://github.com/CIRNETLAB/CIRNET-FPGA",
-      "version": "0.1.1",
-      "sourceRevision": "24ade35eade5382efd42f784008280c0fbb768c3",
+    "Interface": {
+      "repository": "https://github.com/cirnetlab/cirnet-interface",
+      "version": "0.1.4",
+      "releaseTag": "v0.1.4",
+      "releaseTitle": "cirnet-interface-v0.1.4",
+      "sourceRevision": "f1fe0c4738e105727aff1a331327caf7172cdf5f",
       "artifacts": {
         "source": {
-          "filename": "netcircuit-fpga-scaffold-0.1.1.tar.gz",
-          "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-FPGA/releases/assets/684944031",
-          "sha256": "b82edb4167b821f55d98331304d0c49d2f37638d972fc9c167287bb6368908ca",
-          "size": 56247,
-          "assetId": 684944031
+          "filename": "cirnet-interface-0.1.4-source.tar.gz",
+          "url": "https://api.github.com/repos/cirnetlab/cirnet-interface/releases/assets/712765206",
+          "sha256": "8a48b86547d7f4937c04dc25edd5acc60dc00ceeb29e39a857981782714ae143",
+          "size": 2440552,
+          "assetId": 712765206
+        },
+        "static": {
+          "filename": "cirnet-interface-0.1.4-static.tar.gz",
+          "url": "https://api.github.com/repos/cirnetlab/cirnet-interface/releases/assets/712765287",
+          "sha256": "f092cd7305ebe33d515d80642e422078b969540d276d0d09cda1266a87d11d74",
+          "size": 2204606,
+          "assetId": 712765287
         }
-      },
-      "releaseTag": "v0.1.1"
+      }
+    },
+    "FPGA": {
+      "repository": "https://github.com/cirnetlab/cirnet-fpga",
+      "version": "0.1.2",
+      "releaseTag": "v0.1.2",
+      "releaseTitle": "cirnet-fpga-v0.1.2",
+      "sourceRevision": "d27c818aca0eb95e9ee8d9b5ba6bda3182909914",
+      "artifacts": {
+        "source": {
+          "filename": "cirnet-fpga-scaffold-0.1.2.tar.gz",
+          "url": "https://api.github.com/repos/cirnetlab/cirnet-fpga/releases/assets/712736504",
+          "sha256": "b7e866324fe3562c03bb6adec2750dd0880102e772101a388cf7064e1c479c82",
+          "size": 63908,
+          "assetId": 712736504
+        }
+      }
     }
   },
+  "integration": {
+    "repository": "https://github.com/cirnetlab/cirnet-remote",
+    "version": "0.1.4",
+    "sourceRevision": "ce84ec4cf3602ef6fd001f91877e864c8955f9c7"
+  },
   "compatibility": {
-    "contractsVersion": "0.1.1",
+    "contractsVersion": "0.1.2",
     "hardwareRpcVersion": "2.0",
     "fpgaLogicalProtocolVersion": "1.0-scaffold",
     "fpgaRegisterMapVersion": "1.0-reserved",
     "sameOrigin": true,
     "apiSchedulerProcesses": 1,
-    "hardwareRpcScope": "local-only",
-    "circuitGraphVersions": [
-      "1.0",
-      "1.1",
-      "1.2"
-    ],
-    "ncapVersions": [
-      1,
-      2
-    ],
-    "apiApplicationVersion": "0.1.1",
-    "physicalAvailable": false,
-    "ngspiceAvailable": false
+    "hardwareRpcScope": "local-only"
   },
   "rollback": {
-    "source": {
-      "filename": "netcircuit-system-rollback-pre-m6.tar.gz",
-      "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Remote/releases/assets/682421591",
-      "sha256": "64242f673d3e750cbf3b18db36314ce86d23347ab3130ff2308afe63ac7d9e34",
-      "bytes": 8033237,
-      "assetId": 682421591
-    },
-    "artifactSet": [
-      {
-        "component": "Remote",
-        "version": "0.1.0",
-        "sourceRevision": "40ad3a62a046cf72f17e5be0d693ecd78e8c7fe4",
-        "artifacts": {
-          "python": {
-            "filename": "netcircuit_api-0.1.0-py3-none-any.whl",
-            "sha256": "576d44402fa79d61a24dd361450a68271da805e0490580f592a8de10a0076466",
-            "bytes": 100266
-          },
-          "sdist": {
-            "filename": "netcircuit_api-0.1.0.tar.gz",
-            "sha256": "648f5e5fef096dc3c65a6671cb4c7ba7eecb7ac31b6f067853b9321798d8e2b0",
-            "bytes": 157162
-          }
-        },
-        "originalBuildProvenance": {
-          "sourceRevision": "40ad3a62a046cf72f17e5be0d693ecd78e8c7fe4",
-          "uncommittedMigration": false,
-          "sourceDateEpoch": 1793114480,
-          "builtForRollbackRehearsal": true
-        }
-      },
-      {
-        "component": "Contracts",
-        "version": "1.0.1",
-        "sourceRevision": "1f4388252a0711eae0a167b95964372453e811d2",
-        "artifacts": {
-          "python": {
-            "filename": "netcircuit_contracts-1.0.1-py3-none-any.whl",
-            "sha256": "ab865f991950fb575d86d3b6bb23646864c706b64c3d0305ba4b9ca9d0237c79",
-            "bytes": 1230120
-          },
-          "sdist": {
-            "filename": "netcircuit_contracts-1.0.1.tar.gz",
-            "sha256": "d527113fcd9d41d192576b49b69bf7a7af2f329b61a696c96220b1cf10af1473",
-            "bytes": 1277644
-          },
-          "npm": {
-            "filename": "tinihi-labs-contracts-1.0.1.tgz",
-            "sha256": "17cac7b7ec725581b2ff02078900d5a08ac0f5504df2e1fc3c3703a594c86579",
-            "bytes": 826742
-          },
-          "dev": {
-            "filename": "netcircuit_artifact_paths-1.0.0a1-py3-none-any.whl",
-            "sha256": "ff76532c69b2115338edb641660c966c5459dd40cb806f52a1e2e8c379c70a1f",
-            "bytes": 18574
-          },
-          "dev_sdist": {
-            "filename": "netcircuit_artifact_paths-1.0.0a1.tar.gz",
-            "sha256": "e437f0719d2756f1e15f04d28246089ee66f517ba14a8771297bedb5ba4afaf0",
-            "bytes": 19863
-          },
-          "dev_npm": {
-            "filename": "tinihi-labs-artifact-paths-1.0.0-m1.0.tgz",
-            "sha256": "53190cceb3eee6bb92e91edf1eda0c01043e0ea095cbba1e745a0f7103e6f6df",
-            "bytes": 17527
-          }
-        },
-        "originalBuildProvenance": {
-          "source_revision": "295797c581acc3935f5e128fd3d23674c728ca65",
-          "destination_base": "a5b17b1c17bce6a1d097c263110b82e8a4602024",
-          "status": "LOCAL_UNPUBLISHED"
-        }
-      },
-      {
-        "component": "Interface",
-        "version": "0.1.0-m2.0",
-        "sourceRevision": "24968de2803cf69c7c5159f649f21ec0c32f8b5e",
-        "artifacts": {
-          "source": {
-            "filename": "netcircuit-interface-0.1.0-m2.0-source.tar.gz",
-            "sha256": "56d85ec4c6bea9b69e8c8dac801a5ecaf86d9c9dbe678721e2b6eaa670f0c30e",
-            "bytes": 2365885
-          },
-          "static": {
-            "filename": "netcircuit-interface-0.1.0-m2.0-static.tar.gz",
-            "sha256": "8ca2e539767235cc38c3b298016db9f62ddd5086e50d07fc5abb367c42f318b5",
-            "bytes": 2200771
-          }
-        },
-        "originalBuildProvenance": {
-          "sourceFingerprint": "0cc7226388831e448864349651a7e9462114d66809801bab0e903ca1c54559b1",
-          "status": "LOCAL_UNPUBLISHED"
-        }
-      },
-      {
-        "component": "Simulator",
-        "version": "0.2.0",
-        "sourceRevision": "96a57e0f42a114c4f5b4675411c625415019f907",
-        "artifacts": {
-          "python": {
-            "filename": "netcircuit_simulator-0.2.0-py3-none-any.whl",
-            "sha256": "fc7930662e49c5751980154261e5c39448c63fde1cb5da9a8f509b82b1dd2e62",
-            "bytes": 33312
-          },
-          "sdist": {
-            "filename": "netcircuit_simulator-0.2.0.tar.gz",
-            "sha256": "070fcaefd0c3486ef003b87db4465ee5bfb0f6a6a835f10102b5f116c23a9fa7",
-            "bytes": 76554
-          }
-        },
-        "originalBuildProvenance": {
-          "sourceRevision": "25d2e6784035f6a8165142f8a8e03c4534512bcc",
-          "uncommittedMigration": true,
-          "sourceFingerprint": "4127414fbb32c763f5eb545b4693656ae7b314e0056a1ca6b215ef1556ecf29c",
-          "sourceDateEpoch": 1792844004,
-          "status": "LOCAL_UNPUBLISHED"
-        }
-      },
-      {
-        "component": "Hardware",
-        "version": "0.1.1",
-        "sourceRevision": "2ddd0801e11207afa7fdfbe997392626dece0cd1",
-        "artifacts": {
-          "python": {
-            "filename": "netcircuit_hardware_service-0.1.1-py3-none-any.whl",
-            "sha256": "27338f44251dafd3a35cbba2883b7fba2d85bfcf7dec73e6fdda3fcb74e8c48c",
-            "bytes": 29225
-          },
-          "sdist": {
-            "filename": "netcircuit_hardware_service-0.1.1.tar.gz",
-            "sha256": "4888448ec20a38e2a60fe6903dbd43e9db383530a3895ab167edfe3ed89d3739",
-            "bytes": 71991
-          }
-        },
-        "originalBuildProvenance": {
-          "sourceRevision": "0d038c7aed15798696223558b4e58f5ffe926aa9",
-          "uncommittedMigration": true,
-          "sourceFingerprint": "a5fbb69abbef75ccab6342d64a490791b6d745aa0d0e1181fb41323adb6aa16b",
-          "sourceDateEpoch": 1793107095,
-          "status": "LOCAL_UNPUBLISHED"
-        }
-      },
-      {
-        "component": "FPGA",
-        "version": "0.1.0",
-        "sourceRevision": "2a263190ef622319a15e45ef261919107fcfd96f",
-        "artifacts": {
-          "source": {
-            "filename": "netcircuit-fpga-scaffold-0.1.0.tar.gz",
-            "sha256": "bdbd5cc984c75429ba3f65031f4c2b7557becb50b9e7d4bd156e1b4051d71eda",
-            "bytes": 54775
-          }
-        },
-        "originalBuildProvenance": {
-          "status": "LOCAL_UNPUBLISHED"
-        }
-      }
-    ],
-    "priorPublishedRelease": null,
-    "provenance": "reviewed-pre-m6-local-set",
     "matchingDatabaseBackupRequired": true,
     "matchingCaptureBackupRequired": true,
     "preserveQuarantine": true,
     "automaticStartReplay": false
-  },
-  "sourceRevisionMeaning": "Exact artifact build revision. A release tag/master may additionally contain verified CI, release-manifest or verification documentation changes; package input differences must be reviewed.",
-  "historicalReproducibility": {
-    "Contracts": {
-      "filename": "netcircuit-contracts-0.1.1-build-recipe.tar.gz",
-      "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Contracts/releases/assets/682445990",
-      "sha256": "d3066a8e1c89bce4a7a7887744cd13bb2595fc9a01c8a62c8f061ae90cac824e",
-      "bytes": 26958,
-      "assetId": 682445990
-    },
-    "Remote": {
-      "filename": "netcircuit-api-0.1.1-build-recipe.tar.gz",
-      "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Remote/releases/assets/682446200",
-      "sha256": "adb5c00cac6afe1270aa4428e54fa69b04b033049ac98f161d03f782c35be70b",
-      "bytes": 12302,
-      "assetId": 682446200
-    },
-    "DevTooling": {
-      "filename": "netcircuit-artifact-paths-1.0.0a1-build-recipe.tar.gz",
-      "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Contracts/releases/assets/682460861",
-      "sha256": "87e230ec4f14b1e0af36bec1f9b94f8b1e791a0bece30b9417773c92445d0ade",
-      "bytes": 2062,
-      "assetId": 682460861
-    }
-  },
-  "reproducibility": {
-    "ReviewedLocalBuildInputs": {
-      "filename": "m6-reproducibility-inputs-0.1.1-82ca15b.zip",
-      "url": "https://api.github.com/repos/CIRNETLAB/CIRNET-Remote/releases/assets/684944690",
-      "sha256": "9dc5886ee214bc6e535ffe13965a44a2c9d504f67e4cd9fef5c6a9ee3cb974dc",
-      "size": 75180,
-      "assetId": 684944690,
-      "sourceRevision": "82ca15bec250894c39c2849ab4a3eaaeb7712b05",
-      "limitations": "Reviewed build/archive profiles and recipes; historical absolute paths require remapping. Not a portable automated pipeline; native Interface/FPGA builders remain in their recorded source commits."
-    }
-  },
-  "integration": {
-    "version": "0.1.3",
-    "repository": "https://github.com/CIRNETLAB/CIRNET-Remote",
-    "sourceRevision": "ea171dd950586ba104a8224220266c78861f1298"
   }
 }
