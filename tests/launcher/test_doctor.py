@@ -37,6 +37,9 @@ GOOD_TOOLS = r"""
 & $module {
     $script:NativeProbe = ${function:Invoke-CirnetDoctorProcess}
     function script:Find-CirnetDoctorCommand { param($Names)
+        if ($Names[0] -notin @('git.exe', 'python.exe', 'node.exe', 'npm.cmd', 'npm.exe')) {
+            throw "Unexpected Doctor tool lookup: $($Names -join ', ')"
+        }
         [pscustomobject]@{ Source = ('C:\tools\' + ($Names[0] -replace '\.cmd$', '.exe')) }
     }
     function script:Invoke-CirnetDoctorProcess { param($FilePath, $Arguments, $TimeoutMilliseconds)
@@ -78,13 +81,10 @@ def test_fresh_machine_distinguishes_bootstrap_from_installed_readiness(tmp_path
     assert by_name["Launcher virtual environment"]["Status"] == "MISSING"
     assert by_name["Pinned release cache"]["Status"] == "MISSING"
     assert "start" in by_name["Pinned release cache"]["Remediation"]
-    assert by_name["Physical FPGA / firmware"]["Status"] == "NOT VERIFIED"
-    assert by_name["Icarus Verilog"]["Status"] == "INSTALLED"
-    assert by_name["Icarus Verilog"]["Version"] == "1.0.0"
     for check in value["Checks"]:
         assert set(check) >= {"Name", "Required", "Status", "Version", "Path", "Detail", "Remediation"}
         assert check["Status"] in {"INSTALLED", "MISSING", "INCOMPATIBLE", "NOT VERIFIED"}
-        assert isinstance(check["Required"], bool)
+        assert check["Required"] is True, check["Name"]
 
 
 def test_missing_commands_are_reported_without_executing_them(tmp_path):
@@ -312,20 +312,14 @@ def installed_cache(tmp_path, *, prefix="CIRNET"):
 
 
 @pytest.mark.parametrize("prefix", ["CIRNET", "NETCIRCUIT"])
-def test_complete_matching_cache_can_be_ready_without_optional_tools(tmp_path, prefix):
+def test_complete_matching_cache_is_ready_without_modifying_files(tmp_path, prefix):
     repository, dev, state = installed_cache(tmp_path, prefix=prefix)
     before = {path: path.read_bytes() for path in tmp_path.rglob("*") if path.is_file()}
-    setup = GOOD_TOOLS + r"""
-& $module {
-    function script:Get-CirnetDoctorMsvc { New-CirnetDoctorCheck 'MSVC v143 (Visual Studio Build Tools)' $false 'MISSING' }
-}
-"""
-    value = report(dev, setup, repository)
+    value = report(dev, GOOD_TOOLS, repository)
     assert value["Ready"], value["MissingRequired"]
     assert value["MissingRequired"] == []
     assert checks(value)["Pinned release cache"]["Status"] == "INSTALLED"
     assert checks(value)["Cached Python dependencies"]["Status"] == "INSTALLED"
-    assert checks(value)["MSVC v143 (Visual Studio Build Tools)"]["Status"] == "MISSING"
     assert before == {path: path.read_bytes() for path in tmp_path.rglob("*") if path.is_file()}
 
 

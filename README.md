@@ -55,10 +55,11 @@ Remote API and CIRNET-Interface. The first setup can take several minutes.
 
 The Console groups actions into clear sections, highlights success, warnings
 and errors, and shows a bounded loading spinner during service health checks
-and shutdown waits. Banners display only their title. Doctor separates required and optional checks with a final
-summary; Clean shows both exact byte counts and readable sizes. All messages
-remain in English. Colors and animation automatically fall back to plain output
-for redirected output, `NO_COLOR=1`, `TERM=dumb` or unsupported console features.
+and shutdown waits. Banners display only their title. Doctor shows recommended
+versions above the detected environment. Clean shows exact byte counts and
+readable sizes. All messages remain in English. Colors and animation fall back
+to plain output for redirected output, `NO_COLOR=1`, `TERM=dumb` or unsupported
+console features.
 Redirected input disables animation. Resizing during a spinner switches it to
 a static status line without erasing previous Console output.
 
@@ -81,9 +82,12 @@ Existing command-line usage starts directly without displaying the menu.
 without motion. Either presentation switch alone opens the menu. Combined with
 an explicit action or an existing startup flag, it keeps direct CLI behavior.
 
-`-Check` checks the real services and stops them automatically. During a normal
-run, focus the launcher terminal and press Enter or Ctrl+C to stop, or run the
-`stop` command in another terminal. Service logs are printed as an absolute
+`-Check` checks the real services and stops them automatically. For a normal
+`start`, focus the launcher terminal and press **Esc** during readiness checks or
+while running to stop and return to the menu after shutdown. Choose **3** to start
+again. The first-run dependency setup completes before readiness checks begin.
+**Enter**, **Ctrl+C**, and the `stop` command from another terminal stop the
+session and exit. Service logs are printed as an absolute
 external path. Development SQLite and captures use
 `%USERPROFILE%\CIRNET-Dev`, or the external directory selected with
 `CIRNET_DEV_HOME`.
@@ -99,14 +103,15 @@ dependencies, virtual environments, databases, captures, release artifacts and
 the DEV allocator cache. It skips unrecognized output and refuses cleanup while
 a launcher or relevant service is active.
 
-Doctor inspects Git, PowerShell, Python 3.14+, pip/venv, Node.js 26 LTS, npm,
-the installed runtime, release cache and the three service ports. It reports
+Doctor starts with recommended versions for Git, Windows PowerShell, Python,
+pip/venv, Node.js and npm. It then inspects the installed tools, runtime,
+release cache and the three service ports. It reports
 `INSTALLED`, `MISSING`, `INCOMPATIBLE` or `NOT VERIFIED` with remediation.
 `READY FOR LOCAL SIMULATION` requires an installed, verified runtime and the
 required tools. On a fresh machine with the tools installed, use `start` to
-bootstrap the pinned release, then run Doctor again. CMake, Ninja, MSVC v143
-and FPGA tools are reported separately as optional. Doctor performs local
-inspection and prints its report to the console.
+bootstrap the pinned release, then run Doctor again. The FPGA development
+section points to the pinned `pyslang`, Icarus Verilog and `vvp` workflow in
+CIRNET-FPGA. Doctor performs local inspection and prints its report to the console.
 
 Startup checks both the base interpreter and an existing launcher environment
 against Python 3.14. Installing a newer Python does not upgrade an existing
@@ -124,8 +129,9 @@ Trên Windows, mở [run-cirnet.bat](run-cirnet.bat), chọn **3** hoặc nhập
 Cài Git, Python 3.14+ và Node.js 26 LTS trước. Sau khi nâng Node, mở lại
 terminal và kiểm tra `node --version` hiển thị `v26.x`. Lần đầu, launcher tải các gói
 được pin trong manifest, sau đó tự mở trình duyệt tại `http://127.0.0.1:5173`.
-Giữ cửa sổ launcher mở. Để dừng, chuyển về cửa sổ đó và nhấn **Enter** hoặc
-**Ctrl+C**. Nếu terminal giữ phím tắt hoặc bạn đã chuyển sang cửa sổ khác,
+Giữ cửa sổ launcher mở. Nhấn **Esc** trong cửa sổ đó để dừng các dịch vụ và
+quay lại menu, sau đó chọn **3** nếu muốn chạy tiếp. Nhấn **Enter** hoặc
+**Ctrl+C** để dừng và thoát. Nếu bạn đã chuyển sang cửa sổ khác,
 mở PowerShell mới tại thư mục repo và chạy `.\run-cirnet.bat stop`.
 Launcher dừng Web, API và Hardware Service. Dữ liệu SQLite phát triển và
 capture nằm trong `%USERPROFILE%\CIRNET-Dev`.

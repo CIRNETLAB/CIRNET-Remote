@@ -11,6 +11,13 @@ import pytest
 from tests.launcher.support import PS_EXECUTABLE, REPO, run_ps
 
 
+DOCTOR_RECOMMENDATIONS = """
+function Get-CirnetRequiredTools {
+    [pscustomobject]@{Name='Node.js'; RecommendedVersion='26 LTS'; Purpose='Runs the Web tooling.'}
+}
+"""
+
+
 def launch(repo, args=(), *, text="", env=None, host=PS_EXECUTABLE):
     if os.name != "nt":
         pytest.skip("The batch launcher requires Windows.")
@@ -31,11 +38,11 @@ def isolated_launcher(tmp_path):
     shutil.copy2(REPO / "scripts/run-cirnet.ps1", root / "scripts")
     shutil.copy2(REPO / "scripts/launcher/Common.psm1", modules)
     shutil.copy2(REPO / "scripts/launcher/Console.psm1", modules)
-    (modules / "Doctor.psm1").write_text("""
+    (modules / "Doctor.psm1").write_text(DOCTOR_RECOMMENDATIONS + """
 function Get-CirnetEnvironmentReport {
     [pscustomobject]@{Ready=$true; Checks=@(); MissingRequired=@()}
 }
-Export-ModuleMember -Function Get-CirnetEnvironmentReport
+Export-ModuleMember -Function Get-CirnetEnvironmentReport, Get-CirnetRequiredTools
 """, encoding="utf-8")
     (modules / "Clean.psm1").write_text("""
 function Invoke-CirnetClean {
@@ -130,17 +137,19 @@ def test_existing_stop_and_batch_forwarding_work_without_menu(isolated_launcher,
 
 
 def test_doctor_failure_reports_named_remediation_and_failure_exit(isolated_launcher):
-    (isolated_launcher / "scripts/launcher/Doctor.psm1").write_text("""
+    (isolated_launcher / "scripts/launcher/Doctor.psm1").write_text(DOCTOR_RECOMMENDATIONS + """
 function Get-CirnetEnvironmentReport {
     $item = [pscustomobject]@{Name='Node.js'; Required=$true; Status='INCOMPATIBLE';
         Version='24.0.0'; Path='C:\\tools\\node.exe'; Detail='Node.js 26 is required.';
         Remediation='Install Node.js 26 LTS and select it on PATH.'}
     [pscustomobject]@{Ready=$false; Checks=@($item); MissingRequired=@($item)}
 }
-Export-ModuleMember -Function Get-CirnetEnvironmentReport
+Export-ModuleMember -Function Get-CirnetEnvironmentReport, Get-CirnetRequiredTools
 """, encoding="utf-8")
     result = launch(isolated_launcher, ("doctor",))
     assert result.returncode == 1
+    assert result.stdout.index("Required tools and recommended versions") < result.stdout.index("[INCOMPATIBLE]")
+    assert "26 LTS" in result.stdout and "Version: 24.0.0" in result.stdout
     assert "MISSING REQUIRED DEPENDENCIES" in result.stdout
     assert "Node.js [INCOMPATIBLE]" in result.stdout
     assert "Install Node.js 26 LTS" in result.stdout
@@ -294,23 +303,22 @@ def test_presentation_flags_keep_menu_and_direct_action_contract(isolated_launch
 
 
 @pytest.mark.parametrize("host", HOSTS, ids=lambda host: host.name)
-def test_doctor_summary_keeps_optional_missing_tools_separate(isolated_launcher, host):
-    (isolated_launcher / "scripts/launcher/Doctor.psm1").write_text("""
+def test_doctor_summarizes_readiness_and_points_to_fpga_workflow(isolated_launcher, host):
+    (isolated_launcher / "scripts/launcher/Doctor.psm1").write_text(DOCTOR_RECOMMENDATIONS + """
 function Get-CirnetEnvironmentReport {
     $checks = @(
         [pscustomobject]@{Name='Git'; Required=$true; Status='INSTALLED'; Version='2.48.0';
-            Path='C:\\tools\\git.exe'; Detail='Version checked.'; Remediation=''},
-        [pscustomobject]@{Name='Ninja'; Required=$false; Status='MISSING'; Version='';
-            Path=''; Detail='Optional tool is absent.'; Remediation='Install Ninja for native builds.'})
+            Path='C:\\tools\\git.exe'; Detail='Version checked.'; Remediation=''})
     [pscustomobject]@{Ready=$true; Checks=$checks; MissingRequired=@()}
 }
-Export-ModuleMember -Function Get-CirnetEnvironmentReport
+Export-ModuleMember -Function Get-CirnetEnvironmentReport, Get-CirnetRequiredTools
 """, encoding="utf-8")
     result = launch(isolated_launcher, ("doctor",), host=host, env={"NO_COLOR": "1", "TERM": "dumb"})
     assert result.returncode == 0, result.stderr
-    for text in ("ENVIRONMENT DOCTOR", "Required ready: 1/1", "Optional installed: 0/1",
-                 "Install Ninja for native builds.", "READY FOR LOCAL SIMULATION"):
+    for text in ("ENVIRONMENT DOCTOR", "Required ready: 1/1", "FPGA development",
+                 "CIRNET-FPGA", "READY FOR LOCAL SIMULATION"):
         assert text in result.stdout
+    assert "Optional installed" not in result.stdout
     assert "MISSING REQUIRED DEPENDENCIES" not in result.stdout
     assert "\x1b" not in result.stdout + result.stderr
 

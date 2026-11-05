@@ -59,28 +59,27 @@ function Invoke-CirnetDoctorProcess {
 }
 
 function Get-CirnetDoctorTool {
-    param([string]$Name, [string[]]$Commands, [string[]]$Arguments = @('--version'),
-        [bool]$Required = $true, [string]$Remediation, [string]$VersionPattern = '(\d+\.\d+(?:\.\d+)?)')
+    param([string]$Name, [string[]]$Commands, [string]$Remediation)
     $command = Find-CirnetDoctorCommand $Commands
-    if (-not $command) { return New-CirnetDoctorCheck $Name $Required 'MISSING' '' '' 'Executable was not found on PATH.' $Remediation }
+    if (-not $command) { return New-CirnetDoctorCheck $Name $true 'MISSING' '' '' 'Executable was not found on PATH.' $Remediation }
     $executable = $command.Source
-    $probeArguments = $Arguments
+    $probeArguments = @('--version')
     # Invoke npm's JavaScript CLI directly so cmd.exe cannot expand PATH spelling.
     if ([IO.Path]::GetExtension($executable) -eq '.cmd') {
         $cli = Join-Path (Split-Path -Parent $executable) 'node_modules\npm\bin\npm-cli.js'
         $node = Find-CirnetDoctorCommand @('node.exe')
         if (-not $node -or -not (Test-Path -LiteralPath $cli -PathType Leaf)) {
-            return New-CirnetDoctorCheck $Name $Required 'NOT VERIFIED' '' $executable 'The npm CLI could not be located beside its command wrapper.' $Remediation
+            return New-CirnetDoctorCheck $Name $true 'NOT VERIFIED' '' $executable 'The npm CLI could not be located beside its command wrapper.' $Remediation
         }
-        $probeArguments = @($cli) + $Arguments
+        $probeArguments = @($cli) + $probeArguments
         $executable = $node.Source
     }
     $probe = Invoke-CirnetDoctorProcess -FilePath $executable -Arguments $probeArguments
-    if ($probe.ExitCode -ne 0 -or $probe.Output -notmatch $VersionPattern) {
+    if ($probe.ExitCode -ne 0 -or $probe.Output -notmatch '(\d+\.\d+(?:\.\d+)?)') {
         $detail = if ($probe.TimedOut) { 'The version probe timed out.' } else { 'The executable did not return a recognizable version.' }
-        return New-CirnetDoctorCheck $Name $Required 'NOT VERIFIED' '' $command.Source $detail $Remediation
+        return New-CirnetDoctorCheck $Name $true 'NOT VERIFIED' '' $command.Source $detail $Remediation
     }
-    New-CirnetDoctorCheck $Name $Required 'INSTALLED' $Matches[1] $command.Source 'Executable version was checked.' ''
+    New-CirnetDoctorCheck $Name $true 'INSTALLED' $Matches[1] $command.Source 'Executable version was checked.' ''
 }
 
 function Assert-CirnetDoctorOwnedPath {
@@ -409,25 +408,41 @@ function Get-CirnetDoctorAllocatorCache {
     }
 }
 
-function Get-CirnetDoctorMsvc {
-    $remediation = 'Optional native builds: install Visual Studio Build Tools 2022 with the MSVC v143 C++ tools workload.'
-    $vswhere = if (${env:ProgramFiles(x86)}) { Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe' } else { '' }
-    if (-not $vswhere -or -not (Test-Path -LiteralPath $vswhere -PathType Leaf)) {
-        return New-CirnetDoctorCheck 'MSVC v143 (Visual Studio Build Tools)' $false 'MISSING' '' $vswhere 'vswhere.exe was not found.' $remediation
+function Get-CirnetRequiredTools {
+    [pscustomobject]@{
+        Name = 'Git'
+        RecommendedVersion = '2.x (Git for Windows)'
+        Purpose = 'Clones and verifies the development checkout.'
     }
-    $probe = Invoke-CirnetDoctorProcess $vswhere @('-latest','-products','Microsoft.VisualStudio.Product.BuildTools','-version','[17.0,18.0)','-requires','Microsoft.VisualStudio.Component.VC.Tools.x86.x64','-property','installationPath')
-    if ($probe.ExitCode -ne 0 -or -not $probe.Output) {
-        return New-CirnetDoctorCheck 'MSVC v143 (Visual Studio Build Tools)' $false 'MISSING' '' $vswhere 'vswhere did not find the required Build Tools product and C++ component.' $remediation
+    [pscustomobject]@{
+        Name = 'PowerShell'
+        RecommendedVersion = 'Windows PowerShell 5.1 (included with Windows)'
+        Purpose = 'Runs the launcher from run-cirnet.bat.'
     }
-    try {
-        $tools = Join-Path $probe.Output 'VC\Tools\MSVC'
-        $selected = Get-ChildItem -LiteralPath $tools -Directory -ErrorAction Stop |
-            Where-Object { $_.Name -match '^14\.(3\d|4\d)\.' } | Sort-Object Name -Descending | Select-Object -First 1
-        $compiler = if ($selected) { Join-Path $selected.FullName 'bin\Hostx64\x64\cl.exe' } else { '' }
-        if (-not $compiler -or -not (Test-Path -LiteralPath $compiler -PathType Leaf)) { throw 'The v143 x64 compiler is missing.' }
-        New-CirnetDoctorCheck 'MSVC v143 (Visual Studio Build Tools)' $false 'INSTALLED' $selected.Name $compiler 'Visual Studio Build Tools 2022 and its v143 x64 compiler were located through vswhere.' ''
-    } catch {
-        New-CirnetDoctorCheck 'MSVC v143 (Visual Studio Build Tools)' $false 'INCOMPATIBLE' '' $probe.Output 'The discovered Build Tools installation does not contain the v143 x64 compiler.' $remediation
+    [pscustomobject]@{
+        Name = 'Python'
+        RecommendedVersion = 'CPython 3.14.x (3.14.6 tested)'
+        Purpose = 'Runs the API, Hardware Service and launcher bootstrap.'
+    }
+    [pscustomobject]@{
+        Name = 'Python pip'
+        RecommendedVersion = 'Bundled with CPython 3.14'
+        Purpose = 'Installs the pinned Python dependencies.'
+    }
+    [pscustomobject]@{
+        Name = 'Python venv'
+        RecommendedVersion = 'Bundled with CPython 3.14'
+        Purpose = 'Creates the isolated launcher environment.'
+    }
+    [pscustomobject]@{
+        Name = 'Node.js'
+        RecommendedVersion = '26 LTS (26.13.0 tested)'
+        Purpose = 'Runs Vite and the web build tools.'
+    }
+    [pscustomobject]@{
+        Name = 'npm'
+        RecommendedVersion = 'Bundled with Node.js 26 LTS (11.20.0 tested)'
+        Purpose = 'Installs the locked web dependencies.'
     }
 }
 
@@ -501,30 +516,8 @@ function Get-CirnetEnvironmentReport {
         }
         $checks.Add((New-CirnetDoctorCheck ('Port ' + $port) $true $status '' ('127.0.0.1:' + $port) $detail $fix))
     }
-    $checks.Add((Get-CirnetDoctorTool 'CMake' @('cmake.exe') -Required $false -Remediation 'Optional native builds: install CMake and add cmake.exe to PATH.'))
-    $checks.Add((Get-CirnetDoctorTool 'Ninja' @('ninja.exe') -Required $false -Remediation 'Optional native builds: install Ninja and add ninja.exe to PATH.'))
-    $checks.Add((Get-CirnetDoctorMsvc))
-    $fpgaRemediation = 'Optional FPGA work: install the selected project toolchain and expose its executable on PATH.'
-    foreach ($tool in @(@('Quartus','quartus_sh.exe','--version'),@('Icarus Verilog','iverilog.exe','-V'),@('Icarus runtime','vvp.exe','-V'),@('slang','slang.exe','--version'))) {
-        $check = Get-CirnetDoctorTool -Name $tool[0] -Commands @($tool[1]) -Arguments @($tool[2]) -Required $false -Remediation $fpgaRemediation
-        if ($check.Status -eq 'INSTALLED') { $check.Detail = 'Tool version and availability only; FPGA compilation, board access and firmware were not verified.' }
-        $checks.Add($check)
-    }
-    # Vivado version launches may create journals; inspect file metadata only.
-    $vivado = Find-CirnetDoctorCommand @('vivado.exe','vivado.bat')
-    $vivadoStatus='MISSING'; $vivadoVersion=''; $vivadoPath=''; $vivadoDetail='Optional FPGA tool was not found on PATH.'
-    if ($vivado) {
-        $vivadoStatus='NOT VERIFIED'; $vivadoPath=$vivado.Source
-        $vivadoDetail='Vivado is present; no process was launched, so no journal or log can be created. The tool version was not verified.'
-        try {
-            $vivadoVersion=[Diagnostics.FileVersionInfo]::GetVersionInfo($vivadoPath).ProductVersion
-            if ($vivadoVersion) { $vivadoStatus='INSTALLED'; $vivadoDetail='Vivado file product version and availability only; FPGA compilation, board access and firmware were not verified.' }
-        } catch { }
-    }
-    $checks.Add((New-CirnetDoctorCheck 'Vivado' $false $vivadoStatus $vivadoVersion $vivadoPath $vivadoDetail $fpgaRemediation))
-    $checks.Add((New-CirnetDoctorCheck 'Physical FPGA / firmware' $false 'NOT VERIFIED' '' '' 'Tool availability does not verify a physical board, firmware, bitstream or synthesis result. Local simulation does not require FPGA tools.' 'Use the FPGA repository verification workflow for physical hardware and firmware.'))
     $missing = @($checks | Where-Object { $_.Required -and $_.Status -ne 'INSTALLED' })
     [pscustomobject]@{ Ready=($missing.Count -eq 0); BootstrapReady=($bootstrapMissing.Count -eq 0); Checks=$checks.ToArray(); MissingRequired=$missing }
 }
 
-Export-ModuleMember -Function Get-CirnetEnvironmentReport
+Export-ModuleMember -Function Get-CirnetEnvironmentReport, Get-CirnetRequiredTools

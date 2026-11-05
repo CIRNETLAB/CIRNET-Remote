@@ -130,7 +130,7 @@ setup or report files.
 For real lifecycle verification, provision an owned external dev home containing
 the selected installed wheels and a separate Interface product with its own
 dependencies. Set `CIRNET_DEV_HOME` for the test process. Verify `-Check`, second
-launcher exclusion, external `stop`, Enter and Ctrl+C, and confirm that ports
+launcher exclusion, external `stop`, Esc, Enter and Ctrl+C, and confirm that ports
 50051, 8000 and 5173 are released after every run. Preserve existing developer
 databases, captures and runtime caches during these checks.
 
@@ -138,7 +138,9 @@ On Windows, run `.\run-cirnet.bat -Check` to start the local simulation stack,
 check the Hardware listener, API health, and Vite proxy, then stop the services.
 For launcher changes, also run `.\run-cirnet.bat -NoBrowser` in a terminal and
 exercise Enter, Ctrl+C, and `.\run-cirnet.bat stop` from a second terminal on
-separate runs. Check that ports 50051, 8000, and 5173 are available after each stop.
+separate runs. For Esc, verify the launcher shows its menu after releasing the
+lock and ports, then select **3** to start again. Check that ports 50051, 8000,
+and 5173 are available after each stop.
 
 Choose gates from real package scripts and workflows. Run at root:
 
@@ -907,3 +909,31 @@ remaining identity-checked task directories were moved into a fresh allocator
 cleanup session and removed through the pinned canonical CLI. Both session
 paths and the task-owned containers are absent; the durable published-release
 backup, original user runtime and source repositories are preserved.
+
+## 2026-11-05 Doctor prerequisites and Esc menu return
+
+Local verification used Windows (UTC+07:00), starting from `0a65236` with the
+launcher changes in the working tree. Doctor lists recommended versions before
+running its local checks. The optional section points to the pinned CIRNET-FPGA
+RTL workflow, which selects its own toolchain. Local simulation readiness uses
+only the tools, installed runtime, release cache and ports required by Remote.
+
+| Gate | Result |
+| --- | --- |
+| `.\run-cirnet.bat doctor -NoColor` with the existing runtime, Windows PowerShell 5.1, CPython 3.14.6 and Node 26.12.1 | PASS, required ready 15/15 and exit 0 |
+| `python -B -m pytest -q tests/launcher/test_clean.py tests/launcher/test_common.py tests/launcher/test_console.py` | PASS, 94 passed and one file-symlink fixture skipped |
+| `python -B -m pytest -q tests/launcher/test_doctor.py tests/launcher/test_dispatcher.py` | PASS, 82 passed |
+| Native Windows console, `.\run-cirnet.bat start -NoBrowser`, Esc, menu **3**, Esc, menu **0** | PASS, both starts healthy and exit 0 |
+| Native Windows console, Enter, Ctrl+C, external `stop`, concurrent start rejection and `-Check -NoBrowser` | PASS, existing shutdown and health behavior |
+| Simulated readiness interruption in Windows PowerShell 5.1 and PowerShell 7.6 | PASS, returns to menu after child and lock cleanup, restores the console and process environment |
+
+Native tests used actual console input records and a separate cached runtime
+with CPython 3.14.6 and verified Interface 0.1.3 source with locked dependencies.
+Hardware, API, Interface and proxy health were verified on both starts. Ports
+50051, 8000 and 5173 and the launcher lock were released before both menu
+returns. The readiness fixture exercises early cancellation separately from
+the native runtime test. Fresh dependency installation, browser rendering and
+physical FPGA verification are NOT_RUN for this change.
+
+The final native Esc log has SHA256
+`786d561b79a8431364300bb6293df5248b7e0cc905da38d133f7758407f0c154`.
