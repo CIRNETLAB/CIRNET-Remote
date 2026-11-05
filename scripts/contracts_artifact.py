@@ -20,6 +20,9 @@ VERSION = '0.1.1'
 NAME = 'cirnet-contracts'
 LEGACY_NAME = 'netcircuit-contracts'
 SUPPORTED_NAMES = (NAME, LEGACY_NAME)
+NPM_NAME = '@cirnet/contracts'
+LEGACY_NPM_NAME = '@tinihi-labs/contracts'
+SUPPORTED_NPM_NAMES = (NPM_NAME, LEGACY_NPM_NAME)
 
 
 def installed_contracts():

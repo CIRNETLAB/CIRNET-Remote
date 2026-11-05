@@ -11,6 +11,8 @@ import pytest
 from tests.launcher.support import PS_EXECUTABLE, REPO, run_ps
 
 
+MENU_PROMPT = "Enter your choice (0-3):"
+
 DOCTOR_RECOMMENDATIONS = """
 function Get-CirnetRequiredTools {
     [pscustomobject]@{Name='Node.js'; RecommendedVersion='26 LTS'; Purpose='Runs the Web tooling.'}
@@ -60,9 +62,9 @@ def test_no_arguments_show_the_requested_menu_and_exit_without_setup(isolated_la
     result = launch(isolated_launcher, text="0\n", env={"CIRNET_DEV_HOME": str(dev)})
     assert result.returncode == 0, result.stderr
     for line in (
-        "CIRNET REMOTE LAUNCHER", "How can I help you?",
+        "CIRNET REMOTE LAUNCHER",
         "[1] Clean build files", "[2] Check development environment",
-        "[3] Run CIRNET Remote", "[0] Exit", "Enter your choice (0-3):",
+        "[3] Run CIRNET Remote", "[0] Exit", MENU_PROMPT,
     ):
         assert line in result.stdout
     assert not dev.exists()
@@ -75,14 +77,14 @@ def test_menu_handles_invalid_input_commands_and_eof(isolated_launcher):
     assert "READY FOR LOCAL SIMULATION" in result.stdout
     eof = launch(isolated_launcher)
     assert eof.returncode == 0, eof.stderr
-    assert eof.stdout.count("How can I help you?") == 1
+    assert eof.stdout.count(MENU_PROMPT) == 1
 
 
 @pytest.mark.parametrize("args", [("doctor",), ("exit",), ("clean", "-Preview")])
 def test_explicit_actions_never_show_a_menu(isolated_launcher, args):
     result = launch(isolated_launcher, args)
     assert result.returncode == 0, result.stderr
-    assert "How can I help you?" not in result.stdout
+    assert MENU_PROMPT not in result.stdout
 
 
 def test_clean_requires_confirmation_and_preview_never_deletes(isolated_launcher, tmp_path):
@@ -106,7 +108,7 @@ def test_existing_cli_flags_take_the_original_start_path_without_a_menu(isolated
     # No Git on this test PATH means start stops before bootstrap or services.
     result = launch(isolated_launcher, args, env={"PATH": "", "CIRNET_DEV_HOME": str(tmp_path / "dev")})
     assert result.returncode == 1
-    assert "How can I help you?" not in result.stdout
+    assert MENU_PROMPT not in result.stdout
     assert "git" in result.stderr.lower()
 
 
@@ -115,7 +117,7 @@ def test_menu_run_reaches_the_existing_start_path(isolated_launcher, tmp_path, c
     result = launch(isolated_launcher, text=choice + "\n",
                     env={"PATH": "", "CIRNET_DEV_HOME": str(tmp_path / "dev")})
     assert result.returncode == 1
-    assert result.stdout.count("How can I help you?") == 1
+    assert result.stdout.count(MENU_PROMPT) == 1
     assert "git" in result.stderr.lower()
 
 
@@ -133,7 +135,7 @@ def test_existing_stop_and_batch_forwarding_work_without_menu(isolated_launcher,
             env=environment, creationflags=subprocess.CREATE_NO_WINDOW,
         )
         assert result.returncode == 0, result.stderr
-        assert ("How can I help you?" in result.stdout) == (not args)
+        assert (MENU_PROMPT in result.stdout) == (not args)
 
 
 def test_doctor_failure_reports_named_remediation_and_failure_exit(isolated_launcher):
@@ -292,12 +294,12 @@ def test_presentation_flags_keep_menu_and_direct_action_contract(isolated_launch
     dev = tmp_path / "unused-dev"
     menu = launch(isolated_launcher, flags, text="0\n", env={"CIRNET_DEV_HOME": str(dev)}, host=host)
     assert menu.returncode == 0, menu.stderr
-    assert "How can I help you?" in menu.stdout
+    assert MENU_PROMPT in menu.stdout
     assert not dev.exists()
     direct = launch(isolated_launcher, ("doctor", *flags), host=host)
     assert direct.returncode == 0, direct.stderr
     assert "READY FOR LOCAL SIMULATION" in direct.stdout
-    assert "How can I help you?" not in direct.stdout
+    assert MENU_PROMPT not in direct.stdout
     assert "\x1b" not in menu.stdout + direct.stdout
     assert "\b" not in menu.stdout + direct.stdout
 
@@ -346,5 +348,5 @@ def test_quiet_presentation_preserves_start_failure_on_stderr(isolated_launcher,
     assert result.returncode == 1
     assert "[ERROR]" in result.stderr and "git" in result.stderr.lower()
     assert "[ERROR]" not in result.stdout
-    assert "How can I help you?" not in result.stdout
+    assert MENU_PROMPT not in result.stdout
     assert "\x1b" not in result.stdout + result.stderr

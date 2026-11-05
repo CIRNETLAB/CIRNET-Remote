@@ -937,3 +937,66 @@ physical FPGA verification are NOT_RUN for this change.
 
 The final native Esc log has SHA256
 `786d561b79a8431364300bb6293df5248b7e0cc905da38d133f7758407f0c154`.
+
+## 2026-11-05 Lowercase repository names
+
+Windows verification (UTC+07:00) used working-tree changes on the six `master`
+checkouts. Their starting revisions were Contracts `9d5877c`, FPGA `85192f2`,
+Hardware `c9ebbaf`, Interface `b4e842c`, Remote `6455ab6` and Simulator
+`adb435b`. GitHub metadata confirmed `cirnetlab/cirnet-*` and `git ls-remote`
+returned the same six revisions through the updated origins.
+
+| Gate | Result |
+| --- | --- |
+| Published system manifests 0.1.1, 0.1.2 and 0.1.3 | PASS, downloaded with their published SHA256 and accepted by the current validator |
+| Selected product and rollback archives | PASS, 16 archives per system version matched their exact digests. The 0.1.2 check reused 14 identical 0.1.3 selections and downloaded the two Interface archives via the exact public release tag after the API rate limit |
+| GitHub CI source archives at the three retained commits | PASS, roots and SHA256 changed with the rename, and all 360 file paths, Git blob IDs and file modes matched |
+| `python -B scripts/build_ci_dependency.py` for Contracts, Simulator and Hardware | PASS, three wheels and the Contracts npm SDK built |
+| Remote release, provenance, extraction and CI workflow pytest suites | 260 PASS in the main run. The remaining workflow assertion passed after installing the freshly built Hardware wheel into an owned test directory |
+| Hardware and Simulator CI profile tests | PASS, 11 each |
+| Interface external build | PASS, 29 script tests, 229-module boundary check, E2E type check and production build |
+| FPGA tooling and packaging | PASS, 28 non-RTL tests with the verified Contracts wheel |
+| Launcher log allocation with an old-case cached marker and a lowercase Git fixture | PASS, two log sessions created by the launcher command and the old marker hash preserved |
+
+The checked-in system manifest, published artifact IDs, filenames, release
+versions, source revisions, hashes and rollback selections stay byte-for-byte
+as recorded. The CI source archive digests describe GitHub-generated archives
+from the existing pinned Git revisions. Native RTL and hosted Actions were
+outside this run.
+
+At verification time, Windows blocked the local directory rename because
+VS Code and a running launcher held checkout handles. The live session
+answered API and Vite proxy health requests with HTTP 200, served the
+Interface home page and accepted an RPC port connection. A separate native
+launcher start after renaming is pending the release of those handles and ports.
+
+### Lowercase checkouts and npm scope follow-up
+
+After the handles were released, all six local checkouts moved to lowercase
+names on Windows. Their original `master` revisions and GitHub origins were
+verified. The linked `refactor` worktree moved to `Branch/cirnet-remote/refactor`
+and still resolves to its original commit `295797c` through the renamed Git
+directory.
+
+| Gate | Result |
+| --- | --- |
+| `run-cirnet.bat doctor -NoColor` from the lowercase checkout | PASS, required 15/15 against the existing release cache |
+| `run-cirnet.bat -Check -NoBrowser` from the lowercase checkout | PASS, Hardware RPC, API, Interface and Vite proxy ready. All three ports and the lock were released |
+| Copied cache from before the rename | PASS, 0.1.3 dependencies reused, fresh log session allocated, cached manifest and ownership marker hashes preserved |
+| New FPGA source archive provenance | PASS, canonical Remote URL with the retained original commit, historical source fixtures accepted |
+| Contracts producer build | PASS, wheel and both scoped npm archives built. All 27 public data, schema and fixture files matched the wheel byte for byte |
+| Contracts and npm allocator tests | PASS, 516 Python and 18 Node cases across runs. Seven socket fixtures and one junction fixture passed in native reruns |
+| Remote SDK consumer | PASS for each package scope with its corresponding wheel. Each run verified 88 baseline cases, 89 public shape/profile checks and the public TypeScript boundary |
+| Remote launcher dispatcher | PASS, 41 tests, including direct flags and the current menu prompt |
+| Published Interface source archives 0.1.1–0.1.3 | PASS, each SHA256 and original dependency identity verified |
+| Current Interface source with published package inputs | PASS, 1,497 unit tests, type checks, boundary gate and production build |
+| Local `cirnet-interface` install with bundled npm 11.20.0 | PASS, `npm ci` installed both canonical import paths with the tracked lock unchanged |
+| Interface with the candidate `@cirnet` archives | PASS, production build and type checks. The initial unit run passed 1,495 of 1,497. The two affected cases passed after fixing the allocator test matcher and pairing the SDK with the source distribution built from the same checkout |
+| Interface clean-export release builder | PASS, all six cases with each selected allocator. Published and candidate allocator checks used separate owned sessions |
+
+New producer builds use `@cirnet/contracts` and `@cirnet/artifact-paths`.
+The current Interface uses those import keys. Its default lock installs the
+exact published archives under those keys and retains their original package
+metadata. Historical releases keep their selected assets, digests and
+compatibility checks. The Windows launcher test used the existing verified
+release in an isolated runtime copy.

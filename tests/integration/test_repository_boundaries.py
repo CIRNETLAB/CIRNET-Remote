@@ -1,4 +1,4 @@
-from tests.support.release_inputs import interface_root, installed_distribution, sdk_resource
+from tests.support.release_inputs import interface_root, installed_distribution, sdk_dependency_name, sdk_resource
 import importlib
 import json
 from pathlib import Path
@@ -67,15 +67,16 @@ def test_six_product_owners_are_explicit_and_installed_packages_do_not_cross_bou
     assert_interface_has_no_python_runtimes(interface)
     package = json.loads((interface / 'package.json').read_text(encoding='utf-8'))
     sdk_lock = json.loads((interface / 'integration/contracts-artifacts.json').read_text(encoding='utf-8'))
-    assert package['dependencies']['@tinihi-labs/contracts'] == 'file:.artifacts/' + sdk_lock['npm']['filename']
+    dependency = sdk_dependency_name(interface)
+    assert package['dependencies'][dependency] == 'file:.artifacts/' + sdk_lock['npm']['filename']
     structural = (interface / 'src/contracts/structural.ts').read_text(encoding='utf-8')
     validation = (interface / 'src/contracts/validation.ts').read_text(encoding='utf-8')
-    assert "from '@tinihi-labs/contracts/dto'" in validation
+    assert f"from '{dependency}/dto'" in validation
     for export, resource in [('dto', 'dto.d.ts'), ('validators.core', 'validators.core.js'),
                              ('validators.editor.core', 'validators.editor.core.js'),
                              ('validators.structural.core', 'validators.structural.core.js'),
                              ('public-contract-names', 'publicContractNames.js')]:
-        assert "from '@tinihi-labs/contracts/" + export + "'" in structural
+        assert f"from '{dependency}/{export}'" in structural
         assert sdk_resource(resource).is_file()  # archive SHA256 and installed bytes are checked
     from scripts.fpga_artifact import source_product
     fpga = source_product()

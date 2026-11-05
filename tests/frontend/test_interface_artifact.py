@@ -106,7 +106,7 @@ def test_interface_product_requires_root_manifest_and_released_product_identity(
         module.extract_product(archive_bytes('nested/package.json'),tmp_path/'nested-product')
 
 
-@pytest.mark.parametrize('repository',['CIRNETLAB/CIRNET-Interface','TINIHI-Labs/net-Circuit-Interface'])
+@pytest.mark.parametrize('repository',['cirnetlab/cirnet-interface','CIRNETLAB/CIRNET-Interface','TINIHI-Labs/net-Circuit-Interface'])
 @pytest.mark.parametrize('suffix',['','.git'])
 def test_interface_product_accepts_canonical_repository_urls_from_native_builder(tmp_path,suffix,repository):
     source={'repository':'https://github.com/'+repository+suffix,

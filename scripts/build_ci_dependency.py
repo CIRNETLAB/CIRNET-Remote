@@ -15,6 +15,7 @@ from tempfile import mkdtemp
 
 from artifact_download import download_artifact
 from artifact_paths import artifact_directory
+from contracts_artifact import SUPPORTED_NPM_NAMES
 from environment import append_environment
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -94,8 +95,8 @@ def main(argv=None):
     revision, digest = pin['revision'], pin['sha256']
     if not re.fullmatch('[0-9a-f]{40}', revision):
         raise ValueError(f'CI source dependency requires a full Git commit ID: {component}')
-    repo = f'CIRNET-{component}'
-    url = f'https://codeload.github.com/CIRNETLAB/{repo}/tar.gz/{revision}'
+    repo = f'cirnet-{component.lower()}'
+    url = f'https://codeload.github.com/cirnetlab/{repo}/tar.gz/{revision}'
     archive_root = f'{repo}-{revision}'
     workspace = Path(mkdtemp(prefix=f'{component.lower()}-', dir=artifact_directory('ci-source-dependencies')))
     epoch = extract_source(download_artifact(url, digest), workspace, archive_root)
@@ -134,7 +135,7 @@ def main(argv=None):
     artifacts = {
         'schemaVersion': 1,
         'python': {'path': str(wheel), 'sha256': wheel_digest},
-        'source': {'repository': f'https://github.com/CIRNETLAB/{repo}', 'revision': revision,
+        'source': {'repository': f'https://github.com/cirnetlab/{repo}', 'revision': revision,
                    'sha256': digest},
     }
     if prepared_requirements:
@@ -153,11 +154,16 @@ def main(argv=None):
         run(npm, 'ci', '--no-audit', '--no-fund', cwd=sdk)
         run(npm, 'run', 'build', cwd=sdk)
         run(npm, 'pack', '--ignore-scripts', '--pack-destination', str(dist), cwd=sdk)
-        package = dist / 'tinihi-labs-contracts-0.1.1.tgz'
+        packages = list(dist.glob('*.tgz'))
+        if len(packages) != 1:
+            raise ValueError('The Contracts source build must produce exactly one SDK package.')
+        package = packages[0]
         with tarfile.open(package, 'r:gz') as archive:
             metadata = json.load(archive.extractfile('package/package.json'))
-        if metadata.get('name') != '@tinihi-labs/contracts' or metadata.get('version') != '0.1.1':
-            raise ValueError('The source SDK must identify @tinihi-labs/contracts==0.1.1.')
+        name = metadata.get('name')
+        if (name not in SUPPORTED_NPM_NAMES or metadata.get('version') != '0.1.1'
+                or package.name != name.removeprefix('@').replace('/', '-') + '-0.1.1.tgz'):
+            raise ValueError('The source SDK must be a supported Contracts 0.1.1 package.')
         artifacts['npm'] = {'path': str(package), 'sha256': hashlib.sha256(package.read_bytes()).hexdigest()}
     manifest = workspace / 'artifacts.json'
     manifest.write_text(json.dumps(artifacts, indent=2) + '\n', encoding='utf-8')

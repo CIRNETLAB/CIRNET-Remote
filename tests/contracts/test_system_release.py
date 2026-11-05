@@ -80,6 +80,30 @@ def test_historical_release_manifest_preserves_its_original_repository_provenanc
     assert json.dumps(value, sort_keys=True) == recorded
 
 
+@pytest.mark.parametrize('canonical_assets', [True, False])
+def test_lowercase_repository_names_accept_the_same_immutable_asset_routes(canonical_assets):
+    from scripts.system_release_manifest import validate_manifest
+    value = patch_release('0.1.3')
+    for product in value['repositories'].values():
+        product['repository'] = product['repository'].lower()
+        if canonical_assets:
+            for artifact in product['artifacts'].values():
+                artifact['url'] = artifact['url'].lower()
+    value['integration']['repository'] = value['repositories']['Remote']['repository']
+    if canonical_assets:
+        value['rollback']['source']['url'] = value['rollback']['source']['url'].lower()
+    assert validate_manifest(value) is value
+
+
+def test_repeated_asset_route_cannot_hide_behind_a_case_alias():
+    from scripts.system_release_manifest import validate_manifest
+    value = release()
+    assets = value['repositories']['Remote']['artifacts']
+    assets['sdist']['url'] = assets['python']['url'].lower()
+    with pytest.raises(ValueError, match='cannot identify multiple artifacts'):
+        validate_manifest(value)
+
+
 def patch_release(version='0.1.2'):
     value = release()
     value['releaseVersion'] = version

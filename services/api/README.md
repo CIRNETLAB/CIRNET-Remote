@@ -6,7 +6,7 @@ For source builds, install `cirnet-contracts==0.1.1` and the matching rebuilt Si
 
 Use one API worker; do not start multiple scheduler workers against the same stations. SQLAlchemy persists definitions/results/sessions/leases and FIFO order; versioned migrations through 0007 upgrade new and legacy databases, including indexed runtime state and bounded auth maintenance. Restart recovers active leases and quarantines failed safe cleanup. Actual PostgreSQL migration/backup/restore and independent-writer tests have run locally; target production deployment remains unverified. Durable principals, server sessions, Argon2id passwords, CSRF/exact-origin and role/object authorization protect HTTP/WebSocket. Follow [auth setup](../../docs/architecture/auth-and-migrations.md) for administrator bootstrap, and the [production guide](../../deployment/README.md) for installed wheels, migration checks, TLS/origins, persistent data and maintenance. Development guests are explicit; production disables them.
 
-Current source owner: [CIRNETLAB/CIRNET-Remote](https://github.com/CIRNETLAB/CIRNET-Remote).
+Current source owner: [cirnetlab/cirnet-remote](https://github.com/cirnetlab/cirnet-remote).
 All six product selections are 0.1.1; Python/npm/import/environment identities
 remain compatible. Earlier M1–M5 pins in dated reports are historical. Use the
 current [system installer/runbook](../../deployment/multi-repo-release.md) for
@@ -30,7 +30,7 @@ Projects/circuits use saved revisions and database CAS, with session fences agai
 
 Additive `/api/v2` placement/document/experiment and assignment routes accept Graph
 1.2 while legacy public shapes stay frozen. They share the existing ownership, CAS,
-publication and immutable admission authority; see [versioned placement](https://github.com/CIRNETLAB/CIRNET-Contracts/blob/54ef9f6a11f4906c11ec9789de47cf06d5100734/contracts/design-models/flexible-placement.md).
+publication and immutable admission authority; see [versioned placement](https://github.com/cirnetlab/cirnet-contracts/blob/54ef9f6a11f4906c11ec9789de47cf06d5100734/contracts/design-models/flexible-placement.md).
 New verification follows [VERIFICATION.md](../../docs/VERIFICATION.md), with raw/visual
 diagnostics created outside the checkout and retained reports in Markdown. Earlier
 test/deployment claims describe their dated evidence, not a rerun during a doc edit.
@@ -118,7 +118,7 @@ Invoke-RestMethod http://127.0.0.1:8000/api/health
 ```
 
 Start Vite in a separate terminal from an explicitly selected, prepared
-CIRNET-Interface product (its local directory may still be named `net-Circuit-Interface`). Its own README and the [M2 ledger](https://github.com/CIRNETLAB/CIRNET-Remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/superpowers/plans/2026-10-24-multi-repo-migration-m2.md)
+`cirnet-interface` product. Its own README and the [M2 ledger](https://github.com/cirnetlab/cirnet-remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/superpowers/plans/2026-10-24-multi-repo-migration-m2.md)
 cover the digest-verified artifact bootstrap and locked install:
 
 ```powershell
@@ -176,10 +176,10 @@ cd "$CIRNET_INTERFACE_ROOT"
 npm run dev
 ```
 
-Web development and release checks use the [selected Interface source](https://github.com/CIRNETLAB/CIRNET-Interface/blob/a14d0950e71a997e2219a32f7268fd0e9d6502b3/README.md). Integrated browser verification uses `node scripts/e2e-interface.mjs --interface-root ABSOLUTE_PRODUCT --forbid-only`
+Web development and release checks use the [selected Interface source](https://github.com/cirnetlab/cirnet-interface/blob/a14d0950e71a997e2219a32f7268fd0e9d6502b3/README.md). Integrated browser verification uses `node scripts/e2e-interface.mjs --interface-root ABSOLUTE_PRODUCT --forbid-only`
 from Remote root and the [shared external-output policy](../../docs/VERIFICATION.md).
 
-Core execution endpoints (the [generated API reference](https://github.com/CIRNETLAB/CIRNET-Contracts/blob/54ef9f6a11f4906c11ec9789de47cf06d5100734/contracts/api/README.md) lists the complete typed surface):
+Core execution endpoints (the [generated API reference](https://github.com/cirnetlab/cirnet-contracts/blob/54ef9f6a11f4906c11ec9789de47cf06d5100734/contracts/api/README.md) lists the complete typed surface):
 
 - `GET /api/health`
 - `POST /api/circuits/validate`

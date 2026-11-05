@@ -28,20 +28,30 @@ FILENAMES = {
 COMPATIBILITY = {'contractsVersion': VERSION, 'hardwareRpcVersion': '2.0', 'fpgaLogicalProtocolVersion': '1.0-scaffold',
                  'fpgaRegisterMapVersion': '1.0-reserved', 'sameOrigin': True, 'apiSchedulerProcesses': 1, 'hardwareRpcScope': 'local-only'}
 ROLLBACK_VERSIONS = {'Remote': '0.1.0', 'Contracts': '1.0.1', 'Interface': '0.1.0-m2.0', 'Simulator': '0.2.0', 'Hardware': '0.1.1', 'FPGA': '0.1.0'}
-REPOSITORY_PREFIXES = ('CIRNETLAB/CIRNET-', 'TINIHI-Labs/net-Circuit-')
+GITHUB_REPOSITORY_BASE = 'https://github.com/'
+
+
+def _repository_namespaces(component):
+    if component not in FILENAMES:
+        raise ValueError('Unknown release repository owner: ' + component)
+    return (
+        (f'cirnetlab/cirnet-{component.lower()}', f'CIRNETLAB/CIRNET-{component}'),
+        (f'TINIHI-Labs/net-Circuit-{component}',),
+    )
 
 
 def repository_urls(component):
-    """Current identity and its recorded pre-rename alias; never a download fallback."""
-    if component not in FILENAMES:
-        raise ValueError('Unknown release repository owner: ' + component)
-    return tuple('https://github.com/' + prefix + component for prefix in REPOSITORY_PREFIXES)
+    """Canonical identity followed by recorded aliases for immutable provenance."""
+    return tuple(GITHUB_REPOSITORY_BASE + slug
+                 for namespace in _repository_namespaces(component) for slug in namespace)
 
 
-def _repository_prefix(repository, component):
-    for prefix, url in zip(REPOSITORY_PREFIXES, repository_urls(component)):
-        if repository in (url, url + '.git'):
-            return prefix
+def _repository_namespace(repository, component):
+    if isinstance(repository, str) and repository.startswith(GITHUB_REPOSITORY_BASE):
+        slug = repository.removeprefix(GITHUB_REPOSITORY_BASE).removesuffix('.git')
+        for index, namespace in enumerate(_repository_namespaces(component)):
+            if slug in namespace:
+                return index
     raise ValueError('Unknown canonical or historical release repository: ' + component)
 
 
@@ -104,7 +114,7 @@ def local_artifact_bytes(value):
     return contents
 
 
-def _artifact(value, component, expected=None, *, released=True, local_artifacts=False, repository_prefix=REPOSITORY_PREFIXES[0]):
+def _artifact(value, component, expected=None, *, released=True, local_artifacts=False, repository_namespace=0):
     if not isinstance(value, dict) or not _filename(value.get('filename')) or not _sha(value.get('sha256')):
         raise ValueError('Each artifact requires a safe exact filename and SHA256: ' + component)
     if expected is not None and value['filename'] != expected:
@@ -119,9 +129,10 @@ def _artifact(value, component, expected=None, *, released=True, local_artifacts
         if not isinstance(url, str):
             raise ValueError('An immutable GitHub release asset URL is required: ' + component)
         parsed = urlparse(url)
-        prefix = '/repos/' + repository_prefix + component + '/releases/assets/'
+        names = _repository_namespaces(component)[repository_namespace]
         if (parsed.scheme != 'https' or parsed.netloc != 'api.github.com' or parsed.query or parsed.fragment
-                or not re.fullmatch(re.escape(prefix) + '[1-9][0-9]*', parsed.path)):
+                or not any(re.fullmatch(re.escape(f'/repos/{name}/releases/assets/') + '[1-9][0-9]*', parsed.path)
+                           for name in names)):
             raise ValueError('Artifact URL must identify a canonical immutable GitHub API asset: ' + component)
 
 
@@ -138,17 +149,17 @@ def validate_manifest(value, *, local_artifacts=False):
     if not isinstance(repositories, dict) or set(repositories) != set(FILENAMES):
         raise ValueError('The release must identify exactly all six repository owners.')
     urls = set()
-    repository_prefix = None
+    repository_namespace = None
     for component, filenames in FILENAMES.items():
         product = repositories[component]
         version = versions[component]
         if (not isinstance(product, dict) or product.get('version') != version
                 or not _revision(product.get('sourceRevision'))):
             raise ValueError('Each product requires its reviewed version and exact sourceRevision: ' + component)
-        selected_prefix = _repository_prefix(product.get('repository'), component)
-        if repository_prefix is not None and repository_prefix != selected_prefix:
+        selected_namespace = _repository_namespace(product.get('repository'), component)
+        if repository_namespace is not None and repository_namespace != selected_namespace:
             raise ValueError('A release cannot mix current and historical repository namespaces.')
-        repository_prefix = selected_prefix
+        repository_namespace = selected_namespace
         artifacts = product.get('artifacts')
         if not isinstance(artifacts, dict) or set(artifacts) != set(filenames):
             raise ValueError('The product artifact set is incomplete or unknown: ' + component)
@@ -157,8 +168,8 @@ def validate_manifest(value, *, local_artifacts=False):
                 filename = filename.replace('0.1.1', version)
                 if version == '0.1.3':
                     filename = filename.replace('netcircuit-interface-', 'cirnet-interface-')
-            _artifact(artifacts[kind], component, filename, local_artifacts=local_artifacts, repository_prefix=repository_prefix)
-            location = str(Path(artifacts[kind]['path']).resolve()) if local_artifacts else artifacts[kind]['url']
+            _artifact(artifacts[kind], component, filename, local_artifacts=local_artifacts, repository_namespace=repository_namespace)
+            location = str(Path(artifacts[kind]['path']).resolve()) if local_artifacts else artifacts[kind]['url'].lower()
             if location in urls:
                 raise ValueError('An artifact location cannot identify multiple artifacts.')
             urls.add(location)
@@ -177,7 +188,7 @@ def validate_manifest(value, *, local_artifacts=False):
             or rollback.get('provenance') != 'reviewed-pre-m6-local-set' or 'priorPublishedRelease' not in rollback
             or rollback['priorPublishedRelease'] is not None):
         raise ValueError('Rollback must identify the reviewed pre-M6 set and preserve paired backups, quarantine and no replay.')
-    _artifact(rollback.get('source'), 'Remote', 'netcircuit-system-rollback-pre-m6.tar.gz', local_artifacts=local_artifacts, repository_prefix=repository_prefix)
+    _artifact(rollback.get('source'), 'Remote', 'netcircuit-system-rollback-pre-m6.tar.gz', local_artifacts=local_artifacts, repository_namespace=repository_namespace)
     artifact_set = rollback.get('artifactSet')
     if (not isinstance(artifact_set, list) or len(artifact_set) != len(ROLLBACK_VERSIONS)
             or any(not isinstance(item, dict) for item in artifact_set)

@@ -112,7 +112,7 @@ function Invoke-CirnetLauncherDoctor {
     }
     Write-CirnetSection 'Optional FPGA development'
     Write-CirnetLine -Text 'Use the pinned pyslang, Icarus Verilog and vvp in CIRNET-FPGA.'
-    Write-CirnetLine -Text 'Follow CIRNET-FPGA/fpga/simulation/README.md for RTL verification.'
+    Write-CirnetLine -Text 'Follow cirnet-fpga/fpga/simulation/README.md for RTL verification.'
     $requiredReady = @($report.Checks | Where-Object Status -eq 'INSTALLED').Count
     Write-CirnetSection 'Environment summary'
     Write-CirnetLine -Text "Required ready: $requiredReady/$(@($report.Checks).Count)"
@@ -381,7 +381,8 @@ function Invoke-CirnetLauncherLifecycle([string]$Mode) {
             & $python -B -c 'from scripts.bootstrap_contract_tools import materialize_allocator; materialize_allocator()'
             if ($LASTEXITCODE -ne 0) { throw 'Could not restore the pinned DEV allocator cache.' }
         }
-        $logDir = & $node scripts/artifact-paths.mjs ("launcher-" + [Guid]::NewGuid().ToString('N'))
+        # The release cache may record the checkout's previous path casing.
+        $logDir = & $node scripts/artifact-paths.mjs ("launcher-" + [Guid]::NewGuid().ToString('N')) --directory $dev
         if ($LASTEXITCODE -ne 0 -or -not $logDir) { throw 'Could not allocate launcher logs.' }
         # Keep service keyboard readers (including Vite shortcuts) off the launcher console.
         $serviceInput = Join-Path $logDir 'stdin.empty'

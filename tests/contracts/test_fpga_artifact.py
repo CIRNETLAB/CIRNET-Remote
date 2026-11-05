@@ -75,6 +75,14 @@ def test_published_fpga_provenance_is_accepted_without_rewriting_its_repository(
     assert consumer().verify_archive(target, digest)['identity']['source'] == source
 
 
+def test_new_fpga_provenance_accepts_the_canonical_original_repository(tmp_path):
+    source = {'repository': 'https://github.com/cirnetlab/cirnet-fpga.git', 'revision': 'a'*40,
+              'originalRepository': 'https://github.com/cirnetlab/cirnet-remote.git',
+              'originalRevision': 'f43f92c7730d40040e717bf1bacd3a3773e2a131', 'uncommittedMigration': False}
+    target, digest = archive(tmp_path, identity_change={'source': source})
+    assert consumer().verify_archive(target, digest)['identity']['source'] == source
+
+
 @pytest.mark.parametrize('change', [
     {'version': '0.1.0'}, {'contractsVersion': '1.0.0'}, {'logicalProtocolVersion': '2.0-scaffold'},
     {'registerMapVersion': '2.0'}, {'physicalAvailable': True}, {'source': {}}, {'sourceFingerprint': '0'*64}])

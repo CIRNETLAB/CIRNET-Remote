@@ -1,7 +1,7 @@
 from pathlib import Path
 import subprocess
 import sys
-from tests.support.release_inputs import interface_root, sdk_resource
+from tests.support.release_inputs import interface_root, sdk_dependency_name, sdk_resource
 
 ROOT=Path(__file__).resolve().parents[2]
 
@@ -14,5 +14,6 @@ def test_browser_contract_snapshot_and_types_match_canonical_schemas():
         if legacy.startswith('apps/web/src/data/'):
             selected = sdk_resource('data/' + legacy.removeprefix('apps/web/src/data/'))
             assert selected.read_bytes().replace(b'\r\n', b'\n') == expected.replace(b'\r\n', b'\n'), legacy
-    facade = (interface_root() / 'src/types/lab.ts').read_text(encoding='utf-8')
-    assert "from '@tinihi-labs/contracts/dto'" in facade
+    interface = interface_root()
+    facade = (interface / 'src/types/lab.ts').read_text(encoding='utf-8')
+    assert f"from '{sdk_dependency_name(interface)}/dto'" in facade

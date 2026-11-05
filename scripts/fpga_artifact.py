@@ -29,8 +29,10 @@ NAMES = ('cirnet-fpga-scaffold', 'netcircuit-fpga-scaffold')
 PINS = {'schemaVersion': 1, 'name': 'cirnet-fpga-scaffold', 'version': '0.1.1',
     'kind': 'source', 'contractsVersion': '0.1.1', 'logicalProtocolVersion': '1.0-scaffold',
     'registerMapVersion': '1.0-reserved', 'physicalAvailable': False}
-REPOSITORY = 'https://github.com/CIRNETLAB/CIRNET-FPGA.git'
-ORIGINAL_REPOSITORY = 'https://github.com/net-Circuit-Remote/net-Circuit-Remote.git'
+ORIGINAL_REPOSITORIES = (
+    'https://github.com/cirnetlab/cirnet-remote.git',
+    'https://github.com/net-Circuit-Remote/net-Circuit-Remote.git',
+)
 ORIGINAL_REVISION = 'f43f92c7730d40040e717bf1bacd3a3773e2a131'
 
 
@@ -80,7 +82,7 @@ def _identity(identity, contents):
     source = identity.get('source')
     if (not isinstance(source, dict) or not isinstance(source.get('repository'), str)
             or source['repository'].removesuffix('.git') not in repository_urls('FPGA')
-            or source.get('originalRepository') != ORIGINAL_REPOSITORY
+            or source.get('originalRepository') not in ORIGINAL_REPOSITORIES
             or source.get('originalRevision') != ORIGINAL_REVISION
             or not isinstance(source.get('revision'), str) or not re.fullmatch('[0-9a-f]{40}', source['revision'])
             or type(source.get('uncommittedMigration')) is not bool):

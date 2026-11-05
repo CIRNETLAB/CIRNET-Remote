@@ -1,12 +1,13 @@
 # Release assets and CI access
 
-All six `CIRNETLAB/CIRNET-*` repositories are public. Published release assets support
+All six `cirnetlab/cirnet-*` repositories are public. Published release assets support
 anonymous downloads through the exact numeric GitHub URLs in the release
 manifest. Retain authenticated access for draft assets, CI and API rate limits.
 Test the selected URLs with the actual intended consumer identity.
 The organization rename retains account ID 333715068 and all six repository
-IDs. Current API asset paths use `/repos/CIRNETLAB/CIRNET-<product>/releases/assets/<id>`
-with the existing selected asset IDs/filenames/digests. Sixty existing CI URL
+IDs. Canonical API asset paths use `/repos/cirnetlab/cirnet-<product>/releases/assets/<id>`.
+The selected manifest retains its original paths, asset IDs, filenames and digests.
+Sixty existing CI URL
 variables were rebound and read back under the new names; unrelated variables,
 secrets, package versions and immutable artifact bytes were preserved. Hosted
 authenticated 15-artifact download/install acceptance at 28221a5 is verified
@@ -25,15 +26,15 @@ Keep GitHub workflow permissions at `contents: read`. This controls the job's
 secret.
 
 Use an expiring fine-grained personal access token with resource owner
-`CIRNETLAB`, only these selected repositories, and `Contents: Read-only` plus
+`cirnetlab`, only these selected repositories, and `Contents: Read-only` plus
 the automatic metadata-read permission:
 
-- `CIRNET-Remote`
-- `CIRNET-Contracts`
-- `CIRNET-Interface`
-- `CIRNET-Simulator`
-- `CIRNET-Hardware`
-- `CIRNET-FPGA`
+- `cirnet-remote`
+- `cirnet-contracts`
+- `cirnet-interface`
+- `cirnet-simulator`
+- `cirnet-hardware`
+- `cirnet-fpga`
 
 Store new credentials as `CIRNET_ARTIFACTS_READ_TOKEN` in each repository's Actions
 secrets. Keep the credential used for local Git pushes and release publication

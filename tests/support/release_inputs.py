@@ -8,7 +8,7 @@ from pathlib import Path, PurePosixPath
 import re
 import tarfile
 
-from scripts.contracts_artifact import installed_contracts
+from scripts.contracts_artifact import SUPPORTED_NPM_NAMES, installed_contracts
 from scripts.environment import getenv
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -90,6 +90,14 @@ def interface_root():
     return root
 
 
+def sdk_dependency_name(root):
+    dependencies = json.loads((root / 'package.json').read_text(encoding='utf-8'))['dependencies']
+    matches = [name for name in SUPPORTED_NPM_NAMES if name in dependencies]
+    if len(matches) != 1:
+        raise RuntimeError('Interface must select exactly one public Contracts dependency.')
+    return matches[0]
+
+
 def sdk_resource(path):
     """Verify released Interface bytes and select explicit producer SDK resources."""
     relative = _relative(path).as_posix()
@@ -98,11 +106,12 @@ def sdk_resource(path):
     archive = root / '.artifacts' / lock['npm']['filename']
     if lock['contractsVersion'] != VERSION or hashlib.sha256(archive.read_bytes()).hexdigest() != lock['npm']['sha256']:
         raise RuntimeError('Interface public SDK archive differs from its exact release lock.')
-    package = root / 'node_modules/@tinihi-labs/contracts'
+    package = root / 'node_modules' / sdk_dependency_name(root)
     if package.is_symlink() or not package.resolve(strict=True).is_relative_to(root / 'node_modules'):
         raise RuntimeError('Interface public SDK must be installed inside the selected artifact.')
     metadata = json.loads((package / 'package.json').read_text(encoding='utf-8'))
-    if metadata.get('name') != '@tinihi-labs/contracts' or metadata.get('version') != VERSION:
+    if (metadata.get('name') not in SUPPORTED_NPM_NAMES or metadata['name'] != lock['npm']['name']
+            or metadata.get('version') != VERSION):
         raise RuntimeError('Interface requires the public SDK 0.1.1 installation.')
     resource = package / 'dist' / relative
     with tarfile.open(archive, 'r:gz') as product:
@@ -124,7 +133,7 @@ def sdk_resource(path):
         return resource
     with tarfile.open(selected_archive, 'r:gz') as product:
         metadata = json.load(product.extractfile('package/package.json'))
-        if metadata.get('name') != '@tinihi-labs/contracts' or metadata.get('version') != VERSION:
+        if metadata.get('name') not in SUPPORTED_NPM_NAMES or metadata.get('version') != VERSION:
             raise RuntimeError('Selected public SDK identity differs from Contracts 0.1.1.')
         member_name = 'package/dist/' + relative
         members = [member for member in product.getmembers() if member.name.casefold() == member_name.casefold()]

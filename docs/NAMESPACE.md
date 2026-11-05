@@ -1,7 +1,7 @@
 # CIRNET source names and legacy compatibility
 
-Active source uses the `CIRNETLAB/CIRNET-*` repository namespace. The following
-names describe new source builds; they do not relabel an existing release.
+Active source uses the `cirnetlab/cirnet-*` repository namespace. The following
+names describe new source builds.
 
 | Product | Source distribution or artifact | Runtime import |
 | --- | --- | --- |
@@ -13,10 +13,13 @@ names describe new source builds; they do not relabel an existing release.
 | FPGA | `cirnet-fpga-scaffold` | canonical `cirnet_*` RTL modules |
 | Independent DEV allocator | `cirnet-artifact-paths` | `cirnet_artifact_paths` |
 
-The public dependency scopes `@tinihi-labs/contracts` and
-`@tinihi-labs/artifact-paths` stay unchanged. Simulator and DEV retain legacy
-import aliases, and FPGA retains thin old-module wrappers. Use fresh Python
-environments when changing distributions that own the same runtime package.
+New npm builds use `@cirnet/contracts` and `@cirnet/artifact-paths`. The
+[release lock](../integration/release-set.json) identifies the immutable
+packages used by published releases. Current Interface imports use the new
+scope and can install the pinned legacy archives under those dependency keys.
+Simulator and DEV retain legacy import aliases, and FPGA retains thin
+old-module wrappers. Use fresh Python environments when changing
+distributions that own the same runtime package.
 
 ## Settings and protocol identities
 
@@ -76,8 +79,8 @@ See the [production guide](../deployment/README.md).
 published source identities remain the exact historical release selection.
 `scripts/install_release.py` deliberately installs that published old artifact
 family. Canonical source builds are separate candidates until an explicit release
-selects their bytes. Validators accept the valid old artifact identity without
-rewriting its metadata, source inventory or provenance.
+selects their bytes. Validators accept the lowercase namespace and the exact
+repository identities recorded in prior releases.
 
 Historical migration/extraction sections, dated CI/readback reports, protected
 archive filenames and markers, original proposal URLs, artwork, baselines and

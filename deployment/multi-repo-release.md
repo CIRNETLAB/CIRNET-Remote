@@ -2,16 +2,14 @@
 
 Use `integration/release-set.json` as the exact six-product selection. The approved system/integration release is 0.1.3 with Interface 0.1.3; API, Contracts, Simulator, Hardware and FPGA retain their original 0.1.1 artifacts and DEV tooling remains 1.0.0a1. Under the latest explicit M6 sequencing decision, actual full selected-artifact local Ubuntu browser acceptance precedes publication, without waiting for further Actions. The complete 0.1.3 Ubuntu result is recorded in the [verification guide](../docs/VERIFICATION.md#complete-committed-artifact-ubuntu-browser-acceptance). Keep previous CI-identity draft access and new unrun checks distinct, and retain the true hosted outcomes in the M6 ledger. Download URLs identify exact numeric GitHub release asset IDs. After publication, assets from the six public repositories permit anonymous downloads; retain authenticated access for drafts, CI and API rate limits. Never use `latest`, editable producer installs or sibling checkouts as fallback.
 
-Current repositories use `CIRNETLAB/CIRNET-*`. Current manifest URLs name those
-repositories directly. Only the approved Interface source/static selection changes;
-all reused artifact IDs, filenames, versions, source revisions and digests stay exact.
+Current repositories use `cirnetlab/cirnet-*`. The selected system manifest
+retains its recorded `CIRNETLAB/CIRNET-*` URLs and exact asset IDs, filenames,
+versions, source revisions and digests. GitHub serves those case aliases.
 The integration revision is recorded separately from retained API build provenance.
 An existing published artifact
 is still built from its recorded earlier source, even when the current repository
-master has later rename/CI/documentation changes. Published immutable v0.1.1 tags,
-notes and bytes remain preserved; the current Git manifest is a canonical-URL
-selection, not a claim that the immutable historical system-manifest payload was
-rewritten. See the [M6 disposition](../docs/verification/2026-10-27-multi-repo-migration-m6.md).
+master has later rename, CI or documentation changes. Published tags, notes and
+asset bytes remain preserved. See the [M6 disposition](../docs/verification/2026-10-27-multi-repo-migration-m6.md).
 
 Build and test a candidate from a clean committed export, then compare raw
 archive digests and member payloads against the existing release. Keep comparison

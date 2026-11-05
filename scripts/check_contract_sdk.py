@@ -21,10 +21,10 @@ import re
 import uuid
 try:
     from scripts.artifact_paths import artifact_directory
-    from scripts.contracts_artifact import VERSION, installed_provenance
+    from scripts.contracts_artifact import SUPPORTED_NPM_NAMES, VERSION, installed_provenance
 except ModuleNotFoundError:
     from artifact_paths import artifact_directory
-    from contracts_artifact import VERSION, installed_provenance
+    from contracts_artifact import SUPPORTED_NPM_NAMES, VERSION, installed_provenance
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -56,7 +56,8 @@ def main(argv=None):
     baseline_cases = 0
     with tarfile.open(archive) as bundle:
         metadata = json.load(bundle.extractfile('package/package.json'))
-        if metadata['name'] != '@tinihi-labs/contracts' or metadata['version'] != VERSION:
+        sdk_name = metadata.get('name')
+        if sdk_name not in SUPPORTED_NPM_NAMES or metadata.get('version') != VERSION:
             raise ValueError('npm artifact identity does not match the selected release.')
         for member in bundle.getmembers():
             if member.isfile():
@@ -123,10 +124,10 @@ def main(argv=None):
     (target / 'probe.mjs').write_text("""
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import * as transport from '@tinihi-labs/contracts/validators';
-import * as editor from '@tinihi-labs/contracts/validators.editor';
-import * as structural from '@tinihi-labs/contracts/validators.structural';
-import {publicContractNames,captureLayout} from '@tinihi-labs/contracts';
+import * as transport from '@cirnet/contracts/validators';
+import * as editor from '@cirnet/contracts/validators.editor';
+import * as structural from '@cirnet/contracts/validators.structural';
+import {publicContractNames,captureLayout} from '@cirnet/contracts';
 const profiles={transport,editor,structural};
 for(const item of JSON.parse(readFileSync('cases.json','utf8'))) {
   const validator=profiles[item.profile][item.contract];
@@ -139,20 +140,20 @@ assert.ok(!publicContractNames.includes('InstrumentationExecutionPlan'));
 assert.ok(!publicContractNames.includes('StationCapabilities'));
 assert.deepEqual(captureLayout,JSON.parse(readFileSync('layout.json','utf8')));
 console.log('Installed public npm profile/shape parity: PASS');
-""", encoding='utf-8')
+""".replace('@cirnet/contracts', sdk_name), encoding='utf-8')
     (target / 'layout.json').write_text(resource.joinpath('capture/layout.json').read_text(encoding='utf-8'), encoding='utf-8')
     subprocess.run(['node', str(target / 'probe.mjs')], cwd=target, check=True)
     (target / 'types.ts').write_text("""
-import type {ContractMap} from '@tinihi-labs/contracts/dto';
+import type {ContractMap} from '@cirnet/contracts/dto';
 const graph: ContractMap['CircuitGraph']={schema_version:'1.0',circuit_id:'sdk',modules:[],connections:[]};
 // @ts-expect-error private execution types never enter the public map
 type PrivatePlan=ContractMap['InstrumentationExecutionPlan'];
 // @ts-expect-error internal station routing never enters the public map
 type PrivateStation=ContractMap['StationCapabilities'];
 // @ts-expect-error package root must not expose private station DTOs
-import type {StationCapabilities} from '@tinihi-labs/contracts';
+import type {StationCapabilities} from '@cirnet/contracts';
 void graph;
-""", encoding='utf-8')
+""".replace('@cirnet/contracts', sdk_name), encoding='utf-8')
     interface = getenv('CIRNET_INTERFACE_ROOT')
     if not interface or not Path(interface).is_absolute():
         raise ValueError('CIRNET_INTERFACE_ROOT must select the independent Interface artifact for TypeScript verification.')
