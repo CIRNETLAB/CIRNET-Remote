@@ -18,7 +18,7 @@ def sources():
 
 def test_current_public_operations_schemas_and_ncap_versions_match_supported_unpublished_baseline():
     api,layout=sources()
-    assert api['info']['version'] == '0.1.1'
+    assert api['info']['version'] == '0.1.2'
     baseline=json.loads((contract_resource('compatibility/2026-10-16/public-wire-baseline.json')).read_text(encoding='utf-8'))
     check_compatibility(api,layout,baseline)
 

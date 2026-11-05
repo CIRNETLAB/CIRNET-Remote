@@ -80,8 +80,11 @@ def test_every_allocator_job_selects_node_26_before_bootstrap(name):
 
 
 def test_every_ci_bootstrap_derives_dependencies_from_the_committed_system_lock():
+    prefixes = ('CONTRACTS_', 'ARTIFACT_PATHS_NPM_', 'SIMULATOR_WHEEL_', 'HARDWARE_WHEEL_',
+                'FPGA_ARTIFACT_', 'INTERFACE_ARTIFACT_')
     for path in sorted((ROOT / '.github/workflows').glob('*.yml')):
-        for name, job in workflow(path.name).get('jobs', {}).items():
+        document = workflow(path.name)
+        for name, job in document.get('jobs', {}).items():
             steps = job.get('steps', [])
             bootstrap = next((index for index, step in enumerate(steps)
                               if 'scripts/install_contracts.py --dev-only' in step.get('run', '')), None)
@@ -90,6 +93,11 @@ def test_every_ci_bootstrap_derives_dependencies_from_the_committed_system_lock(
             selection = [index for index, step in enumerate(steps)
                          if 'scripts/select_ci_release.py --manifest integration/release-set.json --github-env "$GITHUB_ENV"' in step.get('run', '')]
             assert len(selection) == 1 and selection[0] < bootstrap, (path.name, name)
+            overrides = [key for scope in (document, job, *steps) for key in scope.get('env', {})
+                         if key.startswith(('CIRNET_', 'NETCIRCUIT_'))
+                         and key.split('_', 1)[1].startswith(prefixes)
+                         and key.endswith(('_URL', '_SHA256', '_FILENAME'))]
+            assert not overrides, (path.name, name, 'only the system release lock may select dependency assets', overrides)
 
 
 @pytest.mark.parametrize(('name', 'job_id', 'components'), [
@@ -188,9 +196,6 @@ def test_contract_workflow_checks_artifacts_compatibility_and_outside_packages()
     assert_interface_release_job(job)
     assert any('npm test' in step.get('run','') for step in job['steps'])
     assert_interface_release_job(workflow('integration.yml')['jobs']['repository-contracts'])
-    for document in (data, workflow('integration.yml')):
-        for name in ('CIRNET_CONTRACTS_SDIST_URL', 'CIRNET_ARTIFACT_PATHS_NPM_URL'):
-            assert document.get('env', {}).get(name) == '${{ vars.' + name + ' || vars.' + name.replace('CIRNET_', 'NETCIRCUIT_', 1) + ' }}', name
 
 
 @pytest.mark.parametrize('failure', ['missing-digest', 'frozen-directory', 'early-npm-install'])
@@ -224,7 +229,7 @@ def test_api_consumer_installs_the_versioned_simulator_and_uses_compatible_wire_
     for dependencies in (api['project']['dependencies'], installed_distribution('cirnet-hardware-service').requires):
         assert 'grpcio==1.84.0' in dependencies
         assert 'protobuf==7.36.2' in dependencies
-        assert 'cirnet-simulator==0.1.1' in dependencies
+        assert 'cirnet-simulator==0.1.2' in dependencies
     api=tomllib.loads((ROOT/'services/api/pyproject.toml').read_text(encoding='utf-8'))
     assert 'fastapi==0.143.0' in api['project']['dependencies']
 
@@ -343,7 +348,7 @@ def test_hardware_consuming_jobs_select_installed_artifacts_and_never_frozen_uni
         assert "-e './services/hardware-service" not in commands,(name,job_id)
         assert 'pytest -q services/hardware-service/tests' not in commands,(name,job_id)
         assert 'services/hardware-service/tests/test_' not in commands,(name,job_id)
-        assert 'CIRNET_HARDWARE_WHEEL_SHA256' in workflow(name).get('env',{})
+        assert commands.index('scripts/select_ci_release.py') < commands.index('install_hardware.py'), (name, job_id)
 
 
 def test_fpga_acceptance_uses_explicit_source_artifact_and_mandatory_owned_rtl():
@@ -356,8 +361,7 @@ def test_fpga_acceptance_uses_explicit_source_artifact_and_mandatory_owned_rtl()
         assert marker in commands, marker
     assert 'iverilog -g2012 -tnull fpga/' not in commands
     assert 'pytest -q tests/fpga' not in commands
-    assert 'CIRNET_FPGA_ARTIFACT_SHA256' in document['env']
-    assert document['env']['CIRNET_FPGA_ARTIFACT_FILENAME'] == 'netcircuit-fpga-scaffold-0.1.1.tar.gz'
+    assert commands.index('scripts/select_ci_release.py') < commands.index('python scripts/install_fpga.py')
     for name, job_id in (('contracts.yml', 'canonical-boundaries'), ('integration.yml', 'repository-contracts')):
         commands = '\n'.join(step.get('run', '') for step in workflow(name)['jobs'][job_id]['steps'])
         assert 'install_fpga.py' in commands and 'scripts.check_fpga_consumer' in commands, name

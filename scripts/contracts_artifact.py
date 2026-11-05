@@ -16,13 +16,11 @@ import sys
 import subprocess
 from zipfile import ZipFile
 
-VERSION = '0.1.1'
+VERSION = '0.1.2'
 NAME = 'cirnet-contracts'
 LEGACY_NAME = 'netcircuit-contracts'
 SUPPORTED_NAMES = (NAME, LEGACY_NAME)
 NPM_NAME = '@cirnet/contracts'
-LEGACY_NPM_NAME = '@tinihi-labs/contracts'
-SUPPORTED_NPM_NAMES = (NPM_NAME, LEGACY_NPM_NAME)
 
 
 def installed_contracts():
@@ -83,7 +81,7 @@ from zipfile import ZipFile
 wheel,digest,name,other=sys.argv[1:]
 assert not list(distributions(name=other)), 'both Contracts distributions are installed'
 artifact=distribution(name)
-assert artifact.version=='0.1.1','selected archive version differs from the installation'
+assert artifact.version=='0.1.2','selected archive version differs from the installation'
 direct=json.loads(artifact.read_text('direct_url.json') or '{}')
 archive_info=direct.get('archive_info',{})
 actual_digest=archive_info.get('hashes',{}).get('sha256')

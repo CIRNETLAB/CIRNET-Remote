@@ -245,12 +245,12 @@ def test_start_validates_python_before_reuse_or_install_preserving_user_data(
     capture.parent.mkdir()
     capture.write_bytes(b"retained capture")
     if cached:
-        python = dev / ".venv/Scripts/python.exe"
+        python = dev / ".venv-0.1.4/Scripts/python.exe"
         python.parent.mkdir(parents=True)
         shutil.copy2(executable, python)
         # Deliberately claim a compatible version: the actual interpreter must
         # decide readiness rather than trusting editable configuration text.
-        (dev / ".venv/pyvenv.cfg").write_text("version = 3.14.6\n", encoding="utf-8")
+        (dev / ".venv-0.1.4/pyvenv.cfg").write_text("version = 3.14.6\n", encoding="utf-8")
         session = dev / "retained-session"
         vite = session / "interface/node_modules/vite/bin/vite.js"
         vite.parent.mkdir(parents=True)
@@ -260,7 +260,7 @@ def test_start_validates_python_before_reuse_or_install_preserving_user_data(
         environment_file.write_text(json.dumps({"python": str(python), "environment": {
             "CIRNET_INTERFACE_ROOT": str(session / "interface"), "CIRNET_ARTIFACTS_SESSION": str(session),
         }}), encoding="utf-8")
-        (dev / "launcher-state.json").write_text(json.dumps({
+        (dev / "launcher-state-0.1.4.json").write_text(json.dumps({
             "repo": str(isolated_launcher), "manifestHash": hashlib.sha256(manifest.read_bytes()).hexdigest(),
             "environmentFile": str(environment_file),
         }), encoding="utf-8")

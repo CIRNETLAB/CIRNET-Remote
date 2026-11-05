@@ -9,7 +9,7 @@ import json
 from pathlib import Path
 import sys
 
-_EXPECTED_VERSION = '0.1.1'
+_EXPECTED_VERSION = '0.1.2'
 _legacy = Path(__file__).resolve().parent
 _installed_distributions = []
 for _name in ('cirnet-contracts', 'netcircuit-contracts'):

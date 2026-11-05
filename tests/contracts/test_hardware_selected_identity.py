@@ -95,15 +95,15 @@ def isolated_hardware_installer(tmp_path, monkeypatch):
 
 def test_same_version_hardware_candidate_replaces_payload_and_rejects_stale_selection(tmp_path, monkeypatch, isolated_hardware_installer):
     installer, python = isolated_hardware_installer
-    dependencies = ('cirnet-contracts==0.1.1', 'cirnet-simulator==0.1.1',
+    dependencies = ('cirnet-contracts==0.1.2', 'cirnet-simulator==0.1.2',
         'grpcio==1.84.0', 'protobuf==7.36.2', 'jsonschema==4.26.0')
     dependency_root = tmp_path / 'dependencies'
     for item in dependencies:
         name, version = item.split('==')
         wheel(dependency_root, name, version)
-    first, first_digest = wheel(tmp_path / 'first', 'cirnet-hardware-service', '0.1.1',
+    first, first_digest = wheel(tmp_path / 'first', 'cirnet-hardware-service', '0.1.2',
         'hardware_service', 'first', dependencies)
-    second, second_digest = wheel(tmp_path / 'second', 'cirnet-hardware-service', '0.1.1',
+    second, second_digest = wheel(tmp_path / 'second', 'cirnet-hardware-service', '0.1.2',
         'hardware_service', 'second', dependencies)
     monkeypatch.setenv('PIP_FIND_LINKS', str(dependency_root))
     assert installer.main(['--wheel', str(first), '--sha256', first_digest]) == 0

@@ -2,16 +2,16 @@
   "status": "PINNED_ARTIFACT_INPUTS",
   "python": {
     "name": "cirnet-contracts",
-    "version": "0.1.1"
+    "version": "0.1.2"
   },
   "npm": {
-    "name": "@tinihi-labs/contracts",
-    "version": "0.1.1"
+    "name": "@cirnet/contracts",
+    "version": "0.1.2"
   },
   "dev": {
-    "name": "netcircuit-artifact-paths",
+    "name": "cirnet-artifact-paths",
     "version": "1.0.0a1",
-    "wheel_sha256": "ff76532c69b2115338edb641660c966c5459dd40cb806f52a1e2e8c379c70a1f",
-    "node_sha256": "7c42c4fd171ed861b365f08501f3c765282d6bba2dcd6430c9677cddd1abe345"
+    "wheel_sha256": "61009f539e672cd6bdd799c608d30273f2e6988ad429147b2efa8e3873d51c08",
+    "node_sha256": "742ef11f9083beaf901d0d4f9a5a777d87aeae71a990597f9640a1b3a9329b5a"
   }
 }

@@ -25,15 +25,15 @@ def consumer():
     return module
 
 
-def wheel(tmp_path, *, name='cirnet-hardware-service', version='0.1.1', contracts='0.1.1', simulator='0.1.1', grpcio='1.84.0', protobuf='7.36.2', jsonschema='4.26.0', missing=None, contracts_name=None, simulator_name=None):
+def wheel(tmp_path, *, name='cirnet-hardware-service', version='0.1.2', contracts='0.1.2', simulator='0.1.2', grpcio='1.84.0', protobuf='7.36.2', jsonschema='4.26.0', missing=None, contracts_name=None, simulator_name=None):
     contracts_name = contracts_name or ('netcircuit-contracts' if name == 'netcircuit-hardware-service' else 'cirnet-contracts')
     simulator_name = simulator_name or ('netcircuit-simulator' if name == 'netcircuit-hardware-service' else 'cirnet-simulator')
-    path = tmp_path / (name.replace('-', '_') + '-0.1.1-py3-none-any.whl')
+    path = tmp_path / (name.replace('-', '_') + '-0.1.2-py3-none-any.whl')
     with ZipFile(path, 'w') as archive:
         for module in MODULES:
             if module != missing:
                 archive.writestr('hardware_service/' + module, '')
-        archive.writestr(name.replace('-', '_') + '-0.1.1.dist-info/METADATA',
+        archive.writestr(name.replace('-', '_') + '-0.1.2.dist-info/METADATA',
             f'Metadata-Version: 2.1\nName: {name}\nVersion: {version}\nRequires-Dist: {contracts_name}=={contracts}\nRequires-Dist: {simulator_name}=={simulator}\nRequires-Dist: grpcio=={grpcio}\nRequires-Dist: protobuf=={protobuf}\nRequires-Dist: jsonschema=={jsonschema}\n')
     return path, hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -50,7 +50,7 @@ def test_manifest_selects_exact_identity_digest_and_dependency(tmp_path, monkeyp
 
 @pytest.mark.parametrize('change,reason', [
     ({'name': 'different'}, 'cirnet-hardware-service'),
-    ({'version': '0.1.0'}, '0.1.1'),
+    ({'version': '0.1.0'}, '0.1.2'),
     ({'contracts': '1.0.0'}, 'Contracts'),
     ({'missing': 'rpc.py'}, 'rpc.py'),
     ({'simulator': '0.1.0'}, 'Simulator'),
@@ -77,7 +77,7 @@ def test_selection_has_no_latest_or_source_fallback_and_checks_digest(tmp_path, 
         selected.verify_wheel(Path(artifact.name), digest)
 
 
-def fake_install(tmp_path, *, version='0.1.1', editable=False, tampered=False, source_metadata=False, name='cirnet-hardware-service'):
+def fake_install(tmp_path, *, version='0.1.2', editable=False, tampered=False, source_metadata=False, name='cirnet-hardware-service'):
     installed = tmp_path / 'site'
     package = installed / 'hardware_service'
     package.mkdir(parents=True)
@@ -92,7 +92,7 @@ def fake_install(tmp_path, *, version='0.1.1', editable=False, tampered=False, s
     metadata.mkdir()
     contracts_name = 'netcircuit-contracts' if name == 'netcircuit-hardware-service' else 'cirnet-contracts'
     simulator_name = 'netcircuit-simulator' if name == 'netcircuit-hardware-service' else 'cirnet-simulator'
-    (metadata / 'METADATA').write_text(f'Name: {name}\nVersion: {version}\nRequires-Dist: {contracts_name}==0.1.1\nRequires-Dist: {simulator_name}==0.1.1\nRequires-Dist: grpcio==1.84.0\nRequires-Dist: protobuf==7.36.2\nRequires-Dist: jsonschema==4.26.0\n', encoding='utf-8')
+    (metadata / 'METADATA').write_text(f'Name: {name}\nVersion: {version}\nRequires-Dist: {contracts_name}==0.1.2\nRequires-Dist: {simulator_name}==0.1.2\nRequires-Dist: grpcio==1.84.0\nRequires-Dist: protobuf==7.36.2\nRequires-Dist: jsonschema==4.26.0\n', encoding='utf-8')
     (metadata / 'RECORD').write_text('\n'.join(records), encoding='utf-8')
     if not source_metadata:
         (metadata / 'WHEEL').write_text('Wheel-Version: 1.0\n', encoding='utf-8')
@@ -125,11 +125,11 @@ def installed_probe(tmp_path, installed, *, shadow=False):
 def test_installed_wheel_passes_real_metadata_record_and_import_checks(tmp_path):
     result = installed_probe(tmp_path, fake_install(tmp_path))
     assert result.returncode == 0, result.stdout + result.stderr
-    assert '0.1.1' in result.stdout
+    assert '0.1.2' in result.stdout
 
 
 @pytest.mark.parametrize('options,shadow,reason', [
-    ({'version': '0.1.0'}, False, '0.1.1'),
+    ({'version': '0.1.0'}, False, '0.1.2'),
     ({'editable': True}, False, 'editable'),
     ({'tampered': True}, False, 'RECORD'),
     ({'source_metadata': True}, False, 'source egg-info'),
@@ -144,13 +144,13 @@ def test_old_editable_tampered_or_shadowed_installation_fails(tmp_path, options,
 def test_consumers_pin_one_hardware_and_default_collection_excludes_retained_units():
     for relative in ('pyproject.toml',):
         metadata = tomllib.loads((ROOT / relative).read_text(encoding='utf-8'))
-        assert 'cirnet-hardware-service==0.1.1' in metadata['project']['dependencies'], relative
+        assert 'cirnet-hardware-service==0.1.2' in metadata['project']['dependencies'], relative
     root = tomllib.loads((ROOT / 'pyproject.toml').read_text(encoding='utf-8'))
     assert 'services/hardware-service' in root['tool']['pytest']['ini_options']['norecursedirs']
     lock = json.loads((ROOT / 'integration/hardware-version.json').read_text(encoding='utf-8'))
-    assert lock['python'] == {'name': 'cirnet-hardware-service', 'version': '0.1.1'}
-    assert lock['contracts'] == {'name': 'cirnet-contracts', 'version': '0.1.1'}
-    assert lock['simulator'] == {'name': 'cirnet-simulator', 'version': '0.1.1'}
+    assert lock['python'] == {'name': 'cirnet-hardware-service', 'version': '0.1.2'}
+    assert lock['contracts'] == {'name': 'cirnet-contracts', 'version': '0.1.2'}
+    assert lock['simulator'] == {'name': 'cirnet-simulator', 'version': '0.1.2'}
     api = tomllib.loads((ROOT / 'services/api/pyproject.toml').read_text(encoding='utf-8'))
     assert not any(value.startswith('cirnet-hardware') for value in api['project']['dependencies'])
 
@@ -207,21 +207,12 @@ def test_record_owned_but_unreviewed_installed_module_is_rejected_without_manife
     value = b'# unreviewed but correctly hashed\n'
     (installed / 'hardware_service/injected.py').write_bytes(value)
     digest = base64.urlsafe_b64encode(hashlib.sha256(value).digest()).rstrip(b'=').decode()
-    record = installed / 'cirnet_hardware_service-0.1.1.dist-info/RECORD'
+    record = installed / 'cirnet_hardware_service-0.1.2.dist-info/RECORD'
     with record.open('a', encoding='utf-8') as output:
         output.write(f'\nhardware_service/injected.py,sha256={digest},{len(value)}\n')
     result = installed_probe(tmp_path, installed)
     assert result.returncode != 0
     assert 'inventory' in result.stderr
-
-
-@pytest.mark.parametrize('name', ['cirnet-hardware-service', 'netcircuit-hardware-service'])
-def test_canonical_and_immutable_legacy_wheels_and_installations_are_supported(tmp_path, name):
-    artifact, digest = wheel(tmp_path, name=name)
-    assert consumer().verify_wheel(artifact, digest) == artifact
-    result = installed_probe(tmp_path, fake_install(tmp_path, name=name))
-    assert result.returncode == 0, result.stderr
-    assert name in result.stdout
 
 
 def test_coinstalled_canonical_and_legacy_distribution_identity_is_rejected(tmp_path):
@@ -233,14 +224,14 @@ def test_coinstalled_canonical_and_legacy_distribution_identity_is_rejected(tmp_
     assert result.returncode != 0 and 'share an import namespace' in result.stderr
 
 
-@pytest.mark.parametrize('name', ['cirnet-hardware-service', 'netcircuit-hardware-service'])
-def test_selected_archive_probe_uses_distribution_and_namespace_from_wheel(tmp_path, name):
+def test_selected_archive_probe_uses_canonical_distribution_and_namespace(tmp_path):
     selected = consumer()
-    artifact, digest = wheel(tmp_path, name=name)
-    installed = fake_install(tmp_path, name=name)
-    metadata = installed / (name.replace('-', '_') + '-0.1.1.dist-info')
+    name = 'cirnet-hardware-service'
+    artifact, digest = wheel(tmp_path)
+    installed = fake_install(tmp_path)
+    metadata = installed / 'cirnet_hardware_service-0.1.2.dist-info'
     (metadata / 'direct_url.json').write_text(json.dumps({'url': artifact.as_uri(), 'archive_info': {'hashes': {'sha256': digest}}}))
-    other = selected.LEGACY_NAME if name == selected.NAME else selected.NAME
+    other = 'netcircuit-hardware-service'
     program = 'import sys,site; site.addsitedir(sys.argv[1]); sys.argv=sys.argv[2:]; exec(sys.argv.pop(0))'
     result = subprocess.run([sys.executable, '-B', '-S', '-c', program, str(installed), selected.SELECTED_INSTALL_PROBE,
         'probe', str(artifact), digest, name, other, json.dumps(selected.NAMESPACES[name])], capture_output=True, text=True)
@@ -253,7 +244,6 @@ def test_selected_archive_probe_uses_distribution_and_namespace_from_wheel(tmp_p
 @pytest.mark.parametrize('options', [
     {'contracts_name':'netcircuit-contracts'},
     {'simulator_name':'netcircuit-simulator'},
-    {'name':'netcircuit-hardware-service','simulator_name':'cirnet-simulator'},
 ])
 def test_hardware_rejects_unreviewed_cross_brand_dependency_matrix(tmp_path, options):
     artifact, digest = wheel(tmp_path, **options)
@@ -261,6 +251,8 @@ def test_hardware_rejects_unreviewed_cross_brand_dependency_matrix(tmp_path, opt
         consumer().verify_wheel(artifact, digest)
 
 
-def test_legacy_hardware_accepts_reviewed_contracts_transition(tmp_path):
-    artifact, digest = wheel(tmp_path, name='netcircuit-hardware-service', contracts_name='cirnet-contracts')
-    assert consumer().verify_wheel(artifact, digest) == artifact
+def test_hardware_rejects_the_previous_release_even_with_the_expected_digest(tmp_path):
+    artifact, digest = wheel(tmp_path, name='netcircuit-hardware-service', version='0.1.1',
+                             contracts='0.1.1', simulator='0.1.1')
+    with pytest.raises(ValueError, match=r'0\.1\.2'):
+        consumer().verify_wheel(artifact, digest)

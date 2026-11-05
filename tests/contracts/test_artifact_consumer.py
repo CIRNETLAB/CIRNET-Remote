@@ -11,7 +11,7 @@ from tests.support.release_inputs import installed_distribution
 ROOT = Path(os.environ.get('CIRNET_CONSUMER_SOURCE_ROOT', Path(__file__).resolve().parents[2]))
 
 
-def environment(tmp_path, *, name='cirnet-contracts', version='0.1.1', editable=False, missing=False):
+def environment(tmp_path, *, name='cirnet-contracts', version='0.1.2', editable=False, missing=False):
     shadow = tmp_path / 'remote'
     package = shadow / 'contracts'
     package.mkdir(parents=True)
@@ -42,9 +42,8 @@ def probe(shadow, installed, body):
         cwd=shadow, env=clean, capture_output=True, text=True)
 
 
-@pytest.mark.parametrize('name', ['cirnet-contracts', 'netcircuit-contracts'])
-def test_root_import_and_resources_use_only_the_installed_distribution(tmp_path, name):
-    shadow, installed = environment(tmp_path, name=name)
+def test_root_import_and_resources_use_only_the_installed_distribution(tmp_path):
+    shadow, installed = environment(tmp_path)
     result = probe(shadow, installed,
         "import contracts,json; from importlib.resources import files; "
         "from pathlib import Path; assert contracts.IDENTITY=='wheel'; "
@@ -57,7 +56,8 @@ def test_root_import_and_resources_use_only_the_installed_distribution(tmp_path,
 
 @pytest.mark.parametrize(('options', 'reason'), [
     ({'missing': True}, 'not installed'),
-    ({'version': '1.0.0'}, '0.1.1'),
+    ({'version': '1.0.0'}, '0.1.2'),
+    ({'name': 'netcircuit-contracts', 'version': '0.1.1'}, 'CIRNET Contracts'),
     ({'editable': True}, 'editable'),
 ])
 def test_unavailable_wrong_or_editable_artifact_cannot_fall_back_to_old_source(tmp_path, options, reason):
@@ -78,9 +78,9 @@ def test_reload_keeps_the_installed_package_and_resource_loader(tmp_path):
 
 def test_distribution_metadata_cannot_redirect_to_retained_source(tmp_path):
     shadow, installed = environment(tmp_path, missing=True)
-    metadata = shadow / 'cirnet_contracts-0.1.1.dist-info'
+    metadata = shadow / 'cirnet_contracts-0.1.2.dist-info'
     metadata.mkdir()
-    (metadata / 'METADATA').write_text('Name: cirnet-contracts\nVersion: 0.1.1\n')
+    (metadata / 'METADATA').write_text('Name: cirnet-contracts\nVersion: 0.1.2\n')
     (metadata / 'RECORD').write_text('contracts/__init__.py,,\n')
     result = probe(shadow, installed, 'import contracts')
     assert result.returncode != 0
@@ -101,11 +101,11 @@ def test_consumer_metadata_pins_the_same_artifact_version():
     import tomllib
     for relative in ('pyproject.toml', 'services/api/pyproject.toml'):
         metadata = tomllib.loads((ROOT / relative).read_text(encoding='utf-8'))
-        assert 'cirnet-contracts==0.1.1' in metadata['project']['dependencies'], relative
-    assert 'cirnet-contracts==0.1.1' in installed_distribution('cirnet-hardware-service').requires
+        assert 'cirnet-contracts==0.1.2' in metadata['project']['dependencies'], relative
+    assert 'cirnet-contracts==0.1.2' in installed_distribution('cirnet-hardware-service').requires
     assert tomllib.loads((ROOT / 'pyproject.toml').read_text())['project']['name'] == 'cirnet-remote-dev'
     lock = json.loads((ROOT / 'integration/contracts-version.json').read_text())
-    assert lock['python'] == {'name': 'cirnet-contracts', 'version': '0.1.1'}
-    assert lock['npm'] == {'name': '@tinihi-labs/contracts', 'version': '0.1.1'}
+    assert lock['python'] == {'name': 'cirnet-contracts', 'version': '0.1.2'}
+    assert lock['npm'] == {'name': '@cirnet/contracts', 'version': '0.1.2'}
     simulator = json.loads((ROOT / 'integration/simulator-version.json').read_text(encoding='utf-8'))
     assert simulator['contracts'] == lock['python']

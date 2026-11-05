@@ -19,15 +19,15 @@ except ModuleNotFoundError:
 
 NAME = 'cirnet-hardware-service'
 LEGACY_NAME = 'netcircuit-hardware-service'
-VERSION = '0.1.1'
+VERSION = '0.1.2'
 MODULES = ('__init__.py', 'fpga_transport.py', 'models.py', 'rpc.py', 'server.py', 'station/__init__.py', 'station/base.py', 'station/physical.py', 'station/virtual.py')
 NAMESPACES = {NAME: ('hardware_service',), LEGACY_NAME: ('hardware_service',)}
 DEPENDENCIES = {
-    NAME: (tuple(sorted(('cirnet-contracts==0.1.1', 'cirnet-simulator==0.1.1',
+    NAME: (tuple(sorted(('cirnet-contracts==0.1.2', 'cirnet-simulator==0.1.2',
                          'grpcio==1.84.0', 'jsonschema==4.26.0', 'protobuf==7.36.2'))),),
-    LEGACY_NAME: tuple(tuple(sorted((contracts, 'netcircuit-simulator==0.1.1',
+    LEGACY_NAME: tuple(tuple(sorted((contracts, 'netcircuit-simulator==0.1.2',
                                     'grpcio==1.84.0', 'jsonschema==4.26.0', 'protobuf==7.36.2')))
-                       for contracts in ('cirnet-contracts==0.1.1', 'netcircuit-contracts==0.1.1')),
+                       for contracts in ('cirnet-contracts==0.1.2', 'netcircuit-contracts==0.1.2')),
 }
 
 
@@ -45,7 +45,7 @@ def validate_metadata(value):
         raise ValueError(f'Expected {NAME} or {LEGACY_NAME}=={VERSION}; got {name}=={value["Version"]}.')
     dependencies = tuple(sorted(entry.replace(' ', '') for entry in value.get_all('Requires-Dist', []) if ';' not in entry))
     if dependencies not in DEPENDENCIES[name]:
-        raise ValueError('Hardware must pin the reviewed Contracts 0.1.1, Simulator 0.1.1, grpcio 1.84.0, protobuf 7.36.2 and jsonschema 4.26.0 dependency matrix.')
+        raise ValueError('Hardware must pin the reviewed Contracts 0.1.2, Simulator 0.1.2, grpcio 1.84.0, protobuf 7.36.2 and jsonschema 4.26.0 dependency matrix.')
     return name
 
 
@@ -107,7 +107,7 @@ except PackageNotFoundError:
 else:
     raise ValueError('Canonical and legacy Hardware distributions share an import namespace; use a fresh environment.')
 artifact=distribution(name)
-assert artifact.version=='0.1.1','selected archive version differs from installation'
+assert artifact.version=='0.1.2','selected archive version differs from installation'
 direct=json.loads(artifact.read_text('direct_url.json') or '{}')
 assert 'dir_info' not in direct,'Hardware must not use an editable/source installation'
 info=direct.get('archive_info',{})

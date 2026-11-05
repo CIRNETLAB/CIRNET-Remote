@@ -1,17 +1,6 @@
 name: Backend
 env:
   PYTHONDONTWRITEBYTECODE: '1'
-  CIRNET_SIMULATOR_WHEEL_FILENAME: netcircuit_simulator-0.1.1-py3-none-any.whl
-  CIRNET_SIMULATOR_WHEEL_URL: ${{ vars.CIRNET_SIMULATOR_WHEEL_URL || vars.NETCIRCUIT_SIMULATOR_WHEEL_URL }}
-  CIRNET_SIMULATOR_WHEEL_SHA256: ${{ vars.CIRNET_SIMULATOR_WHEEL_SHA256 || vars.NETCIRCUIT_SIMULATOR_WHEEL_SHA256 }}
-  CIRNET_CONTRACTS_DEV_WHEEL_URL: ${{ vars.CIRNET_CONTRACTS_DEV_WHEEL_URL || vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_URL }}
-  CIRNET_CONTRACTS_DEV_WHEEL_SHA256: ${{ vars.CIRNET_CONTRACTS_DEV_WHEEL_SHA256 || vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_SHA256 }}
-  CIRNET_CONTRACTS_WHEEL_FILENAME: netcircuit_contracts-0.1.1-py3-none-any.whl
-  CIRNET_CONTRACTS_NPM_FILENAME: tinihi-labs-contracts-0.1.1.tgz
-  CIRNET_CONTRACTS_WHEEL_URL: ${{ vars.CIRNET_CONTRACTS_WHEEL_URL || vars.NETCIRCUIT_CONTRACTS_WHEEL_URL }}
-  CIRNET_CONTRACTS_WHEEL_SHA256: ${{ vars.CIRNET_CONTRACTS_WHEEL_SHA256 || vars.NETCIRCUIT_CONTRACTS_WHEEL_SHA256 }}
-  CIRNET_CONTRACTS_NPM_URL: ${{ vars.CIRNET_CONTRACTS_NPM_URL || vars.NETCIRCUIT_CONTRACTS_NPM_URL }}
-  CIRNET_CONTRACTS_NPM_SHA256: ${{ vars.CIRNET_CONTRACTS_NPM_SHA256 || vars.NETCIRCUIT_CONTRACTS_NPM_SHA256 }}
 on:
   push:
     paths: ['services/api/**', 'contracts/**', 'scripts/**', 'integration/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/backend.yml']
@@ -66,7 +55,7 @@ jobs:
           python scripts/install_contracts.py --manifest "$CIRNET_CI_CONTRACTS_ARTIFACT_MANIFEST"
           python scripts/install_simulator.py --wheel "$CIRNET_CI_SIMULATOR_WHEEL" --sha256 "$CIRNET_CI_SIMULATOR_WHEEL_SHA256"
           python -m build --no-isolation --wheel --outdir "$CIRNET_ARTIFACTS_SESSION/api-dist" ./services/api
-          python -m pip install "$CIRNET_ARTIFACTS_SESSION/api-dist/cirnet_api-0.1.1-py3-none-any.whl"
+          python -m pip install "$CIRNET_ARTIFACTS_SESSION/api-dist/cirnet_api-0.1.2-py3-none-any.whl"
           python -m pip check
           python -m scripts.check_simulator_consumer
       - run: python -m scripts.check_contract_consumer

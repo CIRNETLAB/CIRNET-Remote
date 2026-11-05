@@ -8,12 +8,12 @@ from pathlib import Path, PurePosixPath
 import re
 import tarfile
 
-from scripts.contracts_artifact import SUPPORTED_NPM_NAMES, installed_contracts
+from scripts.contracts_artifact import NPM_NAME, installed_contracts
 from scripts.environment import getenv
 
 ROOT = Path(__file__).resolve().parents[2]
-VERSION = '0.1.1'
-INTERFACE_VERSIONS = ('0.1.1', '0.1.2', '0.1.3')
+VERSION = '0.1.2'
+INTERFACE_VERSIONS = ('0.1.4',)
 
 
 def _relative(path):
@@ -36,7 +36,7 @@ def installed_distribution(name):
 def contract_resource(path):
     product = installed_contracts()
     if product.version != VERSION or 'dir_info' in json.loads(product.read_text('direct_url.json') or '{}'):
-        raise RuntimeError('CIRNET Contracts must be an installed immutable 0.1.1 wheel.')
+        raise RuntimeError('CIRNET Contracts must be an installed immutable 0.1.2 wheel.')
     relative = _relative(path)
     resource = Path(files('contracts').joinpath(*relative.parts)).resolve(strict=True)
     package = Path(product.locate_file('contracts')).resolve(strict=True)
@@ -61,11 +61,11 @@ def interface_root():
         raise RuntimeError('Interface acceptance requires an exported artifact, not a Git checkout.')
     identity = json.loads((root / 'interface-artifact.json').read_text(encoding='utf-8'))
     package = json.loads((root / 'package.json').read_text(encoding='utf-8'))
-    if (identity.get('name') not in ('cirnet-interface', 'netcircuit-interface') or identity.get('version') not in INTERFACE_VERSIONS
+    if (identity.get('name') not in ('cirnet-interface',) or identity.get('version') not in INTERFACE_VERSIONS
             or identity.get('contractsVersion') != VERSION or identity.get('kind') != 'source'
             or package.get('version') != identity.get('version') or identity.get('source', {}).get('uncommittedMigration') is not False
             or not re.fullmatch('[0-9a-f]{40}', identity.get('source', {}).get('revision', ''))):
-        raise RuntimeError('Interface source identity must select a reviewed committed product version with Contracts 0.1.1.')
+        raise RuntimeError('Interface source identity must select a reviewed committed product version with Contracts 0.1.2.')
     excluded = {'.git', 'node_modules', '.artifacts', '.runtime', '.build', '.test-build', '.benchmark-build', 'dist'}
     fingerprint = hashlib.sha256()
     paths = []
@@ -92,10 +92,9 @@ def interface_root():
 
 def sdk_dependency_name(root):
     dependencies = json.loads((root / 'package.json').read_text(encoding='utf-8'))['dependencies']
-    matches = [name for name in SUPPORTED_NPM_NAMES if name in dependencies]
-    if len(matches) != 1:
-        raise RuntimeError('Interface must select exactly one public Contracts dependency.')
-    return matches[0]
+    if NPM_NAME not in dependencies:
+        raise RuntimeError('Interface must select the canonical public Contracts dependency.')
+    return NPM_NAME
 
 
 def sdk_resource(path):
@@ -110,9 +109,9 @@ def sdk_resource(path):
     if package.is_symlink() or not package.resolve(strict=True).is_relative_to(root / 'node_modules'):
         raise RuntimeError('Interface public SDK must be installed inside the selected artifact.')
     metadata = json.loads((package / 'package.json').read_text(encoding='utf-8'))
-    if (metadata.get('name') not in SUPPORTED_NPM_NAMES or metadata['name'] != lock['npm']['name']
+    if (metadata.get('name') != NPM_NAME or metadata['name'] != lock['npm']['name']
             or metadata.get('version') != VERSION):
-        raise RuntimeError('Interface requires the public SDK 0.1.1 installation.')
+        raise RuntimeError('Interface requires the public SDK 0.1.2 installation.')
     resource = package / 'dist' / relative
     with tarfile.open(archive, 'r:gz') as product:
         if resource.read_bytes() != product.extractfile('package/dist/' + relative).read():
@@ -133,8 +132,8 @@ def sdk_resource(path):
         return resource
     with tarfile.open(selected_archive, 'r:gz') as product:
         metadata = json.load(product.extractfile('package/package.json'))
-        if metadata.get('name') not in SUPPORTED_NPM_NAMES or metadata.get('version') != VERSION:
-            raise RuntimeError('Selected public SDK identity differs from Contracts 0.1.1.')
+        if metadata.get('name') != NPM_NAME or metadata.get('version') != VERSION:
+            raise RuntimeError('Selected public SDK identity differs from Contracts 0.1.2.')
         member_name = 'package/dist/' + relative
         members = [member for member in product.getmembers() if member.name.casefold() == member_name.casefold()]
         if len(members) != 1 or members[0].name != member_name or not members[0].isfile():

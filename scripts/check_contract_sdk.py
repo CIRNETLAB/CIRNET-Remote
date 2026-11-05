@@ -21,10 +21,10 @@ import re
 import uuid
 try:
     from scripts.artifact_paths import artifact_directory
-    from scripts.contracts_artifact import SUPPORTED_NPM_NAMES, VERSION, installed_provenance
+    from scripts.contracts_artifact import NPM_NAME, VERSION, installed_provenance
 except ModuleNotFoundError:
     from artifact_paths import artifact_directory
-    from contracts_artifact import SUPPORTED_NPM_NAMES, VERSION, installed_provenance
+    from contracts_artifact import NPM_NAME, VERSION, installed_provenance
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -56,8 +56,7 @@ def main(argv=None):
     baseline_cases = 0
     with tarfile.open(archive) as bundle:
         metadata = json.load(bundle.extractfile('package/package.json'))
-        sdk_name = metadata.get('name')
-        if sdk_name not in SUPPORTED_NPM_NAMES or metadata.get('version') != VERSION:
+        if metadata.get('name') != NPM_NAME or metadata.get('version') != VERSION:
             raise ValueError('npm artifact identity does not match the selected release.')
         for member in bundle.getmembers():
             if member.isfile():
@@ -140,7 +139,7 @@ assert.ok(!publicContractNames.includes('InstrumentationExecutionPlan'));
 assert.ok(!publicContractNames.includes('StationCapabilities'));
 assert.deepEqual(captureLayout,JSON.parse(readFileSync('layout.json','utf8')));
 console.log('Installed public npm profile/shape parity: PASS');
-""".replace('@cirnet/contracts', sdk_name), encoding='utf-8')
+""", encoding='utf-8')
     (target / 'layout.json').write_text(resource.joinpath('capture/layout.json').read_text(encoding='utf-8'), encoding='utf-8')
     subprocess.run(['node', str(target / 'probe.mjs')], cwd=target, check=True)
     (target / 'types.ts').write_text("""
@@ -153,7 +152,7 @@ type PrivateStation=ContractMap['StationCapabilities'];
 // @ts-expect-error package root must not expose private station DTOs
 import type {StationCapabilities} from '@cirnet/contracts';
 void graph;
-""".replace('@cirnet/contracts', sdk_name), encoding='utf-8')
+""", encoding='utf-8')
     interface = getenv('CIRNET_INTERFACE_ROOT')
     if not interface or not Path(interface).is_absolute():
         raise ValueError('CIRNET_INTERFACE_ROOT must select the independent Interface artifact for TypeScript verification.')

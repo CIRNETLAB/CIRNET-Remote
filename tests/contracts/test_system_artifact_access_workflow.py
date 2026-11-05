@@ -1,13 +1,11 @@
 """The hosted credential consumer must install the complete selected release."""
 import hashlib
-import io
 import json
 import os
 from pathlib import Path
 import shutil
 import subprocess
 import sys
-import tarfile
 from urllib.parse import urlparse
 from urllib.request import url2pathname
 
@@ -92,17 +90,7 @@ def installed_fixture(tmp_path):
             path.write_bytes(payload)
             artifact['sha256'] = hashlib.sha256(payload).hexdigest()
             state['artifacts'][component][kind] = str(path)
-    rollback = tmp_path / value['rollback']['source']['filename']
-    with tarfile.open(rollback, 'w:gz') as archive:
-        for product in value['rollback']['artifactSet']:
-            for artifact in product['artifacts'].values():
-                payload = product['component'].encode()
-                artifact['sha256'] = hashlib.sha256(payload).hexdigest()
-                member = tarfile.TarInfo(artifact['filename'])
-                member.size = len(payload)
-                archive.addfile(member, io.BytesIO(payload))
-    value['rollback']['source']['sha256'] = hashlib.sha256(rollback.read_bytes()).hexdigest()
-    state['rollback'] = {'archive': str(rollback), 'verifiedPreservedArtifacts': 6}
+    state['rollback'] = {**value['rollback'], 'rehearsalStatus': 'NOT_RUN'}
     installed = [{
         'name': name, 'version': version, 'origin': 'owned-venv/site-packages/' + module + '/__init__.py',
         'selectedSha256': value['repositories'][component]['artifacts'][kind]['sha256'],
@@ -110,7 +98,7 @@ def installed_fixture(tmp_path):
     return state, value, installed
 
 
-def test_receipt_rehashes_all_fifteen_actual_files_and_rollback_without_environment_dump(tmp_path):
+def test_receipt_rehashes_all_fifteen_actual_files_and_checks_backup_policy(tmp_path):
     program = receipt_program()
     state, manifest, installed = installed_fixture(tmp_path)
     state['environment'] = {'CIRNET_ARTIFACTS_TOKEN': 'sentinel-never-publish'}
@@ -118,7 +106,7 @@ def test_receipt_rehashes_all_fifteen_actual_files_and_rollback_without_environm
     assert receipt['status'] == 'PASS'
     assert len(receipt['artifacts']) == 15
     assert {row['component'] for row in receipt['artifacts']} == set(manifest['repositories'])
-    assert receipt['rollback']['verifiedPreservedArtifacts'] == 6
+    assert receipt['rollback'] == {**manifest['rollback'], 'rehearsalStatus': 'NOT_RUN'}
     assert receipt['credentialScopeVerification'] == 'NOT_VERIFIED'
     assert receipt['selectedRepositories'] == {
         name: {key: product[key] for key in ('repository', 'version', 'sourceRevision')}
@@ -132,7 +120,7 @@ def test_receipt_rehashes_all_fifteen_actual_files_and_rollback_without_environm
     assert 'sentinel-never-publish' not in encoded and 'environment' not in receipt
 
 
-@pytest.mark.parametrize('corruption', ['missing-file', 'changed-bytes', 'missing-owner', 'extra-artifact', 'rollback-bytes', 'missing-origin', 'wrong-origin-version', 'wrong-origin-digest', 'unauthenticated'])
+@pytest.mark.parametrize('corruption', ['missing-file', 'changed-bytes', 'missing-owner', 'extra-artifact', 'rollback-policy', 'missing-origin', 'wrong-origin-version', 'wrong-origin-digest', 'unauthenticated'])
 def test_receipt_cannot_pass_with_incomplete_or_unverified_real_inputs(tmp_path, corruption):
     program = receipt_program()
     state, manifest, installed = installed_fixture(tmp_path)
@@ -141,7 +129,7 @@ def test_receipt_cannot_pass_with_incomplete_or_unverified_real_inputs(tmp_path,
     elif corruption == 'changed-bytes': Path(state['artifacts']['Contracts']['npm']).write_bytes(b'changed')
     elif corruption == 'missing-owner': state['artifacts'].pop('FPGA')
     elif corruption == 'extra-artifact': state['artifacts']['Remote']['unexpected'] = 'unused'
-    elif corruption == 'rollback-bytes': Path(state['rollback']['archive']).write_bytes(b'changed')
+    elif corruption == 'rollback-policy': state['rollback']['automaticStartReplay'] = True
     elif corruption == 'missing-origin': installed.pop()
     elif corruption == 'wrong-origin-version': installed[0]['version'] = '0.1.0'
     elif corruption == 'wrong-origin-digest': installed[0]['selectedSha256'] = 'f' * 64
@@ -154,14 +142,13 @@ def test_receipt_cannot_pass_with_incomplete_or_unverified_real_inputs(tmp_path,
 def test_actual_isolated_probe_ignores_checkout_shadowing_and_rejects_wrong_wheel_digest(tmp_path, monkeypatch, checkout_metadata):
     from importlib.metadata import Distribution, distribution
     import sysconfig
-    from scripts.contracts_artifact import LEGACY_NAME, SUPPORTED_NAMES
     if checkout_metadata:
         checkout = tmp_path / 'checkout'
-        metadata = checkout / 'netcircuit_api.egg-info'
+        metadata = checkout / 'cirnet_api.egg-info'
         metadata.mkdir(parents=True)
-        (metadata / 'PKG-INFO').write_text('Metadata-Version: 2.1\nName: netcircuit-api\nVersion: 0.1.1\n', encoding='utf-8')
+        (metadata / 'PKG-INFO').write_text('Metadata-Version: 2.1\nName: cirnet-api\nVersion: 0.1.2\n', encoding='utf-8')
         monkeypatch.syspath_prepend(str(checkout))
-        assert distribution('netcircuit-api').read_text('direct_url.json') is None
+        assert distribution('cirnet-api').read_text('direct_url.json') is None
     program = receipt_program()
     probe = program['ORIGIN_PROBE']
     assert 'sys.flags.isolated' in probe
@@ -175,15 +162,7 @@ def test_actual_isolated_probe_ignores_checkout_shadowing_and_rejects_wrong_whee
     # API builds leave checkout egg-info; fixture hashes must come from wheels.
     installed_roots = list(dict.fromkeys(sysconfig.get_paths()[key] for key in ('purelib', 'platlib')))
     for name, module, version, component, kind in program['PACKAGES']:
-        # The source test environment can use renamed Contracts while the
-        # published receipt still requires its exact legacy distribution.
-        names = SUPPORTED_NAMES if name == LEGACY_NAME else {
-            'netcircuit-api': ('cirnet-api', 'netcircuit-api'),
-            'netcircuit-simulator': ('cirnet-simulator', 'netcircuit-simulator'),
-            'netcircuit-hardware-service': ('cirnet-hardware-service', 'netcircuit-hardware-service'),
-        }.get(name, (name,))
-        matches = [item for candidate in names
-                   for item in Distribution.discover(name=candidate, path=installed_roots)]
+        matches = list(Distribution.discover(name=name, path=installed_roots))
         assert len(matches) == 1, f'Expected one installed wheel for {name}.'
         metadata = matches[0]
         if metadata.metadata['Name'] == 'cirnet-simulator':
@@ -224,7 +203,7 @@ def test_cleanup_after_allocated_dev_pip_failure_uses_published_canonical_cli(tm
     assert shared_cleanup.is_file(), 'The shared bootstrap-safe cleanup helper is missing'
     shutil.copyfile(shared_cleanup, consumer / 'scripts/cleanup-artifact-session.mjs')
     shutil.copyfile(ROOT / 'integration/contracts-version.json', consumer / 'integration/contracts-version.json')
-    direct = json.loads(distribution('netcircuit-artifact-paths').read_text('direct_url.json'))
+    direct = json.loads(distribution('cirnet-artifact-paths').read_text('direct_url.json'))
     assert urlparse(direct['url']).scheme == 'file'
     wheel = Path(url2pathname(urlparse(direct['url']).path))
     pin = json.loads((ROOT / 'integration/contracts-version.json').read_text())['dev']

@@ -13,8 +13,8 @@ ROOT = Path(__file__).resolve().parents[2]
 def test_selected_fpga_source_and_installed_contracts_keep_independent_versions():
     result = check()
     lock = json.loads((ROOT / 'integration/fpga-version.json').read_text(encoding='utf-8'))
-    assert result['version'] == lock['source']['version'] == '0.1.1'
-    assert result['contractsVersion'] == lock['contracts']['version'] == '0.1.1'
+    assert result['version'] == lock['source']['version'] == '0.1.2'
+    assert result['contractsVersion'] == lock['contracts']['version'] == '0.1.2'
     assert result['logicalProtocolVersion'] == lock['logicalProtocolVersion'] == '1.0-scaffold'
     assert result['registerMapVersion'] == lock['registerMapVersion'] == '1.0-reserved'
     assert result['physicalAvailable'] is lock['physicalAvailable'] is False
@@ -23,7 +23,7 @@ def test_selected_fpga_source_and_installed_contracts_keep_independent_versions(
 
 def test_selected_scaffold_never_enables_installed_hardware_transport():
     check()
-    assert installed_provenance()['version'] == '0.1.1'
+    assert installed_provenance()['version'] == '0.1.2'
     from hardware_service.fpga_transport import SerialFpgaTransport, UsbSpiFpgaTransport
     from hardware_service.station.physical import PhysicalHardwareStation
     from contracts.validation import validate

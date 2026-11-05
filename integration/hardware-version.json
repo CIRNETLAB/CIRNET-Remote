@@ -2,15 +2,15 @@
   "status": "PINNED_ARTIFACT_INPUTS",
   "python": {
     "name": "cirnet-hardware-service",
-    "version": "0.1.1"
+    "version": "0.1.2"
   },
   "contracts": {
     "name": "cirnet-contracts",
-    "version": "0.1.1"
+    "version": "0.1.2"
   },
   "simulator": {
     "name": "cirnet-simulator",
-    "version": "0.1.1"
+    "version": "0.1.2"
   },
   "namespace": "hardware_service",
   "hardwareRpcVersion": "2.0",

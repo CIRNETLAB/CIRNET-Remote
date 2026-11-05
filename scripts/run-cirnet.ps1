@@ -274,9 +274,9 @@ function Invoke-CirnetLauncherLifecycle([string]$Mode) {
         Get-Command git.exe -CommandType Application | Out-Null
         $node = (Get-Command node.exe -CommandType Application | Select-Object -First 1).Source
         $npm = (Get-Command npm.cmd -CommandType Application | Select-Object -First 1).Source
-        $manifest = Join-Path $repo 'integration\release-set.json'
+        $manifest = Get-CirnetReleaseManifest $repo
         try {
-            Get-Content -LiteralPath $manifest -Raw | ConvertFrom-Json | Out-Null
+            $selection = Get-Content -LiteralPath $manifest -Raw | ConvertFrom-Json
         } catch {
             throw "Could not load the JSON release manifest at '$manifest'. $($_.Exception.Message)"
         }
@@ -294,7 +294,7 @@ function Invoke-CirnetLauncherLifecycle([string]$Mode) {
             finally { $listener.Stop() }
         }
 
-        $python = Join-Path $dev '.venv\Scripts\python.exe'
+        $python = Join-Path $configuration.VirtualEnvironment 'Scripts\python.exe'
         $existingEnvironment = Test-Path -LiteralPath $python -PathType Leaf
         $runtimePython = if ($existingEnvironment) { $python } else {
             (Get-Command python.exe -CommandType Application | Select-Object -First 1).Source
@@ -304,12 +304,12 @@ function Invoke-CirnetLauncherLifecycle([string]$Mode) {
         & $runtimePython -I -S -B -c 'import sys; raise SystemExit(sys.version_info < (3, 14))'
         if ($LASTEXITCODE -ne 0) {
             if ($existingEnvironment) {
-                throw "Python 3.14 or newer is required. Stop CIRNET, recreate only '$dev\.venv' with Python 3.14+, move launcher-state.json aside, then run .\run-cirnet.bat start. Keep databases and captures."
+                throw "Python 3.14 or newer is required. Stop CIRNET, recreate only '$($configuration.VirtualEnvironment)' with Python 3.14+, move launcher-state-0.1.4.json aside, then run .\run-cirnet.bat start. Keep databases and captures."
             }
             throw 'Python 3.14 or newer is required. Install it and make sure python.exe is on PATH.'
         }
         if (-not $existingEnvironment) {
-            & $runtimePython -m venv (Join-Path $dev '.venv')
+            & $runtimePython -m venv $configuration.VirtualEnvironment
             if ($LASTEXITCODE -ne 0) { throw "Could not create the Python environment in '$dev' (exit code $LASTEXITCODE)." }
         }
 
@@ -317,7 +317,7 @@ function Invoke-CirnetLauncherLifecycle([string]$Mode) {
         $env:NETCIRCUIT_ARTIFACTS_DIR = $dev
         Remove-Item Env:CIRNET_ARTIFACTS_SESSION,Env:CIRNET_ARTIFACTS_CONTEXT,Env:NETCIRCUIT_ARTIFACTS_SESSION,Env:NETCIRCUIT_ARTIFACTS_CONTEXT -ErrorAction SilentlyContinue
 
-        $cacheFile = Join-Path $dev 'launcher-state.json'
+        $cacheFile = $configuration.CachePath
         $state = $null
         if (Test-Path -LiteralPath $cacheFile -PathType Leaf) {
             try {
@@ -344,7 +344,11 @@ function Invoke-CirnetLauncherLifecycle([string]$Mode) {
         if (-not $state) {
             Write-CirnetSection '1/4  Install pinned Python and Interface artifacts'
             Write-CirnetMessage 'Installing pinned Python dependencies and downloading CIRNET-Interface. This can take several minutes.'
-            $summaryJson = & $python -B scripts/install_release.py --manifest $manifest --environment-file release-env.json
+            $installArguments = @('--manifest', $manifest, '--environment-file', 'release-env.json')
+            if ($env:CIRNET_RELEASE_MANIFEST -and $selection.distribution -ceq 'local') {
+                $installArguments += '--local-artifacts'
+            }
+            $summaryJson = & $python -B scripts/install_release.py @installArguments
             if ($LASTEXITCODE -ne 0) {
                 throw "Release setup failed (exit code $LASTEXITCODE). Check the installer output and the latest system-release logs under '$dev'."
             }

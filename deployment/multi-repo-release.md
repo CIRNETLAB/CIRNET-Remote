@@ -1,24 +1,18 @@
 # CIRNET multi-repo release and rollback
 
-Use `integration/release-set.json` as the exact six-product selection. The approved system/integration release is 0.1.3 with Interface 0.1.3; API, Contracts, Simulator, Hardware and FPGA retain their original 0.1.1 artifacts and DEV tooling remains 1.0.0a1. Under the latest explicit M6 sequencing decision, actual full selected-artifact local Ubuntu browser acceptance precedes publication, without waiting for further Actions. The complete 0.1.3 Ubuntu result is recorded in the [verification guide](../docs/VERIFICATION.md#complete-committed-artifact-ubuntu-browser-acceptance). Keep previous CI-identity draft access and new unrun checks distinct, and retain the true hosted outcomes in the M6 ledger. Download URLs identify exact numeric GitHub release asset IDs. After publication, assets from the six public repositories permit anonymous downloads; retain authenticated access for drafts, CI and API rate limits. Never use `latest`, editable producer installs or sibling checkouts as fallback.
+Use `integration/release-set.json` for the exact system 0.1.4 selection.
+Interface is 0.1.4. API, Contracts, Simulator, Hardware and FPGA are 0.1.2.
+The independent allocator keeps its Python 1.0.0a1 and npm 1.0.0-m1.0 versions.
+The lock identifies each artifact by exact filename, SHA-256, source revision
+and numeric GitHub release asset URL.
 
-Current repositories use `cirnetlab/cirnet-*`. The selected system manifest
-retains its recorded `CIRNETLAB/CIRNET-*` URLs and exact asset IDs, filenames,
-versions, source revisions and digests. GitHub serves those case aliases.
-The integration revision is recorded separately from retained API build provenance.
-An existing published artifact
-is still built from its recorded earlier source, even when the current repository
-master has later rename, CI or documentation changes. Published tags, notes and
-asset bytes remain preserved. See the [M6 disposition](../docs/verification/2026-10-27-multi-repo-migration-m6.md).
-
-Build and test a candidate from a clean committed export, then compare raw
-archive digests and member payloads against the existing release. Keep comparison
-normalization explicit and read-only. If the existing artifact remains correct,
-retain its original bytes/tag/build provenance and verify downloads/install/run
-through the new URLs. If replacing an asset or moving v0.1.1 is necessary, retain
-the candidate, exact comparison and rollback set, finish independent work, and
-obtain the user's release decision. Do not overwrite immutable assets, delete a
-release or retag. Approval for a new patch permits new artifacts only; published 0.1.1 and 0.1.2 releases remain immutable.
+Use the title `<project>-v<version>` and the corresponding `v<version>` tag.
+Contracts, Simulator, Hardware and FPGA publish under `v0.1.2`.
+Interface and the Remote system publish under `v0.1.4`.
+The Remote release includes the API 0.1.2 artifacts and system manifest.
+Prepare the local set, verify it, then upload the verified packages to new
+release drafts. Check the draft asset identities and digests before publication.
+Existing published tags and bytes record their original releases.
 
 Install Git, Node 26 and Python 3.14+ first. Create an external virtual environment and activate it. For authenticated access, privately set `CIRNET_ARTIFACTS_TOKEN` using the [selected-repository read credential](../docs/ci-artifact-access.md); it can remain unset for public published assets. Current CI workflows prefer `CIRNET_ARTIFACTS_READ_TOKEN` and retain the provisioned `NETCIRCUIT_ARTIFACTS_READ_TOKEN` fallback. From a clean Remote checkout run:
 
@@ -54,7 +48,7 @@ if ($LASTEXITCODE -ne 0) { throw 'The selected package set is inconsistent.' }
 
 Invoke the installer once and retain the resulting JSON state for reuse. Python tooling and Interface dependencies are verification prerequisites, separate from runtime installation. All package-manager caches and temporary paths in this recipe inherit owned external directories. The browser installation cache is inside the external exported product; actual browser launches use separate complete owned copies. Set `CIRNET_TEST_POSTGRES_URL` to an isolated test database and `CIRNET_TEST_PG_BIN` to the matching tools before PostgreSQL gates.
 
-For an explicitly local rebuild, use a separate `distribution: "local"` system manifest and add `--local-artifacts`. Every selected artifact, including the preserved rollback bundle, must have its exact versioned filename, absolute regular-file `path` and SHA-256; local entries cannot contain `url`. Keep the six committed producer revisions and the same compatibility/rollback inventory. The installer validates the complete selection before bootstrap and checks the bytes again when copying. It retains all archive identity, package provenance and installed-origin checks. Local mode performs no GitHub artifact downloads; third-party Python/npm dependencies still follow their pinned package requirements. The default published mode rejects local manifests/paths and continues requiring immutable numeric GitHub asset URLs.
+For an explicitly local rebuild, use a separate `distribution: "local"` system manifest and add `--local-artifacts`. Every selected artifact requires its exact versioned filename, absolute regular-file `path` and SHA-256. Local entries omit `url`. Keep the six source revisions, compatibility requirements and backup policy. The installer validates the complete selection before bootstrap and checks the bytes again when copying. Local mode uses reviewed local artifact files and installs the declared third-party dependencies. For a local Windows smoke test, point `CIRNET_RELEASE_MANIFEST` to the absolute local manifest and use a separate `CIRNET_DEV_HOME`.
 
 ```text
 python -B scripts/install_release.py --local-artifacts --manifest ABSOLUTE_LOCAL_RELEASE_MANIFEST --environment-file release-env.json
@@ -69,13 +63,17 @@ python scripts/check_release.py --group contracts --group python --group web --g
 
 Use an isolated real PostgreSQL database and the matching `pg_dump`/`pg_restore` tools. Prepare the pinned Playwright installation cache and let the Interface launcher make an owned external runtime copy. The browser group owns real API/RPC startup, restart and safe shutdown; keep one worker, zero retries and forbid-only. The FPGA standalone repository owns mandatory pinned parser/compiler/runtime and both behavioral testbenches. Passing source/static compilation does not substitute for native browser or RTL execution.
 
-The current source build uses `cirnet-contracts==0.1.1`. Use a fresh Python environment to install the renamed wheel and the matching rebuilt API, Simulator and Hardware wheels together. The published manifest still selects the immutable legacy wheels. The local package gate accepts explicit per-product wheel manifests for the renamed set.
+Use a fresh Python environment for the selected 0.1.2 API, Contracts, Simulator and Hardware wheels. The current installer accepts the 0.1.4 system profile.
 
 Production installation is a separate authorized operation. Select API/Contracts/Simulator wheels for the API environment, and Hardware/Contracts/Simulator wheels for the Hardware environment. Serve the exact Interface static bundle through the existing same-origin Nginx routes. Preserve `/models`, `/api` and `/ws`; keep one API scheduler process and Hardware RPC on loopback. DEV tooling and source checkouts are unnecessary for the running application. Keep unavailable native/physical capabilities unavailable.
 
 Before changing a deployed set, stop new admissions and preserve the matching database backup, capture storage and release manifest together. Confirm safe cleanup or retained quarantine; an unresolved cleanup must retain its leases/quarantine. A database backup and unrelated capture directory are not a valid pair.
 
-Rollback selects the reviewed pre-M6 bundle recorded in the system manifest and verifies its archive hash and every contained artifact. Recreate the old virtual environments from those exact artifacts; never reuse a higher-version package cache. Restore the corresponding database and capture backup as one set, verify ownership/migrations/capture hashes and quarantine, then start services with normal recovery. Do not replay Start, Apply, Run or other uncertain commands, and do not erase quarantine to make startup succeed. Retain the failed set and its diagnostic evidence for review.
+For recovery, restore the database and capture backup as one set and verify
+ownership, migrations, capture hashes and quarantine before normal startup.
+Recreate runtime environments from the matching verified release selection.
+The current installer records the backup policy. Preserve unresolved
+quarantine and avoid replaying uncertain commands.
 
 `python scripts/check_release_rollback.py --show-plan` lists the software/restore gates; `--run` executes them against isolated test state. Its output distinguishes those gates from a complete prior-artifact rehearsal. Only the dated M6 evidence can establish that the complete exact-set rehearsal actually ran. No command in this runbook authorizes a live production restore or board programming.
 

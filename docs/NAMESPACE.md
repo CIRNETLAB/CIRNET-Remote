@@ -13,13 +13,12 @@ names describe new source builds.
 | FPGA | `cirnet-fpga-scaffold` | canonical `cirnet_*` RTL modules |
 | Independent DEV allocator | `cirnet-artifact-paths` | `cirnet_artifact_paths` |
 
-New npm builds use `@cirnet/contracts` and `@cirnet/artifact-paths`. The
-[release lock](../integration/release-set.json) identifies the immutable
-packages used by published releases. Current Interface imports use the new
-scope and can install the pinned legacy archives under those dependency keys.
-Simulator and DEV retain legacy import aliases, and FPGA retains thin
-old-module wrappers. Use fresh Python environments when changing
-distributions that own the same runtime package.
+System 0.1.4 selects the canonical \`@cirnet/contracts\` SDK and
+\`@cirnet/artifact-paths\` allocator through the [release lock](../integration/release-set.json).
+Interface imports the packages directly by their published identities.
+Simulator and DEV retain application import aliases, and FPGA retains thin
+old-module wrappers for RTL fixtures. The Windows launcher uses a separate
+virtual environment for system 0.1.4 and reuses developer database and capture paths.
 
 ## Settings and protocol identities
 
@@ -75,15 +74,12 @@ See the [production guide](../deployment/README.md).
 
 ## Published artifacts and preserved evidence
 
-`integration/release-set.json`, its rollback set, selected SHA256 digests and
-published source identities remain the exact historical release selection.
-`scripts/install_release.py` deliberately installs that published old artifact
-family. Canonical source builds are separate candidates until an explicit release
-selects their bytes. Validators accept the lowercase namespace and the exact
-repository identities recorded in prior releases.
+`integration/release-set.json` selects the current 0.1.4 release with exact
+artifact digests and lowercase repository identities. `scripts/install_release.py`
+accepts this release family and its verified local build counterpart. The
+previous releases remain available under their original tags for historical reference.
 
 Historical migration/extraction sections, dated CI/readback reports, protected
 archive filenames and markers, original proposal URLs, artwork, baselines and
-LICENSE keep their recorded names and bytes. Old names in these records and in
-compatibility readers/aliases are intentional. They do not define new source
-package names or current deployment examples.
+LICENSE keep their recorded names and bytes. Environment and service aliases in
+this guide apply to existing deployments and user data.

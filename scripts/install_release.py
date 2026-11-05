@@ -121,7 +121,7 @@ def _extract_static(path, directory, value, source_identity):
         if not required <= files.keys():
             raise ValueError('Interface static release is missing production entrypoints or metadata.')
         identity = json.load(archive.extractfile(files['interface-artifact.json']))
-        if (identity.get('name') not in ('cirnet-interface', 'netcircuit-interface') or identity.get('version') != value['repositories']['Interface']['version']
+        if (identity.get('name') not in ('cirnet-interface',) or identity.get('version') != value['repositories']['Interface']['version']
                 or identity.get('kind') != 'static' or identity.get('contractsVersion') != value['compatibility']['contractsVersion']
                 or identity.get('sourceFingerprint') != source_identity['sourceFingerprint']):
             raise ValueError('Interface static release does not match the selected source product.')
@@ -129,23 +129,6 @@ def _extract_static(path, directory, value, source_identity):
         directory.mkdir(exist_ok=False)
         archive.extractall(directory, members=members, filter='data')
     return directory
-
-
-def verify_rollback_bundle(path, value):
-    """Verify preserved filenames/hashes without installing or extracting old code."""
-    archive, members = _checked_tar(Path(path).read_bytes())
-    with archive:
-        files = {}
-        for member in members:
-            if member.isfile(): files.setdefault(PurePosixPath(member.name).name, []).append(member)
-        checked = 0
-        for product in value['rollback']['artifactSet']:
-            for artifact in product['artifacts'].values():
-                candidates = files.get(artifact['filename'], [])
-                if len(candidates) != 1 or hashlib.sha256(archive.extractfile(candidates[0]).read()).hexdigest() != artifact['sha256']:
-                    raise ValueError('Rollback archive differs from its original filename/digest inventory.')
-                checked += 1
-    return checked
 
 
 def verify_api_wheel(path, digest):
@@ -158,15 +141,15 @@ def verify_api_wheel(path, digest):
         if len(metadata) != 1 or len(names) != len(set(names)) or 'app/__init__.py' not in names:
             raise ValueError('API wheel must contain one distribution and its owned app package.')
         value = Parser().parsestr(archive.read(metadata[0]).decode())
-        if value['Name'] != 'netcircuit-api' or value['Version'] != VERSION:
-            raise ValueError('API wheel must identify netcircuit-api==0.1.1.')
+        if value['Name'] != 'cirnet-api' or value['Version'] != VERSION:
+            raise ValueError('API wheel must identify cirnet-api==0.1.2.')
         dependencies = [item.replace(' ', '') for item in value.get_all('Requires-Dist', []) if ';' not in item]
-        if not {'netcircuit-contracts==0.1.1', 'netcircuit-simulator==0.1.1'} <= set(dependencies) or any(item.startswith('netcircuit-hardware') for item in dependencies):
+        if not {'cirnet-contracts==0.1.2', 'cirnet-simulator==0.1.2'} <= set(dependencies) or any(item.startswith('cirnet-hardware') for item in dependencies):
             raise ValueError('API wheel dependencies cross the reviewed release/Hardware process boundary.')
         for name in names:
             relative = PurePosixPath(name)
             if (not relative.parts or relative.is_absolute() or '..' in relative.parts or '\\' in name or ':' in name
-                    or relative.parts[0] not in {'app', 'netcircuit_api-0.1.1.dist-info'}):
+                    or relative.parts[0] not in {'app', 'cirnet_api-0.1.2.dist-info'}):
                 raise ValueError('API wheel contains an unexpected payload owner or unsafe path.')
     return path
 
@@ -192,8 +175,8 @@ from pathlib import Path
 from zipfile import ZipFile
 import app
 wheel,digest=sys.argv[1:]
-product=distribution('netcircuit-api')
-assert product.version=='0.1.1','API installation has the wrong product version'
+product=distribution('cirnet-api')
+assert product.version=='0.1.2','API installation has the wrong product version'
 direct=json.loads(product.read_text('direct_url.json') or '{}')
 assert 'dir_info' not in direct,'API must be installed from the selected wheel'
 info=direct.get('archive_info',{})
@@ -207,7 +190,7 @@ with ZipFile(wheel) as archive:
     observed={'app/'+path.relative_to(root).as_posix() for path in root.rglob('*') if path.is_file() and '__pycache__' not in path.parts and path.suffix!='.pyc'}
     assert expected==observed,'installed API inventory differs from the selected archive'
     for name in expected:assert Path(product.locate_file(name)).read_bytes()==archive.read(name),'installed API bytes differ: '+name
-print(json.dumps({'name':'netcircuit-api','version':'0.1.1','selectedSha256':digest,'ownedFiles':len(expected)}))
+print(json.dumps({'name':'cirnet-api','version':'0.1.2','selectedSha256':digest,'ownedFiles':len(expected)}))
 '''
 
 
@@ -321,13 +304,10 @@ def install(manifest, environment_file, *, local_artifacts=False):
             path = destination / artifact['filename']
             path.write_bytes(_artifact_bytes(artifact, local_artifacts=local_artifacts))
             local[component][kind] = path
-    rollback = value['rollback']['source']; rollback_path = directory / rollback['filename']
-    rollback_path.write_bytes(_artifact_bytes(rollback, local_artifacts=local_artifacts))
-    rollback_files = verify_rollback_bundle(rollback_path, value)
-    for component, name in (('Remote', 'netcircuit-api'), ('Contracts', 'netcircuit-contracts'), ('Simulator', 'netcircuit-simulator'), ('Hardware', 'netcircuit-hardware-service')):
+    for component, name in (('Remote', 'cirnet-api'), ('Contracts', 'cirnet-contracts'), ('Simulator', 'cirnet-simulator'), ('Hardware', 'cirnet-hardware-service')):
         verify_package_archive(local[component]['sdist'], name, value['repositories'][component]['version'])
-    verify_package_archive(local['Contracts']['npm'], '@tinihi-labs/contracts', value['repositories']['Contracts']['version'], npm=True)
-    verify_package_archive(local['Contracts']['dev_npm'], '@tinihi-labs/artifact-paths', '1.0.0-m1.0', npm=True)
+    verify_package_archive(local['Contracts']['npm'], '@cirnet/contracts', value['repositories']['Contracts']['version'], npm=True)
+    verify_package_archive(local['Contracts']['dev_npm'], '@cirnet/artifact-paths', '1.0.0-m1.0', npm=True)
     verify_api_wheel(local['Remote']['python'], value['repositories']['Remote']['artifacts']['python']['sha256'])
     deployment, deployment_members = _checked_tar(local['Remote']['deployment'].read_bytes())
     with deployment:
@@ -372,7 +352,7 @@ def install(manifest, environment_file, *, local_artifacts=False):
     state = {'schemaVersion': 1, 'releaseVersion': value['releaseVersion'], 'python': sys.executable, 'environmentFile': str(target), 'manifest': str(snapshot),
              'manifestSha256': hashlib.sha256(snapshot.read_bytes()).hexdigest(), 'environment': exports, 'processEnvironment': process_environment,
              'artifacts': {name: {kind: str(path) for kind, path in paths.items()} for name, paths in local.items()},
-             'apiVerification': verification, 'rollback': {'archive': str(rollback_path), 'verifiedPreservedArtifacts': rollback_files, 'rehearsalStatus': 'NOT_RUN'}}
+             'apiVerification': verification, 'rollback': {**value['rollback'], 'rehearsalStatus': 'NOT_RUN'}}
     if local_artifacts:
         state['distribution'] = 'local'
     target.parent.mkdir(parents=True, exist_ok=True)

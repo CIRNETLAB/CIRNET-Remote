@@ -5,18 +5,12 @@
 ## English
 
 Current repository: [cirnetlab/cirnet-remote](https://github.com/cirnetlab/cirnet-remote).
-All six repositories use `cirnetlab/cirnet-*`. Current source packages, imports,
-commands and environment settings use CIRNET names with explicit legacy aliases.
-See [source-name compatibility](docs/NAMESPACE.md). New checkouts use lowercase
-directory names. The 0.1.3 system selection reuses the original 0.1.1 wheels
-and selects Interface 0.1.3, with immutable artifact identities.
-Consumers use the locked asset URLs in the system
-manifest. The published 0.1.1 artifacts retain their original revisions and digests.
-The [M6 ledger](docs/verification/2026-10-27-multi-repo-migration-m6.md) separates
-published artifact sources, current source commits, candidate builds and
-published 0.1.2 acceptance.
-The [current browser acceptance](docs/VERIFICATION.md#complete-committed-artifact-ubuntu-browser-acceptance)
-records the complete Ubuntu gate and the 0.1.3 repair.
+All six repositories use \`cirnetlab/cirnet-*\`. The 0.1.4 system selects
+Interface 0.1.4 and API, Contracts, Simulator, Hardware and FPGA 0.1.2.
+Its npm inputs are \`@cirnet/contracts\` and \`@cirnet/artifact-paths\`.
+Use the [exact release lock](integration/release-set.json) and the
+[release runbook](deployment/multi-repo-release.md). The current installer
+accepts the 0.1.4 system profile. Dated reports retain their recorded evidence.
 
 A Web-first, Safety-gated, Lab-First remote electronics laboratory. Canonical authority: [Lab-First v3.1](docs/ARCHITECTURE.md). Safety allows execution; real student wiring produces behavior; software observes and evaluates. SAFETY != CORRECTNESS.
 
@@ -30,7 +24,7 @@ Verification entrypoint: `python scripts/check_release.py --show-plan` and named
 
 Documentation navigation and status conventions: [documentation index](docs/README.md). Codex verification follows [AGENTS.md](AGENTS.md) and the [shared verification guide](docs/VERIFICATION.md): generated screenshots, traces and diagnostic output go directly to an external session directory; retained repository evidence is Markdown. Model textures, icons and approved fixtures remain product/test assets.
 
-The selected system release is **0.1.3** with Interface **0.1.3** and the other selected component artifacts at **0.1.1**. Remote owns API, persistence, scheduler, deployment and integrated acceptance. Contracts owns schemas/catalogs/protocols and public SDK; Interface owns Web/editor/assets/browser assertions; Simulator owns execution/backends; Hardware owns local RPC/stations/transports; FPGA owns scaffold/RTL/toolchain. The build, runtime and release gates use the selected artifacts.
+The selected system release is **0.1.4** with Interface **0.1.4** and the other selected component artifacts at **0.1.2**. Remote owns API, persistence, scheduler, deployment and integrated acceptance. Contracts owns schemas/catalogs/protocols and public SDK; Interface owns Web/editor/assets/browser assertions; Simulator owns execution/backends; Hardware owns local RPC/stations/transports; FPGA owns scaffold/RTL/toolchain. The build, runtime and release gates use the selected artifacts.
 
 Activate an external virtual environment. Set `CIRNET_ARTIFACTS_TOKEN` privately if authenticated access is needed. Run `python scripts/install_release.py --manifest integration/release-set.json --environment-file release-env.json` from the Remote root. Apply the external JSON environment before `python scripts/check_release.py --show-plan` and the named groups. The installer verifies exact artifacts; it never deploys or starts services. See the [M6 plan](https://github.com/cirnetlab/cirnet-remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/superpowers/plans/2026-10-27-multi-repo-migration-m6.md), [fresh verification](docs/verification/2026-10-27-multi-repo-migration-m6.md) and [release/rollback runbook](deployment/multi-repo-release.md).
 
@@ -42,7 +36,7 @@ Post-R7 H0–H6: observed pin/net evidence resolves arbitrary student placement 
 
 Remote owns services/api, deployment, docs, tests and integration scripts. The other implementations are developed in their producer repositories. The [documentation index](docs/README.md#reading-status) links to historical source, analyses, plans and verification reports by Git revision.
 
-Historical M5 verification used the independent `netcircuit-fpga-scaffold` source artifact `0.1.0`, selected by manifest/SHA256; it is not an API runtime dependency or board image. The original FPGA RTL and test copies are available in the pre-cleanup Git revision. Current M6 selects scaffold 0.1.1. Pure RTL acceptance belongs to CIRNET-FPGA and requires pinned parser/compiler/runtime without skips. Remote release checks require the selected FPGA artifact root; see the [M5 plan](https://github.com/cirnetlab/cirnet-remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/superpowers/plans/2026-10-27-multi-repo-migration-m5.md) and [consumer setup](contracts/README.md). Logical 1.0-scaffold remains independent of source version and unavailable physical firmware.
+Historical M5 verification used the independent `netcircuit-fpga-scaffold` source artifact `0.1.0`, selected by manifest/SHA256; it is not an API runtime dependency or board image. The original FPGA RTL and test copies are available in the pre-cleanup Git revision. System 0.1.4 selects scaffold 0.1.2. Pure RTL acceptance belongs to CIRNET-FPGA and requires pinned parser/compiler/runtime without skips. Remote release checks require the selected FPGA artifact root; see the [M5 plan](https://github.com/cirnetlab/cirnet-remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/superpowers/plans/2026-10-27-multi-repo-migration-m5.md) and [consumer setup](contracts/README.md). Logical 1.0-scaffold remains independent of source version and unavailable physical firmware.
 
 ## Windows launcher
 
@@ -112,9 +106,9 @@ bootstrap the pinned release, then run Doctor again. The FPGA development
 section points to the pinned `pyslang`, Icarus Verilog and `vvp` workflow in
 CIRNET-FPGA. Doctor performs local inspection and prints its report to the console.
 
-Startup checks both the base interpreter and an existing launcher environment
+Startup checks both the base interpreter and the release-specific launcher environment
 against Python 3.14. Installing a newer Python does not upgrade an existing
-`.venv`; follow Doctor's repair instructions to recreate only that environment
+`.venv-0.1.4`; follow Doctor's repair instructions to recreate only that environment
 and retain your databases and captures.
 
 After upgrading to Node 26 LTS, reopen your terminal so it uses the new PATH.

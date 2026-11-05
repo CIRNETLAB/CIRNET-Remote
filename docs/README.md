@@ -11,20 +11,18 @@
 
 | Product | Current repository | Version / ownership |
 | --- | --- | --- |
-| Remote | [cirnetlab/cirnet-remote](https://github.com/cirnetlab/cirnet-remote) | API/deployment 0.1.1; selected system/integration 0.1.3 |
-| Contracts | [cirnetlab/cirnet-contracts](https://github.com/cirnetlab/cirnet-contracts) | 0.1.1; schemas, catalog, protocols, Python resources and public SDK |
-| Interface | [cirnetlab/cirnet-interface](https://github.com/cirnetlab/cirnet-interface) | published 0.1.3; Web/editor/assets and browser assertions |
-| Simulator | [cirnetlab/cirnet-simulator](https://github.com/cirnetlab/cirnet-simulator) | 0.1.1; existing engine and replaceable backend boundary |
-| Hardware | [cirnetlab/cirnet-hardware](https://github.com/cirnetlab/cirnet-hardware) | 0.1.1; local RPC, station lifecycle and private transport |
-| FPGA | [cirnetlab/cirnet-fpga](https://github.com/cirnetlab/cirnet-fpga) | 0.1.1 source scaffold; pinned RTL verification |
+| Remote | [cirnetlab/cirnet-remote](https://github.com/cirnetlab/cirnet-remote) | API/deployment 0.1.2; selected system/integration 0.1.4 |
+| Contracts | [cirnetlab/cirnet-contracts](https://github.com/cirnetlab/cirnet-contracts) | 0.1.2; schemas, catalog, protocols, Python resources and public SDK |
+| Interface | [cirnetlab/cirnet-interface](https://github.com/cirnetlab/cirnet-interface) | 0.1.4; Web/editor/assets and browser assertions |
+| Simulator | [cirnetlab/cirnet-simulator](https://github.com/cirnetlab/cirnet-simulator) | 0.1.2; existing engine and replaceable backend boundary |
+| Hardware | [cirnetlab/cirnet-hardware](https://github.com/cirnetlab/cirnet-hardware) | 0.1.2; local RPC, station lifecycle and private transport |
+| FPGA | [cirnetlab/cirnet-fpga](https://github.com/cirnetlab/cirnet-fpga) | 0.1.2 source scaffold; pinned RTL verification |
 
 The repository/organization rename preserves GitHub repository IDs and history.
 Use the current [release selection](../integration/release-set.json) and
-[release runbook](../deployment/multi-repo-release.md). The reused immutable
-0.1.1 artifacts retain their original build revisions/digests; rename candidates
-and new master commits are tracked separately in the M6 report. Old extraction
-versions and URLs in dated reports retain their historical meaning. Python source builds use `cirnet-contracts`. The published selection retains
-the original distribution, and the `contracts` import remains compatible.
+[release runbook](../deployment/multi-repo-release.md). The 0.1.4
+selection uses the six canonical repositories and exact asset digests.
+Dated reports record earlier inputs and verification outcomes.
 
 Current source identities and migration/legacy boundaries are recorded in
 [namespace compatibility](NAMESPACE.md). New operator examples use `CIRNET_*`;

@@ -12,7 +12,6 @@ def local_set(tmp_path):
     value = release()
     value['distribution'] = 'local'
     entries = [entry for product in value['repositories'].values() for entry in product['artifacts'].values()]
-    entries.append(value['rollback']['source'])
     for index, entry in enumerate(entries):
         directory = tmp_path / str(index)
         directory.mkdir()
@@ -43,7 +42,7 @@ def test_bad_local_set_cannot_reach_bootstrap(tmp_path, monkeypatch, failure):
     elif failure == 'relative-path': entry['path'] = entry['filename']
     elif failure == 'directory': entry['path'] = str(tmp_path)
     elif failure == 'wrong-digest': entry['sha256'] = '0' * 64
-    elif failure == 'mixed-url': entry['url'] = 'https://api.github.com/repos/TINIHI-Labs/net-Circuit-Contracts/releases/assets/1'
+    elif failure == 'mixed-url': entry['url'] = 'https://api.github.com/repos/cirnetlab/cirnet-contracts/releases/assets/1'
     elif failure == 'wrong-filename': entry['filename'] = 'netcircuit_contracts-1.0.1-py3-none-any.whl'
     elif failure == 'missing-owner': value['repositories'].pop('FPGA')
     elif failure == 'wrong-version': value['repositories']['Hardware']['version'] = '0.2.0'
@@ -101,7 +100,7 @@ def test_rollback_local_environment_retains_digest_and_strict_admission(tmp_path
     elif failure == 'artifact-bytes':
         Path(entry['path']).write_bytes(b'changed after installation')
     else:
-        if failure == 'mixed-url': entry['url'] = 'https://api.github.com/repos/TINIHI-Labs/net-Circuit-Contracts/releases/assets/1'
+        if failure == 'mixed-url': entry['url'] = 'https://api.github.com/repos/cirnetlab/cirnet-contracts/releases/assets/1'
         elif failure == 'published-distribution': value['distribution'] = 'github-release'
         elif failure == 'unsafe-runtime': value['compatibility']['apiSchedulerProcesses'] = 2
         manifest.write_text(json.dumps(value), encoding='utf-8')

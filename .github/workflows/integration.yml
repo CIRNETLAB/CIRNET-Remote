@@ -1,25 +1,6 @@
 name: Integration
 env:
   PYTHONDONTWRITEBYTECODE: '1'
-  CIRNET_FPGA_ARTIFACT_FILENAME: netcircuit-fpga-scaffold-0.1.1.tar.gz
-  CIRNET_FPGA_ARTIFACT_URL: ${{ vars.CIRNET_FPGA_ARTIFACT_URL || vars.NETCIRCUIT_FPGA_ARTIFACT_URL }}
-  CIRNET_FPGA_ARTIFACT_SHA256: ${{ vars.CIRNET_FPGA_ARTIFACT_SHA256 || vars.NETCIRCUIT_FPGA_ARTIFACT_SHA256 }}
-  CIRNET_HARDWARE_WHEEL_FILENAME: netcircuit_hardware_service-0.1.1-py3-none-any.whl
-  CIRNET_HARDWARE_WHEEL_URL: ${{ vars.CIRNET_HARDWARE_WHEEL_URL || vars.NETCIRCUIT_HARDWARE_WHEEL_URL }}
-  CIRNET_HARDWARE_WHEEL_SHA256: ${{ vars.CIRNET_HARDWARE_WHEEL_SHA256 || vars.NETCIRCUIT_HARDWARE_WHEEL_SHA256 }}
-  CIRNET_SIMULATOR_WHEEL_FILENAME: netcircuit_simulator-0.1.1-py3-none-any.whl
-  CIRNET_SIMULATOR_WHEEL_URL: ${{ vars.CIRNET_SIMULATOR_WHEEL_URL || vars.NETCIRCUIT_SIMULATOR_WHEEL_URL }}
-  CIRNET_SIMULATOR_WHEEL_SHA256: ${{ vars.CIRNET_SIMULATOR_WHEEL_SHA256 || vars.NETCIRCUIT_SIMULATOR_WHEEL_SHA256 }}
-  CIRNET_CONTRACTS_DEV_WHEEL_URL: ${{ vars.CIRNET_CONTRACTS_DEV_WHEEL_URL || vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_URL }}
-  CIRNET_CONTRACTS_DEV_WHEEL_SHA256: ${{ vars.CIRNET_CONTRACTS_DEV_WHEEL_SHA256 || vars.NETCIRCUIT_CONTRACTS_DEV_WHEEL_SHA256 }}
-  CIRNET_CONTRACTS_WHEEL_FILENAME: netcircuit_contracts-0.1.1-py3-none-any.whl
-  CIRNET_CONTRACTS_NPM_FILENAME: tinihi-labs-contracts-0.1.1.tgz
-  CIRNET_CONTRACTS_WHEEL_URL: ${{ vars.CIRNET_CONTRACTS_WHEEL_URL || vars.NETCIRCUIT_CONTRACTS_WHEEL_URL }}
-  CIRNET_CONTRACTS_WHEEL_SHA256: ${{ vars.CIRNET_CONTRACTS_WHEEL_SHA256 || vars.NETCIRCUIT_CONTRACTS_WHEEL_SHA256 }}
-  CIRNET_CONTRACTS_NPM_URL: ${{ vars.CIRNET_CONTRACTS_NPM_URL || vars.NETCIRCUIT_CONTRACTS_NPM_URL }}
-  CIRNET_CONTRACTS_SDIST_URL: ${{ vars.CIRNET_CONTRACTS_SDIST_URL || vars.NETCIRCUIT_CONTRACTS_SDIST_URL }}
-  CIRNET_ARTIFACT_PATHS_NPM_URL: ${{ vars.CIRNET_ARTIFACT_PATHS_NPM_URL || vars.NETCIRCUIT_ARTIFACT_PATHS_NPM_URL }}
-  CIRNET_CONTRACTS_NPM_SHA256: ${{ vars.CIRNET_CONTRACTS_NPM_SHA256 || vars.NETCIRCUIT_CONTRACTS_NPM_SHA256 }}
 on:
   push:
   pull_request:
@@ -95,15 +76,14 @@ jobs:
 
           from scripts.artifact_paths import artifact_directory, validate_artifact_directory
           from scripts.check_release_rollback import load_environment
-          from scripts.install_release import verify_rollback_bundle
           from scripts.system_release_manifest import load_manifest, validate_manifest
 
           PACKAGES = (
-              ('netcircuit-api', 'app', '0.1.1', 'Remote', 'python'),
-              ('netcircuit-contracts', 'contracts', '0.1.1', 'Contracts', 'python'),
-              ('netcircuit-simulator', 'netcircuit_sim', '0.1.1', 'Simulator', 'python'),
-              ('netcircuit-hardware-service', 'hardware_service', '0.1.1', 'Hardware', 'python'),
-              ('netcircuit-artifact-paths', 'netcircuit_artifact_paths', '1.0.0a1', 'Contracts', 'dev'),
+              ('cirnet-api', 'app', '0.1.2', 'Remote', 'python'),
+              ('cirnet-contracts', 'contracts', '0.1.2', 'Contracts', 'python'),
+              ('cirnet-simulator', 'cirnet_sim', '0.1.2', 'Simulator', 'python'),
+              ('cirnet-hardware-service', 'hardware_service', '0.1.2', 'Hardware', 'python'),
+              ('cirnet-artifact-paths', 'cirnet_artifact_paths', '1.0.0a1', 'Contracts', 'dev'),
           )
           ORIGIN_PROBE = r'''
           import importlib
@@ -164,11 +144,8 @@ jobs:
                       rows.append(checked(component, kind, selected, state['artifacts'][component][kind]))
               if len(rows) != 15:
                   raise ValueError('The credential receipt requires all fifteen current artifacts.')
-              rollback = checked('Remote', 'rollback', manifest['rollback']['source'], state['rollback']['archive'])
-              preserved = verify_rollback_bundle(state['rollback']['archive'], manifest)
-              if preserved != state['rollback']['verifiedPreservedArtifacts']:
-                  raise ValueError('Rollback verification count differs from the installed state.')
-              rollback['verifiedPreservedArtifacts'] = preserved
+              if state.get('rollback') != {**manifest['rollback'], 'rehearsalStatus': 'NOT_RUN'}:
+                  raise ValueError('Installed state differs from the selected backup policy.')
               expected = {name: (version, products[component]['artifacts'][kind]['sha256'])
                           for name, module, version, component, kind in PACKAGES}
               if len(installed) != len(expected) or {row['name'] for row in installed} != set(expected):
@@ -182,7 +159,7 @@ jobs:
                       'scopeLimitation': 'Successful downloads do not establish read-only or minimum credential permissions.',
                       'selectedRepositories': {name: {key: product[key] for key in ('repository', 'version', 'sourceRevision')}
                                                for name, product in products.items()},
-                      'artifacts': rows, 'rollback': rollback, 'installedPython': installed,
+                      'artifacts': rows, 'rollback': state['rollback'], 'installedPython': installed,
                       'pipCheck': 'PASS', 'rollbackRehearsal': 'NOT_RUN'}
 
           def main():
@@ -206,7 +183,7 @@ jobs:
               receipt['installedManifestSha256'] = state['manifestSha256']
               output = artifact_directory('system-artifact-access') / 'receipt.json'
               output.write_text(json.dumps(receipt, indent=2) + '\n', encoding='utf-8')
-              print('Verified all 15 selected artifacts, preserved rollback bytes, pip check and isolated installed origins.')
+              print('Verified all 15 selected artifacts, backup policy, pip check and isolated installed origins.')
 
           if __name__ == '__main__':
               main()
@@ -275,7 +252,7 @@ jobs:
           python scripts/install_simulator.py --wheel "$CIRNET_CI_SIMULATOR_WHEEL" --sha256 "$CIRNET_CI_SIMULATOR_WHEEL_SHA256"
           python scripts/install_hardware.py --wheel "$CIRNET_CI_HARDWARE_WHEEL" --sha256 "$CIRNET_CI_HARDWARE_WHEEL_SHA256"
           python -m build --no-isolation --wheel --outdir "$CIRNET_ARTIFACTS_SESSION/api-dist" ./services/api
-          python -m pip install "$CIRNET_ARTIFACTS_SESSION/api-dist/cirnet_api-0.1.1-py3-none-any.whl"
+          python -m pip install "$CIRNET_ARTIFACTS_SESSION/api-dist/cirnet_api-0.1.2-py3-none-any.whl"
           python -m pip check
           python -m scripts.check_simulator_consumer
           python -m scripts.check_hardware_consumer
@@ -375,7 +352,7 @@ jobs:
           python scripts/install_simulator.py --wheel "$CIRNET_CI_SIMULATOR_WHEEL" --sha256 "$CIRNET_CI_SIMULATOR_WHEEL_SHA256"
           python scripts/install_hardware.py --wheel "$CIRNET_CI_HARDWARE_WHEEL" --sha256 "$CIRNET_CI_HARDWARE_WHEEL_SHA256"
           python -m build --no-isolation --wheel --outdir "$CIRNET_ARTIFACTS_SESSION/api-dist" ./services/api
-          python -m pip install "$CIRNET_ARTIFACTS_SESSION/api-dist/cirnet_api-0.1.1-py3-none-any.whl"
+          python -m pip install "$CIRNET_ARTIFACTS_SESSION/api-dist/cirnet_api-0.1.2-py3-none-any.whl"
           python -m pip check
           python -m scripts.check_simulator_consumer
           python -m scripts.check_hardware_consumer

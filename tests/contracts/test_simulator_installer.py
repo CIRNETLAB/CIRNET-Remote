@@ -17,19 +17,20 @@ class ReachedInstaller(Exception):
 
 @pytest.fixture
 def candidate(tmp_path, monkeypatch):
-    wheel = tmp_path / 'cirnet_simulator-0.1.1-py3-none-any.whl'
+    wheel = tmp_path / 'cirnet_simulator-0.1.2-py3-none-any.whl'
     with ZipFile(wheel, 'w') as archive:
         archive.writestr('netcircuit_sim/__init__.py', '')
         for module in MODULES:
             archive.writestr('cirnet_sim/' + module, '')
-        archive.writestr('cirnet_simulator-0.1.1.dist-info/METADATA',
-            'Name: cirnet-simulator\nVersion: 0.1.1\n'
-            'Requires-Dist: cirnet-contracts==0.1.1\nRequires-Dist: jsonschema==4.26.0\n')
+        archive.writestr('cirnet_simulator-0.1.2.dist-info/METADATA',
+            'Name: cirnet-simulator\nVersion: 0.1.2\n'
+            'Requires-Dist: cirnet-contracts==0.1.2\nRequires-Dist: jsonschema==4.26.0\n')
     digest = hashlib.sha256(wheel.read_bytes()).hexdigest()
     manifest = tmp_path / 'selected.json'
     manifest.write_text(json.dumps({'schemaVersion': 1, 'python': {'path': str(wheel), 'sha256': digest}}), encoding='utf-8')
-    for suffix in ('ARTIFACT_MANIFEST', 'WHEEL_URL', 'WHEEL_SHA256', 'WHEEL_FILENAME'):
-        monkeypatch.delenv('CIRNET_SIMULATOR_' + suffix, raising=False)
+    for prefix in ('CIRNET_SIMULATOR_', 'NETCIRCUIT_SIMULATOR_'):
+        for suffix in ('ARTIFACT_MANIFEST', 'WHEEL_URL', 'WHEEL_SHA256', 'WHEEL_FILENAME'):
+            monkeypatch.delenv(prefix + suffix, raising=False)
     monkeypatch.setenv('CIRNET_SIMULATOR_WHEEL_URL', 'https://example.invalid/inherited-b.whl')
     monkeypatch.setenv('CIRNET_SIMULATOR_WHEEL_SHA256', digest)
     monkeypatch.setenv('CIRNET_SIMULATOR_WHEEL_FILENAME', 'inherited-b.whl')

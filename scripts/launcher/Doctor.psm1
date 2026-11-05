@@ -122,14 +122,14 @@ function Get-CirnetDoctorHash {
 
 function Test-CirnetDoctorReleaseCache {
     param($Configuration)
-    $cacheFile = Join-Path $Configuration.DevHome 'launcher-state.json'
+    $cacheFile = $Configuration.CachePath
     if (-not (Test-Path -LiteralPath $cacheFile)) {
         return [pscustomobject]@{ Status='MISSING'; Version=''; Path=$cacheFile; Detail='No installed release cache was found.'; State=$null; Manifest=$null }
     }
     try {
         $null = Assert-CirnetDoctorOwnedPath $cacheFile $Configuration.DevHome -File
         $cache = Read-CirnetDoctorJson $cacheFile
-        $lock = Join-Path $Configuration.RepositoryRoot 'integration\release-set.json'
+        $lock = Get-CirnetReleaseManifest $Configuration.RepositoryRoot
         $manifest = Read-CirnetDoctorJson $lock
         if ($manifest.schemaVersion -ne 1 -or -not $manifest.releaseVersion -or -not $manifest.repositories) { throw 'The repository release manifest schema is invalid.' }
         $expectedHash = Get-CirnetDoctorHash $lock
@@ -138,10 +138,10 @@ function Test-CirnetDoctorReleaseCache {
         $state = Read-CirnetDoctorJson $environmentFile
         $state.environment = ConvertTo-CirnetEnvironment $state.environment
         if ($state.schemaVersion -ne 1 -or $state.releaseVersion -cne $manifest.releaseVersion -or $state.environmentFile -ine $environmentFile) { throw 'The saved release environment schema or version is invalid.' }
-        $python = Join-Path $Configuration.DevHome '.venv\Scripts\python.exe'
+        $python = Join-Path $Configuration.VirtualEnvironment 'Scripts\python.exe'
         if ($state.python -ine $python) { throw 'The saved interpreter is not the selected launcher virtual environment.' }
         $null = Assert-CirnetDoctorOwnedPath $python $Configuration.DevHome -File
-        $venvConfig = Assert-CirnetDoctorOwnedPath (Join-Path $Configuration.DevHome '.venv\pyvenv.cfg') $Configuration.DevHome -File
+        $venvConfig = Assert-CirnetDoctorOwnedPath (Join-Path $Configuration.VirtualEnvironment 'pyvenv.cfg') $Configuration.DevHome -File
         $venvContents = Get-Content -LiteralPath $venvConfig -Raw -ErrorAction Stop
         if ($venvContents -notmatch '(?m)^version\s*=\s*(\d+\.\d+(?:\.\d+)?)\s*$' -or [version]$Matches[1] -lt [version]'3.14') { throw 'The cached virtual environment does not declare a compatible Python 3.14+ version.' }
         $session = Assert-CirnetDoctorOwnedPath $state.environment.CIRNET_ARTIFACTS_SESSION $Configuration.DevHome -Directory
@@ -203,13 +203,13 @@ function Test-CirnetDoctorReleaseCache {
 
 function Get-CirnetDoctorCachedPython {
     param($Configuration, $Cache)
-    $python = Join-Path $Configuration.DevHome '.venv\Scripts\python.exe'
+    $python = Join-Path $Configuration.VirtualEnvironment 'Scripts\python.exe'
     $remediation = 'Run .\run-cirnet.bat start to bootstrap the pinned release.'
     if ($Cache.Status -ne 'INSTALLED') {
         return New-CirnetDoctorCheck 'Cached Python dependencies' $true 'NOT VERIFIED' '' $python 'Cached interpreter code was not executed because the release cache has not passed validation.' $remediation
     }
     try {
-        $site = Assert-CirnetDoctorOwnedPath (Join-Path $Configuration.DevHome '.venv\Lib\site-packages') $Configuration.DevHome -Directory
+        $site = Assert-CirnetDoctorOwnedPath (Join-Path $Configuration.VirtualEnvironment 'Lib\site-packages') $Configuration.DevHome -Directory
         # -S prevents .pth/sitecustomize execution. Inspect metadata and pip's
         # requirement parser without importing application or service code.
         $code = @'
@@ -275,14 +275,14 @@ print(json.dumps({'python': sys.version.split()[0], 'packages': versions}))
         $versions = $probe.Output | ConvertFrom-Json -ErrorAction Stop
         return New-CirnetDoctorCheck 'Cached Python dependencies' $true 'INSTALLED' $versions.python $python 'Python 3.14+, selected distribution versions, declared dependencies and Python module files were checked without application or service imports.' ''
     } catch {
-        $repair = "Stop CIRNET, repair or recreate only '$($Configuration.DevHome)\.venv' with Python 3.14+, move launcher-state.json aside, then run .\run-cirnet.bat start. Keep databases and captures."
+        $repair = "Stop CIRNET, repair or recreate only '$($Configuration.VirtualEnvironment)' with Python 3.14+, move launcher-state-0.1.4.json aside, then run .\run-cirnet.bat start. Keep databases and captures."
         return New-CirnetDoctorCheck 'Cached Python dependencies' $true 'INCOMPATIBLE' '' $python $_.Exception.Message $repair
     }
 }
 
 function Get-CirnetDoctorWebDependencies {
     param($Cache)
-    $repair = 'Stop CIRNET, move launcher-state.json aside, then run .\run-cirnet.bat start to rebuild the pinned Web dependencies. Keep databases and captures.'
+    $repair = 'Stop CIRNET, move launcher-state-0.1.4.json aside, then run .\run-cirnet.bat start to rebuild the pinned Web dependencies. Keep databases and captures.'
     if ($Cache.Status -ne 'INSTALLED') {
         return New-CirnetDoctorCheck 'Cached Web dependencies' $true 'NOT VERIFIED' '' '' 'The release cache must pass validation before Web dependencies can be inspected.' $repair
     }
@@ -389,7 +389,7 @@ function Get-CirnetDoctorAllocatorCache {
     $directory = Join-Path $Configuration.RepositoryRoot '.build\contracts-tools'
     $metadataPath = Join-Path $directory 'allocator.json'
     $resource = Join-Path $directory 'allocator.mjs'
-    $repair = 'Stop CIRNET, then use the selected launcher .venv Python from the repository directory: python -B -c ''from scripts.bootstrap_contract_tools import materialize_allocator; materialize_allocator()''. Doctor does not run this repair.'
+    $repair = 'Stop CIRNET, then use the selected launcher .venv-0.1.4 Python from the repository directory: python -B -c ''from scripts.bootstrap_contract_tools import materialize_allocator; materialize_allocator()''. Doctor does not run this repair.'
     if (-not (Test-Path -LiteralPath $metadataPath -PathType Leaf) -or -not (Test-Path -LiteralPath $resource -PathType Leaf)) {
         return New-CirnetDoctorCheck 'DEV allocator cache' $true 'MISSING' '' $directory 'The pinned DEV allocator cache has not been materialized.' 'Run .\run-cirnet.bat start to restore the pinned DEV allocator cache.'
     }
@@ -480,13 +480,13 @@ function Get-CirnetEnvironmentReport {
     $checks.Add((Get-CirnetDoctorTool 'npm' @('npm.cmd','npm.exe') -Remediation 'Install npm with Node.js 26 LTS and add npm to PATH.'))
     $bootstrapMissing = @($checks | Where-Object { $_.Required -and $_.Status -ne 'INSTALLED' })
     $remediation = 'Run .\run-cirnet.bat start to bootstrap the pinned release.'
-    $venvPython = Join-Path $configuration.DevHome '.venv\Scripts\python.exe'
+    $venvPython = Join-Path $configuration.VirtualEnvironment 'Scripts\python.exe'
     try {
         if (-not (Test-Path -LiteralPath $venvPython -PathType Leaf)) {
             $checks.Add((New-CirnetDoctorCheck 'Launcher virtual environment' $true 'MISSING' '' $venvPython 'The external launcher virtual environment has not been created.' $remediation))
         } else {
             $null = Assert-CirnetDoctorOwnedPath $venvPython $configuration.DevHome -File
-            $cfg = Assert-CirnetDoctorOwnedPath (Join-Path $configuration.DevHome '.venv\pyvenv.cfg') $configuration.DevHome -File
+            $cfg = Assert-CirnetDoctorOwnedPath (Join-Path $configuration.VirtualEnvironment 'pyvenv.cfg') $configuration.DevHome -File
             $contents = Get-Content -LiteralPath $cfg -Raw -ErrorAction Stop
             if ($contents -notmatch '(?m)^version\s*=\s*(\d+\.\d+(?:\.\d+)?)\s*$') { throw 'The launcher virtual environment configuration does not declare a Python version.' }
             $venvVersion = $Matches[1]
@@ -494,12 +494,12 @@ function Get-CirnetEnvironmentReport {
             $checks.Add((New-CirnetDoctorCheck 'Launcher virtual environment' $true 'INSTALLED' $venvVersion $venvPython 'The external virtual environment files are present; code execution waits for release cache validation.' ''))
         }
     } catch {
-        $repair = "Stop CIRNET, recreate only '$($configuration.DevHome)\.venv' with Python 3.14+, move launcher-state.json aside, then run .\run-cirnet.bat start. Keep databases and captures."
+        $repair = "Stop CIRNET, recreate only '$($configuration.VirtualEnvironment)' with Python 3.14+, move launcher-state-0.1.4.json aside, then run .\run-cirnet.bat start. Keep databases and captures."
         $checks.Add((New-CirnetDoctorCheck 'Launcher virtual environment' $true 'INCOMPATIBLE' '' $venvPython $_.Exception.Message $repair))
     }
     $cache = Test-CirnetDoctorReleaseCache $configuration
     $cacheRemediation = if ($cache.Status -eq 'INSTALLED') { '' } elseif ($cache.Status -eq 'INCOMPATIBLE') {
-        'Stop CIRNET, move launcher-state.json aside, then run .\run-cirnet.bat start to rebuild the pinned setup. Keep databases and captures.'
+        'Stop CIRNET, move launcher-state-0.1.4.json aside, then run .\run-cirnet.bat start to rebuild the pinned setup. Keep databases and captures.'
     } else { $remediation }
     $checks.Add((New-CirnetDoctorCheck 'Pinned release cache' $true $cache.Status $cache.Version $cache.Path $cache.Detail $cacheRemediation))
     $checks.Add((Get-CirnetDoctorCachedPython $configuration $cache))

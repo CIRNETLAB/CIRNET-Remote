@@ -19,13 +19,13 @@ except ModuleNotFoundError:
 
 NAME = 'cirnet-simulator'
 LEGACY_NAME = 'netcircuit-simulator'
-VERSION = '0.1.1'
+VERSION = '0.1.2'
 MODULES = ('__init__.py', 'analog.py', 'backends.py', 'circuit.py', 'dispatch.py', 'engine.py', 'logic.py', 'nets.py', 'waveform.py')
 NAMESPACES = {NAME: ('cirnet_sim', 'netcircuit_sim'), LEGACY_NAME: ('netcircuit_sim',)}
 DEPENDENCIES = {
-    NAME: (('cirnet-contracts==0.1.1', 'jsonschema==4.26.0'),),
-    LEGACY_NAME: (('cirnet-contracts==0.1.1', 'jsonschema==4.26.0'),
-                  ('jsonschema==4.26.0', 'netcircuit-contracts==0.1.1')),
+    NAME: (('cirnet-contracts==0.1.2', 'jsonschema==4.26.0'),),
+    LEGACY_NAME: (('cirnet-contracts==0.1.2', 'jsonschema==4.26.0'),
+                  ('jsonschema==4.26.0', 'netcircuit-contracts==0.1.2')),
 }
 
 
@@ -43,7 +43,7 @@ def validate_metadata(value):
         raise ValueError(f'Expected {NAME} or {LEGACY_NAME}=={VERSION}; got {name}=={value["Version"]}.')
     dependencies = tuple(sorted(entry.replace(' ', '') for entry in value.get_all('Requires-Dist', []) if ';' not in entry))
     if dependencies not in DEPENDENCIES[name]:
-        raise ValueError('Simulator must pin the reviewed Contracts 0.1.1 and jsonschema 4.26.0 dependency matrix.')
+        raise ValueError('Simulator must pin the reviewed Contracts 0.1.2 and jsonschema 4.26.0 dependency matrix.')
     return name
 
 
@@ -105,7 +105,7 @@ except PackageNotFoundError:
 else:
     raise ValueError('Canonical and legacy Simulator distributions share an import namespace; use a fresh environment.')
 artifact=distribution(name)
-assert artifact.version=='0.1.1','selected archive version differs from installation'
+assert artifact.version=='0.1.2','selected archive version differs from installation'
 direct=json.loads(artifact.read_text('direct_url.json') or '{}')
 assert 'dir_info' not in direct,'Simulator must not use an editable/source installation'
 info=direct.get('archive_info',{})

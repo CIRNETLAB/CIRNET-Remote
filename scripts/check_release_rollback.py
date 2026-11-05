@@ -2,7 +2,7 @@
 
 The registered gates exercise isolated PostgreSQL schemas and installed-package
 probes. A full old-artifact reinstall/recovery rehearsal remains separately
-NOT_RUN until performed against the preserved rollback bundle and paired backups.
+NOT_RUN for prior versions. The current installer validates backup policy only.
 """
 import sys
 sys.dont_write_bytecode = True
@@ -21,10 +21,10 @@ import subprocess
 from xml.etree import ElementTree
 
 try:
-    from scripts.system_release_manifest import load_manifest, RELEASE_PROFILES
+    from scripts.system_release_manifest import load_manifest, SYSTEM_VERSION
     from scripts.install_release import validate_process_environment
 except ModuleNotFoundError:
-    from system_release_manifest import load_manifest, RELEASE_PROFILES
+    from system_release_manifest import load_manifest, SYSTEM_VERSION
     from install_release import validate_process_environment
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -52,7 +52,7 @@ def verification_plan(temporary_root):
 
 def load_environment(path, *, local_artifacts=False):
     state = json.loads(Path(path).read_text(encoding='utf-8'))
-    if (state.get('schemaVersion') != 1 or not isinstance(state.get('releaseVersion'), str) or state['releaseVersion'] not in RELEASE_PROFILES
+    if (state.get('schemaVersion') != 1 or state.get('releaseVersion') != SYSTEM_VERSION
             or Path(state.get('python', '')).resolve() != Path(sys.executable).resolve()):
         raise ValueError('Use the selected release installation and its invoking virtualenv.')
     manifest = Path(state['manifest'])

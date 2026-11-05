@@ -22,7 +22,7 @@ def test_generation_is_byte_deterministic_and_public_only(tmp_path):
         assert result.returncode == 0, result.stdout+result.stderr
     first = artifacts(tmp_path/'one')
     assert first == artifacts(tmp_path/'two')
-    assert json.loads(first['contracts/api/openapi.json'])['info']['version'] == '0.1.1'
+    assert json.loads(first['contracts/api/openapi.json'])['info']['version'] == '0.1.2'
     assert 'contracts/boundary/models.py' in first
     dto = first['apps/web/src/contracts/generated/dto.ts'].decode()
     assert 'export interface ContractMap' in dto

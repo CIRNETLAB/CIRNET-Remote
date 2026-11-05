@@ -18,7 +18,7 @@ def installer():
     return module
 
 
-def archive_bytes(name='package.json',*,symlink=False,metadata_changes=None,version='0.1.1'):
+def archive_bytes(name='package.json',*,symlink=False,metadata_changes=None,version='0.1.4'):
     output=io.BytesIO()
     with tarfile.open(fileobj=output,mode='w:gz') as archive:
         contents=json.dumps({'version':version}).encode()
@@ -28,7 +28,7 @@ def archive_bytes(name='package.json',*,symlink=False,metadata_changes=None,vers
         archive.addfile(member,None if symlink else io.BytesIO(contents))
         if name=='package.json' and not symlink:
             identity={'schema':1,'name':'cirnet-interface','version':version,
-                'kind':'source','contractsVersion':'0.1.1',
+                'kind':'source','contractsVersion':'0.1.2',
                 'source':{'repository':'https://github.com/example/interface.git','revision':'7'*40,'uncommittedMigration':False},
                 'sourceFingerprint':hashlib.sha256((hashlib.sha256(contents).hexdigest()+'  package.json\n').encode()).hexdigest()}
             identity.update(metadata_changes or {})
@@ -38,29 +38,36 @@ def archive_bytes(name='package.json',*,symlink=False,metadata_changes=None,vers
     return output.getvalue()
 
 
-@pytest.mark.parametrize('version',['0.1.2','0.1.3'])
+@pytest.mark.parametrize('version',['0.1.4'])
 def test_patch_product_is_independent_from_contracts_and_bound_to_selected_version(tmp_path,version):
     module=installer()
     contents=archive_bytes(version=version)
     module.extract_product(contents,tmp_path/'patch',expected_version=version)
     assert json.loads((tmp_path/'patch/package.json').read_text())['version']==version
-    for selected,body in [('0.1.1',contents),(version,archive_bytes()),('0.1.4',archive_bytes(version='0.1.4'))]:
+    for selected,body in [('0.1.3',contents),(version,archive_bytes(version='0.1.3')),('0.1.3',archive_bytes(version='0.1.3'))]:
         with pytest.raises(ValueError):module.extract_product(body,tmp_path/selected,expected_version=selected)
     with pytest.raises(ValueError):
-        module.extract_product(archive_bytes(version=version,metadata_changes={'contractsVersion':'0.1.2'}),tmp_path/'wrong-contracts',expected_version=version)
+        module.extract_product(archive_bytes(version=version,metadata_changes={'contractsVersion':'0.1.1'}),tmp_path/'wrong-contracts',expected_version=version)
 
 
-@pytest.mark.parametrize('version',['0.1.2','0.1.3'])
+@pytest.mark.parametrize('version',['0.1.1','0.1.2','0.1.3'])
+def test_previous_interface_products_are_rejected_before_extraction(tmp_path,version):
+    with pytest.raises(ValueError,match='reviewed Interface product version'):
+        installer().extract_product(archive_bytes(version=version),tmp_path/'previous')
+    assert not (tmp_path/'previous').exists()
+
+
+@pytest.mark.parametrize('version',['0.1.4'])
 def test_patch_product_rejects_identity_and_package_version_mismatch(tmp_path,version):
     with pytest.raises(ValueError):
         installer().extract_product(archive_bytes(version=version,metadata_changes={'version':'0.1.1'}),tmp_path/'wrong')
 
 
 @pytest.mark.parametrize('field',['URL','SHA256'])
-@pytest.mark.parametrize('version',['0.1.2','0.1.3'])
+@pytest.mark.parametrize('version',['0.1.4'])
 def test_selected_lock_rejects_stale_interface_variables_before_download(tmp_path,monkeypatch,field,version):
-    from tests.contracts.test_system_release import patch_release
-    module=installer();value=patch_release(version)
+    from tests.contracts.test_system_release import release
+    module=installer();value=release()
     path=tmp_path/'release.json';path.write_text(json.dumps(value))
     selected=value['repositories']['Interface']['artifacts']['source']
     monkeypatch.setenv('CIRNET_INTERFACE_ARTIFACT_URL',selected['url'])
@@ -71,10 +78,10 @@ def test_selected_lock_rejects_stale_interface_variables_before_download(tmp_pat
         module.main(['--manifest',str(path)])
 
 
-@pytest.mark.parametrize('version',['0.1.2','0.1.3'])
+@pytest.mark.parametrize('version',['0.1.4'])
 def test_selected_interface_requires_exact_source_revision_before_extraction(tmp_path,version):
     module=installer()
-    selected={'repository':'https://github.com/CIRNETLAB/CIRNET-Interface','sourceRevision':'8'*40}
+    selected={'repository':'https://github.com/cirnetlab/cirnet-interface','sourceRevision':'8'*40}
     source={'repository':selected['repository'],'revision':'7'*40,'uncommittedMigration':False}
     with pytest.raises(ValueError,match='provenance'):
         module.extract_product(archive_bytes(version=version,metadata_changes={'source':source}),tmp_path/'wrong',expected_version=version,expected_source=selected)
@@ -82,10 +89,10 @@ def test_selected_interface_requires_exact_source_revision_before_extraction(tmp
 
 
 @pytest.mark.parametrize('suffix',['','.git'])
-@pytest.mark.parametrize('version',['0.1.2','0.1.3'])
+@pytest.mark.parametrize('version',['0.1.4'])
 def test_selected_interface_preserves_known_manifest_repository_suffixes(tmp_path,suffix,version):
-    selected={'repository':'https://github.com/CIRNETLAB/CIRNET-Interface'+suffix,'sourceRevision':'7'*40}
-    source={'repository':'https://github.com/CIRNETLAB/CIRNET-Interface.git','revision':'7'*40,'uncommittedMigration':False}
+    selected={'repository':'https://github.com/cirnetlab/cirnet-interface'+suffix,'sourceRevision':'7'*40}
+    source={'repository':'https://github.com/cirnetlab/cirnet-interface.git','revision':'7'*40,'uncommittedMigration':False}
     installer().extract_product(archive_bytes(version=version,metadata_changes={'source':source}),tmp_path/'product',expected_version=version,expected_source=selected)
     assert (tmp_path/'product/package.json').is_file()
 
@@ -106,7 +113,7 @@ def test_interface_product_requires_root_manifest_and_released_product_identity(
         module.extract_product(archive_bytes('nested/package.json'),tmp_path/'nested-product')
 
 
-@pytest.mark.parametrize('repository',['cirnetlab/cirnet-interface','CIRNETLAB/CIRNET-Interface','TINIHI-Labs/net-Circuit-Interface'])
+@pytest.mark.parametrize('repository',['cirnetlab/cirnet-interface'])
 @pytest.mark.parametrize('suffix',['','.git'])
 def test_interface_product_accepts_canonical_repository_urls_from_native_builder(tmp_path,suffix,repository):
     source={'repository':'https://github.com/'+repository+suffix,
@@ -116,11 +123,11 @@ def test_interface_product_accepts_canonical_repository_urls_from_native_builder
 
 
 @pytest.mark.parametrize('repository',[
-    'http://github.com/TINIHI-Labs/CIRNET-Interface',
-    'https://github.com/TINIHI-Labs/net-Circuit-Interface?ref=master',
-    'https://github.com/TINIHI-Labs/net-Circuit-Interface#master',
-    'https://user@github.com/TINIHI-Labs/CIRNET-Interface',
-    'https://github.com/TINIHI-Labs/net-Circuit-Interface-other',
+    'http://github.com/cirnetlab/cirnet-interface',
+    'https://github.com/cirnetlab/cirnet-interface?ref=master',
+    'https://github.com/cirnetlab/cirnet-interface#master',
+    'https://user@github.com/cirnetlab/cirnet-interface',
+    'https://github.com/cirnetlab/cirnet-interface-other',
 ])
 def test_interface_product_rejects_aliases_of_unsuffixed_canonical_repository(tmp_path,repository):
     source={'repository':repository,'revision':'7'*40,'uncommittedMigration':False}

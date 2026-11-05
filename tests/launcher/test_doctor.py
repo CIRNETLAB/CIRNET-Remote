@@ -178,7 +178,7 @@ def test_cache_path_outside_dev_is_rejected_before_cached_python(tmp_path):
     dev.mkdir()
     outside = tmp_path / "untrusted.json"
     outside.write_text("not JSON and must never be opened", encoding="utf-8")
-    (dev / "launcher-state.json").write_text(
+    (dev / "launcher-state-0.1.4.json").write_text(
         json.dumps({"repo": str(REPO), "environmentFile": str(outside), "manifestHash": "0" * 64}),
         encoding="utf-8",
     )
@@ -215,7 +215,8 @@ def install_web_runtime(interface):
 
 def release_manifest(prefix="netcircuit"):
     """Select published legacy identities or explicit renamed wheel identities."""
-    manifest = json.loads((REPO / "integration/release-set.json").read_text(encoding="utf-8"))
+    from tests.contracts.test_system_release import release
+    manifest = release()
     names = {"Remote": "api", "Contracts": "contracts", "Simulator": "simulator", "Hardware": "hardware_service"}
     for component, package in names.items():
         product = manifest["repositories"][component]
@@ -260,11 +261,11 @@ def installed_cache(tmp_path, *, prefix="CIRNET"):
     lock = repository / "integration/release-set.json"
     for target in (snapshot, lock):
         target.write_text(json.dumps(manifest), encoding="utf-8")
-    interpreter = dev / ".venv/Scripts/python.exe"
+    interpreter = dev / ".venv-0.1.4/Scripts/python.exe"
     interpreter.parent.mkdir(parents=True)
     interpreter.write_bytes(b"not executable: probe is stubbed")
-    (dev / ".venv/Lib/site-packages").mkdir(parents=True)
-    (dev / ".venv/pyvenv.cfg").write_text("version = 3.14.6\n", encoding="utf-8")
+    (dev / ".venv-0.1.4/Lib/site-packages").mkdir(parents=True)
+    (dev / ".venv-0.1.4/pyvenv.cfg").write_text("version = 3.14.6\n", encoding="utf-8")
     context = {"version": 1, "owner": "git:" + str(repository), "roots": [str(repository)]}
     (session / f".{package_prefix}-artifact-session.json").write_text(
         json.dumps({"version": 2, "directory": str(session), "context": context}), encoding="utf-8"
@@ -304,7 +305,7 @@ def installed_cache(tmp_path, *, prefix="CIRNET"):
         "environment": environment, "processEnvironment": process, "artifacts": artifacts,
     }
     environment_file.write_text(json.dumps(state), encoding="utf-8")
-    (dev / "launcher-state.json").write_text(json.dumps({
+    (dev / "launcher-state-0.1.4.json").write_text(json.dumps({
         "repo": str(repository), "manifestHash": hashlib.sha256(lock.read_bytes()).hexdigest(),
         "environmentFile": str(environment_file),
     }), encoding="utf-8")
@@ -335,7 +336,7 @@ def test_cache_current_environment_wins_over_stale_legacy_values(tmp_path):
 
 def test_windows_cache_repository_path_case_does_not_invalidate_identity(tmp_path):
     repository, dev, state = installed_cache(tmp_path)
-    cache_path = dev / "launcher-state.json"
+    cache_path = dev / "launcher-state-0.1.4.json"
     cache = json.loads(cache_path.read_text(encoding="utf-8"))
     cache["repo"] = str(repository).upper()
     cache_path.write_text(json.dumps(cache), encoding="utf-8")
@@ -363,7 +364,7 @@ def test_cache_corruption_is_rejected_before_cached_code(tmp_path, corruption):
 & $module {
     $script:originalProbe = ${function:Invoke-CirnetDoctorProcess}
     function script:Invoke-CirnetDoctorProcess { param($FilePath, $Arguments, $TimeoutMilliseconds)
-        if ($FilePath -match '\\.venv\\') { throw 'Unvalidated cached interpreter was executed.' }
+        if ($FilePath -match '\\.venv-0\.1\.4\\') { throw 'Unvalidated cached interpreter was executed.' }
         & $originalProbe @PSBoundParameters
     }
 }
@@ -371,7 +372,7 @@ def test_cache_corruption_is_rejected_before_cached_code(tmp_path, corruption):
     value = report(dev, setup, repository)
     assert not value["Ready"]
     assert checks(value)["Pinned release cache"]["Status"] == "INCOMPATIBLE"
-    assert "move launcher-state.json aside" in checks(value)["Pinned release cache"]["Remediation"]
+    assert "move launcher-state-0.1.4.json aside" in checks(value)["Pinned release cache"]["Remediation"]
     assert "databases and captures" in checks(value)["Pinned release cache"]["Remediation"]
     assert checks(value)["Cached Python dependencies"]["Status"] == "NOT VERIFIED"
 
@@ -379,7 +380,7 @@ def test_cache_corruption_is_rejected_before_cached_code(tmp_path, corruption):
 @pytest.mark.parametrize("version", ["3.12.10", "3.13.12"])
 def test_incompatible_cached_python_has_data_preserving_repair_instructions(tmp_path, version):
     repository, dev, state = installed_cache(tmp_path)
-    (dev / ".venv/pyvenv.cfg").write_text(f"version = {version}\n", encoding="utf-8")
+    (dev / ".venv-0.1.4/pyvenv.cfg").write_text(f"version = {version}\n", encoding="utf-8")
     value = report(dev, GOOD_TOOLS, repository)
     by_name = checks(value)
     assert by_name["Launcher virtual environment"]["Status"] == "INCOMPATIBLE"
@@ -440,7 +441,7 @@ def cached_metadata_report(dev, manifest):
         "function script:Invoke-CirnetDoctorProcess { param($FilePath,$Arguments,$TimeoutMilliseconds) "
         "& $script:ActualProbe -FilePath $script:ProbePython -Arguments $Arguments -TimeoutMilliseconds $TimeoutMilliseconds }; "
         "$cache=[pscustomobject]@{ Status='INSTALLED'; Manifest=(Get-Content -LiteralPath $Manifest -Raw|ConvertFrom-Json) }; "
-        "Get-CirnetDoctorCachedPython ([pscustomobject]@{DevHome=$Dev}) $cache | ConvertTo-Json -Compress "
+        "Get-CirnetDoctorCachedPython ([pscustomobject]@{DevHome=$Dev; VirtualEnvironment=(Join-Path $Dev '.venv-0.1.4')}) $cache | ConvertTo-Json -Compress "
         f"}} {ps(dev)} {ps(manifest)} {ps(executable)}",
         timeout=30,
     )
@@ -452,11 +453,11 @@ def cached_metadata_report(dev, manifest):
 @pytest.mark.parametrize("prefix", ["cirnet", "netcircuit"])
 def test_real_metadata_probe_enforces_selected_identity_native_payload_and_record(tmp_path, missing, prefix):
     dev = tmp_path / "d"
-    site = dev / ".venv/Lib/site-packages"
+    site = dev / ".venv-0.1.4/Lib/site-packages"
     site.mkdir(parents=True)
     names = {
-        prefix + "-api": "0.1.1", prefix + "-contracts": "0.1.1", prefix + "-simulator": "0.1.1",
-        prefix + "-hardware-service": "0.1.1", prefix + "-artifact-paths": "1.0.0a1",
+        prefix + "-api": "0.1.2", prefix + "-contracts": "0.1.2", prefix + "-simulator": "0.1.2",
+        prefix + "-hardware-service": "0.1.2", prefix + "-artifact-paths": "1.0.0a1",
         "uvicorn": "0.54.0", "fastapi": "0.143.0", "grpcio": "1.84.0", "pip": "26.0",
     }
     for name, version in names.items():

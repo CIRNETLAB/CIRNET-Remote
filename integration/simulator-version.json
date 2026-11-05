@@ -2,11 +2,11 @@
   "status": "PINNED_ARTIFACT_INPUTS",
   "python": {
     "name": "cirnet-simulator",
-    "version": "0.1.1"
+    "version": "0.1.2"
   },
   "contracts": {
     "name": "cirnet-contracts",
-    "version": "0.1.1"
+    "version": "0.1.2"
   },
   "namespace": "cirnet_sim",
   "backends": {

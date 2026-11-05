@@ -15,14 +15,14 @@ from tempfile import mkdtemp
 
 from artifact_download import download_artifact
 from artifact_paths import artifact_directory
-from contracts_artifact import SUPPORTED_NPM_NAMES
+from contracts_artifact import NPM_NAME
 from environment import append_environment
 
 ROOT = Path(__file__).resolve().parents[1]
 PRODUCTS = {
-    'Contracts': ('requirements-build.lock', 'cirnet_contracts-0.1.1-py3-none-any.whl'),
-    'Simulator': ('requirements-verification.lock', 'cirnet_simulator-0.1.1-py3-none-any.whl'),
-    'Hardware': ('requirements-verification.lock', 'cirnet_hardware_service-0.1.1-py3-none-any.whl'),
+    'Contracts': ('requirements-build.lock', 'cirnet_contracts-0.1.2-py3-none-any.whl'),
+    'Simulator': ('requirements-verification.lock', 'cirnet_simulator-0.1.2-py3-none-any.whl'),
+    'Hardware': ('requirements-verification.lock', 'cirnet_hardware_service-0.1.2-py3-none-any.whl'),
 }
 
 
@@ -161,9 +161,9 @@ def main(argv=None):
         with tarfile.open(package, 'r:gz') as archive:
             metadata = json.load(archive.extractfile('package/package.json'))
         name = metadata.get('name')
-        if (name not in SUPPORTED_NPM_NAMES or metadata.get('version') != '0.1.1'
-                or package.name != name.removeprefix('@').replace('/', '-') + '-0.1.1.tgz'):
-            raise ValueError('The source SDK must be a supported Contracts 0.1.1 package.')
+        if (name != NPM_NAME or metadata.get('version') != '0.1.2'
+                or package.name != name.removeprefix('@').replace('/', '-') + '-0.1.2.tgz'):
+            raise ValueError('The source SDK must be a supported Contracts 0.1.2 package.')
         artifacts['npm'] = {'path': str(package), 'sha256': hashlib.sha256(package.read_bytes()).hexdigest()}
     manifest = workspace / 'artifacts.json'
     manifest.write_text(json.dumps(artifacts, indent=2) + '\n', encoding='utf-8')

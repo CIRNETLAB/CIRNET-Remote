@@ -40,202 +40,93 @@ def test_ci_selection_overrides_stale_same_version_variables(monkeypatch):
         select(invalid)
 
 
-def release(*, historical=False):
-    kinds = {'Remote': {'python': 'netcircuit_api-0.1.1-py3-none-any.whl', 'sdist': 'netcircuit_api-0.1.1.tar.gz', 'deployment': 'netcircuit-remote-0.1.1-deployment.tar.gz'},
-             'Contracts': {'python': 'netcircuit_contracts-0.1.1-py3-none-any.whl', 'sdist': 'netcircuit_contracts-0.1.1.tar.gz', 'npm': 'tinihi-labs-contracts-0.1.1.tgz', 'dev': 'netcircuit_artifact_paths-1.0.0a1-py3-none-any.whl', 'dev_npm': 'tinihi-labs-artifact-paths-1.0.0-m1.0.tgz'},
-             'Simulator': {'python': 'netcircuit_simulator-0.1.1-py3-none-any.whl', 'sdist': 'netcircuit_simulator-0.1.1.tar.gz'},
-             'Hardware': {'python': 'netcircuit_hardware_service-0.1.1-py3-none-any.whl', 'sdist': 'netcircuit_hardware_service-0.1.1.tar.gz'},
-             'Interface': {'source': 'netcircuit-interface-0.1.1-source.tar.gz', 'static': 'netcircuit-interface-0.1.1-static.tar.gz'},
-             'FPGA': {'source': 'netcircuit-fpga-scaffold-0.1.1.tar.gz'}}
+def release():
+    from scripts.system_release_manifest import FILENAMES, PRODUCT_VERSIONS, ROLLBACK_POLICY
     repositories = {}
     asset = 100
-    for component, entries in kinds.items():
-        repository = ('TINIHI-Labs/net-Circuit-' if historical else 'CIRNETLAB/CIRNET-') + component
+    for component, entries in FILENAMES.items():
+        slug = f'cirnetlab/cirnet-{component.lower()}'
+        version = PRODUCT_VERSIONS[component]
+        tag = 'v0.1.4' if component == 'Remote' else f'v{version}'
         artifacts = {}
         for kind, filename in entries.items():
             asset += 1
-            artifacts[kind] = {'filename': filename, 'url': f'https://api.github.com/repos/{repository}/releases/assets/{asset}', 'sha256': 'a' * 64}
-        repositories[component] = {'repository': 'https://github.com/' + repository, 'version': '0.1.1', 'sourceRevision': 'b' * 40, 'artifacts': artifacts}
-    old = {'Remote': '0.1.0', 'Contracts': '1.0.1', 'Interface': '0.1.0-m2.0', 'Simulator': '0.2.0', 'Hardware': '0.1.1', 'FPGA': '0.1.0'}
-    return {'schemaVersion': 1, 'releaseVersion': '0.1.1', 'repositories': repositories,
-            'compatibility': {'contractsVersion': '0.1.1', 'hardwareRpcVersion': '2.0', 'fpgaLogicalProtocolVersion': '1.0-scaffold', 'fpgaRegisterMapVersion': '1.0-reserved', 'sameOrigin': True, 'apiSchedulerProcesses': 1, 'hardwareRpcScope': 'local-only'},
-            'rollback': {'source': {'filename': 'netcircuit-system-rollback-pre-m6.tar.gz', 'url': f'https://api.github.com/repos/{"TINIHI-Labs/net-Circuit-Remote" if historical else "CIRNETLAB/CIRNET-Remote"}/releases/assets/999', 'sha256': 'c' * 64},
-                         'artifactSet': [{'component': name, 'version': version, 'sourceRevision': 'd' * 40, 'artifacts': {'archive': {'filename': f'{name}-{version}.tar.gz', 'sha256': 'e' * 64}}} for name, version in old.items()],
-                         'priorPublishedRelease': None, 'provenance': 'reviewed-pre-m6-local-set', 'matchingDatabaseBackupRequired': True, 'matchingCaptureBackupRequired': True, 'preserveQuarantine': True, 'automaticStartReplay': False}}
+            artifacts[kind] = {'filename': filename, 'url': f'https://api.github.com/repos/{slug}/releases/assets/{asset}', 'sha256': 'a' * 64}
+        repositories[component] = {
+            'repository': 'https://github.com/' + slug, 'version': version,
+            'releaseTag': tag, 'releaseTitle': slug.split('/')[1] + '-' + tag,
+            'sourceRevision': 'b' * 40, 'artifacts': artifacts,
+        }
+    return {'schemaVersion': 1, 'releaseVersion': '0.1.4', 'repositories': repositories,
+            'integration': {'repository': repositories['Remote']['repository'], 'version': '0.1.4', 'sourceRevision': 'f' * 40},
+            'compatibility': {'contractsVersion': '0.1.2', 'hardwareRpcVersion': '2.0', 'fpgaLogicalProtocolVersion': '1.0-scaffold', 'fpgaRegisterMapVersion': '1.0-reserved', 'sameOrigin': True, 'apiSchedulerProcesses': 1, 'hardwareRpcScope': 'local-only'},
+            'rollback': dict(ROLLBACK_POLICY)}
 
 
-def test_complete_system_release_retains_independent_tool_versions_and_old_rollback_set():
+def test_current_system_release_keeps_exact_product_and_independent_dev_versions():
     from scripts.system_release_manifest import validate_manifest
     value = release()
-    assert validate_manifest(value) == value
-    assert value['repositories']['Contracts']['artifacts']['dev']['filename'].startswith('netcircuit_artifact_paths-1.0.0a1-')
-    assert value['rollback']['artifactSet'][1]['version'] == '1.0.1'
-
-
-def test_historical_release_manifest_preserves_its_original_repository_provenance():
-    from scripts.system_release_manifest import validate_manifest
-    value = release(historical=True)
-    recorded = json.dumps(value, sort_keys=True)
     assert validate_manifest(value) is value
-    assert json.dumps(value, sort_keys=True) == recorded
+    assert value['repositories']['Contracts']['artifacts']['npm']['filename'] == 'cirnet-contracts-0.1.2.tgz'
+    assert value['repositories']['Contracts']['artifacts']['dev']['filename'] == 'cirnet_artifact_paths-1.0.0a1-py3-none-any.whl'
+    assert value['repositories']['Interface']['releaseTitle'] == 'cirnet-interface-v0.1.4'
+    assert value['repositories']['Remote']['releaseTitle'] == 'cirnet-remote-v0.1.4'
 
 
-@pytest.mark.parametrize('canonical_assets', [True, False])
-def test_lowercase_repository_names_accept_the_same_immutable_asset_routes(canonical_assets):
+@pytest.mark.parametrize('version', ['0.1.1', '0.1.2', '0.1.3'])
+def test_previous_system_manifests_are_not_accepted(version):
     from scripts.system_release_manifest import validate_manifest
-    value = patch_release('0.1.3')
-    for product in value['repositories'].values():
-        product['repository'] = product['repository'].lower()
-        if canonical_assets:
-            for artifact in product['artifacts'].values():
-                artifact['url'] = artifact['url'].lower()
-    value['integration']['repository'] = value['repositories']['Remote']['repository']
-    if canonical_assets:
-        value['rollback']['source']['url'] = value['rollback']['source']['url'].lower()
-    assert validate_manifest(value) is value
+    value = release()
+    value['releaseVersion'] = version
+    with pytest.raises(ValueError, match='only system release'):
+        validate_manifest(value)
 
 
-def test_repeated_asset_route_cannot_hide_behind_a_case_alias():
+def test_asset_route_cannot_identify_multiple_artifacts():
     from scripts.system_release_manifest import validate_manifest
     value = release()
     assets = value['repositories']['Remote']['artifacts']
-    assets['sdist']['url'] = assets['python']['url'].lower()
+    assets['sdist']['url'] = assets['python']['url']
     with pytest.raises(ValueError, match='cannot identify multiple artifacts'):
         validate_manifest(value)
 
 
-def patch_release(version='0.1.2'):
+@pytest.mark.parametrize('failure', ['missing-integration', 'wrong-integration-version', 'wrong-integration-revision', 'wrong-integration-owner', 'wrong-title', 'wrong-tag'])
+def test_system_requires_exact_integration_and_publish_identity(failure):
+    from scripts.system_release_manifest import validate_manifest
     value = release()
-    value['releaseVersion'] = version
-    value['integration'] = {'repository': value['repositories']['Remote']['repository'],
-                            'version': version, 'sourceRevision': 'f' * 40}
-    interface = value['repositories']['Interface']
-    interface['version'] = version
-    for artifact in interface['artifacts'].values():
-        artifact['filename'] = artifact['filename'].replace('0.1.1', version)
-        if version == '0.1.3':
-            artifact['filename'] = artifact['filename'].replace('netcircuit-interface-', 'cirnet-interface-')
-    return value
-
-
-@pytest.mark.parametrize('version', ['0.1.2', '0.1.3'])
-def test_system_patch_selects_interface_patch_without_relabeling_retained_packages(version):
-    from scripts.system_release_manifest import validate_manifest
-    value = patch_release(version)
-    before = release()
-    assert validate_manifest(value) is value
-    prefix = 'cirnet-interface-' if version == '0.1.3' else 'netcircuit-interface-'
-    assert {kind: artifact['filename'] for kind, artifact in value['repositories']['Interface']['artifacts'].items()} == {
-        kind: prefix + version + '-' + kind + '.tar.gz' for kind in ('source', 'static')}
-    for component in ('Remote', 'Contracts', 'Simulator', 'Hardware', 'FPGA'):
-        assert value['repositories'][component] == before['repositories'][component]
-    assert value['compatibility'] == before['compatibility']
-    assert value['rollback'] == before['rollback']
-
-
-@pytest.mark.parametrize('component', ['Remote', 'Contracts', 'Simulator', 'Hardware', 'FPGA'])
-@pytest.mark.parametrize('version', ['0.1.2', '0.1.3'])
-def test_system_patch_rejects_unapproved_package_bumps(component, version):
-    from scripts.system_release_manifest import validate_manifest
-    value = patch_release(version)
-    value['repositories'][component]['version'] = '0.1.2'
+    if failure == 'missing-integration':
+        value.pop('integration')
+    elif failure == 'wrong-integration-version':
+        value['integration']['version'] = '0.1.3'
+    elif failure == 'wrong-integration-revision':
+        value['integration']['sourceRevision'] = 'master'
+    elif failure == 'wrong-integration-owner':
+        value['integration']['repository'] = value['repositories']['Contracts']['repository']
+    elif failure == 'wrong-title':
+        value['repositories']['Remote']['releaseTitle'] = 'Remote'
+    else:
+        value['repositories']['Remote']['releaseTag'] = 'v0.1.2'
     with pytest.raises(ValueError):
         validate_manifest(value)
 
 
-@pytest.mark.parametrize('failure', ['old-interface', 'old-filename', 'unknown-system', 'missing-integration', 'wrong-integration-version', 'wrong-integration-revision', 'wrong-integration-owner'])
-@pytest.mark.parametrize('version', ['0.1.2', '0.1.3'])
-def test_system_patch_requires_exact_approved_selection_and_integration_source(failure, version):
-    from scripts.system_release_manifest import validate_manifest
-    value = patch_release(version)
-    if failure == 'old-interface': value['repositories']['Interface'] = release()['repositories']['Interface']
-    elif failure == 'old-filename': value['repositories']['Interface']['artifacts']['source']['filename'] = 'netcircuit-interface-0.1.1-source.tar.gz'
-    elif failure == 'unknown-system': value['releaseVersion'] = '0.1.4'
-    elif failure == 'missing-integration': value.pop('integration')
-    elif failure == 'wrong-integration-version': value['integration']['version'] = '0.1.1'
-    elif failure == 'wrong-integration-revision': value['integration']['sourceRevision'] = 'master'
-    elif failure == 'wrong-integration-owner': value['integration']['repository'] = value['repositories']['Contracts']['repository']
-    with pytest.raises(ValueError):
-        validate_manifest(value)
-
-
-@pytest.mark.parametrize('kind', ['source', 'static'])
-@pytest.mark.parametrize('prefix', ['netcircuit-interface-0.1.3', 'cirnet-interface-0.1.2'])
-def test_new_patch_requires_its_exact_canonical_interface_filenames(kind, prefix):
-    from scripts.system_release_manifest import validate_manifest
-    value = patch_release('0.1.3')
-    value['repositories']['Interface']['artifacts'][kind]['filename'] = prefix + '-' + kind + '.tar.gz'
-    with pytest.raises(ValueError):
-        validate_manifest(value)
-
-
-def test_new_system_patch_cannot_select_the_previous_interface_patch():
-    from scripts.system_release_manifest import validate_manifest
-    value = patch_release('0.1.3')
-    value['repositories']['Interface'] = patch_release()['repositories']['Interface']
-    with pytest.raises(ValueError):
-        validate_manifest(value)
-
-
-def test_original_system_lock_cannot_silently_select_patch_interface():
-    from scripts.system_release_manifest import validate_manifest
-    value = patch_release()
-    value['releaseVersion'] = '0.1.1'
-    with pytest.raises(ValueError):
-        validate_manifest(value)
-
-
-@pytest.mark.parametrize('version', ['0.1.2', '0.1.3'])
-@pytest.mark.parametrize('name', ['cirnet-interface', 'netcircuit-interface'])
-def test_static_patch_keeps_contracts_version_and_matches_selected_product(tmp_path, version, name):
-    from scripts.install_release import _extract_static
-    value = patch_release(version)
-    identity = {'name': name, 'kind': 'static', 'version': version, 'contractsVersion': '0.1.1',
-                'sourceFingerprint': 'f' * 64, 'source': {'repository': value['repositories']['Interface']['repository'],
-                'revision': value['repositories']['Interface']['sourceRevision'], 'uncommittedMigration': False}}
-    path = tmp_path / 'static.tar.gz'
-    pages = [(name, b'<html>real release page</html>') for name in ('index.html', 'oscilloscope-preview.html', 'function-generator-preview.html')]
-    def write(): path.write_bytes(archive_bytes([*pages, ('interface-artifact.json', json.dumps(identity).encode())]))
-    write()
-    assert _extract_static(path, tmp_path / 'product', value, identity) == tmp_path / 'product'
-    for field in ('name', 'version', 'contractsVersion'):
-        before = identity[field]
-        identity[field] = {'name': 'unknown-interface', 'version': '0.1.1', 'contractsVersion': '0.1.2'}[field]
-        write()
-        with pytest.raises(ValueError):
-            _extract_static(path, tmp_path / ('wrong-' + field), value, identity)
-        identity[field] = before
-
-
-@pytest.mark.parametrize('state_version,manifest_version', [('0.1.2', '0.1.2'), ('0.1.1', '0.1.2'), ('0.1.2', '0.1.1'),
-                                                         ('0.1.3', '0.1.3'), ('0.1.2', '0.1.3'), ('0.1.3', '0.1.2')])
+@pytest.mark.parametrize('state_version,manifest_version', [('0.1.4', '0.1.4'), ('0.1.3', '0.1.4'), ('0.1.4', '0.1.3')])
 def test_rollback_state_is_bound_to_exact_system_release_version(tmp_path, state_version, manifest_version):
     from scripts.check_release_rollback import load_environment
     state, path = saved_environment(tmp_path)
     state['releaseVersion'] = state_version
     manifest = Path(state['manifest'])
-    manifest.write_text(json.dumps(release() if manifest_version == '0.1.1' else patch_release(manifest_version)), encoding='utf-8')
+    value = release()
+    value['releaseVersion'] = manifest_version
+    manifest.write_text(json.dumps(value), encoding='utf-8')
     state['manifestSha256'] = hashlib.sha256(manifest.read_bytes()).hexdigest()
     path.write_text(json.dumps(state), encoding='utf-8')
     if state_version == manifest_version:
         assert load_environment(path)['releaseVersion'] == state_version
     else:
-        with pytest.raises(ValueError): load_environment(path)
-
-
-@pytest.mark.parametrize('location', ['repository', 'asset', 'rollback'])
-def test_release_cannot_mix_current_and_historical_repository_names(location):
-    from scripts.system_release_manifest import validate_manifest
-    value = release()
-    old = release(historical=True)
-    if location == 'repository':
-        value['repositories']['Contracts'] = old['repositories']['Contracts']
-    elif location == 'asset':
-        value['repositories']['Contracts']['artifacts']['npm'] = old['repositories']['Contracts']['artifacts']['npm']
-    else:
-        value['rollback']['source'] = old['rollback']['source']
-    with pytest.raises(ValueError):
-        validate_manifest(value)
+        with pytest.raises(ValueError):
+            load_environment(path)
 
 
 @pytest.mark.parametrize('failure', ['missing-owner', 'wrong-version', 'missing-artifact', 'wrong-revision', 'legacy-namespace', 'latest-url', 'tag-url', 'wrong-asset-owner', 'credential-url', 'query-url', 'missing-digest', 'path-filename', 'wrong-filename', 'unsafe-compatibility', 'unsafe-rollback', 'missing-rollback-owner'])
@@ -248,17 +139,17 @@ def test_invalid_system_set_cannot_reach_bootstrap(tmp_path, monkeypatch, failur
     elif failure == 'missing-artifact': del value['repositories']['Interface']['artifacts']['static']
     elif failure == 'wrong-revision': value['repositories']['Simulator']['sourceRevision'] = 'master'
     elif failure == 'legacy-namespace': value['repositories']['Remote']['repository'] = 'https://github.com/net-Circuit-Remote/net-Circuit-Remote'
-    elif failure == 'latest-url': artifact['url'] = 'https://github.com/TINIHI-Labs/net-Circuit-Contracts/releases/latest/download/example.whl'
-    elif failure == 'tag-url': artifact['url'] = 'https://github.com/TINIHI-Labs/net-Circuit-Contracts/releases/download/v0.1.1/' + artifact['filename']
-    elif failure == 'wrong-asset-owner': artifact['url'] = 'https://api.github.com/repos/TINIHI-Labs/net-Circuit-Hardware/releases/assets/100'
-    elif failure == 'credential-url': artifact['url'] = 'https://secret@api.github.com/repos/TINIHI-Labs/net-Circuit-Contracts/releases/assets/100'
+    elif failure == 'latest-url': artifact['url'] = 'https://github.com/cirnetlab/cirnet-contracts/releases/latest/download/example.whl'
+    elif failure == 'tag-url': artifact['url'] = 'https://github.com/cirnetlab/cirnet-contracts/releases/download/v0.1.1/' + artifact['filename']
+    elif failure == 'wrong-asset-owner': artifact['url'] = 'https://api.github.com/repos/cirnetlab/cirnet-hardware/releases/assets/100'
+    elif failure == 'credential-url': artifact['url'] = 'https://secret@api.github.com/repos/cirnetlab/cirnet-contracts/releases/assets/100'
     elif failure == 'query-url': artifact['url'] += '?token=secret'
     elif failure == 'missing-digest': artifact.pop('sha256')
     elif failure == 'path-filename': artifact['filename'] = '../' + artifact['filename']
     elif failure == 'wrong-filename': artifact['filename'] = 'netcircuit_contracts-1.0.1-py3-none-any.whl'
     elif failure == 'unsafe-compatibility': value['compatibility']['apiSchedulerProcesses'] = 2
     elif failure == 'unsafe-rollback': value['rollback']['automaticStartReplay'] = True
-    elif failure == 'missing-rollback-owner': value['rollback']['artifactSet'].pop()
+    elif failure == 'missing-rollback-owner': value['rollback'].pop('matchingCaptureBackupRequired')
     path = tmp_path / 'release.json'; path.write_text(json.dumps(value), encoding='utf-8')
     monkeypatch.setattr(install_release, '_bootstrap', lambda *args, **kwargs: pytest.fail('invalid set reached bootstrap'))
     with pytest.raises(ValueError):
@@ -290,52 +181,34 @@ def test_release_archives_reject_escape_windows_aliases_and_colliding_targets(en
 
 def test_package_archives_check_real_metadata_instead_of_renamed_filenames(tmp_path):
     from scripts.install_release import verify_package_archive
-    sdist = tmp_path / 'netcircuit_simulator-0.1.1.tar.gz'
-    sdist.write_bytes(archive_bytes([('netcircuit_simulator-0.1.1/PKG-INFO', b'Name: netcircuit-simulator\nVersion: 0.2.0\n')]))
+    sdist = tmp_path / 'cirnet_simulator-0.1.2.tar.gz'
+    sdist.write_bytes(archive_bytes([('cirnet_simulator-0.1.2/PKG-INFO', b'Name: cirnet-simulator\nVersion: 0.2.0\n')]))
     with pytest.raises(ValueError, match='identity'):
-        verify_package_archive(sdist, 'netcircuit-simulator', '0.1.1')
-    npm = tmp_path / 'tinihi-labs-contracts-0.1.1.tgz'
-    npm.write_bytes(archive_bytes([('package/package.json', b'{"name":"@tinihi-labs/contracts","version":"0.1.1"}')]))
-    assert verify_package_archive(npm, '@tinihi-labs/contracts', '0.1.1', npm=True) == npm
-
-
-def test_rollback_bundle_checks_original_payload_bytes_and_never_relabels_versions(tmp_path):
-    from scripts.install_release import verify_rollback_bundle
-    value = release(); entries = []
-    for item in value['rollback']['artifactSet']:
-        for selected in item['artifacts'].values():
-            payload = ('original-' + item['version']).encode()
-            selected['sha256'] = hashlib.sha256(payload).hexdigest()
-            entries.append((item['component'] + '/' + selected['filename'], payload))
-    path = tmp_path / value['rollback']['source']['filename']
-    path.write_bytes(archive_bytes(entries))
-    assert verify_rollback_bundle(path, value) == 6
-    entries[0] = (entries[0][0], b'relabeled')
-    path.write_bytes(archive_bytes(entries))
-    with pytest.raises(ValueError, match='inventory'):
-        verify_rollback_bundle(path, value)
+        verify_package_archive(sdist, 'cirnet-simulator', '0.1.2')
+    npm = tmp_path / 'cirnet-contracts-0.1.2.tgz'
+    npm.write_bytes(archive_bytes([('package/package.json', b'{"name":"@cirnet/contracts","version":"0.1.2"}')]))
+    assert verify_package_archive(npm, '@cirnet/contracts', '0.1.2', npm=True) == npm
 
 
 def test_api_wheel_requires_actual_version_and_keeps_hardware_out_of_process(tmp_path):
     from scripts.install_release import verify_api_wheel
-    path = tmp_path / 'netcircuit_api-0.1.1-py3-none-any.whl'
-    for version, extra in [('0.2.0', ''), ('0.1.1', 'Requires-Dist: netcircuit-hardware-service==0.1.1\n'), ('0.1.1', '')]:
+    path = tmp_path / 'cirnet_api-0.1.2-py3-none-any.whl'
+    for version, extra in [('0.2.0', ''), ('0.1.2', 'Requires-Dist: cirnet-hardware-service==0.1.2\n'), ('0.1.2', '')]:
         with ZipFile(path, 'w') as archive:
             archive.writestr('app/__init__.py', '')
-            archive.writestr('netcircuit_api-0.1.1.dist-info/METADATA', f'Name: netcircuit-api\nVersion: {version}\nRequires-Dist: netcircuit-contracts==0.1.1\nRequires-Dist: netcircuit-simulator==0.1.1\n' + extra)
+            archive.writestr('cirnet_api-0.1.2.dist-info/METADATA', f'Name: cirnet-api\nVersion: {version}\nRequires-Dist: cirnet-contracts==0.1.2\nRequires-Dist: cirnet-simulator==0.1.2\n' + extra)
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
-        if version != '0.1.1' or extra:
+        if version != '0.1.2' or extra:
             with pytest.raises(ValueError): verify_api_wheel(path, digest)
         else:
             assert verify_api_wheel(path, digest) == path
 
 
-@pytest.mark.parametrize('historical_source', [False, True])
-def test_static_product_requires_exact_committed_source_identity(tmp_path, historical_source):
+def test_static_product_requires_exact_committed_source_identity(tmp_path):
     from scripts.install_release import _extract_static
     value = release()
-    identity = {'name': 'netcircuit-interface', 'kind': 'static', 'version': '0.1.1', 'contractsVersion': '0.1.1', 'sourceFingerprint': 'f' * 64,
-                'source': {'repository': release(historical=historical_source)['repositories']['Interface']['repository'] + '.git', 'revision': 'a' * 40, 'uncommittedMigration': False}}
+    identity = {'name': 'cirnet-interface', 'kind': 'static', 'version': '0.1.4', 'contractsVersion': '0.1.2', 'sourceFingerprint': 'f' * 64,
+                'source': {'repository': value['repositories']['Interface']['repository'] + '.git', 'revision': 'a' * 40, 'uncommittedMigration': False}}
     path = tmp_path / 'static.tar.gz'
     pages = [(name, b'<html>real release page</html>') for name in ('index.html', 'oscilloscope-preview.html', 'function-generator-preview.html')]
     path.write_bytes(archive_bytes([*pages, ('interface-artifact.json', json.dumps(identity).encode())]))
@@ -367,19 +240,19 @@ def test_api_selected_archive_probe_detects_stale_same_version_bytes_and_wrong_d
     python = virtualenv / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
     location = subprocess.run([str(python), '-I', '-c', "import sysconfig; print(sysconfig.get_path('purelib'))"], check=True, capture_output=True, text=True)
     site = Path(location.stdout.strip())
-    wheel = tmp_path / 'netcircuit_api-0.1.1-py3-none-any.whl'
-    payload = {'app/__init__.py': b"IDENTITY='selected-release'\n", 'netcircuit_api-0.1.1.dist-info/METADATA': b'Name: netcircuit-api\nVersion: 0.1.1\n'}
+    wheel = tmp_path / 'cirnet_api-0.1.2-py3-none-any.whl'
+    payload = {'app/__init__.py': b"IDENTITY='selected-release'\n", 'cirnet_api-0.1.2.dist-info/METADATA': b'Name: cirnet-api\nVersion: 0.1.2\n'}
     with ZipFile(wheel, 'w') as archive:
         for name, contents in payload.items(): archive.writestr(name, contents)
     digest = hashlib.sha256(wheel.read_bytes()).hexdigest()
     for name, contents in payload.items():
         destination = site / name; destination.parent.mkdir(parents=True, exist_ok=True); destination.write_bytes(contents)
-    direct = site / 'netcircuit_api-0.1.1.dist-info/direct_url.json'
+    direct = site / 'cirnet_api-0.1.2.dist-info/direct_url.json'
     direct.write_text(json.dumps({'url': wheel.as_uri(), 'archive_info': {'hashes': {'sha256': digest}}}), encoding='utf-8')
     command = [str(python), '-B', '-I', '-c', API_INSTALL_PROBE, str(wheel), digest]
     result = subprocess.run(command, capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
-    assert json.loads(result.stdout)['version'] == '0.1.1'
+    assert json.loads(result.stdout)['version'] == '0.1.2'
     (site / 'app/__init__.py').write_bytes(b"IDENTITY='stale-same-version-release'\n")
     result = subprocess.run(command, capture_output=True, text=True)
     assert result.returncode != 0 and 'bytes differ' in result.stderr
@@ -397,7 +270,7 @@ def test_rollback_gate_cannot_count_a_skipped_database_test_as_pass(tmp_path, mo
                'npm_config_cache': str(tmp_path / 'npm-cache'), 'PYTHONDONTWRITEBYTECODE': '1'}
     for key in process:
         monkeypatch.setenv(key, 'inherited-output-must-be-replaced')
-    monkeypatch.setattr(check_release_rollback, 'load_environment', lambda path: {'releaseVersion': '0.1.2', 'environment': {}, 'processEnvironment': process})
+    monkeypatch.setattr(check_release_rollback, 'load_environment', lambda path: {'releaseVersion': '0.1.4', 'environment': {}, 'processEnvironment': process})
     monkeypatch.setattr(artifact_paths, 'artifact_directory', lambda child: tmp_path)
     def skipped(command, **kwargs):
         child_environment = {key.casefold(): value for key, value in kwargs['env'].items()}
@@ -409,7 +282,7 @@ def test_rollback_gate_cannot_count_a_skipped_database_test_as_pass(tmp_path, mo
     monkeypatch.setattr(check_release_rollback.subprocess, 'run', skipped)
     report, path = check_release_rollback.run(tmp_path / 'unused-environment.json')
     assert report['gateStatus'] == 'FAIL'
-    assert report['releaseVersion'] == '0.1.2'
+    assert report['releaseVersion'] == '0.1.4'
     assert [gate['status'] for gate in report['registeredGates']] == ['FAIL', 'NOT_RUN', 'NOT_RUN']
     assert report['registeredGates'][0]['skippedTests'] == 1
     assert report['fullPriorArtifactRollbackRehearsal'] == 'NOT_RUN'
@@ -431,9 +304,9 @@ def test_selected_contracts_manifest_hands_all_five_artifacts_to_interface(tmp_p
 def test_generated_contracts_command_passes_the_real_selector_parser_before_pip(tmp_path, monkeypatch):
     from importlib.metadata import PackageNotFoundError
     from scripts import install_release, install_contracts
-    path = tmp_path / 'netcircuit_contracts-0.1.1-py3-none-any.whl'
+    path = tmp_path / 'cirnet_contracts-0.1.2-py3-none-any.whl'
     with ZipFile(path, 'w') as archive:
-        archive.writestr('netcircuit_contracts-0.1.1.dist-info/METADATA', 'Name: netcircuit-contracts\nVersion: 0.1.1\n')
+        archive.writestr('cirnet_contracts-0.1.2.dist-info/METADATA', 'Name: cirnet-contracts\nVersion: 0.1.2\n')
     value = release()
     value['repositories']['Contracts']['artifacts']['python']['sha256'] = hashlib.sha256(path.read_bytes()).hexdigest()
     command = install_release._component_install_command('Contracts', 'install_contracts.py', value, {'Contracts': {'python': path}})
@@ -472,7 +345,7 @@ def saved_environment(tmp_path):
     environment = {name: str(tmp_path / name) for name in ('CIRNET_CONTRACTS_ARTIFACT_MANIFEST', 'CIRNET_SIMULATOR_ARTIFACT_MANIFEST', 'CIRNET_HARDWARE_ARTIFACT_MANIFEST',
                    'CIRNET_FPGA_ARTIFACT_MANIFEST', 'CIRNET_INTERFACE_ROOT', 'CIRNET_FPGA_ROOT')}
     environment.update(CIRNET_ARTIFACTS_SESSION=str(session), CIRNET_ARTIFACTS_CONTEXT=json.dumps(context))
-    state = {'schemaVersion': 1, 'releaseVersion': '0.1.1', 'python': sys.executable, 'manifest': str(manifest), 'manifestSha256': hashlib.sha256(manifest.read_bytes()).hexdigest(),
+    state = {'schemaVersion': 1, 'releaseVersion': '0.1.4', 'python': sys.executable, 'manifest': str(manifest), 'manifestSha256': hashlib.sha256(manifest.read_bytes()).hexdigest(),
              'environment': environment, 'processEnvironment': {'TMP': str(temporary), 'TEMP': str(temporary), 'TMPDIR': str(temporary), 'PIP_CACHE_DIR': str(pip_cache),
                                                                 'npm_config_cache': str(npm_cache), 'PYTHONDONTWRITEBYTECODE': '1'}}
     path = tmp_path / 'environment.json'; path.write_text(json.dumps(state), encoding='utf-8')

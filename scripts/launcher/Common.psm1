@@ -53,10 +53,20 @@ function Get-CirnetRuntimeConfiguration {
     [pscustomobject]@{
         RepositoryRoot = $root
         DevHome = $dev
+        VirtualEnvironment = Join-Path $dev '.venv-0.1.4'
+        CachePath = Join-Path $dev 'launcher-state-0.1.4.json'
         LockPath = Join-Path $dev 'launcher.lock'
         SignalName = 'Local\CIRNET-Stop-' + $hash
         MaintenanceName = 'Local\CIRNET-Maintenance-' + $hash
     }
+}
+
+function Get-CirnetReleaseManifest([string]$RepositoryRoot) {
+    if (-not $env:CIRNET_RELEASE_MANIFEST) { return Join-Path $RepositoryRoot 'integration\release-set.json' }
+    if (-not [IO.Path]::IsPathRooted($env:CIRNET_RELEASE_MANIFEST)) {
+        throw 'Set CIRNET_RELEASE_MANIFEST to an absolute path.'
+    }
+    return [IO.Path]::GetFullPath($env:CIRNET_RELEASE_MANIFEST)
 }
 
 function Get-CirnetLauncherActivity {
@@ -127,4 +137,4 @@ function Exit-CirnetMaintenance {
     finally { $Mutex.Dispose() }
 }
 
-Export-ModuleMember -Function ConvertTo-CirnetEnvironment, Import-CirnetEnvironment, Get-CirnetRuntimeConfiguration, Get-CirnetLauncherActivity, Get-CirnetPortStatus, Enter-CirnetMaintenance, Exit-CirnetMaintenance
+Export-ModuleMember -Function ConvertTo-CirnetEnvironment, Import-CirnetEnvironment, Get-CirnetRuntimeConfiguration, Get-CirnetReleaseManifest, Get-CirnetLauncherActivity, Get-CirnetPortStatus, Enter-CirnetMaintenance, Exit-CirnetMaintenance

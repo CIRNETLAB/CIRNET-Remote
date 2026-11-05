@@ -7,7 +7,7 @@ name = "cirnet-remote-dev"
 version = "0.1.2"
 description = "Local integration dependency entrypoint for CIRNET Remote"
 requires-python = ">=3.11"
-dependencies = ["cirnet-contracts==0.1.1", "cirnet-simulator==0.1.1", "cirnet-hardware-service==0.1.1"]
+dependencies = ["cirnet-contracts==0.1.2", "cirnet-simulator==0.1.2", "cirnet-hardware-service==0.1.2"]
 
 [tool.setuptools]
 packages = []

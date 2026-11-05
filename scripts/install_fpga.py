@@ -44,7 +44,7 @@ def main(argv=None):
         if args.url is not None:
             if urlparse(args.url).scheme != 'https' or not args.sha256: parser.error('Select an explicit HTTPS URL and SHA256.')
             name = args.filename or Path(urlparse(args.url).path).name
-            if name not in ('cirnet-fpga-scaffold-0.1.1.tar.gz', 'netcircuit-fpga-scaffold-0.1.1.tar.gz'): parser.error('Select the exact versioned FPGA source filename.')
+            if name not in ('cirnet-fpga-scaffold-0.1.2.tar.gz',): parser.error('Select the exact versioned FPGA source filename.')
             archive = fpga_artifact.artifact_directory('fpga-download') / name
             archive.write_bytes(download_artifact(args.url, args.sha256)); digest = args.sha256
         elif args.archive is not None:

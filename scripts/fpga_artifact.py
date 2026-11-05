@@ -25,13 +25,12 @@ MAX_MEMBERS = 10_000
 MAX_EXPANDED_BYTES = 128 * 1024 * 1024
 MAX_ARCHIVE_BYTES = 128 * 1024 * 1024
 IDENTITY = 'fpga-artifact.json'
-NAMES = ('cirnet-fpga-scaffold', 'netcircuit-fpga-scaffold')
-PINS = {'schemaVersion': 1, 'name': 'cirnet-fpga-scaffold', 'version': '0.1.1',
-    'kind': 'source', 'contractsVersion': '0.1.1', 'logicalProtocolVersion': '1.0-scaffold',
+NAMES = ('cirnet-fpga-scaffold',)
+PINS = {'schemaVersion': 1, 'name': 'cirnet-fpga-scaffold', 'version': '0.1.2',
+    'kind': 'source', 'contractsVersion': '0.1.2', 'logicalProtocolVersion': '1.0-scaffold',
     'registerMapVersion': '1.0-reserved', 'physicalAvailable': False}
 ORIGINAL_REPOSITORIES = (
     'https://github.com/cirnetlab/cirnet-remote.git',
-    'https://github.com/net-Circuit-Remote/net-Circuit-Remote.git',
 )
 ORIGINAL_REVISION = 'f43f92c7730d40040e717bf1bacd3a3773e2a131'
 
@@ -78,7 +77,7 @@ def _identity(identity, contents):
     if (not isinstance(identity, dict) or identity.get('name') not in NAMES
             or any(type(identity.get(key)) is not type(value) or identity[key] != value
                    for key, value in PINS.items() if key != 'name')):
-        raise ValueError('FPGA source identity must match source 0.1.1 and Contracts 0.1.1/logical 1.0-scaffold pins.')
+        raise ValueError('FPGA source identity must match source 0.1.2 and Contracts 0.1.2/logical 1.0-scaffold pins.')
     source = identity.get('source')
     if (not isinstance(source, dict) or not isinstance(source.get('repository'), str)
             or source['repository'].removesuffix('.git') not in repository_urls('FPGA')

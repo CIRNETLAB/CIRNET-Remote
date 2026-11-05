@@ -72,7 +72,7 @@ def main(argv=None):
     manifest.write_text(json.dumps({'schemaVersion': 1, 'python': {'path': str(wheel), 'sha256': digest}}), encoding='utf-8')
     if os.environ.get('GITHUB_ENV'):
         append_environment({'CIRNET_SIMULATOR_ARTIFACT_MANIFEST': str(manifest)}, os.environ['GITHUB_ENV'])
-    print(f'Installed cirnet-simulator==0.1.1 from selected SHA256 {digest}; manifest: {manifest}')
+    print(f'Installed cirnet-simulator==0.1.2 from selected SHA256 {digest}; manifest: {manifest}')
     return 0
 
 

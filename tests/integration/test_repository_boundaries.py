@@ -81,13 +81,13 @@ def test_six_product_owners_are_explicit_and_installed_packages_do_not_cross_bou
     from scripts.fpga_artifact import source_product
     fpga = source_product()
     assert fpga['identity']['name'] in ('cirnet-fpga-scaffold', 'netcircuit-fpga-scaffold')
-    assert fpga['identity']['version'] == '0.1.1'
+    assert fpga['identity']['version'] == '0.1.2'
     remote = tomllib.loads((ROOT / 'pyproject.toml').read_text(encoding='utf-8'))['project']
     api = tomllib.loads((ROOT / 'services/api/pyproject.toml').read_text(encoding='utf-8'))['project']
     assert remote['name'] == 'cirnet-remote-dev' and remote['version'] == '0.1.2'
-    assert api['name'] == 'cirnet-api' and api['version'] == '0.1.1'
-    assert 'cirnet-contracts==0.1.1' in api['dependencies']
-    assert 'cirnet-simulator==0.1.1' in api['dependencies']
+    assert api['name'] == 'cirnet-api' and api['version'] == '0.1.2'
+    assert 'cirnet-contracts==0.1.2' in api['dependencies']
+    assert 'cirnet-simulator==0.1.2' in api['dependencies']
     assert not any(value.startswith('cirnet-hardware') for value in api['dependencies'])
 
 

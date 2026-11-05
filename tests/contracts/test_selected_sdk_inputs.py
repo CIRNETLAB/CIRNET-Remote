@@ -10,7 +10,7 @@ import pytest
 def archive(path, value, name):
     with tarfile.open(path, 'w:gz') as product:
         for name, content in {
-            'package/package.json': json.dumps({'name': name, 'version': '0.1.1'}).encode(),
+            'package/package.json': json.dumps({'name': name, 'version': '0.1.2'}).encode(),
             'package/dist/data/sample.json': json.dumps(value).encode(),
         }.items():
             member = tarfile.TarInfo(name)
@@ -19,25 +19,22 @@ def archive(path, value, name):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-@pytest.fixture(params=[('@tinihi-labs/contracts', '@tinihi-labs/contracts'),
-                        ('@cirnet/contracts', '@tinihi-labs/contracts'),
-                        ('@cirnet/contracts', '@cirnet/contracts')],
-                ids=['published', 'renamed-import', 'canonical-package'])
-def sdk_inputs(tmp_path, monkeypatch, request):
+@pytest.fixture
+def sdk_inputs(tmp_path, monkeypatch):
     from tests.support import release_inputs
     from scripts import artifact_paths
     product = tmp_path / 'interface'
     (product / 'integration').mkdir(parents=True)
     (product / '.artifacts').mkdir()
-    dependency, packed_name = request.param
+    dependency = packed_name = '@cirnet/contracts'
     package = product / 'node_modules' / dependency
     (package / 'dist/data').mkdir(parents=True)
-    (package / 'package.json').write_text(json.dumps({'name': packed_name, 'version': '0.1.1'}))
+    (package / 'package.json').write_text(json.dumps({'name': packed_name, 'version': '0.1.2'}))
     (package / 'dist/data/sample.json').write_text(json.dumps({'prefix': 'legacy'}))
     legacy = product / '.artifacts/legacy.tgz'
     digest = archive(legacy, {'prefix': 'legacy'}, packed_name)
     lock = product / 'integration/contracts-artifacts.json'
-    lock.write_text(json.dumps({'contractsVersion': '0.1.1', 'npm': {'name': packed_name, 'filename': legacy.name, 'sha256': digest}}))
+    lock.write_text(json.dumps({'contractsVersion': '0.1.2', 'npm': {'name': packed_name, 'filename': legacy.name, 'sha256': digest}}))
     (product / 'package.json').write_text(json.dumps({'dependencies': {dependency: 'file:.artifacts/' + legacy.name}}))
     current = tmp_path / 'current.tgz'
     digest = archive(current, {'prefix': 'current'}, '@cirnet/contracts')

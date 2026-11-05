@@ -128,9 +128,9 @@ for path in sys.path:
 for name in ('contracts','app','cirnet_sim','hardware_service'):
     module=importlib.import_module(name)
     assert module.__file__ and not any(Path(module.__file__).resolve().is_relative_to(root) for root in checkout_roots),name
-assert version('cirnet-simulator')=='0.1.1'
-assert version('cirnet-contracts')=='0.1.1'
-assert version('cirnet-hardware-service')=='0.1.1'
+assert version('cirnet-simulator')=='0.1.2'
+assert version('cirnet-contracts')=='0.1.2'
+assert version('cirnet-hardware-service')=='0.1.2'
 
 from contracts.registry import check_manifest,validate_contract
 from contracts.boundary.models import CircuitGraph,SimulationRequest,AnySupportedCircuitGraph
@@ -242,7 +242,7 @@ if __name__=='__main__':
         os.environ['CIRNET_SIMULATION_BACKEND']='unknown-after-start'
         second=pool.submit(execute,plan).result(timeout=30)
     assert first==second,'installed worker capture or provenance was nondeterministic'
-    assert first['method']=='spawn' and first['version']=='0.1.1'
+    assert first['method']=='spawn' and first['version']=='0.1.2'
     assert Path(first['origin']).resolve().is_relative_to(Path(sys.prefix).resolve())
     assert first['prefix']==sys.prefix
     assert first['capture']=={'available':True,'state':'COMPLETE','duration_ns':20,'samples':[{'signal':'D.OUT','time_ns':0,'value':1}]}
@@ -270,9 +270,9 @@ if __name__=='__main__':
     from contracts.capture_codec import decode_digital
     from contracts.generated import rpc_v2_pb2 as pb
     from contracts.validation import validate
-    assert version('cirnet-hardware-service')=='0.1.1'
-    assert version('cirnet-contracts')=='0.1.1'
-    assert version('cirnet-simulator')=='0.1.1'
+    assert version('cirnet-hardware-service')=='0.1.2'
+    assert version('cirnet-contracts')=='0.1.2'
+    assert version('cirnet-simulator')=='0.1.2'
     assert Path(hardware_service.__file__).resolve().is_relative_to(Path(sys.prefix).resolve())
     for address in ('0.0.0.0:50051','[::]:50051','192.0.2.1:50051'):
         try:serve(address)
@@ -330,7 +330,7 @@ if __name__=='__main__':
     for name,module in tuple(sys.modules.items()):
         if name=='hardware_service' or name.startswith('hardware_service.'):
             assert Path(module.__file__).resolve().is_relative_to(Path(sys.prefix).resolve()),name
-    print(json.dumps({'hardware':'0.1.1','rpc':'2.0','loopback':True,'worker_pids':[worker.pid for worker in workers],
+    print(json.dumps({'hardware':'0.1.2','rpc':'2.0','loopback':True,'worker_pids':[worker.pid for worker in workers],
         'ncap_samples':metadata['sample_count'],'physical_available':False,'unsafe_bind_rejected':True,'shutdown':True}))
 '''
 

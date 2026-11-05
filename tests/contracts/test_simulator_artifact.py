@@ -29,17 +29,17 @@ def consumer():
 SHIM = b"import importlib,sys\nsys.modules[__name__]=importlib.import_module('cirnet_sim')\n"
 
 
-def wheel(tmp_path, *, name='cirnet-simulator', version='0.1.1', contracts='0.1.1', contracts_name=None, missing=None, shim=True):
+def wheel(tmp_path, *, name='cirnet-simulator', version='0.1.2', contracts='0.1.2', contracts_name=None, missing=None, shim=True):
     namespace = 'netcircuit_sim' if name == 'netcircuit-simulator' else 'cirnet_sim'
     contracts_name = contracts_name or ('netcircuit-contracts' if name == 'netcircuit-simulator' else 'cirnet-contracts')
-    path = tmp_path / (name.replace('-', '_') + '-0.1.1-py3-none-any.whl')
+    path = tmp_path / (name.replace('-', '_') + '-0.1.2-py3-none-any.whl')
     with ZipFile(path, 'w') as archive:
         for module in MODULES:
             if module != missing:
                 archive.writestr(namespace + '/' + module, '')
         if namespace == 'cirnet_sim' and shim:
             archive.writestr('netcircuit_sim/__init__.py', SHIM)
-        archive.writestr(name.replace('-', '_') + '-0.1.1.dist-info/METADATA',
+        archive.writestr(name.replace('-', '_') + '-0.1.2.dist-info/METADATA',
             f'Metadata-Version: 2.1\nName: {name}\nVersion: {version}\nRequires-Dist: {contracts_name}=={contracts}\nRequires-Dist: jsonschema==4.26.0\n')
     return path, hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -56,7 +56,7 @@ def test_manifest_selects_exact_identity_digest_and_dependency(tmp_path, monkeyp
 
 @pytest.mark.parametrize('change,reason', [
     ({'name': 'different'}, 'cirnet-simulator'),
-    ({'version': '0.1.0'}, '0.1.1'),
+    ({'version': '0.1.0'}, '0.1.2'),
     ({'contracts': '1.0.0'}, 'Contracts'),
     ({'missing': 'engine.py'}, 'engine.py'),
 ])
@@ -79,7 +79,7 @@ def test_selection_has_no_latest_or_source_fallback_and_checks_digest(tmp_path, 
         selected.verify_wheel(Path(artifact.name), digest)
 
 
-def fake_install(tmp_path, *, version='0.1.1', editable=False, tampered=False, source_metadata=False, name='cirnet-simulator'):
+def fake_install(tmp_path, *, version='0.1.2', editable=False, tampered=False, source_metadata=False, name='cirnet-simulator'):
     installed = tmp_path / 'site'
     namespace = 'netcircuit_sim' if name == 'netcircuit-simulator' else 'cirnet_sim'
     package = installed / namespace
@@ -99,7 +99,7 @@ def fake_install(tmp_path, *, version='0.1.1', editable=False, tampered=False, s
     metadata = installed / f"{name.replace('-', '_')}-{version}.dist-info"
     metadata.mkdir()
     contracts_name = 'netcircuit-contracts' if name == 'netcircuit-simulator' else 'cirnet-contracts'
-    (metadata / 'METADATA').write_text(f'Name: {name}\nVersion: {version}\nRequires-Dist: {contracts_name}==0.1.1\nRequires-Dist: jsonschema==4.26.0\n', encoding='utf-8')
+    (metadata / 'METADATA').write_text(f'Name: {name}\nVersion: {version}\nRequires-Dist: {contracts_name}==0.1.2\nRequires-Dist: jsonschema==4.26.0\n', encoding='utf-8')
     (metadata / 'RECORD').write_text('\n'.join(records), encoding='utf-8')
     if not source_metadata:
         (metadata / 'WHEEL').write_text('Wheel-Version: 1.0\n', encoding='utf-8')
@@ -132,11 +132,11 @@ def installed_probe(tmp_path, installed, *, shadow=False):
 def test_installed_wheel_passes_real_metadata_record_and_import_checks(tmp_path):
     result = installed_probe(tmp_path, fake_install(tmp_path))
     assert result.returncode == 0, result.stdout + result.stderr
-    assert '0.1.1' in result.stdout
+    assert '0.1.2' in result.stdout
 
 
 @pytest.mark.parametrize('options,shadow,reason', [
-    ({'version': '0.1.0'}, False, '0.1.1'),
+    ({'version': '0.1.0'}, False, '0.1.2'),
     ({'editable': True}, False, 'editable'),
     ({'tampered': True}, False, 'RECORD'),
     ({'source_metadata': True}, False, 'source egg-info'),
@@ -151,13 +151,13 @@ def test_old_editable_tampered_or_shadowed_installation_fails(tmp_path, options,
 def test_consumers_pin_one_simulator_and_default_collection_excludes_retained_units():
     for relative in ('pyproject.toml', 'services/api/pyproject.toml'):
         metadata = tomllib.loads((ROOT / relative).read_text(encoding='utf-8'))
-        assert 'cirnet-simulator==0.1.1' in metadata['project']['dependencies'], relative
-    assert 'cirnet-simulator==0.1.1' in installed_distribution('cirnet-hardware-service').requires
+        assert 'cirnet-simulator==0.1.2' in metadata['project']['dependencies'], relative
+    assert 'cirnet-simulator==0.1.2' in installed_distribution('cirnet-hardware-service').requires
     root = tomllib.loads((ROOT / 'pyproject.toml').read_text(encoding='utf-8'))
     assert 'simulator/circuit-simulator' in root['tool']['pytest']['ini_options']['norecursedirs']
     lock = json.loads((ROOT / 'integration/simulator-version.json').read_text(encoding='utf-8'))
-    assert lock['python'] == {'name': 'cirnet-simulator', 'version': '0.1.1'}
-    assert lock['contracts'] == {'name': 'cirnet-contracts', 'version': '0.1.1'}
+    assert lock['python'] == {'name': 'cirnet-simulator', 'version': '0.1.2'}
+    assert lock['contracts'] == {'name': 'cirnet-contracts', 'version': '0.1.2'}
 
 
 def test_default_pytest_discovery_never_imports_the_retained_simulator_tree(tmp_path):
@@ -174,15 +174,6 @@ def test_default_pytest_discovery_never_imports_the_retained_simulator_tree(tmp_
     assert 'test_legacy.py' not in result.stdout
 
 
-@pytest.mark.parametrize('name', ['cirnet-simulator', 'netcircuit-simulator'])
-def test_canonical_and_immutable_legacy_wheels_and_installations_are_supported(tmp_path, name):
-    artifact, digest = wheel(tmp_path, name=name)
-    assert consumer().verify_wheel(artifact, digest) == artifact
-    result = installed_probe(tmp_path, fake_install(tmp_path, name=name))
-    assert result.returncode == 0, result.stderr
-    assert name in result.stdout
-
-
 def test_coinstalled_canonical_and_legacy_distribution_identity_is_rejected(tmp_path):
     installed = fake_install(tmp_path)
     other = installed / 'netcircuit_simulator-0.1.1.dist-info'
@@ -192,14 +183,14 @@ def test_coinstalled_canonical_and_legacy_distribution_identity_is_rejected(tmp_
     assert result.returncode != 0 and 'share an import namespace' in result.stderr
 
 
-@pytest.mark.parametrize('name', ['cirnet-simulator', 'netcircuit-simulator'])
-def test_selected_archive_probe_uses_distribution_and_namespace_from_wheel(tmp_path, name):
+def test_selected_archive_probe_uses_canonical_distribution_and_namespace(tmp_path):
     selected = consumer()
-    artifact, digest = wheel(tmp_path, name=name)
-    installed = fake_install(tmp_path, name=name)
-    metadata = installed / (name.replace('-', '_') + '-0.1.1.dist-info')
+    name = 'cirnet-simulator'
+    artifact, digest = wheel(tmp_path)
+    installed = fake_install(tmp_path)
+    metadata = installed / 'cirnet_simulator-0.1.2.dist-info'
     (metadata / 'direct_url.json').write_text(json.dumps({'url': artifact.as_uri(), 'archive_info': {'hashes': {'sha256': digest}}}))
-    other = selected.LEGACY_NAME if name == selected.NAME else selected.NAME
+    other = 'netcircuit-simulator'
     program = 'import sys,site; site.addsitedir(sys.argv[1]); sys.argv=sys.argv[2:]; exec(sys.argv.pop(0))'
     result = subprocess.run([sys.executable, '-B', '-S', '-c', program, str(installed), selected.SELECTED_INSTALL_PROBE,
         'probe', str(artifact), digest, name, other, json.dumps(selected.NAMESPACES[name])], capture_output=True, text=True)
@@ -219,6 +210,7 @@ def test_canonical_simulator_requires_new_contracts_and_legacy_import_shim(tmp_p
         consumer().verify_wheel(artifact, digest)
 
 
-def test_legacy_simulator_accepts_reviewed_contracts_transition(tmp_path):
-    artifact, digest = wheel(tmp_path, name='netcircuit-simulator', contracts_name='cirnet-contracts')
-    assert consumer().verify_wheel(artifact, digest) == artifact
+def test_simulator_rejects_the_previous_release_even_with_the_expected_digest(tmp_path):
+    artifact, digest = wheel(tmp_path, name='netcircuit-simulator', version='0.1.1', contracts='0.1.1')
+    with pytest.raises(ValueError, match=r'0\.1\.2'):
+        consumer().verify_wheel(artifact, digest)

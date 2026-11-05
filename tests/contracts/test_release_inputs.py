@@ -28,7 +28,7 @@ def test_interface_input_rejects_checkout_and_unidentified_directory(tmp_path, m
         interface_root()
 
 
-def product(tmp_path, *, version='0.1.1', identity_version=None, contracts='0.1.1'):
+def product(tmp_path, *, version='0.1.4', identity_version=None, contracts='0.1.2'):
     contents = (json.dumps({'name': '@cirnet/web', 'version': version}) + '\n').encode()
     (tmp_path / 'package.json').write_bytes(contents)
     fingerprint = hashlib.sha256((hashlib.sha256(contents).hexdigest() + '  package.json\n').encode()).hexdigest()
@@ -64,21 +64,13 @@ def test_interface_input_rejects_relative_path(monkeypatch):
         interface_root()
 
 
-@pytest.mark.parametrize('version', ['0.1.1', '0.1.2', '0.1.3'])
-def test_interface_input_accepts_reviewed_product_version_with_unchanged_contracts(tmp_path, monkeypatch, version):
-    from tests.support.release_inputs import interface_root
-    root = product(tmp_path, version=version)
-    monkeypatch.setenv('CIRNET_INTERFACE_ROOT', str(root))
-    assert interface_root() == root.resolve()
-
-
 @pytest.mark.parametrize('changes', [
-    {'version': '0.1.2', 'identity_version': '0.1.1'},
-    {'version': '0.1.1', 'identity_version': '0.1.2'},
-    {'version': '0.1.4'},
-    {'version': '0.1.2', 'contracts': '0.1.2'},
-    {'version': '0.1.3', 'identity_version': '0.1.2'},
-    {'version': '0.1.3', 'contracts': '0.1.2'},
+    {'version': '0.1.1'},
+    {'version': '0.1.2'},
+    {'version': '0.1.3'},
+    {'version': '0.1.5'},
+    {'identity_version': '0.1.3'},
+    {'contracts': '0.1.1'},
 ])
 def test_interface_input_rejects_unreviewed_or_mismatched_product_and_contracts_versions(tmp_path, monkeypatch, changes):
     from tests.support.release_inputs import interface_root
