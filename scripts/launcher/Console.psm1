@@ -163,7 +163,7 @@ function Write-CirnetMessage {
 }
 
 function Write-CirnetBanner {
-    param([string]$Title = 'CIRNET REMOTE LAUNCHER')
+    param([string]$Title = '<<<<<<<< CIRNET REMOTE LAUNCHER >>>>>>>>>>')
     $width = Get-CirnetConsoleWidth
     if ($width -le 1) { $width = 80 }
     $rule = '=' * ([Math]::Min(46, [Math]::Max(1, $width - 1)))

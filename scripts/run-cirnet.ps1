@@ -280,7 +280,7 @@ try {
         throw 'A stop request was sent, but the launcher did not exit within 20 seconds. Check the launcher window for details.'
     }
 
-    Write-CirnetBanner -Title 'STARTING CIRNET REMOTE' -Subtitle 'Pinned release | Local simulation'
+    Write-CirnetBanner -Title '<<<<<<<< STARTING CIRNET REMOTE >>>>>>>>>>' -Subtitle 'Pinned release | Local simulation'
     $maintenance = Enter-CirnetMaintenance -Configuration $configuration
     Get-Command git.exe -CommandType Application | Out-Null
     $node = (Get-Command node.exe -CommandType Application | Select-Object -First 1).Source
