@@ -52,8 +52,8 @@ GOOD_TOOLS = r"""
                 else { 'OK' }
                 break
             }
-            'node' { 'v22.19.0'; break }
-            'npm' { '10.9.0'; break }
+            'node' { 'v26.13.0'; break }
+            'npm' { '11.20.0'; break }
             default { '1.0.0' }
         }
         [pscustomobject]@{ ExitCode = 0; Output = $output; TimedOut = $false; Error = '' }
@@ -121,6 +121,28 @@ def test_python_minimum_and_node_major_are_enforced(tmp_path):
     value = report(tmp_path / "dev", setup)
     assert checks(value)["Python"]["Status"] == "INCOMPATIBLE"
     assert checks(value)["Node.js"]["Status"] == "INCOMPATIBLE"
+    assert not value["BootstrapReady"]
+
+
+@pytest.mark.parametrize("version", ["26.0.0", "26.13.0"])
+def test_node_26_allows_bootstrap_without_creating_state(tmp_path, version):
+    dev = tmp_path / "uncreated-dev"
+    value = report(dev, GOOD_TOOLS.replace("v26.13.0", "v" + version))
+    node = checks(value)["Node.js"]
+    assert node["Status"] == "INSTALLED"
+    assert node["Version"] == version
+    assert value["BootstrapReady"]
+    assert not dev.exists()
+
+
+@pytest.mark.parametrize("version", ["20.19.0", "22.19.0", "24.20.0", "25.0.0", "27.0.0", "28.0.0"])
+def test_unsupported_node_majors_block_bootstrap_with_node_26_remediation(tmp_path, version):
+    value = report(tmp_path / "dev", GOOD_TOOLS.replace("v26.13.0", "v" + version))
+    node = checks(value)["Node.js"]
+    assert node["Status"] == "INCOMPATIBLE"
+    assert node["Version"] == version
+    assert "26" in node["Detail"]
+    assert "Node.js 26 LTS" in node["Remediation"]
     assert not value["BootstrapReady"]
 
 

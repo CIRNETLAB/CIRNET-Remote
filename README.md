@@ -55,7 +55,7 @@ Remote API and CIRNET-Interface. The first setup can take several minutes.
 
 The Console groups actions into clear sections, highlights success, warnings
 and errors, and shows a bounded loading spinner during service health checks
-and shutdown waits. Doctor separates required and optional checks with a final
+and shutdown waits. Banners display only their title. Doctor separates required and optional checks with a final
 summary; Clean shows both exact byte counts and readable sizes. All messages
 remain in English. Colors and animation automatically fall back to plain output
 for redirected output, `NO_COLOR=1`, `TERM=dumb` or unsupported console features.
@@ -99,7 +99,7 @@ dependencies, virtual environments, databases, captures, release artifacts and
 the DEV allocator cache. It skips unrecognized output and refuses cleanup while
 a launcher or relevant service is active.
 
-Doctor inspects Git, PowerShell, Python 3.12+, pip/venv, Node.js 22, npm,
+Doctor inspects Git, PowerShell, Python 3.12+, pip/venv, Node.js 26 LTS, npm,
 the installed runtime, release cache and the three service ports. It reports
 `INSTALLED`, `MISSING`, `INCOMPATIBLE` or `NOT VERIFIED` with remediation.
 `READY FOR LOCAL SIMULATION` requires an installed, verified runtime and the
@@ -108,11 +108,16 @@ bootstrap the pinned release, then run Doctor again. CMake, Ninja, MSVC v143
 and FPGA tools are reported separately as optional. Doctor performs local
 inspection and prints its report to the console.
 
+After upgrading to Node 26 LTS, reopen your terminal so it uses the new PATH.
+Confirm `node --version` starts with `v26.`, then run
+`.\run-cirnet.bat doctor` and `.\run-cirnet.bat start`.
+
 ## Tiếng Việt
 
 Trên Windows, mở [run-cirnet.bat](run-cirnet.bat), chọn **3** hoặc nhập
 `start` để chạy chế độ mô phỏng.
-Cài Git, Python 3.12+ và Node.js 22 trước. Lần đầu, launcher tải các gói
+Cài Git, Python 3.12+ và Node.js 26 LTS trước. Sau khi nâng Node, mở lại
+terminal và kiểm tra `node --version` hiển thị `v26.x`. Lần đầu, launcher tải các gói
 được pin trong manifest, sau đó tự mở trình duyệt tại `http://127.0.0.1:5173`.
 Giữ cửa sổ launcher mở. Để dừng, chuyển về cửa sổ đó và nhấn **Enter** hoặc
 **Ctrl+C**. Nếu terminal giữ phím tắt hoặc bạn đã chuyển sang cửa sổ khác,

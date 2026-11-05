@@ -170,7 +170,6 @@ function Write-CirnetBanner {
     Write-CirnetLine
     Write-CirnetLine $rule -Tone Muted
     Write-CirnetLine "  $Title" -Tone Accent
-    if ($Subtitle) { Write-CirnetLine "  $Subtitle" -Tone Muted }
     Write-CirnetLine $rule -Tone Muted
     Write-CirnetLine
 }

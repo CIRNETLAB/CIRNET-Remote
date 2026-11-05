@@ -66,12 +66,26 @@ Stop-CirnetActivity 'API is ready'
     assert_success(result)
     assert result.stderr == ""
     assert "CIRNET REMOTE LAUNCHER" in result.stdout
-    assert "Local simulation workspace" in result.stdout
+    assert "Local simulation workspace" not in result.stdout
     for level in ("INFO", "OK", "WARN", "ERROR", "WORKING"):
         assert f"[{level}]" in result.stdout
     assert "Waiting for API" in result.stdout and "API is ready" in result.stdout
     assert result.stdout.isascii()
     assert all(control not in result.stdout for control in ("\x1b", "\r", "\b"))
+
+
+def test_banner_does_not_render_an_ambient_subtitle(console_ps):
+    result = console_ps(r"""
+Initialize-CirnetConsole -NoColor -NoAnimation
+& (Get-Module Console) {
+    $script:Subtitle = 'UNEXPECTED AMBIENT SUBTITLE'
+    Write-CirnetBanner -Title 'CUSTOM CIRNET TITLE'
+}
+""")
+    assert_success(result)
+    assert "CUSTOM CIRNET TITLE" in result.stdout
+    assert "UNEXPECTED AMBIENT SUBTITLE" not in result.stdout
+    assert result.stderr == ""
 
 
 def test_messages_do_not_contaminate_the_success_pipeline(console_ps):
@@ -81,7 +95,7 @@ $values = @(& {
     Initialize-CirnetConsole -NoColor -NoAnimation
     Write-CirnetLine 'Plain line' -Tone Muted
     Write-CirnetMessage 'Information'
-    Write-CirnetBanner 'Launcher' 'Workspace'
+    Write-CirnetBanner 'Launcher'
     Write-CirnetSection 'Section'
     Start-CirnetActivity 'Inspecting'
     Update-CirnetActivity

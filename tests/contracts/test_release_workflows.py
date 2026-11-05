@@ -34,7 +34,7 @@ def assert_owned_test_runtime(job):
         assert 'echo "'+variable+'=' in command and '"$GITHUB_ENV"' in command,variable
     assert 'sqlite:///$ci_runtime/default.sqlite' in command and '$ci_runtime/captures' in command
     assert any(index<allocation and step.get('uses','').startswith('actions/setup-node@')
-        and step.get('with',{}).get('node-version')=='22' for index,step in enumerate(steps)),'pinned Node must precede allocator'
+        and step.get('with',{}).get('node-version')=='26' for index,step in enumerate(steps)),'pinned Node must precede allocator'
     writers=[(index,step['run']) for index,step in enumerate(steps) if any(marker in step.get('run','')
         for marker in ('pytest -q','check_release.py --group','npm test'))]
     assert writers and all(index>allocation for index,_ in writers),'verification ran before isolated defaults'
@@ -53,6 +53,21 @@ def workflow(name):
     path=ROOT/'.github/workflows'/name
     assert path.exists(),f'Independent workflow {name} is missing.'
     return yaml.safe_load(path.read_text(encoding='utf-8'))
+
+
+@pytest.mark.parametrize('name', sorted(path.name for path in (ROOT / '.github/workflows').glob('*.yml')))
+def test_every_allocator_job_selects_node_26_before_bootstrap(name):
+    for job_id, job in workflow(name).get('jobs', {}).items():
+        steps = job.get('steps', [])
+        consumers = [index for index, step in enumerate(steps) if any(marker in step.get('run', '')
+                     for marker in ('scripts/install_contracts.py --dev-only', 'scripts/artifact-paths.mjs',
+                                    'scripts/bootstrap-contracts.mjs'))]
+        node = [(index, step) for index, step in enumerate(steps)
+                if step.get('uses', '').startswith('actions/setup-node@')]
+        if consumers:
+            assert len(node) == 1 and node[0][0] < min(consumers), (name, job_id, 'Node must precede allocator bootstrap')
+        for _, step in node:
+            assert step.get('with', {}).get('node-version') == '26', (name, job_id, 'CI must select Node 26')
 
 
 def test_every_ci_bootstrap_derives_dependencies_from_the_committed_system_lock():

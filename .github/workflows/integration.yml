@@ -41,7 +41,7 @@ jobs:
           python-version: '3.12'
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '26'
       - name: Require the selected private-artifact credential
         shell: bash
         run: ': "${CIRNET_ARTIFACTS_TOKEN:?CIRNET_ARTIFACTS_READ_TOKEN is required}"'
@@ -234,7 +234,7 @@ jobs:
           python-version: '3.12'
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '26'
       - name: Select exact dependency artifacts from the system lock
         run: python scripts/select_ci_release.py --manifest integration/release-set.json --github-env "$GITHUB_ENV"
       - name: Bootstrap the pinned independent DEV allocator
@@ -325,7 +325,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '26'
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

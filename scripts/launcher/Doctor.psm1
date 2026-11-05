@@ -457,12 +457,12 @@ function Get-CirnetEnvironmentReport {
         }
         $checks.Add((New-CirnetDoctorCheck ('Python ' + $feature) $true $status $version $python.Path $detail ('Repair the Python installation to include ' + $feature + '; doctor does not install packages.')))
     }
-    $node = Get-CirnetDoctorTool 'Node.js' @('node.exe') -Remediation 'Install Node.js 22 LTS and add node.exe to PATH.'
-    if ($node.Status -eq 'INSTALLED' -and ([version]$node.Version).Major -ne 22) {
-        $node.Status='INCOMPATIBLE'; $node.Detail='The supported Node.js major version is 22.'; $node.Remediation='Install Node.js 22 LTS and select it on PATH.'
+    $node = Get-CirnetDoctorTool 'Node.js' @('node.exe') -Remediation 'Install Node.js 26 LTS and add node.exe to PATH.'
+    if ($node.Status -eq 'INSTALLED' -and ([version]$node.Version).Major -ne 26) {
+        $node.Status='INCOMPATIBLE'; $node.Detail='The supported Node.js major version is 26.'; $node.Remediation='Install Node.js 26 LTS and select it on PATH.'
     }
     $checks.Add($node)
-    $checks.Add((Get-CirnetDoctorTool 'npm' @('npm.cmd','npm.exe') -Remediation 'Install npm with Node.js 22 and add npm to PATH.'))
+    $checks.Add((Get-CirnetDoctorTool 'npm' @('npm.cmd','npm.exe') -Remediation 'Install npm with Node.js 26 LTS and add npm to PATH.'))
     $bootstrapMissing = @($checks | Where-Object { $_.Required -and $_.Status -ne 'INSTALLED' })
     $remediation = 'Run .\run-cirnet.bat start to bootstrap the pinned release.'
     $venvPython = Join-Path $configuration.DevHome '.venv\Scripts\python.exe'

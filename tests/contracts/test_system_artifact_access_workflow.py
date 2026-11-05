@@ -55,7 +55,7 @@ def test_access_job_uses_real_installer_only_the_named_secret_and_owned_outputs(
     assert ' -I -m pip check' in steps[install]['run']
     for name in ('TMP', 'TEMP', 'TMPDIR', 'PIP_CACHE_DIR', 'npm_config_cache', 'CIRNET_DATABASE_URL', 'CIRNET_CAPTURE_DIR'):
         assert 'echo "' + name + '=' in steps[allocation]['run'], name
-    assert any(i < bootstrap and step.get('with', {}).get('node-version') == '22' for i, step in enumerate(steps))
+    assert any(i < bootstrap and step.get('with', {}).get('node-version') == '26' for i, step in enumerate(steps))
     assert any(i < bootstrap and step.get('with', {}).get('python-version') == '3.12' for i, step in enumerate(steps))
     upload = next(step for step in steps if step.get('uses', '').startswith('actions/upload-artifact@'))
     assert upload['with']['path'].splitlines() == [

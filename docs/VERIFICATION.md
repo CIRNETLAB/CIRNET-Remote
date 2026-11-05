@@ -10,7 +10,7 @@ Source logos/icons/textures, model assets, product/design references, contract f
 
 Use `scripts/artifact-paths.mjs` from Node/TypeScript. Python tools use `scripts/artifact_paths.py`, which delegates to that same implementation. No independent path-validation algorithm is permitted in consumers.
 
-Verification harnesses require Node (CI pins Node 22) and Git in `PATH`, including Python callers of the allocator. M1 packages the canonical allocator separately as DEV tooling. Current source builds use `cirnet-artifact-paths==1.0.0a1`; the immutable release lock still selects `netcircuit-artifact-paths==1.0.0a1`. Both namespaces are supported by the reviewed adapters. Bootstrap the reviewed artifact before running checks with `python scripts/install_contracts.py --with-dev --manifest ABSOLUTE_MANIFEST`. CI uses the same digest-verified bootstrap before allocation; production Contracts consumers do not need DEV tooling. Remote adapters delegate to this installed implementation and fail if it is absent or differs from `integration/contracts-version.json`.
+Verification harnesses require Node (current CI and launcher baseline: Node 26 LTS) and Git in `PATH`, including Python callers of the allocator. M1 packages the canonical allocator separately as DEV tooling. Current source builds use `cirnet-artifact-paths==1.0.0a1`; the immutable release lock still selects `netcircuit-artifact-paths==1.0.0a1`. Both namespaces are supported by the reviewed adapters. Bootstrap the reviewed artifact before running checks with `python scripts/install_contracts.py --with-dev --manifest ABSOLUTE_MANIFEST`. CI uses the same digest-verified bootstrap before allocation; production Contracts consumers do not need DEV tooling. Remote adapters delegate to this installed implementation and fail if it is absent or differs from `integration/contracts-version.json`.
 
 For verification spanning repositories, supply `CIRNET_ARTIFACTS_CONTEXT` as JSON with an explicit owner and every participating absolute repository root before allocation (M5: Remote, FPGA, Contracts, Hardware and Simulator). Inherited children and cleanup must retain that context. The allocator expands each Git family and rejects discovered checkout/Git administration paths, including aliases. A session allocated under an earlier context must be cleaned with its original owner/root context.
 
@@ -633,3 +633,116 @@ Native PS7 service lifecycle, fresh dependency installation, backend/browser
 product gates and physical hardware/deployment are NOT_RUN for this presentation
 change. PS7 presentation/dispatch is covered by the automated suite. No commit,
 push, release, baseline, dependency or backend change is part of this task.
+
+## 2026-11-05 Node 26 LTS toolchain compatibility
+
+The current launcher and the six repositories' 17 Node selections in 14 workflow
+files now use major 26 LTS. The live official release index identifies
+26.13.0 (Lithium, 2026-10-28) as the latest Node 26 LTS on the verification date.
+Tests use the official portable Windows x64 archive and bundled npm 11.20.0;
+archive SHA256 `dcc60d59a0746999f99064a01c020445d54d84228c691cdbf25b49ac3b59150a`
+matches the official checksums. The initial installed host was Node 24.20.0;
+this verification made no global tool installation or PATH update. Final host
+inspection reports Node 26.12.1, and the actual Doctor now classifies that host
+Node as INSTALLED. This host binary reports no LTS tag; 26.13.0 is the verified
+LTS version used for the complete gates below. Doctor checks the supported
+major locally, rather than querying the latest patch release over the network.
+The previous Doctor rejection was an exact-major-22 policy gate;
+it was not evidence of an application crash on Node 24.
+
+Doctor retains explicit supported-major validation, now for 26, rather than
+admitting unverified future majors. Its failure instructions name Node 26 LTS.
+Existing SDK/DEV `engines >=22`, Interface Node type declarations, third-party
+lockfiles, immutable artifacts and historical measurements retain their meaning.
+No Contracts schema, backend, FPGA logic or dependency payload changed.
+
+| Actual local gate | Result |
+| --- | --- |
+| New Doctor version-policy regressions against original gate | Eight expected failures before implementation |
+| Doctor + dispatcher, Windows PowerShell 5.1 | PASS, 61 tests |
+| Doctor policy matrix, PowerShell 7 | PASS, 8 tests |
+| Unstubbed Doctor with portable Node 26, both PowerShell hosts | Node 26.13.0 and npm 11.20.0 INSTALLED; fresh DevHome remains absent |
+| Final complete title-only launcher suite on Node 26 | PASS, 155 tests; 1 existing file-symlink privilege skip; 127.29 s |
+| Remote allocator, artifact guard, environment and E2E lifecycle Node tests | PASS, 11/11 |
+| Remote explicit Interface target/session/output orchestration Node tests | PASS, 4/4 |
+| Remote workflow policy tests without the installed-Python fixture | PASS, 60; 1 environment-bound case deselected |
+| Remote system workflow/receipt tests without the installed-Python fixtures | PASS, 21; 6 environment-bound cases deselected |
+| Contracts CI bootstrap tests | PASS, 2/2 |
+| Simulator, Hardware and FPGA bootstrap tests | PASS, 2/2 per repository |
+| New Interface Node selection/order regression | PASS, 1/1 |
+| actionlint 1.7.12, `-shellcheck= -pyflakes=` | PASS, all 14 workflow files |
+| Documentation/provenance/link workflow tests | PASS, 13/13 |
+| Actual title-only launcher `start -Check -NoBrowser` on Node 26 | PASS, exit 0; no subtitle; all three ports and the launcher lock released |
+
+The complete launcher run initially exposed six presentation failures:
+`Write-CirnetBanner` used an undeclared `Subtitle`, while the tests still expected
+the previous default subtitle. A temporary parameter restoration passed 153
+tests, but the user selected a title-only banner. The final implementation
+removes the ambient subtitle read and the startup subtitle argument, preserving
+the decorated title strings. Tests now require subtitle absence, and two new
+PowerShell-host regressions first failed when an ambient module variable leaked
+into banner output. Node policy, service assertions and deadlines are unchanged.
+An initial restricted allocator test run failed to create its Windows
+junctions (`EPERM`); the unchanged native run passed all 11 cases.
+
+The clean Interface export of `b2fd6ed6cc797113c70f70678395be55366bf316`
+passed reviewed SDK bootstrap, fresh locked npm installation (92 packages),
+27 script tests, 10 Contracts prechecks, all 1,497 runtime tests, 229-module AST
+boundaries, E2E types and all three production entrypoints on Node 26. All 581
+exported tracked files, the lock and the three original SDK artifacts remained
+byte-identical. Native Sharp PNG and Vue Demi/Vue 3 smoke also passed. Existing
+npm install-script restrictions stayed enabled. Workflow/README changes and the
+new one-case policy test are separately checked in the current checkout; they
+do not change the exported runtime. Full Interface log SHA256:
+`7a41dd9ff340911724f13d889b902fdf8d96112d71c5b8a9e000ad02fb8f72ef`.
+Interface receipt SHA256:
+`ad8e6372ae06b2ee0049aa5bdbe3353137297cb70223d0c99e9d32ea4aab10cb`.
+
+A broader two-file Remote workflow/receipt run returned **81 PASS / 7 FAIL**
+in the pre-existing Python verification environment. Those seven fixtures lack
+`cirnet-hardware-service` metadata, require an archive `direct_url.json` instead
+of the existing editable API metadata, or refer to a DEV wheel path in an
+already deleted older session. They fail before exercising the intended
+installed-wheel probes; they do not establish a Node incompatibility or a
+complete passing Python release gate. The existing environment and test
+assertions were preserved. The focused native rerun passes all 21 other system
+workflow cases, with only the six environment-bound cases deselected; together
+with 60 workflow-policy passes this covers the complete eligible policy set.
+System workflow log SHA256:
+`2022ae9231095dcc4fdbe182f4bdbc5e62c550d6365c1ee9641037335b17b2fd`.
+Fresh complete Python source-wheel acceptance,
+the full browser gate, hosted Actions, publication and physical hardware are
+NOT_RUN for this toolchain change.
+
+The real startup smoke uses a separate owned dev home, a read-only copy of the
+existing Python 3.14.6 runtime (all imports and `sys.prefix` verified inside
+that copy), and the selected Interface 0.1.3 source archive verified by SHA256
+`41273280dfc3934c33f7d6ae7fb5c0d4f76d92a9e8b31dd4b6c50c164449b2e3`.
+Web dependencies are copied from the fresh Node 26 install with unchanged lock
+semantics. An initial exact-byte lock comparison stopped preparation: the Git
+export uses CRLF and the published archive uses LF. A normalized comparison
+proved that line endings were the only difference; neither input was edited.
+This is a copied-runtime cached-start smoke, not a fresh complete release
+installation. It exercises the original Hardware, API, Web, main-source and
+API-proxy health checks and `-Check` shutdown with unchanged deadlines. User
+databases, captures and the original runtime were not modified.
+
+Final title-only launcher log SHA256:
+`1940ee8d6ccb0b38c8b09b0f1dac3fcf97ebd0beb629b3263268abba7521236b`.
+Final native startup summary SHA256:
+`2541235ae88810d385f9a54529e0fd1c717674eb2abd5a61b68d80326d2dbbf0`.
+The final Console module SHA256 is
+`6efff4666e24877afc4b46750ece241e96f21bac2ce053d4138936819a61129e`;
+dispatcher SHA256 is
+`43b57119443e6428044d7c278a6692c80dcffc2936314265749def17e4cfb9ff`.
+
+All raw diagnostics, exports, copied runtime and caches begin outside Git in
+the canonical session owned by `cirnet-node26-compat-20261105`. Only Markdown
+verification evidence is retained in source. This is an uncommitted working-tree
+change based on Remote `755b269a97258ac5e3dea0ee8338d06ed6c402fd`;
+no commit, push, release, global install or system PATH update is part of it.
+After evidence inspection and confirmation that owned processes had exited,
+the pinned canonical CLI removed only this session. The published release
+backup remains outside it and was preserved. Final staged diffs are empty in
+all six repositories; the pre-existing eight Simulator bytecode files retain
+their original 2026-10-27 timestamps and were not changed by this task.

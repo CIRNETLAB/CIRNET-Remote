@@ -130,8 +130,8 @@ def test_doctor_failure_reports_named_remediation_and_failure_exit(isolated_laun
     (isolated_launcher / "scripts/launcher/Doctor.psm1").write_text("""
 function Get-CirnetEnvironmentReport {
     $item = [pscustomobject]@{Name='Node.js'; Required=$true; Status='INCOMPATIBLE';
-        Version='24.0.0'; Path='C:\\tools\\node.exe'; Detail='Node.js 22 is required.';
-        Remediation='Install Node.js 22 and select it on PATH.'}
+        Version='24.0.0'; Path='C:\\tools\\node.exe'; Detail='Node.js 26 is required.';
+        Remediation='Install Node.js 26 LTS and select it on PATH.'}
     [pscustomobject]@{Ready=$false; Checks=@($item); MissingRequired=@($item)}
 }
 Export-ModuleMember -Function Get-CirnetEnvironmentReport
@@ -140,7 +140,7 @@ Export-ModuleMember -Function Get-CirnetEnvironmentReport
     assert result.returncode == 1
     assert "MISSING REQUIRED DEPENDENCIES" in result.stdout
     assert "Node.js [INCOMPATIBLE]" in result.stdout
-    assert "Install Node.js 22" in result.stdout
+    assert "Install Node.js 26 LTS" in result.stdout
     assert "@{Name=" not in result.stdout
 
 
