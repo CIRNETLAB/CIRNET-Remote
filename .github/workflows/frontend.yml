@@ -3,6 +3,7 @@ env:
   PYTHONDONTWRITEBYTECODE: '1'
 on:
   push:
+    branches: [master]
     paths: ['tests/frontend/**', 'contracts/**', 'scripts/**', 'services/api/**', 'integration/**', 'pyproject.toml', 'requirements-verification.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
   pull_request:
     paths: ['tests/frontend/**', 'contracts/**', 'scripts/**', 'services/api/**', 'integration/**', 'pyproject.toml', 'requirements-verification.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
@@ -88,17 +89,14 @@ jobs:
           python scripts/generate_contracts.py --check
           python scripts/export_openapi.py --check
           python scripts/sync_editor_catalog.py --check
-      - name: AST dependency boundaries
-        working-directory: ${{ env.CIRNET_INTERFACE_ROOT }}
-        run: npm run check:boundaries
+      - name: Python browser-boundary, AST and workflow tests
+        run: python -m pytest -q tests/frontend --basetemp "$CIRNET_ARTIFACTS_SESSION/pytest"
       - name: Typecheck and frontend runtime tests
         working-directory: ${{ env.CIRNET_INTERFACE_ROOT }}
         run: npm test
       - name: Build workbench and imported GLB previews
         working-directory: ${{ env.CIRNET_INTERFACE_ROOT }}
         run: npm run build
-      - name: Python browser-boundary and workflow tests
-        run: python -m pytest -q tests/frontend --basetemp "$CIRNET_ARTIFACTS_SESSION/pytest"
       - name: Clean the owned external verification session
         if: always() && env.CIRNET_ARTIFACTS_SESSION != ''
         shell: bash

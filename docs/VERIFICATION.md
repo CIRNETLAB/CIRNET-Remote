@@ -69,6 +69,14 @@ installers. This tests the renamed `cirnet-contracts` distribution with the
 corresponding Simulator and Hardware dependencies. Browser release, FPGA and
 system artifact access continue to select the published release set.
 
+The browser workflow uses the [exact Interface commit](../integration/browser-interface-source.json)
+for pull requests and pushes to `master`. The candidate export records the
+resolved commit and Git tree before SDK bootstrap. Tag pushes and manual runs
+with `interface_source=published` keep the digest-verified Interface archive
+from the system release lock. Both paths run the same complete browser suite
+with the selected API, Hardware, Simulator and Contracts packages. The source
+path uses public SDK inputs and does not receive the release read credential.
+
 Primary verification uses normal-GIL CPython 3.14 and Node 26. The explicit
 Python 3.11 installed-package gate retains the reusable packages' minimum
 compatibility check. A pinned producer archive can contain older wheel-hash
@@ -225,6 +233,12 @@ After inspecting results, run `node scripts/artifact-paths.mjs --cleanup <sessio
 CI allocates in `runner.temp`, uploads external evidence when needed, then cleans its own session. Upload retention is not a reason to commit artifacts. `.gitignore` is a narrow secondary defense for known generated directories, not a blanket image-extension ban.
 
 The backend, hardware-service, frontend, repository integration, PostgreSQL migration and canonical Contracts jobs allocate a fresh session through `scripts/artifact-paths.mjs` before verification. They publish its ownership before allocating application defaults, set the default database and captures inside that session, pass its `pytest` child as `--basetemp` for direct pytest commands, and run the allocator's guarded cleanup with `always()` after failures as well as success. The migration job retains its PostgreSQL 18 service and explicit `CIRNET_TEST_POSTGRES_URL`; the isolated SQLite default applies only to incidental default-app imports and does not replace PostgreSQL validation. Local workflow policy tests check this configuration; hosted CI execution is separate evidence.
+
+The [Hardware and Simulator consumer workflow](../.github/workflows/hardware-service.yml)
+runs the targeted artifact, RPC, backend and API preview tests in one Python
+invocation. It extracts verified Interface source for the test that checks real
+default pytest collection. The separate Integration job installs the Interface
+SDK and runs the full repository suite.
 
 Root CI cleanup uses `scripts/cleanup-artifact-session.mjs`. Bootstrap can publish
 an owned session before DEV pip installation succeeds, while the repository

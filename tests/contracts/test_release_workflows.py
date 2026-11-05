@@ -2,6 +2,7 @@
 from fnmatch import fnmatchcase
 from copy import deepcopy
 from pathlib import Path
+import shlex
 import tomllib
 import yaml
 import pytest
@@ -108,7 +109,6 @@ def test_every_ci_bootstrap_derives_dependencies_from_the_committed_system_lock(
     ('hardware-service.yml', 'test', ('Contracts', 'Simulator', 'Hardware')),
     ('integration.yml', 'repository-contracts', ('Contracts', 'Simulator', 'Hardware')),
     ('integration.yml', 'postgresql-migrations', ('Contracts', 'Simulator', 'Hardware')),
-    ('simulator.yml', 'test', ('Contracts', 'Simulator', 'Hardware')),
 ])
 def test_source_api_jobs_install_pinned_source_wheels(name, job_id, components):
     steps = workflow(name)['jobs'][job_id]['steps']
@@ -154,7 +154,7 @@ def assert_shared_coverage(data,name):
             assert patterns is None or any(fnmatchcase(path,pattern) for pattern in patterns),(name,event,path)
 
 
-@pytest.mark.parametrize('name',['contracts.yml','backend.yml','hardware-service.yml','simulator.yml','frontend.yml','integration.yml','fpga.yml','browser-e2e.yml'])
+@pytest.mark.parametrize('name',['contracts.yml','backend.yml','hardware-service.yml','frontend.yml','integration.yml','fpga.yml','browser-e2e.yml'])
 def test_shared_changes_trigger_the_contract_gate_and_every_consumer(name):
     assert_shared_coverage(workflow(name),name)
 
@@ -165,8 +165,8 @@ def test_shared_changes_trigger_the_contract_gate_and_every_consumer(name):
     ('contracts.yml', ('tests/contracts/test_artifact_consumer.py', 'tests/frontend/test_frontend_shell.py')),
     ('fpga.yml', ('tests/contracts/test_fpga_artifact.py', 'tests/integration/test_fpga_compatibility.py')),
     ('frontend.yml', ('tests/frontend/test_frontend_shell.py',)),
-    ('hardware-service.yml', ('tests/contracts/test_hardware_artifact.py', 'tests/integration/test_virtual_lab_execution.py')),
-    ('simulator.yml', ('tests/contracts/test_simulator_artifact.py', 'tests/integration/test_virtual_lab_execution.py')),
+    ('hardware-service.yml', ('tests/contracts/test_hardware_artifact.py', 'tests/contracts/test_simulator_artifact.py',
+        'tests/integration/test_virtual_lab_execution.py', 'services/api/tests/test_physical_preview.py')),
 ])
 def test_consumer_triggers_cover_active_inputs_and_exclude_retired_source(name, active_paths):
     retired_paths = (
@@ -310,7 +310,7 @@ def test_postgres_job_keeps_real_database_gate_while_isolating_only_application_
 
 
 def test_contract_consumer_jobs_install_verified_artifacts_and_never_root_contracts_source():
-    for name in ('backend.yml','hardware-service.yml','simulator.yml','contracts.yml','frontend.yml','browser-e2e.yml','integration.yml'):
+    for name in ('backend.yml','hardware-service.yml','contracts.yml','frontend.yml','browser-e2e.yml','integration.yml'):
         document=workflow(name)
         for job in document['jobs'].values():
             commands='\n'.join(step.get('run','') for step in job['steps'])
@@ -325,7 +325,7 @@ def test_contract_consumer_jobs_install_verified_artifacts_and_never_root_contra
 
 
 def test_dev_bootstrap_precedes_every_consumer_and_docs_allocator_invocation():
-    for name in ('backend.yml','hardware-service.yml','simulator.yml','contracts.yml','frontend.yml','browser-e2e.yml','integration.yml','docs.yml'):
+    for name in ('backend.yml','hardware-service.yml','contracts.yml','frontend.yml','browser-e2e.yml','integration.yml','docs.yml'):
         for job_name, job in workflow(name)['jobs'].items():
             steps=job['steps']
             allocation=next(index for index,step in enumerate(steps) if 'node scripts/artifact-paths.mjs' in step.get('run',''))
@@ -337,10 +337,35 @@ def test_dev_bootstrap_precedes_every_consumer_and_docs_allocator_invocation():
             assert steps[bootstrap].get('env',{}).get('CIRNET_ARTIFACTS_TOKEN')=='${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}'
 
 
+def test_hardware_and_simulator_consumers_share_one_targeted_python_run():
+    document = workflow('hardware-service.yml')
+    events = document.get('on', document.get(True))
+    commands = [step.get('run', '') for step in document['jobs']['test']['steps']]
+    pytest_steps = [index for index, command in enumerate(commands) if ' -m pytest ' in command]
+    assert len(pytest_steps) == 1
+    test_index = pytest_steps[0]
+    assert shlex.split(commands[test_index]) == [
+        'python', '-m', 'pytest', '-q',
+        'tests/contracts/test_hardware_artifact.py',
+        'tests/contracts/test_hardware_installer.py',
+        'tests/integration/test_capture_rpc_data_plane.py',
+        'tests/integration/test_instrument_path_rpc.py',
+        'tests/integration/test_virtual_lab_execution.py',
+        'tests/integration/test_simulation_backend_selection.py',
+        'tests/contracts/test_simulator_artifact.py',
+        'services/api/tests/test_physical_preview.py',
+        '--basetemp', '$CIRNET_ARTIFACTS_SESSION/pytest',
+    ]
+    assert events['push']['branches'] == ['master']
+    assert any('scripts.install_interface --manifest integration/release-set.json --github-env "$GITHUB_ENV"'
+               in command for command in commands[:test_index])
+    assert not any('bootstrap-contracts.mjs' in command or 'npm ci' in command for command in commands)
+
+
 def test_hardware_consuming_jobs_select_installed_artifacts_and_never_frozen_units():
     for name, job_id in (('contracts.yml','canonical-boundaries'),('contracts.yml','installed-packages'),
             ('integration.yml','repository-contracts'),('browser-e2e.yml','chromium'),
-            ('simulator.yml','test'),('hardware-service.yml','test'),('fpga.yml','syntax')):
+            ('hardware-service.yml','test'),('fpga.yml','syntax')):
         job=workflow(name)['jobs'][job_id]
         commands='\n'.join(step.get('run','') for step in job['steps'])
         assert 'install_hardware.py' in commands,(name,job_id)

@@ -3,10 +3,18 @@ env:
   PYTHONDONTWRITEBYTECODE: '1'
 on:
   push:
+    branches: [master]
+    tags: ['v*']
     paths: ['tests/frontend/**', 'tests/integration/**', 'tests/support/**', 'contracts/**', 'scripts/**', 'services/api/**', 'integration/**', 'pyproject.toml', 'requirements-verification.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
   pull_request:
     paths: ['tests/frontend/**', 'tests/integration/**', 'tests/support/**', 'contracts/**', 'scripts/**', 'services/api/**', 'integration/**', 'pyproject.toml', 'requirements-verification.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/**']
   workflow_dispatch:
+    inputs:
+      interface_source:
+        description: Interface source to verify
+        type: choice
+        options: [published, candidate]
+        default: published
 permissions:
   contents: read
 concurrency:
@@ -26,6 +34,8 @@ jobs:
       CIRNET_E2E_PYTHON: python
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '26'
@@ -79,14 +89,25 @@ jobs:
         run: |
           python -c "import json,os,platform,psutil; print(json.dumps({'platform':platform.platform(),'python':platform.python_version(),'cpuCount':os.cpu_count(),'cpuAffinity':psutil.Process().cpu_affinity(),'memoryBytes':psutil.virtual_memory().total},sort_keys=True))"
       - name: Download the explicit reviewed Interface product
+        if: github.ref_type == 'tag' || inputs.interface_source == 'published'
         env:
           CIRNET_ARTIFACTS_TOKEN: ${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
         run: python -m scripts.install_interface --manifest integration/release-set.json --github-env "$GITHUB_ENV"
+      - name: Export the exact Interface candidate commit
+        if: github.ref_type != 'tag' && inputs.interface_source != 'published'
+        run: python -m scripts.select_browser_interface --lock integration/browser-interface-source.json --github-env "$GITHUB_ENV"
       - name: Bootstrap Interface artifacts before its clean install
+        if: github.ref_type == 'tag' || inputs.interface_source == 'published'
         env:
           CIRNET_CONTRACTS_ARTIFACT_MANIFEST: ''
           NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST: ''
           CIRNET_ARTIFACTS_TOKEN: ${{ secrets.CIRNET_ARTIFACTS_READ_TOKEN || secrets.NETCIRCUIT_ARTIFACTS_READ_TOKEN }}
+        run: node "$CIRNET_INTERFACE_ROOT/scripts/bootstrap-contracts.mjs" --github-env "$GITHUB_ENV"
+      - name: Bootstrap public SDK inputs for the Interface candidate
+        if: github.ref_type != 'tag' && inputs.interface_source != 'published'
+        env:
+          CIRNET_CONTRACTS_ARTIFACT_MANIFEST: ''
+          NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST: ''
         run: node "$CIRNET_INTERFACE_ROOT/scripts/bootstrap-contracts.mjs" --github-env "$GITHUB_ENV"
       - name: Install locked Playwright 1.64.1 and Interface dependencies
         working-directory: ${{ env.CIRNET_INTERFACE_ROOT }}

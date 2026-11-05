@@ -101,7 +101,7 @@ def test_frontend_contains_no_physical_transport_references():
 
 def test_ci_workflows_exist_for_each_subsystem():
     workflows=ROOT/'.github/workflows'
-    required=['frontend.yml','backend.yml','hardware-service.yml','simulator.yml','integration.yml','docs.yml','fpga.yml']
+    required=['frontend.yml','backend.yml','hardware-service.yml','integration.yml','docs.yml','fpga.yml']
     missing=[name for name in required if not (workflows/name).is_file()]
     assert not missing, missing
 

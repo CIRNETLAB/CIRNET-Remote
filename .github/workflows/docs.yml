@@ -3,6 +3,7 @@ env:
   PYTHONDONTWRITEBYTECODE: '1'
 on:
   push:
+    branches: [master]
   pull_request:
 jobs:
   context:

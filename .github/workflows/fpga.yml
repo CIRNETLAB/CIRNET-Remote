@@ -3,6 +3,7 @@ env:
   PYTHONDONTWRITEBYTECODE: '1'
 on:
   push:
+    branches: [master]
     paths: ['contracts/**', 'tests/contracts/**', 'tests/integration/**', 'integration/**', 'scripts/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/fpga.yml']
   pull_request:
     paths: ['contracts/**', 'tests/contracts/**', 'tests/integration/**', 'integration/**', 'scripts/**', 'pyproject.toml', 'requirements-*.txt', 'setup.py', 'MANIFEST.in', 'Makefile', '.gitattributes', '.github/workflows/fpga.yml']

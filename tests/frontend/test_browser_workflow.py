@@ -41,8 +41,11 @@ def test_frontend_checks_shared_generation_and_every_dependency_trigger():
         assert shared <= set(events[event]['paths'])
     steps = commands(document['jobs']['build'])
     for check in ('scripts.check_contract_consumer', 'generate_contracts.py --check', 'export_openapi.py --check',
-                  'sync_editor_catalog.py --check', 'npm run check:boundaries', 'npm test', 'npm run build', 'tests/frontend'):
+                  'sync_editor_catalog.py --check', 'npm test', 'npm run build', 'python -m pytest -q tests/frontend'):
         assert check in steps
+    # test_frontend_shell invokes the real AST checker on the same product.
+    assert 'npm run check:boundaries' not in steps
+    assert steps.index('python -m pytest -q tests/frontend') < steps.index('npm test') < steps.index('npm run build')
     assert document['permissions'] == {'contents': 'read'}
     assert_interface_bootstrap_ownership(document['jobs']['build'])
     assert all(step.get('working-directory')!='apps/web' for step in document['jobs']['build']['steps'])

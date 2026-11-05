@@ -2,12 +2,12 @@
   "status": "PINNED_ARTIFACT_INPUTS",
   "source": {
     "name": "cirnet-fpga-scaffold",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "kind": "source"
   },
   "contracts": {
     "name": "cirnet-contracts",
-    "version": "0.1.1"
+    "version": "0.1.2"
   },
   "logicalProtocolVersion": "1.0-scaffold",
   "registerMapVersion": "1.0-reserved",

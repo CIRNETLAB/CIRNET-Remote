@@ -3,6 +3,8 @@ env:
   PYTHONDONTWRITEBYTECODE: '1'
 on:
   push:
+    branches: [master]
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
 jobs:
@@ -203,6 +205,7 @@ jobs:
         shell: bash
         run: node scripts/cleanup-artifact-session.mjs --cleanup "$CIRNET_ARTIFACTS_SESSION"
   repository-contracts:
+    if: github.ref_type != 'tag'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

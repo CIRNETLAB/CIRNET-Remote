@@ -10,7 +10,16 @@ import tarfile
 
 import pytest
 
+from scripts.system_release_manifest import load_manifest
+
 ROOT = Path(__file__).resolve().parents[2]
+
+
+@pytest.mark.parametrize(('field', 'component'), [('source', 'FPGA'), ('contracts', 'Contracts')])
+def test_fpga_version_lock_matches_system_release(field, component):
+    lock = json.loads((ROOT / 'integration/fpga-version.json').read_text(encoding='utf-8'))
+    release = load_manifest(ROOT / 'integration/release-set.json')
+    assert lock[field]['version'] == release['repositories'][component]['version']
 
 
 def archive(tmp_path, *, identity_change=None, payload_change=None, extra=None, omit=None):
