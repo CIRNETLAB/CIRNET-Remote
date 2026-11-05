@@ -8,7 +8,10 @@ except ModuleNotFoundError:
 import sys
 from threading import Event, Thread
 import uvicorn
-from artifact_paths import artifact_directory, validate_artifact_directory
+try:
+    from scripts.artifact_paths import artifact_directory, validate_artifact_directory
+except ModuleNotFoundError:
+    from artifact_paths import artifact_directory, validate_artifact_directory
 
 def wait_for_pipe_eof(descriptor):
     """Wait for our parent's pipe without holding a blocking stdin read.

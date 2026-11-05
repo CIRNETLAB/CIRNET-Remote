@@ -2,7 +2,7 @@
 
 [English](../../en/operations/deployment.md) · [Hướng dẫn triển khai gốc](../../../deployment/README.md) · [Kiến trúc Lab-First](../architecture/system.md)
 
-Các mẫu Linux, Nginx và systemd mô tả máy đích dự kiến. Các lượt kiểm thử cục bộ theo ngày kiểm tra bất biến cấu hình, luồng phần mềm và migration cơ sở dữ liệu. Thu bằng chứng TLS, tường lửa, trình quản lý dịch vụ, năng lực và phần cứng trên máy đích thực tế. [Danh sách kiểm tra Mini PC](mini-pc.md) · [Báo cáo phát hành cục bộ 0.1.4](../../verification/2026-11-05-cirnet-release-0.1.4.md) · [Kết quả PostgreSQL ở Giai đoạn 0 native](../../verification/2026-11-05-native-migration-stage-0.md)
+Các mẫu Linux, Nginx và systemd mô tả máy đích dự kiến. Các lượt kiểm thử cục bộ theo ngày kiểm tra bất biến cấu hình, luồng phần mềm và migration cơ sở dữ liệu. Thu bằng chứng TLS, tường lửa, trình quản lý dịch vụ, năng lực và phần cứng trên máy đích thực tế. [Danh sách kiểm tra Mini PC](mini-pc.md) · [Báo cáo phát hành cục bộ 0.1.4](../../verification/2026-11-05-cirnet-release-0.1.4.md) · [Kết quả PostgreSQL ở Giai đoạn 0 native](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md)
 
 ## Chọn và cài môi trường chạy
 

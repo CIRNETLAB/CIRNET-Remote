@@ -14,7 +14,7 @@ Các hồ sơ này mô tả revision, đầu vào và môi trường cụ thể.
 | [Phát hành 0.1.4 cục bộ](../../verification/2026-11-05-cirnet-release-0.1.4.md) | Tiếng Anh | Kiểm thử phát hành cục bộ và gate chưa chạy |
 | [Rà soát hạ tầng CI](../../verification/2026-11-05-test-infrastructure-audit.md) | Tiếng Việt | Thay đổi P0–P3, số đo và giới hạn |
 | [Kế hoạch chuyển đổi native gốc](https://github.com/cirnetlab/cirnet-remote/blob/f91eeeb42d7528d4e7fa9b1526195847932faf9d/docs/superpowers/plans/2026-11-05-cirnet-native-migration.md) | Tiếng Việt | Kế hoạch C++ và Rust theo giai đoạn, tách riêng môi trường hiện hành |
-| [Chuyển đổi native giai đoạn 0](../../verification/2026-11-05-native-migration-stage-0.md) | Tiếng Việt | Một phần số đo tham chiếu và ngưỡng chưa chốt |
+| [Chuyển đổi native giai đoạn 0](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md) | Tiếng Việt | Một phần số đo tham chiếu và ngưỡng chưa chốt |
 | [Điều khiển nguồn 3D gốc](../../POWER_SUPPLY_CONTROLS.md) | Tiếng Việt | Tương tác mô hình cũ và kết quả theo ngày |
 
 ## Hồ sơ lưu trữ

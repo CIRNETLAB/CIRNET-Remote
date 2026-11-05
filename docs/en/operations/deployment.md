@@ -2,7 +2,7 @@
 
 [Tiếng Việt](../../vi/operations/deployment.md) · [Original deployment guide](../../../deployment/README.md) · [Lab-First architecture](../architecture/system.md)
 
-These Linux, Nginx and systemd templates describe the intended target. Dated local tests cover configuration invariants, software flows and database migrations. Collect target TLS, firewall, service-manager, capacity and hardware evidence on the actual host. [Mini PC checklist](mini-pc.md) · [0.1.4 local release report](../../verification/2026-11-05-cirnet-release-0.1.4.md) · [PostgreSQL results in native Stage 0](../../verification/2026-11-05-native-migration-stage-0.md)
+These Linux, Nginx and systemd templates describe the intended target. Dated local tests cover configuration invariants, software flows and database migrations. Collect target TLS, firewall, service-manager, capacity and hardware evidence on the actual host. [Mini PC checklist](mini-pc.md) · [0.1.4 local release report](../../verification/2026-11-05-cirnet-release-0.1.4.md) · [PostgreSQL results in native Stage 0](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md)
 
 ## Select and install the runtime
 
