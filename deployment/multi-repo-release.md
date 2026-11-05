@@ -22,7 +22,7 @@ the candidate, exact comparison and rollback set, finish independent work, and
 obtain the user's release decision. Do not overwrite immutable assets, delete a
 release or retag. Approval for a new patch permits new artifacts only; published 0.1.1 and 0.1.2 releases remain immutable.
 
-Install Git, Node 26 and Python 3.12+ first. Create an external virtual environment and activate it. For authenticated access, privately set `CIRNET_ARTIFACTS_TOKEN` using the [selected-repository read credential](../docs/ci-artifact-access.md); it can remain unset for public published assets. Current CI workflows prefer `CIRNET_ARTIFACTS_READ_TOKEN` and retain the provisioned `NETCIRCUIT_ARTIFACTS_READ_TOKEN` fallback. From a clean Remote checkout run:
+Install Git, Node 26 and Python 3.14+ first. Create an external virtual environment and activate it. For authenticated access, privately set `CIRNET_ARTIFACTS_TOKEN` using the [selected-repository read credential](../docs/ci-artifact-access.md); it can remain unset for public published assets. Current CI workflows prefer `CIRNET_ARTIFACTS_READ_TOKEN` and retain the provisioned `NETCIRCUIT_ARTIFACTS_READ_TOKEN` fallback. From a clean Remote checkout run:
 
 ```text
 python -B scripts/install_release.py --manifest integration/release-set.json --environment-file release-env.json

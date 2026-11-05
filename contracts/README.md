@@ -4,7 +4,7 @@ Canonical Contracts and Device Library ownership belongs to [CIRNET-Contracts](h
 
 JSON Schemas own shapes, FastAPI registrations in Remote own public operations, and protobuf owns local RPC fields. The installed package's manifest records identity, version, visibility, producer/consumers, profiles, artifacts and compatibility policy. Absolute URIs resolve from installed resources without network access or the current directory. Historical relative schema IDs remain readable through the registry. The root `contracts/__init__.py` is a strict adapter to the installed wheel's module/spec/resource loader, with no retained-source fallback; missing, wrong-version or editable Contracts fail explicitly.
 
-Canonical generation belongs to the independent repository, with Python 3.11+ runtime and Python 3.12/Node 26 generator CI. Remote verification first needs a reviewed absolute artifact manifest containing Python/npm artifact paths and SHA-256 values, plus the independently versioned DEV allocator wheel. For source development, select the renamed Contracts wheel and matching Simulator and Hardware builds in a fresh environment. Install the artifacts before consumer packages:
+Canonical generation belongs to the independent repository, with Python 3.11+ runtime and Python 3.14/Node 26 generator CI. Remote verification first needs a reviewed absolute artifact manifest containing Python/npm artifact paths and SHA-256 values, plus the independently versioned DEV allocator wheel. For source development, select the renamed Contracts wheel and matching Simulator and Hardware builds in a fresh environment. Install the artifacts before consumer packages:
 
 ```sh
 export CIRNET_CONTRACTS_ARTIFACT_MANIFEST=/absolute/reviewed/artifacts.json

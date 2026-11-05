@@ -144,7 +144,7 @@ function Test-CirnetDoctorReleaseCache {
         $null = Assert-CirnetDoctorOwnedPath $python $Configuration.DevHome -File
         $venvConfig = Assert-CirnetDoctorOwnedPath (Join-Path $Configuration.DevHome '.venv\pyvenv.cfg') $Configuration.DevHome -File
         $venvContents = Get-Content -LiteralPath $venvConfig -Raw -ErrorAction Stop
-        if ($venvContents -notmatch '(?m)^version\s*=\s*(\d+\.\d+(?:\.\d+)?)\s*$' -or [version]$Matches[1] -lt [version]'3.12') { throw 'The cached virtual environment does not declare a compatible Python 3.12+ version.' }
+        if ($venvContents -notmatch '(?m)^version\s*=\s*(\d+\.\d+(?:\.\d+)?)\s*$' -or [version]$Matches[1] -lt [version]'3.14') { throw 'The cached virtual environment does not declare a compatible Python 3.14+ version.' }
         $session = Assert-CirnetDoctorOwnedPath $state.environment.CIRNET_ARTIFACTS_SESSION $Configuration.DevHome -Directory
         $null = Assert-CirnetDoctorOwnedPath $environmentFile $session -File
         $markerPath = Join-Path $session '.cirnet-artifact-session.json'
@@ -218,7 +218,7 @@ import csv, importlib.metadata as m, io, json, os, pathlib, sys
 sys.path.append(sys.argv[1])
 expected = json.loads(sys.argv[2])
 versions = {name: m.version(name) for name in expected}
-assert sys.version_info >= (3, 12), 'Cached Python must be 3.12 or newer.'
+assert sys.version_info >= (3, 14), 'Cached Python must be 3.14 or newer.'
 assert all(not version or versions[name] == version for name, version in expected.items()), 'Installed distribution versions differ from the selected release.'
 # pip is already a required launcher dependency. Its vendored requirement parser
 # evaluates Python/Windows markers and extras without invoking any pip command.
@@ -274,9 +274,9 @@ print(json.dumps({'python': sys.version.split()[0], 'packages': versions}))
         $probe = Invoke-CirnetDoctorProcess -FilePath $python -Arguments @('-I','-S','-B','-c',$code,$site,($expected | ConvertTo-Json -Compress)) -TimeoutMilliseconds 6000
         if ($probe.ExitCode -ne 0) { throw 'The cached interpreter or required distribution metadata did not pass the isolated read-only probe.' }
         $versions = $probe.Output | ConvertFrom-Json -ErrorAction Stop
-        return New-CirnetDoctorCheck 'Cached Python dependencies' $true 'INSTALLED' $versions.python $python 'Python 3.12+, selected distribution versions, declared dependencies and Python module files were checked without application or service imports.' ''
+        return New-CirnetDoctorCheck 'Cached Python dependencies' $true 'INSTALLED' $versions.python $python 'Python 3.14+, selected distribution versions, declared dependencies and Python module files were checked without application or service imports.' ''
     } catch {
-        $repair = "Stop CIRNET, repair or recreate only '$($Configuration.DevHome)\.venv' with Python 3.12+, move launcher-state.json aside, then run .\run-cirnet.bat start. Keep databases and captures."
+        $repair = "Stop CIRNET, repair or recreate only '$($Configuration.DevHome)\.venv' with Python 3.14+, move launcher-state.json aside, then run .\run-cirnet.bat start. Keep databases and captures."
         return New-CirnetDoctorCheck 'Cached Python dependencies' $true 'INCOMPATIBLE' '' $python $_.Exception.Message $repair
     }
 }
@@ -440,9 +440,9 @@ function Get-CirnetEnvironmentReport {
     $checks.Add((Get-CirnetDoctorTool 'Git' @('git.exe') -Remediation 'Install Git for Windows and add git.exe to PATH.'))
     $psStatus = if ($PSVersionTable.PSVersion -ge [version]'5.1') { 'INSTALLED' } else { 'INCOMPATIBLE' }
     $checks.Add((New-CirnetDoctorCheck 'PowerShell' $true $psStatus $PSVersionTable.PSVersion.ToString() ([Diagnostics.Process]::GetCurrentProcess().MainModule.FileName) 'The current PowerShell host was checked.' 'Use Windows PowerShell 5.1 or newer.'))
-    $python = Get-CirnetDoctorTool 'Python' @('python.exe') -Remediation 'Install Python 3.12 or newer and add python.exe to PATH.'
-    if ($python.Status -eq 'INSTALLED' -and [version]$python.Version -lt [version]'3.12') {
-        $python.Status = 'INCOMPATIBLE'; $python.Detail = 'Python 3.12 or newer is required.'; $python.Remediation = 'Install Python 3.12 or newer and add python.exe to PATH.'
+    $python = Get-CirnetDoctorTool 'Python' @('python.exe') -Remediation 'Install Python 3.14 or newer and add python.exe to PATH.'
+    if ($python.Status -eq 'INSTALLED' -and [version]$python.Version -lt [version]'3.14') {
+        $python.Status = 'INCOMPATIBLE'; $python.Detail = 'Python 3.14 or newer is required.'; $python.Remediation = 'Install Python 3.14 or newer and add python.exe to PATH.'
     }
     $checks.Add($python)
     foreach ($feature in @('pip','venv')) {
@@ -475,11 +475,11 @@ function Get-CirnetEnvironmentReport {
             $contents = Get-Content -LiteralPath $cfg -Raw -ErrorAction Stop
             if ($contents -notmatch '(?m)^version\s*=\s*(\d+\.\d+(?:\.\d+)?)\s*$') { throw 'The launcher virtual environment configuration does not declare a Python version.' }
             $venvVersion = $Matches[1]
-            if ([version]$venvVersion -lt [version]'3.12') { throw 'The launcher virtual environment requires Python 3.12 or newer.' }
+            if ([version]$venvVersion -lt [version]'3.14') { throw 'The launcher virtual environment requires Python 3.14 or newer.' }
             $checks.Add((New-CirnetDoctorCheck 'Launcher virtual environment' $true 'INSTALLED' $venvVersion $venvPython 'The external virtual environment files are present; code execution waits for release cache validation.' ''))
         }
     } catch {
-        $repair = "Stop CIRNET, recreate only '$($configuration.DevHome)\.venv' with Python 3.12+, move launcher-state.json aside, then run .\run-cirnet.bat start. Keep databases and captures."
+        $repair = "Stop CIRNET, recreate only '$($configuration.DevHome)\.venv' with Python 3.14+, move launcher-state.json aside, then run .\run-cirnet.bat start. Keep databases and captures."
         $checks.Add((New-CirnetDoctorCheck 'Launcher virtual environment' $true 'INCOMPATIBLE' '' $venvPython $_.Exception.Message $repair))
     }
     $cache = Test-CirnetDoctorReleaseCache $configuration

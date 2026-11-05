@@ -1,7 +1,53 @@
 {
   "Contracts": {
     "revision": "3dea0a64c5f79d9c2cca0400d39643135d5bc9ab",
-    "sha256": "b72b7c5668d781452888e3a5d9b07c8d568b29a9d84337d2152d3c099ed71de4"
+    "sha256": "b72b7c5668d781452888e3a5d9b07c8d568b29a9d84337d2152d3c099ed71de4",
+    "buildWheelHashes": {
+      "3.14": {
+        "requirements-build.lock": {
+          "sha256": "df424b594d38fb00b71fb3d93add01f2f509e5a14305a730c0624fc13d72a8d0",
+          "hashes": {
+            "black==26.10.1": [
+              "289282aa2e09d3162312a3be1788ff21b08e9ea9cc4a81e656024728b32428fb",
+              "5cd88fd7b444ca51f3fc883b6f6657ea53a258b0b2eef6d9f2dfcfa17ce0e27b"
+            ],
+            "grpcio-tools==1.84.0": [
+              "38b2819f6a04cb98158815f7d12cc14fd62659ce65c30b5c8c9f0efcf898cb6e",
+              "a64a86d7e32d6ff57e0d4c6d01bac1ccd5718d01c5a5042b14ad63a00bd365f7"
+            ],
+            "markupsafe==3.0.4": [
+              "a8e9f292fcda89b324f2f5c91d13f1424a153e40fc2756f38ee23b15835ff300",
+              "c1bc67752d5f21013cfe430df4062441714eab79f65a6a05e01505957e9c35fe"
+            ],
+            "pytokens==0.4.1": [
+              "b35d7e5ad269804f6697727702da3c517bb8a5228afa450ab0fa787732055fc9",
+              "dc74c035f9bfca0255c1af77ddd2d6ae8419012805453e4b0e7513e17904545d"
+            ],
+            "pyyaml==6.0.3": [
+              "4a2e8cebe2ff6ab7d1050ecd59c25d4c8bd7e6f400f5f82b96557ac0abafd0ac",
+              "c458b6d084f9b935061bc36216e8a69a7e293a2f1e68bf956dcd9e6cbcd143f5"
+            ]
+          }
+        },
+        "requirements-runtime.lock": {
+          "sha256": "575826f2f9a57488cfd9c7de3441a831ee8db99db205ddb294eaf5b15d0b4d90",
+          "hashes": {
+            "grpcio==1.84.0": [
+              "57dc36a5ab0e676f5f6e171de2917fd0aef73f32a9aaf23956bfe19997a30bd1",
+              "800b7e00d92553313c0463c200087930aa78678ec1d528193aeb50906f55989b"
+            ],
+            "pydantic-core==2.50.1": [
+              "42b54c2c90ad348b5e3a85e03e715d572c1fde357ef104cdfe3b03b697a404ea",
+              "d32f3acc081cc3923386d88f422cde8892335e95f034e0104bb4cf9310d9915f"
+            ],
+            "rpds-py==2026.9.1": [
+              "837c6b305e26fe0f75b15c92cf3b2ba29e0ae19dc40b1c557b026cb426347d0c",
+              "eac2f5dbafd585dfe31f86a23ebf0d3ba480a9d49ebc87947267b5608d4ea0cd"
+            ]
+          }
+        }
+      }
+    }
   },
   "Simulator": {
     "revision": "b2bfe2c0ff5ca05ede19122830de21f97a2cecd2",

@@ -56,6 +56,15 @@ def workflow(name):
 
 
 @pytest.mark.parametrize('name', sorted(path.name for path in (ROOT / '.github/workflows').glob('*.yml')))
+def test_ci_selects_python_314_and_keeps_the_python_311_package_gate(name):
+    for job_id, job in workflow(name).get('jobs', {}).items():
+        selected = [step.get('with', {}).get('python-version') for step in job.get('steps', [])
+                    if step.get('uses', '').startswith('actions/setup-python@')]
+        expected = '3.11' if (name, job_id) == ('contracts.yml', 'installed-packages') else '3.14'
+        assert selected == [expected], (name, job_id, 'select the primary Python or explicit minimum gate')
+
+
+@pytest.mark.parametrize('name', sorted(path.name for path in (ROOT / '.github/workflows').glob('*.yml')))
 def test_every_allocator_job_selects_node_26_before_bootstrap(name):
     for job_id, job in workflow(name).get('jobs', {}).items():
         steps = job.get('steps', [])

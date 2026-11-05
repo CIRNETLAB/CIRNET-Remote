@@ -306,11 +306,21 @@ try {
     }
 
     $python = Join-Path $dev '.venv\Scripts\python.exe'
-    if (-not (Test-Path -LiteralPath $python -PathType Leaf)) {
-        $basePython = (Get-Command python.exe -CommandType Application | Select-Object -First 1).Source
-        & $basePython -c 'import sys; raise SystemExit(sys.version_info < (3, 12))'
-        if ($LASTEXITCODE -ne 0) { throw 'Python 3.12 or newer is required. Install it and make sure python.exe is on PATH.' }
-        & $basePython -m venv (Join-Path $dev '.venv')
+    $existingEnvironment = Test-Path -LiteralPath $python -PathType Leaf
+    $runtimePython = if ($existingEnvironment) { $python } else {
+        (Get-Command python.exe -CommandType Application | Select-Object -First 1).Source
+    }
+    # Check the actual interpreter before cached imports or package installation.
+    # -S also prevents an old environment's .pth/sitecustomize code from running.
+    & $runtimePython -I -S -B -c 'import sys; raise SystemExit(sys.version_info < (3, 14))'
+    if ($LASTEXITCODE -ne 0) {
+        if ($existingEnvironment) {
+            throw "Python 3.14 or newer is required. Stop CIRNET, recreate only '$dev\.venv' with Python 3.14+, move launcher-state.json aside, then run .\run-cirnet.bat start. Keep databases and captures."
+        }
+        throw 'Python 3.14 or newer is required. Install it and make sure python.exe is on PATH.'
+    }
+    if (-not $existingEnvironment) {
+        & $runtimePython -m venv (Join-Path $dev '.venv')
         if ($LASTEXITCODE -ne 0) { throw "Could not create the Python environment in '$dev' (exit code $LASTEXITCODE)." }
     }
 

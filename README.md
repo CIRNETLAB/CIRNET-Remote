@@ -99,7 +99,7 @@ dependencies, virtual environments, databases, captures, release artifacts and
 the DEV allocator cache. It skips unrecognized output and refuses cleanup while
 a launcher or relevant service is active.
 
-Doctor inspects Git, PowerShell, Python 3.12+, pip/venv, Node.js 26 LTS, npm,
+Doctor inspects Git, PowerShell, Python 3.14+, pip/venv, Node.js 26 LTS, npm,
 the installed runtime, release cache and the three service ports. It reports
 `INSTALLED`, `MISSING`, `INCOMPATIBLE` or `NOT VERIFIED` with remediation.
 `READY FOR LOCAL SIMULATION` requires an installed, verified runtime and the
@@ -107,6 +107,11 @@ required tools. On a fresh machine with the tools installed, use `start` to
 bootstrap the pinned release, then run Doctor again. CMake, Ninja, MSVC v143
 and FPGA tools are reported separately as optional. Doctor performs local
 inspection and prints its report to the console.
+
+Startup checks both the base interpreter and an existing launcher environment
+against Python 3.14. Installing a newer Python does not upgrade an existing
+`.venv`; follow Doctor's repair instructions to recreate only that environment
+and retain your databases and captures.
 
 After upgrading to Node 26 LTS, reopen your terminal so it uses the new PATH.
 Confirm `node --version` starts with `v26.`, then run
@@ -116,7 +121,7 @@ Confirm `node --version` starts with `v26.`, then run
 
 Trên Windows, mở [run-cirnet.bat](run-cirnet.bat), chọn **3** hoặc nhập
 `start` để chạy chế độ mô phỏng.
-Cài Git, Python 3.12+ và Node.js 26 LTS trước. Sau khi nâng Node, mở lại
+Cài Git, Python 3.14+ và Node.js 26 LTS trước. Sau khi nâng Node, mở lại
 terminal và kiểm tra `node --version` hiển thị `v26.x`. Lần đầu, launcher tải các gói
 được pin trong manifest, sau đó tự mở trình duyệt tại `http://127.0.0.1:5173`.
 Giữ cửa sổ launcher mở. Để dừng, chuyển về cửa sổ đó và nhấn **Enter** hoặc

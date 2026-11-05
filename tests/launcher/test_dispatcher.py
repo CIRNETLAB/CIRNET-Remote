@@ -1,11 +1,14 @@
 import os
+import json
+import hashlib
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
-from tests.launcher.support import PS_EXECUTABLE, REPO
+from tests.launcher.support import PS_EXECUTABLE, REPO, run_ps
 
 
 def launch(repo, args=(), *, text="", env=None, host=PS_EXECUTABLE):
@@ -162,6 +165,116 @@ Export-ModuleMember -Function Invoke-CirnetClean
 
 
 HOSTS = [PS_EXECUTABLE] + ([Path(shutil.which("pwsh.exe"))] if shutil.which("pwsh.exe") else [])
+
+
+@pytest.fixture(scope="module")
+def versioned_python_executable(tmp_path_factory):
+    """Execute the launcher's real version expression with a controlled Python version."""
+    directory = tmp_path_factory.mktemp("launcher-python-probe")
+    bridge = directory / "probe.py"
+    bridge.write_text(
+        "import os, sys\n"
+        "sys.version_info = tuple(map(int, os.environ['CIRNET_TEST_PYTHON_VERSION'].split('.')))\n"
+        "exec(os.environ['CIRNET_TEST_PROBE_CODE'])\n", encoding="utf-8",
+    )
+    source = directory / "Probe.cs"
+    source.write_text(r'''
+using System;
+using System.Diagnostics;
+using System.IO;
+public class Probe {
+    public static int Main(string[] args) {
+        File.AppendAllText(Environment.GetEnvironmentVariable("CIRNET_TEST_PYTHON_CALLS"), String.Join("\t", args) + "\n");
+        int code = Array.IndexOf(args, "-c");
+        if (code >= 0 && code + 1 < args.Length && args[code + 1].Contains("sys.version_info")) {
+            ProcessStartInfo info = new ProcessStartInfo(Environment.GetEnvironmentVariable("CIRNET_TEST_REAL_PYTHON"));
+            info.UseShellExecute = false;
+            info.CreateNoWindow = true;
+            info.Arguments = "-I -S -B \"" + Environment.GetEnvironmentVariable("CIRNET_TEST_PYTHON_BRIDGE") + "\"";
+            info.EnvironmentVariables["CIRNET_TEST_PROBE_CODE"] = args[code + 1];
+            using (Process child = Process.Start(info)) { child.WaitForExit(); return child.ExitCode; }
+        }
+        Console.Error.WriteLine("Fixture stopped before environment creation, package installation or service startup.");
+        return 73;
+    }
+}
+''', encoding="utf-8")
+    executable = directory / "python.exe"
+    quote = lambda value: "'" + str(value).replace("'", "''") + "'"
+    result = run_ps(
+        f"Add-Type -Path {quote(source)} -OutputAssembly {quote(executable)} -OutputType ConsoleApplication",
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stderr
+    return executable, bridge
+
+
+@pytest.mark.parametrize("host", HOSTS, ids=lambda host: host.name)
+@pytest.mark.parametrize("cached", [False, True], ids=["base", "cached-venv"])
+@pytest.mark.parametrize("version", ["3.12.10", "3.13.12", "3.14.0", "3.14.6"])
+def test_start_validates_python_before_reuse_or_install_preserving_user_data(
+    isolated_launcher, tmp_path, versioned_python_executable, host, cached, version,
+):
+    # Removing the existing-venv version probe would let old runtimes import the
+    # cached application or install packages; either call is captured below.
+    executable, bridge = versioned_python_executable
+    tools = tmp_path / "tools"
+    tools.mkdir()
+    for name in ("python.exe", "git.exe", "node.exe"):
+        shutil.copy2(executable, tools / name)
+    (tools / "npm.cmd").write_text("@exit /b 73\n", encoding="ascii")
+    manifest = isolated_launcher / "integration/release-set.json"
+    manifest.parent.mkdir()
+    manifest.write_text("{}", encoding="utf-8")
+    dev = tmp_path / "dev"
+    dev.mkdir()
+    database = dev / "database.sqlite3"
+    database.write_bytes(b"retained database")
+    capture = dev / "captures/evidence.ncap"
+    capture.parent.mkdir()
+    capture.write_bytes(b"retained capture")
+    if cached:
+        python = dev / ".venv/Scripts/python.exe"
+        python.parent.mkdir(parents=True)
+        shutil.copy2(executable, python)
+        # Deliberately claim a compatible version: the actual interpreter must
+        # decide readiness rather than trusting editable configuration text.
+        (dev / ".venv/pyvenv.cfg").write_text("version = 3.14.6\n", encoding="utf-8")
+        session = dev / "retained-session"
+        vite = session / "interface/node_modules/vite/bin/vite.js"
+        vite.parent.mkdir(parents=True)
+        vite.write_text("", encoding="utf-8")
+        (session / ".cirnet-artifact-session.json").write_text("{}", encoding="utf-8")
+        environment_file = session / "environment.json"
+        environment_file.write_text(json.dumps({"python": str(python), "environment": {
+            "CIRNET_INTERFACE_ROOT": str(session / "interface"), "CIRNET_ARTIFACTS_SESSION": str(session),
+        }}), encoding="utf-8")
+        (dev / "launcher-state.json").write_text(json.dumps({
+            "repo": str(isolated_launcher), "manifestHash": hashlib.sha256(manifest.read_bytes()).hexdigest(),
+            "environmentFile": str(environment_file),
+        }), encoding="utf-8")
+    calls = tmp_path / "python-calls.txt"
+    result = launch(isolated_launcher, ("start", "-NoColor", "-NoAnimation"), host=host, env={
+        "PATH": str(tools), "CIRNET_DEV_HOME": str(dev),
+        "CIRNET_TEST_REAL_PYTHON": sys.executable, "CIRNET_TEST_PYTHON_BRIDGE": str(bridge),
+        "CIRNET_TEST_PYTHON_VERSION": version, "CIRNET_TEST_PYTHON_CALLS": str(calls),
+    })
+    assert result.returncode == 1, result.stdout + result.stderr
+    recorded = calls.read_text(encoding="utf-8")
+    if version.startswith(("3.12.", "3.13.")):
+        assert "Python 3.14" in result.stderr, result.stderr
+        assert all("sys.version_info" in line for line in recorded.splitlines()), recorded
+        if cached:
+            assert "recreate only" in result.stderr
+            assert "databases and captures" in result.stderr
+            assert python.read_bytes() == executable.read_bytes()
+    else:
+        # A compatible interpreter reaches the next boundary, whose executable
+        # fixture deliberately refuses creation/installation without network use.
+        assert "Release setup failed" in result.stderr if cached else "Could not create the Python environment" in result.stderr
+        assert "Fixture stopped" in result.stderr
+    assert database.read_bytes() == b"retained database"
+    assert capture.read_bytes() == b"retained capture"
 
 
 @pytest.mark.parametrize("host", HOSTS, ids=lambda host: host.name)

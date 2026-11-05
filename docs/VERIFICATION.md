@@ -69,6 +69,15 @@ installers. This tests the renamed `cirnet-contracts` distribution with the
 corresponding Simulator and Hardware dependencies. Browser release, FPGA and
 system artifact access continue to select the published release set.
 
+Primary verification uses normal-GIL CPython 3.14 and Node 26. The explicit
+Python 3.11 installed-package gate retains the reusable packages' minimum
+compatibility check. A pinned producer archive can contain older wheel-hash
+coverage: its `buildWheelHashes` profile in the source CI lock adds reviewed
+CPython 3.14 wheel hashes only after both original lock-file digests and exact
+package declarations match. The helper modifies only its owned extracted build
+copy, retains every version and original hash, and records original/effective
+lock digests in `buildRequirements`. Published source/artifact pins stay intact.
+
 If GitHub regenerates a source archive with different compression, verify its
 extracted files against the pinned commit before updating the archive digest.
 [GitHub source archive stability](https://docs.github.com/en/repositories/working-with-files/using-files/downloading-source-code-archives#stability-of-source-code-archives)
@@ -746,3 +755,155 @@ the pinned canonical CLI removed only this session. The published release
 backup remains outside it and was preserved. Final staged diffs are empty in
 all six repositories; the pre-existing eight Simulator bytecode files retain
 their original 2026-10-27 timestamps and were not changed by this task.
+
+## 2026-11-05 Python 3.14 runtime and CI baseline
+
+Primary CI now selects Python 3.14 in all six repositories; Node 26 remains
+selected. Contracts retains its Python 3.11 compatibility matrix entry and
+Remote retains its explicit 3.11 installed-package gate. Reusable wheel metadata
+continues to allow Python 3.11+; this preserves consumer compatibility rather
+than changing published package requirements. The Windows launcher/Doctor
+minimum is now 3.14, including saved virtual-environment metadata and the actual
+interpreter executed before cached imports, installation or environment creation.
+An older environment is rejected with instructions to recreate only `.venv`
+and move its setup state aside, keeping databases and captures. Stop, cleanup,
+the title-only Console, service deadlines and the release selection are preserved.
+
+Verification uses a fresh external CPython 3.14.6 Windows AMD64 virtual
+environment based on the user's existing Anaconda interpreter, with the GIL
+enabled. The tool shell separately resolves Python 3.14.4; it is not the fresh
+runtime used for the package and integration results below. Final compilation
+of all 434 current tracked/new Python files under 3.14.6 reports zero errors
+or warnings. The official Python 3.13 and 3.14 porting notes were checked against
+actual imports and calls. Existing Hardware explicitly chooses `spawn`; asyncio
+uses supported running-loop/run patterns; annotations/generated models are
+handled by the pinned Pydantic; archive extraction already specifies `data`.
+No speculative backend/API replacement was needed.
+
+The initial real installation failed because Contracts' reviewed locks only
+allowed CPython 3.11/3.12 native wheel hashes. Sixteen exact-version official
+PyPI hashes were added for CPython 3.14 Windows AMD64 and glibc Linux x86_64;
+no dependency version or existing hash was removed. All five producer lock
+closures pass offline binary-only hash verification for both platforms (ten
+checks, 53 selected wheels verified against official metadata). Simulator,
+Hardware and FPGA locks already covered these wheels. Fresh API verification
+also freezes its resolved, exact declared pins in an external local hash lock;
+it does not claim a pre-existing tracked complete API hash closure.
+
+Consumer CI still builds Contracts from the immutable `3dea0a6` source pin.
+Its older lock bytes need the same 16 approved hashes even after the producer's
+current lock changes. Remote, Simulator and Hardware therefore use identical
+minor-version hash profiles in their existing source CI manifests. The helper
+first verifies both original lock SHA256 values and existing exact package
+declarations, then extends only those allowed lock files in the owned build
+copy. Invalid paths, hashes, missing versions or changed source fail before any
+write. The output manifest records both original and effective lock digests.
+The source archive digest/revision and all 40 exact requirement declarations
+remain unchanged. Eleven regressions failed before implementation, then pass
+in each of the three independent consumers; independent review also verified
+that removing only the 16 additions restores the original bytes.
+
+| Windows CPython 3.14.6 gate | Result |
+| --- | --- |
+| Fresh offline hashed dependencies, `pip check`, installed wheel metadata/payload/RECORD | PASS, all five distributions |
+| Contracts deterministic generation, catalog, topology and compatibility | PASS, all four commands |
+| Contracts complete source tests | PASS, 516 |
+| Contracts isolated installed-wheel conformance/RPC/schema tests | PASS, 209 |
+| Simulator installed-wheel tests | PASS, 121 |
+| Hardware installed-wheel tests including real RPC/spawn | PASS, 114 |
+| API installed-wheel tests with installed-module origin audit | PASS, 492 |
+| Four independent extracted sdist rebuilds | PASS, reproduce each original candidate wheel byte-for-byte |
+| Complete launcher tests on the fresh runtime | PASS, 176; one existing file-symlink privilege skip |
+| Workflow, real installed-package receipt and new hash-profile tests | PASS, 108; no deselections |
+| Extra independent Simulator/Hardware hash-profile tests | PASS, 11 each |
+| CI bootstrap/selection guards | PASS, Contracts/Simulator/Hardware/FPGA: three each; Interface: two |
+| actionlint 1.7.12 | PASS, all 14 workflow files |
+
+The fresh environment resolves the seven metadata/missing-wheel fixture errors
+recorded during the earlier Node migration. Package tests use physical exports
+of the recorded starting Git HEADs; API tests explicitly import the installed
+wheel rather than source-shadowing it. Current workflow/lock/launcher/helper
+changes are separately exercised from the working tree. Candidate versions
+remain 0.1.1 and no candidate replaces a published artifact. Hosted Actions,
+publication, full browser acceptance, PostgreSQL acceptance and physical FPGA
+verification are NOT_RUN for this upgrade; normal-GIL CPython is the verified
+runtime, with no free-threaded build claim.
+
+Initial restricted Windows runs could not create some junctions/hardlinks or
+loopback sockets. In particular, asyncio's Windows fallback socket pair blocked
+TestClient before its AnyIO portal could start. Native executions passed the
+unchanged assertions; no runtime workaround was added. One existing upstream
+Starlette/httpx deprecation warning is retained. All diagnostics, test state,
+source exports, caches and candidate artifacts begin in the canonical external
+session owned by `cirnet-python314-compat-20261105`; permanent source retains
+only Markdown evidence. No global Python install, user virtual-environment
+mutation, commit, push or release is part of this task.
+
+Real Windows PowerShell 5.1 acceptance also passes `-Check`, Enter, Ctrl+C and
+external `stop`, with a concurrent launcher rejected while the first stays
+healthy. Actual Hardware/API/Web/main-source/proxy checks pass, and all three
+ports and the launcher lock are released after each run. Hidden native consoles
+record non-redirected input and genuine Enter/Ctrl+C input records. The test
+uses a separate copied immutable Python 3.14.6 legacy runtime and verified
+Interface 0.1.3 source with a fresh 92-package npm install; it is a cached-runtime
+smoke, not a fresh release install. API uses the current checkout's `--app-dir`
+as the launcher specifies. A final read-only Doctor check against the user's
+actual Anaconda 3.14.6 and existing 3.14.6 launcher environment reports
+`Ready=true` / READY FOR LOCAL SIMULATION, with no user environment/data change.
+
+Actual Linux verification uses normal-GIL CPython 3.14.6, glibc 2.36 and Node
+26.13.0 in the official `python:3.14.6-slim-bookworm` image, digest
+`sha256:4c92ffcde4dd6f1ff72a24518f49fd4990b27134987dfa31a733badde66df9f8`,
+limited to four CPUs and 8 GiB. Its 1,390-file physical export includes recorded
+working-tree policy changes and six finalized helper/profile overlays; there
+is zero source drift. It is not a committed clean-checkout claim.
+
+| Actual Linux Python 3.14.6 gate | Result |
+| --- | --- |
+| Contracts full source suite and deterministic commands | PASS, 516 tests and all four commands |
+| Simulator installed suite | PASS, 122 |
+| Hardware installed suite with actual RPC/spawn | PASS, 115 |
+| API installed suite with installed origins | PASS, 492 |
+| Remote workflow/access cases | 95 PASS in combined run; remaining two origin cases PASS after exact-wheel metadata setup, all 97 accounted for |
+| Contracts/FPGA bootstrap; Interface selection checks | PASS, 3 / 3 / 2 |
+| Four fresh wheel/sdist builds, selected wheel digests/origins and `pip check` | PASS |
+| Actual pinned Contracts CI dependency helper | PASS, original archive/digests, hash profile, Python wheel and SDK build/npm pack |
+
+Linux uses executable native temporary storage for ordinary Python extension
+loading and pytest's unlinked capture files; Docker Desktop's NTFS bind cannot
+provide those semantics. Git discovery, the standalone allocator URI and actual
+DEV bootstrap paths match the normal verification prerequisites. The first API
+provenance probe lacked PEP610 metadata after name-based offline installation;
+force-installing the same exact verified wheel file supplies the required
+archive digest. Both affected assertions pass on stable metadata. No assertions
+were weakened or product workaround added. The task-owned container was removed
+after canonical child cleanup; Docker Desktop and its reusable pinned image
+remain. Python 3.11 execution is NOT_RUN locally; its CI compatibility gates
+are preserved rather than claimed as a new pass.
+
+Final Windows launcher log SHA256:
+`53e048daf0d91fc53550cf5f2914988508f37ee2ad1541a39eafd35243212d91`.
+Full Windows workflow/provenance/profile log SHA256:
+`3abff9fd4af9a9785c387aec352433779a73839e01bf8878758f2b7c150fc010`.
+Windows runtime report SHA256:
+`4014d16d54e796ea39de3bc59a1974e0be1cf0339a52633f8cc9e094335c0bc2`;
+real lifecycle report SHA256:
+`e01434ff8f9c51c14086b472a79f04ca75358a4500b2c45c0d0f5fc70280c086`.
+Linux report SHA256:
+`b7d9e7ccba249135e2f8edc80caa337fb8316f76fb104c1c2d9567f21bd45d86`;
+native evidence archive SHA256:
+`92db1111de704ab02b6fc776763090ca9bd94a631bd61d73d4578719073cf9c2`.
+Final dispatcher SHA256:
+`515aa5704db0a900fc902f365c6ef4a6a2acc0d845e7d65b452d9d87a8371751`;
+Doctor SHA256:
+`262d224e3a34d3d8ce7e1ddced3125c90320c68860b8fc6cf65af13e2553d313`.
+
+After evidence inspection, the task-owned artifacts and container were removed.
+Windows canonical cleanup first stopped on the initial Linux venv's `lib64`
+symlink after partially removing the session. A read-only native inventory
+identified that link and three owned test junctions. A network-disabled Linux
+container unlinked only `lib64`, without following its `lib` target. The
+remaining identity-checked task directories were moved into a fresh allocator
+cleanup session and removed through the pinned canonical CLI. Both session
+paths and the task-owned containers are absent; the durable published-release
+backup, original user runtime and source repositories are preserved.

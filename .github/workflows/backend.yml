@@ -27,7 +27,7 @@ jobs:
           node-version: '26'
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.14'
       - name: Select exact dependency artifacts from the system lock
         run: python scripts/select_ci_release.py --manifest integration/release-set.json --github-env "$GITHUB_ENV"
       - name: Bootstrap the pinned independent DEV allocator

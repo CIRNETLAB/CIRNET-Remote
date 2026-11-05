@@ -46,9 +46,9 @@ GOOD_TOOLS = r"""
         $output = switch -Regex ($FilePath) {
             'git' { 'git version 2.50.0'; break }
             'python' {
-                if ($Arguments -contains '-S') { '{"python":"3.12.7","packages":{}}' }
-                elseif ($Arguments -contains '--version') { 'Python 3.12.7' }
-                elseif ($Arguments -contains 'pip') { 'pip 25.0 from C:\tools\pip (python 3.12)' }
+                if ($Arguments -contains '-S') { '{"python":"3.14.6","packages":{}}' }
+                elseif ($Arguments -contains '--version') { 'Python 3.14.6' }
+                elseif ($Arguments -contains 'pip') { 'pip 25.0 from C:\tools\pip (python 3.14)' }
                 else { 'OK' }
                 break
             }
@@ -122,6 +122,18 @@ def test_python_minimum_and_node_major_are_enforced(tmp_path):
     assert checks(value)["Python"]["Status"] == "INCOMPATIBLE"
     assert checks(value)["Node.js"]["Status"] == "INCOMPATIBLE"
     assert not value["BootstrapReady"]
+
+
+@pytest.mark.parametrize("version, compatible", [
+    ("3.12.10", False), ("3.13.12", False), ("3.14.0", True), ("3.14.6", True),
+])
+def test_python_bootstrap_minimum_keeps_patch_updates_compatible(tmp_path, version, compatible):
+    dev = tmp_path / "uncreated-dev"
+    value = report(dev, GOOD_TOOLS.replace("3.14.6", version))
+    python = checks(value)["Python"]
+    assert python["Status"] == ("INSTALLED" if compatible else "INCOMPATIBLE")
+    assert value["BootstrapReady"] is compatible
+    assert not dev.exists()
 
 
 @pytest.mark.parametrize("version", ["26.0.0", "26.13.0"])
@@ -252,7 +264,7 @@ def installed_cache(tmp_path, *, prefix="CIRNET"):
     interpreter.parent.mkdir(parents=True)
     interpreter.write_bytes(b"not executable: probe is stubbed")
     (dev / ".venv/Lib/site-packages").mkdir(parents=True)
-    (dev / ".venv/pyvenv.cfg").write_text("version = 3.12.7\n", encoding="utf-8")
+    (dev / ".venv/pyvenv.cfg").write_text("version = 3.14.6\n", encoding="utf-8")
     context = {"version": 1, "owner": "git:" + str(repository), "roots": [str(repository)]}
     (session / f".{package_prefix}-artifact-session.json").write_text(
         json.dumps({"version": 2, "directory": str(session), "context": context}), encoding="utf-8"
@@ -370,9 +382,10 @@ def test_cache_corruption_is_rejected_before_cached_code(tmp_path, corruption):
     assert checks(value)["Cached Python dependencies"]["Status"] == "NOT VERIFIED"
 
 
-def test_incompatible_cached_python_has_data_preserving_repair_instructions(tmp_path):
+@pytest.mark.parametrize("version", ["3.12.10", "3.13.12"])
+def test_incompatible_cached_python_has_data_preserving_repair_instructions(tmp_path, version):
     repository, dev, state = installed_cache(tmp_path)
-    (dev / ".venv/pyvenv.cfg").write_text("version = 3.11.9\n", encoding="utf-8")
+    (dev / ".venv/pyvenv.cfg").write_text(f"version = {version}\n", encoding="utf-8")
     value = report(dev, GOOD_TOOLS, repository)
     by_name = checks(value)
     assert by_name["Launcher virtual environment"]["Status"] == "INCOMPATIBLE"
@@ -421,10 +434,10 @@ def cached_metadata_report(dev, manifest):
     """Run the production metadata probe using a real Python and owned fake wheels."""
     executable = shutil.which("python.exe")
     if not executable:
-        pytest.skip("The isolated metadata regression requires Python 3.12+.")
-    version = subprocess.run([executable, "-I", "-S", "-B", "-c", "import sys; print(int(sys.version_info >= (3,12)))"], capture_output=True, text=True, timeout=10)
+        pytest.skip("The isolated metadata regression requires Python 3.14+.")
+    version = subprocess.run([executable, "-I", "-S", "-B", "-c", "import sys; print(int(sys.version_info >= (3,14)))"], capture_output=True, text=True, timeout=10)
     if version.stdout.strip() != "1":
-        pytest.skip("The isolated metadata regression requires Python 3.12+.")
+        pytest.skip("The isolated metadata regression requires Python 3.14+.")
     result = run_ps(
         f"$module=Import-Module {ps(MODULE)} -Force -PassThru; "
         "& $module { param($Dev,$Manifest,$RealPython) "

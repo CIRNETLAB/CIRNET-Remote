@@ -65,10 +65,10 @@ does not start it.
 
 ### Windows PowerShell
 
-First-time setup from the Remote repository root, with Python 3.12 (package minimum 3.11). Select the local renamed Contracts wheel and matching rebuilt Simulator and Hardware wheels in the explicit 0.1.1 manifests before installing consumer packages:
+First-time setup from the Remote repository root, with Python 3.14 (package minimum 3.11). Select the local renamed Contracts wheel and matching rebuilt Simulator and Hardware wheels in the explicit 0.1.1 manifests before installing consumer packages:
 
 ```powershell
-py -3.12 -m venv services/api/.venv
+py -3.14 -m venv services/api/.venv
 $env:CIRNET_CONTRACTS_ARTIFACT_MANIFEST = 'C:\absolute\reviewed\artifacts.json'
 .\services\api\.venv\Scripts\python.exe scripts/install_contracts.py --with-dev --manifest $env:CIRNET_CONTRACTS_ARTIFACT_MANIFEST
 $env:CIRNET_SIMULATOR_ARTIFACT_MANIFEST = 'C:\absolute\reviewed\simulator-artifacts.json'
@@ -144,10 +144,10 @@ required for virtual execution.
 
 ### Linux/macOS
 
-Run setup from Remote root with an installed Python 3.12 interpreter:
+Run setup from Remote root with an installed Python 3.14 interpreter:
 
 ```bash
-python3.12 -m venv services/api/.venv
+python3.14 -m venv services/api/.venv
 export CIRNET_CONTRACTS_ARTIFACT_MANIFEST=/absolute/reviewed/artifacts.json
 services/api/.venv/bin/python scripts/install_contracts.py --with-dev --manifest "$CIRNET_CONTRACTS_ARTIFACT_MANIFEST"
 export CIRNET_SIMULATOR_ARTIFACT_MANIFEST=/absolute/reviewed/simulator-artifacts.json
