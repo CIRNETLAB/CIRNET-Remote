@@ -53,6 +53,15 @@ environment**, **Run CIRNET Remote**, or **Exit**. Enter a number or
 Choosing Run uses the pinned release bootstrap and starts Hardware Service,
 Remote API and CIRNET-Interface. The first setup can take several minutes.
 
+The Console groups actions into clear sections, highlights success, warnings
+and errors, and shows a bounded loading spinner during service health checks
+and shutdown waits. Doctor separates required and optional checks with a final
+summary; Clean shows both exact byte counts and readable sizes. All messages
+remain in English. Colors and animation automatically fall back to plain output
+for redirected output, `NO_COLOR=1`, `TERM=dumb` or unsupported console features.
+Redirected input disables animation. Resizing during a spinner switches it to
+a static status line without erasing previous Console output.
+
 Existing command-line usage starts directly without displaying the menu.
 
 ```powershell
@@ -63,7 +72,14 @@ Existing command-line usage starts directly without displaying the menu.
 .\run-cirnet.bat doctor
 .\run-cirnet.bat clean -Preview
 .\run-cirnet.bat clean
+.\run-cirnet.bat -NoColor
+.\run-cirnet.bat start -NoAnimation
+.\run-cirnet.bat doctor -NoColor
 ```
+
+`-NoColor` disables colors and animation; `-NoAnimation` keeps supported colors
+without motion. Either presentation switch alone opens the menu. Combined with
+an explicit action or an existing startup flag, it keeps direct CLI behavior.
 
 `-Check` checks the real services and stops them automatically. During a normal
 run, focus the launcher terminal and press Enter or Ctrl+C to stop, or run the

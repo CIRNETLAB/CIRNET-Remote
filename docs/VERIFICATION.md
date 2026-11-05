@@ -540,3 +540,96 @@ Context, 34 Remote Markdown files, 17 Interface Markdown files, both artifact
 worktree/index/committed-diff guards and whitespace checks pass. Follow-up
 hosted Actions are NOT_WAITED at the user's instruction; deployment and physical
 hardware checks are NOT_RUN.
+
+## Windows launcher Console presentation - 2026-11-05
+
+The launcher now uses the presentation-only `scripts/launcher/Console.psm1` for
+English ASCII banners/sections, semantic status colors, readable sizes and
+synchronous service-readiness/shutdown activity. Doctor retains the same report
+and required/optional semantics, with summary counts; Clean retains its exact
+whitelist/confirmation/results, with readable units alongside original bytes.
+BAT, Common/Clean/Doctor business modules, release selection, backend and
+dependencies are unchanged. The dispatcher preserves bootstrap JSON capture,
+error stderr/exit codes, health probes, 60/20-second deadlines, locks, Enter,
+Ctrl+C, external stop and reverse child shutdown.
+
+`-NoColor` disables launcher colors and animation; `-NoAnimation` disables motion
+while retaining supported colors. Either alone opens the menu. Existing runtime
+flags and explicit actions continue direct dispatch. Redirected/unsupported
+output, `NO_COLOR=1` and `TERM=dumb` use plain output. Redirected input disables
+animation. Native console width loss/change finishes the existing complete
+frame and falls back to one static status line, without erasing reflowed rows.
+Only real readiness/stop polling animates; blocking setup/inspection shows an
+honest stage message. There is no animation thread, new dependency, encoding,
+code-page, title or cursor-hiding change.
+
+TDD first recorded eleven dispatcher failures for the missing presentation
+flags/summaries/readable sizes. Console tests cover captured output without
+terminal controls, stdout/stderr, no success-pipeline objects, capability/closed
+writer fallback, idempotent cleanup, resizing and byte formatting on Windows
+PowerShell 5.1 and installed PowerShell 7. Real native shrink 120 to 40 columns
+exposed an erased-tail fragment; four failing regressions preceded the fallback
+repair. A real default-encoding WinPS5.1 comparison also exposed `Trần` becoming
+`Tr?n` through `Console.Out`. Two OEM-writer regressions preceded the normal
+stdout switch to `Write-Host`, matching the original host's Unicode behavior
+without changing encoding. Native stderr routing remains preserved.
+
+The final full `tests/launcher` suite passes **145 tests**, with one existing
+file-symlink privilege skip, in 115.20 seconds, exit zero. The skip is explicitly
+`test_file_symlink_is_retained_without_deleting_its_target`: this Windows account
+cannot create that file symlink. Junction/path-traversal, running-service,
+permission, whitelist and other existing safety cases remain in the suite.
+The final console subset passes 40 cases, with two additional closed-writer
+fallback rechecks. Independent review found no remaining blocker.
+
+Final full-suite log SHA256:
+`93f67753c53db3b9fbd4f14fcc7b37e4ee2cdf729e7df50f3cb02575a19d1144`.
+Working-tree Console module SHA256:
+`85dd25c5682d5ab152a6677c20a3e2adb208265a70d29bc5c85c4285dfe741fa`;
+dispatcher SHA256:
+`349cd8ff887ac6b87c1191108b78f0dee46bcd1dc72877c4385b78d3afb8a836`.
+Raw fixtures, copied runtime, console-buffer/attribute snapshots and reports
+start only in the shared external session owned by
+`cirnet-launcher-console-20261105`. Only this canonical Markdown record and
+source/tests belong in Git.
+
+Final real Windows PowerShell 5.1 Console acceptance uses those same two source
+hashes, hidden owned consoles and a separate owned dev home. Its existing
+installed Python runtime was copied read-only; imports and `sys.prefix` resolve
+inside the copy. Interface 0.1.3 was strictly extracted from its selected archive
+and used identical-lock copied Web dependencies. This is a copied-runtime smoke,
+not a fresh-install claim. User databases, captures, runtime and windows were
+not modified; all test state/logs stayed outside Git.
+
+| Real launcher control | Result | Last observed output |
+| --- | --- | ---: |
+| `-Check` | PASS, exit 0 | 8.68 s |
+| Enter key | PASS, exit 0 | 8.07 s |
+| Ctrl+C key record | PASS, exit 0 | 8.78 s |
+| External `stop` | PASS, both exits 0 | 7.06 s |
+
+Each run reaches the original Hardware/API/Vite/main-source/proxy health checks,
+releases its exclusive launcher lock and all three ports (50051/8000/5173), and
+restores foreground, cursor visibility and runtime input mode. A separate native
+tree observation verifies concurrent-launcher rejection while the original
+remains healthy and shutdown order Web, API, Hardware, then no owned descendants.
+The later changes are presentation-only; those lifecycle statements do not
+depend on a mocked service or probe.
+
+Native console buffer/attribute snapshots confirm the six status tones and
+actual spinner frames. Final 120-to-40-column reflow preserves the complete old
+frame, produces exactly one static WORKING message, retains earlier history and
+puts final OK on a new row. `NO_COLOR=1` and `TERM=dumb` are plain with no motion.
+Default-encoding native path output containing `Trần` exactly matches baseline
+`Write-Host`; no code-page or encoding change is required. Menu input mode has
+the same mouse-input-bit change as standalone PowerShell `Read-Host`; runtime
+stop and module-only controls restore their original modes.
+
+Final native summary SHA256:
+`c3e886f0f43010d23108dc6edf53e561a60d0c5b04ccedd5cf5590a0ab036523`.
+Initial restricted-desktop console attempts produced no usable result and are
+NOT_RUN; successful acceptance used the approved isolated native console path.
+Native PS7 service lifecycle, fresh dependency installation, backend/browser
+product gates and physical hardware/deployment are NOT_RUN for this presentation
+change. PS7 presentation/dispatch is covered by the automated suite. No commit,
+push, release, baseline, dependency or backend change is part of this task.

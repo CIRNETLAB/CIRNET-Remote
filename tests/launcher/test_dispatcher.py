@@ -8,11 +8,11 @@ import pytest
 from tests.launcher.support import PS_EXECUTABLE, REPO
 
 
-def launch(repo, args=(), *, text="", env=None):
+def launch(repo, args=(), *, text="", env=None, host=PS_EXECUTABLE):
     if os.name != "nt":
         pytest.skip("The batch launcher requires Windows.")
     return subprocess.run(
-        [str(PS_EXECUTABLE), "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass",
+        [str(host), "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass",
          "-File", str(repo / "scripts/run-cirnet.ps1"), *args],
         cwd=repo, input=text, capture_output=True, text=True, timeout=30,
         env={**os.environ, **(env or {})}, creationflags=subprocess.CREATE_NO_WINDOW,
@@ -27,6 +27,7 @@ def isolated_launcher(tmp_path):
     shutil.copy2(REPO / "run-cirnet.bat", root)
     shutil.copy2(REPO / "scripts/run-cirnet.ps1", root / "scripts")
     shutil.copy2(REPO / "scripts/launcher/Common.psm1", modules)
+    shutil.copy2(REPO / "scripts/launcher/Console.psm1", modules)
     (modules / "Doctor.psm1").write_text("""
 function Get-CirnetEnvironmentReport {
     [pscustomobject]@{Ready=$true; Checks=@(); MissingRequired=@()}
@@ -49,7 +50,7 @@ def test_no_arguments_show_the_requested_menu_and_exit_without_setup(isolated_la
     result = launch(isolated_launcher, text="0\n", env={"CIRNET_DEV_HOME": str(dev)})
     assert result.returncode == 0, result.stderr
     for line in (
-        "         CIRNET REMOTE LAUNCHER", "How can I help you?",
+        "CIRNET REMOTE LAUNCHER", "How can I help you?",
         "[1] Clean build files", "[2] Check development environment",
         "[3] Run CIRNET Remote", "[0] Exit", "Enter your choice (0-3):",
     ):
@@ -158,3 +159,71 @@ Export-ModuleMember -Function Invoke-CirnetClean
     assert result.returncode == 0, result.stderr
     assert "Eligible files: 1 | Eligible bytes: 7" in result.stdout
     assert "Protected dependencies. (0 files, 0 bytes)" not in result.stdout
+
+
+HOSTS = [PS_EXECUTABLE] + ([Path(shutil.which("pwsh.exe"))] if shutil.which("pwsh.exe") else [])
+
+
+@pytest.mark.parametrize("host", HOSTS, ids=lambda host: host.name)
+@pytest.mark.parametrize("flags", [("-NoColor",), ("-NoAnimation",), ("-NoColor", "-NoAnimation")])
+def test_presentation_flags_keep_menu_and_direct_action_contract(isolated_launcher, tmp_path, host, flags):
+    dev = tmp_path / "unused-dev"
+    menu = launch(isolated_launcher, flags, text="0\n", env={"CIRNET_DEV_HOME": str(dev)}, host=host)
+    assert menu.returncode == 0, menu.stderr
+    assert "How can I help you?" in menu.stdout
+    assert not dev.exists()
+    direct = launch(isolated_launcher, ("doctor", *flags), host=host)
+    assert direct.returncode == 0, direct.stderr
+    assert "READY FOR LOCAL SIMULATION" in direct.stdout
+    assert "How can I help you?" not in direct.stdout
+    assert "\x1b" not in menu.stdout + direct.stdout
+    assert "\b" not in menu.stdout + direct.stdout
+
+
+@pytest.mark.parametrize("host", HOSTS, ids=lambda host: host.name)
+def test_doctor_summary_keeps_optional_missing_tools_separate(isolated_launcher, host):
+    (isolated_launcher / "scripts/launcher/Doctor.psm1").write_text("""
+function Get-CirnetEnvironmentReport {
+    $checks = @(
+        [pscustomobject]@{Name='Git'; Required=$true; Status='INSTALLED'; Version='2.48.0';
+            Path='C:\\tools\\git.exe'; Detail='Version checked.'; Remediation=''},
+        [pscustomobject]@{Name='Ninja'; Required=$false; Status='MISSING'; Version='';
+            Path=''; Detail='Optional tool is absent.'; Remediation='Install Ninja for native builds.'})
+    [pscustomobject]@{Ready=$true; Checks=$checks; MissingRequired=@()}
+}
+Export-ModuleMember -Function Get-CirnetEnvironmentReport
+""", encoding="utf-8")
+    result = launch(isolated_launcher, ("doctor",), host=host, env={"NO_COLOR": "1", "TERM": "dumb"})
+    assert result.returncode == 0, result.stderr
+    for text in ("ENVIRONMENT DOCTOR", "Required ready: 1/1", "Optional installed: 0/1",
+                 "Install Ninja for native builds.", "READY FOR LOCAL SIMULATION"):
+        assert text in result.stdout
+    assert "MISSING REQUIRED DEPENDENCIES" not in result.stdout
+    assert "\x1b" not in result.stdout + result.stderr
+
+
+def test_clean_preview_keeps_exact_counts_and_adds_readable_sizes(isolated_launcher):
+    (isolated_launcher / "scripts/launcher/Clean.psm1").write_text("""
+function Invoke-CirnetClean {
+    param($RepositoryRoot, [switch]$Preview)
+    $row=[pscustomobject]@{Path='cache.cpython-312.pyc';Status='Eligible';Files=1;Bytes=1024;Reason='Generated cache.'}
+    [pscustomobject]@{Results=@($row);Deleted=0;Skipped=0;Failed=0;Bytes=0;Files=0;Preview=$true}
+}
+Export-ModuleMember -Function Invoke-CirnetClean
+""", encoding="utf-8")
+    result = launch(isolated_launcher, ("clean", "-Preview"))
+    assert result.returncode == 0, result.stderr
+    assert "CLEAN BUILD FILES" in result.stdout
+    assert "Eligible files: 1 | Eligible bytes: 1024" in result.stdout
+    assert "KiB" in result.stdout
+
+
+@pytest.mark.parametrize("host", HOSTS, ids=lambda host: host.name)
+def test_quiet_presentation_preserves_start_failure_on_stderr(isolated_launcher, tmp_path, host):
+    result = launch(isolated_launcher, ("start", "-NoColor", "-NoAnimation"), host=host,
+                    env={"PATH": "", "CIRNET_DEV_HOME": str(tmp_path / "dev")})
+    assert result.returncode == 1
+    assert "[ERROR]" in result.stderr and "git" in result.stderr.lower()
+    assert "[ERROR]" not in result.stdout
+    assert "How can I help you?" not in result.stdout
+    assert "\x1b" not in result.stdout + result.stderr
