@@ -1,6 +1,6 @@
 # CIRNET migration plan for C++ and Rust
 
-[Tiếng Việt](../../vi/architecture/native-migration.md) · [Original plan dated 2026-11-05](../../superpowers/plans/2026-11-05-cirnet-native-migration.md) · [Stage 0 record](../../verification/2026-11-05-native-migration-stage-0.md)
+[Tiếng Việt](../../vi/architecture/native-migration.md) · [Original plan dated 2026-11-05](https://github.com/cirnetlab/cirnet-remote/blob/f91eeeb42d7528d4e7fa9b1526195847932faf9d/docs/superpowers/plans/2026-11-05-cirnet-native-migration.md) · [Stage 0 record](../../verification/2026-11-05-native-migration-stage-0.md)
 
 **Recorded status. Gate 0 is incomplete.** The team authenticated and exercised the released 0.1.4 reference set. The report records digest checks for all 15 artifacts, HTTP, SQLite, gRPC and Simulator runs, and 18 passing PostgreSQL cases. The loaded Stop measurement with a worker still running, integrated phase timings, PostgreSQL load profile, paired reference database and capture snapshots, and absolute thresholds are still missing. Stages 1–5 are `NOT RUN`. The combinations and thresholds below are planned acceptance criteria.
 

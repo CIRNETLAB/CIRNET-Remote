@@ -32,10 +32,13 @@
 - [Quyền tải artifact của CI](operations/ci-artifact-access.md)
 - [Triển khai sản xuất](operations/deployment.md)
 - [Rà soát triển khai Mini PC Linux](operations/mini-pc.md)
+
+## Lịch sử
+
 - [Lịch sử phát hành, kế hoạch và bằng chứng](history/index.md)
 
 Remote sở hữu tích hợp hệ thống, API, lưu trữ, lập lịch và triển khai. Các
 repo sản phẩm sở hữu SDK và schema, bàn làm việc trên trình duyệt, bộ mô
 phỏng, dịch vụ Hardware RPC cục bộ và RTL FPGA. Xem
-[sơ đồ repo](../README.md#current-repositories-and-release-selection) bằng
-tiếng Anh để đến từng repo và xem bộ phát hành chính xác.
+[sơ đồ repo](architecture/system.md#ranh-giới-hệ-thống) để đến từng repo
+và xem bộ phát hành chính xác.

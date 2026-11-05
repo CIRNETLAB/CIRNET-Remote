@@ -2,7 +2,7 @@
 
 **Gate 0 chưa đạt.** Đã xác thực và chạy bộ tham chiếu 0.1.4. Còn thiếu Stop khi worker đang tải, số đo tích hợp theo từng pha, tải PostgreSQL, bản đối chứng DB/capture để chuyển giao và ngưỡng tuyệt đối. Giai đoạn 1–5 đang ở trạng thái NOT RUN.
 
-[Kế hoạch và ma trận chuyển đổi](../superpowers/plans/2026-11-05-cirnet-native-migration.md) · [Manifest bộ tham chiếu](../../integration/release-set.json)
+[Kế hoạch và ma trận chuyển đổi](https://github.com/cirnetlab/cirnet-remote/blob/f91eeeb42d7528d4e7fa9b1526195847932faf9d/docs/superpowers/plans/2026-11-05-cirnet-native-migration.md) · [Manifest bộ tham chiếu](../../integration/release-set.json)
 
 ## Provenance
 

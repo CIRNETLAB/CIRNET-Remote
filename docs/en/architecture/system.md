@@ -8,12 +8,12 @@ The browser uses Vue 3, TypeScript, Pinia and Three.js in a single workspace. In
 
 | Repository | Responsibility |
 | --- | --- |
-| `cirnet-remote` | API, auth, persistence, scheduler, deployment and integrated verification |
-| `cirnet-contracts` | Schemas, device catalog, RPC/FPGA protocol contracts, generated resources and public SDK |
-| `cirnet-interface` | Web editor, browser operation adapters, product assets and browser assertions |
-| `cirnet-simulator` | Simulation engine and replaceable backend boundary |
-| `cirnet-hardware` | Local RPC, virtual and physical station adapters, and private transport |
-| `cirnet-fpga` | RTL scaffold, testbenches and pinned verification toolchain |
+| [cirnet-remote](https://github.com/cirnetlab/cirnet-remote) | API, auth, persistence, scheduler, deployment and integrated verification |
+| [cirnet-contracts](https://github.com/cirnetlab/cirnet-contracts) | Schemas, device catalog, RPC/FPGA protocol contracts, generated resources and public SDK |
+| [cirnet-interface](https://github.com/cirnetlab/cirnet-interface) | Web editor, browser operation adapters, product assets and browser assertions |
+| [cirnet-simulator](https://github.com/cirnetlab/cirnet-simulator) | Simulation engine and replaceable backend boundary |
+| [cirnet-hardware](https://github.com/cirnetlab/cirnet-hardware) | Local RPC, virtual and physical station adapters, and private transport |
+| [cirnet-fpga](https://github.com/cirnetlab/cirnet-fpga) | RTL scaffold, testbenches and pinned verification toolchain |
 
 The [release lock](../../../integration/release-set.json) selects system and Interface `0.1.4` and API, Contracts, Simulator, Hardware and FPGA scaffold `0.1.2`. It pins exact artifacts, RPC `2.0`, FPGA logical `1.0-scaffold` and register map `1.0-reserved`. The scaffold is a source artifact. [Application API](../api/application.md) · [FPGA conformance](fpga-contract-conformance.md)
 

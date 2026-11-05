@@ -1,6 +1,6 @@
 # Kế hoạch chuyển đổi CIRNET sang C++ và Rust
 
-[English](../../en/architecture/native-migration.md) · [Kế hoạch gốc ngày 2026-11-05](../../superpowers/plans/2026-11-05-cirnet-native-migration.md) · [Biên bản giai đoạn 0](../../verification/2026-11-05-native-migration-stage-0.md)
+[English](../../en/architecture/native-migration.md) · [Kế hoạch gốc ngày 2026-11-05](https://github.com/cirnetlab/cirnet-remote/blob/f91eeeb42d7528d4e7fa9b1526195847932faf9d/docs/superpowers/plans/2026-11-05-cirnet-native-migration.md) · [Biên bản giai đoạn 0](../../verification/2026-11-05-native-migration-stage-0.md)
 
 **Trạng thái đã ghi nhận. Gate 0 chưa đạt.** Bộ phát hành 0.1.4 đã được xác minh và chạy làm mốc. Biên bản ghi nhận 15 artifact khớp digest, các ca HTTP, SQLite, gRPC và Simulator đã chạy, cùng 18 ca PostgreSQL đạt. Còn thiếu Stop khi worker thực sự đang chạy dưới tải, số đo tích hợp theo từng pha, tải PostgreSQL, cặp snapshot cơ sở dữ liệu và capture để đối chứng, và ngưỡng tuyệt đối. Giai đoạn 1–5 ở trạng thái `NOT RUN`. Các ngưỡng và tổ hợp bên dưới là tiêu chí trong kế hoạch.
 

@@ -17,6 +17,10 @@ when they have content. Use `lowercase-with-dashes.md`, one H1, clear heading
 levels and fenced examples with the language specified. Use descriptive link
 text and link to the same language when the counterpart exists.
 
+Keep working plans and design drafts outside Git, in the ignored `.superpowers/`
+directory or outside the checkout. After implementation, record accepted
+decisions and verified results in the relevant English and Vietnamese pages.
+
 History indexes point to dated originals and state their language and scope.
 Preserve fixed paths, hash/marker-protected inputs, baselines, and evidence.
 Before moving or removing an ordinary document, review inbound Markdown, code,

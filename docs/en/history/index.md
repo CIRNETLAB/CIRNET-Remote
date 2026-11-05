@@ -13,12 +13,14 @@ These records describe specific revisions, inputs and environments. Use the
 | [M6 release ledger](../../verification/2026-10-27-multi-repo-migration-m6.md) | English | Versioned release history and validation |
 | [0.1.4 local release](../../verification/2026-11-05-cirnet-release-0.1.4.md) | English | Local release checks and unrun gates |
 | [CI test infrastructure audit](../../verification/2026-11-05-test-infrastructure-audit.md) | Vietnamese | P0–P3 changes, measurements and limits |
-| [Native migration plan](../../superpowers/plans/2026-11-05-cirnet-native-migration.md) | Vietnamese | Staged C++ and Rust plan, separate from current runtime |
+| [Original native migration plan](https://github.com/cirnetlab/cirnet-remote/blob/f91eeeb42d7528d4e7fa9b1526195847932faf9d/docs/superpowers/plans/2026-11-05-cirnet-native-migration.md) | Vietnamese | Staged C++ and Rust plan, separate from current runtime |
 | [Native migration Stage 0](../../verification/2026-11-05-native-migration-stage-0.md) | Vietnamese | Partial reference measurements and open thresholds |
 | [Original 3D power supply controls](../../POWER_SUPPLY_CONTROLS.md) | Vietnamese | Legacy model interaction and dated results |
 
-The [original documentation index](../../README.md#reading-status) links the
-Git revisions for archived architecture, visual references and older evidence.
-The [development handoff](../../DEV_LOG.md) retains the repository's recorded
-handoff markers. Keep superseded designs and artifact identities with their
-original revisions.
+## Archives
+
+- [Development handoff](../../DEV_LOG.md) records past work and handoff markers.
+- [Archive](../../archive/) holds original prompts and superseded specifications.
+- [Verification ledger](../../VERIFICATION.md) and [dated evidence](../../verification/) record test inputs and results.
+- [Remote before the repository split](https://github.com/cirnetlab/cirnet-remote/tree/989954f95c1c6b1d224e31a53fb33f125f0a81a9) contains the earlier integrated implementations.
+- [Pre-cleanup documentation](https://github.com/cirnetlab/cirnet-remote/tree/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs) contains earlier designs, component and physical visuals, and verification reports. Its [browser suite entry](https://github.com/cirnetlab/cirnet-remote/tree/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/tests/end-to-end) points to the migrated suite.

@@ -1,20 +1,87 @@
 # Authentication and database upgrades
 
-[Tiếng Việt](../../vi/architecture/auth-and-migrations.md) · [Full original note](../../architecture/auth-and-migrations.md)
+[Tiếng Việt](../../vi/architecture/auth-and-migrations.md) · [Application API](../api/application.md) · [Production deployment](../operations/deployment.md)
 
-A durable principal owns data. An independent cookie credential authenticates a session, and a separate session ID supports revocation and control leases. A new cookie has 256 random bits, and the database stores its SHA-256 digest. Passwords use Argon2id. `X-Control-Client` identifies a tab for control.
+## Credentials and session rotation
 
-## Sessions and roles
+The API uses durable principal IDs for ownership and independent, opaque cookie
+credentials. New cookie values have 256 bits of randomness; only their SHA-256
+digests are stored in `auth_sessions`. Session IDs used for revocation and control
+leases are separate identifiers. Passwords use pinned `argon2-cffi==25.1.0`
+Argon2id hashing, verification, and parameter rehashing. Passwords and cookie
+credentials do not appear in public DTOs, audit rows, or command arguments.
 
-Only explicit `GET /api/auth/session` creates a guest or pre-login session and returns its CSRF token. An unauthenticated production visitor receives a pre-login session. Unsafe methods, including login and logout, require an exact trusted Origin and matching CSRF. API 0.1.2 emits `cirnet_session` and `netcircuit_session` with the same credential, preferring the canonical name on reads. It prefers `X-CIRNET-CSRF` and accepts the legacy `X-CSRF-Token`. Cookies are HttpOnly, SameSite=Lax, Path=/, and Secure in production. WebSocket authorization checks the same credential, Origin, expiry and revocation.
+`GET /api/auth/session` establishes a session and returns its CSRF token. In
+explicit development guest mode the principal is a Guest with Student access.
+When guests are disabled it establishes an unauthenticated session for login
+CSRF. All unsafe HTTP methods, including login and logout, require an exact
+trusted `Origin` and matching session CSRF token. API 0.1.2 emits
+`cirnet_session` and `netcircuit_session` with the same credential. Reads
+prefer the canonical name when present. Send `X-CIRNET-CSRF`. The legacy
+`X-CSRF-Token` remains accepted when the canonical header is absent.
+Cookie attributes are HttpOnly, SameSite=Lax, Path=/, bounded lifetime, and
+Secure in production. Login, logout,
+guest claim, and role changes revoke the previous session. The websocket checks
+the same cookie, origin, expiry, and revocation state. `X-Control-Client` identifies
+a tab's control lease and is not a credential.
+An invalid, expired, or revoked supplied cookie produces `SESSION_EXPIRED` for
+ordinary requests without installing a replacement cookie. Explicit
+`GET /api/auth/session` bootstrap installs and returns a fresh prelogin or guest
+session truthfully; it never retains the prior authenticated identity. Successful
+auth mutations install their own rotated credentials. A late old-cookie or
+no-cookie read therefore cannot overwrite a successful login's cookie. A valid
+legacy-cookie bootstrap exchange is recognized separately and preserves only its
+proven guest ownership. The Web retires prior remote connections during an auth
+mutation and reconciles an unsuccessful/unknown rotation with one read-only
+session request; it never replays login, claim or Run.
 
-An ordinary request with a stale credential returns `SESSION_EXPIRED` without replacing the cookie. Protected reads without a credential return `UNAUTHENTICATED`. Login, logout and confirmed guest claim rotate credentials. Role and active-status changes revoke affected sessions. A late ordinary response cannot overwrite a successful rotation. The browser reconciles an uncertain rotation with a session read, without repeating the mutation. A valid legacy ownership proof can be exchanged through explicit bootstrap. A confirmed guest claim transfers owned records and operation keys atomically, rejecting active or quarantined leases and key collisions.
+Ordinary requests only resolve existing credentials. Credential-free health and
+OPTIONS requests allocate no session or guest row; credential-free protected
+reads return `UNAUTHENTICATED`. Supplied stale cookies retain the established
+`SESSION_EXPIRED` policy, including health, and never install a cookie. Legacy
+reads reuse one revocable internal context per proof. Only explicit bootstrap
+allocates new credentials: creation is limited to 30 per client address per
+60 seconds by default (`CIRNET_BOOTSTRAP_LIMIT`); valid credential reuse is
+not counted. Login retains separate address and account admission limits.
+An expired or revoked internal legacy context returns 401 on ordinary reads,
+even if the original proof has a longer remaining lifetime. It is not refreshed
+or resurrected; explicit bootstrap may still consume that live ownership proof
+and rotate to a new opaque credential.
 
-New bootstrap allocation defaults to 30 per client address per minute. Maintenance uses indexed batches, preserving principals, audit and owned data. The defaults retain expired credentials for a day, process at most 100 credentials and 100 old rate buckets per pass, and cap address buckets at 10,000. Live legacy proof keeps its revocation fence. Only an authenticated Admin can administer accounts, and the last active Admin cannot be disabled or demoted.
+## Session maintenance and safe Stop
 
-## Deployment and upgrade
+The application monitor performs one maintenance batch at most every minute,
+independently of the scheduler lock. An indexed batch removes at most 100
+credentials whose nominal expiry is at least one day old, including revoked
+credentials; it also removes at most 100 rate buckets older than one day.
+`CIRNET_AUTH_RETENTION_SECONDS` and `CIRNET_AUTH_MAINTENANCE_BATCH`
+configure retention and batch size. A failed batch leaves the next monitor
+iteration able to retry. Principals, users, ownership, operations and audit rows
+are retained; session deletion cannot delete evidence or an owned document.
+Expired/revoked context rows remain as fences while the matching legacy proof
+is live, including with a zero retention setting. Maintenance reads at most
+one configured batch of candidate scalar rows and proof IDs; an expiry/ID
+keyset cursor advances past protected rows so other expired sessions still
+progress, then wraps for the next pass. Principals are not deleted.
+The address bucket table fails closed at 10,000 rows pending maintenance.
+Multi-session revocation accepts every affected execution cancellation before
+remote cleanup is dispatched. Expiry/disconnect sweeps use the same bounded
+four-worker Stop dispatcher, with at most 16 outstanding identities, separately
+from simulation workers. A contended execution configuration is retried by the
+monitor rather than delaying another station's Stop. Stop ACK bookkeeping does
+not release a lease; worker cleanup still requires the real safe-state outcome.
 
-Production requires PostgreSQL, `CIRNET_ALLOW_GUEST=false` and an explicit HTTPS `CIRNET_TRUSTED_ORIGINS`. With the installed API interpreter, migrate and provision the first administrator from a private terminal.
+## Production configuration and provisioning
+
+Set `CIRNET_ALLOW_GUEST=false` in production and provide explicit HTTPS
+`CIRNET_TRUSTED_ORIGINS`. Production also requires PostgreSQL. Insecure
+production combinations fail configuration validation. Development guest mode
+is unsuitable for an Internet deployment. No default administrator exists.
+`CIRNET_ENV` accepts exactly `development`, `test`, or `production`;
+`CIRNET_ALLOW_GUEST` accepts exactly `true` or `false`. Misspelled values fail
+startup rather than falling back to anonymous development behavior.
+
+After installing the API, migrate and bootstrap from a private terminal:
 
 ```console
 python -m app.migrate
@@ -22,4 +89,80 @@ python -m app.migrate --check
 python -m app.bootstrap_admin --username instructor-admin
 ```
 
-The command prompts for the password. Remove `CIRNET_BOOTSTRAP_PASSWORD` after controlled environment-based provisioning. The Alembic chain runs from `0001_legacy` through auth, projects, assignments, captures and runtime indexing to `0007_auth_maintenance`. It preserves historical data, ownership, operation identity and quarantined leases. Upgrade with writers stopped and a verified database and matching capture backup. Rehearse SQLite with its backup API and an integrity check, and PostgreSQL with a dump restored to a separate database. Rollback restores the matched pair. The 2026-10-16 PostgreSQL results belong to the run documented in the original note. See the [API guide](../api/application.md).
+The bootstrap command prompts without echo, or reads
+`CIRNET_BOOTSTRAP_PASSWORD` for deployment provisioning. Remove that variable
+after provisioning. It refuses when an administrator already exists. Only an
+authenticated Admin may create accounts or change roles and active status; the
+last active administrator cannot be disabled or demoted. These changes are
+audited and revoke every affected session. Login admission limits are persisted
+in the database; application mutation admission separately permits safety Stop.
+
+## Assignment and experiment access
+
+Students see published `StudentAssignmentView` records without reference graphs,
+expected answers, instructor pin profiles, or private endpoint mappings.
+Instructors author and publish their own assignments; they do not automatically
+receive another instructor's private assignments. Admin access is explicit.
+The internal `AssignmentDefinition` remains the compiler's authoritative input.
+Direct repository imports are private until explicitly assigned to an owner and
+published. Experiment creation checks assignment access independently of listing.
+Experiment feedback defaults to `observed_only`. Authorized active Admins and
+assignment-owning Instructors can see detailed evidence for records they may
+read. Other readers need an explicit stored `detailed` policy. Both policies
+preserve the student assignment view's reference-answer redaction.
+
+## Migration and legacy ownership
+
+The current Alembic chain is `0001_legacy` → `0002_auth` → `0003_projects` →
+`0004_assignments` → `0005_captures` → `0006_experiment_runtime` →
+`0007_auth_maintenance`. Revision 0007 adds expiry/principal/rate-window indexes
+without rewriting credentials or ownership. The [project](projects-and-revisions.md),
+[assignment](assignments-and-publication.md) and [capture](capture-catalog.md)
+guides cover their corresponding revisions. New repositories run the chain,
+replacing unversioned `create_all`. The baseline verifies required legacy
+columns before admitting an existing database and creates missing historical
+tables. The auth revision adds identities, sessions, assignment access metadata,
+audit records, and rate limits. It preserves experiment sequence, payload JSON,
+operations, capture references, lease rows, quarantine flags, and legacy owner
+strings. New auth and assignment access tables have foreign keys. Historical
+experiment/operation ownership columns remain unchanged for trusted internal
+imports; authenticated HTTP writes always use the durable principal ID.
+
+Existing anonymous owners migrate to Guest principals. A still-valid old cookie
+can be exchanged once for a new opaque session proving that same guest identity;
+an expired cookie cannot claim historical records. Ordinary legacy-owned reads,
+including capture payloads, retain that proof and install no replacement cookie.
+They use an internal revocable context so final read authorization remains active.
+That internal context expires no later than the legacy proof and is revoked by
+confirmed claim together with the guest's other sessions.
+Only explicit `GET /api/auth/session` consumes the proof and installs its opaque
+credential; this prevents a delayed legacy read from overwriting a later login.
+This intentionally replaces automatic credential installation on an ordinary
+legacy read while preserving its owned read access and explicit claim flow.
+Logging in preserves that
+proof, but performs no automatic transfer. Explicit confirmed guest claim moves
+experiments and operation keys atomically, rejects any active or quarantined
+lease and active execution state, aborts on operation-key collisions, then rotates
+the session. Historical assignments migrate private under `legacy-system` and
+need deliberate owner/publication assignment. Migration never adopts all old
+data into the first login.
+
+## Backup, rollback and verification
+
+Before upgrading a deployed database, stop API writers and make a verified
+backup. For SQLite use the SQLite backup API (or `.backup`), not a live file copy;
+open the backup and run `PRAGMA integrity_check`, then rehearse the migration on
+that copy. For PostgreSQL use `pg_dump` and restore into a separate database,
+run the migration and verify record/operation/lease counts before switching.
+Keep capture files and their metadata together. Downgrade intentionally refuses
+to delete identities; rollback means restoring the verified pre-upgrade database
+and matching capture backup while writers remain stopped.
+
+The [2026-10-16 release evidence](https://github.com/CIRNETLAB/CIRNET-Remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/verification/2026-10-16-w8-release.md) records
+SQLite migration/restart and 16 actual PostgreSQL 18.6 cases, including
+backup/restore and independent-writer/authorization/recovery races. Those are
+historical results, not commands rerun during a later documentation edit. They
+do not establish a target production deployment. PostgreSQL verification requires
+a real isolated server; an absent server must fail that gate explicitly rather
+than appear as a pass. New execution records follow the [verification policy](../../VERIFICATION.md).
+[Authentication implementation](../../../services/api/app/services/auth.py) · [Compatibility aliases](../../../services/api/app/compatibility.py)

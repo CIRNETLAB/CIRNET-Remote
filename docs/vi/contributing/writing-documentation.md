@@ -17,6 +17,11 @@ CLI, đường dẫn, biến môi trường, phiên bản và mã nguồn giữa
 cấp tiêu đề rõ ràng và ghi ngôn ngữ cho khối lệnh. Dùng văn bản liên kết
 diễn tả đích và ưu tiên trang cùng ngôn ngữ khi có bản tương ứng.
 
+Giữ kế hoạch triển khai và bản nháp thiết kế ngoài Git, trong thư mục
+`.superpowers/` được bỏ qua hoặc bên ngoài checkout. Sau khi triển khai,
+ghi các quyết định đã chốt và kết quả đã xác minh vào cặp trang Anh–Việt
+tương ứng.
+
 Mục lục lịch sử dẫn đến bản gốc có ngày và nêu rõ ngôn ngữ, phạm vi. Giữ
 đường dẫn bắt buộc, đầu vào được bảo vệ bằng hash hoặc marker, baseline và
 bằng chứng. Trước khi dời hoặc bỏ một tài liệu thông thường, rà soát các tham

@@ -8,12 +8,12 @@ Trình duyệt dùng Vue 3, TypeScript, Pinia và Three.js trong một không gi
 
 | Kho mã | Trách nhiệm |
 | --- | --- |
-| `cirnet-remote` | API, xác thực, lưu trữ, điều phối, triển khai và kiểm chứng tích hợp |
-| `cirnet-contracts` | Schema, danh mục thiết bị, hợp đồng giao thức RPC/FPGA, tài nguyên sinh tự động và SDK công khai |
-| `cirnet-interface` | Trình biên tập Web, lớp gọi API từ trình duyệt, tài nguyên sản phẩm và các phép kiểm tra trình duyệt |
-| `cirnet-simulator` | Bộ mô phỏng và giao diện thay thế backend |
-| `cirnet-hardware` | RPC nội bộ, bộ điều hợp trạm ảo/vật lý và lớp truyền thông riêng |
-| `cirnet-fpga` | Khung RTL, testbench và bộ công cụ kiểm chứng đã khóa phiên bản |
+| [cirnet-remote](https://github.com/cirnetlab/cirnet-remote) | API, xác thực, lưu trữ, điều phối, triển khai và kiểm chứng tích hợp |
+| [cirnet-contracts](https://github.com/cirnetlab/cirnet-contracts) | Schema, danh mục thiết bị, hợp đồng giao thức RPC/FPGA, tài nguyên sinh tự động và SDK công khai |
+| [cirnet-interface](https://github.com/cirnetlab/cirnet-interface) | Trình biên tập Web, lớp gọi API từ trình duyệt, tài nguyên sản phẩm và các phép kiểm tra trình duyệt |
+| [cirnet-simulator](https://github.com/cirnetlab/cirnet-simulator) | Bộ mô phỏng và giao diện thay thế backend |
+| [cirnet-hardware](https://github.com/cirnetlab/cirnet-hardware) | RPC nội bộ, bộ điều hợp trạm ảo/vật lý và lớp truyền thông riêng |
+| [cirnet-fpga](https://github.com/cirnetlab/cirnet-fpga) | Khung RTL, testbench và bộ công cụ kiểm chứng đã khóa phiên bản |
 
 [Khóa bản phát hành](../../../integration/release-set.json) chọn hệ thống và Interface `0.1.4`, cùng API, Contracts, Simulator, Hardware và khung FPGA `0.1.2`. Tệp này khóa chính xác gói phát hành, RPC `2.0`, giao thức logic FPGA `1.0-scaffold` và sơ đồ thanh ghi `1.0-reserved`. Khung FPGA được phân phối dưới dạng mã nguồn. [API ứng dụng](../api/application.md) · [Đối chiếu hợp đồng FPGA](fpga-contract-conformance.md)
 

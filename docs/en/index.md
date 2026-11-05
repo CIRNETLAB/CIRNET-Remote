@@ -32,10 +32,13 @@
 - [CI artifact access](operations/ci-artifact-access.md)
 - [Production deployment](operations/deployment.md)
 - [Linux Mini PC review](operations/mini-pc.md)
+
+## History
+
 - [Release history, plans and evidence](history/index.md)
 
 Remote owns system integration, API, persistence, scheduling and deployment.
 The producers own the SDK and schemas, the browser workbench, the simulator,
 the local Hardware RPC service and the FPGA RTL. Browse the
-[repository map](../README.md#current-repositories-and-release-selection)
+[repository map](architecture/system.md#system-boundary)
 for their entry points and the exact published selection.
