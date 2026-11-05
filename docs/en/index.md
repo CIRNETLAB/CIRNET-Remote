@@ -1,11 +1,6 @@
 # CIRNET Remote documentation
 
-[Tiếng Việt](../vi/index.md) · [Repository](../../README.md)
-
-English is the default documentation for current work. Follow the applicable
-[repository instructions](../../AGENTS.md) and check the implementation and
-locked artifacts when validating a claim. This index separates instructions
-for the current system from results recorded at earlier revisions.
+[Tiếng Việt](../vi/index.md) · [Repository](../../README.md) · [Repository instructions](../../AGENTS.md)
 
 ## Guides
 

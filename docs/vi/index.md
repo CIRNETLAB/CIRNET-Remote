@@ -1,11 +1,6 @@
 # Tài liệu CIRNET Remote
 
-[English](../en/index.md) · [Repo](../../README.md)
-
-Bản tiếng Anh là mặc định cho công việc hiện hành. Tuân theo
-[chỉ dẫn repo](../../AGENTS.md) áp dụng và đối chiếu implementation cùng
-artifact đã khóa khi xác minh. Mục lục này tách hướng dẫn hệ thống đang dùng
-khỏi kết quả ghi tại revision cũ.
+[English](../en/index.md) · [Repo](../../README.md) · [Chỉ dẫn repo](../../AGENTS.md)
 
 ## Hướng dẫn sử dụng
 

@@ -2,11 +2,11 @@
 
 [Tiếng Việt](../../vi/contributing/writing-documentation.md) · [Documentation](../index.md)
 
-Follow the applicable [repository instructions](../../../AGENTS.md). Start
-with the current English page under `docs/en/`. Mirror the relative path in
-`docs/vi/` and update the Vietnamese page in the same change. Keep the root
-`README.md` in English with links to both indexes. Place system-level material
-in Remote and feature-specific material in the repository that owns the code.
+Follow the applicable [repository instructions](../../../AGENTS.md). Use the
+same relative path under `docs/en/` and `docs/vi/` and update both pages in the
+same change. Keep the root `README.md` in English with links to both indexes.
+Place system-level material in Remote and feature-specific material in the
+repository that owns the code.
 Other repositories can link to the owner with a short contextual summary.
 
 Use one prose language per file. Keep API identifiers, CLI commands, paths,

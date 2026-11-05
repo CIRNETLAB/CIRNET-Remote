@@ -2,11 +2,11 @@
 
 [English](../../en/contributing/writing-documentation.md) · [Mục lục](../index.md)
 
-Tuân theo [chỉ dẫn repo](../../../AGENTS.md) áp dụng. Bắt đầu từ trang tiếng
-Anh hiện hành trong `docs/en/`. Dùng cùng đường dẫn tương đối trong `docs/vi/`
-và cập nhật bản tiếng Việt trong cùng thay đổi. Giữ `README.md` gốc bằng
-tiếng Anh và liên kết cả hai mục lục. Đặt tài liệu hệ thống trong Remote và
-tài liệu tính năng ở repo sở hữu mã nguồn. Repo khác có thể tóm tắt ngắn và
+Tuân theo [chỉ dẫn repo](../../../AGENTS.md) áp dụng. Dùng cùng đường dẫn
+tương đối trong `docs/en/` và `docs/vi/`, rồi cập nhật cả hai trang trong
+cùng thay đổi. Giữ `README.md` gốc bằng tiếng Anh và liên kết cả hai mục lục.
+Đặt tài liệu hệ thống trong Remote và tài liệu tính năng ở repo sở hữu mã
+nguồn. Repo khác có thể tóm tắt ngắn và
 liên kết đến repo sở hữu.
 
 Dùng một ngôn ngữ diễn giải trong mỗi tệp. Giữ nguyên định danh API, lệnh
