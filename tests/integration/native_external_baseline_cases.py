@@ -72,10 +72,10 @@ def _service_identity(process, port_file):
 
 
 @contextmanager
-def _service(role, directory, environment):
+def _service(role, directory, environment, python):
     with (directory / f'{role}.log').open('wb') as log:
         process = subprocess.Popen(
-            [sys.executable, '-B', '-m', MODULE, role, str(directory)],
+            [python, '-B', '-m', MODULE, role, str(directory)],
             cwd=ROOT, env=environment, stdin=subprocess.PIPE, stdout=log,
             stderr=subprocess.STDOUT, creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0,
         )
@@ -86,25 +86,28 @@ def _service(role, directory, environment):
 
 
 @contextmanager
-def baseline_services(directory, database_url, *, probes=False):
+def baseline_services(directory, database_url, *, probes=False, backend='legacy', python=None):
     """Start distinct API and gRPC child processes from the selected venv."""
     directory = _owned_directory(directory)
     _require_isolated_database(database_url, directory)
-    if probes not in (False, True, 'stop'):
+    if probes not in (False, True, 'stop', 'capture-fault'):
         raise ValueError('Unknown baseline probe set.')
+    if backend not in ('legacy', 'cpp'):
+        raise ValueError('Unknown reference service backend.')
     password = secrets.token_urlsafe(32)
     environment = dict(os.environ)
     environment.pop('PYTHONPATH', None)
     environment.update(
         CIRNET_ENV='development', CIRNET_HARDWARE_MODE='simulation', CIRNET_ALLOW_GUEST='true',
         CIRNET_DATABASE_URL=database_url, CIRNET_CAPTURE_DIR=str(directory / 'captures'),
-        CIRNET_TRUSTED_ORIGINS=ORIGIN, CIRNET_SIMULATION_WORKERS='4', CIRNET_SIMULATION_BACKEND='legacy',
+        CIRNET_TRUSTED_ORIGINS=ORIGIN, CIRNET_SIMULATION_WORKERS='4', CIRNET_SIMULATION_BACKEND=backend,
         CIRNET_BASELINE_ADMIN_PASSWORD=password, CIRNET_BASELINE_PROBES='phases' if probes is True else (probes or ''),
         PYTHONDONTWRITEBYTECODE='1', PYTHONUNBUFFERED='1',
     )
-    with _service('hardware', directory, environment) as (_, (rpc_port, hardware_pid)):
+    python = python or sys.executable
+    with _service('hardware', directory, environment, python) as (_, (rpc_port, hardware_pid)):
         environment['CIRNET_HARDWARE_GRPC_TARGET'] = f'127.0.0.1:{rpc_port}'
-        with _service('api', directory, environment) as (api, (http_port, api_pid)):
+        with _service('api', directory, environment, python) as (api, (http_port, api_pid)):
             url = f'http://127.0.0.1:{http_port}'
             deadline = monotonic() + 60
             with httpx.Client(timeout=1, trust_env=False) as probe:
@@ -146,6 +149,9 @@ def _serve(role, directory):
     elif probes == 'stop':
         from tests.integration.native_stop_baseline_cases import install_stop_probes
         install_stop_probes(role, directory)
+    if probes == 'capture-fault' or (probes == 'stop' and os.environ.get('CIRNET_NATIVE_CAPTURE_FAULT_DIAGNOSTIC') == '1'):
+        from tests.integration.native_phase_baseline_cases import install_capture_fault_probes
+        install_capture_fault_probes(role)
 
     if role == 'hardware':
         from hardware_service.server import build_server
@@ -401,6 +407,13 @@ def _run_fixed_profile(clients, repetitions, metrics, pids):
             'resources': resources, 'latency': latency, 'observations': dict(metrics.values)}
 
 
+def fixed_profile_configuration(repetitions):
+    configuration = {'principals': 50, 'job_principals': 40, 'http_threads': 10, 'worker_slots': 4,
+                     'read_rounds_per_reader': 10, 'warmup_clock_jobs': 4, 'cycles_per_job_lane': repetitions}
+    workload_sha256 = sha256(json.dumps([_workloads(), configuration], sort_keys=True).encode()).hexdigest()
+    return configuration, workload_sha256
+
+
 @pytest.mark.parametrize('kind', ['sqlite', 'postgresql'])
 def test_external_reference_profile(kind):
     manifest_sha256 = verified_reference()
@@ -408,9 +421,7 @@ def test_external_reference_profile(kind):
     repetitions = int(os.environ.get('CIRNET_NATIVE_PROFILE_CYCLES', '25'))
     assert 1 <= batches <= 3 and 1 <= repetitions <= 25
     inventory = dict(sorted((item.name, item.version) for item in distributions()))
-    configuration = {'principals': 50, 'job_principals': 40, 'http_threads': 10, 'worker_slots': 4,
-                     'read_rounds_per_reader': 10, 'warmup_clock_jobs': 4, 'cycles_per_job_lane': repetitions}
-    workload_sha256 = sha256(json.dumps([_workloads(), configuration], sort_keys=True).encode()).hexdigest()
+    configuration, workload_sha256 = fixed_profile_configuration(repetitions)
     for batch in range(batches):
         directory = artifact_directory(f'native-external/{kind}-{uuid4().hex}')
         metrics = Metrics()

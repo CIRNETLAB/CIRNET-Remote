@@ -2,7 +2,7 @@
 
 [Tiếng Việt](../../vi/architecture/native-migration.md) · [Original plan dated 2026-11-05](https://github.com/cirnetlab/cirnet-remote/blob/f91eeeb42d7528d4e7fa9b1526195847932faf9d/docs/superpowers/plans/2026-11-05-cirnet-native-migration.md) · [Stage 0 record](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md)
 
-**Gate 0 PASS on the selected 0.1.4 reference. Gate 1 remains open.** Six external load windows, two integrated phase runs, three loaded Stop runs and both database/capture restorations passed. The local C++ 74HC08 slice passed Run, capture and preview. Stages 2–5 are `NOT RUN`.
+**Gate 0 PASS on the selected 0.1.4 reference. Gate 1 PASS on Windows x64 with r7.** The r7 combination is B for Stage 2. The published 0.1.4 profile is the rollback reference. Stages 2–5 are `NOT RUN`.
 
 > **For implementation agents.** Use superpowers:subagent-driven-development or superpowers:executing-plans. Complete each gate and record its evidence before beginning the next stage.
 
@@ -219,9 +219,9 @@ is a separate gate.
 
 ## 1. C++ Simulator and transition adapters
 
-- [ ] **Digital slice.** In Simulator, add CMake and an independent C++ worker. Start with 74HC08 AND from the corpus and check the event sequence through `cirnet_sim/backends.py`. Extend it according to `engine.py`, `nets.py`, `logic.py`, `dispatch.py` and published model behavior. Keep preview and the supported static DC fixtures for supply, resistor, LED and powered 74HC08. Analog, SPICE and mixed execution remain unavailable. Compare timestamps, simultaneous event ordering, 0/1/X, NCAP bytes and errors. Run Simulator tests, pytest against the binary directly, and ASan/UBSan on supported targets.
-- [ ] **Packaging and supervision.** Use local IPC with bounded frames, a version handshake and request/generation IDs. The Simulator artifact exports the binary and a private protocol description. Hardware's `station/virtual.py` Run adapter and Remote's preview adapter use the same core with separate budgets and pools. Add host deadlines, queue/CPU/RAM limits, cancellation, process reaping and fencing of late results. Check timeout, invalid frames, hung or dead workers, Stop/reset and running again. Preserve REST, RPC 2.0 and NCAP.
-- [ ] **Matrix and Gate 1.** A = current Interface / Python Remote / Python Hardware / Python Simulator. B = the same combination with the C++ worker enabled for Run and preview, keeping Contracts Python 0.1.2. Run the fixtures, `tests/integration/test_virtual_lab_execution.py`, `test_capture_rpc_data_plane.py`, `test_simulation_backend_selection.py` and `services/api/tests/test_physical_preview.py` on artifacts. Compare with Stage 0 and choose B only after parity and measurable improvement. Roll back to A after cancellation, reaping and generation fencing. Interrupted jobs never replay automatically.
+- [x] **Digital slice.** In Simulator, add CMake and an independent C++ worker. Start with 74HC08 AND from the corpus and check the event sequence through `cirnet_sim/backends.py`. Extend it according to `engine.py`, `nets.py`, `logic.py`, `dispatch.py` and published model behavior. Keep preview and the supported static DC fixtures for supply, resistor, LED and powered 74HC08. Analog, SPICE and mixed execution remain unavailable. Compare timestamps, simultaneous event ordering, 0/1/X, NCAP bytes and errors. Run Simulator tests, pytest against the binary directly, and ASan/UBSan on supported targets.
+- [x] **Packaging and supervision.** Use local IPC with bounded frames, a version handshake and request/generation IDs. The Simulator artifact exports the binary and a private protocol description. Hardware's `station/virtual.py` Run adapter and Remote's preview adapter use the same core with separate budgets and pools. Add host deadlines, queue/CPU/RAM limits, cancellation, process reaping and fencing of late results. Check timeout, invalid frames, hung or dead workers, Stop/reset and running again. Preserve REST, RPC 2.0 and NCAP.
+- [x] **Matrix and Gate 1.** A = current Interface / Python Remote / Python Hardware / Python Simulator. B = the same combination with the C++ worker enabled for Run and preview, keeping Contracts Python 0.1.2. Run the fixtures, `tests/integration/test_virtual_lab_execution.py`, `test_capture_rpc_data_plane.py`, `test_simulation_backend_selection.py` and `services/api/tests/test_physical_preview.py` on artifacts. Compare with Stage 0 and choose B only after parity and measurable improvement. Roll back to A after cancellation, reaping and generation fencing. Interrupted jobs never replay automatically.
 
 ### C++ 74HC08 slice on 2026-11-06
 
@@ -275,6 +275,535 @@ Stage 1 still needs to amortize worker startup and IPC while preserving
 independent preview limits, cancellation and generation fencing. The
 rollback for this local configuration is to stop the owned test services
 and select the archived 0.1.4 artifacts with `legacy`.
+
+### Candidate with persistent CNP1/CNP2 workers
+
+Remote and Hardware select C++ through service configuration. Run and
+preview use the same event loop through separate pools. Each worker serves
+multiple requests, checks frame/event/sample bounds and runs with an OS
+memory limit. Hardware waits for cancellation and reaping before safe Stop
+or reset acknowledgement. A stale generation cannot update capture for a
+replacement session. CNP2 adds powered gates, final pin levels and the
+bounded series DC LED model. Contracts Python 0.1.2 encodes NCAP in B.
+
+| Check | Result | Scope |
+| --- | --- | --- |
+| Windows x64 Release, AddressSanitizer and UBSan worker | PASS | 41 cases per build, including malformed and consecutive frames, DC behavior and a request near the protocol bounds. |
+| Adapter on the installed wheel and final CNP2 worker | PASS | 30 focused cases covering AND/OR/XOR/NOT, four powered HC08 gates, DC, the event limit and rollback to legacy. |
+| Hardware lifecycle over gRPC with a real worker | PASS | Five cases on the final candidate covering Stop while saturated, reset, crash, timeout and delayed reply. Verified PID reaping and NCAP bytes on a subsequent Run. |
+| Remote → Hardware → C++ through service configuration | PASS | Two cases on the final worker and selected transition wheels. Both preview routes and NCAP bytes for AND, clock and the powered HC08 circuit matched Python. |
+| RTL and HIL | NOT RUN | This candidate verification used virtual simulation. |
+
+The final Windows x64 CNP2 worker SHA-256 is
+`c0b114fd5c7fd6e65df991c303090cd3e87946bde4d11b65377e9b5797383adf`.
+The Simulator and Hardware transition wheels have SHA-256
+`f8cdada13405dc0f06d4034309df366ca42f8b55ba6fa895c17cd22b69451090` and
+`03e08365f3888682e6eefc547b46c58c6f7700578de62c1d9afbb6d886696c63`.
+
+In three paired diagnostic windows with 100 observations per workload and
+backend, the persistent CNP1 worker reduced p95 for the 100 MHz clock from
+16.545–18.022 ms to 3.833–4.487 ms. The AND p95 increased from 0.286–0.413
+ms to 0.353–0.476 ms. These spans cover the Simulator facade. Gate 1 still
+requires service measurements on SQLite/PostgreSQL and qualified loaded
+Stop observations against the frozen profile.
+
+The three SQLite pairs completed 200 jobs per backend and window. The
+candidate passed the frozen CPU, peak RSS and throughput limits. Seven
+latency checks exceeded their limits, so the SQLite load gate is **FAIL**.
+
+| Median of three windows | Reference A | Candidate B | Stage 0 limit |
+| --- | ---: | ---: | ---: |
+| CPU seconds/job | 0.232 | 0.213 | ≤ 0.565 |
+| Peak RSS, MiB | 608.94 | 281.62 | ≤ 668.25 |
+| Jobs/second | 3.262 | 3.418 | ≥ 1.625 |
+| AND create p95, ms | 145.423 | 405.322 | ≤ 332.187 |
+| Clock capture p99, ms | 72.951 | 497.010 | ≤ 236.623 |
+| History read p95, ms | 115.875 | 751.402 | ≤ 364.995 |
+
+The same reference re-run also exceeded the frozen limit for clock
+creation p99. The API log shows time within application request handling
+for some of the high-latency requests. Additional phase measurements
+are needed to separate database contention from other causes.
+
+In an instrumented SQLite pair of 96 jobs per backend, the two slowest
+candidate capture downloads spent 435.8 of 455.5 ms and 430.0 of
+440.9 ms waiting for the Remote repository lock. The same wait occurred
+on A, including 901.2 of 908.6 ms on its slowest download. In B, the
+four slowest history reads took 1,025–1,034 ms, with 4–7 ms of recorded
+lock wait. The measured lock explains the slow downloads and leaves a
+separate gap in the history tail. The p95 Simulator facade span in this
+pair was 0.569 → 0.728 ms for AND and 15.353 → 16.421 ms for clock.
+The C++ worker round trip alone was 0.239 ms and 1.219 ms respectively.
+
+The short loaded Stop trial on the frozen SQLite workload qualified 0 of
+4 required samples. Native request-to-reply spans took 8.240–37.735 ms.
+The four measured waves reached peak concurrency of 1, 2, 2 and 2 workers.
+All 11 matched client Stop RPCs entered after the target worker returned.
+There were 20 durable lease releases, no quarantines and no residual
+leases. This trial leaves the loaded Stop latency gate open. The separate
+gRPC tests cover cancellation while the actual worker is in flight.
+
+The supplemental `saturated-v1` trial used a heavier common circuit and a
+test rendezvous before simulation dispatch. The C++ activity span starts
+when the IPC request is flushed and ends when the reply is read or the
+request aborts. It excludes the rendezvous. Each backend qualified all four
+observations. The median durable release time was 4,103 ms for A and
+82 ms for B. Each cancelled native child exited before release, and
+peer Runs returned identical 7,001-sample NCAP. The trial established
+that the workload qualifies on both backends. The p95/p99 gate needs
+the full sample set.
+
+The PostgreSQL 18.6 diagnostic also completed 96 jobs per backend. Its
+Simulator facade p95 was 0.513 → 0.971 ms for AND and 14.120 → 6.348 ms
+for clock. Service throughput was 4.322 → 3.582 jobs/second in that pair.
+This candidate completed no three-pair PostgreSQL acceptance run and
+failed the SQLite limits. The subsequent candidates are reported below.
+The release profile selects `legacy`.
+
+For local reproduction, preserve the reference venv and its release
+environment. Install the two selected transition wheels in a separate
+copy. Set `CIRNET_NATIVE_RELEASE_STATE` to the original release state and
+`CIRNET_NATIVE_STAGE1_CANDIDATE` to the candidate manifest. Use absolute
+artifact paths in that manifest after extraction.
+
+```powershell
+python -B -m pytest -q tests/integration/native_cpp_pool_cases.py -k "configured_cpp or paired_worker" --basetemp "$env:CIRNET_ARTIFACTS_SESSION/pytest-cpp-pool"
+python -B -m pytest -q tests/integration/native_cpp_pool_cases.py -k paired_service_profile --basetemp "$env:CIRNET_ARTIFACTS_SESSION/pytest-cpp-load"
+```
+
+The service profile defaults to three pairs of 200 jobs per backend.
+Use an isolated loopback cluster for the PostgreSQL node. An explicit
+`CIRNET_NATIVE_PROFILE_PHASES=1` adds diagnostic timing probes and writes
+a separate report. Set `CIRNET_NATIVE_STAGE0_REFERENCE` to the archived
+Stage 0 ZIP for the uninstrumented run to verify the workload and fail
+when a frozen service limit is exceeded.
+
+To return to A, stop admitting Run, wait for safe acknowledgement and
+worker reaping, then restart with the pinned 0.1.4 artifacts and `legacy`.
+Remove `CIRNET_SQLITE_ROLLBACK_JOURNAL` from the reference environment.
+Stored graph and NCAP formats carry over. An interrupted job requires a
+new Run request.
+
+### Candidate after the latency investigation
+
+An instrumented SQLite diagnostic compared three rollback journal modes
+with the first candidate and 96 jobs per mode. Clock capture GET p99 was
+765.587 ms with DELETE, 419.439 ms with TRUNCATE and 145.015 ms with
+PERSIST. Commit p99 was 11.763, 11.708 and 14.828 ms respectively.
+Throughput was 3.279, 3.711 and 2.333 jobs/second. These single windows
+led to retaining the existing rollback journal for the next candidate.
+
+Remote returns empty owner-scoped history and active pages directly after
+the repository read. Pages with records still use the scheduler lock to
+read queue positions. Simulator plan format 3 prepackages static wire
+data and reuses successful exact capture configuration validation with a
+bounded cache. Clock packing and single-probe decoding retain event order
+and validation. The installed candidate wheels differ from the earlier
+API and Simulator wheels in exactly one runtime member each. Remote
+SHA-256 is `6131adcfd6821d12e304707403c8fa4cd9856e9015e137198d368956db667506`.
+Simulator SHA-256 is `d77359ee16a74ceab2035fff7474663aed296b4cab2a6f96a737d01df6dc512d`.
+The candidate uses the same Hardware and CNP2 worker digests recorded above.
+
+The optimized facade matched all captures in three alternating windows of
+100 observations per backend and workload. The median p95 was 0.344 →
+0.173 ms for AND and 24.670 → 4.530 ms for the clock. These timings include
+adapter and IPC. The full service profile measures API and database
+latency separately.
+
+The full SQLite retry completed its first 200-job pair. The second
+candidate warmup then reached `CAPTURING` and failed with `DRIVER_ERROR`
+before sealing the capture. Hardware acknowledged safe cleanup and the
+lease was released. The incomplete run has no three-window gate result.
+A separate error-probe run verified 120 clock captures across three
+restarts and four simultaneous Runs. An exact 50-owner diagnostic
+verified its four warmup captures and 200 measured captures. Neither
+diagnostic reproduced the fault, so its cause remains open.
+
+A second PERSIST diagnostic on the same installed r2 wheels verified 200
+jobs plus four warmup captures. It ran at 4.774 jobs/second and stayed
+within all frozen operation latency limits for that one window. The
+next Remote wheel uses a single fresh lease snapshot for the station
+list. It also supports selecting PERSIST with `synchronous=FULL` on
+file-backed SQLite. The r3 candidate selects this option for SQLite,
+and the reference uses its original connection settings. The workloads
+and frozen thresholds come from the Stage 0 archive. The r3 Remote
+wheel SHA-256 is
+`17257f6a99faef0a5dc82044f97eb2728869d61bea7830da02112e99ee0c5329`.
+The installed API suite passed 45 cases, including commit, rollback,
+backup and reopen with the default SQLite connection settings.
+
+The r3 SQLite service gate passed all 29 frozen limits. Three pairs
+completed 200 measured jobs per backend and pair with byte-verified
+NCAP and no capture failures. Median fixed HTTP throughput was
+17.575 → 23.047 requests/second. Jobs/second was 3.515 → 4.609,
+CPU seconds/job was 0.217 → 0.192, and peak RSS was 607.65 →
+294.58 MiB. Median clock Run p95 was 575.7 → 414.2 ms. The
+PostgreSQL service gate and full loaded Stop verification are separate.
+
+The r3 PostgreSQL 18.6 service gate also passed all 29 frozen limits
+across three pairs of 200 jobs per backend. Median jobs/second was
+4.889 → 4.854, CPU seconds/job was 0.200 → 0.199, and peak RSS
+was 616.15 → 287.19 MiB. The isolated cluster used the Stage 0
+PostgreSQL binary.
+
+### Configurable Run capacity
+
+The r4 Simulator wheel SHA-256 is
+`e0f8db8f2830e6ea321c2ec4ade46793946fe5675c1cb6222aa53dd50932fdaa`.
+Its only changed runtime file from r3 is `cirnet_sim/cpp_backend.py`.
+The configured C++ Run pool now uses `CIRNET_SIMULATION_WORKERS`.
+The preview limit stays separate. Both sealed service profiles use four
+Run workers, which was also the r3 pool size. Their measurements above
+identify the exact r3 artifacts used for those runs.
+
+The installed r4 adapter passed 87 focused tests. Five simultaneous
+configured Runs reached five distinct worker processes, produced identical
+7,001-sample NCAP payloads and reaped all five processes. The five
+loopback Hardware lifecycle cases and the two paired REST/gRPC digital
+and powered DC cases also passed on r4. Its Hardware and Remote wheels
+and the CNP2 worker are byte-identical to those used for r3.
+The four planned integration suites passed 27 cases against the installed
+wheels. They covered C++ Run and preview, the 100,000-sample NCAP gRPC
+boundary, and compatibility with the legacy and unavailable backends.
+
+To reproduce r4, apply the archived release environment to an isolated
+copy of the reference venv. Install the three selected transition wheels
+for Simulator, Hardware and Remote there, and point the candidate
+manifest at the extracted worker and wheels with absolute paths. Keep
+the original venv available for A.
+
+Run the supplemental Stop gate with `CIRNET_NATIVE_STOP_PROFILE=saturated-v1`,
+`CIRNET_NATIVE_STOP_GATE=1` and `CIRNET_NATIVE_STOP_SAMPLES=100`.
+The test verifies the same archived Stage 0 thresholds through
+`CIRNET_NATIVE_STAGE0_REFERENCE`. For each pair, run
+`tests/integration/native_stop_baseline_cases.py::test_loaded_stop_baseline`
+first with the original reference interpreter and backend `legacy`.
+Run it next with the selected candidate interpreter and backend `cpp`,
+and set `CIRNET_NATIVE_STOP_REFERENCE_RECEIPT` to the matching reference
+receipt. A qualifying observation has the same four active workers at
+both HTTP Stop dispatch and gRPC ingress. Keep the independent receipts
+for the three pairs.
+
+The first full reference retry recorded 100 qualifying Stop observations
+with zero rejections. Its median and p95 to durable lease release were
+4,282.508 and 4,616.636 ms on the supplemental workload. The matching r4
+window aborted in warmup before any client Stop. All four native workers
+returned. One Run entered `CAPTURING` and reported `DRIVER_ERROR` before
+sealing NCAP. Hardware acknowledged safe cleanup and the lease was
+released. The other three NCAP payloads matched byte for byte. The fault
+occurred at the same capture boundary as the r2 warmup failure. The
+initial receipt did not record the underlying exception. The second full
+r4 candidate window reproduced the warmup failure with the diagnostic
+enabled. `FilesystemCaptureStore._path` rejected a valid capture name on
+Windows. A first writer created the capture directory between another
+writer's path lookups. Python changed from Win32 error 3 to error 2 and
+returned an extended-length spelling of the same parent. A controlled
+reproduction on the installed r4 wheel triggered the same rejection.
+The fix resolves the path under the existing directory lock before `mkdir`.
+The resolved-parent check still applies. The regression failed before
+the fix, and the capture storage, quota and control isolation suites
+passed 43 tests with the fix.
+
+The r5 Remote wheel contains that one runtime change. Its SHA-256 is
+`401bd7ff62c278b0491d09fc11aecf9a10c67df747008a380d7d910092a7ecd9`.
+The same 43 tests passed on the installed wheel. Export took 0.29 seconds,
+the Remote wheel build 5.45 seconds, and copying the environment and
+installing the wheel 100.90 seconds. The other artifacts were verified
+and reused. Two compatible independent legacy Stop receipts can supply
+the reference sides for r5. Their pytest times total 1,628.96 seconds.
+All candidate measurements must use the r5 Remote wheel.
+
+### Stage 1 verification time and reuse
+
+Run installed-artifact compatibility checks as a development lane. Keep
+the paired load and loaded Stop gates in a separate lane. Use independent
+runners for parallel suites and reserve an idle runner for each timed A/B
+comparison. Keep the reference and candidate venvs available for the whole
+comparison. Reuse the unchanged CNP2 worker, Hardware wheel and Remote
+wheel after verifying their hashes and dependency pins. The installed
+Remote-only suite is the single receipt for the unchanged Remote wheel.
+
+The default compatibility smoke runs the digital and powered DC fixtures
+with the same installed wheels and one API–Hardware startup per backend.
+It uses new guest sessions for every Run and preview. It still checks all
+five captures per backend, both preview routes per fixture, independent
+Run and preview workers, and process reaping. Set
+`CIRNET_NATIVE_SMOKE_PROFILE=digital` or `physical` for a separate cold
+diagnostic. On the same installed r4 artifacts, pytest time fell from
+177.60 seconds to 84.27 seconds (53%) with the same five captures per
+backend. The combined run recorded 11.40 seconds for provenance and
+setup, 62.53 for service startup, 8.06 for the smoke operations and
+assertions, and 1.62 for cleanup. It reused the existing build. The
+recorded capture lengths were 124, 44,109, 124, 142 and 142 bytes, with
+each payload checked against its expected SHA-256.
+
+For a short Stop diagnostic, set `CIRNET_NATIVE_STOP_GATE=0` and
+`CIRNET_NATIVE_STOP_SAMPLES=12`. Use `CIRNET_NATIVE_CAPTURE_FAULT_DIAGNOSTIC=1`
+to record a bounded exception trace. Five r4 restarts produced 60 valid
+diagnostic observations. Keep these receipts separate from the gate.
+
+Reuse a receipt only for the matching source commit and file inventory,
+artifact and dependency digests, harness, workload, configuration,
+toolchain and machine environment. Keep the r3 load numbers with the r3
+Simulator digest. Four-slot behavior explains their relevance to r4. The
+final r4 service gate requires r4 receipts. A compatible full Stop reference
+can be reused when its candidate attempt aborts. Pass its absolute receipt
+path as `CIRNET_NATIVE_STOP_REFERENCE_RECEIPT`. Candidate verification checks
+the harness, launcher, client and diagnostic source, workload, clock and
+settings before running. Count each full A/B pair once. Keep failed and
+short diagnostic runs separate from the three independent full pairs.
+
+On this Windows runner, restoring the reference took about 234 seconds
+and the remaining tool setup about 46 seconds. Each of the changed r3 and
+r4 wheels took about 3 seconds to build. The r3 service profiles took
+about 1,172 seconds overall across SQLite and PostgreSQL, with 548 seconds
+inside the measured windows. About 399 seconds elapsed through database
+preparation and both service startups. The remaining 225 seconds included
+health checks, client setup, warmup and cleanup. These are estimates from
+retained timestamps. New service receipts separate database preparation,
+startup, client setup, warmup, measured work and cleanup with a monotonic
+clock. Package builds occur before that run.
+
+The first matched r4 Stop pair with the same diagnostic on both sides
+passed all six frozen limits. Each backend recorded 100 valid observations.
+A and B rejected one and fourteen waves respectively on the load check.
+Durable lease release p50/p95/p99 was 4,312.387 / 5,209.127 / 5,824.744 ms
+for A and 93.802 / 129.613 / 135.933 ms for B. One passing pair is partial
+evidence for the three-pair Stop gate. This pair took about 911 seconds
+from the two Hardware starts through their sealed receipts. Keep a
+verified pair when restarting an interrupted later pair.
+
+The r5 loaded Stop gate **PASS** covers all three independent pairs with
+100 observations per backend per pair. It reused two matching A receipts
+and measured three new B windows. One A wave and 21 B waves missed the
+load qualification. Every accepted observation met the safe ACK, worker
+cleanup, capture and lease invariants. There were no residual leases.
+The table gives the median across windows for each percentile.
+
+| Stop latency | A p50 / p95 / p99 ms | r5 p50 / p95 / p99 ms |
+| --- | ---: | ---: |
+| HTTP Stop | 54.715 / 128.714 / 336.275 | 65.137 / 86.017 / 137.575 |
+| gRPC ACK | 38.254 / 117.519 / 313.666 | 45.041 / 66.614 / 83.415 |
+| Durable lease release | 4,362.157 / 7,854.343 / 8,050.876 | 85.692 / 122.815 / 184.875 |
+
+The four planned integration suites passed 27 cases against r5's installed
+wheels. The full SQLite and PostgreSQL load checks use separate receipts.
+In the first r5 SQLite attempt, all 1,200 measured jobs returned matching
+captures, but the gate **FAIL** was 27 of 29 checks. Project-list p95/p99
+were 223.000/264.910 ms against limits of 200.994/245.163 ms. The unchanged
+reference reached 290.020/305.144 ms in the same attempt, compared with
+67.8/88.6 ms in the earlier r3 comparison. Other processes were using CPU
+during the first attempt. Keep its failure and repeat the same workload
+and thresholds when the runner is idle.
+
+The first r5 SQLite attempt took 995.62 seconds. The recorded phases
+include 31.72 seconds for setup and verification, 225.75 for service
+startup, 197.57 for client setup, 18.43 for warmup, 514.86 for measured work
+and 6.99 for cleanup. Wheel builds occurred separately.
+
+The full r5 SQLite retry **PASS** covers all 29 limits and 1,200 measured
+jobs with byte-verified NCAP. Project-list p95/p99 were 71.435/117.923 ms.
+Median jobs/second were 1.889 for A and 4.309 for r5. Median peak RSS was
+606.90 and 292.31 MiB. The retry took 896.21 seconds, with 211.26 for
+service startup, 160.75 for client setup, 17.32 for warmup, 476.27 for
+measured work and 6.89 for cleanup. The first attempt's measurements and
+threshold failure remain part of the record.
+
+The r5 PostgreSQL 18.6 load gate **FAIL** passed 22 of 29 limits after
+all three pairs and 1,200 byte-verified jobs. Median throughput was
+1.818 → 1.970 jobs/second and peak RSS 612.07 → 289.61 MiB. The same
+reference reached 4.889 jobs/second in the r3 PostgreSQL comparison.
+There was concurrent desktop CPU use. The available observations do
+not isolate the cause of the full slowdown.
+
+| PostgreSQL check | A ms | r5 ms | Limit ms |
+| --- | ---: | ---: | ---: |
+| AND capture p95 / p99 | 93.504 / 131.866 | 129.545 / 154.760 | 92.557 / 153.366 |
+| AND poll p95 / p99 | 195.070 / 341.884 | 263.268 / 538.285 | 194.792 / 386.104 |
+| Clock Run p99 | 1,515.386 | 1,379.434 | 1,339.881 |
+| Project-list p95 / p99 | 289.003 / 304.442 | 303.022 / 332.575 | 302.778 / 330.987 |
+
+The PostgreSQL profile took 1,109.17 seconds. The timed workload used
+614.72 seconds. Database and window preparation, service startup,
+client setup, warmup and cleanup used 2.67, 222.99, 212.06, 21.55 and
+8.95 seconds respectively, with the remaining time in verification and
+reporting. The owned cluster stopped after the run. This result applies
+to the exact r5 artifacts. The released profile selects `legacy`.
+
+A second full PostgreSQL run on the same r5 bytes verified all 1,200
+captures and passed 20 of 29 checks. Median throughput was 1.736 → 1.747
+jobs/second against a 1.760 minimum. The fixed HTTP and capture throughput
+limits also failed. AND capture p95, AND create p99, AND poll p95/p99,
+clock create p95 and clock Run p95 exceeded their limits. The released
+reference was close to the frozen Stage 0 range of 1.830–1.920 jobs/second.
+The much faster r3 run remains a separate observation. The CPU sample
+before the repeat showed less desktop CPU use, so that factor alone did
+not explain the PostgreSQL gate result.
+
+A paired diagnostic ran 40 jobs per backend. Among the slowest five
+percent of r5 polls, the median application time was 283.70 ms, with
+253.74 ms waiting for the scheduler lock and 1.94 ms executing SQL. The
+same diagnostic found that slow capture and project reads spent much of
+their time waiting for the repository lock. The probes measure overlapping
+spans and this short run does not score the frozen limits.
+
+R6 uses a committed, owner-checked snapshot for the two REST reads of a
+non-queued experiment. A queued read rechecks ownership and state under
+the scheduler lock before reporting its live position. Run, Stop, event
+publication and operation recovery still use the serialized snapshot.
+The new tests cover the unlocked read, wrong-owner rejection and dispatch
+between a queued read's initial observation and the locked re-read. The
+focused scheduler, API and access suites passed 65 cases. The rebuilt
+Remote wheel SHA-256 is
+`7a050978ca43083dfd3e119f475d0a8d939b9c22341e372b588f2408ad955a96`.
+The other product artifact bytes match r5. The full r6 PostgreSQL profile
+passed 16 of 29 limits. It brought AND poll p95/p99 down to 105.335/166.265
+ms, but the first two candidate windows handled 4,401 and 4,471 HTTP
+requests for 200 jobs. Shorter polls let the same client cadence issue
+more requests while a Run was active. Median throughput fell to 1.449
+jobs/second and CPU rose to 0.592 seconds/job. All 1,200 captures matched.
+
+R7 retains the polling change and reads session and user data in one SQL
+statement per authorization lookup. The existing transactional write fence
+and post-fence expiry, revocation and revision checks still apply. The
+query-count regression passed within the 121-case API and access suite. Five
+PostgreSQL cases verified concurrent session fences, capture retirement
+and assignment admission. The Remote wheel SHA-256 is
+`d66ea041d27b3215be106c1bb18ca3efd90eb2e4d9904715fb1b0e264e1f30f0`.
+
+The r7 PostgreSQL 18.6 load gate **PASS** met all 29 frozen limits across
+three pairs of 200 jobs per backend on Windows x64. All 1,200 NCAP
+captures matched byte for byte. The timed workload and client cadence
+were unchanged. Median throughput was 4.410 → 4.633 jobs/second, CPU
+0.235 → 0.216 seconds/job and peak RSS 615.75 → 300.98 MiB for A and r7.
+
+| Previously failing PostgreSQL check | r5 ms | r7 ms | Frozen limit ms |
+| --- | ---: | ---: | ---: |
+| AND capture p95 / p99 | 129.545 / 154.760 | 62.202 / 78.271 | 92.557 / 153.366 |
+| AND poll p95 / p99 | 263.268 / 538.285 | 49.596 / 121.351 | 194.792 / 386.104 |
+| Clock Run p99 | 1,379.434 | 502.861 | 1,339.881 |
+| Project-list p95 / p99 | 303.022 / 332.575 | 86.128 / 119.113 | 302.778 / 330.987 |
+
+The r7 PostgreSQL profile took 814.08 seconds of pytest wall time versus
+1,109.17 seconds on the first r5 run. R7 reused the verified build.
+Profile setup took 41.66 seconds. Across the six windows, database and
+window preparation, service startup, client setup, warmup, timed work,
+measurement teardown and cleanup took 1.97, 242.07, 140.36, 14.87,
+365.35, 0.17 and 6.86 seconds respectively. The remaining time was spent
+in verification and reporting. The A windows varied from 40.45 to
+116.04 seconds, so the reduction in wall time includes run-to-run
+variation. The owned PostgreSQL cluster stopped at the end of the run.
+
+The r7 SQLite load gate **FAIL** passed 28 of 29 checks, with all 1,200
+NCAP captures matching byte for byte. AND capture p95 was 85.662 ms
+for A and 98.726 ms for r7 against the 89.121 ms limit. The three
+r7 windows measured 111.156, 98.726 and 45.312 ms. Median throughput
+was 2.051 → 2.061 jobs/second, CPU 0.406 → 0.471 seconds/job and peak
+RSS 607.68 → 281.07 MiB. The candidate generated 2,521 and 2,516 poll
+requests in its first two windows, compared with 1,226 and 1,156 in the
+first two r5 retry windows under the same client cadence.
+
+The r7 SQLite run took 1,010.99 seconds of pytest wall time. Setup took
+31.94 seconds. The six windows used 217.66 seconds for service startup,
+205.31 for client setup, 19.34 for warmup, 528.33 for timed work,
+0.23 for measurement teardown and 7.57 for cleanup.
+
+A separate instrumented comparison of 80 jobs per backend found that
+the slowest 20% of r7 AND capture GETs spent a median of 21.27 ms waiting for the
+repository lock, 3.41 ms reading and validating the file and 1.04 ms
+executing SQL. The wait was spread across the existing ownership and
+session checks. The short run did not reproduce the formal latency.
+The next formal run kept the artifact and gate unchanged and sampled
+background process CPU throughout the paired windows.
+
+The r7 SQLite retry **PASS** met all 29 limits with 1,200 byte-matched
+captures. AND capture p95 was 49.859 ms for A and 53.139 ms for r7.
+The three r7 windows were 42.237, 53.139 and 88.515 ms. Median
+throughput was 2.989 → 4.643 jobs/second, CPU 0.233 → 0.194 seconds/job
+and peak RSS 606.82 → 283.45 MiB. Pytest wall time was 809.96 seconds.
+Setup took 32.20 seconds. Service startup, client setup, warmup, timed
+work, measurement teardown and cleanup took 237.71, 117.45, 13.36,
+402.17, 0.19 and 6.18 seconds. The same r7 build was used in both runs.
+Their difference shows Windows runner variability, and both receipts
+remain part of the record.
+
+### Gate 1 decision for Windows x64
+
+The r7 `saturated-v1` Stop gate **PASS** met all six frozen limits in
+each of three independent pairs. Each side supplied 100 qualified
+observations per pair. The three legacy receipts were reused after
+the harness verified their release, workload and probe digests. All
+qualified samples met safe ACK, worker cleanup, capture and durable
+lease requirements. There were no residual leases. A and B discarded
+one and 23 waves respectively because they did not meet the load check.
+The candidate windows took 384.30, 405.82 and 298.51 seconds.
+
+| Stop latency | A median p50 / p95 / p99 ms | r7 median p50 / p95 / p99 ms |
+| --- | ---: | ---: |
+| HTTP Stop | 54.715 / 128.714 / 336.275 | 79.088 / 114.662 / 138.435 |
+| gRPC ACK | 38.254 / 117.519 / 313.666 | 50.958 / 77.013 / 88.645 |
+| Durable lease release | 4,362.157 / 7,854.343 / 8,050.876 | 113.206 / 175.904 / 239.915 |
+
+The original Stage 0 Stop circuit remains a separate qualification
+record. It gave zero qualifying observations in the early C++ trial.
+The supplemental gate used the same heavier circuit and qualification
+for both sides with the original sample counts and absolute limits.
+All 27 planned integration cases passed on the installed r7 wheels.
+The same Simulator, Hardware and worker bytes carry the prior direct,
+lifecycle and sanitizer evidence. The worker's memory and process
+bounds are enforced by the OS. Its CPU work is bounded by admission,
+event limits and host deadlines.
+
+Use the verified r7 combination for Stage 2 with
+`CIRNET_SIMULATION_BACKEND=cpp`, the pinned worker path and SHA-256,
+four Run workers, and PERSIST/FULL for the SQLite load configuration.
+The measured local manifest SHA-256 is
+`e7e2ce0056b11eb6cbf42304cb35607b2263e464a57cddb9485e43d61ac0f50d`.
+Rollback follows the cancellation, reaping and generation fencing
+procedure above and reinstalls the 0.1.4 reference. RTL, HIL and SPICE
+remain `NOT RUN` for this Windows virtual simulation gate.
+
+### Future SPICE core based on ngspice
+
+**Proposed.** Keep the Stage 1 C++ digital core and its bounded DC model
+for compatibility. Develop a separate SPICE backend from upstream ngspice
+source. Evaluate the shared C library inside the isolated C++ worker so
+Remote and Hardware retain their current process and safety boundaries.
+Compare its callbacks and cooperative interruption with a pinned batch
+child for the first analog cases. Start with one simulation per child.
+Deadline expiry or failed interruption requires terminating and reaping the
+child before reporting safe cleanup. [ngspice shared library](https://ngspice.sourceforge.io/shared.html)
+
+- [ ] **Select a reproducible input.** Start the experiment with upstream
+  `ngspice-46` and a headless shared build with XSPICE enabled. Record the
+  archive SHA-256, exact toolchain and options, patches, target ABI, library
+  and code-model hashes, and each model's origin, version and SHA-256.
+  Audit the selected source and all packaged components against their
+  notices and redistribution terms before packaging. [Upstream release archive](https://sourceforge.net/projects/ngspice/files/ng-spice-rework/old-releases/46/)
+- [ ] **Translate and capture.** Validate `CircuitGraph` first. Assign stable
+  net and element names, map approved parts and pin order to a versioned
+  model catalog, and emit a bounded netlist. Resolve model paths inside
+  the pinned model directory. Collect analog vectors and XSPICE events
+  through bounded callbacks. Specify units, time conversion, quantization,
+  ordering and how gaps and unknowns are represented before emitting
+  Contracts-compatible NCAP. [ngspice documentation](https://ngspice.sourceforge.io/docs.html)
+- [ ] **Evaluate parity and failure handling.** Run RC and diode/LED analog
+  references, 74HC08 gates, clocks, fan-out, unpowered inputs, conflicting
+  drivers and analog/digital bridges. Compare event order, equal timestamps,
+  propagation delay and CIRNET `0/1/X` against the C++ corpus. Define a
+  mapping for XSPICE logic and drive strength before testing parity. Exercise
+  invalid graphs and models, nonconvergence, limits, timeout, cancel, crash
+  and late replies through Run and preview. [XSPICE in ngspice](https://ngspice.sourceforge.io/xspice.html)
+
+The downloaded `ngspice-46.tar.gz` matched the selected SHA-256
+`a0d1699af1940b06649276dcd6ff5a566c8c0cad01b2f7b5e99dedbb4d64c19b`.
+The Simulator backend plan records verified source digests for the first
+three XSPICE models. SPICE build, runtime, review of distributed components
+and digital parity are **NOT RUN**. [Upstream tarball](https://sourceforge.net/projects/ngspice/files/ng-spice-rework/old-releases/46/ngspice-46.tar.gz/download) · [Pinned build recipe](https://github.com/Homebrew/homebrew-core/blob/539f6abfdfdff8af39757bc100dfbce1db0c5618/Formula/lib/libngspice.rb#L3-L5)
+
+Select a digital replacement only after parity and performance pass. Expose
+only implemented and verified capabilities in the release manifest. The
+Simulator backend documentation owns the detailed implementation sequence.
 
 ## 2. Rust Contracts
 

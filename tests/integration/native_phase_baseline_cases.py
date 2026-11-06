@@ -1,4 +1,4 @@
-"""Opt-in timing probes around the selected Python reference services.
+"""Opt-in timing probes around the selected reference or candidate services.
 
 The launcher loads these probes in its own children. Artifact bytes and service
 entrypoints stay intact. The timings describe an instrumented run and the spans
@@ -14,7 +14,10 @@ import json
 from math import ceil
 import os
 from pathlib import Path
+import re
+from threading import get_native_id
 from time import perf_counter_ns
+from traceback import extract_tb
 from uuid import uuid4
 
 
@@ -68,6 +71,63 @@ def _wrap(owner, attribute, trace, phase):
     setattr(owner, attribute, observed)
 
 
+def _capture_fault_probe(owner, attribute, *, should_report=None):
+    operation = getattr(owner, attribute)
+
+    @wraps(operation)
+    def observed(*args, **kwargs):
+        try:
+            return operation(*args, **kwargs)
+        except Exception as error:
+            if should_report is not None and not should_report(*args, **kwargs):
+                raise
+            original = getattr(error, 'orig', error)
+            code = getattr(error, 'code', None)
+            errno = getattr(original, 'errno', None)
+            winerror = getattr(original, 'winerror', None)
+            print(json.dumps({'event': 'capture.diagnostic', 'boundary': attribute,
+                              'exception': type(error).__name__, 'original': type(original).__name__,
+                              'code': code if isinstance(code, str) and re.fullmatch(r'[A-Z][A-Z0-9_]{0,63}', code) else None,
+                              'errno': errno if type(errno) is int else None,
+                              'winerror': winerror if type(winerror) is int else None,
+                              'sqlite': getattr(original, 'sqlite_errorname', None),
+                              'frames': [[Path(frame.filename).name, frame.lineno, frame.name]
+                                         for frame in extract_tb(error.__traceback__)]}), flush=True)
+            raise
+
+    setattr(owner, attribute, observed)
+
+
+def install_capture_fault_probes(role):
+    if role == 'api':
+        from app.services.captures import CaptureService
+        from app.services.experiments import ExperimentManager
+
+        _capture_fault_probe(ExperimentManager, '_call',
+                             should_report=lambda _self, _eid, method, **_kwargs: method == 'read_capture')
+        _capture_fault_probe(ExperimentManager, '_transition',
+                             should_report=lambda _self, _eid, state, **_kwargs: state == 'CAPTURING')
+        _capture_fault_probe(CaptureService, 'persist')
+    else:
+        from hardware_service import rpc
+        from hardware_service.station import virtual
+
+        _capture_fault_probe(rpc, 'encode_digital')
+        _capture_fault_probe(virtual.VirtualHardwareStation, 'read_capture')
+        execute = rpc.LifecycleRpc._execute
+
+        @wraps(execute)
+        def observed(service, request, action):
+            reply = execute(service, request, action)
+            if action.__name__ == 'read_capture' and not reply.accepted:
+                print(json.dumps({'event': 'capture.diagnostic', 'boundary': 'ReadCapture RPC',
+                                  'code': service.pb.ErrorCode.Name(reply.code),
+                                  'payload_bytes': len(reply.capture_payload)}), flush=True)
+            return reply
+
+        rpc.LifecycleRpc._execute = observed
+
+
 def install_api_probes(output):
     """Attach before launching the selected API so new engines are observed."""
     from sqlalchemy import event
@@ -79,6 +139,7 @@ def install_api_probes(output):
     from app.services.capture_store import FilesystemCaptureStore
     from app.services.experiments import ExperimentManager
     from app.services.lab_compiler import LabExecutionCompiler
+    from app.services.persistence import Repository
 
     trace = _Trace(_owned_directory(output), 'api', observability.current_correlation)
     _wrap(Pool, 'connect', trace, 'database.connection_acquire')
@@ -88,6 +149,51 @@ def install_api_probes(output):
     _wrap(FilesystemCaptureStore, 'put', trace, 'api.capture_store')
     _wrap(FilesystemCaptureStore, 'get', trace, 'api.capture_read_and_validate')
     _wrap(hardware_client, 'decode_digital', trace, 'api.capture_ncap_decode')
+
+    if os.environ.get('CIRNET_NATIVE_CAPTURE_FAULT_DIAGNOSTIC') == '1':
+        install_capture_fault_probes('api')
+
+    if os.environ.get('CIRNET_NATIVE_PROFILE_PHASES') == '1':
+        journal = os.environ.get('CIRNET_NATIVE_PHASE_SQLITE_JOURNAL')
+        if journal is not None:
+            from sqlite3 import Connection as SqliteConnection
+
+            if journal not in ('delete', 'truncate', 'persist'):
+                raise ValueError('Unsupported diagnostic SQLite rollback journal mode.')
+
+            @event.listens_for(Engine, 'connect')
+            def diagnostic_journal(dbapi_connection, _record):
+                if isinstance(dbapi_connection, SqliteConnection):
+                    mode = dbapi_connection.execute(f'PRAGMA journal_mode={journal}').fetchone()[0]
+                    synchronous = dbapi_connection.execute('PRAGMA synchronous').fetchone()[0]
+                    assert mode == journal and synchronous == 2
+
+        class TimedLock:
+            def __init__(self, lock, phase):
+                self.lock = lock
+                self.phase = phase
+
+            def __enter__(self):
+                began = perf_counter_ns()
+                result = self.lock.__enter__()
+                trace.record(self.phase, began)
+                return result
+
+            def __exit__(self, *exception):
+                return self.lock.__exit__(*exception)
+
+        def observe_lock(owner, phase):
+            initialize = owner.__init__
+
+            @wraps(initialize)
+            def observed_initialize(instance, *args, **kwargs):
+                initialize(instance, *args, **kwargs)
+                instance.lock = TimedLock(instance.lock, phase)
+
+            owner.__init__ = observed_initialize
+
+        observe_lock(Repository, 'database.repository_lock_wait')
+        observe_lock(ExperimentManager, 'api.experiment_lock_wait')
 
     @event.listens_for(Engine, 'before_cursor_execute')
     def before_cursor_execute(_connection, _cursor, _statement, _parameters, context, _many):
@@ -153,16 +259,67 @@ def _timed_worker(output, experiment_id, submitted, operation, args, kwargs):
         _worker_trace.record('simulator.run', began, ended, experiment_id=experiment_id)
 
 
+def _install_native_worker_probes(virtual, trace):
+    from cirnet_sim.cpp_backend import _Connection
+
+    initialize = virtual._NativeJobs.__init__
+
+    @wraps(initialize)
+    def observed_initialize(pool, *args, **kwargs):
+        initialize(pool, *args, **kwargs)
+        submit = pool._executor.submit
+
+        @wraps(submit)
+        def observed_submit(operation, *operation_args, **operation_kwargs):
+            experiment_id = _experiment.get()
+
+            def timed():
+                began = perf_counter_ns()
+                token = _experiment.set(experiment_id)
+                try:
+                    return operation(*operation_args, **operation_kwargs)
+                finally:
+                    ended = perf_counter_ns()
+                    try:
+                        thread_id = get_native_id()
+                        trace.record('simulator.submit_to_worker_entry', submitted, began, thread_id=thread_id)
+                        trace.record('simulator.run', began, ended, thread_id=thread_id)
+                    finally:
+                        _experiment.reset(token)
+
+            submitted = perf_counter_ns()
+            return submit(timed)
+
+        pool._executor.submit = observed_submit
+
+    virtual._NativeJobs.__init__ = observed_initialize
+    exchange = _Connection.exchange
+
+    @wraps(exchange)
+    def observed_exchange(connection, *args, **kwargs):
+        started = perf_counter_ns()
+        try:
+            return exchange(connection, *args, **kwargs)
+        finally:
+            trace.record('simulator.native_worker_round_trip', started,
+                         native_pid=connection.child.pid, thread_id=get_native_id())
+
+    _Connection.exchange = observed_exchange
+
+
 def install_hardware_probes(output):
     """Observe the real gRPC dispatch and Simulator pool without replacing either."""
     from hardware_service import rpc
     from hardware_service.station import virtual
+    from scripts.environment import getenv
 
     output = _owned_directory(output)
     trace = _Trace(output, 'hardware', lambda: {'experiment_id': _experiment.get()})
     _wrap(virtual, 'compile_graph', trace, 'hardware.graph_compile')
     _wrap(virtual.VirtualHardwareStation, 'read_capture', trace, 'hardware.capture_read')
     _wrap(rpc, 'encode_digital', trace, 'hardware.capture_ncap_encode')
+    if os.environ.get('CIRNET_NATIVE_CAPTURE_FAULT_DIAGNOSTIC') == '1':
+        install_capture_fault_probes('hardware')
     execute = rpc.LifecycleRpc._execute
 
     @wraps(execute)
@@ -181,6 +338,9 @@ def install_hardware_probes(output):
             _experiment.reset(token)
 
     rpc.LifecycleRpc._execute = observed_execute
+    if getenv('CIRNET_SIMULATION_BACKEND', 'legacy') == 'cpp':
+        _install_native_worker_probes(virtual, trace)
+        return
     pool = virtual.simulation_pool
 
     class PoolProbe:
@@ -203,8 +363,10 @@ def _percentiles(durations):
     }
 
 
-def summarize_phases(directory, service_pids, verified_runs, measurement_started_ns):
+def summarize_phases(directory, service_pids, verified_runs, measurement_started_ns, *, backend='legacy'):
     """Require complete phase coverage on the same verified experiments."""
+    if backend not in ('legacy', 'cpp'):
+        raise ValueError('Phase timing requires the legacy or C++ backend.')
     api_pid, hardware_pid = service_pids
     assert api_pid != hardware_pid
     rows = [
@@ -226,9 +388,11 @@ def summarize_phases(directory, service_pids, verified_runs, measurement_started
         'hardware.capture_rpc_handler': hardware_pid,
         'hardware.capture_read': hardware_pid,
         'hardware.capture_ncap_encode': hardware_pid,
-        'simulator.submit_to_worker_entry': None,
-        'simulator.run': None,
+        'simulator.submit_to_worker_entry': hardware_pid if backend == 'cpp' else None,
+        'simulator.run': hardware_pid if backend == 'cpp' else None,
     }
+    if backend == 'cpp':
+        expected_pids['simulator.native_worker_round_trip'] = hardware_pid
     for phase, pid in expected_pids.items():
         phase_rows = [row for row in rows if row['phase'] == phase]
         assert {row.get('experiment_id') for row in phase_rows} == run_ids, phase
@@ -276,7 +440,7 @@ def summarize_phases(directory, service_pids, verified_runs, measurement_started
         by_workload[workload_by_experiment[experiment_id]][phase].append(remaining)
     for phase in ('database.connection_acquire', 'database.cursor_execute', 'database.commit'):
         assert grouped[phase], phase
-    return {
+    report = {
         'phases': {phase: _percentiles(values) for phase, values in sorted(grouped.items())},
         'by_workload': {
             workload: {phase: _percentiles(values) for phase, values in sorted(spans.items())}
@@ -288,6 +452,23 @@ def summarize_phases(directory, service_pids, verified_runs, measurement_started
         'worker_pids': sorted({row['pid'] for row in rows if row['phase'] == 'simulator.run'}),
         'wire_capture_bytes': sum(row.get('capture_bytes', 0) for row in rows),
     }
+    if backend == 'cpp':
+        run_spans = {row['experiment_id']: row for row in rows if row['phase'] == 'simulator.run'}
+        exchanges = [row for row in rows if row['phase'] == 'simulator.native_worker_round_trip']
+        for row in exchanges:
+            run = run_spans[row['experiment_id']]
+            assert type(row['native_pid']) is int and row['native_pid'] > 0 and row['native_pid'] not in service_pids
+            assert run['start_ns'] <= row['start_ns'] <= row['end_ns'] <= run['end_ns']
+            assert run['thread_id'] == row['thread_id']
+        report.update(
+            native_worker_pids=sorted({row['native_pid'] for row in exchanges}),
+            simulator_measurement_scope={
+                'simulator.submit_to_worker_entry': 'Hardware executor submission to Hardware thread entry',
+                'simulator.run': 'Simulator facade in the Hardware thread, including adapter and IPC',
+                'simulator.native_worker_round_trip': 'host-side worker exchange, including pipe I/O and wait',
+            },
+        )
+    return report
 
 
 def test_integrated_reference_phases():

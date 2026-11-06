@@ -153,11 +153,21 @@ class ExperimentManager:
             e['queue_position']=(list(queue).index(eid)+1) if eid in queue else None
             return self._public(e,owner)
 
+    def poll(self,eid,owner):
+        e=self.repo.get_experiment(eid,owner)
+        if e['state']=='QUEUED':
+            # Recheck ownership and state with the live queue position.
+            return self.get(eid,owner)
+        e['queue_position']=None
+        return self._public(e,owner)
+
     def list(self,owner):
         return [self.get(e['experiment_id'],owner) for e in self.repo.list_experiments(owner)]
 
     def _page(self,owner,*,limit=50,cursor=None,active=False):
         records,next_cursor=self.repo.experiment_page(owner,limit=limit,cursor=cursor,active=active)
+        if not records:
+            return {'schema_version':'1.0','items':[],'next_cursor':next_cursor}
         with self.lock:
             positions={eid:index+1 for queue in self.queues.values() for index,eid in enumerate(queue)}
             items=[self._public({**record,'queue_position':positions.get(record['experiment_id'])},owner) for record in records]

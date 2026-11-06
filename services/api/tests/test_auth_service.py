@@ -1,6 +1,6 @@
 import time
 import pytest
-from sqlalchemy import select
+from sqlalchemy import event, select, update
 from app.config import Settings
 from app.services.persistence import Repository
 
@@ -24,6 +24,38 @@ def test_login_rotates_opaque_cookie_and_logout_revokes_session():
     assert not auth.session_active(admin.session_id)
     assert admin.session_id in revoked and replacement_cookie!=new_cookie
     assert not replacement.authenticated
+
+
+@pytest.mark.parametrize('stale_user', [{'active': False}, {'auth_revision': 1}])
+def test_resolve_reads_session_and_user_in_one_statement(stale_user):
+    from app.services.auth import AuthService
+
+    auth = AuthService(Repository('sqlite://'), Settings(allow_guest=True))
+    password = 'correct horse battery staple'
+    auth.bootstrap_admin('teacher', password)
+    guest, guest_cookie = auth.ensure_session(None)
+    context, cookie = auth.login(guest, 'teacher', password)
+    statements = []
+
+    def record_query(*_):
+        statements.append(None)
+
+    event.listen(auth.repo.engine, 'before_cursor_execute', record_query)
+    try:
+        assert auth.current(cookie) == context
+        assert len(statements) == 1
+        statements.clear()
+        assert auth.session_active(context.session_id)
+        assert len(statements) == 1
+    finally:
+        event.remove(auth.repo.engine, 'before_cursor_execute', record_query)
+
+    with auth.repo.engine.begin() as db:
+        users = auth.repo.auth_users
+        db.execute(update(users).where(users.c.principal_id == context.principal_id).values(**stale_user))
+    assert auth.current(cookie) is None
+    assert not auth.session_active(context.session_id)
+    assert auth.current(guest_cookie) is None
 
 
 def test_password_hash_and_cookie_not_stored_as_plaintext():

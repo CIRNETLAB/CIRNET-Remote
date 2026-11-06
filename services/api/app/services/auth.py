@@ -9,7 +9,7 @@ import uuid
 from threading import BoundedSemaphore
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, VerificationError, InvalidHashError
-from sqlalchemy import delete, insert, select, update
+from sqlalchemy import bindparam, delete, insert, select, update
 from sqlalchemy.exc import IntegrityError
 
 COOKIE_NAME='cirnet_session'
@@ -40,6 +40,16 @@ class AuthService:
         self.hasher=PasswordHasher(); self._dummy_hash=self.hasher.hash(secrets.token_urlsafe(32))
         self._revoke_callback=lambda session_ids:None
         self._maintenance_after=None
+        sessions = repository.auth_sessions
+        users = repository.auth_users
+        session_and_user = select(
+            sessions, users.c.principal_id.label('user_principal_id'),
+            users.c.auth_revision.label('user_auth_revision'), users.c.active,
+            users.c.role, users.c.username, users.c.display_name,
+        ).select_from(sessions.outerjoin(users, sessions.c.principal_id == users.c.principal_id))
+        key = bindparam('session_key')
+        self._session_by_token = session_and_user.where(sessions.c.token_hash == key)
+        self._session_by_id = session_and_user.where(sessions.c.session_id == key)
 
     def set_revoke_callback(self,callback): self._revoke_callback=callback
 
@@ -105,14 +115,14 @@ class AuthService:
         return SessionContext(row['session_id'],row['principal_id'],row['principal_id'],user['role'] if user else 'STUDENT',bool(user),row['csrf_token'],row['expires_at'],row['claimable_guest_id'],user['username'] if user else None,user['display_name'] if user else None)
 
     def _resolve(self,db,*,token_hash=None,session_id=None):
-        table=self.repo.auth_sessions
-        row=db.execute(select(table).where(table.c.token_hash==token_hash if token_hash else table.c.session_id==session_id)).mappings().first()
+        statement = self._session_by_token if token_hash else self._session_by_id
+        row = db.execute(statement, {'session_key': token_hash or session_id}).mappings().first()
         if row is None or row['revoked'] or row['expires_at']<=self.clock(): return None
         user=None
         if row['principal_id']:
-            user=db.execute(select(self.repo.auth_users).where(self.repo.auth_users.c.principal_id==row['principal_id'])).mappings().first()
+            user = row if row['user_principal_id'] is not None else None
             if user is None and not self.config.allow_guest: return None
-            if user and (not user['active'] or user['auth_revision']!=row['auth_revision']): return None
+            if user and (not user['active'] or user['user_auth_revision']!=row['auth_revision']): return None
         return self._context(row,user)
 
     def _live_context(self,db,context,*roles):

@@ -29,7 +29,7 @@ def active(request:Request,cursor:str|None=Query(default=None,min_length=1,max_l
 
 @router.get("/{experiment_id}", operation_id='getExperiment', response_model=ExperimentRecord, response_model_exclude_unset=True)
 def get_experiment(experiment_id:str,request:Request):
-    return request.app.state.manager.get(experiment_id,request.state.owner)
+    return request.app.state.manager.poll(experiment_id,request.state.owner)
 
 @router.post("/{experiment_id}/run", operation_id='runExperiment', response_model=ExperimentRecord, response_model_exclude_unset=True)
 def run_experiment(experiment_id:str,request:Request,
@@ -45,7 +45,7 @@ def stop_experiment(experiment_id:str,request:Request,
 
 @router.get("/{experiment_id}/results", operation_id='getExperimentResults', response_model=ExperimentRecord, response_model_exclude_unset=True)
 def results(experiment_id:str,request:Request):
-    return request.app.state.manager.get(experiment_id,request.state.owner)
+    return request.app.state.manager.poll(experiment_id,request.state.owner)
 
 @router.get('/{experiment_id}/document-reference',operation_id='getExperimentDocumentReference',response_model=ExperimentDocumentReference,response_model_exclude_unset=True)
 def document_reference(experiment_id:str,request:Request):

@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
-from threading import Barrier
+from pathlib import Path
+from threading import Barrier, Event
 import pytest
 from app.services.capture_store import FilesystemCaptureStore
 from app.services.captures import CaptureService
@@ -24,6 +25,50 @@ def test_two_store_instances_share_the_directory_quota_admission_lock(tmp_path):
     with ThreadPoolExecutor(max_workers=2) as pool:outcomes=list(pool.map(put,[first,second]))
     assert sorted(outcomes)==['CAPTURE_QUOTA_EXCEEDED','stored']
     assert len(list(tmp_path.glob('*.ncap')))==1
+
+def test_first_capture_writes_serialize_resolution_with_directory_creation(tmp_path, monkeypatch):
+    first, second = (FilesystemCaptureStore(tmp_path / 'captures') for _ in range(2))
+    shared_lock = first.lock
+    assert second.lock is shared_lock
+    first_id, second_id = 'a' * 32, 'b' * 32
+    creating = Event()
+    second_started = Event()
+    mkdir, resolve = Path.mkdir, Path.resolve
+
+    class ObservedLock:
+        def __enter__(self):
+            second_started.set()
+            return shared_lock.__enter__()
+
+        def __exit__(self, *exception):
+            return shared_lock.__exit__(*exception)
+
+    def delayed_mkdir(path, *args, **kwargs):
+        if path == first.directory and not creating.is_set():
+            creating.set()
+            assert second_started.wait(5)
+        return mkdir(path, *args, **kwargs)
+
+    def resolve_during_mkdir(path, *args, **kwargs):
+        if path.name == second_id + '.ncap' and not second_started.is_set():
+            # Windows can return a differently spelled parent when an absent
+            # directory appears during non-strict resolution.
+            second_started.set()
+            return tmp_path / 'different-parent' / path.name
+        return resolve(path, *args, **kwargs)
+
+    second.lock = ObservedLock()
+    monkeypatch.setattr(Path, 'mkdir', delayed_mkdir)
+    monkeypatch.setattr(Path, 'resolve', resolve_during_mkdir)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first_write = pool.submit(first.put, {'capture_id': first_id}, b'first capture')
+        assert creating.wait(5)
+        second_write = pool.submit(second.put, {'capture_id': second_id}, b'second capture')
+        first_write.result(timeout=5)
+        second_write.result(timeout=5)
+    assert (first.directory / (first_id + '.ncap')).read_bytes() == b'first capture'
+    assert (second.directory / (second_id + '.ncap')).read_bytes() == b'second capture'
+
 
 def test_byte_quota_rejects_the_second_payload_without_partial_files(tmp_path):
     from contracts.capture_codec import encode_digital

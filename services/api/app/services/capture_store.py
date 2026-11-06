@@ -38,8 +38,9 @@ class FilesystemCaptureStore:
 
     def put(self, metadata, payload):
         if not isinstance(payload,bytes) or len(payload)>HEADER.size+MAX_HEADER+MAX_EVENTS*EVENT.size:raise ValueError('CAPTURE_PAYLOAD_LIMIT')
-        path=self._path(metadata)
         with self.lock:
+            # Resolve the destination before another writer can create the directory.
+            path=self._path(metadata)
             self.directory.mkdir(parents=True,exist_ok=True)
             if path.exists():
                 if path.is_file() and path.stat().st_size==len(payload):

@@ -31,7 +31,11 @@ dist/
 .runtime/
 .env
 *.db
+*.db-journal
+*.sqlite
+*.sqlite-journal
 *.sqlite3
+*.sqlite3-journal
 logs/
 
 # FPGA / Quartus generated output

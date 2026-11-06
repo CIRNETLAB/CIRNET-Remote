@@ -1,6 +1,7 @@
 """Public HTTP shapes are explicit, conforming, and exclude hardware-private data."""
 from importlib.resources import files
 from pathlib import Path
+from types import SimpleNamespace
 import json
 import subprocess
 import sys
@@ -45,6 +46,39 @@ def test_station_http_projection_excludes_internal_route_resources():
         stations = client.get('/api/stations').json()
         assert all('routing_resources' not in station['capabilities'] for station in stations)
         assert gateway.capabilities('physical-station-01')['routing_resources'][0]['node_ids'] == ['N1']
+
+
+def test_station_list_uses_one_fresh_lease_snapshot_after_observing_all_stations():
+    from app.services.stations import StationService
+    from test_lab_lifecycle import LabGateway
+
+    virtual, physical = 'virtual-station-01', 'physical-station-01'
+    gateway = LabGateway()
+    calls = []
+    leases = [
+        {'station_id': virtual, 'quarantined': False},
+        {'station_id': physical, 'quarantined': True},
+    ]
+
+    def observe(station_id):
+        calls.append(station_id)
+        return gateway.capabilities(station_id)
+
+    def snapshot():
+        calls.append('leases')
+        return list(leases)
+
+    service = StationService(SimpleNamespace(capabilities=observe),
+                             SimpleNamespace(repo=SimpleNamespace(leases=snapshot)))
+    stations = service.list()
+    assert calls == [virtual, physical, 'leases']
+    assert [(station['station_id'], station['state'], station['capabilities']['available'])
+            for station in stations] == [(virtual, 'busy', True), (physical, 'unavailable', False)]
+
+    leases.clear()
+    calls.clear()
+    assert [station['state'] for station in service.list()] == ['ready', 'ready']
+    assert calls == [virtual, physical, 'leases']
 
 
 def test_capture_openapi_declares_binary_media_and_metadata_deletion_response():

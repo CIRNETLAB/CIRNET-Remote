@@ -7,7 +7,7 @@ class StationService:
         self.gateway,self.manager=gateway,manager
         self.targets={"virtual-station-01":"simulation","physical-station-01":"hardware"}
 
-    def capabilities(self,station_id):
+    def _observe(self,station_id):
         if station_id not in self.targets: raise KeyError("STATION_NOT_FOUND")
         try: value=validate("StationCapabilities",self.gateway.capabilities(station_id))
         except GatewayError:
@@ -18,18 +18,31 @@ class StationService:
                 'instrument_capabilities':{name:{'channels':0,'runtime_reconfiguration_supported':False} for name in ('logic_analyzer','oscilloscope','generator')},'routing_resources':[],
                 "hardware_rpc_version":"2.0","fpga_protocol_version":"UNAVAILABLE","firmware_version":"UNAVAILABLE",
                 "hardware_profile_version":"UNAVAILABLE"}
-        if any(l["quarantined"] for l in self.manager.repo.leases() if l["station_id"]==station_id):
-            value=deepcopy(value); value["available"]=False
+        return value
+
+    def _public_capabilities(self,station_id,value,leases):
         # Public capability summary excludes physical node-to-resource mappings.
         value=deepcopy(value)
+        if any(l["quarantined"] for l in leases if l["station_id"]==station_id):
+            value["available"]=False
         for resource in value['routing_resources']: resource['node_ids']=[]
         return value
 
-    def descriptor(self,station_id):
-        caps=self.capabilities(station_id)
-        busy=any(l["station_id"]==station_id for l in self.manager.repo.leases())
+    def capabilities(self,station_id):
+        value=self._observe(station_id)
+        return self._public_capabilities(station_id,value,self.manager.repo.leases())
+
+    def _descriptor(self,station_id,value,leases):
+        caps=self._public_capabilities(station_id,value,leases)
+        busy=any(l["station_id"]==station_id for l in leases)
         return {"station_id":station_id,"mode":caps["mode"],
                 "state":"unavailable" if not caps["available"] else "busy" if busy else "ready","capabilities":caps}
 
+    def descriptor(self,station_id):
+        value=self._observe(station_id)
+        return self._descriptor(station_id,value,self.manager.repo.leases())
+
     def list(self):
-        return [self.descriptor(station_id) for station_id in self.targets]
+        observations=[(station_id,self._observe(station_id)) for station_id in self.targets]
+        leases=self.manager.repo.leases()
+        return [self._descriptor(station_id,value,leases) for station_id,value in observations]

@@ -21,6 +21,7 @@ NAME = 'cirnet-simulator'
 LEGACY_NAME = 'netcircuit-simulator'
 VERSION = '0.1.2'
 MODULES = ('__init__.py', 'analog.py', 'backends.py', 'circuit.py', 'dispatch.py', 'engine.py', 'logic.py', 'nets.py', 'waveform.py')
+_CPP_MODULES = frozenset(('cirnet_sim/cpp_backend.py', 'cirnet_sim/cpp_dc.py'))
 NAMESPACES = {NAME: ('cirnet_sim', 'netcircuit_sim'), LEGACY_NAME: ('netcircuit_sim',)}
 DEPENDENCIES = {
     NAME: (('cirnet-contracts==0.1.2', 'jsonschema==4.26.0'),),
@@ -35,6 +36,11 @@ def runtime_modules(name):
     if len(NAMESPACES[name]) == 2:
         members.add('netcircuit_sim/__init__.py')
     return members
+
+
+def _reviewed_runtime(name, members):
+    baseline = runtime_modules(name)
+    return members == baseline or (name == NAME and members == baseline | _CPP_MODULES)
 
 
 def validate_metadata(value):
@@ -71,7 +77,7 @@ def verify_wheel(path, digest):
     missing = sorted(expected - runtime)
     if missing:
         raise ValueError('Simulator wheel is missing runtime modules: ' + ', '.join(missing))
-    if runtime != expected:
+    if not _reviewed_runtime(identity, runtime):
         raise ValueError('Simulator runtime module inventory differs from the reviewed package.')
     return path
 
@@ -194,7 +200,7 @@ def installed_provenance(*, verify_hashes=True):
             if actual != expected.value:
                 raise ValueError(f'Installed Simulator resource differs from wheel RECORD: {item}')
         checked.add(name)
-    if checked != runtime_modules(identity):
+    if not _reviewed_runtime(identity, checked):
         raise ValueError('Installed Simulator RECORD runtime module inventory differs from the reviewed package.')
     actual = set()
     for part in namespaces:

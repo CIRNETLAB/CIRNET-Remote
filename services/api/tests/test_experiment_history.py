@@ -22,6 +22,87 @@ def test_history_is_newest_first_bounded_private_and_does_not_scan_all_experimen
     manager.closed=True;repo.close()
 
 
+def test_empty_experiment_pages_do_not_acquire_the_scheduler_lock(tmp_path, monkeypatch):
+    manager,repo,_,_,_,_=setup_manager(tmp_path)
+    create(manager,'other')
+
+    class UnexpectedLock:
+        def __enter__(self):
+            pytest.fail('An empty page has no queue positions to read.')
+
+        def __exit__(self,*_):
+            return False
+
+    try:
+        with monkeypatch.context() as patch:
+            patch.setattr(manager,'lock',UnexpectedLock())
+            empty={'schema_version':'1.0','items':[],'next_cursor':None}
+            assert manager.history('owner')==empty
+            assert manager.active_snapshot('owner')==empty
+    finally:
+        manager.close()
+        repo.close()
+
+
+def test_running_experiment_poll_reads_owned_snapshot_without_scheduler_lock(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    from app.api.experiments import get_experiment, results
+
+    manager, repo, _, _, _, _ = setup_manager(tmp_path)
+    experiment_id = create(manager, 'owner')['experiment_id']
+    manager._transition(experiment_id, 'RUNNING')
+    request = SimpleNamespace(app=SimpleNamespace(state=SimpleNamespace(manager=manager)),
+                              state=SimpleNamespace(owner='owner'))
+
+    class UnexpectedLock:
+        def __enter__(self):
+            pytest.fail('A running experiment has no queue position to read.')
+
+        def __exit__(self, *_):
+            return False
+
+    try:
+        with monkeypatch.context() as patch:
+            patch.setattr(manager, 'lock', UnexpectedLock())
+            for route in (get_experiment, results):
+                request.state.owner = 'owner'
+                record = route(experiment_id, request)
+                assert record['state'] == 'RUNNING' and record['queue_position'] is None
+                request.state.owner = 'stranger'
+                with pytest.raises(PermissionError, match='FORBIDDEN'):
+                    route(experiment_id, request)
+    finally:
+        manager.close()
+        repo.close()
+
+
+def test_queued_poll_reads_current_state_after_acquiring_scheduler_lock(tmp_path, monkeypatch):
+    manager, repo, _, _, _, _ = setup_manager(tmp_path)
+    experiment_id = create(manager, 'owner')['experiment_id']
+    queued = manager._transition(experiment_id, 'QUEUED', queue_position=1)
+    manager.queues[queued['station_id']].append(experiment_id)
+    assert manager.poll(experiment_id, 'owner')['queue_position'] == 1
+    scheduler_lock = manager.lock
+
+    class DispatchAtLock:
+        def __enter__(self):
+            scheduler_lock.__enter__()
+            manager.queues[queued['station_id']].popleft()
+            repo.save_experiment({**queued, 'state': 'RESERVED', 'queue_position': None})
+
+        def __exit__(self, *exception):
+            return scheduler_lock.__exit__(*exception)
+
+    try:
+        with monkeypatch.context() as patch:
+            patch.setattr(manager, 'lock', DispatchAtLock())
+            record = manager.poll(experiment_id, 'owner')
+            assert record['state'] == 'RESERVED' and record['queue_position'] is None
+    finally:
+        manager.close()
+        repo.close()
+
+
 def test_active_snapshot_prioritizes_admitted_runs_and_includes_unstarted_create_pages(tmp_path):
     manager,repo,_,_,_,_=setup_manager(tmp_path)
     running=create(manager,'owner')['experiment_id'];manager.run(running,'owner')

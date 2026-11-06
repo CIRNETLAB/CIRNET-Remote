@@ -2,7 +2,7 @@
 
 [English](../../en/architecture/native-migration.md) · [Kế hoạch gốc ngày 2026-11-05](https://github.com/cirnetlab/cirnet-remote/blob/f91eeeb42d7528d4e7fa9b1526195847932faf9d/docs/superpowers/plans/2026-11-05-cirnet-native-migration.md) · [Biên bản giai đoạn 0](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md)
 
-**Gate 0 PASS trên bộ tham chiếu 0.1.4 đã chọn. Gate 1 còn mở.** Sáu lượt tải, hai lượt phân pha, ba lượt Stop dưới tải và hai lượt phục hồi database/capture đều đạt. Lát cắt C++ 74HC08 cục bộ đã qua Run, capture và preview. Giai đoạn 2–5 ở trạng thái `NOT RUN`.
+**Gate 0 PASS trên bộ tham chiếu 0.1.4 đã chọn. Gate 1 PASS trên Windows x64 với r7.** Tổ hợp r7 là B cho giai đoạn 2. Profile 0.1.4 đã phát hành là bản tham chiếu để rollback. Giai đoạn 2–5 ở trạng thái `NOT RUN`.
 
 > **Dành cho agent triển khai.** Dùng superpowers:subagent-driven-development hoặc superpowers:executing-plans. Hoàn thành và ghi bằng chứng từng gate trước khi bắt đầu giai đoạn kế tiếp.
 
@@ -213,9 +213,9 @@ Diễn tập rollback bản phát hành native có gate riêng.
 
 ## 1. Simulator C++ và adapter chuyển tiếp
 
-- [ ] **Lát cắt số.** Trong Simulator, thêm CMake và worker C++ độc lập, bắt đầu với AND 74HC08 từ corpus và kiểm chuỗi sự kiện qua adapter `cirnet_sim/backends.py`. Mở rộng theo hành vi của `engine.py`, `nets.py`, `logic.py`, `dispatch.py` và model đang được công bố. Giữ preview và các fixture DC tĩnh đã hỗ trợ (nguồn, điện trở, LED và 74HC08 có nguồn cấp). Giữ analog/SPICE/mixed ở trạng thái không khả dụng. So timestamp, thứ tự sự kiện đồng thời và giá trị 0/1/X, byte NCAP và lỗi. Chạy test Simulator và pytest gọi trực tiếp binary, ASan/UBSan trên target hỗ trợ.
-- [ ] **Đóng gói và giám sát.** Dùng IPC cục bộ có frame giới hạn, handshake version và ID yêu cầu/thế hệ. Artifact Simulator xuất binary và mô tả giao thức riêng. Adapter Hardware `station/virtual.py` cho Run và adapter preview ở Remote dùng cùng lõi, ngân sách và pool riêng. Có deadline từ host, giới hạn queue/CPU/RAM, hủy, reap tiến trình và fence kết quả trả muộn. Kiểm timeout, frame lỗi, worker treo/chết, Stop/reset và chạy lại. REST, RPC 2.0 và NCAP giữ nguyên.
-- [ ] **Ma trận và gate 1.** A = Interface hiện tại / Remote Python / Hardware Python / Simulator Python. B = cùng tổ hợp với worker C++ được bật ở cả Run và preview, Contracts Python 0.1.2 giữ nguyên. Chạy fixture, `tests/integration/test_virtual_lab_execution.py`, `test_capture_rpc_data_plane.py`, `test_simulation_backend_selection.py` và `services/api/tests/test_physical_preview.py` trên artifact. So số đo theo giai đoạn 0. Chỉ chọn B khi đạt tương đương và cải thiện đo được. Rollback về A sau hủy, reap và fence thế hệ. Không tự chạy lại job dở.
+- [x] **Lát cắt số.** Trong Simulator, thêm CMake và worker C++ độc lập, bắt đầu với AND 74HC08 từ corpus và kiểm chuỗi sự kiện qua adapter `cirnet_sim/backends.py`. Mở rộng theo hành vi của `engine.py`, `nets.py`, `logic.py`, `dispatch.py` và model đang được công bố. Giữ preview và các fixture DC tĩnh đã hỗ trợ (nguồn, điện trở, LED và 74HC08 có nguồn cấp). Giữ analog/SPICE/mixed ở trạng thái không khả dụng. So timestamp, thứ tự sự kiện đồng thời và giá trị 0/1/X, byte NCAP và lỗi. Chạy test Simulator và pytest gọi trực tiếp binary, ASan/UBSan trên target hỗ trợ.
+- [x] **Đóng gói và giám sát.** Dùng IPC cục bộ có frame giới hạn, handshake version và ID yêu cầu/thế hệ. Artifact Simulator xuất binary và mô tả giao thức riêng. Adapter Hardware `station/virtual.py` cho Run và adapter preview ở Remote dùng cùng lõi, ngân sách và pool riêng. Có deadline từ host, giới hạn queue/CPU/RAM, hủy, reap tiến trình và fence kết quả trả muộn. Kiểm timeout, frame lỗi, worker treo/chết, Stop/reset và chạy lại. REST, RPC 2.0 và NCAP giữ nguyên.
+- [x] **Ma trận và gate 1.** A = Interface hiện tại / Remote Python / Hardware Python / Simulator Python. B = cùng tổ hợp với worker C++ được bật ở cả Run và preview, Contracts Python 0.1.2 giữ nguyên. Chạy fixture, `tests/integration/test_virtual_lab_execution.py`, `test_capture_rpc_data_plane.py`, `test_simulation_backend_selection.py` và `services/api/tests/test_physical_preview.py` trên artifact. So số đo theo giai đoạn 0. Chỉ chọn B khi đạt tương đương và cải thiện đo được. Rollback về A sau hủy, reap và fence thế hệ. Không tự chạy lại job dở.
 
 ### Lát cắt C++ 74HC08 ngày 2026-11-06
 
@@ -269,6 +269,516 @@ phép đo. Giai đoạn 1 còn cần giảm chi phí khởi chạy worker và IP
 giữ giới hạn preview riêng, hủy và chặn kết quả generation cũ. Rollback
 cấu hình cục bộ này bằng cách tắt dịch vụ thử thuộc session và chọn lại
 artifact 0.1.4 đã lưu cùng `legacy`.
+
+### Ứng viên CNP1/CNP2 dùng worker thường trú
+
+Remote và Hardware chọn backend C++ qua cấu hình dịch vụ. Run và preview
+dùng chung vòng lặp sự kiện với hai pool độc lập. Worker phục vụ nhiều
+yêu cầu, kiểm tra giới hạn frame/sự kiện/mẫu và có giới hạn bộ nhớ cấp hệ
+điều hành. Hardware chờ hủy và thu hồi worker trước khi xác nhận Stop
+hoặc reset an toàn. Generation cũ không thể cập nhật capture của phiên
+thay thế. CNP2 bổ sung cổng có cấp nguồn, mức chân cuối và mô hình LED DC
+nối tiếp. Contracts Python 0.1.2 tiếp tục mã hóa NCAP trong cấu hình B.
+
+| Kiểm tra | Kết quả | Phạm vi |
+| --- | --- | --- |
+| Worker Windows x64 Release, AddressSanitizer và UBSan | PASS | 41 ca mỗi build, gồm frame sai, nhiều frame, DC và tải sát giới hạn giao thức. |
+| Adapter trên wheel đã cài và worker CNP2 cuối | PASS | 30 ca tập trung, gồm AND/OR/XOR/NOT, bốn cổng HC08 có nguồn, DC, giới hạn sự kiện và quay lại legacy. |
+| Vòng đời Hardware qua gRPC với worker thật | PASS | 5 ca trên ứng viên cuối, gồm Stop khi đầy slot, reset, crash, timeout và phản hồi bị giữ. Kiểm tra thu hồi PID và byte NCAP của lượt chạy lại. |
+| Remote → Hardware → C++ qua cấu hình dịch vụ | PASS | Hai ca trên worker cuối và wheel chuyển tiếp đã chọn. Cả hai đường preview và byte NCAP của AND, clock và mạch HC08 có nguồn khớp bản Python. |
+| RTL và HIL | NOT RUN | Kiểm chứng ứng viên này dùng mô phỏng ảo. |
+
+Worker Windows x64 CNP2 cuối có SHA-256
+`c0b114fd5c7fd6e65df991c303090cd3e87946bde4d11b65377e9b5797383adf`.
+Hai wheel chuyển tiếp Simulator và Hardware lần lượt có SHA-256
+`f8cdada13405dc0f06d4034309df366ca42f8b55ba6fa895c17cd22b69451090` và
+`03e08365f3888682e6eefc547b46c58c6f7700578de62c1d9afbb6d886696c63`.
+
+Ở ba lượt chẩn đoán ghép cặp, mỗi lượt 100 mẫu cho mỗi tải và backend,
+worker thường trú CNP1 giảm p95 của clock 100 MHz từ 16,545–18,022 ms xuống
+3,833–4,487 ms. p95 của AND tăng từ 0,286–0,413 ms lên 0,353–0,476 ms.
+Các số này đo qua facade Simulator. Đánh giá Gate 1 còn cần số đo qua
+dịch vụ trên SQLite/PostgreSQL và Stop khi đủ tải theo profile đã chốt.
+
+Ba cặp SQLite đã hoàn thành 200 job cho mỗi backend trong mỗi lượt.
+Ứng viên đạt ngưỡng CPU, RAM đỉnh và thông lượng. Có bảy phép kiểm độ
+trễ vượt giới hạn, nên gate tải SQLite là **FAIL**.
+
+| Trung vị của ba lượt | Tham chiếu A | Ứng viên B | Ngưỡng giai đoạn 0 |
+| --- | ---: | ---: | ---: |
+| CPU giây/job | 0,232 | 0,213 | ≤ 0,565 |
+| RAM đỉnh, MiB | 608,94 | 281,62 | ≤ 668,25 |
+| Job/giây | 3,262 | 3,418 | ≥ 1,625 |
+| p95 tạo thí nghiệm AND, ms | 145,423 | 405,322 | ≤ 332,187 |
+| p99 tải bản ghi clock, ms | 72,951 | 497,010 | ≤ 236,623 |
+| p95 đọc lịch sử, ms | 115,875 | 751,402 | ≤ 364,995 |
+
+Bản tham chiếu chạy lại cũng vượt ngưỡng p99 tạo thí nghiệm clock. Nhật
+ký API cho thấy một phần độ trễ nằm trong thời gian ứng dụng xử lý
+yêu cầu. Cần phép đo theo pha để phân biệt chờ database với nguyên nhân
+khác.
+
+Trong cặp SQLite có gắn probe với 96 job mỗi backend, hai lượt tải
+capture chậm nhất của B chờ khóa repository Remote 435,8 trong 455,5 ms
+và 430,0 trong 440,9 ms. A cũng gặp cùng kiểu chờ, trong đó lượt chậm
+nhất chờ 901,2 trong 908,6 ms. Bốn lượt đọc lịch sử chậm nhất của B
+mất 1.025–1.034 ms, với 4–7 ms chờ khóa đã ghi. Phép đo khóa giải thích
+các lượt tải capture chậm. Phần lớn độ trễ của lượt đọc lịch sử vẫn
+chưa được quy về một pha. p95 qua facade Simulator trong cặp này là
+0,569 → 0,728 ms cho AND và 15,353 → 16,421 ms cho clock. p95 của riêng
+lượt trao đổi với worker C++ lần lượt là 0,239 ms và 1,219 ms.
+
+Lượt thử Stop trên tải SQLite đã chốt có 0 trong 4 mẫu đạt điều kiện.
+Khoảng từ gửi yêu cầu đến nhận phản hồi native là 8,240–37,735 ms.
+Bốn đợt đo lần lượt có tối đa 1, 2, 2 và 2 worker hoạt động đồng thời.
+Cả 11 Stop RPC ghép được với yêu cầu người dùng đều đến sau khi worker
+đích trả kết quả. Có 20 lượt giải phóng lease bền vững, không có cách ly
+hay lease tồn dư. Gate độ trễ Stop dưới tải còn mở. Các ca gRPC riêng đã
+kiểm việc hủy khi worker thật còn đang xử lý.
+
+Lượt thử bổ sung `saturated-v1` dùng chung mạch nặng hơn và đồng bộ
+trước khi gửi việc mô phỏng. Khoảng đo hoạt động C++ bắt đầu khi yêu
+cầu IPC đã được gửi và kết thúc khi đọc phản hồi hoặc hủy yêu cầu.
+Khoảng này nằm sau điểm đồng bộ. Cả hai backend đều có bốn mẫu đủ điều kiện. Trung vị
+đến giải phóng lease là 4.103 ms cho A và 82 ms cho B. Các worker C++
+bị hủy đều thoát trước lúc giải phóng lease, còn các Run cùng đợt trả
+đúng cùng byte NCAP với 7.001 mẫu. Lượt thử xác nhận tải đủ điều kiện
+trên cả hai backend. Gate p95/p99 cần đủ bộ mẫu.
+
+Cặp chẩn đoán PostgreSQL 18.6 cũng hoàn thành 96 job mỗi backend.
+p95 qua facade Simulator là 0,513 → 0,971 ms cho AND và
+14,120 → 6,348 ms cho clock. Thông lượng dịch vụ trong cặp này là
+4,322 → 3,582 job/giây. Ứng viên này chưa có lượt nghiệm thu PostgreSQL
+đủ ba cặp và vi phạm các ngưỡng SQLite. Kết quả của các ứng viên kế tiếp
+được ghi bên dưới. Profile phát hành chọn `legacy`.
+
+Để tái hiện cục bộ, giữ venv tham chiếu và môi trường phát hành của
+nó. Cài hai wheel chuyển tiếp đã chọn vào một bản sao riêng. Đặt
+`CIRNET_NATIVE_RELEASE_STATE` trỏ đến trạng thái phát hành gốc và
+`CIRNET_NATIVE_STAGE1_CANDIDATE` trỏ đến manifest ứng viên. Dùng đường dẫn
+artifact tuyệt đối trong manifest sau khi giải nén.
+
+```powershell
+python -B -m pytest -q tests/integration/native_cpp_pool_cases.py -k "configured_cpp or paired_worker" --basetemp "$env:CIRNET_ARTIFACTS_SESSION/pytest-cpp-pool"
+python -B -m pytest -q tests/integration/native_cpp_pool_cases.py -k paired_service_profile --basetemp "$env:CIRNET_ARTIFACTS_SESSION/pytest-cpp-load"
+```
+
+Profile dịch vụ mặc định chạy ba cặp với 200 job mỗi backend. Ca
+PostgreSQL cần cluster loopback riêng. Đặt `CIRNET_NATIVE_PROFILE_PHASES=1`
+để thêm probe chẩn đoán và ghi báo cáo riêng. Với profile không gắn
+probe, đặt `CIRNET_NATIVE_STAGE0_REFERENCE` trỏ đến ZIP giai đoạn 0 để
+xác minh workload và báo lỗi nếu vượt ngưỡng dịch vụ đã chốt.
+
+Để quay về A, ngừng tiếp nhận Run, chờ ACK an toàn và thu hồi worker,
+rồi khởi động các dịch vụ với bộ artifact 0.1.4 đã ghim và backend
+`legacy`. Bỏ `CIRNET_SQLITE_ROLLBACK_JOURNAL` khỏi môi trường tham chiếu.
+Dữ liệu đồ thị và NCAP đã lưu dùng định dạng hiện hành. Tác vụ bị gián
+đoạn cần yêu cầu Run mới.
+
+### Ứng viên sau khi xử lý độ trễ
+
+Phép đo phân pha SQLite so ba chế độ rollback journal trên ứng viên
+đầu tiên, mỗi chế độ 96 job. p99 tải capture clock lần lượt là 765,587 ms
+với DELETE, 419,439 ms với TRUNCATE và 145,015 ms với PERSIST. p99 commit
+lần lượt là 11,763, 11,708 và 14,828 ms. Thông lượng là 3,279, 3,711 và
+2,333 job/giây. Từ ba lượt chẩn đoán này, ứng viên kế tiếp tiếp tục dùng
+rollback journal hiện hành.
+
+Remote trả trang lịch sử và trang đang hoạt động rỗng ngay sau khi đọc
+repository theo chủ sở hữu. Trang có dữ liệu lấy khóa scheduler để đọc
+vị trí hàng đợi. Simulator dùng định dạng plan 3 để đóng gói trước dữ liệu
+wire tĩnh và tái sử dụng kết quả xác thực cấu hình chính xác với cache có
+giới hạn. Phần đóng gói clock và đọc một probe giữ thứ tự sự kiện và kiểm
+tra dữ liệu. Hai wheel đã cài mỗi wheel đổi đúng một tệp runtime so với
+wheel API và Simulator trước đó. SHA-256 của Remote là
+`6131adcfd6821d12e304707403c8fa4cd9856e9015e137198d368956db667506`.
+SHA-256 của Simulator là
+`d77359ee16a74ceab2035fff7474663aed296b4cab2a6f96a737d01df6dc512d`.
+Ứng viên dùng cùng digest của Hardware và worker CNP2 đã ghi ở trên.
+
+Facade tối ưu cho kết quả capture khớp trong ba lượt luân phiên với
+100 mẫu mỗi backend và workload. Trung vị p95 giảm từ 0,344 xuống
+0,173 ms cho AND và từ 24,670 xuống 4,530 ms cho clock. Các số đo này
+gồm adapter và IPC. Profile dịch vụ đo riêng độ trễ API và database.
+
+Lượt SQLite đầy đủ chạy xong cặp 200 job đầu tiên. Ở warmup ứng viên
+cặp thứ hai, một Run đến `CAPTURING` rồi báo `DRIVER_ERROR` trước khi
+lưu capture. Hardware xác nhận dọn dẹp an toàn và lease được giải
+phóng. Lượt đo chưa đủ ba cặp để chấm gate. Lượt riêng có probe xác minh
+120 capture clock qua ba lần khởi động lại với bốn Run đồng thời.
+Lượt chẩn đoán đúng cấu hình 50 chủ sở hữu xác minh bốn capture
+warmup và 200 capture đo. Hai lượt này chưa tái hiện được lỗi nên
+nguyên nhân vẫn còn mở.
+
+Lượt chẩn đoán PERSIST thứ hai trên cùng wheel r2 xác minh 200 job
+và bốn capture warmup. Lượt này đạt 4,774 job/giây và nằm trong tất cả
+ngưỡng độ trễ thao tác đã khóa. Wheel Remote kế tiếp dùng một snapshot
+lease mới cho danh sách trạm. Wheel cũng hỗ trợ chọn PERSIST với
+`synchronous=FULL` trên SQLite lưu trên đĩa. Ứng viên r3 chọn tùy chọn
+này cho SQLite, còn bản tham chiếu dùng cấu hình kết nối gốc. Workload
+và ngưỡng đều lấy từ gói giai đoạn 0. SHA-256 của wheel Remote r3 là
+`17257f6a99faef0a5dc82044f97eb2728869d61bea7830da02112e99ee0c5329`.
+Bộ API trên wheel đã cài đạt 45 ca, gồm commit, rollback, backup và mở
+lại với cấu hình kết nối SQLite mặc định.
+
+Gate tải SQLite của r3 đạt cả 29 ngưỡng đã khóa. Ba cặp hoàn thành
+200 job đo mỗi backend trong mỗi cặp, xác minh byte NCAP và không
+gặp lỗi capture. Trung vị thông lượng HTTP cố định tăng từ 17,575
+lên 23,047 yêu cầu/giây. Job/giây tăng từ 3,515 lên 4,609,
+CPU giây/job giảm từ 0,217 xuống 0,192 và RAM đỉnh giảm từ 607,65
+xuống 294,58 MiB. Trung vị p95 Run tải clock giảm từ 575,7 xuống
+414,2 ms. Gate PostgreSQL và Stop đủ mẫu được đánh giá riêng.
+
+Gate tải PostgreSQL 18.6 của r3 cũng đạt cả 29 ngưỡng đã khóa qua
+ba cặp 200 job mỗi backend. Trung vị job/giây là 4,889 → 4,854,
+CPU giây/job là 0,200 → 0,199 và RAM đỉnh giảm từ 616,15 xuống
+287,19 MiB. Cluster thử riêng dùng binary PostgreSQL đã chọn ở giai đoạn 0.
+
+### Cấu hình số worker Run
+
+SHA-256 của wheel Simulator r4 là
+`e0f8db8f2830e6ea321c2ec4ade46793946fe5675c1cb6222aa53dd50932fdaa`.
+So với r3, wheel chỉ đổi tệp runtime `cirnet_sim/cpp_backend.py`.
+Pool Run C++ lấy số worker từ `CIRNET_SIMULATION_WORKERS`.
+Preview có hạn mức riêng. Hai profile dịch vụ đã chốt đều dùng bốn
+worker Run, cũng là số worker của pool r3. Các số đo bên trên ghi theo
+đúng bộ artifact r3 đã dùng.
+
+Adapter r4 đã cài đạt 87 ca kiểm tra tập trung. Năm Run đồng thời chạy
+trên năm tiến trình worker riêng, trả cùng byte NCAP với 7.001 mẫu và
+thu hồi đủ năm tiến trình. Năm ca vòng đời Hardware qua loopback và
+hai ca đối chiếu REST/gRPC cho mạch số và mạch DC có cấp nguồn cũng
+đạt trên r4. Hai wheel Hardware, Remote và worker CNP2 của r4 giữ
+nguyên byte so với r3.
+Bốn bộ kiểm thử tích hợp theo kế hoạch đạt 27 ca trên wheel đã cài.
+Các ca này bao phủ Run và preview C++, NCAP 100.000 mẫu qua gRPC và
+tương thích với backend legacy hoặc backend không khả dụng.
+
+Để tái hiện r4, áp dụng môi trường phát hành đã lưu vào bản sao venv
+tham chiếu riêng. Cài ba wheel chuyển tiếp Simulator, Hardware và
+Remote vào đó. Đặt đường dẫn tuyệt đối tới worker và các wheel đã
+giải nén trong manifest ứng viên. Dành venv gốc cho A.
+
+Chạy gate Stop bổ sung với `CIRNET_NATIVE_STOP_PROFILE=saturated-v1`,
+`CIRNET_NATIVE_STOP_GATE=1` và `CIRNET_NATIVE_STOP_SAMPLES=100`.
+Bài kiểm tra đối chiếu ngưỡng giai đoạn 0 qua
+`CIRNET_NATIVE_STAGE0_REFERENCE`. Với mỗi cặp, chạy
+`tests/integration/native_stop_baseline_cases.py::test_loaded_stop_baseline`
+trước bằng trình Python tham chiếu gốc và backend `legacy`.
+Sau đó chạy bằng trình Python của ứng viên và backend `cpp`, đặt
+`CIRNET_NATIVE_STOP_REFERENCE_RECEIPT` trỏ đến kết quả tham chiếu
+cùng cặp. Mẫu đạt điều kiện khi cùng bốn worker hoạt động ở cả lúc gửi
+HTTP Stop và lúc Hardware nhận gRPC. Giữ kết quả riêng của cả ba cặp.
+
+Lượt tham chiếu đầy đủ đầu tiên sau khi sửa harness thu được 100 mẫu
+Stop đạt điều kiện và không loại mẫu nào. Trung vị và p95 đến khi lease
+được giải phóng lần lượt là 4.282,508 và 4.616,636 ms trên tải bổ sung.
+Lượt r4 cùng cặp dừng khi làm nóng, trước lúc client gửi Stop. Cả bốn
+worker native đều trả kết quả. Một Run vào `CAPTURING` rồi báo
+`DRIVER_ERROR` trước khi lưu NCAP. Hardware xác nhận dọn dẹp an toàn và
+lease được giải phóng. Ba payload NCAP còn lại khớp từng byte. Lỗi xảy ra
+ở cùng bước capture như lượt làm nóng r2. Kết quả ban đầu chưa ghi
+ngoại lệ gốc. Lượt r4 đầy đủ thứ hai tái hiện lỗi làm nóng khi bật probe.
+`FilesystemCaptureStore._path` từ chối tên capture hợp lệ trên Windows.
+Một lượt ghi tạo thư mục giữa hai lần phân giải đường dẫn của lượt ghi
+khác. Python gặp mã Win32 3 rồi mã 2 và trả cách viết đường dẫn mở rộng
+của cùng thư mục cha. Đã tái hiện đúng lỗi trên wheel r4 đã cài. Bản sửa
+phân giải đường dẫn trong khóa thư mục hiện có trước `mkdir` và tiếp tục
+kiểm tra thư mục cha sau phân giải. Ca hồi quy lỗi trước khi sửa. Ba bộ
+kiểm thử lưu capture, quota và cách ly điều khiển đạt 43 ca sau khi sửa.
+
+Wheel Remote r5 có đúng thay đổi runtime này. SHA-256 là
+`401bd7ff62c278b0491d09fc11aecf9a10c67df747008a380d7d910092a7ecd9`.
+Wheel đã cài cũng đạt 43 ca trên. Export mất 0,29 giây, build wheel
+Remote 5,45 giây, sao chép môi trường và cài wheel 100,90 giây. Các
+artifact còn lại được xác minh rồi dùng lại. Hai lượt Stop tham chiếu
+độc lập tương thích có thể dùng cho phía A của r5. Tổng thời gian pytest
+của hai lượt là 1.628,96 giây. Mọi phép đo ứng viên dùng wheel Remote r5.
+
+### Thời gian kiểm thử và tái sử dụng kết quả giai đoạn 1
+
+Chạy kiểm thử tương thích trên artifact đã cài trong luồng phát triển.
+Tách luồng này khỏi gate tải và Stop có đối chứng. Chạy các bộ test song
+song khi có runner riêng và dành một runner rảnh cho mỗi phép đo A/B.
+Giữ venv tham chiếu và ứng viên trong suốt lượt đối chiếu. Tái sử dụng
+worker CNP2, wheel Hardware và wheel Remote giữ nguyên sau khi xác minh
+hash và phụ thuộc đã ghim. Dùng bộ test riêng trên wheel đã cài làm kết
+quả duy nhất cho wheel Remote giữ nguyên.
+
+Smoke tương thích mặc định chạy fixture mạch số và DC có cấp nguồn trên
+cùng wheel đã cài, mỗi backend chỉ khởi động API–Hardware một lần.
+Mỗi Run và preview dùng phiên khách mới. Smoke vẫn kiểm năm capture mỗi
+backend, hai tuyến preview cho mỗi fixture, worker Run và preview riêng,
+và thu hồi tiến trình. Đặt `CIRNET_NATIVE_SMOKE_PROFILE=digital` hoặc
+`physical` để chẩn đoán khởi động nguội riêng. Trên cùng bộ artifact r4,
+thời gian pytest giảm từ 177,60 xuống 84,27 giây (53%), với cùng năm
+capture mỗi backend. Lượt gộp ghi 11,40 giây để xác minh artifact và
+chuẩn bị, 62,53 giây để khởi động dịch vụ, 8,06 giây cho thao tác và
+kiểm tra smoke, và 1,62 giây để dọn dẹp. Lượt này dùng lại build đã có.
+Độ dài các capture là 124, 44.109, 124, 142 và 142 byte. Mỗi payload
+được đối chiếu với SHA-256 dự kiến.
+
+Để chẩn đoán Stop ngắn, đặt `CIRNET_NATIVE_STOP_GATE=0` và
+`CIRNET_NATIVE_STOP_SAMPLES=12`. Dùng `CIRNET_NATIVE_CAPTURE_FAULT_DIAGNOSTIC=1`
+để ghi dấu vết ngoại lệ đã lọc. Năm lần khởi động r4 cho 60 mẫu chẩn đoán
+hợp lệ. Giữ các kết quả này riêng khỏi gate.
+
+Chỉ dùng lại kết quả khi khớp commit và danh sách tệp nguồn, hash
+artifact và phụ thuộc, harness, workload, cấu hình, toolchain và môi
+trường máy. Giữ số đo tải r3 cùng digest Simulator r3. Cấu hình bốn
+slot cho thấy số đo liên quan thế nào đến r4. Gate dịch vụ cuối của r4
+cần kết quả đo trên r4. Khi lượt ứng viên dừng giữa chừng, có thể dùng
+lại lượt tham chiếu Stop đầy đủ cùng cấu hình. Đặt đường dẫn tuyệt đối
+của kết quả đó trong `CIRNET_NATIVE_STOP_REFERENCE_RECEIPT`. Kiểm thử
+ứng viên đối chiếu mã harness, launcher, client và probe chẩn đoán,
+workload, đồng hồ và cấu hình trước khi chạy. Chỉ tính mỗi cặp A/B đầy
+đủ một lần. Ghi riêng lượt lỗi và lượt chẩn đoán ngắn khỏi ba cặp đủ mẫu.
+
+Trên runner Windows này, khôi phục bản tham chiếu mất khoảng 234 giây,
+chuẩn bị công cụ thêm khoảng 46 giây. Mỗi wheel thay đổi ở r3 và r4 mất
+khoảng 3 giây để build. Hai profile tải SQLite và PostgreSQL của r3 mất
+khoảng 1.172 giây, trong đó 548 giây nằm trong cửa sổ đo. Chuẩn bị cơ
+sở dữ liệu và khởi động hai dịch vụ mất khoảng 399 giây. Khoảng 225
+giây còn lại gồm kiểm tra sẵn sàng, chuẩn bị client, làm nóng và dọn dẹp.
+Các mốc trên được ước lượng từ dấu thời gian đã lưu. Kết quả mới tách
+chuẩn bị cơ sở dữ liệu, khởi động, chuẩn bị client, làm nóng, workload
+đo và dọn dẹp bằng đồng hồ đơn điệu. Artifact được build trước lượt chạy.
+
+Cặp Stop r4 đầu tiên dùng cùng probe ở hai phía đã đạt cả sáu ngưỡng đã
+khóa. Mỗi phía thu đủ 100 mẫu hợp lệ. A loại một đợt và B loại 14 đợt
+khi kiểm tra điều kiện tải. p50/p95/p99 đến khi giải phóng lease là
+4.312,387 / 5.209,127 / 5.824,744 ms ở A và 93,802 / 129,613 / 135,933 ms
+ở B. Đây là kết quả của một cặp trong ba cặp gate Stop yêu cầu. Cặp này
+mất khoảng 911 giây tính từ hai lần khởi động Hardware đến khi chốt kết
+quả. Giữ cặp đã xác minh khi cần khởi động lại một cặp sau bị gián đoạn.
+
+Gate Stop dưới tải của r5 **PASS** trên cả ba cặp độc lập, với 100 mẫu
+mỗi backend trong mỗi cặp. Gate dùng lại hai kết quả A khớp cấu hình và
+đo ba lượt B mới. Một đợt A và 21 đợt B bị loại theo điều kiện tải. Mọi
+mẫu hợp lệ đều đạt các kiểm tra ACK an toàn, thu hồi worker, capture và
+lease. Không còn lease sau dọn dẹp. Bảng ghi trung vị qua ba lượt cho
+từng phân vị.
+
+| Độ trễ Stop | A p50 / p95 / p99 ms | r5 p50 / p95 / p99 ms |
+| --- | ---: | ---: |
+| HTTP Stop | 54,715 / 128,714 / 336,275 | 65,137 / 86,017 / 137,575 |
+| ACK gRPC | 38,254 / 117,519 / 313,666 | 45,041 / 66,614 / 83,415 |
+| Giải phóng lease bền vững | 4.362,157 / 7.854,343 / 8.050,876 | 85,692 / 122,815 / 184,875 |
+
+Bốn bộ kiểm thử tích hợp theo kế hoạch đạt 27 ca trên các wheel r5 đã
+cài. Hai phép đo tải SQLite và PostgreSQL có kết quả riêng.
+Lượt SQLite r5 đầu tiên có đủ 1.200 job đo với capture khớp, nhưng gate
+**FAIL** với 27 trên 29 kiểm tra. p95/p99 của danh sách dự án là
+223,000/264,910 ms so với ngưỡng 200,994/245,163 ms. Bản tham chiếu giữ
+nguyên đạt 290,020/305,144 ms trong cùng lượt, so với 67,8/88,6 ms trong
+phép đo r3 trước đó. Có tiến trình khác dùng CPU trong lượt đầu. Giữ kết
+quả lỗi và đo lại với cùng workload và ngưỡng khi runner rảnh.
+
+Lượt SQLite r5 đầu tiên mất 995,62 giây. Kết quả ghi 31,72 giây chuẩn bị
+và xác minh, 225,75 giây khởi động dịch vụ, 197,57 giây chuẩn bị client,
+18,43 giây làm nóng, 514,86 giây chạy workload đo và 6,99 giây dọn dẹp.
+Thời gian build wheel được đo riêng.
+
+Lượt SQLite r5 chạy lại **PASS** cả 29 ngưỡng và đủ 1.200 job đo với
+NCAP khớp byte. p95/p99 của danh sách dự án là 71,435/117,923 ms. Trung
+vị job/giây là 1,889 ở A và 4,309 ở r5. Trung vị RAM đỉnh lần lượt là
+606,90 và 292,31 MiB. Lượt này mất 896,21 giây, gồm 211,26 giây khởi
+động dịch vụ, 160,75 giây chuẩn bị client, 17,32 giây làm nóng, 476,27
+giây chạy workload đo và 6,89 giây dọn dẹp. Kết quả và các ngưỡng vi
+phạm của lượt đầu được giữ riêng.
+
+Gate tải PostgreSQL 18.6 của r5 **FAIL** với 22 trên 29 ngưỡng sau khi
+đủ ba cặp và 1.200 job có NCAP khớp byte. Trung vị thông lượng là
+1,818 → 1,970 job/giây và RAM đỉnh là 612,07 → 289,61 MiB. Cùng bản
+tham chiếu đạt 4,889 job/giây trong phép đo PostgreSQL r3. Trong lượt
+này có ứng dụng khác dùng CPU. Dữ liệu hiện có chưa tách được nguyên
+nhân của toàn bộ phần chậm đi.
+
+| Kiểm tra PostgreSQL | A ms | r5 ms | Ngưỡng ms |
+| --- | ---: | ---: | ---: |
+| Capture AND p95 / p99 | 93,504 / 131,866 | 129,545 / 154,760 | 92,557 / 153,366 |
+| Poll AND p95 / p99 | 195,070 / 341,884 | 263,268 / 538,285 | 194,792 / 386,104 |
+| Run clock p99 | 1.515,386 | 1.379,434 | 1.339,881 |
+| Danh sách dự án p95 / p99 | 289,003 / 304,442 | 303,022 / 332,575 | 302,778 / 330,987 |
+
+Profile PostgreSQL mất 1.109,17 giây. Workload đo chiếm 614,72 giây.
+Chuẩn bị cơ sở dữ liệu và cửa sổ, khởi động dịch vụ, chuẩn bị client,
+làm nóng và dọn dẹp lần lượt mất 2,67, 222,99, 212,06, 21,55 và 8,95
+giây. Phần còn lại dành cho xác minh và ghi kết quả. Cluster thử nghiệm
+đã dừng. Kết quả này áp dụng cho đúng bộ artifact r5. Profile phát hành
+chọn `legacy`.
+
+Lượt PostgreSQL đầy đủ thứ hai trên đúng byte r5 xác minh 1.200 capture
+và đạt 20 trên 29 kiểm tra. Trung vị thông lượng là 1,736 → 1,747
+job/giây, dưới ngưỡng 1,760. Thông lượng HTTP cố định và capture cũng
+chưa đạt. Capture AND p95, tạo AND p99, poll AND p95/p99, tạo clock p95
+và Run clock p95 vượt ngưỡng. Bản tham chiếu gần dải đã khóa của giai
+đoạn 0 là 1,830–1,920 job/giây. Kết quả r3 nhanh hơn nhiều được ghi
+riêng. Mẫu CPU trước lượt đo lại cho thấy tải nền thấp hơn, nên yếu tố
+đó chưa giải thích được toàn bộ kết quả gate PostgreSQL.
+
+Một cặp chẩn đoán chạy 40 job mỗi backend. Trong 5% lượt poll r5 chậm
+nhất, trung vị thời gian phía ứng dụng là 283,70 ms, gồm 253,74 ms chờ
+khóa scheduler và 1,94 ms thực thi SQL. Lượt chẩn đoán cũng ghi nhận
+các lượt đọc capture và dự án chậm dành nhiều thời gian chờ khóa
+repository. Các khoảng đo probe có thể chồng lên nhau. Lượt ngắn này
+được ghi riêng khỏi phép chấm ngưỡng đã khóa.
+
+R6 dùng snapshot đã commit và đã kiểm tra chủ sở hữu cho hai GET của
+thí nghiệm ngoài hàng đợi. Với thí nghiệm đang xếp hàng, GET đọc lại
+quyền và trạng thái dưới khóa scheduler để trả vị trí hiện tại. Run,
+Stop, phát sự kiện và khôi phục thao tác tiếp tục dùng đường đọc có khóa.
+Ca mới kiểm tra đọc ngoài khóa, từ chối sai chủ sở hữu và trạng thái đổi
+khi thí nghiệm được điều phối trước lần đọc lại. Các bộ kiểm thử tập
+trung vào scheduler, API và quyền truy cập đạt 65 ca. SHA-256 của wheel
+Remote mới là
+`7a050978ca43083dfd3e119f475d0a8d939b9c22341e372b588f2408ad955a96`.
+Các artifact sản phẩm còn lại khớp byte r5. Profile PostgreSQL đầy đủ
+của r6 đạt 16 trên 29 ngưỡng. p95/p99 của AND poll giảm xuống
+105,335/166,265 ms, nhưng hai cửa sổ ứng viên đầu xử lý 4.401 và 4.471
+request HTTP cho 200 job. Poll trả nhanh hơn nên cùng nhịp phía client
+gửi được nhiều request hơn khi Run đang hoạt động. Trung vị thông lượng
+giảm còn 1,449 job/giây và CPU tăng lên 0,592 giây/job. Cả 1.200
+capture đều khớp.
+
+R7 giữ cách đọc poll và dùng một câu SQL để lấy dữ liệu phiên và người
+dùng mỗi lần kiểm tra quyền. Hàng rào giao dịch và các lần kiểm tra hạn
+phiên, thu hồi và revision sau hàng rào tiếp tục được áp dụng. Ca hồi
+quy đếm truy vấn đạt trong bộ 121 ca API và quyền truy cập. Năm ca
+PostgreSQL xác minh hàng rào phiên, xóa capture và nhận bài khi có hai
+kết nối. SHA-256 của wheel Remote là
+`d66ea041d27b3215be106c1bb18ca3efd90eb2e4d9904715fb1b0e264e1f30f0`.
+
+Gate tải PostgreSQL 18.6 của r7 **PASS** cả 29 ngưỡng đã khóa qua ba cặp
+200 job mỗi backend trên Windows x64. Cả 1.200 capture NCAP khớp từng byte.
+Workload đo và nhịp gửi request của client giữ nguyên. Trung vị thông lượng
+là 4,410 → 4,633 job/giây, CPU 0,235 → 0,216 giây/job và RSS đỉnh
+615,75 → 300,98 MiB với A và r7.
+
+| Chỉ số PostgreSQL từng vượt ngưỡng | r5 ms | r7 ms | Ngưỡng đã khóa ms |
+| --- | ---: | ---: | ---: |
+| Capture AND p95 / p99 | 129,545 / 154,760 | 62,202 / 78,271 | 92,557 / 153,366 |
+| Poll AND p95 / p99 | 263,268 / 538,285 | 49,596 / 121,351 | 194,792 / 386,104 |
+| Run clock p99 | 1.379,434 | 502,861 | 1.339,881 |
+| Danh sách dự án p95 / p99 | 303,022 / 332,575 | 86,128 / 119,113 | 302,778 / 330,987 |
+
+Profile PostgreSQL của r7 mất 814,08 giây pytest, so với 1.109,17 giây ở
+lượt r5 đầu. R7 dùng lại các artifact build đã xác minh. Chuẩn bị profile
+mất 41,66 giây. Qua sáu cửa sổ, chuẩn bị cơ sở dữ liệu và cửa sổ, khởi động
+dịch vụ, chuẩn bị client, làm nóng, chạy workload đo, kết thúc đo và dọn dẹp
+lần lượt mất 1,97, 242,07, 140,36, 14,87, 365,35, 0,17 và 6,86 giây.
+Phần còn lại dành cho xác minh và ghi kết quả. Các cửa sổ A mất từ
+40,45 đến 116,04 giây nên mức giảm tổng thời gian có phần do biến thiên
+giữa các lượt đo. Cluster PostgreSQL thử nghiệm đã dừng.
+
+Gate tải SQLite của r7 **FAIL**, đạt 28 trên 29 kiểm tra. Cả 1.200
+capture NCAP khớp từng byte. Capture AND p95 là 85,662 ms với A và
+98,726 ms với r7, so với ngưỡng 89,121 ms. Ba cửa sổ r7 đo được
+111,156, 98,726 và 45,312 ms. Trung vị thông lượng là 2,051 → 2,061
+job/giây, CPU 0,406 → 0,471 giây/job và RSS đỉnh 607,68 → 281,07 MiB.
+Hai cửa sổ ứng viên đầu tạo 2.521 và 2.516 request poll, so với
+1.226 và 1.156 ở hai cửa sổ đầu của lượt thử lại r5 với cùng nhịp client.
+
+Lượt SQLite r7 mất 1.010,99 giây pytest. Chuẩn bị mất 31,94 giây.
+Qua sáu cửa sổ, khởi động dịch vụ mất 217,66 giây, chuẩn bị client
+205,31 giây, làm nóng 19,34 giây, chạy workload đo 528,33 giây,
+kết thúc đo 0,23 giây và dọn dẹp 7,57 giây.
+
+Lượt chẩn đoán riêng với 80 job mỗi backend ghi nhận 20% GET capture AND
+chậm nhất của r7 dành trung vị 21,27 ms chờ khóa repository, 3,41 ms
+đọc và xác minh tệp và 1,04 ms thực thi SQL. Thời gian chờ trải qua
+các bước kiểm tra chủ sở hữu và phiên hiện có. Lượt ngắn chưa tái hiện
+mức trễ của gate. Lượt gate kế tiếp giữ nguyên artifact và điều kiện,
+đồng thời ghi CPU tiến trình nền trong các cửa sổ đối chứng.
+
+Lượt SQLite lặp lại của r7 **PASS** cả 29 ngưỡng, với 1.200 capture
+khớp từng byte. Capture AND p95 là 49,859 ms với A và 53,139 ms với
+r7. Ba cửa sổ r7 đo được 42,237, 53,139 và 88,515 ms. Trung vị
+thông lượng là 2,989 → 4,643 job/giây, CPU 0,233 → 0,194 giây/job
+và RSS đỉnh 606,82 → 283,45 MiB. Tổng thời gian pytest là 809,96
+giây. Chuẩn bị mất 32,20 giây. Khởi động dịch vụ, chuẩn bị client,
+làm nóng, chạy workload đo, kết thúc đo và dọn dẹp lần lượt mất
+237,71, 117,45, 13,36, 402,17, 0,19 và 6,18 giây. Cả hai lượt dùng
+cùng build r7. Chênh lệch phản ánh biến thiên trên runner Windows và
+biên nhận của cả hai lượt được lưu.
+
+### Quyết định Gate 1 trên Windows x64
+
+Gate Stop `saturated-v1` của r7 **PASS** cả sáu ngưỡng đã khóa trong
+từng cặp của ba cặp độc lập. Mỗi bên có 100 mẫu hợp lệ mỗi cặp.
+Harness kiểm digest bản phát hành, workload và probe trước khi dùng
+lại ba biên nhận legacy. Mọi mẫu hợp lệ đạt yêu cầu safe ACK, dọn
+worker, capture và lease bền vững. Không còn lease tồn dư. A loại một
+wave và B loại 23 wave do chưa đủ tải. Ba cửa sổ ứng viên mất
+384,30, 405,82 và 298,51 giây.
+
+| Độ trễ Stop | Trung vị A p50 / p95 / p99 ms | Trung vị r7 p50 / p95 / p99 ms |
+| --- | ---: | ---: |
+| HTTP Stop | 54,715 / 128,714 / 336,275 | 79,088 / 114,662 / 138,435 |
+| gRPC ACK | 38,254 / 117,519 / 313,666 | 50,958 / 77,013 / 88,645 |
+| Giải phóng lease bền vững | 4.362,157 / 7.854,343 / 8.050,876 | 113,206 / 175,904 / 239,915 |
+
+Mạch Stop gốc của giai đoạn 0 có biên bản xác nhận tải riêng. Lượt C++
+đầu tiên với mạch đó không có mẫu đủ tải. Gate bổ sung dùng chung mạch
+nặng hơn và cùng tiêu chí xác nhận tải cho hai bên, giữ cỡ mẫu và
+ngưỡng tuyệt đối đã khóa. Cả 27 ca tích hợp theo kế hoạch đạt trên
+wheel r7 đã cài. Bằng chứng kiểm trực tiếp, vòng đời và sanitizer
+áp dụng cho Simulator, Hardware và worker có cùng byte. Hệ điều
+hành giới hạn bộ nhớ và số tiến trình của worker. Hạn mức nhận việc,
+số sự kiện và deadline từ host giới hạn công việc CPU.
+
+Dùng tổ hợp r7 đã xác minh cho giai đoạn 2 với
+`CIRNET_SIMULATION_BACKEND=cpp`, đường dẫn worker và SHA-256 đã ghim,
+bốn worker Run và PERSIST/FULL trong cấu hình tải SQLite. SHA-256
+của manifest cục bộ đã đo là
+`e7e2ce0056b11eb6cbf42304cb35607b2263e464a57cddb9485e43d61ac0f50d`.
+Rollback theo quy trình hủy, reap và fence thế hệ ở trên rồi cài
+lại bộ tham chiếu 0.1.4. RTL, HIL và SPICE ở trạng thái `NOT RUN`
+trong phạm vi gate mô phỏng ảo này trên Windows.
+
+### Core SPICE tương lai dựa trên ngspice
+
+**Đề xuất.** Giữ lõi số C++ và mô hình DC giới hạn của giai đoạn 1 để
+bảo đảm tương thích. Phát triển backend SPICE riêng từ mã nguồn ngspice
+thượng nguồn. Đánh giá thư viện C dùng chung bên trong worker C++ cách ly
+để giữ ranh giới tiến trình và an toàn của Remote và Hardware. So sánh
+callback và cơ chế ngắt hợp tác với tiến trình con chạy batch đã ghim trên
+các mạch analog đầu tiên. Mỗi tiến trình con ban đầu chạy một mô phỏng.
+Nếu hết deadline hoặc không ngắt được, phải kết thúc và thu hồi tiến
+trình trước khi xác nhận dọn dẹp an toàn. [Thư viện dùng chung ngspice](https://ngspice.sourceforge.io/shared.html)
+
+- [ ] **Chọn đầu vào có thể tái lập.** Bắt đầu thử nghiệm với bản thượng
+  nguồn `ngspice-46`, build thư viện dùng chung không có giao diện đồ họa
+  và bật XSPICE. Ghi SHA-256 của gói nguồn, toolchain, tùy chọn build,
+  bản vá, ABI đích, hash thư viện và code model, cùng nguồn gốc, phiên
+  bản và SHA-256 của từng model. Rà soát thông báo bản quyền và điều kiện
+  phân phối của mã nguồn đã chọn và mọi thành phần đi kèm trước khi đóng
+  gói. [Gói phát hành thượng nguồn](https://sourceforge.net/projects/ngspice/files/ng-spice-rework/old-releases/46/)
+- [ ] **Chuyển đồ thị và thu capture.** Xác thực `CircuitGraph` trước.
+  Gán tên net và linh kiện ổn định, ánh xạ linh kiện và thứ tự chân theo
+  catalog model có phiên bản, rồi sinh netlist có giới hạn. Chỉ tra đường
+  dẫn model trong thư mục đã ghim. Thu vector analog và sự kiện XSPICE
+  qua callback có giới hạn. Chốt đơn vị, quy đổi thời gian, lượng tử hóa,
+  thứ tự, biểu diễn khoảng trống và giá trị chưa biết trước khi xuất
+  NCAP tương thích Contracts. [Tài liệu ngspice](https://ngspice.sourceforge.io/docs.html)
+- [ ] **Đánh giá tương đương và xử lý lỗi.** Chạy mạch RC, diode/LED,
+  cổng 74HC08, clock, fan-out, đầu vào mất nguồn, ngõ ra tranh chấp và
+  cầu nối analog/digital. So với corpus C++ về thứ tự sự kiện, timestamp
+  trùng nhau, độ trễ lan truyền và `0/1/X`. Định nghĩa ánh xạ logic và
+  drive strength của XSPICE trước khi kiểm tra tương đương. Kiểm tra đồ
+  thị/model sai, không hội tụ, vượt giới hạn, timeout, hủy, crash và
+  phản hồi muộn qua Run và preview. [XSPICE trong ngspice](https://ngspice.sourceforge.io/xspice.html)
+
+Gói nguồn `ngspice-46.tar.gz` đã tải khớp SHA-256 đã chọn
+`a0d1699af1940b06649276dcd6ff5a566c8c0cad01b2f7b5e99dedbb4d64c19b`.
+Kế hoạch backend của Simulator ghi hash nguồn đã xác minh cho ba model
+XSPICE đầu tiên. Build SPICE, runtime, rà soát thành phần phân phối và
+so sánh lõi số ở trạng thái **NOT RUN**. [Gói nguồn upstream](https://sourceforge.net/projects/ngspice/files/ng-spice-rework/old-releases/46/ngspice-46.tar.gz/download) · [Công thức build đã ghim](https://github.com/Homebrew/homebrew-core/blob/539f6abfdfdff8af39757bc100dfbce1db0c5618/Formula/lib/libngspice.rb#L3-L5)
+
+Chỉ chọn phương án thay lõi số sau khi đạt tiêu chí tương
+đương và hiệu năng. Chỉ công bố capability đã triển khai và kiểm thử
+trong manifest phát hành. Tài liệu backend của Simulator ghi các bước
+tích hợp chi tiết.
 
 ## 2. Contracts Rust
 

@@ -7,6 +7,7 @@ from sqlalchemy import create_engine, delete, insert, literal, select, update, e
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.pool import StaticPool
 from contracts.validation import validate
+from app.compatibility import getenv
 from app.services.observability import log_event
 
 class Repository:
@@ -18,8 +19,22 @@ class Repository:
                 options["poolclass"]=StaticPool
         self.engine=create_engine(url, **options)
         if self.engine.dialect.name=='sqlite':
+            journal = getenv('CIRNET_SQLITE_ROLLBACK_JOURNAL')
+            if journal not in (None, 'persist'):
+                raise ValueError('INVALID_SQLITE_ROLLBACK_JOURNAL')
+
             @event.listens_for(self.engine,'connect')
-            def foreign_keys(connection,record): connection.execute('PRAGMA foreign_keys=ON')
+            def configure_sqlite(connection, _record):
+                connection.execute('PRAGMA foreign_keys=ON')
+                if journal is None or not connection.execute('PRAGMA database_list').fetchone()[2]:
+                    return
+                current = connection.execute('PRAGMA journal_mode').fetchone()[0]
+                if current not in ('delete', 'truncate', 'persist'):
+                    raise ValueError('INCOMPATIBLE_SQLITE_JOURNAL_MODE')
+                mode = connection.execute('PRAGMA journal_mode=PERSIST').fetchone()[0]
+                connection.execute('PRAGMA synchronous=FULL')
+                if mode != 'persist' or connection.execute('PRAGMA synchronous').fetchone()[0] != 2:
+                    raise RuntimeError('SQLITE_ROLLBACK_JOURNAL_UNAVAILABLE')
         self.lock=RLock()
         from app.db import schema
         from app.migrations import migrate

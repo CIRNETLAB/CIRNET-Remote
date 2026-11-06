@@ -15,6 +15,7 @@ from tests.support.release_inputs import installed_distribution
 
 ROOT = Path(__file__).resolve().parents[2]
 MODULES = ('__init__.py', 'analog.py', 'backends.py', 'circuit.py', 'dispatch.py', 'engine.py', 'logic.py', 'nets.py', 'waveform.py')
+CPP_MODULES = ('cpp_backend.py', 'cpp_dc.py')
 
 
 def consumer():
@@ -29,12 +30,12 @@ def consumer():
 SHIM = b"import importlib,sys\nsys.modules[__name__]=importlib.import_module('cirnet_sim')\n"
 
 
-def wheel(tmp_path, *, name='cirnet-simulator', version='0.1.2', contracts='0.1.2', contracts_name=None, missing=None, shim=True):
+def wheel(tmp_path, *, name='cirnet-simulator', version='0.1.2', contracts='0.1.2', contracts_name=None, missing=None, shim=True, extra=()):
     namespace = 'netcircuit_sim' if name == 'netcircuit-simulator' else 'cirnet_sim'
     contracts_name = contracts_name or ('netcircuit-contracts' if name == 'netcircuit-simulator' else 'cirnet-contracts')
     path = tmp_path / (name.replace('-', '_') + '-0.1.2-py3-none-any.whl')
     with ZipFile(path, 'w') as archive:
-        for module in MODULES:
+        for module in (*MODULES, *extra):
             if module != missing:
                 archive.writestr(namespace + '/' + module, '')
         if namespace == 'cirnet_sim' and shim:
@@ -79,13 +80,13 @@ def test_selection_has_no_latest_or_source_fallback_and_checks_digest(tmp_path, 
         selected.verify_wheel(Path(artifact.name), digest)
 
 
-def fake_install(tmp_path, *, version='0.1.2', editable=False, tampered=False, source_metadata=False, name='cirnet-simulator'):
+def fake_install(tmp_path, *, version='0.1.2', editable=False, tampered=False, source_metadata=False, name='cirnet-simulator', extra=()):
     installed = tmp_path / 'site'
     namespace = 'netcircuit_sim' if name == 'netcircuit-simulator' else 'cirnet_sim'
     package = installed / namespace
     package.mkdir(parents=True)
     records = []
-    for module in MODULES:
+    for module in (*MODULES, *extra):
         value = b''
         (package / module).write_bytes(value)
         digest = base64.urlsafe_b64encode(hashlib.sha256(value).digest()).rstrip(b'=').decode()
@@ -129,8 +130,9 @@ def installed_probe(tmp_path, installed, *, shadow=False):
         cwd=cwd, env=environment, capture_output=True, text=True)
 
 
-def test_installed_wheel_passes_real_metadata_record_and_import_checks(tmp_path):
-    result = installed_probe(tmp_path, fake_install(tmp_path))
+@pytest.mark.parametrize('extra', [(), CPP_MODULES], ids=['legacy-runtime', 'cpp-runtime'])
+def test_installed_wheel_passes_real_metadata_record_and_import_checks(tmp_path, extra):
+    result = installed_probe(tmp_path, fake_install(tmp_path, extra=extra))
     assert result.returncode == 0, result.stdout + result.stderr
     assert '0.1.2' in result.stdout
 
@@ -183,11 +185,13 @@ def test_coinstalled_canonical_and_legacy_distribution_identity_is_rejected(tmp_
     assert result.returncode != 0 and 'share an import namespace' in result.stderr
 
 
-def test_selected_archive_probe_uses_canonical_distribution_and_namespace(tmp_path):
+@pytest.mark.parametrize('extra,count', [((), 10), (CPP_MODULES, 12)], ids=['legacy-runtime', 'cpp-runtime'])
+def test_selected_archive_probe_uses_canonical_distribution_and_namespace(tmp_path, extra, count):
     selected = consumer()
     name = 'cirnet-simulator'
-    artifact, digest = wheel(tmp_path)
-    installed = fake_install(tmp_path)
+    artifact, digest = wheel(tmp_path, extra=extra)
+    assert selected.verify_wheel(artifact, digest) == artifact
+    installed = fake_install(tmp_path, extra=extra)
     metadata = installed / 'cirnet_simulator-0.1.2.dist-info'
     (metadata / 'direct_url.json').write_text(json.dumps({'url': artifact.as_uri(), 'archive_info': {'hashes': {'sha256': digest}}}))
     other = 'netcircuit-simulator'
@@ -197,7 +201,19 @@ def test_selected_archive_probe_uses_canonical_distribution_and_namespace(tmp_pa
     assert result.returncode == 0, result.stderr
     data = json.loads(result.stdout)
     assert data['selected_sha256'] == digest
-    assert data['selected_files'] == len(selected.runtime_modules(name))
+    assert data['selected_files'] == count
+
+
+@pytest.mark.parametrize('name,extra', [
+    ('cirnet-simulator', ('cpp_backend.py',)),
+    ('cirnet-simulator', ('cpp_dc.py',)),
+    ('cirnet-simulator', (*CPP_MODULES, 'unreviewed.py')),
+    ('netcircuit-simulator', CPP_MODULES),
+])
+def test_simulator_rejects_partial_or_unreviewed_cpp_inventories(tmp_path, name, extra):
+    artifact, digest = wheel(tmp_path, name=name, extra=extra)
+    with pytest.raises(ValueError, match='runtime module inventory'):
+        consumer().verify_wheel(artifact, digest)
 
 
 @pytest.mark.parametrize('options', [
