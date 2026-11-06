@@ -2,7 +2,7 @@
 
 [English](../../en/architecture/native-migration.md) · [Kế hoạch gốc ngày 2026-11-05](https://github.com/cirnetlab/cirnet-remote/blob/f91eeeb42d7528d4e7fa9b1526195847932faf9d/docs/superpowers/plans/2026-11-05-cirnet-native-migration.md) · [Biên bản giai đoạn 0](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md)
 
-**Gate 0 PASS trên bộ tham chiếu 0.1.4 đã chọn. Gate 1 PASS trên Windows x64 với r7.** Tổ hợp r7 là B cho giai đoạn 2. Profile 0.1.4 đã phát hành là bản tham chiếu để rollback. Giai đoạn 2–5 ở trạng thái `NOT RUN`.
+**Gate 0 PASS trên bộ tham chiếu 0.1.4 đã chọn. Gate 1 PASS trên Windows x64 với r7. Gate 2 PASS với ma trận Contracts r2.** Profile 0.1.4 đã phát hành là bản tham chiếu để rollback. Giai đoạn 3–5 ở trạng thái `NOT RUN`.
 
 > **Dành cho agent triển khai.** Dùng superpowers:subagent-driven-development hoặc superpowers:executing-plans. Hoàn thành và ghi bằng chứng từng gate trước khi bắt đầu giai đoạn kế tiếp.
 
@@ -782,8 +782,67 @@ tích hợp chi tiết.
 
 ## 2. Contracts Rust
 
-- [ ] **Giữ nguồn chuẩn.** Repo Contracts giữ JSON Schema/manifest, `device-library/` và các bản chiếu catalog, `contracts/hardware/v2/rpc_v2.proto`, `contracts/capture/layout.json` và `ncap.schema.json`. Port `validation.py`, validator ngữ nghĩa, `capture_codec.py` và các generator trong `contracts/codegen/`. `contracts/api/openapi.json` là handoff đã duyệt từ exporter Remote. Sinh crate/kiểu Rust, SDK `@cirnet/contracts`, binding Python dùng trong pytest và giữ wheel Python cũ cho consumer chuyển tiếp. Runtime Rust và lệnh sinh SDK chạy trên máy không cài Python.
-- [ ] **Ma trận và gate 2.** Chạy B với wheel Python và npm hiện tại. Lặp lại với SDK từ Rust generator trên Interface và legacy wheel vẫn cài cho Remote/Hardware. Chạy cùng corpus qua legacy Python, Rust binary/binding và tarball npm đã đóng gói. Giữ descriptor field number và hai tên dịch vụ, phân biệt trường absent/default, lỗi, 0/1/X, thứ tự và byte chuẩn NCAP1/NCAP2. Kiểm JSON, timing/gap và các encoding INT16/UINT16/FLOAT32 của NCAP2. Dùng các check generator legacy, `scripts/check_public_compatibility.py`, kiểm runtime/types SDK và build sạch hai lần từ cùng commit/toolchain để so digest. Báo thời gian sinh mã, dung lượng gói và validation/codec throughput. Chỉ đổi nguồn sinh mặc định khi parity và tái lập PASS. Rollback trỏ lại cả bộ crate/SDK/wheel cũ đã xác nhận, giữ artifact trước đó.
+- [x] **Giữ nguồn chuẩn.** Repo Contracts giữ JSON Schema/manifest, `device-library/` và các bản chiếu catalog, `contracts/hardware/v2/rpc_v2.proto`, `contracts/capture/layout.json` và `ncap.schema.json`. Port `validation.py`, validator ngữ nghĩa, `capture_codec.py` và các generator trong `contracts/codegen/`. `contracts/api/openapi.json` là handoff đã duyệt từ exporter Remote. Sinh crate/kiểu Rust, SDK `@cirnet/contracts`, binding Python dùng trong pytest và giữ wheel Python cũ cho consumer chuyển tiếp. Runtime Rust và lệnh sinh SDK chạy trên máy không cài Python.
+- [x] **Ma trận và gate 2.** Chạy B với wheel Python và npm hiện tại. Lặp lại với SDK từ Rust generator trên Interface và legacy wheel vẫn cài cho Remote/Hardware. Chạy cùng corpus qua legacy Python, Rust binary/binding và tarball npm đã đóng gói. Giữ descriptor field number và hai tên dịch vụ, phân biệt trường absent/default, lỗi, 0/1/X, thứ tự và byte chuẩn NCAP1/NCAP2. Kiểm JSON, timing/gap và các encoding INT16/UINT16/FLOAT32 của NCAP2. Dùng các check generator legacy, `scripts/check_public_compatibility.py`, kiểm runtime/types SDK và build sạch hai lần từ cùng commit/toolchain để so digest. Báo thời gian sinh mã, dung lượng gói và validation/codec throughput. Chỉ đổi nguồn sinh mặc định khi parity và tái lập PASS. Rollback trỏ lại cả bộ crate/SDK/wheel cũ đã xác nhận, giữ artifact trước đó.
+
+### Xác minh ứng viên giai đoạn 2
+
+Worktree Contracts `codex/native-contracts-stage2` bắt đầu từ
+`f559ec5b21ea7ecf50db4dc5c5e1dc7c5eb5ad39`. Crate Rust cung cấp
+validator ngoại tuyến, codec NCAP1 và NCAP2, kiểu và descriptor Hardware
+RPC cùng bộ sinh SDK TypeScript. Binding kiểm thử đối chứng với wheel
+Python 0.1.2 đã chọn. Remote và Hardware tiếp tục dùng wheel đó.
+
+| Kiểm tra trên ứng viên đầu tiên đã khóa | Kết quả | Bằng chứng |
+| --- | --- | --- |
+| Rust trên Windows x64 | PASS | 41 ca, gồm sinh và đóng gói SDK trong thư mục ngoài repo. |
+| Đối chứng wheel đã cài trên Windows x64 | PASS | 142 ca về kiểm tra dữ liệu, byte NCAP, thời gian, lỗi và descriptor RPC. |
+| Bộ sinh mã cũ và tương thích công khai | PASS | Kiểm sinh mã Python, danh mục editor, topology breadboard và các mốc giao thức công khai. |
+| SDK và Interface 0.1.4 | PASS | Gói SDK sinh bằng Rust khớp từng byte với gói npm đã khóa. Interface đạt 11 ca kiểm gói và 1.498 ca kiểm thử. Build tái tạo đủ 34 tệp phục vụ. Gói static phát hành có thêm manifest riêng. Có thể dùng lại bằng chứng tích hợp B của giai đoạn 1 cho đúng các byte chạy này. |
+| Hai lượt build sạch Linux x64 không có Python | PASS | Rust 1.90.0 và Node 26.12.1 ngoại tuyến. Hai lượt tái tạo cùng digest cho binary, crate và npm. Lượt đầu xác minh crate đã đóng gói và đạt 34 ca runtime native. |
+| Chẩn đoán dữ liệu vi phạm nhiều ràng buộc schema | FAIL | Một số tài liệu vi phạm nhiều ràng buộc có thể trả lỗi đầu tiên khác validator cũ. |
+
+Hai lượt build sạch mất 33,06 và 32,54 giây trước bước sinh dữ liệu.
+Sinh SDK mất 3,97 và 2,77 giây. Kiểm bộ sinh cũ mất 13,56 giây và
+kiểm thêm phần sinh model Python. Binary, crate và gói SDK có kích
+thước 7.045.320, 692.769 và 825.291 byte. Lưu riêng ca chẩn đoán
+chưa đạt cùng các biên nhận của ứng viên đầu tiên.
+
+R2 khôi phục thứ tự lỗi của bản cũ khi thuộc tính đã khai báo vi phạm
+ràng buộc trước lỗi thiếu trường bắt buộc trực tiếp trong schema có tên.
+Hai ca dữ liệu nhiều lỗi đã báo đều đạt trên profile structural và
+transport. **Gate 2 PASS** với 42 ca Rust trên Windows, 146 ca đối
+chứng wheel, 35 ca runtime native trong build Linux và cùng ma trận SDK
+và Interface đã khóa. Hai lượt build sạch dùng cùng snapshot nguồn có
+SHA-256 `d9d6de46c7cc4b46cf2fe0926ce962a5f2775a2bb8965a0e74e26f2a8447aca8`.
+Cả hai tạo cùng ba artifact. Lượt đầu dựng lại crate đã đóng gói để
+xác minh gói.
+
+| Artifact r2 | Byte | SHA-256 |
+| --- | ---: | --- |
+| Binary Linux x64 | 7.064.152 | `a09a9341b0266b86cdc8b55b0cd4ebd56c42855d03dab27322bf5ad3ca3b5a44` |
+| Crate Contracts | 693.535 | `35c22067f497d68f6461c201dc164e7567ee641fbce66cc243da8567f3b69ec7` |
+| SDK npm | 825.291 | `b963cf4990fee8b5a9294a6aaf85cfd803ed7724efc9ad2b3ee1ec302646b3c8` |
+
+Hai lượt build Release sạch mất 34,77 và 34,07 giây. Sinh dữ liệu SDK
+mất 2,97 và 3,20 giây. Phép đo thông lượng trên Windows dùng ba cửa
+sổ luân phiên trên cùng đầu vào và tính cả chi phí chuyển JSON qua
+binding PyO3 dùng trong kiểm thử.
+
+| Workload | Số mẫu mỗi cửa sổ | Python thao tác/giây | R2 thao tác/giây |
+| --- | ---: | ---: | ---: |
+| Validator trên 18 fixture | 3.000 | 4.623 | 97.352 |
+| Mã hóa NCAP1 với 7.001 sự kiện | 100 | 250 | 113 |
+| Giải mã NCAP1 với 7.001 sự kiện | 100 | 547 | 122 |
+| Giải mã NCAP2 trên 10 fixture | 1.800 | 1.032 | 15.574 |
+
+Hai runtime cho kết quả tương đương trên corpus đã chốt. Nội dung
+thông báo lỗi schema và thứ tự lỗi đầu tiên với các tổ hợp lỗi khác
+có thể khác. Chuỗi Rust yêu cầu giá trị vô hướng Unicode. Lệnh tính
+thời gian frame dùng số hữu tỉ chính xác kể cả khi tốc độ mẫu là số
+thập phân nguyên mà bản cũ có thể làm tròn. Lượt kiểm legacy tiếp
+tục kiểm schema nội bộ. Dùng bộ sinh r2 cho SDK chuyển tiếp đã xác minh.
+Cặp SDK và wheel cũ là bộ rollback và tiếp tục sẵn có cho consumer Python.
 
 ## 3. Hardware Rust
 

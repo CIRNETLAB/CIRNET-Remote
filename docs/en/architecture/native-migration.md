@@ -2,7 +2,7 @@
 
 [Tiếng Việt](../../vi/architecture/native-migration.md) · [Original plan dated 2026-11-05](https://github.com/cirnetlab/cirnet-remote/blob/f91eeeb42d7528d4e7fa9b1526195847932faf9d/docs/superpowers/plans/2026-11-05-cirnet-native-migration.md) · [Stage 0 record](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md)
 
-**Gate 0 PASS on the selected 0.1.4 reference. Gate 1 PASS on Windows x64 with r7.** The r7 combination is B for Stage 2. The published 0.1.4 profile is the rollback reference. Stages 2–5 are `NOT RUN`.
+**Gate 0 PASS on the selected 0.1.4 reference. Gate 1 PASS on Windows x64 with r7. Gate 2 PASS on the r2 Contracts matrix.** The published 0.1.4 profile is the rollback reference. Stages 3–5 are `NOT RUN`.
 
 > **For implementation agents.** Use superpowers:subagent-driven-development or superpowers:executing-plans. Complete each gate and record its evidence before beginning the next stage.
 
@@ -807,8 +807,68 @@ Simulator backend documentation owns the detailed implementation sequence.
 
 ## 2. Rust Contracts
 
-- [ ] **Keep canonical sources.** Contracts retains JSON Schema and the manifest, `device-library/` and catalog projections, `contracts/hardware/v2/rpc_v2.proto`, `contracts/capture/layout.json` and `ncap.schema.json`. Port `validation.py`, semantic validators, `capture_codec.py` and generators in `contracts/codegen/`. `contracts/api/openapi.json` is the approved handoff from the Remote exporter. Generate Rust crates and types, the `@cirnet/contracts` SDK and Python bindings for pytest, and retain the old Python wheel for transition consumers. Run the Rust runtime and SDK generation on a machine without Python.
-- [ ] **Matrix and Gate 2.** Run B with the current Python wheel and npm artifact. Repeat with the SDK from the Rust generator on Interface, keeping the legacy wheel installed for Remote and Hardware. Run the same corpus through legacy Python, the Rust binary or bindings, and the packed npm tarball. Preserve descriptor field numbers, both service names, absent/default distinctions, errors, 0/1/X, order and canonical NCAP1/NCAP2 bytes. Check JSON, timing and gaps, and NCAP2 INT16/UINT16/FLOAT32 encodings. Run legacy generator checks, `scripts/check_public_compatibility.py`, SDK runtime and type checks, and two clean builds with the same commit and toolchain to compare digests. Report generation time, package size and validation and codec throughput. Change the default generator only after parity and reproducibility pass. Roll back to the verified old crate, SDK and wheel set, keeping prior artifacts.
+- [x] **Keep canonical sources.** Contracts retains JSON Schema and the manifest, `device-library/` and catalog projections, `contracts/hardware/v2/rpc_v2.proto`, `contracts/capture/layout.json` and `ncap.schema.json`. Port `validation.py`, semantic validators, `capture_codec.py` and generators in `contracts/codegen/`. `contracts/api/openapi.json` is the approved handoff from the Remote exporter. Generate Rust crates and types, the `@cirnet/contracts` SDK and Python bindings for pytest, and retain the old Python wheel for transition consumers. Run the Rust runtime and SDK generation on a machine without Python.
+- [x] **Matrix and Gate 2.** Run B with the current Python wheel and npm artifact. Repeat with the SDK from the Rust generator on Interface, keeping the legacy wheel installed for Remote and Hardware. Run the same corpus through legacy Python, the Rust binary or bindings, and the packed npm tarball. Preserve descriptor field numbers, both service names, absent/default distinctions, errors, 0/1/X, order and canonical NCAP1/NCAP2 bytes. Check JSON, timing and gaps, and NCAP2 INT16/UINT16/FLOAT32 encodings. Run legacy generator checks, `scripts/check_public_compatibility.py`, SDK runtime and type checks, and two clean builds with the same commit and toolchain to compare digests. Report generation time, package size and validation and codec throughput. Change the default generator only after parity and reproducibility pass. Roll back to the verified old crate, SDK and wheel set, keeping prior artifacts.
+
+### Stage 2 candidate verification
+
+The Contracts worktree `codex/native-contracts-stage2` starts from
+`f559ec5b21ea7ecf50db4dc5c5e1dc7c5eb5ad39`. Its Rust crate provides offline
+validation, NCAP1 and NCAP2 codecs, Hardware RPC types and descriptors, and
+a generator for the TypeScript SDK. The Python test binding compares
+against the selected 0.1.2 wheel. Remote and Hardware still use that wheel.
+
+| Check on the first frozen candidate | Result | Evidence |
+| --- | --- | --- |
+| Windows x64 Rust | PASS | 41 tests, including the external SDK generation and packaging cases. |
+| Windows x64 installed-wheel comparison | PASS | 142 cases covering validation, NCAP bytes, timestamps, errors and the RPC descriptor. |
+| Legacy generator and public compatibility | PASS | Python generation, editor catalog and board topology checks and the public wire anchors. |
+| SDK and Interface 0.1.4 | PASS | Native SDK tarball matches the sealed npm artifact byte for byte. Interface passed 11 package checks and 1,498 tests. The build reproduced all 34 served files. The release archive adds its own manifest. This permits reuse of the Stage 1 B integration evidence for those exact runtime bytes. |
+| Two clean Linux x64 builds without Python | PASS | Offline Rust 1.90.0 and Node 26.12.1. Both runs reproduced the executable, crate and npm digests. The first verified the packaged crate and passed 34 native runtime tests. |
+| Compound-invalid schema diagnostics | FAIL | Some documents that violate several constraints can return a different first issue from the legacy validator. |
+
+The two clean builds took 33.06 and 32.54 seconds before generation.
+SDK projections took 3.97 and 2.77 seconds. The legacy generator check
+took 13.56 seconds and also checked Python model generation. The executable,
+crate and SDK archive sizes were 7,045,320, 692,769 and 825,291 bytes.
+Keep the first candidate's failed diagnostic comparison with its receipts.
+
+R2 restores the legacy first issue when a declared property fails before
+a direct required-property failure in the named schema. It passed the two
+reported compound cases in both structural and transport profiles.
+**Gate 2 PASS** covers 42 Windows Rust tests, 146 installed-wheel cases,
+35 native runtime tests in the Linux build and the same sealed SDK and
+Interface matrix. Two clean builds used the same source snapshot SHA-256
+`d9d6de46c7cc4b46cf2fe0926ce962a5f2775a2bb8965a0e74e26f2a8447aca8`.
+Both produced the same three artifacts. The first also verified the
+packaged crate by building it.
+
+| R2 artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| Linux x64 executable | 7,064,152 | `a09a9341b0266b86cdc8b55b0cd4ebd56c42855d03dab27322bf5ad3ca3b5a44` |
+| Contracts crate | 693,535 | `35c22067f497d68f6461c201dc164e7567ee641fbce66cc243da8567f3b69ec7` |
+| npm SDK | 825,291 | `b963cf4990fee8b5a9294a6aaf85cfd803ed7724efc9ad2b3ee1ec302646b3c8` |
+
+The clean release builds took 34.77 and 34.07 seconds. SDK projections
+took 2.97 and 3.20 seconds. The Windows throughput comparison used
+three alternating windows on identical inputs. It includes the JSON
+boundary of the test-only PyO3 binding.
+
+| Workload | Observations per window | Python operations/s | R2 operations/s |
+| --- | ---: | ---: | ---: |
+| Validation across 18 fixtures | 3,000 | 4,623 | 97,352 |
+| NCAP1 encode, 7,001 events | 100 | 250 | 113 |
+| NCAP1 decode, 7,001 events | 100 | 547 | 122 |
+| NCAP2 decode across 10 fixtures | 1,800 | 1,032 | 15,574 |
+
+Both runtimes matched outcomes on the agreed corpus. Schema message text and
+first-issue ordering for other compound-invalid inputs can differ.
+Rust strings require Unicode scalar values. The sampled time helper
+uses exact rational arithmetic even for integral decimal rate terms
+that can round in the legacy helper. The legacy verification lane
+continues to lint private schemas. Use the r2 generator for the
+verified transition SDK. The original SDK and wheel are the rollback
+pair and remain available for Python consumers.
 
 ## 3. Rust Hardware
 
