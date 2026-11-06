@@ -1,8 +1,17 @@
 """Application RPC gateway. Imports wire bindings only, never physical station drivers."""
 import json
+import re
+from time import monotonic
+
 import grpc
+from google.protobuf.empty_pb2 import Empty
+from google.protobuf.wrappers_pb2 import BytesValue, UInt32Value
+from contracts.boundary.models import PhysicalPreviewResult
 from contracts.validation import validate
 from contracts.capture_codec import decode_digital
+
+_PREVIEW_RPC = '/cirnet.hardware.internal.v1.SimulatorPreview'
+_PREVIEW_VERSION = 1
 
 class GatewayError(RuntimeError):
     def __init__(self,code):
@@ -36,6 +45,52 @@ class HardwareServiceClient:
         try: return getattr(self._connect(),method)(request,timeout=max(self.timeout,15) if method=='StartExecution' else self.timeout)
         except grpc.RpcError as error:
             raise GatewayError("TIMEOUT" if error.code()==grpc.StatusCode.DEADLINE_EXCEEDED else "HARDWARE_UNAVAILABLE") from None
+
+    def preview(self, graph):
+        """Return None only when the connected Hardware lacks the private RPC."""
+        deadline = monotonic() + self.timeout
+        self._connect()
+        # The private messages use no fields for Describe's request, then tag 1
+        # for the version uint32 and each of the two JSON byte payloads.
+        describe = self._channel.unary_unary(f'{_PREVIEW_RPC}/Describe',
+            request_serializer=Empty.SerializeToString, response_deserializer=UInt32Value.FromString)
+        try:
+            version = describe(Empty(), timeout=max(0, deadline - monotonic())).value
+        except grpc.RpcError as error:
+            if error.code() == grpc.StatusCode.UNIMPLEMENTED:
+                return None
+            code = 'TIMEOUT' if error.code() == grpc.StatusCode.DEADLINE_EXCEEDED else 'HARDWARE_UNAVAILABLE'
+            raise GatewayError(code) from None
+        if version != _PREVIEW_VERSION:
+            raise GatewayError('PROTOCOL_MISMATCH')
+
+        try:
+            request = BytesValue(value=json.dumps(graph, allow_nan=False).encode())
+        except (TypeError, ValueError):
+            raise GatewayError('INVALID_CONFIGURATION') from None
+        preview = self._channel.unary_unary(f'{_PREVIEW_RPC}/Preview',
+            request_serializer=BytesValue.SerializeToString, response_deserializer=BytesValue.FromString)
+        try:
+            response = preview(request, timeout=max(0, deadline - monotonic()))
+        except grpc.RpcError as error:
+            code = {
+                grpc.StatusCode.DEADLINE_EXCEEDED: 'TIMEOUT',
+                grpc.StatusCode.UNIMPLEMENTED: 'PROTOCOL_MISMATCH',
+            }.get(error.code(), 'HARDWARE_UNAVAILABLE')
+            raise GatewayError(code) from None
+
+        try:
+            body = json.loads(response.value)
+            if isinstance(body, dict):
+                if body.keys() == {'accepted', 'preview'} and body['accepted'] is True:
+                    return PhysicalPreviewResult.model_validate(body['preview']).model_dump(exclude_unset=True)
+                if body.keys() == {'accepted', 'code'} and body['accepted'] is False:
+                    code = body['code']
+                    if isinstance(code, str) and re.fullmatch(r'[A-Z][A-Z0-9_]{0,63}', code):
+                        raise GatewayError(code)
+        except (ValueError, RecursionError):
+            raise GatewayError('PROTOCOL_MISMATCH') from None
+        raise GatewayError('PROTOCOL_MISMATCH')
 
     def capabilities(self,station_id):
         from google.protobuf.json_format import MessageToDict

@@ -6,7 +6,7 @@ import pytest
 from app.services.auth import AuthService
 from app.config import Settings
 from sqlalchemy import update
-from test_lab_lifecycle import setup_manager,assignment
+from test_lab_lifecycle import setup_manager,assignment,create
 from test_instrument_lifecycle import configuration
 
 
@@ -102,3 +102,106 @@ def test_stop_dispatch_budget_retains_and_retries_excess_cancellations(tmp_path)
         release.set()
         while jobs.jobs:jobs.run_one()
         manager.close();repo.close()
+
+
+def test_concurrent_stops_at_full_admission_queue_keep_lease_until_safe_cleanup(tmp_path):
+    manager, repo, gateway, jobs, _, _ = setup_manager(tmp_path)
+    started, stop_entered, cleanup_entered = Event(), Event(), Event()
+    finish_start, finish_stop, finish_cleanup = Event(), Event(), Event()
+    original_call = gateway.call
+    stop_targets = []
+    active = create(manager, 'active')['experiment_id']
+
+    def call(station, eid, method, **kwargs):
+        if method == 'stop_execution':
+            stop_targets.append(eid)
+        if eid == active:
+            if method == 'start_execution':
+                started.set()
+                assert finish_start.wait(15)
+            elif method == 'stop_execution' and not stop_entered.is_set():
+                stop_entered.set()
+                assert finish_stop.wait(15)
+                return {'accepted': True, 'hardware_applied': False}
+            elif method == 'stop_execution':
+                cleanup_entered.set()
+                assert finish_cleanup.wait(15)
+            elif method == 'read_capture':
+                pytest.fail('The late Start reply must not reach capture.')
+        return original_call(station, eid, method, **kwargs)
+
+    gateway.call = call
+    manager.control_session_active = lambda session: session != 'revoked'
+    try:
+        manager.run(active, 'active', control_session_id='active-session', control_client_id='active-tab')
+        lease = repo.leases()
+        assert len(lease) == 1 and lease[0]['experiment_id'] == active
+        queued = []
+        for index in range(50):
+            owner = f'queued-{index}'
+            eid = create(manager, owner)['experiment_id']
+            assert manager.run(eid, owner)['state'] == 'QUEUED'
+            queued.append((owner, eid))
+        queue_ids = [eid for _, eid in queued]
+        overflow = create(manager, 'overflow')['experiment_id']
+        with pytest.raises(ValueError, match='QUEUE_FULL'):
+            manager.run(overflow, 'overflow')
+        with pytest.raises(ValueError, match='SESSION_EXPIRED'):
+            manager.run(overflow, 'overflow', control_session_id='revoked', control_client_id='active-tab')
+        assert manager.get(overflow, 'overflow')['state'] == 'CREATED'
+
+        with ThreadPoolExecutor(max_workers=2) as workers:
+            worker = workers.submit(jobs.run_one)
+            try:
+                assert started.wait(5)
+                tail_owner, tail = queued[-1]
+                with pytest.raises(PermissionError, match='FORBIDDEN'):
+                    manager.stop(active, 'intruder', operation_key='foreign-active-stop')
+                with pytest.raises(PermissionError, match='FORBIDDEN'):
+                    manager.stop(tail, 'intruder', operation_key='foreign-queued-stop')
+                manager.disconnect_control('active-session', 'different-tab')
+                manager.disconnect_control('different-session', 'active-tab')
+                assert manager.get(active, 'active')['state'] == 'RUNNING'
+                assert manager.queue('p1') == queue_ids and repo.leases() == lease
+                assert not stop_targets
+
+                pending = workers.submit(manager.stop, active, 'active', operation_key='active-stop')
+                assert stop_entered.wait(5)
+                assert manager.queue('p1') == queue_ids and repo.leases() == lease
+                assert not pending.done() and manager.get(active, 'active')['state'] == 'STOPPING'
+                cancelled = manager.stop(tail, tail_owner, operation_key='queued-stop')
+                assert cancelled['state'] == 'COMPLETE' and cancelled['error_code'] == 'STOPPED'
+                assert manager.queue('p1') == queue_ids[:-1] and repo.leases() == lease
+                assert stop_targets == [active] and not pending.done()
+                assert manager.run(overflow, 'overflow')['state'] == 'QUEUED'
+                assert manager.queue('p1') == queue_ids[:-1] + [overflow]
+
+                finish_stop.set()
+                assert pending.result(5)['state'] == 'STOPPING'
+                assert active not in manager.stop_acknowledged and repo.leases() == lease
+                finish_start.set()
+                assert cleanup_entered.wait(5)
+                assert repo.leases() == lease and not worker.done()
+                finish_cleanup.set()
+                worker.result(5)
+            finally:
+                finish_start.set()
+                finish_stop.set()
+                finish_cleanup.set()
+
+        stopped = manager.get(active, 'active')
+        assert stopped['state'] == 'COMPLETE' and stopped['error_code'] == 'STOPPED'
+        assert stopped['capture'] is None and stop_targets == [active, active]
+        first = queue_ids[0]
+        assert [row['experiment_id'] for row in repo.leases()] == [first]
+        assert manager.get(first, queued[0][0])['state'] == 'RESERVED'
+        assert manager.queue('p1') == queue_ids[1:-1] + [overflow]
+
+        manager.stop(overflow, 'overflow')
+        for owner, eid in reversed(queued[1:-1]):
+            manager.stop(eid, owner)
+        jobs.run_one()
+        assert not manager.queue('p1') and not repo.leases() and not jobs.jobs
+    finally:
+        manager.close()
+        repo.close()

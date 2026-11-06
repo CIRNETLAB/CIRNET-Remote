@@ -10,6 +10,14 @@ def guest_mode() -> bool:
     if value not in ('true','false'): raise ValueError('CIRNET_ALLOW_GUEST must be true or false')
     return value=='true'
 
+
+def hardware_preview_enabled() -> bool:
+    value = getenv('CIRNET_HARDWARE_PREVIEW', 'false')
+    if value not in ('true', 'false'):
+        raise ValueError('CIRNET_HARDWARE_PREVIEW must be true or false')
+    return value == 'true'
+
+
 @dataclass(frozen=True)
 class Settings:
     environment: str = field(default_factory=lambda: getenv("CIRNET_ENV", "development"))
@@ -47,6 +55,7 @@ class Settings:
     websocket_send_seconds: float = field(default_factory=lambda:float(getenv('CIRNET_WEBSOCKET_SEND_SECONDS','5')))
     websocket_cleanup_seconds: float = field(default_factory=lambda:float(getenv('CIRNET_WEBSOCKET_CLEANUP_SECONDS','5')))
     websocket_message_limit: int = 120
+    hardware_preview: bool = field(default_factory=hardware_preview_enabled)
 
     def __post_init__(self) -> None:
         limits=(self.bootstrap_limit,self.auth_rate_max_buckets,self.auth_maintenance_batch,self.request_max_bytes,
@@ -60,6 +69,7 @@ class Settings:
             raise ValueError('Websocket deadlines must be finite and at most 60 seconds')
         if self.environment not in ('development','test','production'): raise ValueError('CIRNET_ENV must be development, test or production')
         if type(self.allow_guest) is not bool: raise ValueError('allow_guest must be a boolean')
+        if type(self.hardware_preview) is not bool: raise ValueError('hardware_preview must be a boolean')
         if (type(self.capture_max_bytes) is not int or self.capture_max_bytes<1 or type(self.capture_max_files) is not int
                 or self.capture_max_files<1 or type(self.capture_retention_seconds) is not int or self.capture_retention_seconds<0):raise ValueError('Invalid capture quota or retention configuration')
         object.__setattr__(self,'simulation_workers',simulation_worker_count(self.simulation_workers))

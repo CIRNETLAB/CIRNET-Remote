@@ -11,10 +11,11 @@ import shutil
 import subprocess
 from threading import Barrier,Event
 import time
+from types import SimpleNamespace
 import uuid
 
 import pytest
-from sqlalchemy import create_engine,insert,select,text,update
+from sqlalchemy import create_engine,event,insert,select,text,update
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.schema import CreateSchema,DropSchema
@@ -133,6 +134,132 @@ def assert_blocked_by(pg,blocked,blocker):
                 return
             time.sleep(0.01)
     pytest.fail('The competing writer never waited on the owning transaction lock.')
+
+
+def test_postgresql_event_snapshot_passes_an_unrelated_inflight_write(pg):
+    _,_,repo,_,guest,_=initialized(pg)
+    target={'experiment_id':'snapshot-target','state':'CREATED','revision':0}
+    other={'experiment_id':'write-target','state':'CREATED','revision':0}
+    repo.create_experiment(guest.owner_id,target)
+    repo.create_experiment(guest.owner_id,other)
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        with repo.lock,repo.engine.begin() as db:
+            repo._save_experiment(db,{**other,'revision':1})
+            assert pool.submit(repo.experiment_snapshot,'snapshot-target').result(timeout=3)==(guest.owner_id,target)
+    assert repo.get_experiment('write-target',guest.owner_id)['revision']==1
+
+
+@pytest.mark.parametrize('operation_key',[None,'stale-owner-stop'],ids=['keyless','keyed'])
+def test_postgresql_event_snapshot_and_stop_authority_across_guest_claim(pg,monkeypatch,operation_key):
+    from app.services.experiments import ExperimentManager
+
+    _,url,repo,auth,guest,_=initialized(pg)
+    other=pg.repository(url)
+    password='snapshot regression '+uuid.uuid4().hex
+    auth.bootstrap_admin('snapshot-admin',password)
+    account,_=auth.login(guest,'snapshot-admin',password)
+    with repo.lock,repo.engine.begin() as db:
+        viewer,_=auth._new_session(db,guest.owner_id)
+    assert auth.session_active(viewer.session_id)
+    identity='claimed-experiment'
+    payload={'experiment_id':identity,'station_id':'station','state':'CREATED','state_history':['CREATED'],'revision':7}
+    repo.create_experiment(guest.owner_id,payload)
+    manager=ExperimentManager(repo,SimpleNamespace())
+    committing=Event(); release=Event(); stop_started=Event(); delivery_started=Event()
+
+    @event.listens_for(repo.engine,'commit')
+    def pause_claim(_connection):
+        committing.set()
+        assert release.wait(10)
+
+    get=repo.get_experiment
+    def watched_get(eid,owner=None):
+        if owner==guest.owner_id:stop_started.set()
+        return get(eid,owner)
+
+    def delivery_allowed():
+        delivery_started.set()
+        return auth.session_active(viewer.session_id)
+
+    monkeypatch.setattr(repo,'get_experiment',watched_get)
+    try:
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            transfer=pool.submit(auth.claim_guest,account,True)
+            try:
+                assert committing.wait(3)
+                stopping=pool.submit(manager.stop,identity,guest.owner_id,operation_key=operation_key)
+                assert stop_started.wait(3)
+                delivery=pool.submit(delivery_allowed)
+                assert delivery_started.wait(3)
+                snapshot=pool.submit(repo.experiment_snapshot,identity)
+                assert snapshot.result(timeout=3)==(guest.owner_id,payload)
+                with pytest.raises(PermissionError,match='FORBIDDEN'):
+                    other.get_experiment(identity,account.owner_id)
+                assert not stopping.done() and not delivery.done()
+            finally:
+                release.set()
+            claimed,_=transfer.result(timeout=5)
+            with pytest.raises(PermissionError,match='FORBIDDEN'):
+                stopping.result(timeout=5)
+            assert delivery.result(timeout=5) is False
+        assert repo.experiment_snapshot(identity)==(claimed.owner_id,payload)
+        assert repo.get_experiment(identity,claimed.owner_id)==payload
+        with pytest.raises(PermissionError,match='FORBIDDEN'):
+            repo.get_experiment(identity,guest.owner_id)
+    finally:
+        manager.close()
+
+
+@pytest.mark.parametrize('commit',[True,False],ids=['commit','rollback'])
+def test_postgresql_event_snapshot_uses_committed_payload(pg,commit):
+    _,_,repo,_,guest,_=initialized(pg)
+    initial={'experiment_id':'payload-target','state':'CREATED','revision':0}
+    changed={**initial,'revision':1}
+    repo.create_experiment(guest.owner_id,initial)
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        with repo.lock,repo.engine.connect() as db:
+            transaction=db.begin()
+            try:
+                repo._save_experiment(db,changed)
+                snapshot=pool.submit(repo.experiment_snapshot,'payload-target')
+                assert snapshot.result(timeout=3)==(guest.owner_id,initial)
+                if commit:transaction.commit()
+            finally:
+                if transaction.is_active:transaction.rollback()
+    assert repo.experiment_snapshot('payload-target')==(guest.owner_id,changed if commit else initial)
+
+
+def test_postgresql_transition_event_reads_owner_committed_after_save(pg,monkeypatch):
+    from app.services.experiments import ExperimentManager
+
+    _,url,repo,auth,guest,_=initialized(pg)
+    other_auth=AuthService(pg.repository(url),Settings())
+    password='snapshot regression '+uuid.uuid4().hex
+    auth.bootstrap_admin('snapshot-admin',password)
+    account,_=other_auth.login(guest,'snapshot-admin',password)
+    identity='transition-claim'
+    repo.create_experiment(guest.owner_id,{
+        'experiment_id':identity,'station_id':'station','state':'CREATED','state_history':['CREATED'],'revision':0})
+    notices=[]
+    manager=ExperimentManager(repo,SimpleNamespace(),emit=lambda owner,notice:notices.append((owner,notice)))
+    save=repo.save_experiment
+
+    def save_then_claim(value):
+        save(value)
+        other_auth.claim_guest(account,True)
+
+    try:
+        with monkeypatch.context() as patch:
+            patch.setattr(repo,'save_experiment',save_then_claim)
+            manager._transition(identity,'COMPLETE')
+        owner,notice=notices.pop()
+        assert not notices and owner==account.owner_id
+        assert notice['experiment']==manager.get(identity,account.owner_id)
+        assert notice['experiment']['revision']==1
+    finally:
+        manager.close()
 
 
 def test_postgresql_legacy_upgrade_and_real_backup_restore_rehearsal(pg,tmp_path):

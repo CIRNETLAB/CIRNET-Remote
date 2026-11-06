@@ -66,15 +66,18 @@ class OperationIdentity:
         key=operation_key(key)
         fingerprint=request_fingerprint({'experiment_id':eid})
         with self.guard(owner,kind,key,eid):
-            # Verify resource ownership even on an operation retry.
-            experiment=self.manager.get(eid,owner)
+            # Authorize before looking up the operation. Only a retry needs
+            # the current public snapshot with its live queue position.
+            self.manager.repo.get_experiment(eid,owner)
             record=self.existing(owner,kind,key,eid,fingerprint)
-            if record and record['status']=='FAILED':
-                raise ValueError(record['error_code'])
-            if record and record['status'] in {'ACCEPTED','APPLIED'}:
-                return experiment
             recovering=record is not None
-            if record is None:
+            if recovering:
+                experiment=self.manager.get(eid,owner)
+                if record['status']=='FAILED':
+                    raise ValueError(record['error_code'])
+                if record['status'] in {'ACCEPTED','APPLIED'}:
+                    return experiment
+            else:
                 record=self.manager.repo.begin_operation(owner,kind,key,eid,fingerprint)
             try:
                 # A persisted aggregate transition proves a lost Run request

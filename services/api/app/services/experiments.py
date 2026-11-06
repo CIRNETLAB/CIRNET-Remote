@@ -146,12 +146,14 @@ class ExperimentManager:
         value.setdefault('assessment',None)
         return self.public_projection(value,owner) if self.public_projection else value
 
+    def _public_with_queue_position(self,eid,e,owner):
+        queue=self.queues.get(e['station_id'],())
+        e['queue_position']=(list(queue).index(eid)+1) if eid in queue else None
+        return self._public(e,owner)
+
     def get(self,eid,owner):
         with self.lock:
-            e=self.repo.get_experiment(eid,owner)
-            queue=self.queues.get(e['station_id'],())
-            e['queue_position']=(list(queue).index(eid)+1) if eid in queue else None
-            return self._public(e,owner)
+            return self._public_with_queue_position(eid,self.repo.get_experiment(eid,owner),owner)
 
     def poll(self,eid,owner):
         e=self.repo.get_experiment(eid,owner)
@@ -275,8 +277,11 @@ class ExperimentManager:
                       causation_request_id=e.get('_run_request_id'),
                       experiment_id=eid,station_id=e['station_id'],previous_state=previous,state=state,revision=e['revision'],
                       error_code=e.get('error_code'),capture_id=(e.get('capture') or {}).get('capture_id'))
-            owner=self.repo.owner(eid)
-            self.emit(owner,{'type':'experiment.updated','experiment':self.get(eid,owner)})
+            owner,snapshot=self.repo.experiment_snapshot(eid)
+            self.emit(owner,{
+                'type':'experiment.updated',
+                'experiment':self._public_with_queue_position(eid,snapshot,owner),
+            })
             return e
 
     def run(self,eid,owner,*,operation_key=None,control_session_id=None,control_client_id=None):
@@ -374,15 +379,17 @@ class ExperimentManager:
 
     def _check_cancel(self,eid):
         if self.cancel.get(eid) and self.cancel[eid].is_set(): raise Cancelled()
-        if self.control_session_active is not None:
-            session_id=self.repo.get_experiment(eid).get('_control_session_id')
-            if session_id and not self._control_active(session_id):
-                self.stop(eid,self.repo.owner(eid),'SESSION_EXPIRED')
-                raise Cancelled()
+        if self.control_session_active is None: return None
+        e=self.repo.get_experiment(eid)
+        session_id=e.get('_control_session_id')
+        if session_id and not self._control_active(session_id):
+            self.stop(eid,self.repo.owner(eid),'SESSION_EXPIRED')
+            raise Cancelled()
+        return e
 
     def _call(self,eid,method,**kwargs):
-        self._check_cancel(eid)
-        e=self.repo.get_experiment(eid)
+        e=self._check_cancel(eid)
+        if e is None: e=self.repo.get_experiment(eid)
         reply=self.gateway.call(e['station_id'],eid,method,**kwargs)
         if reply.get('accepted') is False: raise GatewayError(reply.get('code','DRIVER_ERROR'))
         self._check_cancel(eid)

@@ -2,7 +2,7 @@
 
 [English](../../en/architecture/native-migration.md) · [Kế hoạch gốc ngày 2026-11-05](https://github.com/cirnetlab/cirnet-remote/blob/f91eeeb42d7528d4e7fa9b1526195847932faf9d/docs/superpowers/plans/2026-11-05-cirnet-native-migration.md) · [Biên bản giai đoạn 0](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md)
 
-**Gate 0 PASS trên bộ tham chiếu 0.1.4 đã chọn. Gate 1 PASS trên Windows x64 với r7. Gate 2 PASS với ma trận Contracts r2.** Profile 0.1.4 đã phát hành là bản tham chiếu để rollback. Giai đoạn 3–5 ở trạng thái `NOT RUN`.
+**Gate 0 PASS trên bộ tham chiếu 0.1.4 đã chọn. Gate 1 PASS trên Windows x64 với r7. Gate 2 PASS với ma trận Contracts r2. Gate 3 PASS về chức năng, tương thích và an toàn trên Windows với r8-R2.** Hiệu năng production Gate 3 trên Linux Xeon, nghiệm thu production/phát hành và Gate 4–5 ở trạng thái `NOT RUN`. [Chính sách Gate 3 hiện hành](#chính-sách-nghiệm-thu-gate-3-theo-môi-trường). Profile 0.1.4 đã phát hành là bản tham chiếu để rollback.
 
 > **Dành cho agent triển khai.** Dùng superpowers:subagent-driven-development hoặc superpowers:executing-plans. Hoàn thành và ghi bằng chứng từng gate trước khi bắt đầu giai đoạn kế tiếp.
 
@@ -14,7 +14,7 @@
 
 ## Quy tắc áp dụng cho mọi giai đoạn
 
-- Theo đúng thứ tự **0 → 1 → 2 → 3 → 4 → 5**. Mỗi gate bắt buộc cần có lệnh chạy, tổ hợp artifact, kết quả và bằng chứng riêng. FAIL hoặc NOT RUN ở gate bắt buộc chặn cả đổi mặc định và giai đoạn tiếp theo.
+- Theo đúng thứ tự **0 → 1 → 2 → 3 → 4 → 5**. Mỗi gate bắt buộc cần có lệnh chạy, tổ hợp artifact, kết quả và bằng chứng riêng. FAIL hoặc NOT RUN ở gate bắt buộc chặn tiến độ của phạm vi nghiệm thu tương ứng. Nghiệm thu chức năng và an toàn Gate 3 trên Windows quyết định thời điểm bắt đầu giai đoạn triển khai kế tiếp. Chọn mặc định production và phát hành cần đạt gate hiệu năng riêng trên Linux Xeon cùng các bằng chứng phát hành bắt buộc khác.
 - Mỗi tổ hợp dùng gói phát hành hoặc ứng viên đóng gói theo commit, version, SHA-256, target và cờ build. Mã nguồn của repo bên cạnh chỉ dùng để phát triển hoặc xuất artifact riêng. Phân biệt HEAD khảo sát, revision dùng build và revision của harness. Dữ liệu/trace thô nằm trong session ngoài Git do DEV allocator đã ghim cấp phát. Chỉ lưu báo cáo Markdown trong repo.
 - Python được giữ trong test và benchmark của sản phẩm cuối. Trong giai đoạn chuyển tiếp, giữ artifact Python tương thích và toàn bộ test tham chiếu. PR chạy test gần thay đổi cùng kiểm tra auth/safety liên quan. Gate tích hợp chạy tiến trình và artifact thật. Gate phát hành chạy chính xác bộ artifact dự định giao.
 - Dùng cùng fixture hợp lệ và không hợp lệ để kiểm wire. Khóa cả đường dẫn RPC chuẩn và alias cũ, protobuf presence, tên/kiểu/status/error REST, sequence và resync WebSocket, byte NCAP, quyền sở hữu và dữ liệu bền vững. Mọi thay đổi phá tương thích cần phiên bản wire và kế hoạch chuyển consumer riêng.
@@ -847,7 +847,853 @@ Cặp SDK và wheel cũ là bộ rollback và tiếp tục sẵn có cho consume
 ## 3. Hardware Rust
 
 - [ ] **Thay server và lifecycle.** Hardware chuyển `server.py`, `rpc.py` và `station/` sang Rust, dùng Contracts Rust và worker C++ đã ghim. Giữ RPC 2.0 cả `cirnet.hardware.v2.HardwareService` và alias `netcircuit.hardware.v2.HardwareService`, loopback/Unix, nguyên ACK/ownership/deadline/NCAP. Preview chuyển qua endpoint nội bộ được thương lượng, giữ adapter Remote Python tương thích với Hardware cũ. Stop dùng tài nguyên riêng cho xử lý RPC, hủy worker và phản hồi an toàn. Remote tiếp tục sở hữu lease/quarantine. Không tăng khả năng công bố của trạm thiếu driver.
-- [ ] **Ma trận và gate 3.** So B với Interface hiện tại → Remote Python → Hardware Rust → Simulator C++, dùng legacy wheel ở Remote và crate ở Hardware. Giữ `test_server.py`, `test_virtual_execution.py`, `test_simulation_workers.py`, `test_rpc_lifecycle.py`, `test_ncap_rpc.py`, `test_physical_station.py` làm test tham chiếu. Chuyển assertion phụ thuộc internals Python sang test pytest gọi binary riêng qua RPC để thử Start/Stop/reset, hết lease, mất kết nối, worker treo/chết, phản hồi muộn, Stop đồng thời khi queue đầy và cách ly nếu thiếu ACK. Chạy các test tích hợp Remote. So Stop/p95/p99, RSS/CPU, throughput RPC và NCAP. Gate PR luôn giữ kiểm điều kiện trước khi cấp điện. Chạy hai testbench RTL đã ghim và HIL đúng khả năng được công bố. Phân loại riêng thiết bị chưa có. Chỉ đổi mặc định khi tổ hợp mới qua gate. Rollback theo quy trình lease/quarantine, phục hồi Hardware Python và worker tương thích.
+- [ ] **Ma trận và gate 3.** So B với Interface hiện tại → Remote Python → Hardware Rust → Simulator C++, dùng legacy wheel ở Remote và crate ở Hardware. Giữ `test_server.py`, `test_virtual_execution.py`, `test_simulation_workers.py`, `test_rpc_lifecycle.py`, `test_ncap_rpc.py`, `test_physical_station.py` làm test tham chiếu. Chuyển assertion phụ thuộc internals Python sang test pytest gọi binary riêng qua RPC để thử Start/Stop/reset, hết lease, mất kết nối, worker treo/chết, phản hồi muộn, Stop đồng thời khi queue đầy và cách ly nếu thiếu ACK. Chạy các test tích hợp Remote. Dùng [chính sách hiện hành theo môi trường](#chính-sách-nghiệm-thu-gate-3-theo-môi-trường) cho hiệu năng và Stop dưới tải. Gate PR luôn giữ kiểm điều kiện trước khi cấp điện. Chạy hai testbench RTL đã ghim và HIL đúng khả năng được công bố. Phân loại riêng thiết bị chưa có. Rollback theo quy trình lease/quarantine, phục hồi Hardware Python và worker tương thích.
+
+### Chính sách nghiệm thu Gate 3 theo môi trường
+
+Máy phát triển Windows x64 dùng Intel Core i5-12500H nghiệm thu chức
+năng, tương thích và an toàn Giai đoạn 3. Bộ 29 chỉ số dịch vụ thông
+thường trên máy này dùng để chẩn đoán. Bộ chỉ số gồm CPU/job, RAM
+đỉnh, yêu cầu cố định/giây, job/giây và byte NCAP/giây, cùng p95/p99
+của tạo, Run, poll và capture cho AND/CLOCK và các route đọc active,
+history, projects, stations. Các phép đối chứng Windows trước đây
+giữ nguyên số đo, ngưỡng và kết quả PASS/FAIL trong lịch sử. Chỉ số
+dịch vụ thông thường không chặn gate Windows. Assertion chức năng
+lỗi, capture lệch hoặc lượt đo không hợp lệ vẫn cần bằng chứng hợp lệ
+cho yêu cầu bị ảnh hưởng. Chính sách này áp dụng cho quyết định hiện
+tại. Các phần lịch sử sau biên nhận Stop chính thức giữ nguyên bối
+cảnh nghiệm thu trước đây.
+
+Windows cần ma trận B/C trên SQLite và PostgreSQL với hash NCAP khớp
+và job hoàn tất hợp lệ, cả hai namespace Hardware RPC, tương thích
+preview và Interface đã phát hành, chốt quyền sở hữu và phiên, xử lý
+lỗi, quá hạn và kết quả cũ, ACK an toàn, lease, quarantine và rollback.
+Stop dưới tải tiếp tục là gate an toàn, dùng [phương pháp đồng bộ tại Hardware đã chấp thuận](#phương-pháp-đồng-bộ-start-đã-được-chấp-thuận-cho-gate-3),
+cùng workload, ba cặp cửa sổ 100 mẫu hợp lệ mỗi bên và giới hạn số
+lần thử hiện có. Ghi
+`CIRNET_NATIVE_STAGE3_STOP_ACCEPTANCE_SCOPE=windows-functional-safety-v1`
+riêng với phương pháp Start. Cả sáu
+trần vận hành p95/p99 tuyệt đối của Stop đã khóa và các deadline cứng
+hiện có đều bắt buộc. Báo cáo sáu so sánh đối chứng theo mức 110% của
+B cùng PASS/FAIL để chẩn đoán. Vẫn cần bằng chứng đầu nhận, worker
+thoát trước ACK, thu hồi lease, quarantine và chặn kết quả muộn. Ghi
+RTL và HIL riêng. Scaffold công bố thực thi vật lý không khả dụng và
+HIL vẫn **NOT RUN**.
+
+| Bằng chứng Windows trên đúng r8-R2 | Trạng thái hiện tại |
+| --- | --- |
+| Capture và hoàn tất job ma trận PostgreSQL | **PASS**. Lượt r8 đầy đủ xác minh 1.200 capture đo của B và C. Kết quả chỉ số dịch vụ thông thường vẫn là **FAIL** trong lịch sử. |
+| SQLite API và Interface đã phát hành | **PASS** cho 130 ca SQLite/API dùng mã nguồn và capture AND trên trình duyệt B/C dùng đúng r8-R2. SHA-256 biên nhận trình duyệt `b20393483709467efa5f09e85db87172c5cadb10110e8b789994e4354376de93`. |
+| Smoke ma trận SQLite và rollback trên đúng artifact | **PASS**. Hai ca tập trung trên r8-R2 trong 134,99 giây xác minh capture AND/CLOCK, hai route preview, dữ liệu trạm khớp và rollback về Hardware Python. |
+| Vòng đời native và an toàn Remote | **PASS** cho 25 ca vòng đời Rust và ba ca Remote trên đúng artifact về lease, quarantine và mất kết nối. |
+| Stop đồng thời khi hàng đợi Remote đầy và giới hạn dispatch | **PASS**. Hai ca kiểm thử thành phần trên bản r8 đã cài trong 5,15 giây. |
+| RTL FPGA đã ghim | **PASS** cho 30 ca testbench trước đây dùng cùng FPGA scaffold đã ghim. HIL vẫn **NOT RUN**. |
+| Stop dưới tải chính thức và gate Windows tổng hợp | **PASS**. Cả 600 mẫu hợp lệ đáp ứng các kiểm tra về trình tự sự kiện và an toàn. Cả sáu trần vận hành đã khóa đều đạt. Xem [biên nhận Stop chính thức](#gate-3-stop-dưới-tải-chính-thức-trên-windows). |
+
+SHA-256 của biên nhận smoke SQLite và rollback trên đúng artifact là
+`bcaf7513f286a928e3fec9a19e7dd99614ccdfdfa1f97c20540456e05b087c56`
+và `d6f78f7ed3c08eb3b31c3716428237426085548e65d30b2784b8059c352d31ea`.
+SHA-256 của controller là
+`045a3c3aea3c687ae66a9fa9f61921e3090bbab003d4772ab6ce106f4b422080`.
+Các biên nhận SQLite r4 và smoke/rollback r6 vẫn là lịch sử đối chứng
+cho manifest Remote và Hardware tương ứng.
+
+[Ca Stop khi hàng đợi đầy](../../../services/api/tests/test_control_sweep_isolation.py#L107)
+lấp đủ 50 vị trí trong hàng đợi Remote, gửi Stop đồng thời cho job
+đang chạy và job đang chờ, rồi xác minh giữ lease đến khi dọn dẹp an
+toàn và chặn kết quả muộn. [Ca giới hạn dispatch Stop](../../../services/api/tests/test_control_sweep_isolation.py#L71)
+xác minh yêu cầu hủy vượt giới hạn 16 lượt dispatch được giữ lại và
+thử lại. Hai ca SQLite dùng trạm thử có kiểm soát. Lượt Stop dưới tải
+chính thức kiểm tra riêng trường hợp bốn worker Hardware cùng bận.
+Cả 71 tệp `app/` đã cài khớp từng byte với wheel r8 và cả 31 module
+`app` đều được import từ `site-packages` của bản cài. SHA-256 biên nhận
+`gate3-r8-queue-safety/4458bff5993541f09067dd3d2f82c1a5/pytest.log`
+là `be0bf1403962a3a1e8df321c6d30e0a86eee56e652712da873f7050d8b8df0d5`.
+
+Nền tảng đã chọn để nghiệm thu hiệu năng production là máy Linux Xeon.
+Hiệu năng production vẫn **NOT RUN** cho đến khi máy và đúng artifact
+Linux sẵn sàng. Build hoặc chọn B và C dành cho Linux theo phiên bản
+đã ghim. Ghim manifest, binary, wheel, worker, toolchain, dependency
+và hash harness trên Linux. Đối chứng B và C trên cùng máy Xeon, cùng
+cpuset và chính sách NUMA, cấu hình Linux và cơ sở dữ liệu, dữ liệu thử,
+workload, mức đồng thời, warmup, nhịp client và phương pháp đo. Ghi
+topology, hệ điều hành, kernel, RAM, chính sách nguồn và lập lịch, lưu
+trữ, thiết lập độ bền PostgreSQL và tải đồng thời. Khởi tạo trạng thái
+cô lập tương đương và đảo thứ tự cặp.
+
+Xác minh chức năng, tương thích và an toàn trên Linux, gồm NCAP và Stop
+dưới tải, trước khi nghiệm thu production. Harness Stop trên Linux cần
+bằng chứng tương đương trên đồng hồ đơn điệu cho đầu nhận, worker thoát,
+ACK và lease thay cho phép đo QPC của Windows. Giữ deadline vận hành,
+kiểm tra quarantine và chặn kết quả cũ. Chạy hiệu chuẩn tham chiếu Linux
+riêng, rồi phê duyệt và ghi số mẫu, phương pháp đối chứng và ngưỡng dành
+riêng cho Linux trong preflight trước khi đo chính thức. Kết quả Linux
+dùng ngưỡng đã duyệt và digest artifact Linux. Sáu trần Stop tuyệt đối
+tiếp tục áp dụng trên Windows.
+
+Bằng chứng r8-R2 hoàn tất nghiệm thu chức năng, tương thích và an toàn
+trên Windows. Commit Giai đoạn 3 trước khi bắt đầu Giai đoạn 4. Hiệu
+năng Linux và nghiệm thu production/phát hành vẫn **NOT RUN**.
+
+#### Gate 3 Stop dưới tải chính thức trên Windows
+
+Lượt chính thức của r8-R2 **PASS** với
+`CIRNET_NATIVE_STAGE3_STOP_METHOD=natural-loaded-stop-hardware-rendezvous-v1`
+và `CIRNET_NATIVE_STAGE3_STOP_ACCEPTANCE_SCOPE=windows-functional-safety-v1`.
+Giữ nguyên workload và giới hạn 403 lần thử mỗi bên trong từng cửa sổ.
+Có 600 mẫu hợp lệ từ 802 lần thử. Bản tham chiếu Python B có 202 lần
+không đạt tiêu chí lấy mẫu. Mọi lần thử của Rust C đều đủ điều kiện.
+
+| Cửa sổ | Python B hợp lệ / lần thử | Rust C hợp lệ / lần thử |
+| --- | ---: | ---: |
+| 1 | 100 / 175 | 100 / 100 |
+| 2 | 100 / 153 | 100 / 100 |
+| 3 | 100 / 174 | 100 / 100 |
+
+Mọi số đo trong bảng tính bằng mili giây. Cả sáu trần Windows đều đạt.
+Biên nhận giữ ba kết quả đối chứng tương đối chưa đạt để chẩn đoán hiệu năng.
+
+| Chỉ số Stop | Python B | Rust C | Trần Windows đã khóa | 110% của B | Chẩn đoán tương đối |
+| --- | ---: | ---: | ---: | ---: | --- |
+| HTTP p95 | 78.6032 | 89.1368 | 197.55406 | 86.46352 | FAIL |
+| HTTP p99 | 100.8966 | 100.4389 | 581.1564 | 110.98626 | PASS |
+| ACK an toàn gRPC p95 | 56.3787 | 62.2677 | 139.20478 | 62.01657 | FAIL |
+| ACK an toàn gRPC p99 | 69.3376 | 78.5544 | 526.71179 | 76.27136 | FAIL |
+| Thu hồi lease an toàn p95 | 145.9619 | 144.0377 | 2534.55686 | 160.55809 | PASS |
+| Thu hồi lease an toàn p99 | 168.5140 | 163.8268 | 2598.37468 | 185.36540 | PASS |
+
+Ca kiểm thử chính thức đạt trong 2.953,75 giây. Controller thoát mã 0
+sau 2.954,467 giây. Các hash bên dưới đều dùng SHA-256.
+
+| Artifact hoặc biên nhận | SHA-256 |
+| --- | --- |
+| Manifest ứng viên r8-R2 | `ebc49c57c052e0a78c98074af240c78010f787872a4ad32ac23617ada1fc15bd` |
+| Harness Stop chính thức | `939b362c7fc12d463e79e7fec5a54d8a86dfa78e5c579fab1d60b0b97d08b330` |
+| Workload Stop dưới tải | `e48b3d87456a93e3b97f8872fa39ea45099bbf34a49d0e32b888d9b4458a0c2c` |
+| `native-hardware-stop/97612df8bfb942bfbb131dbaf78c1b10/stop-summary.json` | `41b41bb221ec29118e324637119cf2fdfd5a267760b2b7a1da8d9da3310593b0` |
+| `lifecycle-rpc/start-rendezvous/r8-r2-windows-safety-stop-7afac62f5d3241489dde91a070ad2cb7/controller.json` | `35374c64a4268f56f920cf62e66ef03b6bdc721388e1723a1b32d61b954922bd` |
+
+Harness dùng cho lượt chính thức được lưu tại
+`stage3-formal-stop-harness/native_hardware_stop_cases.py` với SHA-256
+gốc trong bảng. Bản trong kho mã nguồn bỏ một dòng trống ở cuối tệp
+và có SHA-256
+`fb07d42f98e6bcc2ebed006ce9f05364b2c2e96c2979032a7557b3da45e8d9f0`.
+Cây cú pháp và các vị trí trong mã nguồn khớp với bản lưu.
+Bản đã chỉnh đạt 26 ca không dùng dịch vụ và hai ca gRPC loopback
+cho cả hai namespace RPC.
+Mã nguồn Hardware Giai đoạn 3 được ghi tại commit
+`3ad140f24ae5f3f2e6b735b5cff4beec7bffda54`.
+
+### Tiến độ Gate 3
+
+Ứng viên Windows x64 triển khai hai namespace RPC 2.0, vòng đời trạm ảo,
+capture NCAP và lane preview riêng. Remote Python bật preview qua Hardware
+bằng `CIRNET_HARDWARE_PREVIEW=true` và dùng preview cục bộ khi Hardware cũ
+trả `UNIMPLEMENTED` ở bước kiểm tra phiên bản.
+
+Phép đo r2 trên Windows x64 dùng Rust 1.90.0 và
+`cargo build --release --locked --offline`. SHA-256 của binary Hardware là
+`39e206e1e306f2e3e041bc52c1802ba9a6da333e1592009d01920c7c9a31221b`.
+SHA-256 của wheel Remote ứng viên là
+`e44bd8be68ecc46895ac195bfc8f767173a8932e1ac8d7dc9e456984bbe3d33e`.
+B dùng wheel r7 của giai đoạn 1. B và C cùng dùng worker C++ r7 và wheel
+Contracts Python đã duyệt. Hardware C dùng crate r2 của giai đoạn 2.
+
+| Kiểm chứng | Trạng thái |
+|---|---|
+| Tương thích với worker C++ đã ghim | PASS, 4 ca gồm SHA-256 NCAP và validation graph vật lý |
+| Preview Remote Python và bàn giao OpenAPI | PASS, 40 ca và đối chiếu từng byte ở cả hai cấu hình |
+| Vòng đời gRPC Hardware Rust trên đúng ứng viên Windows | PASS, 12 ca gồm hết lease, mất kết nối và quarantine khi khởi động lại |
+| Capture lớn trên đúng binary B và C | PASS, 100.000 mẫu và 1.100.101 byte NCAP khớp |
+| Bộ kiểm thử Hardware Python tham chiếu | PASS, 46 ca |
+| Tích hợp Remote và hồi quy API đã chọn | PASS, 114 ca qua lượt đầu và lượt chạy lại với cấu hình artifact đúng |
+| Interface phát hành trên Chromium với dịch vụ B và C thật | PASS, dạng sóng AND và capture NCAP 124 byte giống nhau |
+| Hai testbench FPGA RTL đã ghim trên Windows | PASS, 30 ca |
+| HIL | NOT RUN. FPGA scaffold đã chọn chưa công bố thực thi vật lý |
+| Tải B/C trên SQLite, ba cửa sổ 200 job mỗi bên | FAIL, đạt 29/29 ngưỡng đã khóa và 19/29 ngưỡng ghép cặp. Cả 1.200 capture khớp |
+| Tải B/C trên PostgreSQL, ba cửa sổ 200 job mỗi bên | FAIL, đạt 29/29 ngưỡng đã khóa và 21/29 ngưỡng ghép cặp. Cả 1.200 capture khớp |
+| Stop dưới tải tự nhiên | FAIL, cửa sổ Python đầu có 76 trên 100 mẫu hợp lệ cần thiết |
+
+Chẩn đoán với worker bị treo đo ba cửa sổ, mỗi cửa sổ 100 lượt Stop mỗi bên.
+Ứng viên Rust đầu tiên có p95/p99 là 31,041/34,599 ms. Khi giảm chu kỳ kiểm
+tra hủy và thu hồi từ 10 ms xuống 2 ms, ứng viên đạt 18,261/19,481 ms so với
+22,498/24,927 ms của lane Python đối chứng. Cả 600 lượt Stop của cặp mới đều
+xác minh ACK an toàn, thu hồi worker và chặn capture cũ. Chẩn đoán này dùng
+worker bị tạm dừng. Gate tải tự nhiên chạy riêng.
+
+`GetCapabilities` qua loopback cho kết quả khớp byte ở cả 3.000 phản hồi mỗi
+bên. Thông lượng gộp qua ba cửa sổ là 2.097 RPC/giây với Python và
+5.822 RPC/giây với Rust. p95/p99 tương ứng là 0,681/0,954 và 0,243/0,294 ms.
+
+Trung vị các cửa sổ SQLite là 4,943 → 4,567 job/giây và 109.315 → 101.003
+byte NCAP/giây. p99 của route đọc thí nghiệm đang hoạt động là 54,776 →
+110,925 ms. Cửa sổ Python đầu tiên mất 85,24 giây, hai cửa sổ sau mất
+39,47 và 40,46 giây. Kết quả ghép cặp giữ đủ các cửa sổ.
+
+Trung vị thông lượng PostgreSQL là 5,578 → 5,534 job/giây. Tám ngưỡng độ
+trễ HTTP ghép cặp chưa đạt, gồm p99 Run mạch clock tăng từ 371,575 lên
+501,905 ms. Cụm thử nghiệm PostgreSQL 18.6 đã dừng sau khi đo.
+
+Cửa sổ Stop tự nhiên đầu tiên thử 403 lượt lấy mẫu. Trong 202 lượt bị loại,
+ít nhất một Start đã hoàn tất trước khi Stop tới gRPC. Lượt chẩn đoán sáu
+mẫu và kết quả với worker bị tạm dừng được ghi riêng. So sánh Stop dưới tải
+tự nhiên vẫn thiếu mẫu.
+
+Trong lượt chẩn đoán riêng 40 job mỗi bên, p95 tổng thời gian RPC Hardware
+mỗi job giảm từ 43,47 xuống 21,77 ms. p95 thời gian chờ khóa trong scheduler
+tăng từ 1.089,33 lên 1.278,57 ms, tính theo hợp các khoảng chờ. Lượt này
+định vị phần thời gian đã đo. Nguyên nhân các ngưỡng HTTP chưa đạt còn mở.
+
+Diễn tập rollback đã dừng tổ hợp Rust sau khi xử lý hết công việc, mở lại
+cùng dữ liệu SQLite và capture với Hardware Python, xác minh SHA-256 của
+NCAP đã lưu và hoàn tất lượt Run mới. Gate 3 đang chờ các kiểm chứng còn lại.
+SHA-256 của gói bằng chứng Windows đã xác minh là
+`4ed962dcc9e30c6229cd3a0490a403e1575594637e03f50d5e98abb7ba0582cd`.
+
+### Kiểm thử lại Gate 3 trên Windows x64
+
+r3 dùng lại bản ghi experiment đã đọc khi kiểm tra hủy và phiên trước RPC.
+Kiểm tra sau RPC vẫn đọc trạng thái mới. r4 lấy chủ sở hữu và payload đã
+commit trong cùng một truy vấn trước khi phát cập nhật experiment. Khóa của
+scheduler vẫn giữ thứ tự chuyển trạng thái và phát sự kiện. Ca hồi quy SQLite
+đã kiểm tra chuyển quyền qua kết nối độc lập và snapshot công khai tương ứng.
+r4 đạt 137 ca hồi quy tập trung, bốn ca PostgreSQL về phiên và lease, và đối
+chiếu OpenAPI từng byte.
+
+| Ứng viên và profile | Kết quả | Ngưỡng đã khóa | Ngưỡng ghép cặp | Capture khớp |
+|---|---|---:|---:|---:|
+| r3 SQLite | FAIL | 29/29 | 14/29 | 1.200 |
+| r3 PostgreSQL | NOT RUN | — | — | — |
+| r4 SQLite | FAIL | 29/29 | 28/29 | 1.200 |
+| r4 PostgreSQL | FAIL | 29/29 | 17/29 | 1.200 |
+
+Mỗi profile tải dùng ba cặp cửa sổ với 200 job mỗi bên mỗi cửa sổ. Trung
+vị thông lượng r4 tăng từ 4,707 lên 5,004 job/giây trên SQLite và từ 4,997
+lên 5,374 trên PostgreSQL. Trung vị CPU/job giảm tương ứng từ 0,194 xuống
+0,174 giây và từ 0,199 xuống 0,180 giây. SQLite trượt p95 tạo mạch clock ở
+116,670 ms so với ngưỡng ghép cặp 114,925 ms. PostgreSQL trượt 12 ngưỡng độ
+trễ HTTP ghép cặp, trong đó p99 poll mạch AND là 222,723 ms so với giới hạn
+114,236 ms. Hồ sơ giữ mọi cửa sổ và mẫu CPU của máy.
+
+Chẩn đoán Stop nghiêm ngặt với r3 xác minh tám mẫu mỗi bên. Chẩn đoán r4
+tách riêng bước căn Start, tạm dừng bốn worker đã xác minh khi chúng rảnh
+và tiếp tục cả bốn trước phần workload và Stop được đo. Phía Python đạt
+8/11 lượt, phía Rust đạt 8/9 lượt. Cùng artifact Python đạt 8/35 lượt khi
+chạy chẩn đoán mà chưa căn Start. Mỗi mẫu hợp lệ xác minh các worker đang
+xử lý request đầy đủ, worker đích thoát trước ACK an toàn, và lease được
+giải phóng bền vững sau dọn dẹp. Stop tự nhiên chính thức ở trạng thái
+NOT RUN cho r3 và r4. Đường đo mặc định, ba cửa sổ 100 mẫu mỗi bên và các
+ngưỡng vẫn là điều kiện của gate.
+
+SHA-256 wheel Remote r4 là
+`f4c71271760ca95843c50378fced2c4c81407fe4bfad616886cf57d273805c2f`.
+SHA-256 gói bằng chứng r3/r4 đã xác minh là
+`400f0bb54a731f0b1819d6d5c9c404cbe44aad1b8c7d2d68f187de2a7b0915fa`.
+Gate 3 vẫn **FAIL**. Thay đổi Stage 3 đang chờ tích hợp.
+
+### Chẩn đoán ranh giới Gate 3 sau r4
+
+Commit nền của hai worktree là Hardware `c41027d` và Remote `fd546f1`.
+Manifest r4 có SHA-256
+`f8b7feb73b8cd3c2bee6b9a2528a4db04dd2951d4513e2b17fef51a13b95f694`,
+khớp ba artifact đóng gói và bảy tệp runtime Remote đã ghi. Dùng lại wheel
+đã cài, binary Rust, crate Contracts, worker C++ đã ghim và bằng chứng tham
+chiếu. Kết quả chính thức r4 ở trên vẫn có hiệu lực. Hai phép đo ngắn dùng
+schema mới trên PostgreSQL 18.6 loopback. Số đo đối chứng B lịch sử chỉ áp
+dụng cho điều kiện của lượt chạy tương ứng.
+
+Chạy các script chẩn đoán ngoài repo từ worktree Remote với Python giai
+đoạn 1 đã xác minh, các manifest r4 và URL PostgreSQL riêng. Lệnh thứ hai
+còn dùng wheel thử nghiệm đã xác minh độc lập.
+
+~~~powershell
+& $B -B -m pytest -q -s -p no:cacheprovider --rootdir . "$diag/rpc/test_rpc_phase_diagnostic.py"
+& $B -B -m pytest -q -s -p no:cacheprovider --rootdir . "$diag/test_auth_snapshot_http.py"
+~~~
+
+Lượt đầu đo 40 job mỗi bên với cùng wheel Remote r4 và chỉ thay Hardware.
+Lượt chạy mất 287,35 giây và báo FAIL ở bộ kiểm kê tiến trình vì Rust khởi
+động worker thứ hai sau warmup. Mỗi bên vẫn giữ đủ 40 job hoàn tất và bốn
+capture warmup khớp hash. Script ngoài repo `analyze_retained_spans.py` chỉ
+phân tích span có ID job hoặc request xác định trong trace. Với
+`GET /api/experiments/active`, p95 phía server tăng từ 102,437 lên 136,512 ms.
+p95 chờ khóa Repository tăng từ 78,726 lên 102,407 ms, còn SQL từ 13,414
+xuống 11,644 ms. Route này không gọi Hardware. Lần chờ khóa đầu khi đọc
+phiên tăng từ 42,822 lên 66,736 ms. p95 tổng khoảng RPC của scheduler giảm
+từ 93,004 xuống 53,679 ms. CPU đo ở hai đầu cửa sổ giảm từ 24,609 xuống
+22,672 giây ở Remote và từ 1,813 xuống 0,547 giây ở Hardware. Chênh CPU
+của các worker Simulator là 0,016 và 0,031 giây theo độ phân giải bộ đếm
+Windows, với số worker sau warmup khác nhau. Đã định vị được điểm chờ trong
+lượt này. Nguyên nhân của toàn bộ ngưỡng trượt và ảnh hưởng của runner còn mở.
+
+Wheel thử nghiệm chỉ đổi cách đọc cookie trên PostgreSQL và metadata wheel.
+Ca logout đồng thời tái hiện chờ khóa ở r4 và PASS với bản thử. Cookie cũ
+bị từ chối sau commit, còn hàng rào ghi chờ rồi từ chối phiên đã thu hồi.
+Bốn ca PostgreSQL về phiên và lease cùng 50 ca hồi quy xác thực PASS.
+Đối chứng HTTP 40 job mỗi bên mất 234,83 giây, dùng cùng Hardware Rust và
+capture khớp từng byte. p95 đọc danh sách thí nghiệm đang hoạt động giảm
+từ 128,049 xuống 109,986 ms, nhưng thông lượng giảm từ 1,585 xuống 1,302
+job/giây và p95 tạo mạch clock tăng từ 164,569 lên 278,782 ms. Bản thử được
+giữ ngoài repo và worktree vẫn dùng r4. Phép đo ngắn ít hơn 335,73 giây so
+với lượt PostgreSQL chính thức 570,56 giây trước đó. Hai lượt có mục đích
+và số mẫu khác nhau.
+
+SHA-256 báo cáo span đã phân tích là
+`7b349df4c0b597765857aacb279e611d2c86511328650b67aa5d9c851fcbef73`.
+SHA-256 wheel thử nghiệm là
+`8f3203fb2c60623199d2c189311008b5d293d529bbb53f2986d011919d5430bf`
+và SHA-256 tóm tắt HTTP ngắn là
+`10dcb8a6e9423949e0a8b74f06016d5bbfe6f78f80f9cf688ccd8ce3eed2da29`.
+
+Gate 3 vẫn **FAIL**. Bước chẩn đoán tiếp theo cần gắn thời gian giữ khóa
+với nơi gọi và tách thời gian chờ kết nối PostgreSQL. Hai bài tải SQLite,
+PostgreSQL và Stop tự nhiên chính thức đang chờ ứng viên đủ điều kiện.
+Số mẫu, ngưỡng ghép cặp và đã khóa, cùng bằng chứng an toàn Stop vẫn là
+điều kiện nghiệm thu.
+
+### Truy vết tranh chấp khóa và quan sát Stop ở Gate 3
+
+Worktree Hardware vẫn dựa trên `c41027d` và Remote trên `fd546f1`.
+Các phép chẩn đoán dùng lại manifest r4 đã xác minh, Python Giai đoạn 1,
+binary Rust Hardware, crate Contracts và C++ Simulator đã ghim ở trên.
+Chẩn đoán PostgreSQL dùng schema loopback mới trên PostgreSQL 18.6.
+SHA-256 của tệp thực thi máy chủ là
+`8b8bf5d400487159e3e117053d3f5a89fad0c740b310a3ac69e5720ce4f818e1`.
+
+Chạy các phép chẩn đoán ngoài repo từ worktree Remote với môi trường
+release đã xác minh, các wheel đã cài, URL PostgreSQL riêng và
+`CIRNET_STAGE3_PAGE_EXPERIMENT` trỏ đến biên nhận wheel thử nghiệm.
+
+~~~powershell
+& $B -B -m pytest -q -s -p no:cacheprovider --rootdir . --basetemp "$ownedTmp" "$diag/test_pg_lock_holders.py"
+& $B -B -m pytest -q -s -p no:cacheprovider --rootdir . --basetemp "$ownedTmp" "$diag/test_page_snapshot_http.py"
+& $B -B -m pytest -q -s -p no:cacheprovider --rootdir . --basetemp "$ownedTmp" "$diag/test_page_snapshot_http_reverse.py"
+~~~
+
+Chẩn đoán khóa trên r4 PASS trong 115,37 giây với 24 capture khớp byte.
+Lượt dịch vụ mất 92,55 giây, gồm cửa sổ tải 18,46 giây. p95 của GET
+active là 95,537 ms, chờ khóa repository là 69,773 ms, SQL là 8,919 ms
+và lấy kết nối từ pool là 0,099 ms. Các bên giữ khóa trùng thời gian
+chờ nhiều nhất đã xác định là `AuthService.current`, `page_experiments`
+và `_experiment_row`. p95 của GET history là 230,914 ms, với p95
+chờ khóa manager là 135,619 ms. `_transition` giữ khóa manager
+trùng thời gian chờ nhiều nhất. Thời gian trùng được cộng theo từng
+yêu cầu chờ. Profile xác định điểm tranh chấp trong Remote trên các
+đường này. Nguyên nhân của toàn bộ ngưỡng PostgreSQL chưa đạt vẫn
+đang được xác minh. SHA-256 báo cáo khóa là
+`7d769352e1e59875804a193ea7e94766f89d43915c5c0b332d69f97fb7443a10`.
+
+Harness Stop nay đợi trên đúng handle tiến trình worker Windows và
+giữ bước chứng minh bằng bộ đếm pipe của cả bốn worker sau đó. Harness
+kiểm tra cùng PID và thứ tự giữa quan sát cuối khi tất cả còn sống,
+tín hiệu tiến trình thoát và mẫu bộ đếm sau đó. Lệnh đợi được hủy và
+hoàn tất trước khi đóng handle. Các yêu cầu về ACK, thu hồi tiến trình,
+lease, quarantine và chặn kết quả cũ vẫn được giữ. Năm ca tập trung
+PASS trong 0,52 giây. Khi bật `CIRNET_NATIVE_STAGE3_STOP_SMOKE=1` và
+`CIRNET_NATIVE_STAGE3_STOP_IDLE_BARRIER=1`, lệnh chạy
+`tests/integration/native_hardware_stop_cases.py` với r4 đạt sáu ca
+trong 174,35 giây. Hai bên đều đạt cả tám lượt thử. Chẩn đoán có căn
+thời điểm trước đó cần 11 lượt Python và chín lượt Rust, với bốn lượt
+bị loại do thời điểm quan sát. SHA-256 biên nhận smoke là
+`4f8bc69684d70e66d9ad03304215cb62d3481c15854f76adcfa67d8cda494d1a`.
+SHA-256 mã harness đã áp dụng là
+`c0506faf521e6f4977d11fc3fb24fca0102097f715c5d3b6d525e3b1f19a626d`.
+Đường nghiệm thu chính thức vẫn chạy tự nhiên với ba cửa sổ 100 mẫu hợp
+lệ mỗi bên và các trần p95/p99 Giai đoạn 0 cùng đối chứng đã chốt.
+
+Lượt chẩn đoán r4 riêng khi worker chạy tự nhiên chỉ bật
+`CIRNET_NATIVE_STAGE3_STOP_SMOKE=1` và chạy
+`tests/integration/native_hardware_stop_cases.py::test_stage3_natural_stop`.
+Kết quả **FAIL** sau 282,01 giây vì thiếu mẫu hợp lệ. Python xác minh
+được 5/35 lượt và Rust xác minh đủ 8/8. Python có 19 lượt bị loại
+trước bước chứng minh cả bốn worker đang xử lý. Trong 18 lượt đó,
+ít nhất một worker vẫn ghi nhận 0 byte yêu cầu mới khi đã quan sát
+thấy phản hồi. Ở 18 lượt này, khoảng cách từ lúc Remote gửi RPC Start
+đầu tiên đến cuối cùng có trung vị 0,365 ms và tối đa 0,991 ms. Trung
+vị khoảng cách giữa phản hồi đầu và cuối là 168,743 ms. Tám lượt khác
+có một RPC Start hoàn tất trước khi Stop tới. Phép đo thu hẹp vùng
+điều tra xuống sau mốc Remote gửi RPC. Trace hiện chưa tách được
+tiếp nhận gRPC, dispatch của Hardware và lịch chạy worker. Chẩn đoán
+ngắn chưa xác lập các phân vị Stop. SHA-256 bản tóm tắt là
+`e58d4618ddd0fe0165e99a42eed94be5da57a272de158b35ee92a7a5a45b3cda`.
+SHA-256 bản phân tích trace là
+`0a0c9315a8eed3ae63d19bc7de53fff5e0f115e12c75f7931563922bf0e7f52f`.
+
+Bản thử PostgreSQL riêng cho phép câu SELECT lọc theo chủ sở hữu hiện
+có dùng snapshot MVCC của chính câu lệnh. Hàng rào phiên, điều khiển và
+ghi cùng đường SQLite vẫn được giữ. Ca chuyển quyền guest thật cho thấy
+r4 phải chờ trong lúc giao dịch đang mở. Bản thử trả trang của chủ cũ
+trước commit và chỉ trả trang của chủ mới sau commit, đồng thời xác minh
+quyền sở hữu cursor và lease đang quarantine. Ca này PASS trong 4,26
+giây. Bốn ca phiên/lease PostgreSQL PASS trong 4,32 giây và 14 ca
+history/feedback PASS trong 14,62 giây. SHA-256 wheel thử nghiệm là
+`15eba833e6397394ff5383da50d825a40c2b392dafe146027f6fbf9046e09d59`.
+
+Cả hai lượt so sánh 24 job mỗi bên đều PASS kiểm tra capture và mã
+trạng thái. Hai lượt dùng cùng Rust Hardware, Simulator đã ghim, 50
+principal, bốn slot, bốn job clock khởi động và cùng định nghĩa tải
+`3c5130be3873d53b4d65d4f1698f9a0ff5e6256999c740b6c4eb4ce0d5cc01dd`.
+
+| Thứ tự | Tổng thời gian pytest | p95 active r4 → bản thử | p95 history r4 → bản thử | Cửa sổ tải r4 → bản thử |
+| --- | ---: | ---: | ---: | ---: |
+| r4 trước | 193,43 giây | 100,856 → 37,360 ms | 235,426 → 90,479 ms | 18,363 → 6,500 giây |
+| Bản thử trước | 217,64 giây | 103,933 → 87,955 ms | 340,725 → 376,900 ms | 18,801 → 21,953 giây |
+
+Lượt đầu tiết kiệm 11,86 giây trong cửa sổ tải. Lượt đảo thứ tự tăng
+3,15 giây và thông lượng giảm từ 1,277 xuống 1,093 job/giây. Mức dao
+động làm cho tác động tổng thể còn chưa rõ. Nguyên nhân của dao động
+đang được xác minh. Bản thử trang được giữ ngoài repo. Mã ứng viên
+trong worktree vẫn là r4. SHA-256 hai bản tóm tắt theo thứ tự chạy là
+`27d2446000b021a8393a4338c5c169d83d310603118490bf064ae60e54a31224`
+và `9c82e1b909f5c25759a70d444940de30f5c0032235712f59f4cae3db19c2bee7`.
+
+Kết quả tải chính thức mới nhất vẫn là r4 **FAIL**, đạt 28/29 ngưỡng
+đối chứng trên SQLite và 17/29 trên PostgreSQL. Cả hai đạt 29/29 ngưỡng
+cố định và khớp 1.200 capture mỗi cơ sở dữ liệu. SQLite trượt
+`clock_create.p95_ms`. PostgreSQL trượt p95 và p99 của AND create,
+AND poll, active và history, p99 của clock capture, clock create và
+projects, cùng p95 của stations.
+
+| Biên nhận r4 chính thức | Tổng pytest | Chuẩn bị DB | Khởi động dịch vụ | Chuẩn bị client | Khởi động tải | Đo tải | Dọn dẹp |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| SQLite | 552,57 giây | <0,01 giây | 179,73 giây | 95,19 giây | 6,97 giây | 243,63 giây | 4,33 giây |
+| PostgreSQL | 570,56 giây | 1,49 giây | 192,30 giây | 106,45 giây | 6,41 giây | 236,92 giây | 4,68 giây |
+
+Tổng theo pha lấy từ đồng hồ của sáu lane, chưa tính thời gian ngoài
+lane, gồm bước xác minh artifact. Các phép chẩn đoán dùng lại artifact
+đã cài và gói đối chiếu, không build lại bản release. Lượt chẩn đoán
+có số mẫu khác nên thời gian ngắn hơn không phải mức tiết kiệm của gate.
+
+Gate 3 vẫn **FAIL**. Hai lượt nghiệm thu lại đầy đủ SQLite và
+PostgreSQL cùng gate Stop tự nhiên ba cặp vẫn **NOT RUN**. HIL vẫn
+**NOT RUN** với scaffold hiện tại. Trước lượt nghiệm thu tiếp theo, cần đo mốc tiếp nhận gRPC, vào hàng
+đợi Hardware và ghi yêu cầu CNP ở đối chứng Python B, rồi đối chiếu
+với bộ đếm đọc của worker. Với PostgreSQL, tách thời gian giữ khóa
+của `_transition` theo bước lưu trạng thái, chiếu snapshot và phát
+sự kiện. Dùng kết quả chạy ngắn lặp lại được để chọn ứng viên, giữ
+điều kiện tải, số mẫu và ngưỡng hiện hành.
+
+### Truy vết Gate 3 từ gRPC đến bước lưu trạng thái
+
+Trên Windows x64, hai phép đo dùng lại đối chứng Python B chính xác
+của Giai đoạn 1 cùng các artifact r4 của Remote, Rust Hardware,
+Contracts và C++ Simulator đã ghi ở trên. SHA-256 manifest Giai đoạn 1 là
+`2e42cd74dbe59dd02e0afbd22aaa6ce2dd48dd9400b8c4ae83b1b0defee4e011`.
+Manifest Giai đoạn 3 vẫn là r4. Hai phép đo chạy lần lượt, lưu đầu ra
+ở thư mục đã cấp phát ngoài repo và dùng lại bản release đã build.
+
+Chẩn đoán Python B dùng tải saturated-v1 đã ghim với worker chạy
+tự nhiên, SHA-256
+`e48b3d87456a93e3b97f8872fa39ea45099bbf34a49d0e32b888d9b4458a0c2c`.
+Chẩn đoán dùng C++ worker đã cài, giữ các điều kiện xác minh mẫu và
+kiểm tra capture của các worker còn lại. Probe ngoài repo ghi mốc
+vào bộ nhớ rồi xuất khi Hardware dừng. Mục tiêu riêng của chẩn đoán
+là bốn mẫu hợp lệ trong tối đa 19 lượt.
+
+~~~powershell
+$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD = '1'
+@'
+import sys
+sys.path.insert(0, sys.argv[1])
+import pytest
+raise SystemExit(pytest.main(['-q', '-s', '-p', 'no:cacheprovider',
+    '--rootdir', sys.argv[1], '--basetemp', sys.argv[3], sys.argv[2]]))
+'@ | & $B -I -B - $remote "$stopTrace/python_b_stop_trace.py::test_python_b_unpaused_stop_path" "$ownedTmp"
+~~~
+
+Lượt truy vết **PASS** sau 116,25 giây, đủ bốn mẫu trong sáu lượt.
+Probe ghi nhận 24 RPC Start và năm lần handler Stop thực sự bắt đầu.
+Một lượt bị loại vì Start đã hoàn tất trước Stop, một lượt có phản
+hồi trước khi đủ bằng chứng bốn yêu cầu được đọc trọn.
+
+| Khoảng thời gian của Start | Trung vị | p95 |
+| --- | ---: | ---: |
+| Từ lần gửi Remote đầu tiên đến cuối cùng trong nhóm bốn | 0,33 ms | 0,49 ms |
+| Từ lúc handler Python đầu tiên bắt đầu đến cuối cùng | 134,60 ms | 161,79 ms |
+| Từ Remote gửi đến lúc handler bắt đầu | 14,07 ms | 161,90 ms |
+| Từ lúc handler bắt đầu đến lúc gửi việc vào executor | 0,14 ms | 0,18 ms |
+| Chờ trong executor | 0,18 ms | 63,78 ms |
+| Từ lúc executor bắt đầu đến lane exchange | 140,53 ms | 221,81 ms |
+| Tổng hợp sự kiện CNP | 137,29 ms | 219,35 ms |
+| Đóng gói frame CNP | 3,63 ms | 5,78 ms |
+| Chờ trong hàng đợi pipe | 6,93 ms | 77,95 ms |
+| Ghi pipe | 4,39 ms | 62,78 ms |
+
+Ở lượt thiếu chồng lấn, bốn handler bắt đầu sau mốc Remote gửi đầu
+tiên lần lượt 1,27, 66,75, 143,30 và 162,28 ms. Tại 221,99 ms,
+một worker đã ghi xong phản hồi và hai worker vẫn chưa đọc byte nào.
+Lượt đó chưa gửi Stop.
+
+Bảng mô tả sáu lượt có gắn probe. Mốc handler là thời điểm Python
+bắt đầu xử lý sau vận chuyển và lập lịch. Thời gian tổng hợp sự kiện
+và các khoảng đo thực tế khác có thể gồm chờ GIL hoặc bộ lập lịch.
+Trace xác định vị trí phát sinh độ trễ. Nguyên nhân của thời gian
+chờ trước handler và vai trò của tổng hợp sự kiện còn cần xác minh.
+
+Trong cả bốn mẫu hợp lệ, lần xác nhận cuối khi tất cả worker còn
+sống nằm sau khi handler Stop bắt đầu 4,94–12,73 ms. Mốc thoát của
+đúng PID nằm sau thời điểm handler bắt đầu 5,96–13,61 ms. ACK an toàn
+theo sau mốc thoát 1,37–2,50 ms. Cả bốn khoảng pipe phía Hardware
+đều bao phủ lúc handler nhận Stop. Bằng chứng hiện hành vẫn dùng bộ
+đếm worker và mốc giải phóng lease bền vững. Giai đoạn 0 xác minh tải
+tại đầu nhận Hardware. Harness chính thức Giai đoạn 3 hiện dùng mốc
+API gửi Stop. Trước khi ghi PASS chính thức, cần mốc nhận Hardware
+khớp với đúng RPC, hoặc bằng chứng nhân quả tương đương, cho mọi
+mẫu được tính ở cả hai bên. Giữ các kiểm tra ACK, thu hồi, lease,
+quarantine và chặn kết quả cũ.
+
+SHA-256 của probe ngoài repo, trace thô và bản tóm tắt lần lượt là
+`6ccd20128e22286de347241fbe9c9f826315dcb1cdc3ccfd5fdf3c492dd615d9`,
+`f8969f7a23867e2c1d13b163f1431eefe809117f67d8ea8af0f8a071edfaf114`
+và `dff54640a5224d9a8140b4466ca76007e77db0068588ecf22d8e5fc13047628d`.
+
+Chẩn đoán PostgreSQL 18.6 dùng lại tệp thực thi máy chủ đã ghim.
+Chạy controller ngoài repo từ worktree Remote.
+
+~~~powershell
+& "$pgTrace/launch-transition-pg.ps1"
+~~~
+
+Lần initdb đầu hết hạn 180 giây trong sandbox, trước khi chạy
+pytest. Cụm mới khởi động với quyền tiến trình đã dùng ở các
+lượt đo trước. Cụm chọn tối đa 100 kết nối và bộ đệm 128 MB.
+Khởi tạo, khởi động, pytest và dọn dẹp lần lượt mất 8,18, 0,46,
+123,16 và 0,92 giây. Pytest báo **PASS** sau 121,60 giây. Cửa sổ
+tải 21,28 giây xác minh đủ 24 capture đo khớp byte. Bốn capture
+khởi động cũng khớp. PostgreSQL đã dừng sau lượt đo.
+
+Trong 373 lần `_transition` được đo, 240 lần tự lấy khóa manager
+và 133 lần caller đã giữ khóa. Tổng thời gian giữ khóa riêng trong
+`_transition` là 16,134 giây. Trong đó 10,017 giây (62,1%) là chờ
+khóa Repository lồng bên trong. Chờ khóa khi đọc ban đầu, khi lưu
+và khi đọc snapshot sau commit lần lượt là 3,952, 3,056 và 3,008 giây.
+
+| Khoảng đo trong transition, gồm các bước con | Tổng | p95 |
+| --- | ---: | ---: |
+| Đọc trạng thái ban đầu | 5,355 giây | 42,099 ms |
+| Lưu trạng thái | 6,163 giây | 42,379 ms |
+| Đồng bộ danh mục capture trong bước lưu | 0,358 giây | 3,336 ms |
+| Commit cơ sở dữ liệu trong bước lưu | 0,715 giây | 3,136 ms |
+| Đọc snapshot công khai sau commit | 4,431 giây | 29,353 ms |
+| Áp dụng chính sách công khai | 0,025 giây | 0,116 ms |
+| Phát qua EventHub | 0,039 giây | 0,191 ms |
+
+Trong 100 yêu cầu history, 40 yêu cầu chờ khóa manager. p95 HTTP
+là 275,783 ms và p95 chờ khóa manager là 176,760 ms. Trong tổng
+4,933 giây chờ khóa manager, 2,770 giây (56,1%) trùng lúc
+`_transition` chờ khóa Repository và 0,013 giây trùng lúc EventHub
+phát sự kiện. Probe tách bên giữ khóa ngoài khỏi các pha bên trong
+`_transition`. Lượt mô phỏng có gắn probe này chưa bao phủ truy vấn
+chính sách theo bài tập hoặc tải phân phối cho subscriber.
+
+SHA-256 của launcher chẩn đoán PostgreSQL là
+`3deed55a72c043fe87b0e09f504ce53c93ecd996fb6d6227c1c1daca605a9479`.
+SHA-256 của bản tóm tắt là
+`f6ef032a774107e34ce3ad6c095e675a80c991bffb3946ae742a61d34b67c1d8`.
+Bản tóm tắt ghi digest của trace thô và mã probe. Năm ca kiểm tra
+bằng chứng Stop PASS trong 0,71 giây. Hai ca snapshot chủ sở hữu
+và payload trên r4 đã cài PASS trong 1,15 giây.
+
+Tại mốc r4, Gate 3 vẫn **FAIL** với SQLite đạt 28/29 và PostgreSQL
+đạt 17/29 ngưỡng đối chứng. Lượt Stop tự nhiên tiếp theo cần bằng
+chứng đầu nhận Hardware ở cả hai bên. Giữ tải chạy tự nhiên, ba
+cửa sổ 100 mẫu hợp lệ mỗi bên, các trần cố định và đối chứng cùng
+toàn bộ điều kiện về capture và an toàn.
+
+### Thay đổi khóa Remote của Gate 3 sau r4
+
+Bản thử Remote r5 của Giai đoạn 3 thay khóa toàn Repository khi
+đọc snapshot thí nghiệm trên PostgreSQL bằng `FOR SHARE` trên một
+bản ghi ở mức `READ COMMITTED`. Hai ca hồi quy tái hiện việc chờ
+khóa trên r4 trước khi sửa. Bản thử đạt 22 ca PostgreSQL thực, gồm
+chuyển quyền khách và commit hoặc rollback payload trên cùng bản
+ghi. Trong phép so sánh ngắn 24 job mỗi bên, thông lượng giảm từ
+3,762 xuống 3,441 job/giây và CPU/job tăng 18,4%. p95/p99 của active
+tăng từ 36,913/40,573 lên 51,873/57,506 ms, của history tăng từ
+98,328/103,292 lên 150,233/170,668 ms. Ứng viên bị loại. Phần mã và
+kiểm thử của bản thử đã được gỡ khỏi worktree. Mã snapshot chủ sở
+hữu và payload của r4 đã được khôi phục đúng byte sau khi chuẩn
+hóa dấu xuống dòng của checkout. Wheel r5, diff kiểm thử và phép
+so sánh vẫn được lưu trong bằng chứng ngoài repo.
+
+SHA-256 của wheel r5 bị loại là
+`02245c8cca5633770d4d4666e2a9c5e7c97f2647a363aa529fab191de80ca35b`.
+SHA-256 của phép so sánh và diff kiểm thử lưu trữ lần lượt là
+`6c0e2429612589bd88acf6d6047ba2cb485ea59225c3237a4a1f5c60c49ca76f`
+và `52340d84df168635c43f3a235333af372bd7ea6d9032f7c7857b9f29d8583918`.
+
+Thay đổi r6 của Giai đoạn 3 trong worktree giữ một khóa Repository
+qua các bước đọc trạng thái ban đầu, lưu hoặc phục hồi, rồi đọc
+snapshot mới sau commit trong `ExperimentManager._transition`.
+Khóa Repository được nhả trước khi tạo payload công khai và phát
+sự kiện qua EventHub. Khóa manager vẫn giữ thứ tự sự kiện. Ranh
+giới giao dịch và các chốt ghi về claim, phiên, capture, lease và
+quarantine được giữ nguyên. Ca hồi quy đồng thời thất bại trên r4
+và đạt trên r6. Ca này xác nhận luồng khác có thể lấy khóa Repository
+trong cả hai callback. Fixture chuyển quyền qua kết nối độc lập vẫn
+xác nhận chủ sở hữu và payload mới sau commit. Các kiểm tra liên quan
+đạt **78/78** trên SQLite trong 24,31 giây và **18/18** trên PostgreSQL
+trong 14,51 giây. Lượt SQLite đầu dừng tiến triển ở TestClient trong
+sandbox. Số liệu trên lấy từ lượt chạy lại đầy đủ với quyền tiến trình
+cần thiết.
+
+Các phép so sánh ngắn dùng cùng Rust Hardware và worker C++ ở hai bên,
+schema PostgreSQL riêng và không gắn probe theo pha. Mỗi bên chạy
+24 job đo và bốn job khởi động trong mỗi thứ tự. Tất cả capture khớp
+hash đã ghim. Bảng luôn trình bày số liệu theo chiều r4 → r6.
+
+| Thứ tự chạy | Job/giây | Giây CPU/job | p95/p99 history (ms) | p95/p99 active (ms) | p95/p99 projects (ms) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| r4 rồi r6 | 3,499 → 3,873 | 0,279 → 0,252 | 104,141/123,933 → 65,301/121,490 | 35,035/43,449 → 45,243/126,800 | 116,866/128,681 → 88,870/97,541 |
+| r6 rồi r4 | 2,383 → 3,496 | 0,395 → 0,275 | 130,939/144,297 → 78,203/80,633 | 56,125/57,454 → 42,497/47,153 | 81,084/95,020 → 103,427/118,022 |
+
+Thông lượng và p95 history cải thiện ở cả hai thứ tự. Độ trễ đuôi
+của active và projects đổi chiều. p99 station và độ trễ lớn nhất
+của capture AND tăng ở cả hai lượt, với 12 mẫu capture AND mỗi bên
+trong từng lượt. Đây là các phép chẩn đoán ngắn. Số mẫu và ngưỡng
+nghiệm thu chính thức giữ nguyên.
+
+SHA-256 của wheel Remote r6 là
+`a27f22cdffefd6f91d9102b82fa40d2749a939762a6d294a6d3cabcf25746a09`.
+SHA-256 của manifest chỉ thay Remote là
+`f04a0ca11c95ac79527a1dc799b6ed1c7fc219018ca904d6137d029e4c2157c5`.
+Danh sách tệp API đã cài và cả 77 mục có hash trong `RECORD` đều khớp.
+SHA-256 của phép so sánh thuận và đảo lần lượt là
+`48a3b053d595f5f5a7ffe7474153636688fd1efdc4591d418de7da623e3eaeb0`
+và `2647a8519eb963f984e1c8fa1c2c12ff6e77108f032acb99b20e57666a1f91f7`.
+
+Kiểm tra smoke và rollback chính thức **PASS**. Nghiệm thu tải dịch vụ
+r6 **FAIL**: SQLite đạt 25/29 ngưỡng cố định, 17/29 ngưỡng đối chứng
+và 15/29 tổng hợp; PostgreSQL đạt 29/29 ngưỡng cố định và 14/29
+đối chứng/tổng hợp. Mỗi cơ sở dữ liệu hoàn tất đúng ba cặp cửa sổ,
+200 job đo mỗi bên mỗi cửa sổ; cả 1.200 capture mỗi cơ sở dữ liệu
+đều khớp. SHA-256 manifest ghép r6/QPC là
+`60b40c21c5bdaf78b4a7ef6e99d7203680feb461f37ce3743824b3b1aa8303d4`.
+Lệnh dùng Python đối chứng đã ghim:
+`-B -m pytest -q -s -p no:cacheprovider --rootdir . --basetemp <owned>/pytest-tmp tests/integration/native_hardware_gate_cases.py`,
+với manifest và Python ứng viên r6 do controller PostgreSQL của phiên
+chọn. Pytest ghi nhận hai ca đạt và hai ca lỗi trong 1.683,35 giây.
+Các pha controller: chuẩn bị/initdb 10,759 giây, khởi động dịch vụ
+0,662 giây, tiến trình kiểm thử 1.685,432 giây và dọn dẹp 1,041 giây.
+Dịch vụ PostgreSQL của phiên đã dừng thành công.
+
+Bằng chứng được giữ trong thư mục đã cấp phát `cirnet-aVTc6V`:
+`native-hardware-services/sqlite-116243b649e4449f98f1cf90c9e702b0/gate-load-summary.json`
+(SHA-256 `861b6d66c958cf123c1dd5856ac29bb6c131b7d17d022d4752cf161d598b6b17`),
+`native-hardware-services/postgresql-7289655c93384fae9cd881b903f9b015/gate-load-summary.json`
+(`4fdb68c5ff06f863c26c230fc018776509ef655f66ac67d07803a5e9784fc405`)
+và `gate3-r6-pg-d402d4aa1593438c8845720a7df011f3/controller.json`
+(`c2af670d1aeb6cea52199e67a45985f9f53a8201b72bb6a4d69bb69245349dda`).
+
+Ứng viên r6 gộp khóa bị loại; phần mã và test thay đổi được lưu trữ
+trước khi khôi phục transition r4. Cải thiện thông lượng trong phép
+đo ngắn không dự báo được độ trễ API đủ tốt. Cửa sổ đối chứng SQLite
+dao động 48,92–93,34 giây, ứng viên 40,66–86,30 giây. Số liệu xác nhận
+dao động lớn nhưng chưa xác định nguyên nhân. Các snapshot theo dõi
+tiến trình không đầy đủ không đủ căn cứ kết luận tải CPU nền.
+Không công bố tiết kiệm thời gian kiểm thử từ lượt chạy này.
+
+Thử nghiệm r7 tiếp theo chỉ đổi cách đọc `experiment_snapshot` sau
+commit trên PostgreSQL. Mọi lượt `get_experiment` dùng cho điều khiển
+và quyền truy cập vẫn giữ khóa. Đã loại phương án bỏ khóa rộng:
+Stop được cấp quyền theo chủ cũ khi claim chưa commit có thể sửa
+thí nghiệm của chủ mới sau commit. Các kiểm tra r7 bắt buộc gồm
+claim commit/rollback, chủ và payload mới, từ chối Stop của chủ cũ,
+và thu hồi phiên trước khi giao sự kiện.
+Thử nghiệm đồng bộ bốn Start mà người dùng đã cho phép được đánh giá
+riêng; phải chứng minh tính tương đương và an toàn trước khi dùng
+nghiệm thu chính thức. Stop tự nhiên đầy đủ và HIL vẫn **NOT RUN**.
+Gate 3 vẫn **FAIL/chưa đóng**, Gate 4 **NOT RUN**, mặc định giữ nguyên.
+
+### Snapshot sau commit của Gate 3 r7
+
+Bản Remote r7 dùng lại transition của r4. Chỉ
+`Repository.experiment_snapshot` sau commit dùng câu lệnh PostgreSQL
+thông thường ngoài khóa Repository. Chủ sở hữu và payload lấy từ
+cùng bản ghi đã commit. SQLite và mọi lượt `get_experiment` dùng
+phạm vi khóa cũ. Hai ca đồng thời tái hiện việc chờ khóa trên r4.
+R7 đạt **23/23** ca PostgreSQL thật trong 25,63 giây và **115/115**
+ca SQLite/API trong 78,51 giây. Các ca PostgreSQL mới kiểm tra
+snapshot khi đang ghi bản ghi khác, khi chuyển quyền, khi commit
+hoặc rollback payload, từ chối Stop của chủ cũ mà không sửa trạng
+thái, thu hồi phiên xem và nhận đúng chủ đã commit giữa bước lưu
+transition và phát sự kiện.
+
+Lượt so sánh ngắn thuận dùng cùng Rust Hardware và worker C++,
+schema PostgreSQL riêng và bộ lấy mẫu tài nguyên của gate. Mỗi
+bên xác minh 24 capture đo và bốn capture khởi động theo hash đã
+ghim. Trong 29 chỉ số, **23 cải thiện** và **25 nằm trong khoảng đối
+chứng dùng để mô tả**. Thông lượng tăng từ 1,227 lên 1,353 job/giây
+và CPU/job giảm từ 0,775 xuống 0,674 giây. p95/p99 active giảm từ
+142,922/182,615 xuống 129,050/152,272 ms, history giảm từ
+307,075/380,140 xuống 281,798/327,517 ms. Cả hai phân vị của
+projects và stations đều giảm. Capture AND giảm từ 229,910 xuống
+180,882 ms và capture CLOCK tăng từ 127,884 lên 131,540 ms.
+Bốn chỉ số vượt khoảng là p95/p99 của CLOCK run và poll. Mỗi nhóm
+run hoặc capture có 12 mẫu nên cả hai phân vị cùng lấy giá trị lớn nhất.
+
+Biên nhận đủ 29 chỉ số là `gate3-r7-event-pg-receipts/c202f6e5834f4f86aed162a056feb76f/comparison-29-metrics.json`
+trong thư mục phiên ngoài repo, SHA-256
+`d4a68e7caf4a72bcf7cca7e9dfac8cbda035e4cfd018f6a31dfa6dfe6662704f`.
+SHA-256 của wheel Remote và manifest ứng viên lần lượt là
+`7be54ff8af31dccfae519d29378e11b9ce7d5006294b58ac909309bab1d4bbc8`
+và `04a9016d135f4c203b0791ab3b8fca2c6b169636eeb74b836a19aba23c6f37d7`.
+Danh sách tệp đã cài và cả 77 mục có hash trong `RECORD` đều khớp.
+Cửa sổ r4 mất 19,57 giây, so với 6–10 giây ở các phép so sánh ngắn
+trước. Lượt đảo thứ tự không tạo được cặp hợp lệ. Bộ lấy mẫu tài
+nguyên nghiêm ngặt phát hiện hai lần danh sách tiến trình thay đổi
+trong nhánh r4. Lỗi ghi PID của hai dịch vụ cha nhưng thiếu danh
+tính tiến trình con thay đổi. Cả hai nhánh đều ghi nhận 28 job hoàn
+tất, gồm khởi động, và tất cả capture lưu lại khớp hash tham chiếu.
+SHA-256 của bản tóm tắt một phần từ log ứng dụng là
+`f5d4b2b2e582e25bd4fba17fe3ee140dd6b0e3f3f5ac01c74b65ddd99d403042`.
+Biên nhận này chỉ chứa dữ liệu ứng dụng, còn thiếu profile client
+và tài nguyên đối chứng. Nghiệm thu tải chính thức của r7 vẫn
+**NOT RUN**.
+
+### Thời gian xác minh thư mục kiểm thử Gate 3
+
+Adapter Remote chuyển context được cung cấp hoặc kế thừa trực tiếp đến
+bridge `cirnet-artifact-paths` 1.0.0a1 đã ghim. Node vẫn kiểm tra các Git
+root, đường dẫn đích chuẩn hóa, symlink và marker quyền sở hữu phiên.
+Các đường phát hiện context từ checkout và dọn dẹp giữ quy trình hiện có.
+[Mã nguồn adapter](../../../scripts/artifact_paths.py)
+
+Một cặp đo trực tiếp trên Windows x64 ghi thời gian `_owned_directory`
+sau khi nạp module, dùng cùng thư mục thuộc phiên và cùng context kế thừa
+có sáu Git root. Số lượt gọi Node CLI giảm từ năm còn ba và thời gian
+giảm từ 11,755 xuống 9,223 giây, tương đương 2,532 giây hay 21,5%. Phạm vi
+đo gồm xác minh thư mục và xác định phiên. Mức giảm thời gian khởi động
+dịch vụ và tổng thời gian gate vẫn cần được đo riêng.
+
+Ca hồi quy đếm lệnh phát hiện năm lượt gọi trước khi sửa. Cả năm ca
+kiểm tra adapter đều PASS qua hai lượt chạy. Lượt đầu đạt bốn ca và
+sandbox Windows chặn tạo junction cho ca còn lại. Lượt chạy lại riêng
+ca junction đạt PASS. Phạm vi gồm hai tiền tố biến môi trường, context
+được cung cấp và kế thừa, JSON context sai, sai chủ sở hữu, phiên không
+có chủ sở hữu, Git root ngoài phạm vi và junction thoát đường dẫn.
+[Ca kiểm tra adapter](../../../tests/test_artifact_paths.py)
+
+SHA-256 của entrypoint Node đã ghim là
+`742ef11f9083beaf901d0d4f9a5a777d87aeae71a990597f9640a1b3a9329b5a`.
+SHA-256 của hai biên nhận ngoài repo `timing-before.json` và
+`timing-after.json` lần lượt là
+`a6d737543ff0fed2f22cc4eb0ce0e36995f29ecfd4ce2a30ebee4cf8be34780f`
+và `eecac21c24442fdee64b66e787d76ebf189262c9d6d98ad1763e9d7cb3cbe722`.
+
+### Run/Stop có khóa idempotency và kết quả PostgreSQL Gate 3 r8
+
+Với Run hoặc Stop có khóa mới, r8 kiểm tra chủ sở hữu qua Repository
+có khóa trước khi tra operation. Operation đã tồn tại vẫn lấy payload
+công khai mới, gồm vị trí hàng đợi, khi replay hoặc phục hồi. Hai ca hồi
+quy ghi nhận ý định khi manager đang giữ khóa thất bại trên r7 và đạt
+trên r8. Ứng viên đạt **130/130** ca SQLite/API và **24/24** ca PostgreSQL
+thật, gồm chuyển quyền khách với Stop có và không có khóa idempotency.
+Đúng tổ hợp r8-R2 đạt ba ca Remote về lease, quarantine, disconnect và
+smoke trình duyệt Interface đã phát hành ở cả hai bên.
+
+SHA-256 của wheel Remote r8 là
+`0e3280dc41d81e1b00b4ee7a5e35a3646b06b32276181000ee874b43e113bd01`.
+SHA-256 của đúng manifest r8-R2 là
+`ebc49c57c052e0a78c98074af240c78010f787872a4ad32ac23617ada1fc15bd`.
+Lượt PostgreSQL ngắn 24 job đo mỗi bên nằm trong 26/29 ngưỡng cố định,
+26/29 ngưỡng đối chứng và 23/29 tổng hợp khi dùng để mô tả. Cả tám
+p95/p99 của route đọc đều giảm, thông lượng tăng từ 2,765 lên 3,701
+job/giây. SHA-256 biên nhận ngắn là
+`2043229644d88fe38001f101a4130fa8a8c416e5dc9142b00d661429ea956b95`.
+
+Gate tải dịch vụ PostgreSQL chính thức **FAIL** trên cùng manifest.
+Ba cặp đều hoàn thành 200 job mỗi bên, với 1.200 capture đo khớp
+hash đã ghim. Kết quả là **25/29 ngưỡng cố định, 4/29 ngưỡng đối
+chứng và 4/29 tổng hợp**. Bốn chỉ số tổng hợp đạt là RAM đỉnh,
+p95/p99 của AND Run và p95 của CLOCK Run. Các ngưỡng cố định vượt
+gồm p95/p99 của capture AND ở 97,082 và 157,097 ms so với 92,557 và
+153,366 ms, p99 tạo CLOCK ở 363,643 ms so với 353,771 ms và p99
+history ở 355,203 ms so với 321,567 ms. p95/p99 history đối chứng tăng
+từ 104,241/118,055 lên 295,570/355,203 ms. Pytest đã ghim chạy trong
+789,32 giây và cụm PostgreSQL của phiên đã dừng thành công.
+
+| Cửa sổ | Tải (giây) | Yêu cầu cố định | Poll | CPU ms/yêu cầu | CPU giây/job |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| B1 | 51,100 | 1.000 | 1.798 | 17,211 | 0,2408 |
+| C1 | 57,289 | 1.000 | 1.815 | 18,933 | 0,2665 |
+| C2 | 104,110 | 1.000 | 2.558 | 25,567 | 0,4548 |
+| B2 | 36,093 | 1.000 | 1.489 | 14,263 | 0,1775 |
+| B3 | 119,385 | 1.000 | 3.004 | 25,186 | 0,5042 |
+| C3 | 51,890 | 1.000 | 1.670 | 18,493 | 0,2469 |
+
+Số poll và CPU trên mỗi yêu cầu cùng làm CPU/job tăng ở cửa sổ
+chậm của cả hai bên. Từ B2 đến B3, số yêu cầu/job tăng 1,61 lần và
+CPU/yêu cầu tăng 1,77 lần. Từ C3 đến C2, hai hệ số lần lượt là 1,33
+và 1,38. CPU đo gồm API, Hardware và tiến trình con, trong đó có
+công việc của scheduler. Phép đo không bao gồm tiến trình PostgreSQL
+riêng hoặc hoạt động khác trên máy. Profile thiếu dấu thời gian từng
+yêu cầu và thời lượng trong log ứng dụng không có đồng hồ tuyệt đối
+chung. Khi yêu cầu cuối trong 400 yêu cầu đọc của mỗi nhánh hoàn tất,
+log đã ghi tám capture hoàn thành, gồm bốn capture khởi động. Trung vị
+p95 history trong log ứng dụng tăng từ 98,775 lên 247,712 ms, cho thấy
+chênh lệch đuôi đã có ngay ở pha đầu. Giữa yêu cầu đọc hoàn tất đầu
+và cuối, log ghi 71–72 transition đo ở B và 85–95 ở C. Log chưa phân
+biệt được tải xen kẽ nhiều hơn hay cửa sổ đọc kéo dài hơn. Lượt ngắn
+có 19,67 yêu cầu cố định/job, so với 5,00 ở lượt đầy đủ.
+
+Bản tóm tắt chính thức `native-hardware-services/postgresql-cc20821c896941ebb7636809665369ff/gate-load-summary.json`
+có SHA-256 `51fa434b570b1c8721d4ce7f6196c0e9e428ae5883e594abf17dab7b204693e6`.
+Biên nhận controller `gate3-r8-formal-pg-86708c85164c418bb8457b02d3baae9a/controller.json`
+có SHA-256 `5e6b41d36f6dbb499343a4b97de8cb8a7739f87abfaa697b4f3902c146382baf`.
+SHA-256 của đúng harness tải dịch vụ là
+`0a4af0a2daabb8ab3554b59e2fa14e0a403124ae77cf91727c2c1e6fbd182850`.
+Tại mốc đó Gate 3 còn mở. SQLite và Stop dưới tải chính thức trên r8 ở
+trạng thái **NOT RUN**.
+
+### Phương pháp đồng bộ Start đã được chấp thuận cho Gate 3
+
+Người dùng đã cho phép dùng `natural-loaded-stop-hardware-rendezvous-v1`
+để nghiệm thu Stop sau khi xem kết quả chẩn đoán riêng. Chọn rõ bằng
+`CIRNET_NATIVE_STAGE3_STOP_METHOD=natural-loaded-stop-hardware-rendezvous-v1`.
+Khi không đặt biến, mặc định vẫn là phương pháp đồng bộ tại Remote cũ.
+Đây là thay đổi phương pháp có ghi nhận, không phải kết luận phân bố
+độ trễ trước/sau tương đương. Worker không bị tạm dừng. Điểm đồng bộ
+bổ sung tại handler Hardware ràng buộc đúng bốn ID thí nghiệm với
+cùng mốc nhả QPC trên cả Python B và Rust; hàng rào tạo ticket tại
+Remote vẫn giữ. Hủy, thiếu/trùng/sai thành viên và quá hạn đều hủy
+nhóm trước khi tác động lên station.
+
+Phê duyệt ban đầu yêu cầu ba cặp cửa sổ theo thứ tự đảo, 100 mẫu hợp
+lệ mỗi bên mỗi cửa sổ, tối đa 403 lần thử mỗi cửa sổ và cả sáu
+ngưỡng p95/p99 cố định/110% của B. [Phạm vi Windows hiện hành](#chính-sách-nghiệm-thu-gate-3-theo-môi-trường)
+giữ phương pháp, số mẫu, giới hạn lần thử và sáu trần tuyệt đối. Vẫn
+phải chứng minh request frame
+đầy đủ và chưa ghi reply tại lúc Stop thực sự tới Hardware, worker
+thoát trước ACK an toàn, thu hồi lease bền vững, quarantine và chặn
+kết quả cũ. Khi thiếu mẫu, biên bản ghi **FAIL** và các cửa sổ còn lại
+**NOT RUN**, không để phép so sánh rỗng suy ra PASS.
+SHA-256 harness cuối là
+`519b2b6231a19d7a513b24c7dd96ce632ffa1ff40b0d5e0f8026914a76dbbd4f`.
+SHA-256 binary Rust R2 chính xác là
+`22d3d0a1c57aad0d2d01d512f3a890149566bc799228559b6943843cba1e85e6`.
+Binary đạt 25 ca lifecycle; r8-R2 đạt ba ca an toàn Remote.
+Bộ kiểm tra biên bản/bằng chứng đạt 22 ca không cần dịch vụ.
+
+Lượt chẩn đoán không tạm dừng worker có B đạt 8/10 và C đạt 8/8
+lần thử, so với B 3/35 và C 8/8 trước đó. Sáu so sánh ngắn đều trong
+ngưỡng, nhưng tám mẫu chưa xác minh được độ trễ đuôi chính thức.
+Thời gian 199,80 so với 180,96 giây dùng số mẫu hợp lệ và warmup
+khác nhau, không chứng minh tiết kiệm thời gian. SHA-256 biên bản là
+`001033e2476c81f65aae46fdb754f38203d8e91a717c8e299a514499b6aac712`.
+Tại mốc đó Stop đồng bộ chính thức ở trạng thái **NOT RUN** do nghiệm
+thu dịch vụ chưa đạt. Xem [lượt Windows chính thức đã hoàn tất](#gate-3-stop-dưới-tải-chính-thức-trên-windows).
+
+Log PostgreSQL r8 cũng ghi checkpoint theo thời gian trùng các cửa sổ
+chậm C2 và B3: 23:56:24–23:57:04 ngày 06/11/2026 và
+00:01:24–00:02:31 ngày 07/11/2026, UTC+07. Việc căn thời gian là xấp
+xỉ, dựa trên thời gian tệp profile và thời lượng dọn dẹp/bài đo đã ghi.
+Pha sync của checkpoint là 0,674/0,439 giây; tổng 39,770/67,281 giây
+gồm cả ghi có điều tiết. Tương quan này chưa chứng minh checkpoint
+gây chậm; C1/C3 cũng trượt ngưỡng đọc. Lượt chẩn đoán tiếp theo bổ sung
+dấu thời gian chung và theo dõi CPU có giới hạn; chưa đổi độ bền dữ
+liệu, cấu hình checkpoint hay tiêu chí gate.
+
 
 ## 4. Remote Rust
 

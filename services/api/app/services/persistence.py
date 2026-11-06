@@ -1,4 +1,5 @@
 """SQLAlchemy persistence; PostgreSQL production, SQLite development/tests."""
+from contextlib import nullcontext
 from copy import deepcopy
 from threading import RLock
 import time
@@ -162,12 +163,25 @@ class Repository:
                 table.c.scope==scope,table.c.operation_key==clean['operation_key']).values(payload=deepcopy(clean)))
         log_event('operation.changed',kind=clean['kind'],operation_key=clean['operation_key'],experiment_id=clean.get('experiment_id'),outcome=clean['status'],revision=clean['revision'],error_code=clean.get('error_code'))
 
-    def get_experiment(self,experiment_id,owner=None):
-        with self.lock,self.engine.connect() as db:
-            row=db.execute(select(self.experiments).where(self.experiments.c.experiment_id==experiment_id)).mappings().first()
+    def _experiment_row(self,experiment_id,*,lock):
+        table=self.experiments
+        with lock,self.engine.connect() as db:
+            row=db.execute(select(table.c.owner_id,table.c.payload).where(
+                table.c.experiment_id==experiment_id)).mappings().first()
         if row is None: raise KeyError("EXPERIMENT_NOT_FOUND")
+        return row
+
+    def get_experiment(self,experiment_id,owner=None):
+        row=self._experiment_row(experiment_id,lock=self.lock)
         if owner is not None and row["owner_id"] != owner: raise PermissionError("FORBIDDEN")
         return deepcopy(row["payload"])
+
+    def experiment_snapshot(self,experiment_id):
+        # PostgreSQL can read a committed owner and payload in one statement.
+        # Command authorization continues to use the locked get_experiment path.
+        lock=nullcontext() if self.engine.dialect.name=='postgresql' else self.lock
+        row=self._experiment_row(experiment_id,lock=lock)
+        return row["owner_id"],deepcopy(row["payload"])
 
     def owner(self,experiment_id):
         with self.lock,self.engine.connect() as db:

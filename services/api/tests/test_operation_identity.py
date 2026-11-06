@@ -5,6 +5,7 @@ import pytest
 
 from app.services.persistence import Repository
 from app.services.experiments import ExperimentManager
+from app.services.operations import request_fingerprint
 from test_lab_lifecycle import LabGateway, DeferredJobs, assignment
 
 
@@ -64,6 +65,69 @@ def test_run_and_stop_lost_ack_do_not_replay_side_effects(tmp_path):
     with pytest.raises(KeyError):
         manager.operation('bob','run-once',kind='run',experiment_id=eid)
     manager.close(); repo.close()
+
+
+@pytest.mark.parametrize('kind,expected',[('run','RESERVED'),('stop','COMPLETE')])
+def test_new_operation_precheck_does_not_wait_for_manager_lock(tmp_path,monkeypatch,kind,expected):
+    repo,manager,jobs=setup(tmp_path)
+    try:
+        experiment=manager.create('alice',{'station_id':'physical-station-01','assignment_id':'a1'})
+        eid=experiment['experiment_id']
+        prepared=Event()
+        begin=repo.begin_operation
+
+        def mark_prepared(*args):
+            record=begin(*args)
+            prepared.set()
+            return record
+
+        monkeypatch.setattr(repo,'begin_operation',mark_prepared)
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            with manager.lock:
+                pending=pool.submit(getattr(manager,kind),eid,'alice',operation_key='new-key')
+                assert prepared.wait(3), 'New operation waited for the manager lock before recording intent.'
+                assert repo.operation('alice',kind,'new-key',eid)['status']=='REQUESTED'
+                assert repo.get_experiment(eid,'alice')['state']=='CREATED'
+                assert not pending.done() and not jobs.jobs
+            assert pending.result(timeout=3)['state']==expected
+        assert repo.operation('alice',kind,'new-key',eid)['status']=='ACCEPTED'
+    finally:
+        manager.close(); repo.close()
+
+
+def test_operation_precheck_denies_nonowner_before_lookup(tmp_path,monkeypatch):
+    repo,manager,_=setup(tmp_path)
+    try:
+        experiment=manager.create('alice',{'station_id':'physical-station-01','assignment_id':'a1'})
+        monkeypatch.setattr(repo,'operation',lambda *args:pytest.fail('lookup ran before ownership check'))
+        with pytest.raises(PermissionError,match='FORBIDDEN'):
+            manager.operations.mutate('stop',experiment['experiment_id'],'bob','other-owner',
+                                      lambda:pytest.fail('nonowner invoked Stop'))
+    finally:
+        manager.close(); repo.close()
+
+
+@pytest.mark.parametrize('recovered_status',['REQUESTED','ACCEPTED'])
+def test_existing_run_operation_returns_live_queue_projection(tmp_path,recovered_status):
+    repo,manager,jobs=setup(tmp_path)
+    try:
+        payload={'station_id':'physical-station-01','assignment_id':'a1'}
+        first=manager.create('bob',payload)['experiment_id']
+        eid=manager.create('alice',payload)['experiment_id']
+        manager.run(first,'bob')
+        assert manager.run(eid,'alice')['state']=='QUEUED'
+        stored=repo.get_experiment(eid,'alice')
+        repo.save_experiment({**stored,'queue_position':99})
+        record=repo.begin_operation('alice','run','lost-queued-run',eid,request_fingerprint({'experiment_id':eid}))
+        if recovered_status=='ACCEPTED':
+            repo.save_operation('alice',{**record,'status':recovered_status,'revision':1},eid)
+
+        replay=manager.operations.mutate('run',eid,'alice','lost-queued-run',lambda:pytest.fail('Run replayed'))
+        assert replay==manager.get(eid,'alice')
+        assert replay['queue_position']==1 and len(jobs.jobs)==1
+        assert repo.operation('alice','run','lost-queued-run',eid)['status']=='ACCEPTED'
+    finally:
+        manager.close(); repo.close()
 
 
 def test_slow_create_does_not_serialize_an_unrelated_stop(tmp_path):

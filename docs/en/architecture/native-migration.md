@@ -2,7 +2,7 @@
 
 [Tiếng Việt](../../vi/architecture/native-migration.md) · [Original plan dated 2026-11-05](https://github.com/cirnetlab/cirnet-remote/blob/f91eeeb42d7528d4e7fa9b1526195847932faf9d/docs/superpowers/plans/2026-11-05-cirnet-native-migration.md) · [Stage 0 record](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md)
 
-**Gate 0 PASS on the selected 0.1.4 reference. Gate 1 PASS on Windows x64 with r7. Gate 2 PASS on the r2 Contracts matrix.** The published 0.1.4 profile is the rollback reference. Stages 3–5 are `NOT RUN`.
+**Gate 0 PASS on the selected 0.1.4 reference. Gate 1 PASS on Windows x64 with r7. Gate 2 PASS on the r2 Contracts matrix. Gate 3 Windows functionality, compatibility and safety PASS on r8-R2.** Gate 3 production performance on Linux Xeon, production/release acceptance and Gates 4–5 are `NOT RUN`. [Current Gate 3 acceptance policy](#gate-3-acceptance-policy-by-host). The published 0.1.4 profile is the rollback reference.
 
 > **For implementation agents.** Use superpowers:subagent-driven-development or superpowers:executing-plans. Complete each gate and record its evidence before beginning the next stage.
 
@@ -14,7 +14,7 @@
 
 ## Rules for every stage
 
-- Follow the order **0 → 1 → 2 → 3 → 4 → 5**. Each required gate records its command, artifact combination, result and evidence. A required FAIL or NOT RUN blocks both switching the default and starting the next stage.
+- Follow the order **0 → 1 → 2 → 3 → 4 → 5**. Each required gate records its command, artifact combination, result and evidence. A required FAIL or NOT RUN blocks advancement through its acceptance lane. Gate 3 Windows functional and safety acceptance governs the next implementation stage. Production default selection and release require the separate Linux Xeon performance gate as well as the other required release evidence.
 - Each combination uses released or packaged candidate artifacts identified by commit, version, SHA-256, target and build flags. Use sibling source for development or to export separate artifacts. Distinguish the surveyed HEAD, build revision and harness revision. Raw data and traces go in a session outside Git allocated by the pinned DEV allocator. Keep only Markdown reports in the repository.
 - The final product keeps Python in tests and benchmarks. During the transition, keep compatible Python artifacts and all reference tests. PRs run tests near the change and relevant auth and safety checks. Integration gates exercise real processes and artifacts. Release gates run the exact artifacts intended for delivery.
 - Use the same valid and invalid fixtures to check wire behavior. Pin both canonical and legacy RPC paths, protobuf presence, REST names, types, statuses and errors, WebSocket sequence and resync, NCAP bytes, ownership and durable data. A breaking change requires a wire version and a separate consumer migration plan.
@@ -873,7 +873,857 @@ pair and remain available for Python consumers.
 ## 3. Rust Hardware
 
 - [ ] **Replace the server and lifecycle.** Port Hardware `server.py`, `rpc.py` and `station/` to Rust with Rust Contracts and the pinned C++ worker. Retain RPC 2.0 with both `cirnet.hardware.v2.HardwareService` and `netcircuit.hardware.v2.HardwareService`, loopback or Unix transport, and the existing ACK, ownership, deadline and NCAP rules. Move preview through a negotiated internal endpoint and keep the Python Remote adapter compatible with old Hardware. Give Stop separate resources for RPC handling, worker cancellation and safe response. Remote still owns leases and quarantine. Keep published capabilities unavailable for stations without a driver.
-- [ ] **Matrix and Gate 3.** Compare B with current Interface → Python Remote → Rust Hardware → C++ Simulator, using the legacy wheel in Remote and the crate in Hardware. Retain `test_server.py`, `test_virtual_execution.py`, `test_simulation_workers.py`, `test_rpc_lifecycle.py`, `test_ncap_rpc.py` and `test_physical_station.py` as references. Port assertions tied to Python internals into pytest against a separate RPC binary. Test Start/Stop/reset, lease expiry, disconnect, hung or dead workers, late replies, concurrent Stop with a full queue, and quarantine when ACK is missing. Run Remote integration tests. Compare Stop p95/p99, RSS/CPU, RPC throughput and NCAP throughput. Keep energization precondition checks in PR gates. Run both pinned RTL testbenches and HIL matching advertised capabilities. Report unavailable equipment separately. Switch the default only after the new combination passes. Roll back using the lease and quarantine procedure and restore Python Hardware with a compatible worker.
+- [ ] **Matrix and Gate 3.** Compare B with current Interface → Python Remote → Rust Hardware → C++ Simulator, using the legacy wheel in Remote and the crate in Hardware. Retain `test_server.py`, `test_virtual_execution.py`, `test_simulation_workers.py`, `test_rpc_lifecycle.py`, `test_ncap_rpc.py` and `test_physical_station.py` as references. Port assertions tied to Python internals into pytest against a separate RPC binary. Test Start/Stop/reset, lease expiry, disconnect, hung or dead workers, late replies, concurrent Stop with a full queue, and quarantine when ACK is missing. Run Remote integration tests. Apply the [current host-specific policy](#gate-3-acceptance-policy-by-host) to performance and loaded Stop. Keep energization precondition checks in PR gates. Run both pinned RTL testbenches and HIL matching advertised capabilities. Report unavailable equipment separately. Roll back using the lease and quarantine procedure and restore Python Hardware with a compatible worker.
+
+### Gate 3 acceptance policy by host
+
+The Windows x64 development host with Intel Core i5-12500H qualifies
+functionality, compatibility and safety for Stage 3. The 29 ordinary
+service metrics are diagnostic on this host. They cover CPU/job, peak
+RSS, fixed requests/s, jobs/s and NCAP bytes/s, plus p95/p99 for AND
+and CLOCK create, Run, poll and capture and for the active, history,
+projects and stations reads. Prior Windows comparisons retain their
+original measured values, limits and PASS/FAIL results as history.
+Ordinary service metrics do not block the Windows gate. A failed
+functional assertion, mismatched capture or invalid run still needs
+valid evidence for the affected requirement. This policy governs current
+decisions. The historical records after the formal Stop receipt retain
+their original acceptance context.
+
+Windows requires the B/C matrix on SQLite and PostgreSQL with matching
+NCAP digests and valid completion, both Hardware RPC namespaces,
+compatible preview and released Interface behavior, ownership and
+session fences, fault/timeout and stale-result handling, durable safe
+ACK, lease and quarantine, and rollback. Loaded Stop remains a safety
+gate with the [approved Hardware rendezvous method](#gate-3-approved-start-synchronization-profile),
+the same workloads, three paired windows of 100 valid samples per
+side and the existing attempt limit. Record
+`CIRNET_NATIVE_STAGE3_STOP_ACCEPTANCE_SCOPE=windows-functional-safety-v1`
+separately from the Start method. All six frozen absolute Stop p95/p99
+operational ceilings and the existing hard deadlines are required. Report the six paired
+110%-of-B comparisons and their PASS/FAIL as diagnostics. Ingress,
+worker exit before ACK, lease release, quarantine and late-result
+rejection proofs still apply. Keep RTL evidence separate from HIL.
+The scaffold advertises physical execution as unavailable and HIL
+remains **NOT RUN**.
+
+| Windows evidence for exact r8-R2 | Current status |
+| --- | --- |
+| PostgreSQL matrix capture and completion | **PASS**. The full r8 run verified 1,200 measured captures across B and C. Its ordinary service result remains a historical **FAIL**. |
+| SQLite API and released Interface | **PASS** for 130 source-level SQLite/API cases and exact r8-R2 B/C browser AND capture. Browser receipt SHA-256 `b20393483709467efa5f09e85db87172c5cadb10110e8b789994e4354376de93`. |
+| Exact SQLite matrix smoke and rollback | **PASS**. Two focused r8-R2 checks in 134.99 s verified AND and CLOCK captures, both preview routes, station parity and rollback to Python Hardware. |
+| Exact native lifecycle and Remote safety checks | **PASS** for 25 Rust lifecycle and three exact Remote lease, quarantine and disconnect cases. |
+| Concurrent Stop at full Remote admission and scheduler budget | **PASS**. Two component tests on installed r8 in 5.15 s. |
+| Pinned FPGA RTL | **PASS** for the 30 prior testbench checks on the same pinned FPGA scaffold. HIL remains **NOT RUN**. |
+| Formal loaded Stop and aggregate Windows gate | **PASS**. All 600 qualified samples met the required causal and safety checks. All six frozen operational ceilings passed. See the [formal Stop receipt](#gate-3-formal-windows-loaded-stop). |
+
+The exact SQLite smoke and rollback receipts have SHA-256 values
+`bcaf7513f286a928e3fec9a19e7dd99614ccdfdfa1f97c20540456e05b087c56`
+and `d6f78f7ed3c08eb3b31c3716428237426085548e65d30b2784b8059c352d31ea`.
+Controller SHA-256 is
+`045a3c3aea3c687ae66a9fa9f61921e3090bbab003d4772ab6ce106f4b422080`.
+The older r4 SQLite and r6 smoke/rollback receipts remain comparison
+history for their own Remote and Hardware manifests.
+
+The [full-admission Stop test](../../../services/api/tests/test_control_sweep_isolation.py#L107)
+filled all 50 Remote queue slots, overlapped Stops for active and queued
+jobs, and verified lease retention until safe cleanup and rejection of
+late results. The [Stop dispatch budget test](../../../services/api/tests/test_control_sweep_isolation.py#L71)
+verified that cancellations beyond the 16-dispatch budget were retained
+and retried. These SQLite tests used a controlled station. The formal
+loaded Stop run separately exercised four busy Hardware workers. All 71
+`app/` members matched the installed r8 wheel byte for byte and all 31
+`app` module imports came from its `site-packages`. Receipt
+`gate3-r8-queue-safety/4458bff5993541f09067dd3d2f82c1a5/pytest.log`
+SHA-256 `be0bf1403962a3a1e8df321c6d30e0a86eee56e652712da873f7050d8b8df0d5`.
+
+The approved production performance platform is a Linux Xeon host.
+Production performance remains **NOT RUN** until that host and exact
+Linux artifacts are ready. Build or select platform-native B and C at
+their pinned versions. Pin the Linux manifests, binaries, wheels, worker,
+toolchain, dependencies and harness hashes. Compare B and C on the same
+Xeon host with the same cpuset and NUMA policy, Linux and database
+configuration, test data, workload, concurrency, warmup, client cadence
+and measurement procedure. Record topology, OS and kernel, memory,
+power and scheduling policy, storage, PostgreSQL durability and concurrent
+load. Use isolated, equivalent starts and alternate the paired order.
+
+Verify functional, compatibility and safety evidence on Linux, including
+NCAP and loaded Stop, before production acceptance. The Linux Stop harness
+needs equivalent monotonic ingress, worker exit, ACK and lease proofs
+for the Windows QPC measurements. Keep the operational deadlines and
+quarantine and stale-result checks. Run a separate Linux reference
+calibration and approve and record the sample count, comparison method
+and Linux-specific thresholds in preflight before formal measurement.
+Use the approved Linux thresholds and Linux artifact digests for the
+Linux result. The six absolute Stop ceilings still govern Windows.
+
+The r8-R2 evidence closes Windows functionality, compatibility and safety.
+Commit Stage 3 before starting Stage 4. Linux performance and
+production/release acceptance remain **NOT RUN**.
+
+#### Gate 3 formal Windows loaded Stop
+
+The formal r8-R2 run passed with
+`CIRNET_NATIVE_STAGE3_STOP_METHOD=natural-loaded-stop-hardware-rendezvous-v1`
+and `CIRNET_NATIVE_STAGE3_STOP_ACCEPTANCE_SCOPE=windows-functional-safety-v1`.
+The unchanged workload and cap of 403 attempts per side and window yielded
+600 qualified samples from 802 attempts. The Python B reference had 202
+attempts that did not qualify. Rust C qualified on every attempt.
+
+| Window | Python B qualified / attempts | Rust C qualified / attempts |
+| --- | ---: | ---: |
+| 1 | 100 / 175 | 100 / 100 |
+| 2 | 100 / 153 | 100 / 100 |
+| 3 | 100 / 174 | 100 / 100 |
+
+All times below are milliseconds. All six Windows ceilings passed.
+The three relative failures remain in the receipt for performance diagnosis.
+
+| Stop metric | Python B | Rust C | Frozen Windows ceiling | 110% of B | Relative diagnostic |
+| --- | ---: | ---: | ---: | ---: | --- |
+| HTTP p95 | 78.6032 | 89.1368 | 197.55406 | 86.46352 | FAIL |
+| HTTP p99 | 100.8966 | 100.4389 | 581.1564 | 110.98626 | PASS |
+| gRPC safe ACK p95 | 56.3787 | 62.2677 | 139.20478 | 62.01657 | FAIL |
+| gRPC safe ACK p99 | 69.3376 | 78.5544 | 526.71179 | 76.27136 | FAIL |
+| Safe lease release p95 | 145.9619 | 144.0377 | 2534.55686 | 160.55809 | PASS |
+| Safe lease release p99 | 168.5140 | 163.8268 | 2598.37468 | 185.36540 | PASS |
+
+The formal test passed in 2,953.75 s. Its controller exited 0 after
+2,954.467 s. All digests below are SHA-256.
+
+| Artifact or receipt | SHA-256 |
+| --- | --- |
+| r8-R2 candidate manifest | `ebc49c57c052e0a78c98074af240c78010f787872a4ad32ac23617ada1fc15bd` |
+| Formal Stop harness | `939b362c7fc12d463e79e7fec5a54d8a86dfa78e5c579fab1d60b0b97d08b330` |
+| Loaded Stop workload | `e48b3d87456a93e3b97f8872fa39ea45099bbf34a49d0e32b888d9b4458a0c2c` |
+| `native-hardware-stop/97612df8bfb942bfbb131dbaf78c1b10/stop-summary.json` | `41b41bb221ec29118e324637119cf2fdfd5a267760b2b7a1da8d9da3310593b0` |
+| `lifecycle-rpc/start-rendezvous/r8-r2-windows-safety-stop-7afac62f5d3241489dde91a070ad2cb7/controller.json` | `35374c64a4268f56f920cf62e66ef03b6bdc721388e1723a1b32d61b954922bd` |
+
+The formal harness bytes are preserved at
+`stage3-formal-stop-harness/native_hardware_stop_cases.py` with the
+original SHA-256 above. The repository version removes one trailing
+blank line and has SHA-256
+`fb07d42f98e6bcc2ebed006ce9f05364b2c2e96c2979032a7557b3da45e8d9f0`.
+The parsed syntax tree and its source locations match the archived copy.
+The edited harness passed 26 service-free tests and two gRPC loopback
+tests covering both RPC namespaces.
+The Stage 3 Hardware source is recorded at commit
+`3ad140f24ae5f3f2e6b735b5cff4beec7bffda54`.
+
+### Gate 3 progress
+
+The Windows x64 candidate implements both RPC 2.0 namespaces, virtual
+station lifecycle, NCAP capture, and a separate preview lane. Python Remote
+opts in through `CIRNET_HARDWARE_PREVIEW=true` and falls back to local preview
+when an older Hardware returns `UNIMPLEMENTED` on the version check.
+
+The r2 Windows x64 measurements used Rust 1.90.0 and
+`cargo build --release --locked --offline`. The Hardware binary SHA-256 is
+`39e206e1e306f2e3e041bc52c1802ba9a6da333e1592009d01920c7c9a31221b`.
+The Remote candidate wheel SHA-256 is
+`e44bd8be68ecc46895ac195bfc8f767173a8932e1ac8d7dc9e456984bbe3d33e`.
+B used Stage 1 r7 wheels. B and C used the same Stage 1 r7 C++ worker and
+the approved Python Contracts wheel. C Hardware used the Stage 2 r2 crate.
+
+| Verification | Status |
+|---|---|
+| Pinned C++ worker parity | PASS, 4 tests including NCAP SHA-256 and physical graph validation |
+| Python Remote preview and exact OpenAPI handoff | PASS, 40 tests and byte comparison in both configurations |
+| Rust Hardware gRPC lifecycle with exact Windows candidate | PASS, 12 tests including lease expiry, disconnect and restart quarantine |
+| Large capture on exact B and C binaries | PASS, 100,000 samples and 1,100,101 matching NCAP bytes |
+| Existing Python Hardware reference tests | PASS, 46 tests |
+| Remote integration and selected API regressions | PASS, 114 cases across the initial run and the artifact-setup rerun |
+| Released Interface in Chromium with real B and C services | PASS, identical AND waveform and 124-byte NCAP capture |
+| Both pinned Windows FPGA RTL testbenches | PASS, 30 tests |
+| HIL | NOT RUN. The selected FPGA scaffold advertises no physical execution |
+| B/C SQLite load, three 200-job windows per side | FAIL, 29/29 frozen and 19/29 paired checks. All 1,200 captures matched |
+| B/C PostgreSQL load, three 200-job windows per side | FAIL, 29/29 frozen and 21/29 paired checks. All 1,200 captures matched |
+| Natural loaded Stop | FAIL, 76 of 100 qualified observations in the first Python window |
+
+The held-worker diagnostic compares three windows of 100 Stops per side.
+The first Rust candidate recorded p95/p99 of 31.041/34.599 ms. Reducing the
+bounded cancellation and reap poll from 10 ms to 2 ms yielded 18.261/19.481 ms
+against 22.498/24.927 ms for the paired Python lane. The 600 Stops in the new
+pair each verified safe ACK, reaping and a fenced capture. This diagnostic
+uses a suspended child. The natural-load gate runs separately.
+
+Direct loopback `GetCapabilities` matched all 3,000 replies per side. Aggregate
+throughput across the three windows was 2,097 RPC/s for Python and 5,822 RPC/s
+for Rust. The corresponding p95/p99 were 0.681/0.954 and 0.243/0.294 ms.
+
+The SQLite windows recorded 4.943 → 4.567 jobs/s and 109,315 → 101,003
+NCAP bytes/s by median. The active-experiments read had p99 of 54.776 →
+110.925 ms. The first Python window took 85.24 s and the next two took
+39.47 and 40.46 s. All windows remain in the paired result.
+
+PostgreSQL median throughput was 5.578 → 5.534 jobs/s. Eight HTTP latency
+checks failed the paired bounds, including clock Run p99 at 371.575 →
+501.905 ms. The dedicated PostgreSQL 18.6 test cluster shut down after
+the measurements.
+
+The first natural Stop window attempted 403 measured waves. In 202 of
+the rejected waves at least one Start had completed before Stop reached
+gRPC. The six-sample diagnostic and the held-child results are reported
+separately. The natural Stop comparison remains incomplete.
+
+In a separate 40-job-per-side diagnostic, total Hardware RPC time per job
+had p95 of 43.47 → 21.77 ms. Union of scheduler lock-wait intervals had p95
+of 1,089.33 → 1,278.57 ms. These samples locate time within the path. The
+cause of the HTTP latency failures remains open.
+
+The rollback rehearsal drained the Rust stack, reopened the same SQLite and
+capture state with Python Hardware, verified the retained NCAP SHA-256 and
+completed a new Run. Gate 3 is open pending the remaining qualifications.
+The checked Windows evidence archive SHA-256 is
+`4ed962dcc9e30c6229cd3a0490a403e1575594637e03f50d5e98abb7ba0582cd`.
+
+### Gate 3 retest on Windows x64
+
+r3 reuses the experiment record read for the pre-RPC cancellation and session
+check. The post-RPC check remains fresh. r4 also reads the committed owner and
+payload in one query before publishing the experiment update. The existing
+manager lock still orders transitions and events. The SQLite regression
+verified a concurrent owner transfer and the corresponding public snapshot.
+r4 passed 137 focused regressions, four PostgreSQL session and lease cases,
+and the exact OpenAPI comparison.
+
+| Candidate and profile | Result | Frozen | Paired | Matching captures |
+|---|---|---:|---:|---:|
+| r3 SQLite | FAIL | 29/29 | 14/29 | 1,200 |
+| r3 PostgreSQL | NOT RUN | — | — | — |
+| r4 SQLite | FAIL | 29/29 | 28/29 | 1,200 |
+| r4 PostgreSQL | FAIL | 29/29 | 17/29 | 1,200 |
+
+Each load profile used three paired windows with 200 jobs per side per
+window. r4 median jobs/s increased from 4.707 to 5.004 on SQLite and from
+4.997 to 5.374 on PostgreSQL. Median CPU seconds/job decreased from
+0.194 to 0.174 and from 0.199 to 0.180 respectively. SQLite missed clock
+creation p95 at 116.670 ms against the paired limit of 114.925 ms.
+PostgreSQL missed 12 paired HTTP latency checks, including AND poll p99 at
+222.723 ms against 114.236 ms. All windows and host CPU samples are retained.
+
+The strict Stop diagnostic verified eight observations per side with r3.
+The separate r4 alignment diagnostic paused the four verified idle workers
+during setup and resumed all of them before the measured workload and Stop.
+It qualified 8/11 Python attempts and 8/9 Rust attempts. The same Python
+artifact qualified 8/35 attempts without the setup alignment. Every accepted
+attempt proved complete in-flight frames, target exit before safe ACK, and
+durable lease release after cleanup. The formal natural Stop retest is
+NOT RUN for r3 and r4. Its default path, three windows of 100 samples per
+side, and thresholds remain the gate requirements.
+
+The r4 Remote wheel SHA-256 is
+`f4c71271760ca95843c50378fced2c4c81407fe4bfad616886cf57d273805c2f`.
+The verified r3/r4 evidence archive SHA-256 is
+`400f0bb54a731f0b1819d6d5c9c404cbe44aad1b8c7d2d68f187de2a7b0915fa`.
+Gate 3 remains **FAIL**. The Stage 3 changes are pending integration.
+
+### Gate 3 boundary diagnosis after r4
+
+The worktree bases are Hardware `c41027d` and Remote `fd546f1`. The r4 manifest
+SHA-256 `f8b7feb73b8cd3c2bee6b9a2528a4db04dd2951d4513e2b17fef51a13b95f694`
+matched its three packaged artifacts and all seven recorded Remote source
+overlays. Reused the exact installed wheels, Rust binary, Contracts crate,
+pinned C++ worker and reference evidence. The formal r4 results above still
+apply. The short comparisons used fresh loopback PostgreSQL 18.6 schemas.
+Historical paired B timing remains specific to its original run conditions.
+
+Run the external diagnostics from the Remote worktree with the verified
+Stage 1 Python interpreter, selected r4 manifests, and an isolated PostgreSQL
+URL. The second command also uses the separately verified experimental wheel.
+
+~~~powershell
+& $B -B -m pytest -q -s -p no:cacheprovider --rootdir . "$diag/rpc/test_rpc_phase_diagnostic.py"
+& $B -B -m pytest -q -s -p no:cacheprovider --rootdir . "$diag/test_auth_snapshot_http.py"
+~~~
+
+The first diagnostic ran 40 jobs per side with the same r4 Remote wheel and
+only Hardware changed. It took 287.35 s and exited FAIL on the process
+inventory guard because Rust started a second pinned worker after warmup.
+Both lanes retained 40 completed jobs and four warmup captures with exact
+hashes. The external `analyze_retained_spans.py` reconstructed only job and
+request spans identified in the trace. For `GET /api/experiments/active`,
+server p95 rose from 102.437 to 136.512 ms. Repository lock wait rose from
+78.726 to 102.407 ms and SQL changed from 13.414 to 11.644 ms. That route
+made zero Hardware RPCs. The first lock acquisition, the session read, rose
+from 42.822 to 66.736 ms. Scheduler RPC-union p95 improved from 93.004 to
+53.679 ms. Endpoint CPU observations were 24.609 → 22.672 s for Remote and
+1.813 → 0.547 s for Hardware. Pinned Simulator CPU deltas were 0.016 and
+0.031 s at Windows timer granularity, with different warm-worker inventories.
+This isolates a measured contention point. The cause of the full set of
+formal misses and the effect of the runner remain open.
+
+The experimental wheel changes only PostgreSQL cookie lookup and wheel
+metadata. A real concurrent logout reproduced the old lock wait and passed
+with the experiment. The old cookie was rejected after commit, and the
+mutation fence waited and rejected the revoked session. Four PostgreSQL
+session/lease tests and 50 auth regressions passed. The 40-job-per-side
+HTTP comparison took 234.83 s with the same Rust Hardware and byte-verified
+captures. Active-read p95 improved from 128.049 to 109.986 ms, while throughput
+fell from 1.585 to 1.302 jobs/s and clock-create p95 rose from 164.569 to
+278.782 ms. Kept the experiment external and retained r4 in the worktree.
+The short comparison took 335.73 s less than the historical 570.56 s formal
+PostgreSQL invocation. The two runs have different purposes and sample counts.
+
+The retained boundary report SHA-256 is
+`7b349df4c0b597765857aacb279e611d2c86511328650b67aa5d9c851fcbef73`.
+The experimental wheel SHA-256 is
+`8f3203fb2c60623199d2c189311008b5d293d529bbb53f2986d011919d5430bf`
+and the short HTTP summary SHA-256 is
+`10dcb8a6e9423949e0a8b74f06016d5bbfe6f78f80f9cf688ccd8ce3eed2da29`.
+
+Gate 3 remains **FAIL**. The next diagnostic needs lock-hold attribution by
+caller and PostgreSQL connection waits. The full SQLite and PostgreSQL
+retests and natural loaded Stop remain pending for a qualified candidate.
+The sample counts, paired/frozen thresholds, and Stop safety proof remain
+the formal requirements.
+
+### Gate 3 lock attribution and Stop observer
+
+The worktree bases remain Hardware `c41027d` and Remote `fd546f1`. The
+diagnostics reused the verified r4 manifest, Stage 1 interpreter, Rust
+Hardware binary, Contracts crate, and pinned C++ Simulator listed above.
+PostgreSQL diagnostics used fresh loopback schemas on PostgreSQL 18.6.
+The server executable SHA-256 was
+`8b8bf5d400487159e3e117053d3f5a89fad0c740b310a3ac69e5720ce4f818e1`.
+
+Run the external diagnostics from the Remote worktree with the verified
+release environment, the installed wheels, the isolated PostgreSQL URL, and
+`CIRNET_STAGE3_PAGE_EXPERIMENT` pointing to the diagnostic wheel receipt.
+
+~~~powershell
+& $B -B -m pytest -q -s -p no:cacheprovider --rootdir . --basetemp "$ownedTmp" "$diag/test_pg_lock_holders.py"
+& $B -B -m pytest -q -s -p no:cacheprovider --rootdir . --basetemp "$ownedTmp" "$diag/test_page_snapshot_http.py"
+& $B -B -m pytest -q -s -p no:cacheprovider --rootdir . --basetemp "$ownedTmp" "$diag/test_page_snapshot_http_reverse.py"
+~~~
+
+The r4 lock diagnostic passed in 115.37 s with 24 exact captures. The
+service lane took 92.55 s, including an 18.46 s workload window. Active
+GET p95 was 95.537 ms, with repository wait p95 at 69.773 ms, SQL at
+8.919 ms and pool acquisition at 0.099 ms. `AuthService.current`,
+`page_experiments` and `_experiment_row` were the largest named holders
+overlapping active reads. History GET p95 was 230.914 ms, with 135.619 ms
+of manager lock wait at p95. The largest overlapping manager holder was
+`_transition`. Holder overlap is summed across waiting requests. The
+profile identifies contention in Remote on these paths. Attribution of
+all formal PostgreSQL misses remains open. Lock report SHA-256
+`7d769352e1e59875804a193ea7e94766f89d43915c5c0b332d69f97fb7443a10`.
+
+The Stop harness now waits on the exact Windows worker process handles
+while retaining the later four-worker pipe-counter proof. It checks
+same-PID ordering against the last all-alive observation and the later
+counter sample. It cancels and joins the wait before closing handles.
+The ACK, reap, lease, quarantine and stale-result checks retain their
+existing requirements. Five focused checks passed in 0.52 s. With
+`CIRNET_NATIVE_STAGE3_STOP_SMOKE=1` and
+`CIRNET_NATIVE_STAGE3_STOP_IDLE_BARRIER=1`, the r4 smoke invocation
+`tests/integration/native_hardware_stop_cases.py` passed six tests in
+174.35 s. Each side qualified all eight attempts. The earlier aligned
+diagnostic required 11 attempts for Python and nine for Rust, with four
+observer-timing rejections. The smoke receipt SHA-256 is
+`4f8bc69684d70e66d9ad03304215cb62d3481c15854f76adcfa67d8cda494d1a`.
+The applied harness source SHA-256 is
+`c0506faf521e6f4977d11fc3fb24fca0102097f715c5d3b6d525e3b1f19a626d`.
+The formal path still runs unpaused with three windows of 100 valid
+samples per side and the existing Stage 0 and paired p95/p99 ceilings.
+
+A separate unpaused r4 diagnostic used only
+`CIRNET_NATIVE_STAGE3_STOP_SMOKE=1` and ran
+`tests/integration/native_hardware_stop_cases.py::test_stage3_natural_stop`.
+It took 282.01 s and failed sample qualification (**FAIL**). Python qualified
+5 of 35 attempts and Rust qualified all eight. On Python, 19 attempts
+were rejected before the four-worker proof. In 18 of those, at least
+one child showed zero new request bytes when a reply was observed.
+Across those 18 attempts, the median spread between the first and last
+Remote Start RPC sends was 0.365 ms and the maximum was 0.991 ms. The
+median spread between their returns was 168.743 ms. Eight other
+attempts completed a Start RPC before Stop ingress. The observed send
+spread narrows the investigation to stages after the Remote send
+timestamps. The traces do not separate gRPC ingress, Hardware
+dispatch or child scheduling. The short diagnostic did not establish
+Stop percentiles. Summary SHA-256
+`e58d4618ddd0fe0165e99a42eed94be5da57a272de158b35ee92a7a5a45b3cda`.
+Offline attribution SHA-256
+`0a0c9315a8eed3ae63d19bc7de53fff5e0f115e12c75f7931563922bf0e7f52f`.
+
+The separate PostgreSQL page experiment lets the existing single
+owner-filtered SELECT use its own MVCC snapshot, keeping SQLite and
+session, control and write fences as before. A real concurrent guest
+claim demonstrated that r4 blocked during the transaction. The experiment
+returned the old owner's page until commit and only the new owner's
+page afterward, with cursor ownership and the quarantined lease
+verified. That test passed in 4.26 s. Four PostgreSQL session/lease
+tests passed in 4.32 s and 14 history/feedback tests in 14.62 s. The
+experiment wheel SHA-256 is
+`15eba833e6397394ff5383da50d825a40c2b392dafe146027f6fbf9046e09d59`.
+
+Both 24-job comparisons passed capture and status verification. They
+used the same Rust Hardware, pinned Simulator, 50 principals, four
+slots, four warmup clock jobs and the same workload definition
+`3c5130be3873d53b4d65d4f1698f9a0ff5e6256999c740b6c4eb4ce0d5cc01dd`.
+
+| Order | Total pytest | Active p95 r4 → trial | History p95 r4 → trial | Workload seconds r4 → trial |
+| --- | ---: | ---: | ---: | ---: |
+| r4 first | 193.43 s | 100.856 → 37.360 ms | 235.426 → 90.479 ms | 18.363 → 6.500 |
+| Trial first | 217.64 s | 103.933 → 87.955 ms | 340.725 → 376.900 ms | 18.801 → 21.953 |
+
+The first pair saved 11.86 s inside the workload window. The reverse
+pair added 3.15 s and throughput fell from 1.277 to 1.093 jobs/s.
+The swing warrants caution about the wider performance effect. The
+cause of that variance is open. The page change remains external.
+The deployed-code candidate in the worktree remains r4. Comparison
+summary SHA-256 values in run order are
+`27d2446000b021a8393a4338c5c169d83d310603118490bf064ae60e54a31224`
+and `9c82e1b909f5c25759a70d444940de30f5c0032235712f59f4cae3db19c2bee7`.
+
+The last formal load receipts are still r4 **FAIL**, at 28/29 paired
+checks on SQLite and 17/29 on PostgreSQL. Both met 29/29 frozen
+checks and matched all 1,200 captures per database. SQLite missed
+`clock_create.p95_ms`. PostgreSQL missed p95 and p99 for AND create,
+AND poll, active reads and history reads, p99 for clock capture,
+clock create and projects, and p95 for stations.
+
+| r4 formal receipt | Total pytest | DB setup | Service start | Client setup | Warmup | Workload | Cleanup |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| SQLite | 552.57 s | <0.01 s | 179.73 s | 95.19 s | 6.97 s | 243.63 s | 4.33 s |
+| PostgreSQL | 570.56 s | 1.49 s | 192.30 s | 106.45 s | 6.41 s | 236.92 s | 4.68 s |
+
+The phase totals come from six retained lane clocks and exclude time
+outside the lanes, including artifact verification. The diagnostics
+reused installed artifacts and the reference archive and performed
+no release rebuilds. A shorter diagnostic invocation has a different
+sample count and cannot be compared as a formal gate time saving.
+
+Gate 3 remains **FAIL**. The new full SQLite and PostgreSQL retests
+and the three-pair natural Stop gate are **NOT RUN**. HIL remains
+**NOT RUN** for the current scaffold. Before the next full invocation, instrument gRPC ingress, Hardware
+enqueue and CNP request writes on Python B and correlate them with
+child-read counters. For PostgreSQL, split the manager lock hold in
+`_transition` into persistence, snapshot projection and event
+publication. Use repeatable short-run results to select a candidate
+under the existing load, sample counts, and limits.
+
+### Gate 3 timing from gRPC dispatch through persistence
+
+On Windows x64, reused exact Python B from Stage 1 and the r4 Remote,
+Rust Hardware, Contracts and C++ Simulator artifacts recorded above.
+The Stage 1 manifest SHA-256 is
+`2e42cd74dbe59dd02e0afbd22aaa6ce2dd48dd9400b8c4ae83b1b0defee4e011`.
+The Stage 3 manifest remains r4. The diagnostics ran sequentially
+and used owned external output. They rebuilt no release artifacts.
+
+The Python B diagnostic used the pinned unpaused saturated-v1 workload,
+SHA-256 `e48b3d87456a93e3b97f8872fa39ea45099bbf34a49d0e32b888d9b4458a0c2c`.
+It reused the installed C++ worker, the original qualification
+predicates and peer capture verification. The external probe recorded
+timestamps in memory and wrote them at Hardware teardown. Its bounded
+diagnostic target was four qualifying waves within 19 attempts.
+
+~~~powershell
+$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD = '1'
+@'
+import sys
+sys.path.insert(0, sys.argv[1])
+import pytest
+raise SystemExit(pytest.main(['-q', '-s', '-p', 'no:cacheprovider',
+    '--rootdir', sys.argv[1], '--basetemp', sys.argv[3], sys.argv[2]]))
+'@ | & $B -I -B - $remote "$stopTrace/python_b_stop_trace.py::test_python_b_unpaused_stop_path" "$ownedTmp"
+~~~
+
+The tracing invocation returned **PASS** in 116.25 s with four qualifying
+waves in six attempts. It recorded 24 Starts and five actual Stop
+handler entries. One rejected wave had a Start complete before Stop
+and one reached a reply before the four-frame proof.
+
+| Start timing | Median | p95 |
+| --- | ---: | ---: |
+| First to last of four Remote sends | 0.33 ms | 0.49 ms |
+| First to last of four Python handler entries | 134.60 ms | 161.79 ms |
+| Remote send to handler entry | 14.07 ms | 161.90 ms |
+| Handler entry to executor submit | 0.14 ms | 0.18 ms |
+| Executor queue | 0.18 ms | 63.78 ms |
+| Executor entry to lane exchange | 140.53 ms | 221.81 ms |
+| CNP event synthesis | 137.29 ms | 219.35 ms |
+| CNP frame serialization | 3.63 ms | 5.78 ms |
+| Pipe queue | 6.93 ms | 77.95 ms |
+| Pipe write | 4.39 ms | 62.78 ms |
+
+In the incomplete-frame wave, handler entries were 1.27, 66.75,
+143.30 and 162.28 ms after the first Remote send. At 221.99 ms one
+child had written its entire reply while two children had read zero
+bytes. No Stop was issued in that wave.
+
+The table describes six instrumented waves. Handler entry measures
+Python dispatch after transport and scheduling. Event synthesis and
+other wall spans can include time waiting for the GIL or the scheduler.
+The data locate delays but do not separate transport from gRPC
+dispatch scheduling or establish event synthesis as the sole cause.
+
+In all four qualifying observations, the last all-alive witness was
+4.94–12.73 ms after actual Stop handler entry. The selected exact-PID
+exit bound was 5.96–13.61 ms after entry and the safe ACK followed it
+by 1.37–2.50 ms. All four parent pipe intervals covered handler entry
+and the existing proof still used the worker counters and durable
+release. Stage 0 qualifies load at Hardware ingress. The current
+formal Stage 3 harness uses the API-side Stop send as its ingress
+marker. Before a formal PASS, require an actual correlated Hardware
+ingress witness or equivalent causal proof for each accepted sample
+on both sides. Keep the existing ACK, reap, lease, quarantine and
+stale-result checks.
+
+The external probe, raw trace and summary SHA-256 values are
+`6ccd20128e22286de347241fbe9c9f826315dcb1cdc3ccfd5fdf3c492dd615d9`,
+`f8969f7a23867e2c1d13b163f1431eefe809117f67d8ea8af0f8a071edfaf114`
+and `dff54640a5224d9a8140b4466ca76007e77db0068588ecf22d8e5fc13047628d`.
+
+The PostgreSQL 18.6 diagnostic reused the pinned server executable.
+Run its external controller from the Remote worktree.
+
+~~~powershell
+& "$pgTrace/launch-transition-pg.ps1"
+~~~
+
+The first initdb attempt hit its 180 s sandbox timeout before pytest.
+A fresh owned cluster started with the process permissions used
+for earlier measurements. It selected 100 maximum connections
+and 128 MB shared buffers. Initialization, startup, pytest and
+shutdown took 8.18, 0.46, 123.16 and 0.92 s. Pytest reported **PASS**
+in 121.60 s. The 21.28 s workload window verified 24 captures
+byte-for-byte. The four warmup captures matched too. PostgreSQL stopped
+after the run.
+
+Of 373 measured `_transition` calls, 240 took the manager lock
+directly and 133 entered with the caller holding it. Exclusive
+manager hold inside transitions totaled 16.134 s, with 10.017 s
+(62.1%) in nested Repository lock wait. Initial read, persistence
+and post-commit snapshot accounted for 3.952, 3.056 and 3.008 s
+of that wait.
+
+| Inclusive transition phase | Total | p95 |
+| --- | ---: | ---: |
+| Initial state read | 5.355 s | 42.099 ms |
+| Persistence | 6.163 s | 42.379 ms |
+| Capture catalog sync, inside persistence | 0.358 s | 3.336 ms |
+| Database commit, inside persistence | 0.715 s | 3.136 ms |
+| Post-commit public snapshot read | 4.431 s | 29.353 ms |
+| Public projection | 0.025 s | 0.116 ms |
+| EventHub publish | 0.039 s | 0.191 ms |
+
+Of 100 history requests, 40 waited for the manager lock. HTTP p95
+was 275.783 ms and manager-wait p95 was 176.760 ms. Of 4.933 s
+cumulative manager wait, 2.770 s (56.1%) overlapped Repository
+waits inside transitions and 0.013 s overlapped EventHub publication.
+The probe distinguishes the outer lock owner from the transition's
+own phases. This single instrumented simulation run had no
+assignment-specific queries or subscriber delivery load.
+
+The PostgreSQL diagnostic launcher SHA-256 is
+`3deed55a72c043fe87b0e09f504ce53c93ecd996fb6d6227c1c1daca605a9479`.
+The summary SHA-256 is
+`f6ef032a774107e34ce3ad6c095e675a80c991bffb3946ae742a61d34b67c1d8`.
+The summary records raw trace and probe source digests. Five
+focused Stop proof checks passed in 0.71 s. The two owner-and-payload
+snapshot checks passed on installed r4 in 1.15 s.
+
+At this r4 checkpoint, Gate 3 remained **FAIL** with SQLite at 28/29
+and PostgreSQL at 17/29 paired limits. The next natural Stop
+qualification needs actual ingress evidence on both sides. Retain the
+same unpaused workload, three windows of 100 valid samples per side,
+the fixed and paired ceilings, and all capture and safety criteria.
+
+### Gate 3 Remote lock changes after r4
+
+The Stage 3 r5 Remote trial replaced the PostgreSQL experiment snapshot
+read's process-wide lock with a single-row `FOR SHARE` read at
+`READ COMMITTED`. Two regressions first reproduced the r4 blocking
+behavior. The trial passed 22 real PostgreSQL cases, including a real
+guest claim and same-row payload commit and rollback. In the short
+24-job-per-side comparison, throughput fell from 3.762 to 3.441 jobs/s
+and CPU/job rose 18.4%. Active p95/p99 rose from 36.913/40.573 to
+51.873/57.506 ms and history from 98.328/103.292 to 150.233/170.668 ms.
+The candidate was rejected. Its source and regression changes were
+removed from the worktree. The r4 owner-and-payload snapshot code was
+restored byte-for-byte after normalizing checkout line endings. The r5
+wheel, test diff and comparison remain in the external evidence.
+
+The rejected r5 wheel SHA-256 is
+`02245c8cca5633770d4d4666e2a9c5e7c97f2647a363aa529fab191de80ca35b`.
+The comparison and archived test diff SHA-256 values are
+`6c0e2429612589bd88acf6d6047ba2cb485ea59225c3237a4a1f5c60c49ca76f`
+and `52340d84df168635c43f3a235333af372bd7ea6d9032f7c7857b9f29d8583918`.
+
+The Stage 3 r6 worktree change holds one Repository lock through the
+initial state read, save or recovery, and fresh post-commit snapshot in
+`ExperimentManager._transition`. The Repository lock is released before
+public projection and EventHub publication. The manager lock still
+orders the event stream. Transaction boundaries and the claim, session,
+capture, lease and quarantine write fences are preserved. The new
+concurrent regression failed on r4 and passed on r6. It checks that
+another thread can take the Repository lock during both callbacks.
+The existing independent-connection owner-transfer fixture still verifies
+the fresh post-commit owner and payload. Affected checks passed on SQLite
+**78/78** in 24.31 s and on PostgreSQL **18/18** in 14.51 s. The first
+SQLite functional attempt stalled at TestClient in the sandbox. The
+reported result is the complete retry with the required process permissions.
+
+The short comparisons used the same Rust Hardware and C++ worker on both
+sides, separate PostgreSQL schemas and no phase probes. Each side ran
+24 measured jobs and four warmup jobs in each order. All captures matched
+the pinned hashes. The table expresses each comparison as r4 → r6.
+
+| Order | Jobs/s | CPU s/job | History p95/p99 ms | Active p95/p99 ms | Projects p95/p99 ms |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| r4 then r6 | 3.499 → 3.873 | 0.279 → 0.252 | 104.141/123.933 → 65.301/121.490 | 35.035/43.449 → 45.243/126.800 | 116.866/128.681 → 88.870/97.541 |
+| r6 then r4 | 2.383 → 3.496 | 0.395 → 0.275 | 130.939/144.297 → 78.203/80.633 | 56.125/57.454 → 42.497/47.153 | 81.084/95.020 → 103.427/118.022 |
+
+Throughput and history p95 improved in both orders. Active and project
+tails changed direction. Station p99 and AND capture maximum increased
+in both orders, with only 12 measured AND captures per side in each run.
+The short comparisons are diagnostic and leave the formal sample sizes
+and thresholds unchanged.
+
+The r6 Remote wheel SHA-256 is
+`a27f22cdffefd6f91d9102b82fa40d2749a939762a6d294a6d3cabcf25746a09`.
+The Remote-only manifest SHA-256 is
+`f04a0ca11c95ac79527a1dc799b6ed1c7fc219018ca904d6137d029e4c2157c5`.
+The installed API inventory and all 77 hashed `RECORD` entries matched.
+The forward and reverse comparison SHA-256 values are
+`48a3b053d595f5f5a7ffe7474153636688fd1efdc4591d418de7da623e3eaeb0`
+and `2647a8519eb963f984e1c8fa1c2c12ff6e77108f032acb99b20e57666a1f91f7`.
+
+The formal smoke and rollback checks **PASS**. The r6 service-load
+acceptance is **FAIL**: SQLite passes 25/29 frozen limits, 17/29 paired
+limits and 15/29 combined; PostgreSQL passes 29/29 frozen limits and
+14/29 paired/combined. Each database completed the unchanged three
+paired windows of 200 measured jobs per side; all 1,200 captures per
+database matched. The combined r6/QPC manifest SHA-256 is
+`60b40c21c5bdaf78b4a7ef6e99d7203680feb461f37ce3743824b3b1aa8303d4`.
+The command was the pinned baseline Python running
+`-B -m pytest -q -s -p no:cacheprovider --rootdir . --basetemp <owned>/pytest-tmp tests/integration/native_hardware_gate_cases.py`,
+with the r6 manifest and candidate Python selected through the owned
+PostgreSQL controller. Pytest reports two passed and two failed in
+1,683.35 s. Controller phases were preparation/initdb 10.759 s,
+service startup 0.662 s, test process 1,685.432 s and cleanup 1.041 s;
+the owned PostgreSQL service stopped successfully.
+
+Evidence remains under the allocated `cirnet-aVTc6V` directory:
+`native-hardware-services/sqlite-116243b649e4449f98f1cf90c9e702b0/gate-load-summary.json`
+(SHA-256 `861b6d66c958cf123c1dd5856ac29bb6c131b7d17d022d4752cf161d598b6b17`),
+`native-hardware-services/postgresql-7289655c93384fae9cd881b903f9b015/gate-load-summary.json`
+(`4fdb68c5ff06f863c26c230fc018776509ef655f66ac67d07803a5e9784fc405`)
+and `gate3-r6-pg-d402d4aa1593438c8845720a7df011f3/controller.json`
+(`c2af670d1aeb6cea52199e67a45985f9f53a8201b72bb6a4d69bb69245349dda`).
+
+The coalesced-lock r6 candidate is rejected and its source/test delta
+archived before restoring the r4 transition. Short throughput gains
+did not predict acceptable API tails. SQLite baseline window duration
+varied from 48.92 to 93.34 s, with candidate duration 40.66–86.30 s.
+This establishes substantial variation, but does not identify its cause.
+The incomplete process-monitor snapshots cannot support a claim about
+background CPU load. No test-time saving is claimed from this rerun.
+
+The next r7 experiment changes only the PostgreSQL post-commit
+`experiment_snapshot` read. All `get_experiment` control/authorization
+reads retain their lock. Broadly unlocking these reads was rejected:
+a Stop authorized against an uncommitted old owner could otherwise
+mutate the new owner's experiment after claim commits. Required r7
+checks cover claim commit/rollback, fresh owner and payload, old-owner
+Stop rejection and session revocation before event delivery.
+The user-approved four-Start synchronization experiment is separate;
+its equivalence and safety must be demonstrated before formal use.
+Full natural Stop and HIL remain **NOT RUN**. Gate 3 stays **FAIL/open**,
+Gate 4 remains **NOT RUN**, and the default stays unchanged.
+
+### Gate 3 r7 post-commit snapshot
+
+The r7 Remote overlay starts from the r4 transition. Only the
+post-commit `Repository.experiment_snapshot` uses a normal PostgreSQL
+statement outside the Repository lock. Owner and payload come from
+the same committed row. SQLite and every `get_experiment` call use the
+original lock. The two concurrency checks reproduced the r4 wait.
+R7 passed **23/23** real PostgreSQL cases in 25.63 s and **115/115**
+SQLite/API cases in 78.51 s. The new PostgreSQL cases verify snapshots
+across an unrelated write, claim and payload commit/rollback, old-owner
+Stop rejection without mutation, viewer-session revocation and the
+owner committed between transition save and event publication.
+
+The forward short comparison used the same Rust Hardware and C++
+worker, isolated PostgreSQL schemas and canonical resource sampling.
+Each lane verified 24 measured and four warmup captures against the
+pinned hashes. Of 29 metrics, **23 improved** and **25 were within the
+descriptive paired envelope**. Throughput rose from 1.227 to 1.353 jobs/s
+and CPU/job fell from 0.775 to 0.674 s. Active p95/p99 fell from
+142.922/182.615 to 129.050/152.272 ms and history from
+307.075/380.140 to 281.798/327.517 ms. Projects and stations also
+improved at both tails. AND capture fell from 229.910 to 180.882 ms
+and CLOCK capture rose from 127.884 to 131.540 ms. The four outside
+the envelope were CLOCK run and poll p95/p99. Each run or capture
+group had 12 samples, so both quantiles reduce to the maximum.
+
+The full 29-metric receipt is `gate3-r7-event-pg-receipts/c202f6e5834f4f86aed162a056feb76f/comparison-29-metrics.json`
+under the external session. Its SHA-256 is
+`d4a68e7caf4a72bcf7cca7e9dfac8cbda035e4cfd018f6a31dfa6dfe6662704f`.
+The Remote wheel and candidate manifest SHA-256 values are
+`7be54ff8af31dccfae519d29378e11b9ce7d5006294b58ac909309bab1d4bbc8`
+and `04a9016d135f4c203b0791ab3b8fca2c6b169636eeb74b836a19aba23c6f37d7`.
+The installed inventory and all 77 hashed `RECORD` entries matched.
+The r4 window took 19.57 s compared with 6–10 s in earlier short
+comparisons. The reverse order did not produce a valid pair. The
+strict resource monitor saw two process-inventory changes in the r4
+lane. Its error recorded the service parent PIDs without the changed
+child identities. Both lanes logged 28 completions including warmups,
+and all retained captures matched the reference hashes. The partial
+application log summary SHA-256 is
+`f5d4b2b2e582e25bd4fba17fe3ee140dd6b0e3f3f5ac01c74b65ddd99d403042`.
+It does not replace the missing matched client and resource profile.
+Formal r7 load acceptance remains **NOT RUN**.
+
+### Gate 3 artifact setup timing
+
+The Remote adapter passes an explicit or inherited context directly to
+the pinned `cirnet-artifact-paths` 1.0.0a1 bridge. Node still verifies
+the Git roots, canonical destination, symlinks and session ownership
+marker. Checkout context discovery and cleanup use their original paths.
+[Adapter source](../../../scripts/artifact_paths.py)
+
+One direct Windows x64 timing pair measured `_owned_directory` after
+imports with the same owned directory and six-root inherited context.
+Node CLI calls decreased from five to three and elapsed time went from
+11.755 s to 9.223 s, a reduction of 2.532 s or 21.5%. The measurement
+covers directory validation and session lookup. Full startup and gate
+wall-time savings remain to be measured.
+
+The call-count regression failed before the change at five invocations.
+All five adapter checks passed across two invocations. The initial run
+passed four checks and the Windows sandbox blocked creation of the
+junction fixture. The isolated junction rerun passed. Coverage includes
+both environment prefixes, explicit and inherited contexts, malformed
+context JSON, wrong owners, unowned sessions, foreign Git roots and
+junction escapes. [Adapter checks](../../../tests/test_artifact_paths.py)
+
+The pinned Node entrypoint SHA-256 is
+`742ef11f9083beaf901d0d4f9a5a777d87aeae71a990597f9640a1b3a9329b5a`.
+The external `timing-before.json` and `timing-after.json` receipts have
+SHA-256 values `a6d737543ff0fed2f22cc4eb0ce0e36995f29ecfd4ce2a30ebee4cf8be34780f`
+and `eecac21c24442fdee64b66e787d76ebf189262c9d6d98ad1763e9d7cb3cbe722`.
+
+### Gate 3 r8 keyed operations and PostgreSQL result
+
+For a new keyed Run or Stop, r8 checks ownership through the locked
+Repository before operation lookup. Existing operations still read the
+live public projection, including queue position, for replay and
+recovery. The two regressions for recording new intent while the manager
+lock is held failed on r7 and passed on r8. The candidate passed **130/130**
+SQLite/API and **24/24** real PostgreSQL cases, including guest claim
+with keyed and keyless Stop. The exact r8-R2 combination passed three
+Remote lease, quarantine and disconnect checks and released Interface
+browser smoke on both sides.
+
+The r8 Remote wheel SHA-256 is
+`0e3280dc41d81e1b00b4ee7a5e35a3646b06b32276181000ee874b43e113bd01`.
+The exact r8-R2 manifest SHA-256 is
+`ebc49c57c052e0a78c98074af240c78010f787872a4ad32ac23617ada1fc15bd`.
+The short PostgreSQL comparison of 24 measured jobs per side was within
+26/29 frozen and 26/29 paired envelopes, 23/29 combined, descriptively.
+All eight read-route p95/p99 values improved and throughput rose from
+2.765 to 3.701 jobs/s. The short receipt SHA-256 is
+`2043229644d88fe38001f101a4130fa8a8c416e5dc9142b00d661429ea956b95`.
+
+Formal PostgreSQL service load **FAIL** on the same manifest. All three
+pairs completed 200 jobs per side with 1,200 measured captures matching
+the pinned digests. The result was **25/29 frozen, 4/29 paired and 4/29
+combined**. The four combined checks that passed were peak RSS, AND Run
+p95 and p99, and CLOCK Run p95. The frozen misses were AND capture p95
+and p99 at 97.082 and 157.097 ms against 92.557 and 153.366 ms, CLOCK
+create p99 at 363.643 ms against 353.771 ms, and history p99 at 355.203 ms
+against 321.567 ms. Paired history p95/p99 rose from 104.241/118.055 to
+295.570/355.203 ms. The pinned pytest run took 789.32 s and the owned
+PostgreSQL instance stopped successfully.
+
+| Window | Workload s | Fixed requests | Polls | CPU ms/request | CPU s/job |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| B1 | 51.100 | 1,000 | 1,798 | 17.211 | 0.2408 |
+| C1 | 57.289 | 1,000 | 1,815 | 18.933 | 0.2665 |
+| C2 | 104.110 | 1,000 | 2,558 | 25.567 | 0.4548 |
+| B2 | 36.093 | 1,000 | 1,489 | 14.263 | 0.1775 |
+| B3 | 119.385 | 1,000 | 3,004 | 25.186 | 0.5042 |
+| C3 | 51.890 | 1,000 | 1,670 | 18.493 | 0.2469 |
+
+More polls and higher CPU per request both amplified CPU/job in the
+slow windows of each variant. B2 to B3 had 1.61 times the requests per
+job and 1.77 times the CPU per request. C3 to C2 had corresponding
+factors of 1.33 and 1.38. Sampled CPU includes API, Hardware and their
+descendants. It includes scheduler work and excludes the separate
+PostgreSQL process and other host activity. The profiles lack per-request
+timestamps and the application log durations lack a common absolute
+clock. When the last of 400 read requests finished in each lane, the
+logs showed eight completed captures including four warmups. The history
+p95 median from application logs increased from 98.775 to 247.712 ms, so
+the read-tail gap was already present in the opening phase. The log
+records 71–72 measured transitions between the first and last read
+completions in B and 85–95 in C. It cannot distinguish more overlapping
+work from a longer read window. The short comparison had 19.67 fixed
+requests per job versus 5.00 in the full run.
+
+The formal summary `native-hardware-services/postgresql-cc20821c896941ebb7636809665369ff/gate-load-summary.json`
+has SHA-256 `51fa434b570b1c8721d4ce7f6196c0e9e428ae5883e594abf17dab7b204693e6`.
+The controller receipt `gate3-r8-formal-pg-86708c85164c418bb8457b02d3baae9a/controller.json`
+has SHA-256 `5e6b41d36f6dbb499343a4b97de8cb8a7739f87abfaa697b4f3902c146382baf`.
+The exact service harness SHA-256 is
+`0a4af0a2daabb8ab3554b59e2fa14e0a403124ae77cf91727c2c1e6fbd182850`.
+At that checkpoint Gate 3 was open. Formal r8 SQLite and loaded Stop
+were **NOT RUN**.
+
+### Gate 3 approved Start synchronization profile
+
+The user approved `natural-loaded-stop-hardware-rendezvous-v1` for
+formal Stop acceptance after reviewing the separate diagnostic.
+Select it explicitly with
+`CIRNET_NATIVE_STAGE3_STOP_METHOD=natural-loaded-stop-hardware-rendezvous-v1`.
+The unset default remains the original Remote rendezvous method.
+This is a recorded method change, not a claim that aligned and unaligned
+latency distributions are equivalent. Worker execution is never paused.
+The additional Hardware handler rendezvous binds four exact experiment
+IDs to one QPC release on both Python B and Rust; the Remote ticket
+barrier remains. Cancellation, missing/duplicate/foreign participants
+and deadlines abort the group before station actions.
+
+The original approval required three alternating paired windows,
+100 valid samples per side/window, maximum 403 attempts per window,
+and all six frozen/110%-of-B p95/p99 limits. The [current Windows
+scope](#gate-3-acceptance-policy-by-host) retains the method, samples,
+attempt cap and six absolute ceilings. Full request frames without
+reply writes at actual Hardware Stop ingress, worker exit before safe
+ACK, durable lease release, quarantine and stale-result rejection remain
+required. A shortfall now records **FAIL** and remaining windows
+**NOT RUN**, rather than allowing an empty comparison to imply PASS.
+The final harness SHA-256 is
+`519b2b6231a19d7a513b24c7dd96ce632ffa1ff40b0d5e0f8026914a76dbbd4f`.
+The exact Rust R2 binary SHA-256 is
+`22d3d0a1c57aad0d2d01d512f3a890149566bc799228559b6943843cba1e85e6`.
+It passed 25 lifecycle cases; r8-R2 passed three Remote safety cases.
+The receipt/proof suite passed 22 service-free cases.
+
+The unpaused diagnostic qualified B 8/10 and C 8/8 attempts, versus
+the previous B 3/35 and C 8/8. All six short comparisons were within
+limits, but eight samples do not establish formal tails. Wall time
+199.80 versus 180.96 seconds used different valid/warmup counts and
+does not establish a speedup. Its summary SHA-256 is
+`001033e2476c81f65aae46fdb754f38203d8e91a717c8e299a514499b6aac712`.
+At that checkpoint official aligned Stop was **NOT RUN** while service
+acceptance failed. See the [completed formal Windows run](#gate-3-formal-windows-loaded-stop).
+
+The r8 PostgreSQL log also records timed checkpoints overlapping the
+slow C2 and B3 windows: 2026-11-06 23:56:24–23:57:04 and
+2026-11-07 00:01:24–00:02:31 at UTC+07. Window alignment is approximate,
+derived from profile file timestamps and recorded cleanup/workload times.
+Checkpoint sync was 0.674/0.439 seconds; total 39.770/67.281 seconds
+includes paced writing. This correlation does not prove checkpoint
+contention caused the slowdown, and C1/C3 also missed read limits.
+The next diagnostic adds common timestamps and bounded CPU observation;
+no PostgreSQL durability, checkpoint or gate settings have been changed.
+
 
 ## 4. Rust Remote
 

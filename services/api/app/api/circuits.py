@@ -29,11 +29,12 @@ def physical_preview(request: Request, payload: Any = Body(default=None)):
     valid, code, message = validate_circuit_graph(payload)
     if not valid:
         return JSONResponse(status_code=422, content={'valid': False, 'code': code, 'message': message})
-    from cirnet_sim.backends import preview_physical_graph, SimulationError
+    from cirnet_sim.backends import SimulationError
     from app.models.circuit import CircuitGraph
+    from app.services.simulation_preview import preview_graph
     try:
-        result = preview_physical_graph(CircuitGraph.model_validate(payload).model_dump(exclude_unset=True),
-            backend_id=request.app.state.configuration.simulation_backend)
+        result = preview_graph(CircuitGraph.model_validate(payload).model_dump(exclude_unset=True),
+            configuration=request.app.state.configuration, gateway=request.app.state.gateway)
         return {**result, 'provenance':'simulation_preview',
                 'limitations':['Educational DC and digital component models have a limited execution envelope.',
                                'Physical acquisition and full SPICE or mixed-signal execution remain unavailable.']}
