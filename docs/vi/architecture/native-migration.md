@@ -787,7 +787,7 @@ tích hợp chi tiết.
 
 ### Xác minh ứng viên giai đoạn 2
 
-Worktree Contracts `codex/native-contracts-stage2` bắt đầu từ
+Commit ứng viên Contracts `e640f80b1199779659d3db7817fee16d13cc24c1` được xây dựng từ
 `f559ec5b21ea7ecf50db4dc5c5e1dc7c5eb5ad39`. Crate Rust cung cấp
 validator ngoại tuyến, codec NCAP1 và NCAP2, kiểu và descriptor Hardware
 RPC cùng bộ sinh SDK TypeScript. Binding kiểm thử đối chứng với wheel

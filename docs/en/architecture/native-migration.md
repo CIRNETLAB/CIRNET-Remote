@@ -812,7 +812,7 @@ Simulator backend documentation owns the detailed implementation sequence.
 
 ### Stage 2 candidate verification
 
-The Contracts worktree `codex/native-contracts-stage2` starts from
+The Contracts candidate commit `e640f80b1199779659d3db7817fee16d13cc24c1` builds on
 `f559ec5b21ea7ecf50db4dc5c5e1dc7c5eb5ad39`. Its Rust crate provides offline
 validation, NCAP1 and NCAP2 codecs, Hardware RPC types and descriptors, and
 a generator for the TypeScript SDK. The Python test binding compares
