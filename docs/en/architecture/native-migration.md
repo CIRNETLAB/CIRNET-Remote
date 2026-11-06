@@ -2,7 +2,7 @@
 
 [Tiếng Việt](../../vi/architecture/native-migration.md) · [Original plan dated 2026-11-05](https://github.com/cirnetlab/cirnet-remote/blob/f91eeeb42d7528d4e7fa9b1526195847932faf9d/docs/superpowers/plans/2026-11-05-cirnet-native-migration.md) · [Stage 0 record](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md)
 
-**Gate 0 PASS on the selected 0.1.4 reference. Gate 1 PASS on Windows x64 with r7. Gate 2 PASS on the r2 Contracts matrix. Gate 3 Windows functionality, compatibility and safety PASS on r8-R2.** Gate 3 production performance on Linux Xeon, production/release acceptance and Gates 4–5 are `NOT RUN`. [Current Gate 3 acceptance policy](#gate-3-acceptance-policy-by-host). The published 0.1.4 profile is the rollback reference.
+**Gate 0 PASS on the selected 0.1.4 reference. Gate 1 PASS on Windows x64 with r7. Gate 2 PASS on the r2 Contracts matrix. Gate 3 Windows functionality, compatibility and safety PASS on r8-R2. Gate 4 Windows functionality, compatibility and safety PASS on Remote 717402ba.** Gate 3 production performance, Gate 4 performance and full loaded Stop on Linux/Xeon, HIL, production/release acceptance and Gate 5 are `NOT RUN`. [Current Gate 3 policy](#gate-3-acceptance-policy-by-host) · [Current Gate 4 policy](#gate-4-acceptance-policy-by-host). The published 0.1.4 profile is the rollback reference.
 
 > **For implementation agents.** Use superpowers:subagent-driven-development or superpowers:executing-plans. Complete each gate and record its evidence before beginning the next stage.
 
@@ -1727,9 +1727,656 @@ no PostgreSQL durability, checkpoint or gate settings have been changed.
 
 ## 4. Rust Remote
 
-- [ ] **Replace route groups.** Remote keeps the existing topology, auth and orchestration. Port reads and preview first, then `services/auth.py`, `websocket/events.py`, persistence, and finally commands, idempotency and `services/experiments.py`. Compare the exact OpenAPI handoff, HTTP/errors/cookies/CSRF/Origin, WebSocket hello/sequence/resync/close, ownership/control client and disconnect. Shadow only genuinely side-effect-free routes against a data copy. Test session bootstrap and a control WebSocket in isolation because they can change sessions or cancel jobs.
-- [ ] **Data and control.** Port Remote schemas and migrations to native migrations. Compare real SQLite and PostgreSQL against existing data, CAS revisions, login, ownership and captures. Rehearse `pg_dump`/`pg_restore` with the capture backup and check hashes, keeping idempotency and quarantine. Keep the Hardware control endpoint inaccessible to a shadow scheduler. Revoke the old scheduler's access and verify that it has stopped. Inspect the restored queue before granting the candidate access. Test competing schedulers, a queue with pending commands and loss of connectivity during cutover.
-- [ ] **Matrix and Gate 4.** Compare Python Remote → Rust Hardware → C++ against current Interface → Rust Remote → Rust Hardware → C++ by route group. Keep `scripts/export_openapi.py --check` for the Python comparison. Export or serve OpenAPI from the Rust binary and compare with the same handoff and operation table. Retain auth, ownership, operation identity and WebSocket fixtures and `services/api/tests/postgres_cases.py`. Port assertions tied to internals to pytest using REST, WebSocket, the binary and Rust migrations on real test databases. Keep the existing Interface E2E and add Playwright Python. Compare API and database p95/p99, CPU/RSS, throughput and loaded Stop. Switch default traffic after all routes and the rollback rehearsal pass. Rollback revokes the candidate's scheduler access, restores the matching database and capture pair when needed, and verifies authority and quarantine before reconnecting the old backend.
+- [x] **Replace route groups.** Remote keeps the existing topology, auth and orchestration. Port reads and preview first, then `services/auth.py`, `websocket/events.py`, persistence, and finally commands, idempotency and `services/experiments.py`. Compare the exact OpenAPI handoff, HTTP/errors/cookies/CSRF/Origin, WebSocket hello/sequence/resync/close, ownership/control client and disconnect. Shadow only genuinely side-effect-free routes against a data copy. Test session bootstrap and a control WebSocket in isolation because they can change sessions or cancel jobs.
+- [x] **Data and control.** Port Remote schemas and migrations to native migrations. Compare real SQLite and PostgreSQL against existing data, CAS revisions, login, ownership and captures. Rehearse `pg_dump`/`pg_restore` with the capture backup and check hashes, keeping idempotency and quarantine. Keep the Hardware control endpoint inaccessible to a shadow scheduler. Revoke the old scheduler's access and verify that it has stopped. Inspect the restored queue before granting the candidate access. Test competing schedulers, a queue with pending commands and loss of connectivity during cutover.
+- [x] **Matrix and Gate 4 Windows.** Compare Python Remote → Rust Hardware → C++ with current Interface → Rust Remote → Rust Hardware → C++ by route group. Keep `scripts/export_openapi.py --check` for the Python comparison and compare native OpenAPI with the same handoff and operation table. Retain auth, ownership, operation identity, WebSocket and PostgreSQL assertions through public boundaries or scoped native components. Keep Interface E2E and Playwright Python. Apply the [host-specific policy](#gate-4-acceptance-policy-by-host) to ordinary performance and loaded Stop. Rollback revokes candidate scheduler authority, restores the matching database/capture pair when needed, and verifies authority and quarantine before reconnecting Python. Windows acceptance does not authorize a default or release change.
+- [ ] **Linux/Xeon production and applicable HIL.** Run full fixed load and the full loaded-Stop matrix after project stability and target-host readiness, with approved production thresholds and Linux safety validation. Run real HIL before accepting any advertised physical-control capability. Keep production/release acceptance NOT RUN until all applicable requirements pass.
+
+### Gate 4 acceptance policy by host
+
+This user-approved policy supersedes the earlier Stage 4 acceptance scope.
+It changes the use of measurements, not historical results, artifacts,
+digests or safety requirements. The checkpoints below retain the decisions
+and PASS/FAIL/NOT RUN recorded under their original policy.
+
+Windows x64 / Intel Core i5 is the development acceptance host. **Gate 4
+Windows** requires functional, compatibility and safety evidence for the
+identified Remote, Hardware, Simulator and Contracts combination. Required
+coverage includes REST/OpenAPI, Interface, WebSocket and NCAP; real SQLite
+and PostgreSQL, old data, explicit migrations and rollback; auth, ownership,
+sessions, idempotency and scheduler authority; Run/Stop, disconnect,
+hung/dead workers, missing/late ACK, reaping, stale-result rejection, leases
+and quarantine. Reuse requires verified artifact or unchanged compiled
+component inputs, configuration, fixture and assertion scope; old executable
+results remain attributed to that executable. Missing or invalid evidence
+leaves the affected requirement FAIL or NOT RUN.
+
+CPU/RAM, throughput, ordinary API/database latency and relative comparisons
+with Python on Windows are **diagnostic**, not blockers. The full fixed-load
+comparison and synchronized Stop matrix of **three alternating pairs × 100
+qualified samples per side**, with the existing 403-attempt ceiling per
+window, move to Linux/Xeon acceptance. No full Windows replay is needed to
+exceed an old performance threshold. This does not waive a functional or
+safety failure observed during any diagnostic run.
+
+All approved safety invariants and deadlines remain mandatory on Windows.
+Stop evidence must prove its actual precondition, including workers active
+at Hardware ingress where the case claims a running workload, reaping before
+safe ACK, and safe disposition before durable lease release. Missing or
+uncertain final cleanup ACK required for release must retain authority
+restrictions and quarantine; a missing early explicit Stop ACK can still be
+followed by independently verified safe cleanup. Late
+results must not publish captures or revive old generations. The retained
+Stop safety ceilings in milliseconds are HTTP p95/p99
+197.55406000000002 / 581.1564, raw ACK
+139.20478000000003 / 526.7117900000001, and committed lease release
+2534.55686 / 2598.3746800000004. A short sample is not a production percentile
+estimate. Keep the underlying per-operation deadlines and fail-closed
+behavior; do not reclassify these safety bounds as ordinary latency.
+
+Before production acceptance, require a stable project and an actual
+Linux/Xeon target. Pin the baseline and candidate on the **same machine**,
+with matching database, dependency versions, workload and measurement
+conditions. Record CPU model/cores, RAM, Linux/kernel, filesystem, database
+version/durability/settings, build options, artifact/model and harness
+digests, warmup, background load, phase timings and process-resource scope.
+Before the first acceptance run, approve the workload, sample counts,
+method and production performance thresholds. The retained full-load and
+three-pair Stop design is the starting plan; any change needs an explicit
+decision before measurement. Production performance thresholds are
+**TBD before acceptance**, never converted from Windows absolute values.
+Revalidate Stop, deadlines, cancellation/reaping, late results, scheduler
+authority and lease/quarantine on Linux. Existing Windows-only probe and
+process helpers must be ported and validated before they can be used there.
+
+Report **Gate 4 Windows**, **Linux/Xeon performance and full loaded Stop**,
+and **HIL** separately. Linux/Xeon and HIL remain NOT RUN until their
+requirements are actually exercised. Production/release acceptance waits
+for Linux/Xeon and, if physical control is advertised, suitable real HIL.
+Unavailable physical capabilities remain unavailable. Windows PASS does not
+select a release or change default traffic. Keep Stage 4 changes in the
+review worktree; no commit, merge or branch/worktree removal is authorized
+by this policy update.
+
+### Stage 4 first read and preview slice
+
+Stage 3 was committed and fast-forward merged locally into both `master`
+branches: Hardware `3ad140f24ae5f3f2e6b735b5cff4beec7bffda54` and Remote
+`3cc5063df984c73f05d50979a7b50dbc853323a9`. Both named Stage 3 branches
+and their E: worktrees were removed after post-merge checks. Commit history
+and all selected receipts remain available. The clean detached Hardware
+worktree managed by the app remains because archive reports another active
+task using it. Its contents were not deleted forcibly.
+
+Stage 4 work continues on `codex/native-remote-stage4`. The first native
+Windows debug binary implements seven HTTP operations: health, project list
+and detail, and validation/preview for v1 and v2. A real-process comparison
+against exact Python r8 and Hardware R2 passed 19 observations per side in
+26.89 seconds. It includes pagination, ownership, missing/revoked sessions,
+canonical and legacy cookie/CSRF precedence, and real preview. The native
+SQLite copy stayed byte-identical and its capture directory stayed empty.
+This is functional evidence for these observations, not performance evidence
+or full error-input coverage.
+
+| First-slice artifact or receipt | SHA-256 |
+| --- | --- |
+| Native Windows debug binary | `426073ff0f98fe076f49f555da7d09217fc340c8936906846524767bfb502eb4` |
+| HTTP harness | `0146109ea1dfeb5279733fc3494d1f05e388170476f048acd8b82ad008c58c6f` |
+| `native-remote-http/7cca71c236be4ba08cd3b813e2785769/comparison.json` | `66307313fec415a2b083c8ae5544889e9efddeadaca3f37adc77a16121433d83` |
+
+The typed SQLite/PostgreSQL read adapter also passed legacy-row and
+read-only checks. Actual writes through the read-only connections were
+rejected. SQLite uses only a closed consistent copy, with immutable access
+and dirty-sidecar rejection; this mode must not shadow a changing live
+database. PostgreSQL uses read-only connections and MVCC. Tests use the
+Stage 4 DEV-owned session `cirnet-4PiLwh`; earlier Stage 3 evidence remains
+in its original session.
+
+Authentication writes, native migrations, WebSocket and command/scheduler
+integration are in progress. The other 56 HTTP operations, complete runtime
+OpenAPI comparison, full database/cutover/rollback matrix and full Gate 4
+are **NOT RUN**. Detailed malformed v2 validation messages beyond the
+selected fixtures still need parity evidence. No default traffic or release
+manifest has been switched; Linux/Xeon production acceptance remains
+**NOT RUN**.
+
+
+### Stage 4 native data and protocol checkpoint
+
+Stage 4 remains uncommitted on codex/native-remote-stage4, based on Remote
+3cc5063df984c73f05d50979a7b50dbc853323a9. This checkpoint records component
+and route-group evidence, not Gate 4 acceptance.
+
+Native migration passed 16 disposable scenarios in three tests: fresh and
+unversioned SQLite, all seven historical revisions, five atomic refusals,
+and PostgreSQL legacy/duplicate-capture cases. Independent Python r8
+comparison found all 56 normalized SQLite catalog objects equal and
+PostgreSQL schema dumps byte-identical (SHA-256
+ba9232944070c88777670be368c47c2c4090987a93fa6bc5aef767bd7e496572).
+Both engines retained five legacy tables and 107 original experiment
+payload texts per engine, and matched ownership, assignment history,
+sealed capture adoption and scheduler projections. The explicit --migrate
+CLI passed fresh migration and idempotence; startup does not migrate.
+
+Auth components passed on real SQLite and PostgreSQL, including Python
+Argon2 hashes, opaque token rotation, revocation, legacy proofs, guest
+ownership transfer, roles and last-admin protection. These service tests
+do not establish HTTP callbacks or cancellation of running jobs.
+Project components passed independent-pool and distinct-session CAS on
+both engines, immutable snapshots, owner isolation, revoked-session
+rejection and atomic rollback when a child reaches the revision limit.
+The ordinary native library suite passed 26 tests; 10 environment-gated
+tests remained ignored in that invocation and are not counted as passes.
+
+Frozen debug candidate
+3abbfd9ce1fa1fdd51299347a5bb9942d783e0ad97f8beedbd7fb011f223a3a0
+passed the two SQLite REST slices in 57.48 seconds of pytest time
+(58.62 seconds with controller overhead): 19/63 operations, with
+19 read/preview and 26 document observations per side. The document slice
+covers canonical errors, ownership, ETags, CAS and soft deletion. Only
+new IDs and server timestamps are normalized; timestamps are separately
+bounded and creation times must agree. Project receipt SHA-256:
+46aa355e16738b4734046b807d8077b0cde02a2a5c4517f4eb6bdfeb9f198ab9;
+read/preview receipt:
+cbdf12ea6e8c6ae46a561f75643d398b3ea6c9c0d27f788d5eb38bea6145ce56.
+Earlier candidates and receipts remain historical evidence.
+Document writes require explicit CIRNET_REMOTE_READ_ONLY=false; the
+default remains read-only. Eight HTTP boundary tests passed.
+
+EventHub passed four queue/cleanup tests. A standalone native WebSocket
+fixture passed four tests and matched twelve real Python wire outcomes,
+including malformed frames, UTF-8, oversized frames, rate limits, rejected
+sessions and last-controller cleanup. It is not yet connected to the
+application's real experiment manager; loaded disconnect/Stop safety
+cannot be inferred from these component results.
+
+A missing physical-mounting check in the first preview implementation
+was reproduced and corrected. The pinned Contracts API lacks a public
+standalone physical validator. A small compatibility helper invokes the
+existing public assignment validator with fixed valid wrapper fields,
+without duplicating geometry rules or changing the dependency pin.
+Three pinned physical-design cases passed. An additive producer API is
+a follow-up to remove this coupling.
+
+Raw evidence remains in DEV session cirnet-4PiLwh: project-http-paired,
+native-remote-projects/7e32b73bdd7049aca31ba4e1736ebc7d,
+native-remote-http/a0101eb3e898420d9bf5743fb78fda6e,
+project-cas-safety, stage4-db-compatibility/migration-audit and
+events-websocket. Full OpenAPI/63-operation parity, live scheduler/control
+integration, loaded Stop, cutover/restore/competing-scheduler rehearsal
+and Interface E2E are **NOT RUN**. Gate 4 is **NOT RUN**. Default traffic,
+release selection and outstanding Linux/Xeon production acceptance are
+unchanged.
+
+### Stage 4 assignment, compiler and control checkpoint
+
+This checkpoint supersedes the earlier implementation inventory, while retaining
+its artifacts and observations. Full Gate 4 remains **NOT RUN**.
+
+The frozen Windows debug candidate
+`029b8c20574de6bb8bf64c604f187437df821302c332f0a21d2b9097f4c13d06`
+passed 43 observations for 16 assignment HTTP operations and 26 observations
+for 12 document mutation operations against exact Python r8. The paired suites
+took 53.04 seconds (54.20 seconds including the controller). Their receipts are
+`native-remote-assignments/1838e04358ef4afe898f6fbbcb5ca39c/comparison.json`
+(SHA-256 `2dec73fdf46e032c431c7034fa0a0250d443933bed24c9f00c5f1a31eeefaa1b`)
+and `native-remote-projects/8ca55f282c3f4f51a4a16aa569dfda4d/comparison.json`
+(SHA-256 `c936b51398df84cb5c89d12a427d1ca8a4372b3a27e662b297cd1e76362c2cd5`).
+These isolated SQLite HTTP checks cover instructor/student/admin visibility,
+frozen publication versus subsequent drafts, revision conflicts, and integral
+float revisions. The prior seven read/preview operations retain their separate
+candidate receipts; this is not a combined final-artifact acceptance claim.
+
+Numeric regression tests first reproduced project-write failures on SQLite
+and PostgreSQL and 14 compiler mismatches in a 22-case Python oracle. Bounded
+integer conversion now accepts valid integral float tokens without rounding
+large integer tokens. Generator limit comparisons retain exact integer versus
+binary64 ordering; strict integer-only endpoint allocation remains strict.
+Project and assignment numeric regressions each passed both engines. Compiler
+checks passed the original 173-case corpus and the separate 22-case numeric
+corpus. The changed compiler still needs the combined final-source replay.
+
+Topology edge checks preserve pin order and search limits. Ten fresh Python
+processes produced two orders for the same `shorted_nets` diagnostics (6/4);
+only this proven unordered diagnostic list is compared as a multiset. This does
+not relax event, signal, timestamp, capture or safety ordering. Evidence:
+`topology-ordering/91f7cbee658e4e6f949ed6ff709b169e/ordering-summary.json`,
+SHA-256 `4c864d66af4ee3587ad9067436a9d0a58a3b46a3d99daf1b79be5a9f89d0a2b0`.
+
+The isolated native auth HTTP fixture passed seven operations with 25
+observations and five CORS preflight cases (36.63 seconds). Receipt:
+`native-remote-auth-http/cbe10a191da84e76bc0068e2877e3ec6/comparison.json`,
+SHA-256 `66643ff73b3c95da60583c4ebc883da48a1df833976a05c189fbc4e948dbe009`.
+Its revocation receiver proves durable session revocation before callback;
+it is not evidence for a production scheduler cancellation callback.
+
+Native runtime repository tests passed on disposable SQLite and PostgreSQL:
+lease reservation and generation CAS, transactional creation and operation
+identity, history/privacy queries, and capture retirement. A real R2/C++ manager
+component test passed Create → Run → byte-exact NCAP → safe lease release,
+and restart recovery retained quarantine when physical capability was absent.
+The extended check passed capture read, retirement, repeated delete and file
+removal. Startup performs actual lease cleanup before reporting a blocked
+capture destination.
+
+Independent review identified mandatory unresolved control checks: public Stop
+must fence the current session and owner in the same transaction as its state
+mutation; a lifetime scheduler authority must prevent a second native process
+from recovering a live process's leases; shutdown must drain admitted detached
+mutations before releasing that authority. Fixes and deterministic regressions
+are in progress. HTTP/WebSocket integration, PostgreSQL control races, competing
+scheduler and loss-of-authority tests, full route/OpenAPI matrix, loaded Stop,
+backup/restore/cutover/rollback, and browser E2E remain **NOT RUN**.
+
+All raw receipts are retained under the owned DEV session `cirnet-4PiLwh`.
+Stage 3 history and evidence are unchanged. No Stage 4 commit, default traffic,
+release selection or Linux/Xeon production acceptance is claimed.
+
+### Stage 4 optimized integration checkpoint
+
+This checkpoint supersedes the implementation status above without replacing
+the older artifacts or results. Stage 4 remains uncommitted. Full Gate 4 is
+**NOT RUN**; this is an integration checkpoint, not release acceptance.
+
+The first optimized Windows candidate is
+`7bae8cdc0af803d7487c8b25df5b2333e5f43f242e87ea4d22cc837335ddce79`,
+built with Rust 1.90.0 using `cargo build --release --locked --offline`
+in 134 seconds. Its build receipt is
+`native-remote-release/766f95f64741496e8f7f1cbabc2fa4ba/candidate.json`,
+SHA-256 `43bcba4d0079b167ef699f68a912f7bf1621190efc3bd786eed695f4098ac4ce`.
+The separately recorded runtime-source digest is
+`1d1de69a6a7878de5b9810ccee71ae32b020a003f6de21a6ec7df9422f803787`.
+Subsequent safety review requires a new candidate; these results remain
+attributed to the exact bytes above.
+
+Actual HTTP comparisons passed all six route groups on each of SQLite and
+PostgreSQL: auth, projects, assignments, experiments, reads/preview and stations.
+The operation union contains all 63 canonical IDs. Each lane used exact Python
+r8, the same Rust Hardware R2, Contracts and C++ worker, with separate disposable
+databases and processes. NCAP payload bytes and digital event times matched;
+only separately checked resource identities and server wall clocks were
+normalized. Station HTTP checks include both owners and an empty queue; live
+queue ownership has separate component evidence. The two runners passed
+6 tests each in 191.88 and 202.77 seconds, with six deliberate backend
+deselections each. This parallel functional run is not a performance benchmark.
+The aggregate receipt is `final-http-sqlite/paired-summary.json`,
+SHA-256 `a25b63b426025b6bbf6baa428ec0a91eabd88800b6f903b6fab8054ae0256ec0`.
+
+Python `scripts/export_openapi.py --check` and the exact optimized binary's
+OpenAPI export passed against Contracts SHA-256
+`dc39c874386eba2b58f8b5c631cbee0d63ded86cf287aea63f54e4a237ff8f08`.
+The binary registers the same 63 unique operations. Its migration CLI applied
+seven migrations, repeated with zero changes, and refused implicit database
+creation. Final-source Rust checks passed 43 ordinary library tests; 23 ignored
+fixture tests are not counted as passes. Separate selected checks passed the
+CLI, original 173 compiler cases, 22 numeric cases, three topology cases and
+54 HTTP body cases. Raw commands and results are in `final-native-checks`
+and `final-openapi`.
+
+The earlier Stop ownership, scheduler authority and detached shutdown findings
+now have focused passing proofs. Public Stop fences current owner/session in
+its mutation transaction. A lifetime native authority excludes an independent
+SQLite or PostgreSQL scheduler and fails closed after PostgreSQL connection
+loss. Active cleanup retains the lease until the final safe ACK; failed durable
+settlement fences the station. Startup fault tests cover both committed
+reservation and an actual R2/C++ Start, with no READY, no stale capture and
+cleanup before exit.
+
+The optimized candidate passed the real PostgreSQL cutover and rollback
+rehearsal in 65.30 seconds. It verifies both database/capture backup pairs,
+retirement of the old control endpoint, a competing process rejected before
+READY, pending operation identities, a queue held by physical quarantine,
+loss of the exact advisory-lock connection, retained lease during the held
+final ACK, rejection of late Start capture, and restoration before reconnecting
+exact Python r8. Receipt:
+`stage4-postgres-cutover/721efd638fe747caa082505aac2647fd/cutover-summary.json`,
+SHA-256 `1c97f5bac090c0ebf064bed606a3c8b1cd0bb4794e03348477f56874aded9c8e`.
+This uses unavailable physical capability and makes no energized HIL claim.
+
+Review after this run identified two additional checks: monitor panic must
+still stop admission and drain cleanup, and loss of scheduler authority during
+local post-capture work must prevent publication. Deterministic regressions and
+repairs are in progress. Additional PostgreSQL claim/ownership interleavings,
+browser workflows, actual child crash/timeout propagation, the formal fixed-load
+comparison and loaded Stop remain pending. Browser-driver failures observed
+against Python alone are retained as harness failures, not native API results.
+
+The Stop adapter retains the approved synchronized Start workload, three paired
+windows of 100 qualified samples per side, the 403-attempt ceiling and all six
+absolute safety bounds. Gate 4 also retains its paired 110% comparisons; the
+Gate 3 Windows performance exception is not silently extended to Gate 4.
+Short diagnostics cannot satisfy the formal gate. Linux/Xeon production
+performance and physical HIL are **NOT RUN**. Default traffic, release pins,
+Stage 3 commits and acceptance evidence remain unchanged. All raw evidence is
+under the owned DEV session `cirnet-4PiLwh`.
+
+### Stage 4 safety and compatibility checkpoint: 20cbd915
+
+This checkpoint records the later Windows candidate without rewriting the
+previous candidates or their results. Stage 4 remains uncommitted on
+`codex/native-remote-stage4`, based on Remote
+`3cc5063df984c73f05d50979a7b50dbc853323a9`. Its executable SHA-256 is
+`20cbd915780e6bc14a0fef95d1c2359ab2771ffe37b745d77639f4457411ff36`.
+The release build took 39.82 seconds. The receipt is
+`native-remote-release-successor/c1c9ab11b1194fc9b79942cbbf0b8e49/candidate.json`,
+SHA-256 `872f14b968a9cf78e64a109a9927553a0203418077ecca27df6af51cfba8c35f`.
+All raw paths below are relative to the owned DEV session `cirnet-4PiLwh`.
+
+Three safety findings now have failing reproductions followed by passing
+regressions. Monitor termination or panic closes admission and still drains
+cleanup; diagnostic output failure cannot interrupt that cleanup. Loss of the
+PostgreSQL scheduler connection after capture sealing prevents ordinary
+publication and removes the unreferenced capture. Recovery now atomically
+clears the old private reservation generation with terminal state, lease
+disposition and audit. A stale worker cannot reuse the successor's newer
+revision to overwrite recovery or release quarantine. Both release and
+quarantine successor interleavings passed. This does not claim that a
+connection health check and every subsequent pooled database commit are one
+atomic operation. Normal manager tests passed 6/6 in 4.43 seconds and the
+SQLite/PostgreSQL runtime record checks passed 2/2 in 0.81 seconds.
+
+The inherited `db/` ignore rule hid ten authored Rust database source files
+from the earlier Git-filtered inventories. The narrow source exceptions now
+include those files. Historical inventories remain preserved and are explicitly
+incomplete; their exact executable results have not been relabelled. The
+current filesystem inventory, Cargo dependency inputs and generated protocol
+hashes were verified before and after a locked, offline release command.
+Cargo reported the executable as fresh in 0.67 seconds, with no compilation
+and the same executable hash. This is an input/identity audit, not a second
+clean build. Receipt:
+`native-remote-release-dependency-audit/655607b9c0df463087ed9d52b8eccf88/verification.json`,
+SHA-256 `d7c72263a46ac6ebfd241b610c5c82fde8d93042528ad27a85c52cb41e9b1953`.
+The complete dependency inventory SHA-256 is
+`7a7d4c47fed1bc197c659872388b469a7ac01f66aaf9aefea71161a221d371e5`.
+
+| Exact candidate check | Result and scope |
+| --- | --- |
+| Paired HTTP compatibility | PASS: 12 backend/route groups, all 63 operations; SQLite 161.63 s and PostgreSQL 172.85 s. Six deliberate other-backend deselections per runner are not passes. |
+| Browser and Interface integration | PASS: two selected Interface tests on each runtime plus Playwright Python WebSocket reconnect/resync, exact 124-byte NCAP, waveform rendering, physical preview and recovery from a lost Create response. This is not the complete Stage 5 browser matrix. |
+| PostgreSQL transaction and control races | PASS in 23.69 s: real blocking/commit interleavings, ownership, revision limits, publication/admission, old-session Stop and WebSocket revocation. Unsafe recovery audit rollback followed by quarantine also passed. |
+| PostgreSQL cutover and rollback | PASS in 54.12 s: matching database/capture backups, competing scheduler exclusion, pending queue, lost authority, held safe ACK, late-result rejection and verified Python reconnection. |
+| Real C++ worker faults | PASS in 52.00 s: crash and ten-second timeout on both runtimes; child exit before safe ACK, no fault capture or residual lease, then replacement-worker capture parity. |
+| Formal fixed load and loaded Stop | NOT RUN for this candidate. Short Stop comparisons below do not satisfy the formal gate. |
+| Linux/Xeon performance, Linux signal execution and physical HIL | NOT RUN. No production or release PASS is claimed. |
+
+The exact HTTP aggregate is `successor-http-sqlite/paired-summary.json`,
+SHA-256 `ac9e7a32c98745e3165abda288121b0cbd5867622f3f76098b71f12100cd9c82`.
+Browser evidence is
+`stage4-interface-e2e/paired-d07fdf7109f84ad6ae32d7771e1aa51a/comparison.json`,
+SHA-256 `7caa567e646ccf9be88c330dd5267bddd591d5a2a40db633ff14248815ac50da`.
+The candidate took 140.86 seconds; the 136.46-second Python calibration was
+reused after checking its receipts, source, configuration and raw capture
+digests. Reuse avoided one measured 136.46-second baseline replay; it does not
+establish an application speedup. The PostgreSQL race and rollback receipts are
+`stage4-postgres-races/32db37b4196649828428de6f6a6c7f32/observations.json`
+(SHA-256 `f6664656b31788e3af8829d5fc53dfb4a2e644b3f053f6db7eafa2482d9b1cc0`),
+`stage4-postgres-cutover/694141961f524dc088a29603a4d01f33/cutover-summary.json`
+(SHA-256 `9d918ad480d03ce359d259d9d61393259c1b2f1feaa811d21c5e0837e5d79fa6`),
+and `stage4-worker-faults/6d36cc0329194a4887a72087e72b46d2/worker-fault-summary.json`
+(SHA-256 `220c0b12dcab96997dc866c60af68c3f8ae33e8e41bedd44661cd20143fb8847`).
+The exact older internal pause between commit and event lookup and the direct
+repository reservation interleaving have not been replayed literally.
+Public protocol equivalents are recorded separately, not presented as those
+same internal tests.
+
+Historical `7bae8cdc` also passed five old-database restore/index checks in
+156.80 seconds: revisions 0001/0003/0004/0005, 107 retained payloads, schema
+catalog parity and the active-index query with 2,000 terminal rows. Receipt
+`old-restore-controller/summary.json`, SHA-256
+`da313495a5b7e7a29c3b7f634d31d0c73b5e9653ffee4a9dbb181abd83182fc9`.
+Migration and query source identities justify retaining that scoped evidence;
+it is not a new run on `20cbd915`. The earlier optimized CLI/OpenAPI result
+also remains attributed to its original executable.
+
+The first short Stop attempt failed its Run precondition with HTTP 429.
+The common driver started its one-second owner cooldown before all four Run
+responses, allowing a later admission to remain rate-limited. The Stage 4
+adapter now waits until 1.010 seconds after the last successful Run response,
+before the next Create. Both lanes use this rule; no Run limit or retry policy
+changed. The three deterministic pacing regressions passed. The adapter SHA-256
+is `51c5f933d80068ffe999a4788c8f3dfa0ea5b294ec47953ea760aad60f67d361`.
+The measured Stop interval, synchronized Start, workload, four running workers,
+pipe condition, worker reaping before ACK, capture, lease and quarantine checks
+are unchanged.
+
+The corrected diagnostic took 104.63 seconds: B and D each qualified 8/8
+attempts, with zero rejected samples and eight warmups. Its six absolute safety
+comparisons passed; paired performance passed 4/6. HTTP p95/p99 were
+77.5356 ms for B and 100.8298 ms for D, above the paired 85.28916 ms limit.
+With eight samples these two tail values are the maximum, not a formal tail
+estimate. Raw ACK was 56.7754/38.2203 ms and durable lease release
+124.9691/88.7484 ms. Added untimed pacing was 4.1486/4.1984 seconds.
+The worst native HTTP response followed ACK at 38.22 ms and lease commit at
+83.42 ms, returning at 100.83 ms. Existing evidence localizes the extra time
+after ACK but does not distinguish database acquisition, SQL, commit and
+response work. Receipt:
+`native-remote-loaded-stop/91e03eabd3bc486ba27ec2ae501f0924/stop-summary.json`,
+SHA-256 `c967c9e09daa1bf8973731dd0627fd41c3fe7658f3789d7bfbc312d3bfb40f22`.
+
+Full Gate 4 remains unaccepted. Preserve three paired windows of 100 qualified
+Stop samples per side, the 403-attempt ceiling, all six absolute safety bounds
+and paired comparisons. Fixed-load acceptance still requires both SQLite and
+PostgreSQL, three paired windows of 200 jobs per side, unchanged workload and
+frozen/paired thresholds. Database timings must be identified separately from
+HTTP timings. The Gate 3 Windows policy is not a waiver for these Stage 4
+requirements. Default traffic, immutable release selection, Stage 3 commits and
+all historical evidence remain unchanged.
+
+
+### Stage 4 Windows compatibility and safety checkpoint · 717402ba
+
+The Windows x64/MSVC candidate is `native-remote-sqlite-writer-release/f07bbb29b41d4a7c9120379547450752/cirnet-remote.exe`
+(SHA-256 `717402ba92e7a0f1864fe4f5f70dbc8f6a55c154e9880a35d470dd2e07f51203`).
+Rust 1.90.0 built it in 39.10 seconds with
+`cargo +1.90.0 build --release --locked --offline --bin cirnet-remote`.
+The candidate manifest SHA-256 is `6bd5a0d8d71303f62f149c492f541f04221dc30bc82688fcab12b925cd0a9a51`.
+The full compiled-input audit `complete-after.json` has SHA-256
+`f7adace56acb5817bfba4da3b16e9207455062def19aefa4c2efe5cf90cda9f4`. The historical `20cbd915`
+and `d4d0fa3e` results retain their original candidate and verdict.
+
+| Check | Evidence and scope |
+| --- | --- |
+| HTTP and CLI compatibility | **PASS**. All 63 operations across 12 paired HTTP groups. SQLite took 237.36 s and PostgreSQL 250.94 s, with six deliberate other-backend deselections per lane. The CLI export matches registered operations. Migrations applied seven revisions, then zero on repeat. A missing database was refused. |
+| Interface | **PASS** in 152.75 s. Playwright Python verified WebSocket reconnect/resync, the rendered waveform and exact 124-byte NCAP, physical simulation preview and Stop after a committed Create. Two selected Interface source cases also passed. The unchanged 136.46 s Python reference was reused after verifying the workflow, tools, fixture and raw evidence hashes. The full Stage 5 browser matrix remains pending. |
+| SQLite and scheduler component checks | **PASS**. Two optimized-source writer checks cover clone concurrency, cancellation and rollback. Six manager checks with the pinned Hardware cover control, quarantine and cleanup. These ran in Rust test executables. |
+| PostgreSQL transaction and recovery checks | **PASS**. Two public-boundary cases in 75.38 s cover real transaction blocking, publication/admission, claim and revocation, WebSocket handoff, and recovery rollback followed by quarantine and generation revocation. |
+| PostgreSQL cutover and real worker faults | **PASS**. Backup pairs, exclusive scheduler, lost authority, held safe ACK, late capture fencing and verified Python reconnection passed. Real C++ child crash and timeout tests verified reaping before safe ACK, lease settlement and replacement capture parity. |
+| Short loaded Stop | **PASS for observed functional/safety conditions; timing DIAGNOSTIC**, in 103.54 s with the opt-in phase probe enabled. B and D each qualified 8/8 with eight warmups and no rejection. Qualification checked four live in-flight workers, reaping before safe ACK and durable cleanup. All six absolute and all six paired comparisons passed in this sample. HTTP p95/p99 were 67.0223 ms for B and 43.8271 ms for D, both equal to their side’s maximum at this sample size. |
+| Windows functional, compatibility and safety scope | **PASS**. The approved Windows scope keeps mandatory safety deadlines and invariants. Ordinary performance and paired timing are diagnostic. |
+| Linux/Xeon performance and full loaded Stop | **NOT RUN**. Await project stability, actual target host, approved production method/thresholds and platform-native safety validation. |
+| HIL | **NOT RUN**. Physical capabilities remain unavailable; real HIL becomes mandatory when physical control is advertised. |
+
+**Gate 4 Windows: PASS** for the functional, compatibility and safety
+scope defined above, on the identified Windows candidate. **Linux/Xeon
+performance and full loaded Stop: NOT RUN. HIL: NOT RUN. Production/release:
+NOT RUN**, pending the applicable platform and physical-hardware gates.
+No default, release selection, commit, merge or branch/worktree deletion is
+part of this policy update.
+
+The exact combination is Remote `717402ba…`, Rust Hardware R2 SHA-256
+`22d3d0a1c57aad0d2d01d512f3a890149566bc799228559b6943843cba1e85e6`,
+C++ worker SHA-256
+`c0b114fd5c7fd6e65df991c303090cd3e87946bde4d11b65377e9b5797383adf`,
+Contracts native 0.1.2 at `e640f80b1199779659d3db7817fee16d13cc24c1`,
+and Interface source `66845b01f9b02b70e6ec28ececd163133cdcdfa2`.
+The Python r8 comparison manifest is pinned in each receipt. Current
+Windows acceptance reuses valid scoped evidence and the verified Python
+browser reference; it does not convert old performance FAIL results to PASS.
+No total time-saving estimate is claimed for avoiding unrun full Windows
+gates. The reused browser calibration itself had a measured 136.46-second
+duration; that is not an application-performance improvement.
+
+The owned DEV session `cirnet-4PiLwh` contains the receipts below. Keep the
+formal workload at three paired 200-job windows per side for each database and
+three paired 100-qualified-sample Stop windows per side, with the 403-attempt
+cap. Windows diagnostics and historical comparisons retain their recorded
+scope. The worktree remains available for review before Git integration or a
+default or release change.
+
+| Receipt | Session-relative path | SHA-256 |
+| --- | --- | --- |
+| HTTP | `native-remote-writer-http/sqlite-85cbfefdf1634643b6e22329c2159655/paired-summary.json` | `5aeac02e40c8ce368e2e90ec48e4f4571b7c89af230d1e3e15fe72a31721d224` |
+| CLI | `stage4-717-cli/fa738d3f78ea4003bd4a350d2895f4ae/cli-summary.json` | `d6a52004606ab8197be52b5a266232a69bd7ecf30e07b9e22f74cd2f4c968e6f` |
+| Interface | `stage4-interface-e2e/paired-e1b9932fcb4e4fe0b2549f9942e03417/comparison.json` | `ef7f7d2f047acf972c291d8d2e520621e971b6c904b078c084bc6e43a1e22b7f` |
+| Reused Python browser reference | `stage4-interface-e2e/paired-35ff5d0d77134e5b93e419417fa99f16/reference-calibration.json` | `456868143719bbe7a2218cb34cd30351caf1ce1d7ce4269fcbdb52245e535e0b` |
+| Writer component | `stage4-sqlite-writer-gate/3aca07aa008b4c929fc9d851600ade6b/cargo.log` | `134a30e4754fda5e50fe04ebe7bbafd8069dbed5eedf9e5181ea4b6a93955e48` |
+| Manager component | `stage4-sqlite-writer-gate-safety/fad56c3c234f471b9f238b57e39aa1f8/tests.log` | `04fb67b7330ccc43759dedf2f2a5ff833b56ca79b2451ef5d9448cd8a8d35d30` |
+| PostgreSQL public races | `stage4-postgres-races/dd38c8bba6ef404381e29dd295e75812/observations.json` | `248528c8642941abddba59f7ef8e0b47ea11c85e24e4aa749de55a0feb4687f1` |
+| PostgreSQL unsafe recovery | `stage4-postgres-races/unsafe-recovery-6843987f616b49b2965d8bf7e3ceb077/observations.json` | `01772fef03d94176b2f672e31d9c0019711ff7d453f5f4cf31bba3107218b2ef` |
+| PostgreSQL cutover and rollback | `stage4-postgres-cutover/6e26c077430a483c94a835e222ca71c5/cutover-summary.json` | `c07283642f8a6faa2a7e72d1da9ec83fecd55521d8fc4917d65e69f232e56301` |
+| C++ worker faults | `stage4-worker-faults/81e17b60192747249448db86b353575d/worker-fault-summary.json` | `b848f2e26544a599737dfe48280c1cfd207c53372a8c17288946b6ad651fce7e` |
+| Short loaded Stop | `native-remote-loaded-stop/7cf28ed9776c46b58bd8f3fd3e2578c8/stop-summary.json` | `7a401513a5ab7b475eaab107699557bb5d533702d0e137d723aba831cfe9d98c` |
+
+Exact-candidate old-data acceptance now covers revisions 0001, 0003, 0004
+and 0005 plus the active-index query. The first replay took 126.75 s:
+four cases passed; rank 0004 stopped during fixture preparation because
+the source database reported one backend after seeding, before any dump
+or native migration. The original receipt remains FAIL
+(`old-restore-controller/717-a12e0a60907943f198458e74362a7003/summary.json`,
+SHA-256 `c4500aa8392ad9354f5ffa2b828288479f5e5e569c84d9bedb0c18c7c0da9aa9`).
+Only rank 0004 was retried, passing in 29.35 s with the same immutable binary,
+harness, seed and assertions. A versioned readiness observer retained the
+zero-backend guard; it saw zero immediately and did not wait. The initial
+backend type is unknown, not proven to be autovacuum. Retry receipt:
+`old-restore-controller/717-r4-retry-f2ad472e7f754c8b80ed457999f666d4/rank4-summary.json`,
+SHA-256 `1c6505f3bfa423cbcf69458024cd81329f5435be3e7b3ce2e99139a92c0636ea`.
+This closes the exact-artifact gap left by the incomplete older inventory;
+the historical `7bae8cdc` evidence remains unchanged.
+
+Current compiled-source checks passed 47 default library tests and ten
+selected SQLite/PostgreSQL write, runtime, authority, writer and Stop-claim
+cases. The first PostgreSQL claim fixture used a disallowed name and failed
+before the tested mutation; its original receipt is retained. The same
+test executable passed on a fresh correctly named fixture. Receipts:
+`stage4-717-db-regressions/6ae81db335a84e41a618cd6d34d99401/component-regressions.json`
+(SHA-256 `f225089fd9c2e80db855d1437121c526e2a4cf81997a15b5687352c51eb325b7`)
+and `stage4-717-db-regressions/b3a854439c364bc7859943135d009003/postgres-stop-claim-retry.json`
+(SHA-256 `68b9f8848d1cde10e77da4d6c6365ba0bde299e39cce10ea4e2ff888d4d41259`).
+A final audit matched all 87 Rust source files, 55 compiled source inputs,
+two generated protocol inputs and three build manifests to the frozen build
+(`stage4-policy-docs/current-compiled-input-audit.json`,
+SHA-256 `ebfec38409c1d0b2b55dc60ad217a40bd128e6c1881d19070c39295920618280`).
+
+Historical monitor-panic/cleanup wrapper tests and the post-seal
+PostgreSQL authority/successor regressions are reused only for their
+verified unchanged helper/source and PostgreSQL branch. They are not
+reported as fresh executions of the immutable CLI. Current 717 cutover,
+unsafe recovery, worker faults and held-ACK checks cover the integrated
+paths. The reuse/coverage audit is
+`old-restore-controller/717-a12e0a60907943f198458e74362a7003/windows-coverage-audit.md`,
+SHA-256 `2b4ffa09bb74149088a57413e4e56bfc38fe624d43f871e81e11a7a0125cc9fe`.
+The exact older Python-internal pause/lookup interleavings remain not
+literally rerun; their public protocol equivalents are attributed
+separately. The full Stage 5 browser matrix, Linux signal behavior,
+Linux/Xeon full load and Stop, and real HIL remain NOT RUN.
+
+Two missing clock-driven triggers were then checked directly against
+the immutable 717 CLI. A quiet control WebSocket closed from the server
+with code 4401 after a future session timestamp elapsed, without explicit
+revocation, Stop, client close or a changed auth revision. Cleanup retained
+`SESSION_EXPIRED`. A separate live-session case expired the actual lease
+and retained `TIMEOUT`. Both verified lease retention after early ACK and
+while the final cleanup ACK was held, release only after that ACK, and no
+capture from the late Start response. The relay held a successful Start
+response after Hardware had completed; these are expiry/control proofs,
+not evidence of a worker still executing. The separate 16-sample Stop
+evidence establishes that running-worker condition.
+
+The first session test reached teardown after its functional assertions
+but failed a disposable database DROP statement timeout; that 70.08-second
+two-case run remains one FAIL/one PASS. The lease PASS is retained under
+harness `74de6ae93d24abb0aece8a095bba0c934a1e16ea3c508b0bbe05fe88a72548f0`.
+Only session was rerun, passing in 30.58 s, after the harness preserved its
+owned database and recorded functional observations before teardown. Its
+receive-only loop allows server events before close. The final harness
+is `1fd1613e90bfa2a1aab2fb221fefc2b7f50a9f21aaefe83ef6a983a8f36bd8a4`;
+the lease exercise and product deadlines did not change.
+Receipts are `stage4-clock-expiry/session-cf553de8ad614ca98165963ef8e9e0de/expiry-summary.json`
+(SHA-256 `67fef4569f07b9ef04e94ad5d54365e409f4d1eac2603cff67c0576a3756681f`)
+and `stage4-clock-expiry/lease-b157b5485b3549de899556006493f229/expiry-summary.json`
+(SHA-256 `d28184bef17926b839d355ae2c937f51a0b50234794815b1677d4210dbdd0409`).
+No product source or executable changed for this policy update.
+After all checks, the session's PostgreSQL server was stopped with zero
+external clients; data, dumps and evidence were preserved. Cleanup receipt:
+`stage4-policy-docs/postgres-closeout.json`,
+SHA-256 `4216c7c6690a44a42c35ea71c54282fc5d0cdf96779c6fc213d3327fbbbadd24`.
+
+### SQLite diagnosis and current Windows evidence
+
+The current candidate adds a SQLite-only writer permit before checking out a
+pooled connection. Cloned repositories share the permit; reads bypass it and
+PostgreSQL is unchanged. The permit is held through commit/rollback. SQLite's
+`BEGIN IMMEDIATE`, durable commits and driver locking still fence independent
+pools. Queue and connection checkout share the existing 30-second acquisition
+budget, followed by the unchanged driver busy timeout. Individual contended
+requests can wait at the permit where they previously reached a busy database
+connection sooner; no lease is released because a wait or commit failed.
+
+The earlier instrumented candidate `d4d0fa3e…` identified
+pool checkout plus BEGIN as the largest measured post-ACK span; this does
+not exclude RPC or decoding cost in other phases. A separate controlled
+SQLite test split these phases: checkout medians were about 0.05–0.06 ms
+while competing BEGIN calls waited 45.36–92.62 ms under 10/25/50 ms held
+writers. The failing read-capacity reproduction then passed after the permit
+change, as did cancellation/drop/rollback and independent-pool fencing.
+Two writer tests passed in 0.14 s; six manager safety cases passed in 1.64 s.
+These are causal component and short diagnostic results, not production
+performance acceptance.
+
+On exact `717402ba…`, with the opt-in phase probe enabled, the
+eight-sample-per-side Stop diagnostic took
+103.54 s, with 16/16 qualified attempts and zero rejects. Each sample proved
+four real C++ workers active at Hardware ingress, pipe progress without a
+reply, target reaping before safe ACK, durable release after cleanup ACK,
+three byte-verified peer captures and no capture for the stopped target.
+All six retained absolute safety comparisons passed. HTTP/raw ACK/lease
+observed maxima were B 67.0223/52.4368/106.3526 ms and D
+43.8271/29.3413/76.9102 ms. The six relative comparisons also passed but are
+diagnostic under the current policy. With eight samples, the reported
+p95/p99 are the maximum; no formal tail estimate is claimed.
+Native checkout-plus-BEGIN median fell from 25.229 ms in the prior short
+diagnostic to 2.5583 ms; different short windows cannot establish production
+tail performance. Receipt `native-remote-loaded-stop/7cf28ed9776c46b58bd8f3fd3e2578c8/stop-summary.json`
+has SHA-256 `7a401513a5ab7b475eaab107699557bb5d533702d0e137d723aba831cfe9d98c`;
+its `phase-summary.json` has SHA-256
+`ce06b34ecf3952d40e5d4362e86527bf78394ab24cec323e0638df3625cf079c`.
+The short method retains the approved synchronized Start and unchanged
+pacing/workload; moving the full sample matrix to Linux is a policy decision,
+not a claim that 16 samples replace its statistical evidence.
+
+No full Windows load or 600-sample Stop acceptance run was started when
+the policy changed. The already-running short SQLite comparison finished
+normally in 101.44 s: one test passed, PostgreSQL was intentionally skipped.
+Its receipt remains **DIAGNOSTIC**, with no formal threshold decisions:
+`native-remote-load/sqlite-diagnostic-01953cf81ac34f908ac19e07abfae22f/load-summary.json`,
+SHA-256 `b77f7ba3aee72228aae6387a0d261f365994bc629dacfe7947d1f73b1d054408`.
+Each side ran eight measured jobs; B/D CPU per job was 0.7734375/0.234375 s,
+peak RSS 257708032/134193152 bytes and throughput 1.38175/3.97858 jobs/s.
+All recorded API, worker and console-host PIDs were absent after teardown.
+Closeout receipt:
+`stage4-policy-closeout/bb0520bdb9024eb6a2428fab27ecee7f/diagnostic-closeout.json`,
+SHA-256 `dea388bf2af5c409eddf3fd81f6bfd3689f676c85df88d30c3f93459130526b5`.
+
+Earlier load setup failures are retained. The inventory helper initially
+counted Windows console hosts as workers, then incorrectly required four
+resident workers. The unchanged workload configures four slots and runs four
+warmup jobs, but Rust Hardware creates workers lazily. The corrected inventory
+accepts one to four exact workers and only verified system console hosts;
+the original stable-PID resource monitor still applies. It does not relax
+the four-active-worker requirement of loaded Stop. Six service-free helper
+checks passed; the successful short profile followed. Windows uses
+`journal_mode=DELETE` and `synchronous=FULL` in this Stage 4 comparison, distinct from Stage 3 PERSIST;
+Stage 0 did not record the journal PRAGMA. No Linux equivalence is inferred.
+
+Separate SQLite/PostgreSQL repository timing diagnostics are retained under
+`native-remote-db-component`. They used three alternating pairs of 200
+operations after ten warmups against identical 2010-row fixtures on the
+earlier instrumented source. They compare complete repository operations.
+The separate BEGIN timings use different boundaries because Python begins
+lazily and Rust begins explicitly. SQLite client library
+versions differ (3.50.4 and 3.46.0); PostgreSQL uses the same owned server.
+Their results are not relabelled as measurements of `717402ba…`.
+
 
 ## 5. Accept the exact release artifacts
 

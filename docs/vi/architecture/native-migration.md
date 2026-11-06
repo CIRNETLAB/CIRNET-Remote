@@ -2,7 +2,7 @@
 
 [English](../../en/architecture/native-migration.md) · [Kế hoạch gốc ngày 2026-11-05](https://github.com/cirnetlab/cirnet-remote/blob/f91eeeb42d7528d4e7fa9b1526195847932faf9d/docs/superpowers/plans/2026-11-05-cirnet-native-migration.md) · [Biên bản giai đoạn 0](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md)
 
-**Gate 0 PASS trên bộ tham chiếu 0.1.4 đã chọn. Gate 1 PASS trên Windows x64 với r7. Gate 2 PASS với ma trận Contracts r2. Gate 3 PASS về chức năng, tương thích và an toàn trên Windows với r8-R2.** Hiệu năng production Gate 3 trên Linux Xeon, nghiệm thu production/phát hành và Gate 4–5 ở trạng thái `NOT RUN`. [Chính sách Gate 3 hiện hành](#chính-sách-nghiệm-thu-gate-3-theo-môi-trường). Profile 0.1.4 đã phát hành là bản tham chiếu để rollback.
+**Gate 0 PASS trên bộ tham chiếu 0.1.4 đã chọn. Gate 1 PASS trên Windows x64 với r7. Gate 2 PASS với ma trận Contracts r2. Gate 3 PASS về chức năng, tương thích và an toàn trên Windows với r8-R2. Gate 4 PASS về chức năng, tương thích và an toàn trên Windows với Remote 717402ba.** Hiệu năng production Gate 3, hiệu năng và Stop dưới tải đầy đủ Gate 4 trên Linux/Xeon, HIL, nghiệm thu production/phát hành và Gate 5 đều `NOT RUN`. [Chính sách Gate 3 hiện hành](#chính-sách-nghiệm-thu-gate-3-theo-môi-trường) · [Chính sách Gate 4 hiện hành](#chính-sách-nghiệm-thu-gate-4-theo-môi-trường). Profile 0.1.4 đã phát hành là bản tham chiếu để rollback.
 
 > **Dành cho agent triển khai.** Dùng superpowers:subagent-driven-development hoặc superpowers:executing-plans. Hoàn thành và ghi bằng chứng từng gate trước khi bắt đầu giai đoạn kế tiếp.
 
@@ -1697,9 +1697,641 @@ liệu, cấu hình checkpoint hay tiêu chí gate.
 
 ## 4. Remote Rust
 
-- [ ] **Thay theo nhóm route.** Remote giữ topology, auth và orchestration hiện tại. Port route đọc và preview trước, rồi `services/auth.py`, `websocket/events.py`, persistence và cuối cùng command/idempotency/`services/experiments.py`. So exact OpenAPI handoff, HTTP/error/cookie/CSRF/origin, WebSocket hello/sequence/resync/đóng kết nối, owner/control client và disconnect. Chỉ chạy shadow các route thực sự không có tác dụng phụ trên bản sao dữ liệu. Thử bootstrap phiên và kết nối WebSocket điều khiển trong môi trường riêng vì chúng có thể đổi phiên hoặc hủy job.
-- [ ] **Dữ liệu và quyền điều khiển.** Port schema và migrations của Remote bằng migration native, chạy đối chiếu SQLite và PostgreSQL thực với dữ liệu cũ, CAS revision, login/ownership và capture. Diễn tập `pg_dump`/`pg_restore` cùng backup capture và kiểm hash, giữ idempotency và quarantine. Giữ endpoint điều khiển Hardware ngoài tầm truy cập của scheduler shadow. Rút quyền scheduler cũ và xác nhận tiến trình đã dừng, kiểm tra hàng đợi phục hồi trước khi cấp quyền cho ứng viên. Test hai tiến trình tranh quyền, hàng đợi còn lệnh và mất kết nối giữa cutover.
-- [ ] **Ma trận và gate 4.** So Remote Python → Hardware Rust → C++ với Interface hiện tại → Remote Rust → Hardware Rust → C++ theo từng nhóm route. Giữ `scripts/export_openapi.py --check` làm phép đối chiếu bản Python. Xuất hoặc phục vụ OpenAPI từ binary Rust và so với handoff cùng bảng operation. Giữ fixture auth/ownership/operation identity/WebSocket và `services/api/tests/postgres_cases.py`. Port assertion phụ thuộc internals sang pytest dùng REST/WebSocket, binary và lệnh migration Rust trên DB thử thật. Giữ E2E Interface hiện có và thêm Playwright Python. So p95/p99 API/DB, CPU/RSS, throughput và Stop dưới tải. Khi tất cả route và diễn tập rollback PASS mới chuyển lưu lượng mặc định. Rollback hủy quyền scheduler ứng viên, phục hồi DB và capture cặp đôi khi cần, xác minh quyền và cách ly trước khi nối lại backend cũ.
+- [x] **Thay theo nhóm route.** Remote giữ topology, auth và orchestration hiện tại. Port route đọc và preview trước, rồi `services/auth.py`, `websocket/events.py`, persistence và cuối cùng command/idempotency/`services/experiments.py`. So exact OpenAPI handoff, HTTP/error/cookie/CSRF/origin, WebSocket hello/sequence/resync/đóng kết nối, owner/control client và disconnect. Chỉ chạy shadow các route thực sự không có tác dụng phụ trên bản sao dữ liệu. Thử bootstrap phiên và kết nối WebSocket điều khiển trong môi trường riêng vì chúng có thể đổi phiên hoặc hủy job.
+- [x] **Dữ liệu và quyền điều khiển.** Port schema và migrations của Remote bằng migration native, chạy đối chiếu SQLite và PostgreSQL thực với dữ liệu cũ, CAS revision, login/ownership và capture. Diễn tập `pg_dump`/`pg_restore` cùng backup capture và kiểm hash, giữ idempotency và quarantine. Giữ endpoint điều khiển Hardware ngoài tầm truy cập của scheduler shadow. Rút quyền scheduler cũ và xác nhận tiến trình đã dừng, kiểm tra hàng đợi phục hồi trước khi cấp quyền cho ứng viên. Test hai tiến trình tranh quyền, hàng đợi còn lệnh và mất kết nối giữa cutover.
+- [x] **Ma trận và Gate 4 Windows.** So Remote Python → Hardware Rust → C++ với Interface hiện tại → Remote Rust → Hardware Rust → C++ theo nhóm route. Giữ `scripts/export_openapi.py --check` cho đối chứng Python và so OpenAPI native với cùng handoff và bảng operation. Giữ assertion auth, ownership, operation identity, WebSocket và PostgreSQL qua giao diện công khai hoặc component native có phạm vi xác định. Giữ E2E Interface và Playwright Python. Áp dụng [chính sách theo môi trường](#chính-sách-nghiệm-thu-gate-4-theo-môi-trường) cho hiệu năng thông thường và Stop dưới tải. Rollback rút quyền scheduler ứng viên, phục hồi đúng cặp database/capture khi cần, rồi xác minh quyền và quarantine trước khi nối lại Python. Nghiệm thu Windows không cho phép đổi mặc định hoặc bản phát hành.
+- [ ] **Production Linux/Xeon và HIL áp dụng.** Chạy tải đầy đủ và ma trận Stop đầy đủ sau khi dự án ổn định, có máy đích, đã chốt ngưỡng production và xác minh an toàn Linux. Chạy HIL thật trước khi nghiệm thu capability điều khiển phần cứng thật được công bố. Giữ nghiệm thu production/release NOT RUN đến khi mọi yêu cầu áp dụng đều đạt.
+
+### Chính sách nghiệm thu Gate 4 theo môi trường
+
+Chính sách được người dùng phê duyệt này thay thế phạm vi nghiệm thu
+giai đoạn 4 trước đó. Thay đổi nằm ở cách sử dụng số đo, không sửa kết quả
+lịch sử, artifact, digest hoặc yêu cầu an toàn. Các mốc bên dưới giữ
+quyết định và PASS/FAIL/NOT RUN theo chính sách tại thời điểm ghi nhận.
+
+Windows x64 / Intel Core i5 là máy nghiệm thu phát triển. **Gate 4 Windows**
+yêu cầu bằng chứng chức năng, tương thích và an toàn cho tổ hợp Remote,
+Hardware, Simulator và Contracts đã xác định. Phạm vi bắt buộc gồm
+REST/OpenAPI, Interface, WebSocket và NCAP; SQLite và PostgreSQL thật,
+dữ liệu cũ, migration tường minh và rollback; auth, ownership, session,
+idempotency và quyền scheduler; Run/Stop, mất kết nối, worker treo/chết,
+ACK thiếu/muộn, thu hồi worker, chặn kết quả cũ, lease và quarantine.
+Chỉ dùng lại khi đã xác minh artifact hoặc đầu vào component biên dịch
+không đổi, cấu hình, fixture và phạm vi assertion; kết quả executable cũ
+vẫn gắn với executable đó. Thiếu bằng chứng hoặc bằng chứng không hợp lệ
+thì yêu cầu tương ứng vẫn FAIL hoặc NOT RUN.
+
+CPU/RAM, throughput, độ trễ API/database thông thường và so sánh tương đối
+với Python trên Windows là **chẩn đoán**, không chặn gate. Bài tải đầy đủ
+và ma trận Stop đồng bộ **ba cặp luân phiên × 100 mẫu hợp lệ mỗi bên**,
+giữ trần 403 lần thử mỗi cửa sổ, chuyển sang nghiệm thu Linux/Xeon.
+Không cần chạy lại tải Windows để vượt ngưỡng hiệu năng cũ. Lỗi chức năng
+hoặc an toàn phát hiện trong bất kỳ bài chẩn đoán nào vẫn phải xử lý.
+
+Mọi bất biến và deadline an toàn đã phê duyệt vẫn bắt buộc trên Windows.
+Bằng chứng Stop phải chứng minh đúng tiền điều kiện, gồm worker còn hoạt
+động tại thời điểm Hardware nhận Stop nếu ca kiểm tra tuyên bố có tải
+đang chạy, thu hồi worker trước safe ACK và xác lập trạng thái an toàn
+trước khi ghi giải phóng lease. ACK dọn dẹp cuối cần cho giải phóng lease bị thiếu hoặc không chắc chắn
+phải giữ hạn chế quyền và quarantine; thiếu ACK của lệnh Stop ban đầu vẫn
+có thể được xử lý bằng lượt dọn dẹp độc lập đã xác nhận an toàn. Kết quả
+muộn không được công bố capture
+hoặc khôi phục generation cũ. Các trần an toàn Stop được giữ nguyên,
+đơn vị ms: HTTP p95/p99 197.55406000000002 / 581.1564, ACK thô
+139.20478000000003 / 526.7117900000001, giải phóng lease đã commit
+2534.55686 / 2598.3746800000004. Mẫu ngắn không phải ước lượng percentile
+production. Giữ deadline của từng thao tác và hành vi đóng an toàn khi
+không xác minh được; không đổi các giới hạn an toàn này thành độ trễ
+tham khảo thông thường.
+
+Trước nghiệm thu production, dự án phải ổn định và có máy Linux/Xeon thật.
+Ghim đối chứng và ứng viên trên **cùng máy**, cùng database, phiên bản
+phụ thuộc, workload và điều kiện đo. Ghi CPU/lõi, RAM, Linux/kernel,
+filesystem, phiên bản/cấu hình/độ bền database, tùy chọn build, digest
+artifact/model và harness, warmup, tải nền, thời gian từng pha và phạm vi
+tài nguyên tiến trình. Chốt workload, số mẫu, phương pháp và ngưỡng hiệu
+năng production trước lượt nghiệm thu đầu tiên. Thiết kế tải đầy đủ và
+Stop ba cặp hiện tại là kế hoạch ban đầu; mọi thay đổi phải được quyết
+định tường minh trước khi đo. Ngưỡng hiệu năng production là **TBD trước
+nghiệm thu**, không chuyển từ số đo tuyệt đối Windows. Xác minh lại Stop,
+deadline, hủy/thu hồi worker, kết quả muộn, quyền scheduler và lease/
+quarantine trên Linux. Các probe và helper tiến trình chỉ hỗ trợ Windows
+hiện tại phải được chuyển đổi và kiểm thử trước khi dùng trên Linux.
+
+Báo riêng **Gate 4 Windows**, **hiệu năng và Stop dưới tải đầy đủ
+Linux/Xeon**, và **HIL**. Linux/Xeon và HIL giữ NOT RUN cho đến khi thực
+sự kiểm tra các yêu cầu tương ứng. Nghiệm thu production/release chờ
+Linux/Xeon và HIL phù hợp nếu công bố khả năng điều khiển phần cứng thật.
+Capability phần cứng chưa khả dụng vẫn không khả dụng. Windows PASS
+không chọn bản phát hành hoặc đổi traffic mặc định. Giữ thay đổi
+giai đoạn 4 trong worktree để review; cập nhật chính sách này không
+cho phép commit, merge hoặc xóa branch/worktree.
+
+### Nhóm đọc và preview đầu tiên của Giai đoạn 4
+
+Giai đoạn 3 đã được commit và merge fast-forward cục bộ vào `master`
+của cả hai repo: Hardware `3ad140f24ae5f3f2e6b735b5cff4beec7bffda54`
+và Remote `3cc5063df984c73f05d50979a7b50dbc853323a9`. Hai branch
+Giai đoạn 3 cùng worktree trên ổ E: đã được dọn sau kiểm tra sau merge.
+Lịch sử commit và mọi biên nhận đã chọn vẫn được giữ. Worktree Hardware
+detached, sạch do ứng dụng quản lý còn được giữ vì công cụ archive báo
+một tác vụ khác đang sử dụng. Không cưỡng bức xóa nội dung của worktree này.
+
+Giai đoạn 4 tiếp tục trên `codex/native-remote-stage4`. Binary native
+Windows debug đầu tiên triển khai bảy operation HTTP: health, danh sách
+và chi tiết project, cùng validation/preview v1 và v2. Đối chiếu tiến trình
+thật với đúng Python r8 và Hardware R2 đạt 19 quan sát mỗi bên trong
+26,89 giây. Các ca gồm phân trang, quyền sở hữu, phiên thiếu/bị thu hồi,
+ưu tiên cookie/CSRF hiện tại và legacy, cùng preview thật. Bản sao SQLite
+của native giữ nguyên từng byte và thư mục capture không phát sinh tệp.
+Đây là bằng chứng chức năng cho các quan sát đó, chưa phải bằng chứng
+hiệu năng hoặc bao phủ đầy đủ đầu vào lỗi.
+
+| Artifact hoặc biên nhận nhóm đầu tiên | SHA-256 |
+| --- | --- |
+| Binary native Windows debug | `426073ff0f98fe076f49f555da7d09217fc340c8936906846524767bfb502eb4` |
+| Harness HTTP | `0146109ea1dfeb5279733fc3494d1f05e388170476f048acd8b82ad008c58c6f` |
+| `native-remote-http/7cca71c236be4ba08cd3b813e2785769/comparison.json` | `66307313fec415a2b083c8ae5544889e9efddeadaca3f37adc77a16121433d83` |
+
+Adapter đọc SQLite/PostgreSQL có kiểu dữ liệu rõ ràng cũng đạt các ca
+dữ liệu cũ và chỉ đọc. Lệnh ghi thật qua kết nối chỉ đọc bị từ chối.
+SQLite chỉ dùng bản sao nhất quán đã đóng, truy cập immutable và từ chối
+sidecar còn dữ liệu; không dùng chế độ này để shadow database đang thay
+đổi trực tiếp. PostgreSQL dùng kết nối chỉ đọc và MVCC. Kiểm thử dùng
+session `cirnet-4PiLwh` do DEV cấp cho Giai đoạn 4; bằng chứng Giai đoạn 3
+vẫn nằm trong session ban đầu.
+
+Đường ghi xác thực, migration native, WebSocket và tích hợp lệnh/scheduler
+đang triển khai. 56 operation HTTP còn lại, đối chiếu OpenAPI runtime đầy
+đủ, ma trận database/cutover/rollback và Gate 4 đầy đủ đều **NOT RUN**.
+Thông báo chi tiết cho đầu vào v2 lỗi ngoài fixture đã chọn vẫn cần bằng
+chứng tương thích. Chưa đổi traffic mặc định hoặc manifest phát hành;
+nghiệm thu production Linux/Xeon vẫn **NOT RUN**.
+
+
+### Mốc dữ liệu và giao thức native giai đoạn 4
+
+Giai đoạn 4 chưa commit trên codex/native-remote-stage4, từ Remote
+3cc5063df984c73f05d50979a7b50dbc853323a9. Mốc này ghi bằng chứng component
+và từng nhóm route, chưa phải nghiệm thu Gate 4.
+
+Migration native đạt 16 tình huống dữ liệu tạm trong ba test: SQLite mới
+và chưa có phiên bản, cả bảy revision cũ, năm trường hợp từ chối nguyên tử,
+cùng PostgreSQL cũ/capture trùng. Đối chiếu Python r8 độc lập cho thấy 56
+đối tượng catalog SQLite sau chuẩn hóa bằng nhau và dump schema PostgreSQL
+khớp byte (SHA-256
+ba9232944070c88777670be368c47c2c4090987a93fa6bc5aef767bd7e496572).
+Cả hai engine giữ năm bảng cũ và 107 chuỗi payload experiment gốc mỗi engine;
+ownership, lịch sử assignment, tiếp nhận capture đã đóng và dữ liệu lập
+lịch đều khớp. CLI --migrate tường minh đạt kiểm tra tạo mới và chạy lặp
+không đổi; khởi động không tự migrate.
+
+Component auth PASS trên SQLite và PostgreSQL thật, gồm hash Argon2 Python,
+đổi token opaque, thu hồi phiên, bằng chứng legacy, chuyển ownership khách,
+vai trò và bảo vệ admin cuối cùng. Các test dịch vụ chưa chứng minh callback
+HTTP hoặc hủy job đang chạy. Component project PASS CAS qua pool độc lập
+và phiên khác nhau trên cả hai engine, snapshot bất biến, cách ly owner,
+từ chối phiên thu hồi và rollback nguyên tử khi một circuit con chạm giới
+hạn revision. Bộ thư viện native thông thường đạt 26 test; 10 test cần môi
+trường riêng bị ignore trong lượt đó, không được tính là PASS.
+
+Bản debug đóng băng
+3abbfd9ce1fa1fdd51299347a5bb9942d783e0ad97f8beedbd7fb011f223a3a0
+đạt hai nhóm REST SQLite trong 57,48 giây pytest (58,62 giây gồm controller):
+19/63 operation, với 19 quan sát đọc/preview và 26 quan sát tài liệu mỗi bên.
+Nhóm tài liệu kiểm tra lỗi canonical, ownership, ETag, CAS và xóa mềm.
+Chỉ ID mới cùng timestamp server được chuẩn hóa; timestamp được kiểm tra
+giới hạn riêng và thời điểm tạo phải bằng nhau. SHA-256 biên bản project:
+46aa355e16738b4734046b807d8077b0cde02a2a5c4517f4eb6bdfeb9f198ab9;
+biên bản đọc/preview:
+cbdf12ea6e8c6ae46a561f75643d398b3ea6c9c0d27f788d5eb38bea6145ce56.
+Các ứng viên và biên bản trước vẫn được giữ làm bằng chứng lịch sử.
+Ghi tài liệu cần chọn rõ CIRNET_REMOTE_READ_ONLY=false; mặc định vẫn chỉ
+đọc. Tám test biên HTTP đã PASS.
+
+EventHub đạt bốn test hàng đợi/dọn subscription. Fixture WebSocket native
+độc lập đạt bốn test và khớp mười hai kết quả wire Python thật, gồm frame
+sai, UTF-8, frame quá lớn, giới hạn tần suất, từ chối phiên và dọn controller
+cuối cùng. Chưa nối fixture với manager experiment thật của ứng dụng;
+không suy ra an toàn disconnect/Stop dưới tải từ kết quả component.
+
+Đã tái hiện và sửa phần thiếu kiểm tra mounting vật lý trong preview đầu.
+API Contracts đã ghim chưa công khai validator vật lý độc lập. Hàm tương
+thích nhỏ gọi validator assignment công khai sẵn có với trường bao cố định
+hợp lệ, không sao chép quy tắc hình học hoặc đổi pin phụ thuộc. Ba trường
+hợp thiết kế vật lý đã ghim đều PASS. Bổ sung API producer để bỏ phụ thuộc
+cấu trúc bao là việc tiếp theo.
+
+Bằng chứng thô được giữ trong phiên DEV cirnet-4PiLwh: project-http-paired,
+native-remote-projects/7e32b73bdd7049aca31ba4e1736ebc7d,
+native-remote-http/a0101eb3e898420d9bf5743fb78fda6e,
+project-cas-safety, stage4-db-compatibility/migration-audit và
+events-websocket. Đối chiếu đầy đủ OpenAPI/63 operation, tích hợp
+scheduler/control thật, Stop dưới tải, diễn tập cutover/restore/hai
+scheduler và E2E Interface đều **NOT RUN**. Gate 4 **NOT RUN**. Luồng mặc
+định, lựa chọn release và nghiệm thu production Linux/Xeon còn thiếu
+không thay đổi.
+
+### Mốc bài thực hành, compiler và điều khiển giai đoạn 4
+
+Mốc này cập nhật danh mục triển khai hiện tại; các artifact và kết quả cũ
+vẫn được giữ nguyên. Toàn bộ Gate 4 vẫn **NOT RUN**.
+
+Ứng viên Windows debug đã đóng băng
+`029b8c20574de6bb8bf64c604f187437df821302c332f0a21d2b9097f4c13d06`
+PASS 43 quan sát cho 16 API bài thực hành và 26 quan sát cho 12 API ghi tài liệu,
+so với đúng Python r8. Hai suite đối chứng mất 53,04 giây (54,20 giây tính cả
+controller). Biên bản:
+`native-remote-assignments/1838e04358ef4afe898f6fbbcb5ca39c/comparison.json`
+(SHA-256 `2dec73fdf46e032c431c7034fa0a0250d443933bed24c9f00c5f1a31eeefaa1b`)
+và `native-remote-projects/8ca55f282c3f4f51a4a16aa569dfda4d/comparison.json`
+(SHA-256 `c936b51398df84cb5c89d12a427d1ca8a4372b3a27e662b297cd1e76362c2cd5`).
+Kiểm tra HTTP dùng SQLite cách ly, bao phủ quyền giảng viên/sinh viên/admin,
+bản công bố cố định so với bản nháp sửa tiếp, xung đột phiên bản và số phiên bản
+dạng thực nguyên. Bảy API đọc/preview trước đó giữ biên bản ứng viên riêng;
+đây chưa phải nghiệm thu đồng thời trên artifact cuối.
+
+Kiểm thử hồi quy số học đã tái hiện lỗi ghi project trên SQLite và PostgreSQL
+và 14 sai khác compiler trong oracle Python gồm 22 ca. Chuyển đổi số nguyên
+có giới hạn nay chấp nhận token số thực nguyên hợp lệ mà không làm tròn token
+số nguyên lớn. So sánh ngưỡng generator giữ thứ tự chính xác giữa số nguyên và
+binary64; cấp phát endpoint vốn bắt buộc token số nguyên vẫn giữ yêu cầu đó.
+Hồi quy số học project và bài thực hành đều PASS trên hai engine. Compiler
+PASS corpus 173 ca ban đầu và corpus số học 22 ca riêng. Cần chạy gộp lại trên
+source cuối sau các thay đổi compiler.
+
+Kiểm tra topology bổ sung giữ thứ tự pin và giới hạn tìm kiếm. Mười tiến trình
+Python mới xuất hai thứ tự của cùng chẩn đoán `shorted_nets` (6/4); chỉ danh sách
+chẩn đoán đã chứng minh không có thứ tự này được so bằng đa tập. Không nới lỏng
+thứ tự sự kiện, tín hiệu, timestamp, capture hoặc an toàn. Bằng chứng:
+`topology-ordering/91f7cbee658e4e6f949ed6ff709b169e/ordering-summary.json`,
+SHA-256 `4c864d66af4ee3587ad9067436a9d0a58a3b46a3d99daf1b79be5a9f89d0a2b0`.
+
+Fixture HTTP auth native cách ly PASS bảy API với 25 quan sát và năm ca CORS
+preflight (36,63 giây). Biên bản:
+`native-remote-auth-http/cbe10a191da84e76bc0068e2877e3ec6/comparison.json`,
+SHA-256 `66643ff73b3c95da60583c4ebc883da48a1df833976a05c189fbc4e948dbe009`.
+Bộ nhận thu hồi chứng minh session đã bị thu hồi bền vững trước callback;
+chưa chứng minh callback hủy của bộ điều phối production.
+
+Kiểm thử repository runtime native PASS trên SQLite và PostgreSQL dùng dữ liệu
+tạm riêng: đặt lease và CAS generation, tạo thí nghiệm và định danh thao tác
+trong giao dịch, truy vấn lịch sử/quyền riêng tư và thu hồi capture. Kiểm thử
+component manager với R2/C++ thật PASS Create → Run → NCAP đúng byte → giải phóng
+lease an toàn; phục hồi khởi động lại giữ quarantine khi thiếu capability vật lý.
+Lượt mở rộng PASS đọc capture, thu hồi, xóa lặp và xóa file payload. Khởi động
+thực hiện dọn lease thực tế trước khi báo đích lưu capture bị chặn.
+
+Rà soát độc lập xác định các điều kiện điều khiển bắt buộc còn mở: Stop công khai
+phải kiểm tra session và chủ sở hữu hiện tại trong cùng giao dịch thay đổi trạng
+thái; quyền điều phối độc quyền suốt vòng đời phải chặn tiến trình native thứ hai
+thu hồi lease của tiến trình đang chạy; shutdown phải chờ các mutation đã nhận
+dù HTTP đã ngắt trước khi nhả quyền đó. Đang sửa và bổ sung hồi quy xác định.
+Tích hợp HTTP/WebSocket, tranh chấp điều khiển PostgreSQL, cạnh tranh bộ điều phối
+và mất quyền, ma trận toàn bộ route/OpenAPI, Stop dưới tải, backup/restore/cutover/
+rollback và browser E2E vẫn **NOT RUN**.
+
+Mọi biên bản thô được giữ trong phiên DEV sở hữu `cirnet-4PiLwh`. Lịch sử và
+bằng chứng giai đoạn 3 không đổi. Chưa công bố commit giai đoạn 4, chuyển lưu lượng
+mặc định, chọn bản phát hành hoặc nghiệm thu production Linux/Xeon.
+
+### Mốc tích hợp bản tối ưu giai đoạn 4
+
+Mốc này cập nhật trạng thái triển khai ở trên, giữ nguyên artifact và kết quả
+lịch sử. Giai đoạn 4 chưa commit. Gate 4 đầy đủ là **NOT RUN**; đây là mốc kiểm
+tra tích hợp, chưa phải nghiệm thu release.
+
+Ứng viên Windows tối ưu đầu tiên có SHA-256
+`7bae8cdc0af803d7487c8b25df5b2333e5f43f242e87ea4d22cc837335ddce79`,
+build bằng Rust 1.90.0 với `cargo build --release --locked --offline`
+trong 134 giây. Biên bản build:
+`native-remote-release/766f95f64741496e8f7f1cbabc2fa4ba/candidate.json`,
+SHA-256 `43bcba4d0079b167ef699f68a912f7bf1621190efc3bd786eed695f4098ac4ce`.
+Digest mã nguồn runtime được ghi riêng:
+`1d1de69a6a7878de5b9810ccee71ae32b020a003f6de21a6ec7df9422f803787`.
+Rà soát an toàn sau đó yêu cầu ứng viên mới; các kết quả dưới đây vẫn gắn
+với đúng artifact nêu trên.
+
+Đối chiếu HTTP thực tế đạt cả sáu nhóm route trên từng SQLite và PostgreSQL:
+auth, project, assignment, experiment, đọc/preview và station. Hợp các nhóm
+bao phủ đủ 63 operation ID chuẩn. Mỗi nhánh dùng Python r8 đã ghim, cùng Rust
+Hardware R2, Contracts và worker C++, với database và tiến trình riêng.
+Byte NCAP và thời điểm sự kiện số khớp; chỉ chuẩn hóa ID tài nguyên và đồng
+hồ thực của máy chủ sau khi kiểm tra riêng các điều kiện tương ứng. HTTP
+station kiểm tra cả hai chủ sở hữu với hàng đợi rỗng; quyền xem hàng đợi có
+tải có bằng chứng component riêng. Hai runner đạt 6 test mỗi nhánh trong
+191,88 và 202,77 giây, mỗi nhánh chủ động bỏ chọn sáu test của backend kia.
+Lượt chức năng song song này không phải benchmark hiệu năng.
+Biên bản tổng hợp: `final-http-sqlite/paired-summary.json`,
+SHA-256 `a25b63b426025b6bbf6baa428ec0a91eabd88800b6f903b6fab8054ae0256ec0`.
+
+Python `scripts/export_openapi.py --check` và export OpenAPI từ đúng binary
+tối ưu đều đạt khi so với Contracts SHA-256
+`dc39c874386eba2b58f8b5c631cbee0d63ded86cf287aea63f54e4a237ff8f08`.
+Binary đăng ký đúng 63 operation duy nhất. CLI migration áp dụng bảy migration,
+chạy lại không thay đổi và từ chối tự tạo database khi khởi động dịch vụ.
+Kiểm tra Rust trên mã nguồn chốt đạt 43 test thư viện thông thường; 23 test
+fixture bị ignore không được tính PASS. Các lượt chọn riêng đạt CLI,
+173 ca compiler gốc, 22 ca số học, ba ca topology và 54 ca HTTP body.
+Lệnh và kết quả thô nằm trong `final-native-checks` và `final-openapi`.
+
+Các phát hiện trước về quyền Stop, quyền scheduler và tác vụ tách rời khi
+shutdown đã có bằng chứng tập trung đạt. Stop công khai kiểm tra phiên và
+chủ sở hữu hiện tại trong cùng transaction cập nhật. Quyền native giữ suốt
+vòng đời chặn scheduler độc lập trên SQLite/PostgreSQL và từ chối tiếp tục
+khi mất kết nối giữ khóa PostgreSQL. Cleanup giữ lease đến ACK an toàn cuối;
+lỗi ghi nhận cleanup vào database chặn station. Test lỗi startup bao gồm cả
+reservation đã commit và R2/C++ đã nhận Start: không READY, không capture cũ,
+cleanup trước khi thoát.
+
+Ứng viên tối ưu đạt diễn tập chuyển đổi và rollback PostgreSQL thực tế trong
+65,30 giây. Diễn tập kiểm tra cả hai cặp backup database/capture, đóng endpoint
+điều khiển cũ, từ chối tiến trình cạnh tranh trước READY, giữ danh tính operation
+đang chờ, giữ hàng đợi dưới quarantine vật lý, mất đúng kết nối giữ advisory
+lock, giữ lease khi ACK cuối chưa về, chặn capture từ Start về muộn và khôi
+phục trước khi kết nối lại đúng Python r8. Biên bản:
+`stage4-postgres-cutover/721efd638fe747caa082505aac2647fd/cutover-summary.json`,
+SHA-256 `1c97f5bac090c0ebf064bed606a3c8b1cd0bb4794e03348477f56874aded9c8e`.
+Lượt này dùng capability vật lý không khả dụng, không chứng minh HIL có cấp điện.
+
+Rà soát sau lượt đo phát hiện thêm hai điểm cần kiểm chứng: panic ở monitor vẫn
+phải chặn tiếp nhận và chờ cleanup; mất quyền scheduler trong bước xử lý cục bộ
+sau capture phải chặn công bố kết quả. Đang bổ sung hồi quy xác định và sửa lỗi.
+Các tranh chấp claim/quyền sở hữu PostgreSQL bổ sung, luồng trình duyệt, truyền
+lỗi crash/timeout từ tiến trình con thực tế, so tải cố định và Stop chính thức
+vẫn đang chờ. Lỗi driver trình duyệt gặp ở phía Python được giữ là lỗi harness,
+không gán thành kết quả API native.
+
+Adapter Stop giữ workload đồng bộ Start đã duyệt, ba cặp cửa sổ với 100 mẫu
+hợp lệ mỗi bên, trần 403 lần thử và cả sáu giới hạn an toàn tuyệt đối.
+Gate 4 vẫn giữ phép so 110% với đối chứng; không tự mở rộng ngoại lệ hiệu năng
+Windows của Gate 3 sang Gate 4. Đo ngắn không thay thế nghiệm thu chính thức.
+Hiệu năng production Linux/Xeon và HIL vật lý là **NOT RUN**. Luồng mặc định,
+ghim release, commit giai đoạn 3 và bằng chứng nghiệm thu được giữ nguyên.
+Toàn bộ bằng chứng thô nằm trong phiên DEV sở hữu `cirnet-4PiLwh`.
+
+### Mốc an toàn và tương thích giai đoạn 4: 20cbd915
+
+Mốc này ghi nhận ứng viên Windows mới hơn, giữ nguyên các ứng viên và kết quả
+trước đó. Giai đoạn 4 chưa commit trên `codex/native-remote-stage4`, dựa trên
+Remote `3cc5063df984c73f05d50979a7b50dbc853323a9`. SHA-256 executable là
+`20cbd915780e6bc14a0fef95d1c2359ab2771ffe37b745d77639f4457411ff36`.
+Build release mất 39,82 giây. Biên bản:
+`native-remote-release-successor/c1c9ab11b1194fc9b79942cbbf0b8e49/candidate.json`,
+SHA-256 `872f14b968a9cf78e64a109a9927553a0203418077ecca27df6af51cfba8c35f`.
+Mọi đường dẫn dữ liệu thô dưới đây đều tương đối với phiên DEV sở hữu
+`cirnet-4PiLwh`.
+
+Ba phát hiện an toàn đã có ca tái hiện thất bại rồi hồi quy đạt. Monitor kết
+thúc hoặc panic sẽ đóng tiếp nhận và vẫn hoàn tất dọn dẹp; lỗi ghi chẩn đoán
+không được ngắt dọn dẹp. Mất kết nối giữ quyền scheduler PostgreSQL sau khi
+niêm phong capture sẽ chặn công bố thông thường và xóa capture chưa được tham
+chiếu. Phục hồi hiện xóa generation riêng của reservation cũ trong cùng giao
+dịch với trạng thái kết thúc, xử lý lease và audit. Worker cũ không thể dùng
+revision mới của bên kế nhiệm để ghi đè phục hồi hoặc giải phóng quarantine.
+Cả hai trường hợp kế nhiệm release và quarantine đều đạt. Điều này không
+khẳng định kiểm tra kết nối và mọi commit sau đó qua pool là một thao tác
+nguyên tử. Các kiểm tra manager thông thường đạt 6/6 trong 4,43 giây; bản ghi
+runtime SQLite/PostgreSQL đạt 2/2 trong 0,81 giây.
+
+Quy tắc ignore `db/` kế thừa đã che mười tệp nguồn database Rust khỏi bản kê
+dựa trên Git trước đây. Các ngoại lệ nguồn có phạm vi hẹp hiện đã bao gồm các
+tệp đó. Giữ nguyên các bản kê lịch sử và ghi rõ chúng chưa đầy đủ; không đổi
+nhãn kết quả executable đã kiểm tra. Bản kê filesystem hiện tại, đầu vào phụ
+thuộc Cargo và hash giao thức sinh ra đã được đối chiếu trước/sau lệnh release
+khóa phiên bản và offline. Cargo báo executable còn hợp lệ trong 0,67 giây,
+không biên dịch và giữ nguyên hash. Đây là kiểm tra đầu vào/danh tính, không
+phải build sạch lần thứ hai. Biên bản:
+`native-remote-release-dependency-audit/655607b9c0df463087ed9d52b8eccf88/verification.json`,
+SHA-256 `d7c72263a46ac6ebfd241b610c5c82fde8d93042528ad27a85c52cb41e9b1953`.
+SHA-256 bản kê phụ thuộc đầy đủ:
+`7a7d4c47fed1bc197c659872388b469a7ac01f66aaf9aefea71161a221d371e5`.
+
+| Kiểm tra đúng ứng viên | Kết quả và phạm vi |
+| --- | --- |
+| Tương thích HTTP đối chứng | PASS: 12 nhóm backend/route, đủ 63 operation; SQLite 161,63 giây và PostgreSQL 172,85 giây. Sáu ca chủ động bỏ chọn backend còn lại trên mỗi runner không tính PASS. |
+| Tích hợp trình duyệt và Interface | PASS: hai ca Interface đã chọn trên mỗi runtime cùng Playwright Python kiểm tra WebSocket reconnect/resync, NCAP 124 byte giống hệt, hiển thị waveform, physical preview và phục hồi khi mất phản hồi Create. Đây chưa phải toàn bộ ma trận trình duyệt giai đoạn 5. |
+| Tranh chấp giao dịch và điều khiển PostgreSQL | PASS trong 23,69 giây: chặn/commit thật, quyền sở hữu, giới hạn revision, công bố/tiếp nhận, Stop phiên cũ và thu hồi WebSocket. Rollback audit phục hồi không an toàn rồi quarantine cũng đạt. |
+| Cutover và rollback PostgreSQL | PASS trong 54,12 giây: cặp backup database/capture, loại scheduler cạnh tranh, hàng đợi chờ, mất quyền, giữ safe ACK, chặn kết quả muộn và xác minh kết nối lại Python. |
+| Lỗi worker C++ thật | PASS trong 52,00 giây: crash và timeout mười giây trên cả hai runtime; tiến trình con thoát trước safe ACK, không capture lỗi hoặc lease tồn dư, sau đó capture worker thay thế khớp. |
+| Tải cố định và Stop dưới tải chính thức | NOT RUN cho ứng viên này. Đối chiếu Stop ngắn dưới đây không thay cho gate chính thức. |
+| Hiệu năng Linux/Xeon, thực thi signal Linux và HIL vật lý | NOT RUN. Không công bố production hoặc release PASS. |
+
+Biên bản HTTP đúng ứng viên: `successor-http-sqlite/paired-summary.json`,
+SHA-256 `ac9e7a32c98745e3165abda288121b0cbd5867622f3f76098b71f12100cd9c82`.
+Bằng chứng trình duyệt:
+`stage4-interface-e2e/paired-d07fdf7109f84ad6ae32d7771e1aa51a/comparison.json`,
+SHA-256 `7caa567e646ccf9be88c330dd5267bddd591d5a2a40db633ff14248815ac50da`.
+Ứng viên mất 140,86 giây; dùng lại đối chứng Python 136,46 giây sau khi xác
+minh biên bản, nguồn, cấu hình và digest capture thô. Việc dùng lại tránh một
+lượt đối chứng đã đo là 136,46 giây; không chứng minh ứng dụng chạy nhanh hơn.
+Các biên bản PostgreSQL, rollback và lỗi worker:
+`stage4-postgres-races/32db37b4196649828428de6f6a6c7f32/observations.json`
+(SHA-256 `f6664656b31788e3af8829d5fc53dfb4a2e644b3f053f6db7eafa2482d9b1cc0`),
+`stage4-postgres-cutover/694141961f524dc088a29603a4d01f33/cutover-summary.json`
+(SHA-256 `9d918ad480d03ce359d259d9d61393259c1b2f1feaa811d21c5e0837e5d79fa6`),
+và `stage4-worker-faults/6d36cc0329194a4887a72087e72b46d2/worker-fault-summary.json`
+(SHA-256 `220c0b12dcab96997dc866c60af68c3f8ae33e8e41bedd44661cd20143fb8847`).
+Chưa chạy lại đúng điểm dừng nội bộ cũ giữa commit và truy vấn sự kiện, hoặc
+đúng thao tác xen kẽ reservation trực tiếp ở repository. Các phép kiểm tương
+đương qua giao thức công khai được ghi riêng, không coi là chính các ca nội
+bộ đó.
+
+Ứng viên lịch sử `7bae8cdc` cũng đạt năm kiểm tra restore/index database cũ
+trong 156,80 giây: revision 0001/0003/0004/0005, 107 payload giữ nguyên, schema
+catalog khớp và truy vấn active-index với 2.000 dòng kết thúc. Biên bản
+`old-restore-controller/summary.json`, SHA-256
+`da313495a5b7e7a29c3b7f634d31d0c73b5e9653ffee4a9dbb181abd83182fc9`.
+Danh tính nguồn migration và truy vấn cho phép giữ bằng chứng trong phạm vi
+đó; đây không phải lượt chạy mới trên `20cbd915`. Kết quả CLI/OpenAPI tối ưu
+trước đó cũng giữ nguyên executable gốc.
+
+Lượt Stop ngắn đầu tiên thất bại ở điều kiện Run với HTTP 429. Driver chung
+tính khoảng nghỉ một giây theo chủ sở hữu trước khi nhận đủ bốn phản hồi Run,
+nên một lượt tiếp nhận muộn có thể chưa hết giới hạn. Adapter giai đoạn 4 hiện
+chờ đủ 1,010 giây từ phản hồi Run thành công cuối cùng trước Create tiếp theo.
+Áp dụng giống nhau cho hai phía; không thay giới hạn Run hoặc chính sách thử
+lại. Ba ca hồi quy xác định cho cách nghỉ này đều đạt. SHA-256 adapter:
+`51c5f933d80068ffe999a4788c8f3dfa0ea5b294ec47953ea760aad60f67d361`.
+Giữ nguyên khoảng đo Stop, Start đồng bộ, workload, bốn worker đang chạy,
+điều kiện pipe, thu hồi worker trước ACK, capture, lease và quarantine.
+
+Lượt chẩn đoán đã sửa mất 104,63 giây: B và D đều đủ 8/8 lượt, không loại mẫu
+và có tám warmup. Sáu đối chiếu an toàn tuyệt đối đạt; hiệu năng đối chứng đạt
+4/6. HTTP p95/p99 là 77,5356 ms cho B và 100,8298 ms cho D, vượt giới hạn đối
+chứng 85,28916 ms. Với tám mẫu, hai giá trị đuôi này chính là cực đại, chưa
+phải ước lượng đuôi chính thức. ACK thô là 56,7754/38,2203 ms; giải phóng lease
+bền vững là 124,9691/88,7484 ms. Thời gian nghỉ thêm ngoài phép đo là
+4,1486/4,1984 giây. Phản hồi HTTP native chậm nhất nhận ACK ở 38,22 ms,
+commit giải phóng lease ở 83,42 ms và trả về ở 100,83 ms. Bằng chứng hiện có
+khoanh vùng thời gian tăng sau ACK nhưng chưa tách được nhận kết nối database,
+SQL, commit và công việc phản hồi. Biên bản:
+`native-remote-loaded-stop/91e03eabd3bc486ba27ec2ae501f0924/stop-summary.json`,
+SHA-256 `c967c9e09daa1bf8973731dd0627fd41c3fe7658f3789d7bfbc312d3bfb40f22`.
+
+Gate 4 đầy đủ chưa được nghiệm thu. Giữ ba cặp cửa sổ Stop, mỗi bên 100 mẫu
+đủ chuẩn, trần 403 lần thử, đủ sáu giới hạn an toàn tuyệt đối và đối chứng.
+Nghiệm thu tải cố định vẫn cần SQLite và PostgreSQL, ba cặp cửa sổ mỗi bên
+200 job, giữ workload và ngưỡng đã ghim/đối chứng. Phải xác định thời gian
+database riêng với HTTP. Chính sách Windows Gate 3 không miễn các yêu cầu
+giai đoạn 4 này. Giữ nguyên luồng mặc định, lựa chọn release bất biến, commit
+giai đoạn 3 và toàn bộ bằng chứng lịch sử.
+
+
+### Mốc tương thích và an toàn Windows giai đoạn 4 · 717402ba
+
+Ứng viên Windows x64/MSVC là `native-remote-sqlite-writer-release/f07bbb29b41d4a7c9120379547450752/cirnet-remote.exe`
+(SHA-256 `717402ba92e7a0f1864fe4f5f70dbc8f6a55c154e9880a35d470dd2e07f51203`).
+Rust 1.90.0 build ứng viên trong 39,10 giây bằng
+`cargo +1.90.0 build --release --locked --offline --bin cirnet-remote`.
+Manifest ứng viên có SHA-256 `6bd5a0d8d71303f62f149c492f541f04221dc30bc82688fcab12b925cd0a9a51`.
+Biên bản kiểm đầy đủ đầu vào biên dịch `complete-after.json` có SHA-256
+`f7adace56acb5817bfba4da3b16e9207455062def19aefa4c2efe5cf90cda9f4`. Kết quả lịch sử của
+`20cbd915` và `d4d0fa3e` giữ nguyên ứng viên và kết luận ban đầu.
+
+| Kiểm tra | Bằng chứng và phạm vi |
+| --- | --- |
+| Tương thích HTTP và CLI | **PASS**. Đủ 63 thao tác qua 12 nhóm HTTP đối chứng. SQLite mất 237,36 giây, PostgreSQL mất 250,94 giây, mỗi lượt chủ đích loại sáu nhóm của backend còn lại. Bản xuất CLI khớp các thao tác đã đăng ký. Áp dụng bảy migration, chạy lại không có thay đổi. Từ chối khi thiếu cơ sở dữ liệu. |
+| Interface | **PASS** trong 152,75 giây. Playwright Python xác minh WebSocket kết nối lại và đồng bộ, giao diện hiển thị dạng sóng, NCAP 124 byte khớp từng byte, preview vật lý qua mô phỏng và Stop sau khi Create đã commit. Hai ca được chọn từ mã nguồn Interface cũng đạt. Tái sử dụng đối chứng Python 136,46 giây sau khi kiểm hash của luồng kiểm thử, công cụ, fixture và bằng chứng thô. Ma trận trình duyệt đầy đủ của giai đoạn 5 còn chờ. |
+| Thành phần SQLite và scheduler | **PASS**. Hai ca kiểm thử bản tối ưu cổng ghi bao phủ truy cập đồng thời qua các bản sao, hủy và rollback. Sáu ca manager với Hardware đã ghim bao phủ điều khiển, quarantine và dọn dẹp. Các ca này chạy bằng executable kiểm thử Rust. |
+| Giao dịch và phục hồi PostgreSQL | **PASS**. Hai ca qua giao diện công khai trong 75,38 giây bao phủ chặn giao dịch thật, công bố và tiếp nhận, chuyển quyền và thu hồi phiên, bàn giao WebSocket, rollback khi phục hồi lỗi rồi quarantine và thu hồi generation. |
+| Chuyển đổi PostgreSQL và lỗi worker thật | **PASS**. Xác minh cặp backup, scheduler độc quyền, mất quyền điều phối, giữ lease khi chờ ACK an toàn, chặn capture muộn và kết nối lại Python. Kiểm lỗi crash và timeout trên worker C++ thật xác minh thu hồi tiến trình trước ACK an toàn, xử lý lease và capture khớp trên worker thay thế. |
+| Stop ngắn dưới tải | **PASS cho điều kiện chức năng/an toàn đã quan sát; thời gian CHẨN ĐOÁN**, trong 103,54 giây với probe đo pha tùy chọn được bật. B và D mỗi bên đủ 8/8 mẫu, có tám lượt làm nóng và không loại mẫu. Điều kiện nhận mẫu kiểm bốn worker thực sự đang xử lý, thu hồi trước ACK an toàn và dọn dẹp bền vững. Sáu so sánh tuyệt đối và sáu so sánh đối chứng đều đạt trên số mẫu này. HTTP p95/p99 của B là 67,0223 ms, của D là 43,8271 ms. Với số mẫu này cả hai giá trị đuôi đều bằng cực đại của từng bên. |
+| Phạm vi chức năng, tương thích và an toàn Windows | **PASS**. Phạm vi Windows đã duyệt giữ các deadline và bất biến an toàn bắt buộc. Hiệu năng thông thường và số đo đối chứng phục vụ chẩn đoán. |
+| Hiệu năng và Stop dưới tải đầy đủ Linux/Xeon | **NOT RUN**. Chờ dự án ổn định, máy đích thật, phương pháp/ngưỡng production đã chốt và xác minh an toàn trên nền tảng đích. |
+| HIL | **NOT RUN**. Capability phần cứng thật vẫn không khả dụng; HIL thật bắt buộc nếu công bố điều khiển phần cứng. |
+
+**Gate 4 Windows: PASS** cho phạm vi chức năng, tương thích và an toàn
+đã nêu, trên ứng viên Windows xác định. **Hiệu năng và Stop dưới tải đầy
+đủ Linux/Xeon: NOT RUN. HIL: NOT RUN. Production/release: NOT RUN**, chờ
+các gate nền tảng và phần cứng áp dụng. Cập nhật chính sách này không đổi
+mặc định, chọn bản phát hành, commit, merge hoặc xóa branch/worktree.
+
+Tổ hợp chính xác là Remote `717402ba…`, Hardware Rust R2 SHA-256
+`22d3d0a1c57aad0d2d01d512f3a890149566bc799228559b6943843cba1e85e6`,
+worker C++ SHA-256
+`c0b114fd5c7fd6e65df991c303090cd3e87946bde4d11b65377e9b5797383adf`,
+Contracts native 0.1.2 tại `e640f80b1199779659d3db7817fee16d13cc24c1`,
+Interface source `66845b01f9b02b70e6ec28ececd163133cdcdfa2`.
+Manifest đối chứng Python r8 được ghim trong từng biên bản. Nghiệm thu
+Windows hiện tại dùng lại bằng chứng có phạm vi hợp lệ và đối chứng
+trình duyệt Python đã xác minh; không đổi FAIL hiệu năng cũ thành PASS.
+Không ước tính tổng thời gian tiết kiệm do bỏ lượt Windows đầy đủ chưa
+chạy. Lượt hiệu chuẩn trình duyệt được dùng lại từng mất 136,46 giây;
+đây không phải mức cải thiện hiệu năng ứng dụng.
+
+Các biên bản nằm trong phiên DEV `cirnet-4PiLwh` bên dưới. Giữ workload
+chính thức gồm ba cặp cửa sổ 200 job mỗi bên cho từng cơ sở dữ liệu và ba cặp
+cửa sổ Stop 100 mẫu đủ chuẩn mỗi bên, trần 403 lần thử. Chẩn đoán Windows và
+so sánh lịch sử giữ nguyên phạm vi đã ghi. Giữ worktree để rà soát trước khi
+tích hợp Git hay thay đổi mặc định hoặc release.
+
+| Biên bản | Đường dẫn tương đối trong phiên | SHA-256 |
+| --- | --- | --- |
+| HTTP | `native-remote-writer-http/sqlite-85cbfefdf1634643b6e22329c2159655/paired-summary.json` | `5aeac02e40c8ce368e2e90ec48e4f4571b7c89af230d1e3e15fe72a31721d224` |
+| CLI | `stage4-717-cli/fa738d3f78ea4003bd4a350d2895f4ae/cli-summary.json` | `d6a52004606ab8197be52b5a266232a69bd7ecf30e07b9e22f74cd2f4c968e6f` |
+| Interface | `stage4-interface-e2e/paired-e1b9932fcb4e4fe0b2549f9942e03417/comparison.json` | `ef7f7d2f047acf972c291d8d2e520621e971b6c904b078c084bc6e43a1e22b7f` |
+| Đối chứng trình duyệt Python đã tái sử dụng | `stage4-interface-e2e/paired-35ff5d0d77134e5b93e419417fa99f16/reference-calibration.json` | `456868143719bbe7a2218cb34cd30351caf1ce1d7ce4269fcbdb52245e535e0b` |
+| Thành phần cổng ghi | `stage4-sqlite-writer-gate/3aca07aa008b4c929fc9d851600ade6b/cargo.log` | `134a30e4754fda5e50fe04ebe7bbafd8069dbed5eedf9e5181ea4b6a93955e48` |
+| Thành phần manager | `stage4-sqlite-writer-gate-safety/fad56c3c234f471b9f238b57e39aa1f8/tests.log` | `04fb67b7330ccc43759dedf2f2a5ff833b56ca79b2451ef5d9448cd8a8d35d30` |
+| Tranh chấp PostgreSQL qua giao diện công khai | `stage4-postgres-races/dd38c8bba6ef404381e29dd295e75812/observations.json` | `248528c8642941abddba59f7ef8e0b47ea11c85e24e4aa749de55a0feb4687f1` |
+| Phục hồi PostgreSQL thiếu ACK an toàn | `stage4-postgres-races/unsafe-recovery-6843987f616b49b2965d8bf7e3ceb077/observations.json` | `01772fef03d94176b2f672e31d9c0019711ff7d453f5f4cf31bba3107218b2ef` |
+| Chuyển đổi và rollback PostgreSQL | `stage4-postgres-cutover/6e26c077430a483c94a835e222ca71c5/cutover-summary.json` | `c07283642f8a6faa2a7e72d1da9ec83fecd55521d8fc4917d65e69f232e56301` |
+| Lỗi worker C++ | `stage4-worker-faults/81e17b60192747249448db86b353575d/worker-fault-summary.json` | `b848f2e26544a599737dfe48280c1cfd207c53372a8c17288946b6ad651fce7e` |
+| Stop ngắn dưới tải | `native-remote-loaded-stop/7cf28ed9776c46b58bd8f3fd3e2578c8/stop-summary.json` | `7a401513a5ab7b475eaab107699557bb5d533702d0e137d723aba831cfe9d98c` |
+
+Nghiệm thu dữ liệu cũ trên đúng ứng viên đã bao phủ revision 0001, 0003,
+0004 và 0005 cùng truy vấn active-index. Lượt đầu mất 126,75 giây: bốn ca
+PASS; revision 0004 dừng khi chuẩn bị fixture vì database nguồn còn báo
+một backend sau seed, trước mọi dump hoặc migration native. Biên bản gốc
+giữ FAIL (`old-restore-controller/717-a12e0a60907943f198458e74362a7003/summary.json`,
+SHA-256 `c4500aa8392ad9354f5ffa2b828288479f5e5e569c84d9bedb0c18c7c0da9aa9`).
+Chỉ chạy lại revision 0004, PASS trong 29,35 giây với cùng binary bất biến,
+harness, seed và assertion. Bộ quan sát sẵn sàng có phiên bản riêng giữ
+điều kiện không còn backend; nó thấy số lượng bằng không ngay và không
+chờ. Chưa rõ loại backend ở lượt đầu, chưa chứng minh là autovacuum.
+Biên bản chạy lại:
+`old-restore-controller/717-r4-retry-f2ad472e7f754c8b80ed457999f666d4/rank4-summary.json`,
+SHA-256 `1c6505f3bfa423cbcf69458024cd81329f5435be3e7b3ce2e99139a92c0636ea`.
+Bằng chứng này khép phần còn thiếu về đúng artifact do kiểm kê cũ chưa
+đầy đủ; bằng chứng lịch sử `7bae8cdc` được giữ nguyên.
+
+Kiểm tra mã nguồn biên dịch hiện tại đạt 47 test thư viện mặc định và
+mười ca chọn riêng về ghi SQLite/PostgreSQL, runtime, quyền scheduler,
+quyền ghi và Stop sau chuyển quyền. Fixture chuyển quyền PostgreSQL đầu
+tiên dùng tên không được phép và dừng trước mutation cần kiểm tra;
+biên bản lỗi gốc được giữ nguyên. Cùng executable kiểm thử đã PASS trên
+fixture mới có tên đúng. Biên bản:
+`stage4-717-db-regressions/6ae81db335a84e41a618cd6d34d99401/component-regressions.json`
+(SHA-256 `f225089fd9c2e80db855d1437121c526e2a4cf81997a15b5687352c51eb325b7`)
+và `stage4-717-db-regressions/b3a854439c364bc7859943135d009003/postgres-stop-claim-retry.json`
+(SHA-256 `68b9f8848d1cde10e77da4d6c6365ba0bde299e39cce10ea4e2ff888d4d41259`).
+Đối chiếu cuối xác nhận cả 87 file Rust, 55 đầu vào nguồn biên dịch,
+hai đầu vào giao thức sinh và ba manifest build khớp bản build đã ghim
+(`stage4-policy-docs/current-compiled-input-audit.json`,
+SHA-256 `ebfec38409c1d0b2b55dc60ad217a40bd128e6c1881d19070c39295920618280`).
+
+Chỉ dùng lại kiểm tra lịch sử về wrapper xử lý monitor panic/dọn dẹp và
+các ca mất quyền PostgreSQL sau đóng capture/scheduler kế nhiệm theo
+helper/mã nguồn và nhánh PostgreSQL đã xác minh không đổi. Không báo
+chúng là lượt chạy mới trên CLI bất biến. Cutover, phục hồi không an
+toàn, lỗi worker và giữ ACK trên 717 hiện tại bao phủ đường tích hợp.
+Biên bản phạm vi và tái sử dụng:
+`old-restore-controller/717-a12e0a60907943f198458e74362a7003/windows-coverage-audit.md`,
+SHA-256 `2b4ffa09bb74149088a57413e4e56bfc38fe624d43f871e81e11a7a0125cc9fe`.
+Các ca dừng/tra cứu bên trong Python trước đây vẫn chưa chạy lại nguyên
+xi; ca tương đương qua giao thức công khai được ghi riêng. Ma trận trình
+duyệt đầy đủ giai đoạn 5, xử lý signal Linux, tải và Stop đầy đủ
+Linux/Xeon, cùng HIL thật vẫn NOT RUN.
+
+Sau đó đã kiểm trực tiếp hai nhánh kích hoạt theo đồng hồ còn thiếu
+trên CLI 717 bất biến. WebSocket điều khiển im lặng được server đóng mã
+4401 khi timestamp hết hạn phiên đi từ tương lai sang quá hạn, không
+có thu hồi phiên tường minh, Stop, đóng kết nối từ client hoặc đổi auth
+revision. Dọn dẹp giữ `SESSION_EXPIRED`. Ca riêng với phiên còn hiệu
+lực làm lease thật hết hạn và giữ `TIMEOUT`. Cả hai xác minh giữ lease
+sau ACK ban đầu và khi giữ ACK dọn dẹp cuối, chỉ giải phóng sau ACK đó,
+không công bố capture từ Start muộn. Relay giữ phản hồi Start thành công
+sau khi Hardware đã xử lý xong; đây là bằng chứng hết hạn/điều khiển,
+không chứng minh worker còn thực thi. Lượt Stop 16 mẫu riêng chứng minh
+điều kiện worker còn hoạt động.
+
+Ca phiên đầu đã đến dọn dẹp sau các assertion chức năng nhưng lỗi timeout
+ở câu lệnh DROP database tạm; lượt hai ca dài 70,08 giây giữ nguyên một
+FAIL/một PASS. Giữ PASS của lease theo harness
+`74de6ae93d24abb0aece8a095bba0c934a1e16ea3c508b0bbe05fe88a72548f0`.
+Chỉ chạy lại ca phiên, PASS trong 30,58 giây, sau khi harness giữ database
+thuộc phiên và ghi quan sát chức năng trước dọn dẹp. Vòng chỉ nhận cho
+phép event từ server trước khi đóng. Harness cuối là
+`1fd1613e90bfa2a1aab2fb221fefc2b7f50a9f21aaefe83ef6a983a8f36bd8a4`;
+bài kiểm lease và deadline sản phẩm không đổi.
+Biên bản: `stage4-clock-expiry/session-cf553de8ad614ca98165963ef8e9e0de/expiry-summary.json`
+(SHA-256 `67fef4569f07b9ef04e94ad5d54365e409f4d1eac2603cff67c0576a3756681f`)
+và `stage4-clock-expiry/lease-b157b5485b3549de899556006493f229/expiry-summary.json`
+(SHA-256 `d28184bef17926b839d355ae2c937f51a0b50234794815b1677d4210dbdd0409`).
+Không đổi mã nguồn sản phẩm hoặc executable trong cập nhật chính sách này.
+Sau các kiểm tra, đã dừng server PostgreSQL riêng của phiên khi không còn
+client bên ngoài; giữ dữ liệu, dump và bằng chứng. Biên bản dọn tài nguyên:
+`stage4-policy-docs/postgres-closeout.json`,
+SHA-256 `4216c7c6690a44a42c35ea71c54282fc5d0cdf96779c6fc213d3327fbbbadd24`.
+
+### Chẩn đoán SQLite và bằng chứng Windows hiện tại
+
+Ứng viên hiện tại thêm quyền ghi độc quyền dành riêng cho SQLite trước khi
+lấy kết nối từ pool. Các repository clone dùng chung quyền này; đọc đi
+thẳng vào pool và PostgreSQL không đổi. Quyền được giữ đến khi
+commit/rollback kết thúc. `BEGIN IMMEDIATE`, commit bền vững và khóa của
+driver SQLite vẫn bảo vệ giữa các pool độc lập. Chờ quyền ghi và lấy kết
+nối dùng chung ngân sách 30 giây hiện có, sau đó là busy timeout của driver
+không đổi. Một yêu cầu bị tranh chấp có thể chờ ở quyền ghi lâu hơn trước
+khi tới kết nối database bận; lỗi chờ hoặc commit không giải phóng lease.
+
+Ứng viên có đo pha trước đó `d4d0fa3e…` xác định lấy kết nối cộng BEGIN
+là khoảng đo lớn nhất sau ACK; điều này không loại trừ chi phí RPC hoặc
+giải mã ở các pha khác. Test SQLite có kiểm soát
+đã tách hai pha: trung vị lấy kết nối khoảng 0,05–0,06 ms, còn BEGIN cạnh
+tranh chờ 45,36–92,62 ms khi giao dịch ghi được giữ 10/25/50 ms.
+Ca tái hiện thiếu kết nối đọc ban đầu FAIL rồi PASS sau thay đổi, cùng
+các ca hủy/drop/rollback và khóa giữa pool độc lập. Hai test quyền ghi
+PASS trong 0,14 giây; sáu ca an toàn manager PASS trong 1,64 giây.
+Đây là bằng chứng component về nguyên nhân và chẩn đoán ngắn, không phải
+nghiệm thu hiệu năng production.
+
+Trên đúng `717402ba…`, có bật probe đo pha tùy chọn, bài Stop tám mẫu
+mỗi bên mất 103,54 giây,
+16/16 lần thử hợp lệ, không loại mẫu. Mỗi mẫu chứng minh bốn worker C++
+thật còn hoạt động khi Hardware nhận Stop, dữ liệu pipe tăng nhưng chưa
+có phản hồi, worker mục tiêu được thu hồi trước safe ACK, giải phóng lease
+bền vững sau ACK dọn dẹp, ba capture ngang hàng khớp byte và không có
+capture của lượt bị dừng. Cả sáu so sánh an toàn tuyệt đối đều PASS.
+Cực đại quan sát HTTP/ACK thô/lease là B 67,0223/52,4368/106,3526 ms
+và D 43,8271/29,3413/76,9102 ms. Sáu so sánh tương đối cũng PASS nhưng
+chỉ dùng chẩn đoán theo chính sách hiện tại. Với tám mẫu, p95/p99 được
+báo là cực đại, không phải ước lượng đuôi phân phối chính thức.
+Trung vị lấy kết nối cộng BEGIN native giảm từ 25,229 ms ở lượt chẩn
+đoán trước xuống 2,5583 ms; các cửa sổ ngắn khác nhau chưa chứng minh
+hiệu năng đuôi production. Biên bản
+`native-remote-loaded-stop/7cf28ed9776c46b58bd8f3fd3e2578c8/stop-summary.json`
+có SHA-256 `7a401513a5ab7b475eaab107699557bb5d533702d0e137d723aba831cfe9d98c`;
+`phase-summary.json` có SHA-256
+`ce06b34ecf3952d40e5d4362e86527bf78394ab24cec323e0638df3625cf079c`.
+Phương pháp ngắn giữ đồng bộ Start đã phê duyệt và pacing/workload không
+đổi; chuyển ma trận mẫu đầy đủ sang Linux là quyết định chính sách,
+không phải tuyên bố 16 mẫu thay thế bằng chứng thống kê của ma trận đó.
+
+Chưa khởi chạy tải đầy đủ hoặc nghiệm thu Stop 600 mẫu trên Windows khi
+chính sách thay đổi. Bài đối chiếu SQLite ngắn đang chạy kết thúc bình
+thường trong 101,44 giây: một test PASS, PostgreSQL được bỏ qua có chủ ý.
+Biên bản giữ **DIAGNOSTIC**, không có quyết định theo ngưỡng chính thức:
+`native-remote-load/sqlite-diagnostic-01953cf81ac34f908ac19e07abfae22f/load-summary.json`,
+SHA-256 `b77f7ba3aee72228aae6387a0d261f365994bc629dacfe7947d1f73b1d054408`.
+Mỗi bên chạy tám job đo; CPU/job B/D là 0,7734375/0,234375 giây,
+RSS đỉnh 257708032/134193152 byte, throughput 1,38175/3,97858 job/giây.
+Sau dọn dẹp, mọi PID API, worker và console host đã ghi đều không còn.
+Biên bản kết thúc:
+`stage4-policy-closeout/bb0520bdb9024eb6a2428fab27ecee7f/diagnostic-closeout.json`,
+SHA-256 `dea388bf2af5c409eddf3fd81f6bfd3689f676c85df88d30c3f93459130526b5`.
+
+Giữ nguyên các lỗi thiết lập bài tải trước đó. Helper kiểm kê ban đầu
+đếm console host Windows thành worker, rồi yêu cầu nhầm bốn worker
+thường trú. Workload không đổi cấu hình bốn slot và bốn job warmup,
+nhưng Rust Hardware tạo worker khi cần. Kiểm kê đã sửa chấp nhận một
+đến bốn worker đúng artifact và chỉ console host hệ thống đã xác minh;
+bộ đo tài nguyên gốc vẫn yêu cầu PID ổn định. Thay đổi này không nới
+điều kiện bốn worker hoạt động của Stop dưới tải. Sáu kiểm tra helper
+không cần dịch vụ đã PASS, sau đó bài tải ngắn hoàn tất. Lượt giai
+đoạn 4 này dùng `journal_mode=DELETE` và `synchronous=FULL` trên Windows,
+khác PERSIST ở giai đoạn 3;
+giai đoạn 0 không ghi PRAGMA journal. Không suy ra tương đương Linux.
+
+Các chẩn đoán thời gian repository SQLite/PostgreSQL riêng được giữ
+trong `native-remote-db-component`. Chúng dùng ba cặp luân phiên,
+200 thao tác sau mười warmup, fixture 2010 hàng giống nhau trên mã
+nguồn đo pha trước đó. Chúng so toàn bộ thao tác repository, không
+đánh đồng thời điểm BEGIN trì hoãn ở Python với BEGIN tường minh ở Rust.
+Thư viện SQLite client khác phiên bản (3.50.4 và 3.46.0); PostgreSQL
+dùng cùng server riêng. Không gán lại các số đo đó cho `717402ba…`.
+
 
 ## 5. Nghiệm thu đúng bộ artifact phát hành
 

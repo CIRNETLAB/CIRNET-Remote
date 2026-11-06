@@ -16,6 +16,9 @@ simulator/circuit-simulator/build/
 services/hardware-service/hardware_service/generated/
 contracts/generated/
 
+# Rust build output (verification uses an external target directory).
+/target/
+
 # Node
 node_modules/
 dist/
@@ -42,6 +45,9 @@ logs/
 db/
 !services/api/app/db/
 !services/api/app/db/*.py
+# Authored native database modules are source, not Quartus output.
+!native/src/db/
+!native/src/db/**/*.rs
 incremental_db/
 output_files/
 *.sof
