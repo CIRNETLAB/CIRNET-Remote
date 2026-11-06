@@ -173,6 +173,15 @@ span tích hợp và phục hồi lease cách ly.
 ### Gói đối chứng và ngưỡng nghiệm thu
 
 `cirnet-stage-0-reference.zip` có SHA-256 `73185795872bc1ec7e40e30ecc9732a27ba3cbb5dcf657053db5264302117fbb`.
+Commit `18c4f526030687601e292eef05c474ee1feb0741` lưu bộ kiểm tra và kết quả
+giai đoạn 0. Đối chiếu SHA-256 của lock và ngưỡng đã chốt trước khi đo
+ứng viên với bản tham chiếu.
+
+| Tệp trong gói | SHA-256 |
+| --- | --- |
+| `release/release-set.json` | `90a8ef4d30ddc19d3024dcb3790fef5d5e041f45fa47922bfd5e34c2fd19c419` |
+| `performance/thresholds.json` | `fd7412c675c0372521519626b77a0e74e83d8967037a597e283086378ba0685a` |
+
 Gói đã kiểm tra chứa đúng 15 artifact phát hành, release lock, danh mục
 test và dependency, mẫu thời gian thô, descriptor và phản hồi gRPC, OpenAPI,
 fixture Contracts và NCAP số 100.000 mẫu. Hai cặp database/capture có digest

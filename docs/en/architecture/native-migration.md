@@ -177,6 +177,15 @@ cover load, integrated spans and restoration of a quarantined lease.
 ### Reference archive and acceptance thresholds
 
 `cirnet-stage-0-reference.zip` has SHA-256 `73185795872bc1ec7e40e30ecc9732a27ba3cbb5dcf657053db5264302117fbb`.
+The Stage 0 harness and results are recorded in `18c4f526030687601e292eef05c474ee1feb0741`.
+Use the digests below to verify the lock and the frozen thresholds before
+running a candidate against the reference.
+
+| Archive member | SHA-256 |
+| --- | --- |
+| `release/release-set.json` | `90a8ef4d30ddc19d3024dcb3790fef5d5e041f45fa47922bfd5e34c2fd19c419` |
+| `performance/thresholds.json` | `fd7412c675c0372521519626b77a0e74e83d8967037a597e283086378ba0685a` |
+
 The verified archive retains the exact 15 release assets, release lock, test
 and dependency inventory, raw timing samples, gRPC descriptors and responses,
 OpenAPI, Contracts fixtures, and digital NCAP at 100,000 samples. The two
