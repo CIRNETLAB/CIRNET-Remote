@@ -1,6 +1,6 @@
 # Đặc tả mạch và phòng thí nghiệm vật lý
 
-[English](../../en/api/circuit-and-physical-lab.md) · [Đặc tả mạch gốc](../../CIRCUIT_SPEC.md) · [Kiến trúc chuẩn Lab-First v3.1](../../ARCHITECTURE.md) · [API ứng dụng](application.md)
+[English](../../en/api/circuit-and-physical-lab.md) · [Điểm vào đặc tả mạch](../../CIRCUIT_SPEC.md) · [Kiến trúc chuẩn Lab-First v3.1](../../ARCHITECTURE.md) · [API ứng dụng](application.md)
 
 ## CircuitGraph và cách đặt linh kiện
 
@@ -14,7 +14,7 @@
 
 Thao tác đặt tự động mới dùng `FlexibleMountV2` với `version: 2`, `geometryRevision: 2` và mẫu định tuyến tường minh. Tư thế V1 và điểm điều khiển uốn thủ công đã lưu tiếp tục chi phối những linh kiện tương ứng. Linh kiện vật lý đặt tự do có thể khóa `physicalDescriptor`. Bộ đọc phân giải đúng phiên bản linh kiện và vỏ cũ. Đọc hoặc lưu thông thường giữ nguyên hình học. Thao tác dựng lại hoặc chuyển đổi tường minh có thể chọn biểu diễn khác đã qua kiểm tra. Đây là hành vi đặt và lưu linh kiện đã triển khai. [Hướng dẫn đặt linh kiện](../../COMPONENT_PLACEMENT.md) · [Đặc tả gắn linh hoạt đã chọn](https://github.com/cirnetlab/cirnet-contracts/blob/524cc7a5e2e65f39077feefe70c7fb2ae3a773d6/contracts/design-models/flexible-placement.md)
 
-Cổng nguồn/đích có tên và liên kết tiếp điểm đã khai báo xác định kết nối điện. Giữ các kiểm tra chuẩn về hướng, độ rộng, trùng lặp và ngõ kích bổ sung khi tạo mạch. Schema bộ nhớ giữ phiên bản `1.0` riêng. Điều khiển nguồn và thiết bị đo trên giao diện cần nguồn điện hoặc đường đo được khai báo riêng. [Điều khiển nguồn](../../POWER_SUPPLY_CONTROLS.md)
+Cổng nguồn/đích có tên và liên kết tiếp điểm đã khai báo xác định kết nối điện. Giữ các kiểm tra chuẩn về hướng, độ rộng, trùng lặp và ngõ kích bổ sung khi tạo mạch. Schema bộ nhớ giữ phiên bản `1.0` riêng. Điều khiển nguồn và thiết bị đo trên giao diện cần nguồn điện hoặc đường đo được khai báo riêng. [Biên bản kiểm chứng nguồn điện theo thời điểm](../../POWER_SUPPLY_CONTROLS.md)
 
 ## Quan sát, bài tập và thực thi
 

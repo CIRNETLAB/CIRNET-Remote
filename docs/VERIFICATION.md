@@ -44,18 +44,9 @@ The allocator defaults to a unique `cirnet-*` session in the OS temporary direct
 
 Pytest's `--basetemp` controls fixture files, separately from `.pytest_cache`. Root, API, Simulator and Hardware Python projects disable `cacheprovider` through their pytest configuration. Preserve that setting for nested subprocesses; if explicitly enabling the plugin, select an allocator-owned external `cache_dir` before running it. The M1 report records the earlier cache containment deviation and the follow-up regression check.
 
-For one shell session, allocate once, then export the returned root to child commands:
-
-```powershell
-$env:CIRNET_ARTIFACTS_SESSION = node scripts/artifact-paths.mjs
-$verificationLog = Join-Path $env:CIRNET_ARTIFACTS_SESSION 'checks.log'
-# Run checks and inspect evidence before cleanup.
-```
-
-```sh
-export CIRNET_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"
-# Run checks and inspect evidence before cleanup.
-```
+For shell allocation examples, see the output ownership instructions in
+[English](en/contributing/verification.md#own-the-output-before-running-a-check)
+or [Vietnamese](vi/contributing/verification.md#xác-lập-quyền-sở-hữu-đầu-ra-trước-khi-chạy).
 
 From another working directory use the script's absolute path, or the appropriate relative path to it. Allocation itself is independent of the caller's working directory.
 
@@ -157,18 +148,19 @@ remain separately dated. Suppress source bytecode before importing verification
 helpers and put child temp/cache paths in the canonical session. Import the
 recorded environment into the parent shell before continuing.
 
-Local-only release verification uses an explicit `distribution: "local"` manifest with `scripts/install_release.py --local-artifacts`. Retain exact absolute artifact paths, SHA-256 and committed producer revisions outside Git, including the unchanged rollback inventory. Mixed URL/path transport and implicit local fallback are rejected. This verifies a local set without publishing it or changing the canonical GitHub release selection; identify uncommitted verification-tool overlays separately.
+For a local manifest and installer command, see the candidate procedure in
+[English](en/operations/release-and-rollback.md#verify-a-local-candidate-set)
+or [Vietnamese](vi/operations/release-and-rollback.md).
+Keep the rollback inventory and identify uncommitted verification overlays.
+The installer rejects mixed URL and path transport and implicit local fallback.
 
 The dated [M6 verification record](verification/2026-10-27-multi-repo-migration-m6.md)
 records the native depth-observer equivalence proof and unchanged DPR 2 gate.
 Those focused results do not replace complete browser and hosted-master acceptance.
 
-Published assets from the six public repositories support anonymous downloads.
-Current CI still uses the [selected-repository read credential](ci-artifact-access.md)
-for bootstrap and authenticated asset checks; draft access must be verified separately.
-Workflow `contents: read` does not narrow the scope of a separate Actions secret.
-Record user provisioning attestations separately from the receipt's `NOT_VERIFIED`
-credential scope. After rotation, verify actual selected asset downloads again.
+For CI credential scope, draft access and verification after rotation, use the
+access guide in [English](en/operations/ci-artifact-access.md)
+or [Vietnamese](vi/operations/ci-artifact-access.md).
 
 ## Checks and evidence
 
@@ -208,16 +200,10 @@ separate runs. For Esc, verify the launcher shows its menu after releasing the
 lock and ports, then select **3** to start again. Check that ports 50051, 8000,
 and 5173 are available after each stop.
 
-Choose gates from real package scripts and workflows. Run at root:
-
-```text
-python scripts/check_context.py
-python scripts/check_markdown.py
-node scripts/check-verification-artifacts.mjs
-node --test scripts/artifact-paths.test.mjs scripts/check-verification-artifacts.test.mjs
-python -m pytest -q tests/test_docs_baseline.py tests/test_post_r7_provenance.py tests/integration/test_context_integrity.py tests/test_markdown_links.py
-git diff --check
-```
+Run the documentation gates from the current guide in
+[English](en/contributing/verification.md#check-documentation-changes)
+or [Vietnamese](vi/contributing/verification.md#kiểm-tra-thay-đổi-tài-liệu).
+Review the final patch with `git diff --check`.
 
 For workflow changes, also validate every `.github/workflows/*.yml` with
 `actionlint` **1.7.12**, using `-shellcheck= -pyflakes=` for the reproducible

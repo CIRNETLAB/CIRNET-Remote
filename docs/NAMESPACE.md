@@ -30,7 +30,7 @@ No new credential provisioning or hosted CI result is implied by those fallbacks
 
 Current source emits `cirnet_session` and `netcircuit_session` with the same
 opaque credential, and reads the legacy cookie when the canonical credential
-is absent. The selected immutable API 0.1.1 emits only `netcircuit_session`.
+is absent. The historical immutable API 0.1.1 emits only `netcircuit_session`.
 Browser acceptance recognizes these exact aliases and checks every present
 cookie's privacy and security attributes. The canonical CSRF header is
 `X-CIRNET-CSRF`; the previous generic `X-CSRF-Token` remains accepted. Current

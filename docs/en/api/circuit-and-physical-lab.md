@@ -1,6 +1,6 @@
 # Circuit and physical lab specification
 
-[Tiếng Việt](../../vi/api/circuit-and-physical-lab.md) · [Original circuit specification](../../CIRCUIT_SPEC.md) · [Canonical Lab-First v3.1 architecture](../../ARCHITECTURE.md) · [Application API](application.md)
+[Tiếng Việt](../../vi/api/circuit-and-physical-lab.md) · [Specification entry point](../../CIRCUIT_SPEC.md) · [Canonical Lab-First v3.1 architecture](../../ARCHITECTURE.md) · [Application API](application.md)
 
 ## CircuitGraph and placement
 
@@ -14,7 +14,7 @@
 
 New automatic placement uses `FlexibleMountV2` with `version: 2`, `geometryRevision: 2` and an explicit routing template. Saved V1 poses and manual bend controls remain authoritative for those mounts. A free physical module may pin a `physicalDescriptor`. Readers resolve exact historical part and package revisions. Ordinary read/save preserves geometry, while explicit rebuild or migration can adopt another validated representation. These are implemented authoring and persistence behaviors. [Component placement](../../COMPONENT_PLACEMENT.md) · [Selected flexible mounting specification](https://github.com/cirnetlab/cirnet-contracts/blob/524cc7a5e2e65f39077feefe70c7fb2ae3a773d6/contracts/design-models/flexible-placement.md)
 
-Named source/destination ports and declared contact bonds define connectivity. Keep the canonical direction, width, duplicate and extra-driver checks for authoring. The memory schema remains `1.0` in its own domain. Visual supply and instrument controls require a separate electrical source or measurement path. [Power supply controls](../../POWER_SUPPLY_CONTROLS.md)
+Named source/destination ports and declared contact bonds define connectivity. Keep the canonical direction, width, duplicate and extra-driver checks for authoring. The memory schema remains `1.0` in its own domain. Visual supply and instrument controls require a separate electrical source or measurement path. [Dated power supply verification](../../POWER_SUPPLY_CONTROLS.md)
 
 ## Observations, assignments and execution
 

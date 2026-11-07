@@ -1,34 +1,16 @@
 # Circuit and Physical Lab Specification — Lab-First
 
-Authority: ARCHITECTURE.md, canonical v3.1.
+Use the circuit and lab reference in [English](en/api/circuit-and-physical-lab.md)
+or [Vietnamese](vi/api/circuit-and-physical-lab.md) for current graph versions,
+observed topology, station capabilities and NCAP formats. The
+[Lab-First architecture](ARCHITECTURE.md) governs system behavior. See
+[component placement](COMPONENT_PLACEMENT.md) and the
+[physical safety contract](PHYSICAL_LAB_SAFETY.md) for their detailed rules.
 
-CircuitGraph / DesignGraph supports schema_version 1.0, 1.1 and additive 1.2 under contracts/circuit-schema. Version 1.1 adds board-local rigid mount pose, versioned parts/packages and validated pin-contact bonds; 1.0/1.1 documents retain their original interpretation. Version 1.2 adds `FlexibleMountV1` with one authoritative board-local 3D body pose, versioned mechanical authoring profiles, two stable pin/contact bindings and bounded lead controls. No duplicate mounted world pose or renderer objects are stored. Named source/destination ports and declared contact bonds define connectivity. See [component placement](COMPONENT_PLACEMENT.md) and the [canonical flexible mounting specification](https://github.com/CIRNETLAB/CIRNET-Contracts/blob/54ef9f6a11f4906c11ec9789de47cf06d5100734/contracts/design-models/flexible-placement.md). Keep canonical direction/width/duplicate/extra-driver authoring rules and separate memory schema 1.0. Visual supply/instrument controls imply no electrical source/measurement.
-
-Current automatic authoring uses `FlexibleMountV2` (`version: 2`, `geometryRevision: 2`, explicit routing template); stored V1 manual intent is preserved. Free physical modules may pin `physicalDescriptor`; exact historical part/package revisions remain resolvable. Read/save never silently rebuilds geometry. These are IMPLEMENTED authoring/persistence boundaries, not hardware measurements.
-
-DetectedTopologyGraph is a separate versioned observation contract, preserving wrong/missing/unexpected/opaque/ambiguous student wiring. Physical contact, electrical node, routing resource and FPGA channel are distinct. AssignmentDefinition holds LabEndpoint bindings, optional reference topology/design/profiles/behavior and assessment policy. Reference placement is not grading truth.
-
-Observed components may provide `pins: ObservedPinBinding[]` with pin/node identity and optional confidence, inferred role and observations. Missing evidence remains unknown. Opaque identity is always UNKNOWN; duplicate pins/connections and references to absent nodes are rejected in Python and browser validation. Reference DesignGraph is checked against the existing CircuitGraph validator.
-
-LabEndpoint selects one binding form: `fixed_node_id` for a required station position, `reference_node_id` for placement-independent resolution, or `design_port` for virtual execution. Legacy `node_id` is deprecated and means fixed placement only. Instrument channels, including Logic Analyzer, start at **1** in user contracts; drivers translate their internal indexing. TopologyResolutionResult records RESOLVED/PARTIAL/AMBIGUOUS/UNRESOLVED and actual observed endpoint nodes separately from grading. Structured safety faults, component/net/pin diagnostics and expected/observed functional evidence preserve the three independent verification results. Existing Lab 1.0 contracts remain frozen. AssignmentDefinitionV2 explicitly carries Graph 1.2 references through versioned authoring and student/instructor views; hardware RPC and the remaining Lab version domains stay independent.
-
-SafetyVerificationResult, TopologyVerificationResult and FunctionalVerificationResult are independent. ExecutionDecision blocks unsafe/indeterminate safety or unexecutable infrastructure only. Lab Execution Compiler emits InstrumentationExecutionPlan for infrastructure power/source/clock/instrument/sense routes, capture/test vectors and runtime protection, never reconstruction of internal student wiring.
-
-Host: Linux Mini PC Intel Xeon W-1370 / 16 GB RAM / 256 GB SSD. EP4CE6E22C8N prototype without SDRAM → EP4CE10E22C8N future external SDRAM, Scope 2CH / Generator 2CH / Logic Analyzer/shared arbitration. Physical analog routing V1=false; physical slot target=1. Actual board/resource/channel counts are profile-derived. Physical support stays unavailable until driver/hardware evidence.
-
-StationCapabilities: availability/mode, virtual/physical digital/analog, scan/safety/guarded support, resolution modes, instrument_capabilities/routing/resources and hardware_rpc_version / fpga_protocol_version / firmware_version / hardware_profile_version. Version domains are independent of CircuitGraph/transport/release.
-
-DetectedTopologyGraph → TopologyResolver → ResolvedLabBindings (`TopologyResolutionResult.endpoint_bindings`) → LabExecutionCompiler. Reference physical node != student physical node. Matching uses supported identities/profiles and component-pin/net incidence, with a multiset for repeated devices and explicit ambiguity on multiple/bounded-out mappings. It may resolve anchored instrument endpoints despite wrong internal wiring; it never restores reference connections. Malformed physical evidence is DRIVER_ERROR.
-
-Runtime instruments have one structured authority: channels=0 means unavailable; optional limits and runtime-reconfiguration flags belong to the profile. InstrumentationExecutionPlan holds baseline generator settings; live updates require declared support and legal RUNNING lifecycle/ownership/safety. Physical slots come from current capabilities; spawn pool size comes from shared CIRNET_SIMULATION_WORKERS (positive integer, default 4).
-
-CaptureMetadata separates lifecycle/SQL from CaptureStore payloads. NCAP digital_events v1 uses `NCAP` magic, uint8 version, little-endian uint32 UTF-8 JSON header length, then 11-byte events (uint16 channel, uint64 time_ns, uint8 0/1/2=X). Bounds: 100k events, 4096 channels, 64KiB header; digital time/duration integers are JavaScript-safe. Epoch timestamp_ns is a decimal string. Versioned NCAP v2 INT16/UINT16/FLOAT32 codecs, descriptors and synthetic interoperability fixtures are implemented; a runtime sampled producer/default v2 endpoint is NOT_IMPLEMENTED and Scope remains unavailable. See the [capture format authority](https://github.com/CIRNETLAB/CIRNET-Contracts/blob/54ef9f6a11f4906c11ec9789de47cf06d5100734/contracts/capture/README.md). Owners fetch/delete payload separately; deletion preserves metadata/history and marks available=false.
-
-Functional results contain only declared expected/observed checkpoints and exercised truth cases, preserving X versus absent response. Assessment policies grade separately from safety/executability. Browser and Python response contracts share generated schema/types; run scripts/sync_lab_contracts.py --check after edits.
-
-Protection: current limiting/sensing, fast cutoff, tri-state/default-open routes, protected digital drive, guarded power-up, watchdog/runtime protection and safe-state timeout. See PHYSICAL_LAB_SAFETY.md. Software cannot prove protection exists.
-
-Pinout/bank voltages, switching/protection schematic, ADC/DAC/AFE parts, SDRAM part/timing, transport IC, current/voltage/sample/frequency limits and measurements: TBD_BY_HARDWARE_DESIGN.
+CircuitGraph describes the design and DetectedTopologyGraph describes the
+observed wiring. The Lab Execution Compiler emits InstrumentationExecutionPlan
+for the lab infrastructure. The hardware roadmap starts with EP4CE6E22C8N
+without SDRAM and reserves EP4CE10E22C8N with external SDRAM for a future target.
 
 ## Editor breadboard jumper authoring (2026-10-14)
 
