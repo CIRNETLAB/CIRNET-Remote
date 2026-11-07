@@ -78,6 +78,53 @@ def test_selected_lock_rejects_stale_interface_variables_before_download(tmp_pat
         module.main(['--manifest',str(path)])
 
 
+def test_public_download_keeps_the_interface_source_bound_to_the_lock(tmp_path, monkeypatch):
+    from tests.contracts.test_system_release import release
+
+    module = installer()
+    value = release()
+    product = value['repositories']['Interface']
+    artifact = product['artifacts']['source']
+    source = {'repository': product['repository'], 'revision': product['sourceRevision'],
+              'uncommittedMigration': False}
+    contents = archive_bytes(metadata_changes={'source': source})
+    artifact['sha256'] = hashlib.sha256(contents).hexdigest()
+    downloads = {f"{product['repository']}/releases/download/v0.1.4/{artifact['filename']}":
+                 (artifact['sha256'], contents)}
+    contracts = value['repositories']['Contracts']
+    for kind in ('dev_npm', 'npm', 'sdist'):
+        sdk = contracts['artifacts'][kind]
+        payload = kind.encode()
+        sdk['sha256'] = hashlib.sha256(payload).hexdigest()
+        url = f"{contracts['repository']}/releases/download/v0.1.2/{sdk['filename']}"
+        downloads[url] = sdk['sha256'], payload
+    manifest = tmp_path / 'release.json'
+    manifest.write_text(json.dumps(value), encoding='utf-8')
+    github_env = tmp_path / 'github-env'
+    monkeypatch.setenv('CIRNET_CI_PUBLIC_RELEASE_DOWNLOADS', '1')
+    monkeypatch.setattr(module, 'artifact_directory', lambda name: tmp_path)
+
+    def download(url, digest):
+        expected_digest, payload = downloads.pop(url)
+        assert digest == expected_digest
+        return payload
+
+    monkeypatch.setattr(module, 'download_artifact', download)
+    assert module.main(['--manifest', str(manifest), '--github-env', str(github_env)]) == 0
+    assert not downloads
+    assert len(list(tmp_path.glob('product-*/package.json'))) == 1
+    environment = dict(line.split('=', 1) for line in github_env.read_text().splitlines())
+    assert 'CIRNET_CONTRACTS_ARTIFACT_MANIFEST' not in environment
+    sdk_manifest = Path(environment['CIRNET_CI_INTERFACE_CONTRACTS_MANIFEST'])
+    selected = json.loads(sdk_manifest.read_text())
+    assert set(selected) == {'dev_npm', 'npm', 'sdist'}
+    for kind, entry in selected.items():
+        path = Path(entry['path'])
+        assert path.is_relative_to(tmp_path)
+        assert path.read_bytes() == kind.encode()
+        assert entry['sha256'] == contracts['artifacts'][kind]['sha256']
+
+
 @pytest.mark.parametrize('version',['0.1.4'])
 def test_selected_interface_requires_exact_source_revision_before_extraction(tmp_path,version):
     module=installer()

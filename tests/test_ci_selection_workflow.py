@@ -59,6 +59,20 @@ def test_observation_uses_the_same_dependency_and_isolation_commands():
         assert job['steps'].index(upload) < job['steps'].index(command(job, 'cleanup-artifact-session.mjs'))
 
 
+def test_only_advisory_jobs_select_public_release_downloads():
+    jobs = workflow()['jobs']
+    setting = 'CIRNET_CI_PUBLIC_RELEASE_DOWNLOADS'
+    enabled = {name: job['env'][setting] for name, job in jobs.items() if setting in job.get('env', {})}
+    assert enabled == {'selector-observation': '1', 'selector-comparison': '1'}
+    selected = jobs['selector-observation']
+    bootstrap = command(selected, 'scripts/bootstrap-contracts.mjs')
+    assert selected['steps'].index(command(selected, 'scripts.install_interface')) < selected['steps'].index(bootstrap)
+    assert bootstrap['env'] == {
+        'CIRNET_CONTRACTS_ARTIFACT_MANIFEST': '${{ env.CIRNET_CI_INTERFACE_CONTRACTS_MANIFEST }}',
+        'NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST': '${{ env.CIRNET_CI_INTERFACE_CONTRACTS_MANIFEST }}',
+    }
+
+
 def test_force_full_switch_only_reaches_the_advisory_pytest_step():
     jobs = workflow()['jobs']
     selected = jobs['selector-observation']

@@ -59,7 +59,15 @@ def load_manifest(path, *, local_artifacts=False):
     return validate_manifest(json.loads(Path(path).read_text(encoding='utf-8'), object_pairs_hook=_object), local_artifacts=local_artifacts)
 
 
-def ci_environment(value):
+def artifact_url(product, kind, *, public_downloads=False):
+    """Select the transport for an artifact from an already validated lock."""
+    artifact = product['artifacts'][kind]
+    if public_downloads:
+        return f"{product['repository']}/releases/download/{product['releaseTag']}/{artifact['filename']}"
+    return artifact['url']
+
+
+def ci_environment(value, *, public_downloads=False):
     """Select CI dependencies from the reviewed lock, independent of Actions variables."""
     validate_manifest(value)
     environment = {}
@@ -73,8 +81,10 @@ def ci_environment(value):
         ('Hardware', 'python', 'CIRNET_HARDWARE_WHEEL'),
         ('FPGA', 'source', 'CIRNET_FPGA_ARTIFACT'),
     ):
-        artifact = value['repositories'][component]['artifacts'][kind]
-        for key in ('url', 'sha256', 'filename'):
+        product = value['repositories'][component]
+        artifact = product['artifacts'][kind]
+        environment[prefix + '_URL'] = artifact_url(product, kind, public_downloads=public_downloads)
+        for key in ('sha256', 'filename'):
             environment[prefix + '_' + key.upper()] = artifact[key]
     return export_environment(environment)
 

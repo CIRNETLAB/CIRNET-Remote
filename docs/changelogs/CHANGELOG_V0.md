@@ -22,6 +22,9 @@
 
 ### Fixed
 
+- Switched the advisory selector jobs to exact public release downloads to avoid
+  the anonymous GitHub REST API quota while preserving locked SHA-256 checks.
+  [CI artifact access](../en/operations/ci-artifact-access.md)
 - Pinned tested browser source and consolidated consumer verification. Added a
   fallback to the full Python gate when test selection cannot safely narrow the
   run and kept live gRPC NCAP coverage. [Browser and consumer verification](https://github.com/cirnetlab/cirnet-remote/commit/feebc8dafc7c5a8621c979d1d8aeb6f615fba85f) · [Selector fallback](https://github.com/cirnetlab/cirnet-remote/commit/37cb350b8492799fa1f8ad2ec85b11fbdd2d5bda)

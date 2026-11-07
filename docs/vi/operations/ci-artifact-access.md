@@ -8,6 +8,12 @@ URL tài sản GitHub dạng số và digest SHA-256 cho hệ thống **0.1.4**.
 cập draft riêng bằng thông tin xác thực dự kiến sử dụng. Tải công khai thành
 công chưa chứng minh quyền xem draft hay phạm vi thông tin xác thực.
 
+Hai job tham chiếu `selector-observation` và `selector-comparison` tải
+artifact công khai theo đúng tag và tên tệp lấy từ khóa phát hành. Nhờ vậy,
+lượt chạy từ fork hoạt động độc lập với secret của repo và hạn mức truy cập
+ẩn danh của GitHub REST API. Bước khởi tạo SDK của Interface đọc manifest cục
+bộ cho ba gói Contracts đã được xác minh SHA-256.
+
 ## Thông tin xác thực và phạm vi
 
 [Workflow Integration](../../../.github/workflows/integration.yml) ưu tiên

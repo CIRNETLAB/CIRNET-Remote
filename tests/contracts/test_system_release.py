@@ -12,14 +12,15 @@ from zipfile import ZipFile
 import pytest
 
 
-def test_ci_selection_overrides_stale_same_version_variables(monkeypatch):
+@pytest.mark.parametrize('public_downloads', [False, True])
+def test_ci_selection_overrides_stale_same_version_variables(monkeypatch, public_downloads):
     from scripts import system_release_manifest
     selected = release()
     monkeypatch.setenv('CIRNET_CONTRACTS_WHEEL_URL', 'https://example.invalid/stale.whl')
     monkeypatch.setenv('CIRNET_HARDWARE_WHEEL_SHA256', 'f' * 64)
     select = getattr(system_release_manifest, 'ci_environment', None)
     assert callable(select), 'CI dependencies must derive from the committed system lock before bootstrap.'
-    environment = select(selected)
+    environment = select(selected, public_downloads=public_downloads)
     for component, kind, prefix in (
         ('Contracts', 'python', 'CIRNET_CONTRACTS_WHEEL'),
         ('Contracts', 'dev', 'CIRNET_CONTRACTS_DEV_WHEEL'),
@@ -30,8 +31,12 @@ def test_ci_selection_overrides_stale_same_version_variables(monkeypatch):
         ('Hardware', 'python', 'CIRNET_HARDWARE_WHEEL'),
         ('FPGA', 'source', 'CIRNET_FPGA_ARTIFACT'),
     ):
-        artifact = selected['repositories'][component]['artifacts'][kind]
-        assert environment[prefix + '_URL'] == artifact['url']
+        product = selected['repositories'][component]
+        artifact = product['artifacts'][kind]
+        expected_url = artifact['url']
+        if public_downloads:
+            expected_url = f"{product['repository']}/releases/download/{product['releaseTag']}/{artifact['filename']}"
+        assert environment[prefix + '_URL'] == expected_url
         assert environment[prefix + '_SHA256'] == artifact['sha256']
         assert environment[prefix + '_FILENAME'] == artifact['filename']
     invalid = release()

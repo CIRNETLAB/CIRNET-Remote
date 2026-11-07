@@ -8,6 +8,12 @@ assets in the six public repositories support anonymous downloads. Test draft
 access separately with the intended credential. A public download does not
 establish draft visibility or the scope of an authenticated credential.
 
+The advisory `selector-observation` and `selector-comparison` jobs download
+public assets by the exact tag and filename derived from the lock. This keeps
+fork runs independent of repository secrets and the anonymous GitHub REST API
+quota. Interface's SDK bootstrap reads a local manifest for the three
+SHA-256-verified Contracts packages it needs.
+
 ## Credential and scope
 
 The [Integration workflow](../../../.github/workflows/integration.yml) prefers

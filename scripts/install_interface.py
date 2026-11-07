@@ -3,21 +3,21 @@ import argparse
 import hashlib
 import io
 import json
-import os
 try:
-    from scripts.environment import getenv, export_environment
+    from scripts.environment import append_environment, getenv
 except ModuleNotFoundError:
-    from environment import getenv, export_environment
+    from environment import append_environment, getenv
 
 from pathlib import Path, PurePosixPath
 import re
 import shutil
+from tempfile import mkdtemp
 import uuid
 from urllib.parse import urlparse
 import tarfile
 from scripts.artifact_download import download_artifact
 from scripts.artifact_paths import artifact_directory
-from scripts.system_release_manifest import repository_urls, load_manifest
+from scripts.system_release_manifest import artifact_url, load_manifest, repository_urls
 
 
 MAX_MEMBERS=10_000
@@ -111,6 +111,21 @@ def extract_product(contents, directory, *, expected_version=None, expected_sour
     return directory
 
 
+def download_interface_contracts(product):
+    """Provide published Contracts inputs to Interface's local-manifest bootstrap."""
+    directory = Path(mkdtemp(prefix='contracts-', dir=artifact_directory('interface-contracts')))
+    selected = {}
+    for kind in ('dev_npm', 'npm', 'sdist'):
+        artifact = product['artifacts'][kind]
+        digest = artifact['sha256']
+        path = directory / artifact['filename']
+        path.write_bytes(download_artifact(artifact_url(product, kind, public_downloads=True), digest))
+        selected[kind] = {'path': str(path), 'sha256': digest}
+    manifest = directory / 'artifacts.json'
+    manifest.write_text(json.dumps(selected), encoding='utf-8')
+    return manifest
+
+
 def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--github-env',type=Path)
@@ -119,12 +134,15 @@ def main(argv=None):
     url=getenv('CIRNET_INTERFACE_ARTIFACT_URL')
     digest=getenv('CIRNET_INTERFACE_ARTIFACT_SHA256')
     selected=None
+    public_downloads = arguments.manifest is not None and getenv('CIRNET_CI_PUBLIC_RELEASE_DOWNLOADS') == '1'
     if arguments.manifest:
-        selected=load_manifest(arguments.manifest)['repositories']['Interface']
+        repositories = load_manifest(arguments.manifest)['repositories']
+        selected = repositories['Interface']
         artifact=selected['artifacts']['source']
-        if (url and url!=artifact['url']) or (digest and digest!=artifact['sha256']):
+        selected_url = artifact_url(selected, 'source', public_downloads=public_downloads)
+        if (url and url!=selected_url) or (digest and digest!=artifact['sha256']):
             raise ValueError('Interface environment selection differs from the exact system release lock.')
-        url,digest=artifact['url'],artifact['sha256']
+        url,digest=selected_url,artifact['sha256']
     if not url or not digest:
         parser.error('Configure exact CIRNET_INTERFACE_ARTIFACT_URL/SHA256 for a reviewed exported Interface product; no retained-source fallback is allowed.')
     # HTTPS redirect/authentication and exact SHA256 verification are shared
@@ -133,9 +151,11 @@ def main(argv=None):
     directory=extract_product(contents,artifact_directory('interface-products')/('product-'+uuid.uuid4().hex),
                               expected_version=selected['version'] if selected else None,expected_source=selected)
     if arguments.github_env:
-        with arguments.github_env.open('a',encoding='utf-8') as output:
-            output.write('CIRNET_INTERFACE_ROOT='+str(directory)+'\n')
-            output.write('NETCIRCUIT_INTERFACE_ROOT='+str(directory)+'\n')
+        environment = {'CIRNET_INTERFACE_ROOT': str(directory)}
+        if public_downloads:
+            sdk_manifest = download_interface_contracts(repositories['Contracts'])
+            environment['CIRNET_CI_INTERFACE_CONTRACTS_MANIFEST'] = str(sdk_manifest)
+        append_environment(environment, arguments.github_env)
     print(json.dumps({'interfaceRoot':str(directory)}))
     return 0
 

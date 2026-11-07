@@ -310,6 +310,8 @@ jobs:
     continue-on-error: true
     permissions:
       contents: read
+    env:
+      CIRNET_CI_PUBLIC_RELEASE_DOWNLOADS: '1'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -332,8 +334,8 @@ jobs:
         run: *observation-download-interface
       - name: Bootstrap Interface SDK from exact reviewed artifacts
         env:
-          CIRNET_CONTRACTS_ARTIFACT_MANIFEST: ''
-          NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST: ''
+          CIRNET_CONTRACTS_ARTIFACT_MANIFEST: ${{ env.CIRNET_CI_INTERFACE_CONTRACTS_MANIFEST }}
+          NETCIRCUIT_CONTRACTS_ARTIFACT_MANIFEST: ${{ env.CIRNET_CI_INTERFACE_CONTRACTS_MANIFEST }}
         run: *observation-bootstrap-interface
       - *observation-install-interface
       - *observation-contract-provenance
@@ -361,6 +363,8 @@ jobs:
     continue-on-error: true
     permissions:
       contents: read
+    env:
+      CIRNET_CI_PUBLIC_RELEASE_DOWNLOADS: '1'
     steps:
       - uses: actions/checkout@v4
         with:
