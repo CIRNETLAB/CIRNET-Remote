@@ -1,6 +1,6 @@
 # Đặc tả mạch và phòng thí nghiệm vật lý
 
-[English](../../en/api/circuit-and-physical-lab.md) · [Điểm vào đặc tả mạch](../../CIRCUIT_SPEC.md) · [Kiến trúc chuẩn Lab-First v3.1](../../ARCHITECTURE.md) · [API ứng dụng](application.md)
+[English](../../en/api/circuit-and-physical-lab.md) · [Điểm vào đặc tả mạch](../../en/api/circuit-spec-reference.md) · [Kiến trúc chuẩn Lab-First v3.1](../../en/architecture/lab-first-v3-1.md) · [API ứng dụng](application.md)
 
 ## CircuitGraph và cách đặt linh kiện
 
@@ -12,9 +12,9 @@
 | 1.1 | Tư thế gắn linh kiện cứng theo hệ tọa độ bo, linh kiện/vỏ có phiên bản và liên kết chân–tiếp điểm đã kiểm tra. Tài liệu trước đó giữ nguyên ý nghĩa. |
 | 1.2 | `FlexibleMountV1` bổ sung một tư thế 3D làm nguồn chuẩn cho thân linh kiện theo hệ tọa độ bo, profile cơ khí có phiên bản, hai liên kết chân–tiếp điểm ổn định và các điểm điều khiển chân dẫn có giới hạn. Linh kiện đã gắn lưu một tư thế duy nhất và chỉ lưu dữ liệu thiết kế. |
 
-Thao tác đặt tự động mới dùng `FlexibleMountV2` với `version: 2`, `geometryRevision: 2` và mẫu định tuyến tường minh. Tư thế V1 và điểm điều khiển uốn thủ công đã lưu tiếp tục chi phối những linh kiện tương ứng. Linh kiện vật lý đặt tự do có thể khóa `physicalDescriptor`. Bộ đọc phân giải đúng phiên bản linh kiện và vỏ cũ. Đọc hoặc lưu thông thường giữ nguyên hình học. Thao tác dựng lại hoặc chuyển đổi tường minh có thể chọn biểu diễn khác đã qua kiểm tra. Đây là hành vi đặt và lưu linh kiện đã triển khai. [Hướng dẫn đặt linh kiện](../../COMPONENT_PLACEMENT.md) · [Đặc tả gắn linh hoạt đã chọn](https://github.com/cirnetlab/cirnet-contracts/blob/524cc7a5e2e65f39077feefe70c7fb2ae3a773d6/contracts/design-models/flexible-placement.md)
+Thao tác đặt tự động mới dùng `FlexibleMountV2` với `version: 2`, `geometryRevision: 2` và mẫu định tuyến tường minh. Tư thế V1 và điểm điều khiển uốn thủ công đã lưu tiếp tục chi phối những linh kiện tương ứng. Linh kiện vật lý đặt tự do có thể khóa `physicalDescriptor`. Bộ đọc phân giải đúng phiên bản linh kiện và vỏ cũ. Đọc hoặc lưu thông thường giữ nguyên hình học. Thao tác dựng lại hoặc chuyển đổi tường minh có thể chọn biểu diễn khác đã qua kiểm tra. Đây là hành vi đặt và lưu linh kiện đã triển khai. [Hướng dẫn đặt linh kiện](../../en/architecture/component-placement.md) · [Đặc tả gắn linh hoạt đã chọn](https://github.com/cirnetlab/cirnet-contracts/blob/524cc7a5e2e65f39077feefe70c7fb2ae3a773d6/contracts/design-models/flexible-placement.md)
 
-Cổng nguồn/đích có tên và liên kết tiếp điểm đã khai báo xác định kết nối điện. Giữ các kiểm tra chuẩn về hướng, độ rộng, trùng lặp và ngõ kích bổ sung khi tạo mạch. Schema bộ nhớ giữ phiên bản `1.0` riêng. Điều khiển nguồn và thiết bị đo trên giao diện cần nguồn điện hoặc đường đo được khai báo riêng. [Biên bản kiểm chứng nguồn điện theo thời điểm](../../POWER_SUPPLY_CONTROLS.md)
+Cổng nguồn/đích có tên và liên kết tiếp điểm đã khai báo xác định kết nối điện. Giữ các kiểm tra chuẩn về hướng, độ rộng, trùng lặp và ngõ kích bổ sung khi tạo mạch. Schema bộ nhớ giữ phiên bản `1.0` riêng. Điều khiển nguồn và thiết bị đo trên giao diện cần nguồn điện hoặc đường đo được khai báo riêng. [Biên bản kiểm chứng nguồn điện theo thời điểm](../history/power-supply-controls.md)
 
 ## Quan sát, bài tập và thực thi
 
@@ -47,7 +47,7 @@ Bộ phân giải ghép danh tính được hỗ trợ hoặc profile tường m
 
 Máy chủ triển khai đích là Linux Mini PC dùng Intel Xeon W-1370, RAM 16 GB và SSD 256 GB. Kế hoạch phần cứng dùng nguyên mẫu EP4CE6E22C8N không SDRAM và đích tương lai EP4CE10E22C8N với SDRAM ngoài, hai kênh Scope, hai kênh Generator, Logic Analyzer và phân quyền tài nguyên dùng chung. Định tuyến tương tự vật lý ở V1 là `false`. Mục tiêu là một suất vật lý dùng chung. Profile thực tế cung cấp số bo, tài nguyên và kênh khả dụng. Hỗ trợ vật lý cần bằng chứng về driver và phần cứng. Sản phẩm FPGA 0.1.2 đã chọn là khung mã nguồn. [Đối chiếu hợp đồng FPGA](../architecture/fpga-contract-conformance.md) · [Khóa bản phát hành đã chọn](../../../integration/release-set.json)
 
-Cơ chế bảo vệ cần giới hạn và đo dòng, ngắt nhanh, ngõ kích ba trạng thái, tuyến mặc định hở, ngõ ra số có bảo vệ, cấp nguồn có kiểm soát, watchdog và bảo vệ khi chạy, cùng thời gian về trạng thái an toàn có giới hạn. Sơ đồ chân/điện áp bank, sơ đồ chuyển mạch và bảo vệ, lựa chọn ADC/DAC/AFE, linh kiện và timing SDRAM, IC truyền thông, các giới hạn và phép đo dòng, áp, tốc độ lấy mẫu, tần số vẫn là `TBD_BY_HARDWARE_DESIGN`. Kiểm thử phần mềm xác lập hành vi điều khiển. Kiểm chứng điện cần sơ đồ, linh kiện và kết quả đo riêng. [An toàn phòng thí nghiệm vật lý](../architecture/physical-lab-safety.md) · [Bằng chứng phát hành cục bộ theo ngày](../../verification/2026-11-05-cirnet-release-0.1.4.md)
+Cơ chế bảo vệ cần giới hạn và đo dòng, ngắt nhanh, ngõ kích ba trạng thái, tuyến mặc định hở, ngõ ra số có bảo vệ, cấp nguồn có kiểm soát, watchdog và bảo vệ khi chạy, cùng thời gian về trạng thái an toàn có giới hạn. Sơ đồ chân/điện áp bank, sơ đồ chuyển mạch và bảo vệ, lựa chọn ADC/DAC/AFE, linh kiện và timing SDRAM, IC truyền thông, các giới hạn và phép đo dòng, áp, tốc độ lấy mẫu, tần số vẫn là `TBD_BY_HARDWARE_DESIGN`. Kiểm thử phần mềm xác lập hành vi điều khiển. Kiểm chứng điện cần sơ đồ, linh kiện và kết quả đo riêng. [An toàn phòng thí nghiệm vật lý](../architecture/physical-lab-safety.md) · [Bằng chứng phát hành cục bộ theo ngày](../../en/history/verification/2026-11-05-cirnet-release-0.1.4.md)
 
 ## Bản thu và bằng chứng
 

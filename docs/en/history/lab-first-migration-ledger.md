@@ -2,7 +2,7 @@
 
 Current Web/Contracts hardening WC20 (2026-10-20), its source identity, executed gates and remaining limits are recorded in the [WC20 closure](https://github.com/CIRNETLAB/CIRNET-Remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/verification/2026-10-20-web-contracts-closure.md). The R/H/W phase rows below retain their original history and are not current gate results.
 
-> Historical migration ledger — 2026-10-19 audit: phase instructions, Git states, counts and hashes below record the original R/H/W sessions; they are not instructions to repeat phases, stage or commit now. [ARCHITECTURE.md](ARCHITECTURE.md) remains current authority and [VERIFICATION.md](VERIFICATION.md) governs new evidence. The archived R0–R7 prompt is hash-locked and remains byte-for-byte unchanged.
+> Historical migration ledger — 2026-10-19 audit: phase instructions, Git states, counts and hashes below record the original R/H/W sessions; they are not instructions to repeat phases, stage or commit now. [ARCHITECTURE.md](../architecture/lab-first-v3-1.md) remains current authority and [VERIFICATION.md](verification-ledger.md) governs new evidence. The archived R0–R7 prompt is hash-locked and remains byte-for-byte unchanged.
 
 ## Post-R7 architecture hardening H0–H6
 
@@ -77,7 +77,7 @@ Ruling H4: Baseline generator settings belong to the validated execution plan be
 Ruling H1: Limit deterministic matching to supported digital identities or explicit instructor profiles, with 32 components / 64 mappings / 4096 search steps; budget exhaustion remains AMBIGUOUS — avoids unbounded graph-isomorphism and guessed evidence — cost if wrong: expand supported profiles/bounds after measured performance.
 Ruling H1: Build/validate the pure infrastructure plan to establish executability before committing ExecutionDecision, then apply it only after permission — preserves independent safety/resource policy — cost if wrong: separate an equivalent resource admission pass from final compilation.
 
-Historical plan: [recovered R0–R7 prompt](archive/PROMPT_CODEX_net-Circuit-Remote_Lab-First_Refactor_R0-R7.md). Exact Git blob `1019e14fd1a9c9489a5353d5a539059f144b792d` present at R7 `842b3d1`; later removed by `f5df5ac`. H6 recovers that blob byte-for-byte as historical evidence, SHA256 `cce3f52cec112f5b9125d20bf48cfb68a38f290f1453714a491f7ebb0cdc4985`. The contents are a proven repository artifact; prior execution is supported by this ledger/phase commits, not a new claim from reconstruction. Canonical ARCHITECTURE.md governs any historical conflict.
+Historical plan: [recovered R0–R7 prompt](../../vi/history/archive/PROMPT_CODEX_net-Circuit-Remote_Lab-First_Refactor_R0-R7.md). Exact Git blob `1019e14fd1a9c9489a5353d5a539059f144b792d` present at R7 `842b3d1`; later removed by `f5df5ac`. H6 recovers that blob byte-for-byte as historical evidence, SHA256 `cce3f52cec112f5b9125d20bf48cfb68a38f290f1453714a491f7ebb0cdc4985`. The contents are a proven repository artifact; prior execution is supported by this ledger/phase commits, not a new claim from reconstruction. Canonical ARCHITECTURE.md governs any historical conflict.
 Authority: ARCHITECTURE.md, cleaned Lab-First v3.1; v3 proposal/audit are provenance.
 
 ## Pre-flight — 2026-10-13

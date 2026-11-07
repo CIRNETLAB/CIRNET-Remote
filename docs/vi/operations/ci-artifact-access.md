@@ -37,5 +37,5 @@ quyền phát hành.
 CI có xác thực sẽ dừng khi thiếu đầu vào hoặc lỗi xác thực. Giữ pin chính xác
 và xác minh trước khi dùng. Trình cài không chọn `latest`, checkout lân cận
 hay gói editable làm dự phòng. Xem [quy trình phát hành](release-and-rollback.md)
-để thiết lập cục bộ. [Hồ sơ quyền truy cập sau đổi tên](../../ci-artifact-access.md)
+để thiết lập cục bộ. [Hồ sơ quyền truy cập sau đổi tên](../../en/history/ci-artifact-access-record.md)
 bằng tiếng Anh ghi các revision và receipt lịch sử.

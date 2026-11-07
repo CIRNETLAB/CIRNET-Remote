@@ -1,11 +1,11 @@
 # CIRNET Remote system architecture
 
-[Tiếng Việt](../../vi/architecture/system.md) · [Canonical Lab-First v3.1 architecture](../../ARCHITECTURE.md)
+[Tiếng Việt](../../vi/architecture/system.md) · [Canonical Lab-First v3.1 architecture](lab-first-v3-1.md)
 
 ## Authority and scope
 
-Use the [Lab-First v3.1 specification](../../ARCHITECTURE.md) for approved
-system and safety rules and the [physical safety contract](../../PHYSICAL_LAB_SAFETY.md)
+Use the [Lab-First v3.1 specification](lab-first-v3-1.md) for approved
+system and safety rules and the [physical safety contract](physical-lab-safety-contract.md)
 for electrical requirements. This page explains those boundaries and maps the
 current selected topology. The [working context](context.md) gives maintainers
 the invariants to check when changing the implementation.
@@ -33,7 +33,7 @@ The [release lock](../../../integration/release-set.json) selects system and Int
 
 ## Design and observed topology
 
-`CircuitGraph` 1.0, 1.1 and 1.2 are logical design truth. Version 1.1 adds rigid placement and validated contact bonds. Version 1.2 adds flexible assemblies and pinned free-component descriptors. New flexible authoring uses automatic `FlexibleMountV2`. Saved V1 geometry and historical descriptor revisions remain readable. Three.js projects the graph. Coordinates alone create no nets, and a placement ghost enters the graph only at commit. Versioned `/api/v2` operations carry the new shapes alongside existing operations. [Circuit specification](../../CIRCUIT_SPEC.md) · [Component placement](../../COMPONENT_PLACEMENT.md)
+`CircuitGraph` 1.0, 1.1 and 1.2 are logical design truth. Version 1.1 adds rigid placement and validated contact bonds. Version 1.2 adds flexible assemblies and pinned free-component descriptors. New flexible authoring uses automatic `FlexibleMountV2`. Saved V1 geometry and historical descriptor revisions remain readable. Three.js projects the graph. Coordinates alone create no nets, and a placement ghost enters the graph only at commit. Versioned `/api/v2` operations carry the new shapes alongside existing operations. [Circuit specification](../api/circuit-spec-reference.md) · [Component placement](component-placement.md)
 
 `DetectedTopologyGraph` records what was observed, including missing or unexpected parts and nets, ambiguous continuity and opaque identities. `AssignmentDefinition` carries optional reference design/topology, expected behavior, grading policy and `LabEndpoint` bindings. Endpoints target a fixed observed node, a reference node that requires resolution, or a virtual design port. The resolver binds eligible reference endpoints to actual student nodes. Unknown observations remain unknown. Required unresolved endpoints block execution.
 
@@ -67,4 +67,4 @@ These defaults describe the selected release.
 - Durable principals own projects and captures. Server sessions authenticate requests. The controller tab's identity binds execution lifetime to its authenticated session. Viewer tabs can read authorized state. Reconnection reconciles durable command outcomes and does not replay commands. [Projects and revisions](projects-and-revisions.md) · [Pending observations](pending-observations.md)
 - HTTP and realtime views redact reference answers under the default `observed_only` assignment policy. Experiment JSON and events carry `CaptureMetadata`. Owner-scoped capture endpoints provide binary NCAP payloads. NCAP v2 codecs support sampled data formats, while the current runtime capture producer remains NCAP v1. [Assignment publication](assignments-and-publication.md) · [Capture catalog](capture-catalog.md)
 
-The [0.1.4 local release report](../../verification/2026-11-05-cirnet-release-0.1.4.md) records its Windows and software checks. The [later test audit](../../verification/2026-11-05-test-infrastructure-audit.md) separates hosted release results from post-fix local results. The [native migration Stage 0 record](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md) records its separate environment and open gates. Electrical and target deployment claims require evidence from their own environments.
+The [0.1.4 local release report](../history/verification/2026-11-05-cirnet-release-0.1.4.md) records its Windows and software checks. The [later test audit](../../vi/history/verification/2026-11-05-test-infrastructure-audit.md) separates hosted release results from post-fix local results. The [native migration Stage 0 record](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md) records its separate environment and open gates. Electrical and target deployment claims require evidence from their own environments.

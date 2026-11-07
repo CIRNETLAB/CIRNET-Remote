@@ -4,7 +4,7 @@ Use the current deployment guide in [English](../docs/en/operations/deployment.m
 or [Vietnamese](../docs/vi/operations/deployment.md). This path retains the
 template reference and original operational details.
 
-Authority remains [Lab-First v3.1](../docs/ARCHITECTURE.md). These are reviewable Linux/Nginx/systemd templates for the intended Mini PC; they have not been installed or executed on that target during this task. Local tests verify configuration invariants, SQLite/PostgreSQL migrations and real software flows. They do not verify target TLS, firewall, service-manager configuration, hardware or production capacity.
+Authority remains [Lab-First v3.1](../docs/en/architecture/lab-first-v3-1.md). These are reviewable Linux/Nginx/systemd templates for the intended Mini PC; they have not been installed or executed on that target during this task. Local tests verify configuration invariants, SQLite/PostgreSQL migrations and real software flows. They do not verify target TLS, firewall, service-manager configuration, hardware or production capacity.
 
 Use one API process/worker. Its FIFO scheduler, event hub and directory quotas are process-local; additional Uvicorn workers or API replicas require a separate distributed ownership/scheduling design. `CIRNET_SIMULATION_WORKERS` bounds existing virtual subprocess jobs and is independent of HTTP sessions. Physical stations retain their declared slots and default unavailable capabilities.
 
@@ -14,7 +14,7 @@ The templates are [cirnet.production.env.example](cirnet.production.env.example)
 [nginx/cirnet.conf](nginx/cirnet.conf) and `systemd/cirnet-*` units. Source runtime
 settings prefer `CIRNET_*` and accept `NETCIRCUIT_*` when the canonical spelling
 is absent. Each systemd unit declares its old `netcircuit-*` name as an install
-alias. See [deployment name migration](../docs/NAMESPACE.md#existing-deployments)
+alias. See [deployment name migration](../docs/en/operations/namespace-compatibility.md#existing-deployments)
 before replacing units on an existing host.
 
 Current source repositories are under `CIRNETLAB/CIRNET-*`. Select the exact

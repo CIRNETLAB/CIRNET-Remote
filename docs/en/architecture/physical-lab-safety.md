@@ -1,6 +1,6 @@
 # Physical lab safety
 
-[Tiếng Việt](../../vi/architecture/physical-lab-safety.md) · [Canonical safety contract](../../PHYSICAL_LAB_SAFETY.md) · [System architecture](system.md)
+[Tiếng Việt](../../vi/architecture/physical-lab-safety.md) · [Canonical safety contract](physical-lab-safety-contract.md) · [System architecture](system.md)
 
 Safety and correctness are independent. Unknown component identity remains `UNKNOWN`. Running a safe unknown circuit requires demonstrated protection and executable endpoint bindings and uses `RUN_GUARDED`.
 
@@ -19,4 +19,4 @@ The scan must provide valid node, connection and pin references and unique pin I
 
 The plan validates baseline Generator settings before guarded power-up. A live change requires declared runtime support, `RUNNING`, the owner and active lease, fresh driver safety, and specified profile limits. Scope and Generator have zero channels and live Apply is unavailable in the baseline without the required ADC/DAC/AFE. Two-slot admission tests check scheduler behavior. A physical multi-slot profile requires independent protected partitions. [Control isolation](control-isolation-and-runtime-index.md) · [FPGA conformance](fpga-contract-conformance.md)
 
-Electrical safety claims require schematics, selected-part datasheets and pin mapping, and measurements. State-machine and RTL tests establish control invariants. The [0.1.4 local release report](../../verification/2026-11-05-cirnet-release-0.1.4.md) lists physical FPGA verification as `NOT RUN` for that run.
+Electrical safety claims require schematics, selected-part datasheets and pin mapping, and measurements. State-machine and RTL tests establish control invariants. The [0.1.4 local release report](../history/verification/2026-11-05-cirnet-release-0.1.4.md) lists physical FPGA verification as `NOT RUN` for that run.

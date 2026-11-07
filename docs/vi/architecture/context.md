@@ -1,6 +1,6 @@
 # Bối cảnh làm việc của CIRNET Remote
 
-[English](../../en/architecture/context.md) · [Tài liệu bối cảnh chuẩn và các mốc kiểm tra](../../CONTEXT.md) · [Kiến trúc hệ thống](system.md)
+[English](../../en/architecture/context.md) · [Tài liệu bối cảnh chuẩn và các mốc kiểm tra](../../en/architecture/context-invariants.md) · [Kiến trúc hệ thống](system.md)
 
 ## Các nguyên tắc cần giữ khi thay đổi
 
@@ -20,6 +20,6 @@
 
 ## Bằng chứng và duyệt thay đổi
 
-Đọc phần triển khai và kiểm thử liên quan cùng [khóa bản phát hành](../../../integration/release-set.json). Môi trường kiểm chứng chính hiện dùng Python 3.14 và Node 26. Chạy `python -B scripts/check_context.py` và chọn nhóm phù hợp của `scripts/check_release.py` theo [hướng dẫn kiểm chứng](../../VERIFICATION.md). Cấp phiên ngoài kho do mình sở hữu trước khi chạy kiểm tra sinh tệp tạm. Ghi riêng đầu vào đã thử, lỗi, ca bỏ qua và kiểm tra chưa chạy. [Quy định của kho mã](../../../AGENTS.md)
+Đọc phần triển khai và kiểm thử liên quan cùng [khóa bản phát hành](../../../integration/release-set.json). Môi trường kiểm chứng chính hiện dùng Python 3.14 và Node 26. Chạy `python -B scripts/check_context.py` và chọn nhóm phù hợp của `scripts/check_release.py` theo [hướng dẫn kiểm chứng](../../en/history/verification-ledger.md). Cấp phiên ngoài kho do mình sở hữu trước khi chạy kiểm tra sinh tệp tạm. Ghi riêng đầu vào đã thử, lỗi, ca bỏ qua và kiểm tra chưa chạy. [Quy định của kho mã](../../../AGENTS.md)
 
-[Biên bản kiểm chứng W0–W8](https://github.com/cirnetlab/cirnet-remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/verification/2026-10-16-web-contracts.md) lưu bằng chứng gốc về schema, sinh mã và nghiệm thu từng giai đoạn. [Biên bản chuyển đổi Lab-First](../../MIGRATION_LAB_FIRST.md) ghi các quyết định R0–R7. [Báo cáo phát hành cục bộ 0.1.4](../../verification/2026-11-05-cirnet-release-0.1.4.md) và [báo cáo kiểm tra hạ tầng kiểm thử](../../verification/2026-11-05-test-infrastructure-audit.md) áp dụng cho từng lần chạy được ghi riêng.
+[Biên bản kiểm chứng W0–W8](https://github.com/cirnetlab/cirnet-remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/verification/2026-10-16-web-contracts.md) lưu bằng chứng gốc về schema, sinh mã và nghiệm thu từng giai đoạn. [Biên bản chuyển đổi Lab-First](../../en/history/lab-first-migration-ledger.md) ghi các quyết định R0–R7. [Báo cáo phát hành cục bộ 0.1.4](../../en/history/verification/2026-11-05-cirnet-release-0.1.4.md) và [báo cáo kiểm tra hạ tầng kiểm thử](../history/verification/2026-11-05-test-infrastructure-audit.md) áp dụng cho từng lần chạy được ghi riêng.

@@ -14,7 +14,7 @@ names describe new source builds.
 | Independent DEV allocator | `cirnet-artifact-paths` | `cirnet_artifact_paths` |
 
 System 0.1.4 selects the canonical \`@cirnet/contracts\` SDK and
-\`@cirnet/artifact-paths\` allocator through the [release lock](../integration/release-set.json).
+\`@cirnet/artifact-paths\` allocator through the [release lock](../../../integration/release-set.json).
 Interface imports the packages directly by their published identities.
 Simulator and DEV retain application import aliases, and FPGA retains thin
 old-module wrappers for RTL fixtures. The Windows launcher uses a separate
@@ -70,7 +70,7 @@ Ensure only one API scheduler and one Hardware Service are started. Existing
 independent old unit files must not remain enabled alongside the replacements.
 Reload and validate the host service-manager/proxy configuration before startup;
 actual target installation, TLS and physical checks remain separate acceptance.
-See the [production guide](../deployment/README.md).
+See the [production guide](../../../deployment/README.md).
 
 ## Published artifacts and preserved evidence
 

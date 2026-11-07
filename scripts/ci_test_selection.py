@@ -20,8 +20,9 @@ DOCUMENTATION_TARGETS = frozenset({
 })
 NARROW_PATHS = {
     'README.md': 'remote-documentation',
-    'docs/README.md': 'remote-documentation',
-    'docs/CHANGELOG.md': 'remote-documentation',
+    'docs/en/index.md': 'remote-documentation',
+    'docs/vi/index.md': 'remote-documentation',
+    'docs/en/history/changelog.md': 'remote-documentation',
     'services/api/app/api/health.py': 'remote-api-health',
     'services/api/tests/test_health.py': 'remote-api-health',
 }

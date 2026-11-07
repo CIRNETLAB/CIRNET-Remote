@@ -34,10 +34,11 @@ def test_python_bridge_shares_owned_session_and_cleans_only_that_session(tmp_pat
 
 
 def test_load_benchmark_rejects_repository_output_before_starting_services():
-    result=subprocess.run([sys.executable,str(ROOT/'scripts/benchmark_web_sessions.py'),'--output',str(ROOT/'docs/verification/rejected.json')],capture_output=True,text=True,cwd=ROOT)
+    output=ROOT/'docs/en/history/verification/rejected.json'
+    result=subprocess.run([sys.executable,str(ROOT/'scripts/benchmark_web_sessions.py'),'--output',str(output)],capture_output=True,text=True,cwd=ROOT)
     assert result.returncode!=0
     assert 'outside' in result.stderr
-    assert not (ROOT/'docs/verification/rejected.json').exists()
+    assert not output.exists()
 
 
 def test_owned_lane_reuses_inherited_context_without_extra_node_preflight(tmp_path,monkeypatch):

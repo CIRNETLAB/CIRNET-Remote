@@ -2,8 +2,8 @@
 
 Status: IMPLEMENTED policy and tooling. Individual results are VERIFIED only in their dated verification report. This guide governs new verification output; retained legacy evidence is inventoried separately and has not been deleted.
 
-Use the current verification entry in [English](en/contributing/verification.md)
-or [Vietnamese](vi/contributing/verification.md). This retained guide also
+Use the current verification entry in [English](../contributing/verification.md)
+or [Vietnamese](../../vi/contributing/verification.md). This retained guide also
 contains procedures and evidence from earlier revisions.
 
 ## Output policy
@@ -45,14 +45,14 @@ The allocator defaults to a unique `cirnet-*` session in the OS temporary direct
 Pytest's `--basetemp` controls fixture files, separately from `.pytest_cache`. Root, API, Simulator and Hardware Python projects disable `cacheprovider` through their pytest configuration. Preserve that setting for nested subprocesses; if explicitly enabling the plugin, select an allocator-owned external `cache_dir` before running it. The M1 report records the earlier cache containment deviation and the follow-up regression check.
 
 For shell allocation examples, see the output ownership instructions in
-[English](en/contributing/verification.md#own-the-output-before-running-a-check)
-or [Vietnamese](vi/contributing/verification.md#xác-lập-quyền-sở-hữu-đầu-ra-trước-khi-chạy).
+[English](../contributing/verification.md#own-the-output-before-running-a-check)
+or [Vietnamese](../../vi/contributing/verification.md#xác-lập-quyền-sở-hữu-đầu-ra-trước-khi-chạy).
 
 From another working directory use the script's absolute path, or the appropriate relative path to it. Allocation itself is independent of the caller's working directory.
 
 ## Current release setup
 
-Current repositories use `cirnetlab/cirnet-*`. Active source uses canonical CIRNET technical identifiers and compatibility aliases described in [the namespace guide](NAMESPACE.md). Select the exact numeric asset URLs
+Current repositories use `cirnetlab/cirnet-*`. Active source uses canonical CIRNET technical identifiers and compatibility aliases described in [the namespace guide](../operations/namespace-compatibility.md). Select the exact numeric asset URLs
 and digests in the current Git manifest. Historical immutable manifests/release
 notes keep their recorded source/URLs and are not silently rewritten. Record
 committed build inputs, archive SHA-256 and member-payload differences when
@@ -64,14 +64,14 @@ an immutable release cannot be overwritten. Revalidated original 0.1.1 bytes
 retain their original build provenance.
 
 Jobs that build the API from source build the Python dependencies from the
-producer commits in [the source CI lock](../integration/ci-source-dependencies.json).
+producer commits in [the source CI lock](../../../integration/ci-source-dependencies.json).
 They verify each source archive SHA-256, install the producer's hash-locked
 build tools, and pass each resulting wheel and its digest to the existing
 installers. This tests the renamed `cirnet-contracts` distribution with the
 corresponding Simulator and Hardware dependencies. Browser release, FPGA and
 system artifact access continue to select the published release set.
 
-The browser workflow uses the [exact Interface commit](../integration/browser-interface-source.json)
+The browser workflow uses the [exact Interface commit](../../../integration/browser-interface-source.json)
 for pull requests and pushes to `master`. The candidate export records the
 resolved commit and Git tree before SDK bootstrap. Tag pushes and manual runs
 with `interface_source=published` keep the digest-verified Interface archive
@@ -138,9 +138,9 @@ installed-package probe also passed on Windows with Python 3.11.
 The historical M6 0.1.3 selection used Interface 0.1.3, API, Contracts,
 Simulator, Hardware and FPGA 0.1.1, and DEV tooling 1.0.0a1. The publication
 sequencing decision for that release relied on its full local Ubuntu browser
-acceptance. The current [release lock](../integration/release-set.json) selects
+acceptance. The current [release lock](../../../integration/release-set.json) selects
 0.1.4. Record CI identity, local evidence and unrun gates separately. Use the
-[current release runbook](en/operations/release-and-rollback.md). Installed
+[current release runbook](../operations/release-and-rollback.md). Installed
 Contracts resources and explicit Interface/FPGA artifacts replace frozen-reference
 fixtures. Producers own deterministic generation, unit/AST, backend, RPC and
 RTL gates. Remote owns the integrated release groups. Historical M1–M5 results
@@ -149,8 +149,8 @@ helpers and put child temp/cache paths in the canonical session. Import the
 recorded environment into the parent shell before continuing.
 
 For a local manifest and installer command, see the candidate procedure in
-[English](en/operations/release-and-rollback.md#verify-a-local-candidate-set)
-or [Vietnamese](vi/operations/release-and-rollback.md).
+[English](../operations/release-and-rollback.md#verify-a-local-candidate-set)
+or [Vietnamese](../../vi/operations/release-and-rollback.md).
 Keep the rollback inventory and identify uncommitted verification overlays.
 The installer rejects mixed URL and path transport and implicit local fallback.
 
@@ -159,8 +159,8 @@ records the native depth-observer equivalence proof and unchanged DPR 2 gate.
 Those focused results do not replace complete browser and hosted-master acceptance.
 
 For CI credential scope, draft access and verification after rotation, use the
-access guide in [English](en/operations/ci-artifact-access.md)
-or [Vietnamese](vi/operations/ci-artifact-access.md).
+access guide in [English](../operations/ci-artifact-access.md)
+or [Vietnamese](../../vi/operations/ci-artifact-access.md).
 
 ## Checks and evidence
 
@@ -201,8 +201,8 @@ lock and ports, then select **3** to start again. Check that ports 50051, 8000,
 and 5173 are available after each stop.
 
 Run the documentation gates from the current guide in
-[English](en/contributing/verification.md#check-documentation-changes)
-or [Vietnamese](vi/contributing/verification.md#kiểm-tra-thay-đổi-tài-liệu).
+[English](../contributing/verification.md#check-documentation-changes)
+or [Vietnamese](../../vi/contributing/verification.md#kiểm-tra-thay-đổi-tài-liệu).
 Review the final patch with `git diff --check`.
 
 For workflow changes, also validate every `.github/workflows/*.yml` with
@@ -215,7 +215,7 @@ context availability: `${{ runner.temp }}` belongs in an execution step's `env`,
 not job-level `env`. Start repository tests with `python -m pytest` so clean CI
 has the checkout root on its import path. See the [Actions repair evidence](https://github.com/CIRNETLAB/CIRNET-Remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/verification/2026-10-20-github-actions.md).
 
-For changed Web test output plumbing after M2, bootstrap the exact reviewed artifacts and run `node --test scripts/*.test.mjs`, `npm test`, `npm run check:boundaries`, `npm run build` and `npx tsc --noEmit -p tsconfig.e2e.json` in the explicitly selected CIRNET-Interface product. Remote starts real integration with `node scripts/e2e-interface.mjs --interface-root ABSOLUTE_PRODUCT --forbid-only`; named release gates accept `--interface-root` or `CIRNET_INTERFACE_ROOT` to select the exact product. Before allocating a shared session, include all participating Git roots in `CIRNET_ARTIFACTS_CONTEXT`; an exported product inside the owned session inherits this context rather than becoming a Git root. Playwright output, explicit suite screenshots/reports, backend test state and reporter output use the shared allocator. A configured reporter/output directory inside a checkout is an error. Do not disable assertions to satisfy the policy. See [Contracts](../contracts/README.md) for release groups and external PostgreSQL/package prerequisites.
+For changed Web test output plumbing after M2, bootstrap the exact reviewed artifacts and run `node --test scripts/*.test.mjs`, `npm test`, `npm run check:boundaries`, `npm run build` and `npx tsc --noEmit -p tsconfig.e2e.json` in the explicitly selected CIRNET-Interface product. Remote starts real integration with `node scripts/e2e-interface.mjs --interface-root ABSOLUTE_PRODUCT --forbid-only`; named release gates accept `--interface-root` or `CIRNET_INTERFACE_ROOT` to select the exact product. Before allocating a shared session, include all participating Git roots in `CIRNET_ARTIFACTS_CONTEXT`; an exported product inside the owned session inherits this context rather than becoming a Git root. Playwright output, explicit suite screenshots/reports, backend test state and reporter output use the shared allocator. A configured reporter/output directory inside a checkout is an error. Do not disable assertions to satisfy the policy. See [Contracts](../../../contracts/README.md) for release groups and external PostgreSQL/package prerequisites.
 
 Record revision and dirty state, time/timezone, environment/browser/renderer, scenario, commands, PASS/FAIL/NOT_RUN/BLOCKED, observed results and limits in the affected Markdown report. Historical measurements are not freshly verified. State whether temporary screenshots were actually inspected; do not claim visual or hardware success from source review alone. No permanent temporary-path links are required.
 
@@ -268,7 +268,15 @@ do not launch a browser or establish visual E2E success.
 
 Before/after work, compare Git status and staged diff plus a physical inventory of generated output locations including ignored files. The artifact Git guard checks added/modified worktree and index paths and optional `--base <commit>` CI changes using one policy implementation. Approved asset/fixture paths are distinguished from known generated locations; unknown visual additions require explicit review of their source role. The guard does not remove old tracked outputs or replace the on-disk comparison.
 
-`scripts/legacy-verification-evidence.json` preserves only the 16 exact paths/hashes already tracked at `0cc66f8` (seven PNGs and nine raw JSON records), pending the user's decision. This prevents a PR against an older branch, or a first-push CI comparison, from treating retained history as newly generated evidence. Any subsequent content change is rejected; only Git's JSON LF/CRLF checkout conversion is normalized. Do not add new captures to this manifest. Markdown embedded data-URI visuals and unapproved HTML report output are also rejected, including index-only content. Original artwork and reference images under `assets/` are source inputs. The selected Interface product owns its assets and two instrument-preview HTML entrypoints.
+`scripts/legacy-verification-evidence.json` preserves the 16 hashes already
+tracked at `0cc66f8` (seven PNGs and nine JSON records). The files moved to
+[`docs/en/history/verification/`](verification/) with their recorded hashes.
+The guard rejects subsequent content changes and normalizes only Git's JSON
+LF/CRLF checkout conversion. The manifest is reserved for those historical
+files. The guard also rejects Markdown with embedded data-URI visuals and
+unapproved HTML reports, including index-only content. Original artwork and
+reference images under `assets/` are source inputs. The selected Interface
+product owns its assets and two instrument-preview HTML entrypoints.
 
 ## Cleanup and CI
 
@@ -278,7 +286,7 @@ CI allocates in `runner.temp`, uploads external evidence when needed, then clean
 
 The backend, hardware-service, frontend, repository integration, PostgreSQL migration and canonical Contracts jobs allocate a fresh session through `scripts/artifact-paths.mjs` before verification. They publish its ownership before allocating application defaults, set the default database and captures inside that session, pass its `pytest` child as `--basetemp` for direct pytest commands, and run the allocator's guarded cleanup with `always()` after failures as well as success. The migration job retains its PostgreSQL 18 service and explicit `CIRNET_TEST_POSTGRES_URL`; the isolated SQLite default applies only to incidental default-app imports and does not replace PostgreSQL validation. Local workflow policy tests check this configuration; hosted CI execution is separate evidence.
 
-The [Hardware and Simulator consumer workflow](../.github/workflows/hardware-service.yml)
+The [Hardware and Simulator consumer workflow](../../../.github/workflows/hardware-service.yml)
 runs the targeted artifact, RPC, backend and API preview tests in one Python
 invocation. It extracts verified Interface source for the test that checks real
 default pytest collection. The separate Integration job installs the Interface
@@ -305,7 +313,7 @@ Deletion/relocation of Markdown and old generated visual outputs requires a sepa
 ## CIRNET namespace acceptance — 2026-11-04
 
 Active source uses CIRNET names, with the explicit compatibility boundaries in
-[NAMESPACE.md](NAMESPACE.md). Published release/rollback bytes, historical
+[NAMESPACE.md](../operations/namespace-compatibility.md). Published release/rollback bytes, historical
 provenance, protected documents, baselines and existing developer data were not
 renamed. New source jobs build the Contracts wheel and public SDK from the same
 pinned archive; the Interface release still verifies its own immutable SDK.

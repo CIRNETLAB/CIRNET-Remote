@@ -1,7 +1,7 @@
 # CIRNET Remote — Lab-First v3.1
 
 This is the single canonical architecture authority. The original v3 proposal/audit are provenance; archived specs/prompts, source analyses and verification reports are history. This document governs conflicts. Current source identifiers and legacy compatibility
-boundaries are listed in [namespace compatibility](NAMESPACE.md).
+boundaries are listed in [namespace compatibility](../operations/namespace-compatibility.md).
 
 **Safety-gated, Lab-First, Contract-Driven Virtual-to-Physical Laboratory Architecture.**
 
@@ -19,7 +19,7 @@ Configured capabilities reflect implemented support. Analog virtual execution re
 
 ## Design and physical truth
 
-CircuitGraph schemas 1.0, 1.1 and additive 1.2 are the logical DesignGraph source of truth; Three.js Scene is its projection. Version 1.1 preserves board-local rigid mount pose, part/package revisions and validated pin-contact bonds. Version 1.2 adds flexible assemblies and pinned free physical descriptors. New flexible authoring uses automatic `FlexibleMountV2` geometry; saved V1 manual geometry and historical descriptor revisions retain their meaning. Versioned document and assignment `/api/v2` operations carry these graphs without changing frozen legacy public shapes. See the [component placement guide](COMPONENT_PLACEMENT.md) and [flexible contract](https://github.com/cirnetlab/cirnet-contracts/blob/54ef9f6a11f4906c11ec9789de47cf06d5100734/contracts/design-models/flexible-placement.md). Coordinates never imply electrical nets. Preserve commands/history, explicit connections, placement ghost/gizmo, camera and resource ownership. Ghosts enter the graph only at commit.
+CircuitGraph schemas 1.0, 1.1 and additive 1.2 are the logical DesignGraph source of truth; Three.js Scene is its projection. Version 1.1 preserves board-local rigid mount pose, part/package revisions and validated pin-contact bonds. Version 1.2 adds flexible assemblies and pinned free physical descriptors. New flexible authoring uses automatic `FlexibleMountV2` geometry; saved V1 manual geometry and historical descriptor revisions retain their meaning. Versioned document and assignment `/api/v2` operations carry these graphs without changing frozen legacy public shapes. See the [component placement guide](component-placement.md) and [flexible contract](https://github.com/cirnetlab/cirnet-contracts/blob/54ef9f6a11f4906c11ec9789de47cf06d5100734/contracts/design-models/flexible-placement.md). Coordinates never imply electrical nets. Preserve commands/history, explicit connections, placement ghost/gizmo, camera and resource ownership. Ghosts enter the graph only at commit.
 
 Duplicate-edge/direction/width/extra-driver restrictions are editor authoring rules. DetectedTopologyGraph is separate and preserves wrong/missing/unexpected connections, wrong/opaque components and ambiguity. Never sanitize observations into the expected answer.
 
@@ -96,7 +96,7 @@ Control lifetime is separate from read access. A volatile non-secret per-tab cli
 
 Public station DTOs omit private routing resources and execution plans. Typed routes generate OpenAPI and browser operation bindings without starting runtime services. Versioned bounded event streams carry sequence/stream identity and explicit resync; reconnect never replays commands. Create/Run/Stop mutation identity is durable and principal-scoped. Run acknowledgement is distinct from later measurement completion; Stop acknowledgement requires actual safe lease release.
 
-Browser pending-observation identities survive reload in a bounded principal-scoped ledger. Reload restores observation only: backend operation/command reads reconcile unknown outcomes without resending Create/Run/Apply or recovering tab control authority. See [pending observations](en/architecture/pending-observations.md) for bounds, storage failure and local forgetting semantics.
+Browser pending-observation identities survive reload in a bounded principal-scoped ledger. Reload restores observation only: backend operation/command reads reconcile unknown outcomes without resending Create/Run/Apply or recovering tab control authority. See [pending observations](pending-observations.md) for bounds, storage failure and local forgetting semantics.
 
 Students receive published assignment views without teacher reference designs, node maps, profiles or answers. Default `observed_only` feedback exposes verification/assessment status and observed measurements, while detailed reference diagnostics remain in stored evidence. The same projection applies to HTTP lists/detail/results, operation recovery and every realtime snapshot. Assignment authors/Admin may inspect their authorized detailed evidence; an instructor may explicitly publish `detailed` feedback. Disclosure policy never changes verification algorithms or safety decisions.
 
@@ -108,7 +108,7 @@ Unified results contain execution state/decision, independent safety/topology/fu
 
 Experiment SQL JSON and `experiment.updated` carry `CaptureMetadata` only; samples live behind `CaptureStore`. Runtime `FilesystemCaptureStore` uses immutable, atomic NCAP v1 payload files in `CIRNET_CAPTURE_DIR` (default `.runtime/captures`). Owner-scoped GET/DELETE `/api/captures/{capture_id}/payload` provides the data plane. NCAP v1 losslessly preserves event order, exact timestamps and `0`/`1`/`X`. Separate versioned NCAP v2 codecs/descriptors support INT16/UINT16/FLOAT32, ordered channels, exact clock-referenced rational time, calibration, clipping, generation, gaps/invalid ranges and termination. Shared synthetic fixtures prove decoding/presentation only; runtime still has no sampled producer or default v2 network source. Display min/max envelopes retain raw evidence and cannot grade timing. See `contracts/capture/README.md`.
 
-Migration 0005 indexes sealed captures independently of the current experiment generation; ownership is derived from the parent experiment. Reading/hashing/deleting bytes never holds the global control lock or a database transaction, and reads recheck authorization/availability before disclosure. Retirement atomically marks metadata unavailable and records an audit before filesystem cleanup; failed cleanup remains pending. Active/quarantined captures are not expired. Default directory limits are 256MiB/4,096 files for one API writer; explicit bounded maintenance applies a 30-day policy. Zero disables expiration but retries pending cleanup. Stop/release never deletes historical evidence. Functional verification loads raw payloads; Signal Monitor shares/cancels owner-scoped loads. Restart safe cleanup precedes legacy inline migration. See the [capture catalog](en/architecture/capture-catalog.md) and deployment maintenance templates.
+Migration 0005 indexes sealed captures independently of the current experiment generation; ownership is derived from the parent experiment. Reading/hashing/deleting bytes never holds the global control lock or a database transaction, and reads recheck authorization/availability before disclosure. Retirement atomically marks metadata unavailable and records an audit before filesystem cleanup; failed cleanup remains pending. Active/quarantined captures are not expired. Default directory limits are 256MiB/4,096 files for one API writer; explicit bounded maintenance applies a 30-day policy. Zero disables expiration but retries pending cleanup. Stop/release never deletes historical evidence. Functional verification loads raw payloads; Signal Monitor shares/cancels owner-scoped loads. Restart safe cleanup precedes legacy inline migration. See the [capture catalog](capture-catalog.md) and deployment maintenance templates.
 
 Hardware RPC ReadCapture also uses bounded NCAP in OperationReply.capture_payload, separate from metadata result_json. This keeps a 100k-event response below the default 4 MiB receive limit even for long signal names; the API rejects malformed binary or inconsistent descriptors instead of accepting truncated/no-response evidence.
 
@@ -122,7 +122,7 @@ StationCapabilities: virtual_digital, virtual_analog, physical_digital, physical
 
 `instrument_capabilities` is the sole runtime instrument authority: Logic Analyzer, Scope and Generator each declare channels and runtime_reconfiguration_supported; channels=0 means unavailable. Old top-level channel counts and independently editable `instruments` were removed from unpublished Lab schema 1.0/RPC bindings; old protobuf tags are reserved. Virtual Logic Analyzer=4, Scope=0, Generator=0; physical defaults all zero. Optional waveform/frequency/amplitude/offset limits come only from profiles and are enforced by compiler/driver/UI when supplied. No limits are invented.
 
-Baseline GeneratorConfiguration belongs to the validated execution plan before guarded power-up. Live generator changes require RUNNING, capability runtime_reconfiguration_supported=true, the owner/active unquarantined lease, an allocated channel, fresh safety and profile limits. API snapshots and revalidates lifecycle revision/reservation generation around remote work; the physical station rechecks state/safety. Stop records cancellation before waiting for that execution's configuration acknowledgement; remote capabilities/configuration/Stop never hold the global state lock. Cleanup retains the slot until acknowledged safe or quarantined. See [control isolation and runtime indexing](en/architecture/control-isolation-and-runtime-index.md). Current unavailable generator has runtime support=false; live clock/trigger control remains NOT_IMPLEMENTED.
+Baseline GeneratorConfiguration belongs to the validated execution plan before guarded power-up. Live generator changes require RUNNING, capability runtime_reconfiguration_supported=true, the owner/active unquarantined lease, an allocated channel, fresh safety and profile limits. API snapshots and revalidates lifecycle revision/reservation generation around remote work; the physical station rechecks state/safety. Stop records cancellation before waiting for that execution's configuration acknowledgement; remote capabilities/configuration/Stop never hold the global state lock. Cleanup retains the slot until acknowledged safe or quarantined. See [control isolation and runtime indexing](control-isolation-and-runtime-index.md). Current unavailable generator has runtime support=false; live clock/trigger control remains NOT_IMPLEMENTED.
 
 Web validates and freezes requested capture/clock/generator/test-vector configuration before Create. Invalid visible input blocks submission until corrected and stays scoped to the durable principal. Unsupported trigger/hardware-clock settings fail explicitly; duty-cycle preview remains local-only. InstrumentControlAccess describes current allocation/session/tab/lease eligibility without duplicating channel counts. Durable generator commands distinguish REQUESTED, ACCEPTED and explicit driver APPLIED. Unknown acknowledgement retains its original key across refresh/disconnection and permits read-only reconciliation or Stop, never automatic output replay. Last acknowledgement is immutable evidence, independent of the current draft and output telemetry.
 
@@ -147,7 +147,7 @@ Future EP4CE10E22C8N + external SDRAM: Logic Analyzer, Scope 2CH + ADC/AFE, Gene
 The current GitHub organization is [cirnetlab](https://github.com/cirnetlab).
 The six repositories are `cirnet-remote`, `cirnet-contracts`, `cirnet-interface`,
 `cirnet-simulator`, `cirnet-hardware` and `cirnet-fpga`. The
-[repository map](en/architecture/system.md#system-boundary) records
+[repository map](system.md#system-boundary) records
 their canonical URLs/owners. Organization ID 333715068 and the six repository
 IDs are preserved. Historical names/URLs remain provenance, including unchanged
 immutable release notes and source archives. Current installation paths use the
@@ -155,16 +155,16 @@ canonical URLs rather than depending on those redirects.
 
 The published system selection is **0.1.4** with Interface **0.1.4** and the
 selected API, Contracts, Simulator, Hardware and FPGA source artifacts at
-**0.1.2**. The [release lock](../integration/release-set.json) records exact
+**0.1.2**. The [release lock](../../../integration/release-set.json) records exact
 committed sources, immutable asset locations and digests, compatibility and
 rollback. CircuitGraph 1.0/1.1/1.2, Hardware RPC 2.0, NCAP v1/v2, FPGA logical
 1.0-scaffold and register map 1.0-reserved retain their meaning. DEV tooling
 has independent pins. See the paired architecture overview in
-[English](en/architecture/system.md) and [Vietnamese](vi/architecture/system.md).
+[English](system.md) and [Vietnamese](../../vi/architecture/system.md).
 
 Contracts is the sole schema/catalog/protocol/SDK owner. FastAPI registrations remain operation authority and final-wheel OpenAPI equality is mandatory. Interface owns editor/assets/browser assertions; Simulator owns the existing engine/backend boundary; Hardware owns local-only RPC/stations/private transport; FPGA owns scaffold/RTL/toolchain. Remote owns auth/persistence, one scheduler process, orchestration, deployment and integrated acceptance. Supported gates use installed artifacts/resources, without sibling/frozen source dependencies or editable producers. Superseded monorepo implementations are available in Git history. The current tree keeps the Contracts forwarding shim, historical documents and approved artwork. Compatibility checks read fixture data from the installed Contracts wheel.
 
-Keep same-origin Web/API/WebSocket and unavailable native/physical capabilities. Rollback requires matching database/capture backups, no command replay and retained quarantine. Fresh publication/CI/acceptance dispositions belong to the [M6 record](verification/2026-10-27-multi-repo-migration-m6.md).
+Keep same-origin Web/API/WebSocket and unavailable native/physical capabilities. Rollback requires matching database/capture backups, no command replay and retained quarantine. Fresh publication/CI/acceptance dispositions belong to the [M6 record](../history/verification/2026-10-27-multi-repo-migration-m6.md).
 
 ## Migration execution history
 
@@ -172,7 +172,7 @@ M0–M5 versions and dispositions below describe their recorded stages; the curr
 
 ## Execution discipline
 
-Current verification and artifact storage rules are in [VERIFICATION.md](VERIFICATION.md), with the short Codex policy in root [AGENTS.md](../AGENTS.md). Temporary screenshots, video, traces, image-bearing HTML reports and raw diagnostic artifacts must be created outside every repository/worktree and Git directory. Retained repository evidence is Markdown; dated reports preserve their original results and do not authorize rerunning historical checklists. Product assets and approved regression fixtures keep their own roles.
+Current verification and artifact storage rules are in [VERIFICATION.md](../history/verification-ledger.md), with the short Codex policy in root [AGENTS.md](../../../AGENTS.md). Temporary screenshots, video, traces, image-bearing HTML reports and raw diagnostic artifacts must be created outside every repository/worktree and Git directory. Retained repository evidence is Markdown; dated reports preserve their original results and do not authorize rerunning historical checklists. Product assets and approved regression fixtures keep their own roles.
 
 ### Historical extraction-stage ownership
 

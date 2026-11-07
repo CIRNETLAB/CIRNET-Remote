@@ -38,7 +38,7 @@ Projects/circuits use saved revisions and database CAS, with session fences agai
 Additive `/api/v2` placement/document/experiment and assignment routes accept Graph
 1.2 while legacy public shapes stay frozen. They share the existing ownership, CAS,
 publication and immutable admission authority; see [versioned placement](https://github.com/cirnetlab/cirnet-contracts/blob/54ef9f6a11f4906c11ec9789de47cf06d5100734/contracts/design-models/flexible-placement.md).
-New verification follows [VERIFICATION.md](../../docs/VERIFICATION.md), with raw/visual
+New verification follows [VERIFICATION.md](../../docs/en/history/verification-ledger.md), with raw/visual
 diagnostics created outside the checkout and retained reports in Markdown. Earlier
 test/deployment claims describe their dated evidence, not a rerun during a doc edit.
 
@@ -184,7 +184,7 @@ npm run dev
 ```
 
 Web development and release checks use the [selected Interface source](https://github.com/cirnetlab/cirnet-interface/blob/a14d0950e71a997e2219a32f7268fd0e9d6502b3/README.md). Integrated browser verification uses `node scripts/e2e-interface.mjs --interface-root ABSOLUTE_PRODUCT --forbid-only`
-from Remote root and the [shared external-output policy](../../docs/VERIFICATION.md).
+from Remote root and the [shared external-output policy](../../docs/en/history/verification-ledger.md).
 
 Core execution endpoints (the [generated API reference](https://github.com/cirnetlab/cirnet-contracts/blob/54ef9f6a11f4906c11ec9789de47cf06d5100734/contracts/api/README.md) lists the complete typed surface):
 
@@ -202,4 +202,4 @@ Core execution endpoints (the [generated API reference](https://github.com/cirne
 This layer validates application intent. It does not write FPGA registers directly.
 
 Current environment and wire aliases, persisted database selection and unchanged
-published artifacts are described in [namespace compatibility](../../docs/NAMESPACE.md).
+published artifacts are described in [namespace compatibility](../../docs/en/operations/namespace-compatibility.md).

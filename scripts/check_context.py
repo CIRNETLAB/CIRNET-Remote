@@ -4,14 +4,27 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
-REQUIRED = ["CONTEXT.md", "ARCHITECTURE.md", "ROADMAP.md", "DEV_LOG.md", "CIRCUIT_SPEC.md", "CHANGELOG.md", "MIGRATION_LAB_FIRST.md", "PHYSICAL_LAB_SAFETY.md"]
+CONTEXT = "en/architecture/context-invariants.md"
+ARCHITECTURE = "en/architecture/lab-first-v3-1.md"
+DEV_LOG = "en/history/development-log.md"
+CONTEXT_DOCS = [
+    CONTEXT, ARCHITECTURE, "en/history/lab-first-roadmap.md",
+    "en/api/circuit-spec-reference.md", "en/architecture/physical-lab-safety-contract.md",
+]
+REQUIRED = [
+    *CONTEXT_DOCS, DEV_LOG, "en/history/changelog.md", "en/history/lab-first-migration-ledger.md",
+    "en/index.md", "vi/index.md",
+]
 MARKERS = {
-    "CONTEXT.md": ["EP4CE6E22C8N", "EP4CE10E22C8N", "Web-first", "Frontend must never", "Mini PC", "Lab-First", "Safety-gated", "AssignmentDefinition", "LabEndpoint", "SafetyVerificationResult", "TopologyVerificationResult", "FunctionalVerificationResult", "ExecutionDecision", "HardwareStation", "PostgreSQL"],
-    "ARCHITECTURE.md": ["Lab-First v3.1", "SAFETY != CORRECTNESS", "Lab Execution Compiler", "InstrumentationExecutionPlan"],
-    "DEV_LOG.md": ["current_phase:", "next_task:", "## AI Handoff"],
+    CONTEXT: ["EP4CE6E22C8N", "EP4CE10E22C8N", "Web-first", "Frontend must never", "Mini PC", "Lab-First", "Safety-gated", "AssignmentDefinition", "LabEndpoint", "SafetyVerificationResult", "TopologyVerificationResult", "FunctionalVerificationResult", "ExecutionDecision", "HardwareStation", "PostgreSQL"],
+    ARCHITECTURE: ["Lab-First v3.1", "SAFETY != CORRECTNESS", "Lab Execution Compiler", "InstrumentationExecutionPlan"],
+    DEV_LOG: ["current_phase:", "next_task:", "## AI Handoff"],
 }
 
 errors = []
+for entry in DOCS.glob("*"):
+    if entry.name not in {"en", "vi"} or not entry.is_dir():
+        errors.append(f"unexpected docs/{entry.name}; docs must contain only en/ and vi/")
 for name in REQUIRED:
     if not (DOCS / name).is_file():
         errors.append(f"missing docs/{name}")
@@ -22,7 +35,7 @@ for name, markers in MARKERS.items():
         for marker in markers:
             if marker not in text:
                 errors.append(f"docs/{name} missing marker: {marker}")
-active = [ROOT / "README.md", *(DOCS / name for name in REQUIRED if name not in {"DEV_LOG.md", "CHANGELOG.md", "MIGRATION_LAB_FIRST.md"})]
+active = [ROOT / "README.md", *(DOCS / name for name in CONTEXT_DOCS)]
 for directory in ["deployment", "fpga", "contracts", "services", "simulator"]:
     active.extend((ROOT / directory).rglob("*.md"))
 for path in active:

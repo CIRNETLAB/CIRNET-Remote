@@ -6,7 +6,7 @@ import { resolve, dirname, extname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const visual = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.mp4', '.webm', '.zip'])
-const generatedRoots = /(^|\/)(?:\.test-build|playwright-report|test-results|blob-report)(\/|$)|^docs\/verification\//
+const generatedRoots = /(^|\/)(?:\.test-build|playwright-report|test-results|blob-report)(\/|$)|^docs\/(?:(?:en|vi)\/history\/)?verification\//
 const approvedInputs = /^(?:assets\/|apps\/web\/(?:public\/models|src\/assets)\/|(?:tests|contracts)\/(?:.*\/)?fixtures\/|device-library\/|docs\/(?:design|references)\/)/
 const legacy = JSON.parse(readFileSync(new URL('./legacy-verification-evidence.json', import.meta.url), 'utf8')).sha256
 export function artifactViolation(path) {

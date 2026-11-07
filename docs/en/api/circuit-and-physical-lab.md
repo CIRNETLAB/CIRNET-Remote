@@ -1,6 +1,6 @@
 # Circuit and physical lab specification
 
-[Tiếng Việt](../../vi/api/circuit-and-physical-lab.md) · [Specification entry point](../../CIRCUIT_SPEC.md) · [Canonical Lab-First v3.1 architecture](../../ARCHITECTURE.md) · [Application API](application.md)
+[Tiếng Việt](../../vi/api/circuit-and-physical-lab.md) · [Specification entry point](circuit-spec-reference.md) · [Canonical Lab-First v3.1 architecture](../architecture/lab-first-v3-1.md) · [Application API](application.md)
 
 ## CircuitGraph and placement
 
@@ -12,9 +12,9 @@
 | 1.1 | Board-local rigid mount pose, versioned parts/packages and validated pin-contact bonds. Earlier documents keep their original interpretation. |
 | 1.2 | `FlexibleMountV1` adds one authoritative board-local 3D body pose, versioned mechanical profiles, two stable pin/contact bindings and bounded lead controls. Mounted modules store a single pose and persist only design data. |
 
-New automatic placement uses `FlexibleMountV2` with `version: 2`, `geometryRevision: 2` and an explicit routing template. Saved V1 poses and manual bend controls remain authoritative for those mounts. A free physical module may pin a `physicalDescriptor`. Readers resolve exact historical part and package revisions. Ordinary read/save preserves geometry, while explicit rebuild or migration can adopt another validated representation. These are implemented authoring and persistence behaviors. [Component placement](../../COMPONENT_PLACEMENT.md) · [Selected flexible mounting specification](https://github.com/cirnetlab/cirnet-contracts/blob/524cc7a5e2e65f39077feefe70c7fb2ae3a773d6/contracts/design-models/flexible-placement.md)
+New automatic placement uses `FlexibleMountV2` with `version: 2`, `geometryRevision: 2` and an explicit routing template. Saved V1 poses and manual bend controls remain authoritative for those mounts. A free physical module may pin a `physicalDescriptor`. Readers resolve exact historical part and package revisions. Ordinary read/save preserves geometry, while explicit rebuild or migration can adopt another validated representation. These are implemented authoring and persistence behaviors. [Component placement](../architecture/component-placement.md) · [Selected flexible mounting specification](https://github.com/cirnetlab/cirnet-contracts/blob/524cc7a5e2e65f39077feefe70c7fb2ae3a773d6/contracts/design-models/flexible-placement.md)
 
-Named source/destination ports and declared contact bonds define connectivity. Keep the canonical direction, width, duplicate and extra-driver checks for authoring. The memory schema remains `1.0` in its own domain. Visual supply and instrument controls require a separate electrical source or measurement path. [Dated power supply verification](../../POWER_SUPPLY_CONTROLS.md)
+Named source/destination ports and declared contact bonds define connectivity. Keep the canonical direction, width, duplicate and extra-driver checks for authoring. The memory schema remains `1.0` in its own domain. Visual supply and instrument controls require a separate electrical source or measurement path. [Dated power supply verification](../../vi/history/power-supply-controls.md)
 
 ## Observations, assignments and execution
 
@@ -47,7 +47,7 @@ The resolver matches supported identities or explicit profiles and compares comp
 
 The target deployment host is a Linux Mini PC with Intel Xeon W-1370, 16 GB RAM and 256 GB SSD. The hardware plan calls for an EP4CE6E22C8N prototype without SDRAM and a future EP4CE10E22C8N with external SDRAM, two Scope channels, two Generator channels, Logic Analyzer and shared arbitration. Physical analog routing is false in V1. The target is one shared physical slot. The actual profile supplies available boards, resources and channel counts. Driver and hardware evidence are prerequisites for physical support. The selected FPGA 0.1.2 product is a source scaffold. [FPGA conformance](../architecture/fpga-contract-conformance.md) · [Selected release lock](../../../integration/release-set.json)
 
-Protection requires current limiting and sensing, fast cutoff, tri-state drive, default-open routes, protected digital outputs, guarded power-up, watchdog and runtime protection, and bounded safe-state transitions. Pinout/bank voltages, switching and protection schematics, ADC/DAC/AFE selection, SDRAM part and timing, transport IC, and current, voltage, sample and frequency limits and measurements remain `TBD_BY_HARDWARE_DESIGN`. Software tests establish control behavior. Electrical verification requires its own schematic, parts and measurements. [Physical lab safety](../architecture/physical-lab-safety.md) · [Dated local release evidence](../../verification/2026-11-05-cirnet-release-0.1.4.md)
+Protection requires current limiting and sensing, fast cutoff, tri-state drive, default-open routes, protected digital outputs, guarded power-up, watchdog and runtime protection, and bounded safe-state transitions. Pinout/bank voltages, switching and protection schematics, ADC/DAC/AFE selection, SDRAM part and timing, transport IC, and current, voltage, sample and frequency limits and measurements remain `TBD_BY_HARDWARE_DESIGN`. Software tests establish control behavior. Electrical verification requires its own schematic, parts and measurements. [Physical lab safety](../architecture/physical-lab-safety.md) · [Dated local release evidence](../history/verification/2026-11-05-cirnet-release-0.1.4.md)
 
 ## Captures and evidence
 

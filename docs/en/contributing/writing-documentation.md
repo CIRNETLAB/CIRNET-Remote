@@ -8,6 +8,8 @@ same change. Keep the root `README.md` in English with links to both indexes.
 Place system-level material in Remote and feature-specific material in the
 repository that owns the code.
 Other repositories can link to the owner with a short contextual summary.
+The `docs/` directory contains only `en/` and `vi/`. Keep original historical
+records under `history/` in their source language and list them in both indexes.
 
 ## Documentation roles
 

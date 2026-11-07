@@ -2,7 +2,7 @@
 
 [Tiếng Việt](../../vi/operations/deployment.md) · [Original deployment guide](../../../deployment/README.md) · [Lab-First architecture](../architecture/system.md)
 
-These Linux, Nginx and systemd templates describe the intended target. Dated local tests cover configuration invariants, software flows and database migrations. Collect target TLS, firewall, service-manager, capacity and hardware evidence on the actual host. [Mini PC checklist](mini-pc.md) · [0.1.4 local release report](../../verification/2026-11-05-cirnet-release-0.1.4.md) · [PostgreSQL results in native Stage 0](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md)
+These Linux, Nginx and systemd templates describe the intended target. Dated local tests cover configuration invariants, software flows and database migrations. Collect target TLS, firewall, service-manager, capacity and hardware evidence on the actual host. [Mini PC checklist](mini-pc.md) · [0.1.4 local release report](../history/verification/2026-11-05-cirnet-release-0.1.4.md) · [PostgreSQL results in native Stage 0](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md)
 
 ## Select and install the runtime
 
@@ -22,7 +22,7 @@ Use one API process and one Uvicorn worker. The FIFO scheduler, event hub and di
 
 Use the [production environment example](../../../deployment/cirnet.production.env.example), [Nginx template](../../../deployment/nginx/cirnet.conf) and [systemd units](../../../deployment/systemd). Create the dedicated `cirnet` OS role, PostgreSQL role and database. Store the reviewed production settings in a restricted `/etc/cirnet/cirnet.env`. The example uses a local PostgreSQL socket and requires provisioned peer authentication. For a remote database, configure authenticated TLS explicitly. The root [development example](../../../.env.example) describes local development settings. Keep credentials in the restricted environment and out of tracked files and logs.
 
-Canonical `CIRNET_*` variables take precedence over legacy `NETCIRCUIT_*` aliases. The units include legacy `netcircuit-*` install aliases. Existing hosts require explicit configuration, service and data-path review before renaming. Service aliases change name resolution. Data relocation is a separate operator action. [Existing deployments](../../NAMESPACE.md#existing-deployments)
+Canonical `CIRNET_*` variables take precedence over legacy `NETCIRCUIT_*` aliases. The units include legacy `netcircuit-*` install aliases. Existing hosts require explicit configuration, service and data-path review before renaming. Service aliases change name resolution. Data relocation is a separate operator action. [Existing deployments](namespace-compatibility.md#existing-deployments)
 
 Set `CIRNET_ENV=production`, `CIRNET_ALLOW_GUEST=false`, an explicit HTTPS origin in `CIRNET_TRUSTED_ORIGINS`, a PostgreSQL `CIRNET_DATABASE_URL` and an absolute persistent `CIRNET_CAPTURE_DIR`. Unknown environments, invalid origins, production guests and production SQLite fail configuration. Session cookies are HttpOnly, SameSite=Lax and Secure in production. Mutations require the current session CSRF token and an exact trusted Origin. WebSocket authorization uses that cookie and Origin. Expiry or revocation ends the associated control lifetime.
 

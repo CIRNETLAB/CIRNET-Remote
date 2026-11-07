@@ -1,8 +1,8 @@
 # Component placement and flexible assemblies
 
 This reference owns placement geometry and persistence details. See the
-circuit and lab overview in [English](en/api/circuit-and-physical-lab.md)
-or [Vietnamese](vi/api/circuit-and-physical-lab.md).
+circuit and lab overview in [English](../api/circuit-and-physical-lab.md)
+or [Vietnamese](../../vi/api/circuit-and-physical-lab.md).
 
 CircuitGraph remains the design source of truth. Contact bindings determine electrical
 bonds; body/lead intersections never create nets. Mechanical authoring limits are
@@ -105,6 +105,6 @@ draft; `cirnet-interface/src/composables/useFlexibleAuthoring.ts` owns pointer p
 `cirnet-interface/src/electrical/flexibleGeometry.ts` and `cirnet-contracts/contracts/flexible_mounting.py` own
 geometry validation. The [flexible contract](https://github.com/CIRNETLAB/CIRNET-Contracts/blob/54ef9f6a11f4906c11ec9789de47cf06d5100734/contracts/design-models/flexible-placement.md)
 is the canonical persistence/mechanics specification. Dated reports in `verification/`
-record their own observed results. New checks follow [VERIFICATION.md](VERIFICATION.md);
+record their own observed results. New checks follow [VERIFICATION.md](../history/verification-ledger.md);
 screenshots and reference-derived diagnostic contact sheets are created outside the
 repository. User-supplied reference media remains reference material, not proof of a run.

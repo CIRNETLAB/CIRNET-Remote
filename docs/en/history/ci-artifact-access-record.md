@@ -1,9 +1,9 @@
 # Historical release asset access records
 
 For token scope, rotation and the current CI gate, use the access guide in
-[English](en/operations/ci-artifact-access.md) or
-[Vietnamese](vi/operations/ci-artifact-access.md). The
-[release lock](../integration/release-set.json) identifies the selected bytes.
+[English](../operations/ci-artifact-access.md) or
+[Vietnamese](../../vi/operations/ci-artifact-access.md). The
+[release lock](../../../integration/release-set.json) identifies the selected bytes.
 
 The following records apply to the post-rename checks at their recorded
 revisions. See the [M6 verification record](verification/2026-10-27-multi-repo-migration-m6.md)

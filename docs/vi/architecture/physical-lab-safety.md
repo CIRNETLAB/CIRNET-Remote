@@ -1,6 +1,6 @@
 # An toàn phòng thí nghiệm vật lý
 
-[English](../../en/architecture/physical-lab-safety.md) · [Hợp đồng an toàn chuẩn](../../PHYSICAL_LAB_SAFETY.md) · [Kiến trúc hệ thống](system.md)
+[English](../../en/architecture/physical-lab-safety.md) · [Hợp đồng an toàn chuẩn](../../en/architecture/physical-lab-safety-contract.md) · [Kiến trúc hệ thống](system.md)
 
 An toàn và tính đúng đắn độc lập với nhau. Danh tính linh kiện chưa rõ giữ trạng thái `UNKNOWN`. Mạch có linh kiện chưa rõ chỉ chạy theo chế độ `RUN_GUARDED` khi đã chứng minh bảo vệ và có thể thực thi liên kết điểm cuối.
 
@@ -19,4 +19,4 @@ Bản quét phải có tham chiếu nút, kết nối và chân hợp lệ, vớ
 
 Kế hoạch kiểm tra cấu hình Generator ban đầu trước khi cấp nguồn có bảo vệ. Thay đổi khi đang chạy cần tính năng được công bố, trạng thái `RUNNING`, đúng chủ sở hữu và quyền giữ trạm còn hiệu lực, bằng chứng an toàn mới từ driver, và giới hạn ghi trong cấu hình phần cứng. Cấu hình cơ sở thiếu ADC/DAC/AFE cần thiết nên Scope và Generator có 0 kênh và không thể Apply khi chạy. Ca thử nhận việc hai suất kiểm tra bộ điều phối. Cấu hình vật lý nhiều suất cần phân vùng độc lập có bảo vệ. [Cô lập điều khiển](control-isolation-and-runtime-index.md) · [Đối chiếu hợp đồng FPGA](fpga-contract-conformance.md)
 
-Kết luận về an toàn điện cần sơ đồ nguyên lý, datasheet và ánh xạ chân của linh kiện đã chọn, cùng kết quả đo. Kiểm thử máy trạng thái và RTL xác lập các bất biến điều khiển. [Báo cáo phát hành cục bộ 0.1.4](../../verification/2026-11-05-cirnet-release-0.1.4.md) ghi kiểm chứng FPGA vật lý là `NOT RUN` trong lần chạy đó.
+Kết luận về an toàn điện cần sơ đồ nguyên lý, datasheet và ánh xạ chân của linh kiện đã chọn, cùng kết quả đo. Kiểm thử máy trạng thái và RTL xác lập các bất biến điều khiển. [Báo cáo phát hành cục bộ 0.1.4](../../en/history/verification/2026-11-05-cirnet-release-0.1.4.md) ghi kiểm chứng FPGA vật lý là `NOT RUN` trong lần chạy đó.

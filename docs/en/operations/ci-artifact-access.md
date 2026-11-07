@@ -38,5 +38,5 @@ Authenticated CI fails closed on missing inputs or authentication errors.
 Keep exact pins and verify before use. The installer supports no `latest`,
 sibling checkout or editable fallback. See the
 [release runbook](release-and-rollback.md) for local setup. The
-[post-rename access record](../../ci-artifact-access.md) refers to earlier
+[post-rename access record](../history/ci-artifact-access-record.md) refers to earlier
 revisions and historical receipts.

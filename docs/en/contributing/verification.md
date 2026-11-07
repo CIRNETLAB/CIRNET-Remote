@@ -91,5 +91,5 @@ python -B -m pytest -q tests/test_docs_baseline.py tests/test_post_r7_provenance
 CI also lints workflows with Actionlint 1.7.12. `check_markdown.py` checks local
 links, case and anchors. Verify cross-repository and website links separately.
 Follow [documentation conventions](writing-documentation.md) for the language
-pair. The [original verification ledger and policy](../../VERIFICATION.md)
+pair. The [original verification ledger and policy](../history/verification-ledger.md)
 retains exact historical evidence and further gate-specific procedures.

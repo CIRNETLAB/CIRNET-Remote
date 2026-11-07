@@ -41,7 +41,7 @@ test('default output is external, writable and independent of working directory'
 
 test('rejects repository, nested repository outputs and Git administration directories before writing', () => {
   const git = (flag) => execFileSync('git', ['rev-parse', flag], { cwd: root, encoding: 'utf8' }).trim()
-  for (const directory of [root, join(root, 'docs/verification/new-output'), resolve(root, git('--git-dir')), resolve(root, git('--git-common-dir'))]) {
+  for (const directory of [root, join(root, 'docs/en/history/verification/new-output'), resolve(root, git('--git-dir')), resolve(root, git('--git-common-dir'))]) {
     const result = invoke([], { env: { ...environment(), CIRNET_ARTIFACTS_DIR: directory } })
     assert.notEqual(result.status, 0, directory)
     assert.match(result.stderr, /outside|repository|Git/)

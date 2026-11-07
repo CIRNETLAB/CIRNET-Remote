@@ -8,6 +8,8 @@ cùng thay đổi. Giữ `README.md` gốc bằng tiếng Anh và liên kết c�
 Đặt tài liệu hệ thống trong Remote và tài liệu tính năng ở repo sở hữu mã
 nguồn. Repo khác có thể tóm tắt ngắn và
 liên kết đến repo sở hữu.
+Thư mục `docs/` chỉ chứa `en/` và `vi/`. Đặt hồ sơ lịch sử gốc trong
+`history/` theo ngôn ngữ của hồ sơ và liệt kê trong cả hai mục lục.
 
 ## Vai trò của tài liệu
 

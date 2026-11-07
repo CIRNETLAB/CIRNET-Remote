@@ -164,5 +164,5 @@ backup/restore and independent-writer/authorization/recovery races. Those are
 historical results, not commands rerun during a later documentation edit. They
 do not establish a target production deployment. PostgreSQL verification requires
 a real isolated server; an absent server must fail that gate explicitly rather
-than appear as a pass. New execution records follow the [verification policy](../../VERIFICATION.md).
+than appear as a pass. New execution records follow the [verification policy](../history/verification-ledger.md).
 [Authentication implementation](../../../services/api/app/services/auth.py) · [Compatibility aliases](../../../services/api/app/compatibility.py)

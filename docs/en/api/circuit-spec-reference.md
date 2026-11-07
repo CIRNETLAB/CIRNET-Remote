@@ -1,11 +1,11 @@
 # Circuit and Physical Lab Specification — Lab-First
 
-Use the circuit and lab reference in [English](en/api/circuit-and-physical-lab.md)
-or [Vietnamese](vi/api/circuit-and-physical-lab.md) for current graph versions,
+Use the circuit and lab reference in [English](circuit-and-physical-lab.md)
+or [Vietnamese](../../vi/api/circuit-and-physical-lab.md) for current graph versions,
 observed topology, station capabilities and NCAP formats. The
-[Lab-First architecture](ARCHITECTURE.md) governs system behavior. See
-[component placement](COMPONENT_PLACEMENT.md) and the
-[physical safety contract](PHYSICAL_LAB_SAFETY.md) for their detailed rules.
+[Lab-First architecture](../architecture/lab-first-v3-1.md) governs system behavior. See
+[component placement](../architecture/component-placement.md) and the
+[physical safety contract](../architecture/physical-lab-safety-contract.md) for their detailed rules.
 
 CircuitGraph describes the design and DetectedTopologyGraph describes the
 observed wiring. The Lab Execution Compiler emits InstrumentationExecutionPlan

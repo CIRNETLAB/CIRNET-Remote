@@ -1,6 +1,6 @@
 # CIRNET Remote working context
 
-[Tiếng Việt](../../vi/architecture/context.md) · [Canonical context and markers](../../CONTEXT.md) · [System architecture](system.md)
+[Tiếng Việt](../../vi/architecture/context.md) · [Canonical context and markers](context-invariants.md) · [System architecture](system.md)
 
 ## Invariants to carry across changes
 
@@ -20,6 +20,6 @@
 
 ## Evidence and change review
 
-Read the relevant implementation and tests alongside [the release lock](../../../integration/release-set.json). Current first-line verification uses Python 3.14 and Node 26. Run `python -B scripts/check_context.py` and choose the applicable `scripts/check_release.py` groups from the [verification guide](../../VERIFICATION.md). Allocate an owned external session before running checks that generate temporary files. Record tested inputs, failures, skips and unrun gates separately. [Repository instructions](../../../AGENTS.md)
+Read the relevant implementation and tests alongside [the release lock](../../../integration/release-set.json). Current first-line verification uses Python 3.14 and Node 26. Run `python -B scripts/check_context.py` and choose the applicable `scripts/check_release.py` groups from the [verification guide](../history/verification-ledger.md). Allocate an owned external session before running checks that generate temporary files. Record tested inputs, failures, skips and unrun gates separately. [Repository instructions](../../../AGENTS.md)
 
-The [W0–W8 verification ledger](https://github.com/cirnetlab/cirnet-remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/verification/2026-10-16-web-contracts.md) preserves the original schema, generation and staged acceptance evidence. The [Lab-First migration ledger](../../MIGRATION_LAB_FIRST.md) records R0–R7 decisions. The [0.1.4 local release report](../../verification/2026-11-05-cirnet-release-0.1.4.md) and [test infrastructure audit](../../verification/2026-11-05-test-infrastructure-audit.md) each apply to their recorded runs.
+The [W0–W8 verification ledger](https://github.com/cirnetlab/cirnet-remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/verification/2026-10-16-web-contracts.md) preserves the original schema, generation and staged acceptance evidence. The [Lab-First migration ledger](../history/lab-first-migration-ledger.md) records R0–R7 decisions. The [0.1.4 local release report](../history/verification/2026-11-05-cirnet-release-0.1.4.md) and [test infrastructure audit](../../vi/history/verification/2026-11-05-test-infrastructure-audit.md) each apply to their recorded runs.

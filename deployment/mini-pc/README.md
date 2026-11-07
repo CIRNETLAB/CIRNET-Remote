@@ -1,6 +1,6 @@
 # Linux Mini PC deployment review
 
-Intended target: Intel Xeon W-1370, 16 GB RAM, 256 GB SSD. Actual target deployment, service-manager/TLS checks and hardware execution were not performed in this task. Follow the [production guide](../README.md) and [Lab-First authority](../../docs/ARCHITECTURE.md).
+Intended target: Intel Xeon W-1370, 16 GB RAM, 256 GB SSD. Actual target deployment, service-manager/TLS checks and hardware execution were not performed in this task. Follow the [production guide](../README.md) and [Lab-First authority](../../docs/en/architecture/lab-first-v3-1.md).
 
 1. Provision the dedicated service account and PostgreSQL database; rehearse matched database/capture backup and restoration.
 2. Install verified wheels into separate API/Hardware Service environments, and the built Web bundle into `/opt/cirnet/web`.

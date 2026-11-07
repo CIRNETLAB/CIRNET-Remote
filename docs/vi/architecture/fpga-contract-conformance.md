@@ -1,6 +1,6 @@
 # Đối chiếu Contracts với đề xuất FPGA
 
-[English](../../en/architecture/fpga-contract-conformance.md) · [Tài liệu gốc đầy đủ](../../architecture/fpga-contract-conformance.md)
+[English](../../en/architecture/fpga-contract-conformance.md) · [Tài liệu gốc đầy đủ](../../en/history/fpga-contract-conformance-original.md)
 
 Đề xuất FPGA phiên bản 2.1 là tài liệu thiết kế tham chiếu đang chờ thẩm định phần cứng và ABI. [Kiến trúc hệ thống](system.md) hiện tại và Contracts đã cài quy định hành vi khi chạy. Hệ thống 0.1.4 chọn Contracts 0.1.2 và scaffold FPGA 0.1.2. Hardware RPC 2.0, giao thức logic FPGA `1.0-scaffold` và sơ đồ thanh ghi `1.0-reserved` là các miền phiên bản độc lập. Kết luận M5 giải thích vì sao nhãn mục tiêu `2.0-scaffold` trong ví dụ chưa khả dụng không khớp với envelope logic đã đăng ký.
 

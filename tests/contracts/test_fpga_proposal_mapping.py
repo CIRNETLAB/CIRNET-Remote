@@ -18,7 +18,7 @@ def plan():
 
 
 def test_current_mapping_is_explicit_about_independent_open_hardware_gates():
-    path=ROOT/'docs/architecture/fpga-contract-conformance.md'
+    path=ROOT/'docs/en/history/fpga-contract-conformance-original.md'
     assert path.is_file(),'Current Contracts need a separate mapping; do not rewrite the historical proposal.'
     text=path.read_text(encoding='utf-8')
     for marker in ('PhysicalExecutionPlan','InstrumentationExecutionPlan','FpgaExecutionImage',

@@ -173,5 +173,5 @@ lưu/khôi phục và các ca cạnh tranh giữa tiến trình ghi độc lập
 khôi phục. Kết quả lịch sử áp dụng cho đúng lần chạy đã ghi. Xác nhận triển khai
 production cần bằng chứng trên máy đích. Gate PostgreSQL cần máy chủ thật và cô
 lập, đồng thời phải báo thất bại rõ ràng khi thiếu máy chủ. Bản ghi chạy mới
-tuân theo [quy định kiểm chứng](../../VERIFICATION.md).
+tuân theo [quy định kiểm chứng](../../en/history/verification-ledger.md).
 [Triển khai xác thực](../../../services/api/app/services/auth.py) · [Tên tương thích](../../../services/api/app/compatibility.py)

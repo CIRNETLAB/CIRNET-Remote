@@ -3,7 +3,7 @@
 Native Windows verification used isolated external environments and a 15-asset
 local release set. Interface and the Remote system use 0.1.4. API, Contracts,
 Simulator, Hardware and the FPGA source scaffold use 0.1.2. The published
-[release lock](../../integration/release-set.json) records the exact asset
+[release lock](../../../../integration/release-set.json) records the exact asset
 digests and producer revisions.
 
 | Gate | Result | Evidence |

@@ -90,5 +90,5 @@ python -B -m pytest -q tests/test_docs_baseline.py tests/test_post_r7_provenance
 CI cũng kiểm tra workflow bằng Actionlint 1.7.12. `check_markdown.py` kiểm
 tra liên kết cục bộ, chữ hoa/thường và anchor. Kiểm tra riêng liên kết chéo
 repo và website. Tuân theo [quy ước tài liệu](writing-documentation.md) cho
-cặp ngôn ngữ. [Quy trình và hồ sơ xác minh gốc](../../VERIFICATION.md) bằng
+cặp ngôn ngữ. [Quy trình và hồ sơ xác minh gốc](../../en/history/verification-ledger.md) bằng
 tiếng Anh lưu bằng chứng lịch sử và hướng dẫn chi tiết từng gate.

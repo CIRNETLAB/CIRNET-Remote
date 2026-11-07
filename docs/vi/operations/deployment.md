@@ -2,7 +2,7 @@
 
 [English](../../en/operations/deployment.md) · [Hướng dẫn triển khai gốc](../../../deployment/README.md) · [Kiến trúc Lab-First](../architecture/system.md)
 
-Các mẫu Linux, Nginx và systemd mô tả máy đích dự kiến. Các lượt kiểm thử cục bộ theo ngày kiểm tra bất biến cấu hình, luồng phần mềm và migration cơ sở dữ liệu. Thu bằng chứng TLS, tường lửa, trình quản lý dịch vụ, năng lực và phần cứng trên máy đích thực tế. [Danh sách kiểm tra Mini PC](mini-pc.md) · [Báo cáo phát hành cục bộ 0.1.4](../../verification/2026-11-05-cirnet-release-0.1.4.md) · [Kết quả PostgreSQL ở Giai đoạn 0 native](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md)
+Các mẫu Linux, Nginx và systemd mô tả máy đích dự kiến. Các lượt kiểm thử cục bộ theo ngày kiểm tra bất biến cấu hình, luồng phần mềm và migration cơ sở dữ liệu. Thu bằng chứng TLS, tường lửa, trình quản lý dịch vụ, năng lực và phần cứng trên máy đích thực tế. [Danh sách kiểm tra Mini PC](mini-pc.md) · [Báo cáo phát hành cục bộ 0.1.4](../../en/history/verification/2026-11-05-cirnet-release-0.1.4.md) · [Kết quả PostgreSQL ở Giai đoạn 0 native](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md)
 
 ## Chọn và cài môi trường chạy
 
@@ -22,7 +22,7 @@ Chạy một tiến trình API với một worker Uvicorn. Bộ điều phối F
 
 Dùng [mẫu môi trường production](../../../deployment/cirnet.production.env.example), [mẫu Nginx](../../../deployment/nginx/cirnet.conf) và [các unit systemd](../../../deployment/systemd). Tạo tài khoản hệ điều hành `cirnet`, vai trò PostgreSQL và cơ sở dữ liệu riêng. Lưu cấu hình production đã duyệt vào `/etc/cirnet/cirnet.env` với quyền truy cập hạn chế. Mẫu dùng socket PostgreSQL cục bộ và yêu cầu đã cấp quyền xác thực peer. Với cơ sở dữ liệu từ xa, cấu hình kết nối TLS có xác thực tường minh. [Mẫu phát triển ở thư mục gốc](../../../.env.example) mô tả cấu hình phát triển cục bộ. Giữ thông tin xác thực trong môi trường hạn chế quyền, ngoài tệp Git và nhật ký.
 
-Biến chuẩn `CIRNET_*` được ưu tiên hơn tên tương thích `NETCIRCUIT_*`. Các unit khai báo bí danh cài đặt `netcircuit-*` cũ. Với máy đang triển khai, rà soát tường minh cấu hình, dịch vụ và đường dẫn dữ liệu trước khi đổi tên. Bí danh chỉ thay đổi cách phân giải tên dịch vụ. Di chuyển dữ liệu là thao tác vận hành riêng. [Triển khai hiện có](../../NAMESPACE.md#existing-deployments)
+Biến chuẩn `CIRNET_*` được ưu tiên hơn tên tương thích `NETCIRCUIT_*`. Các unit khai báo bí danh cài đặt `netcircuit-*` cũ. Với máy đang triển khai, rà soát tường minh cấu hình, dịch vụ và đường dẫn dữ liệu trước khi đổi tên. Bí danh chỉ thay đổi cách phân giải tên dịch vụ. Di chuyển dữ liệu là thao tác vận hành riêng. [Triển khai hiện có](../../en/operations/namespace-compatibility.md#existing-deployments)
 
 Đặt `CIRNET_ENV=production`, `CIRNET_ALLOW_GUEST=false`, origin HTTPS tường minh trong `CIRNET_TRUSTED_ORIGINS`, `CIRNET_DATABASE_URL` trỏ đến PostgreSQL và `CIRNET_CAPTURE_DIR` là đường dẫn tuyệt đối trên kho lưu trữ bền vững. Môi trường chưa biết, origin sai, chế độ khách hoặc SQLite trong production làm cấu hình thất bại. Cookie phiên có HttpOnly, SameSite=Lax và Secure trong production. Thao tác ghi cần mã CSRF của phiên hiện tại và Origin tin cậy khớp chính xác. WebSocket kiểm quyền bằng cookie và Origin đó. Hết hạn hoặc thu hồi phiên kết thúc vòng đời điều khiển tương ứng.
 

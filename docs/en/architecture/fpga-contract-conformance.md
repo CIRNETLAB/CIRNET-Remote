@@ -1,6 +1,6 @@
 # Contracts and FPGA proposal conformance
 
-[Tiếng Việt](../../vi/architecture/fpga-contract-conformance.md) · [Full original note](../../architecture/fpga-contract-conformance.md)
+[Tiếng Việt](../../vi/architecture/fpga-contract-conformance.md) · [Full original note](../history/fpga-contract-conformance-original.md)
 
 The FPGA proposal revision 2.1 remains a design reference pending hardware and ABI review. The current [system architecture](system.md) and installed Contracts govern runtime behavior. System 0.1.4 selects Contracts 0.1.2 and FPGA scaffold 0.1.2. Hardware RPC 2.0, logical FPGA `1.0-scaffold` and register map `1.0-reserved` are independent version domains. The historical M5 ruling explains why the unavailable example's `2.0-scaffold` target label cannot satisfy the registered logical envelope.
 
