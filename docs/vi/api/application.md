@@ -1,14 +1,14 @@
 # API ứng dụng và cách chạy dịch vụ cục bộ
 
-[English](../../en/api/application.md) · [Kiến trúc hệ thống](../architecture/system.md) · [Hướng dẫn backend hiện có](../../../services/api/README.md)
+[English](../../en/api/application.md) · [Kiến trúc hệ thống](../architecture/system.md) · [Gói API Python](../../../services/api/README.md)
 
-Remote dùng FastAPI dạng monolith mô-đun để xác thực, quản lý phiên bản dự án và mạch, công bố bài tập, quản lý thí nghiệm, điều phối và lưu bản thu. Hardware Service chạy riêng để điều khiển trạm và giao tiếp FPGA. API gọi dịch vụ này qua RPC `2.0` nội bộ. Chỉ chạy một tiến trình API điều phối. Production cần PostgreSQL, khai báo origin HTTPS cụ thể và tắt chế độ khách. [Xác thực và migration](../architecture/auth-and-migrations.md) · [Triển khai production](../../../deployment/README.md)
+Remote dùng FastAPI dạng monolith mô-đun để xác thực, quản lý phiên bản dự án và mạch, công bố bài tập, quản lý thí nghiệm, điều phối và lưu bản thu. Hardware Service chạy riêng để điều khiển trạm và giao tiếp FPGA. API gọi dịch vụ này qua RPC `2.0` nội bộ. Chỉ chạy một tiến trình API điều phối. Production cần PostgreSQL, khai báo origin HTTPS cụ thể và tắt chế độ khách. [Xác thực và migration](../architecture/auth-and-migrations.md) · [Triển khai production](../operations/deployment.md)
 
 ## Chọn và khởi động dịch vụ
 
 [Khóa bản phát hành](../../../integration/release-set.json) chọn hệ thống và Interface `0.1.4`, API, Contracts, Simulator, Hardware và khung FPGA `0.1.2`, cùng công cụ DEV khóa riêng. [Quy trình cài từ gói phát hành](../../../deployment/multi-repo-release.md) cài đúng phiên bản và digest vào môi trường mới. Production chạy các gói đã cài. Trình khởi chạy Windows dùng API từ checkout qua `--app-dir services/api`, mô-đun Hardware đã cài và Interface đã giải nén. Môi trường kiểm chứng mã nguồn dùng Python 3.14 và Node 26. Gói API hỗ trợ Python từ 3.11. [Trình khởi chạy Windows](../../../README.md) · [Cài đặt Interface đã chọn](https://github.com/cirnetlab/cirnet-interface/blob/f1fe0c4738e105727aff1a331327caf7172cdf5f/README.md)
 
-Để chạy phát triển thủ công trên POSIX, chuẩn bị môi trường ảo bên ngoài kho với các wheel Contracts, Simulator, Hardware đã duyệt và các gói API cần. [Hướng dẫn cho bên tiêu thụ Contracts](../../../contracts/README.md) liệt kê các lệnh cài. Dùng tệp khóa để chọn phiên bản hiện tại. Đặt `CIRNET_ARTIFACTS_SESSION` thành phiên ngoài kho do mình sở hữu và `CIRNET_API_PYTHON` thành trình thông dịch đã chuẩn bị. Trong cả hai terminal dịch vụ, từ thư mục gốc Remote, chọn trạng thái cục bộ cách ly, dùng cùng backend và số tiến trình mô phỏng.
+Để chạy phát triển thủ công trên POSIX, chuẩn bị môi trường ảo bên ngoài kho với các wheel Contracts, Simulator, Hardware đã duyệt và các gói API cần. [Hướng dẫn cho bên tiêu thụ Contracts](contracts-consumer.md) liệt kê các lệnh cài. Dùng tệp khóa để chọn phiên bản hiện tại. Đặt `CIRNET_ARTIFACTS_SESSION` thành phiên ngoài kho do mình sở hữu và `CIRNET_API_PYTHON` thành trình thông dịch đã chuẩn bị. Trong cả hai terminal dịch vụ, từ thư mục gốc Remote, chọn trạng thái cục bộ cách ly, dùng cùng backend và số tiến trình mô phỏng.
 
 ```sh
 export CIRNET_ENV=development

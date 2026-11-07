@@ -6,7 +6,7 @@ Current Web/Contracts hardening WC20 (2026-10-20), its source identity, executed
 
 ## Post-R7 architecture hardening H0–H6
 
-Approved plan: [archived Post-R7 prompt](archive/PROMPT_CODEX_net-Circuit-Remote_Post-R7_Architecture_Hardening.md), exact SHA256 `D1C5608E508E9F1BB313136A08158C349D0A54A5994E33E3AEE2C7D191984CA0`, copied from the user document. Baseline `f5df5ac`, clean branch `refactor`, existing linked worktree. Execute one commit per phase; no merge or push. Authority remains canonical Lab-First v3.1.
+Approved plan: [archived Post-R7 prompt](archive/prompt-post-r7-architecture-hardening.md), exact SHA256 `D1C5608E508E9F1BB313136A08158C349D0A54A5994E33E3AEE2C7D191984CA0`, copied from the user document. Baseline `f5df5ac`, clean branch `refactor`, existing linked worktree. Execute one commit per phase; no merge or push. Authority remains canonical Lab-First v3.1.
 
 Pre-flight: context PASS; Python 184 PASS / 1 SKIP; frontend 225 PASS; build PASS. Icarus/vvp unavailable locally, static HDL compilation available. Known warnings: Starlette/httpx, jsonschema RefResolver deprecations, frontend bundle size. Native/loopback checks passed outside the restricted sandbox.
 
@@ -77,7 +77,7 @@ Ruling H4: Baseline generator settings belong to the validated execution plan be
 Ruling H1: Limit deterministic matching to supported digital identities or explicit instructor profiles, with 32 components / 64 mappings / 4096 search steps; budget exhaustion remains AMBIGUOUS — avoids unbounded graph-isomorphism and guessed evidence — cost if wrong: expand supported profiles/bounds after measured performance.
 Ruling H1: Build/validate the pure infrastructure plan to establish executability before committing ExecutionDecision, then apply it only after permission — preserves independent safety/resource policy — cost if wrong: separate an equivalent resource admission pass from final compilation.
 
-Historical plan: [recovered R0–R7 prompt](../../vi/history/archive/PROMPT_CODEX_net-Circuit-Remote_Lab-First_Refactor_R0-R7.md). Exact Git blob `1019e14fd1a9c9489a5353d5a539059f144b792d` present at R7 `842b3d1`; later removed by `f5df5ac`. H6 recovers that blob byte-for-byte as historical evidence, SHA256 `cce3f52cec112f5b9125d20bf48cfb68a38f290f1453714a491f7ebb0cdc4985`. The contents are a proven repository artifact; prior execution is supported by this ledger/phase commits, not a new claim from reconstruction. Canonical ARCHITECTURE.md governs any historical conflict.
+Historical plan: [recovered R0–R7 prompt](../../vi/history/archive/prompt-lab-first-r0-r7.md). Exact Git blob `1019e14fd1a9c9489a5353d5a539059f144b792d` present at R7 `842b3d1`; later removed by `f5df5ac`. H6 recovers that blob byte-for-byte as historical evidence, SHA256 `cce3f52cec112f5b9125d20bf48cfb68a38f290f1453714a491f7ebb0cdc4985`. The contents are a proven repository artifact; prior execution is supported by this ledger/phase commits, not a new claim from reconstruction. Canonical ARCHITECTURE.md governs any historical conflict.
 Authority: ARCHITECTURE.md, cleaned Lab-First v3.1; v3 proposal/audit are provenance.
 
 ## Pre-flight — 2026-10-13

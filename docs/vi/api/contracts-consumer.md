@@ -1,6 +1,6 @@
 # Hướng dẫn dùng Contracts trong Remote
 
-[English](../../en/api/contracts-consumer.md) · [README gốc của consumer](../../../contracts/README.md)
+[English](../../en/api/contracts-consumer.md) · [Adapter wheel đã cài](../../../contracts/README.md)
 
 Repo độc lập [cirnet-contracts](https://github.com/cirnetlab/cirnet-contracts) sở hữu Contracts chuẩn và Device Library. Hệ thống **0.1.4** chọn Interface **0.1.4** cùng API, Contracts, Simulator, Hardware và FPGA **0.1.2**. Gói Python là `cirnet-contracts==0.1.2`, nhập dưới tên `contracts`. Interface dùng `@cirnet/contracts` **0.1.2**. Bộ cấp phát DEV độc lập dùng phiên bản Python **1.0.0a1** và npm **1.0.0-m1.0**. [Manifest hệ thống](../../../integration/release-set.json) ghi revision của producer, tên tệp và mã băm SHA-256 chính xác.
 

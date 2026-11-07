@@ -85,12 +85,12 @@ khớp sẽ báo lỗi tường minh.
 
 Mã nguồn Simulator còn hỗ trợ worker số `cpp` khi chủ động cấu hình
 executable và digest khớp. Xem
-[hướng dẫn backend Simulator](https://github.com/cirnetlab/cirnet-simulator/blob/master/docs/vi/backends.md)
+[hướng dẫn backend Simulator](https://github.com/cirnetlab/cirnet-simulator/blob/master/docs/vi/architecture/backends.md)
 để thiết lập provider và [trạng thái chuyển đổi](native-migration-status.md)
 để tra các tổ hợp artifact đã xác minh.
 
 Tên dành trước `ngspice` báo chưa khả dụng, với 0 khả năng thực thi
-hoặc sử dụng thiết bị đo. [Đề xuất SPICE](native-migration.md#core-spice-tương-lai-dựa-trên-ngspice)
+hoặc sử dụng thiết bị đo. [Đề xuất SPICE](../history/native-migration-ledger.md#core-spice-tương-lai-dựa-trên-ngspice)
 bao gồm ánh xạ đồ thị/netlist, nguồn gốc mô hình và bản build, hợp đồng
 kết quả và kiểm tra vòng đời trong tương lai. Xác minh, phân loại và lưu
 tài liệu vẫn khả dụng độc lập với khả năng bộ giải.

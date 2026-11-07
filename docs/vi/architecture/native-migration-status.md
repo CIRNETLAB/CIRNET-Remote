@@ -2,9 +2,8 @@
 
 [English](../../en/architecture/native-migration-status.md) · [Tài liệu](../index.md)
 
-[Kế hoạch chuyển đổi native đầy đủ](native-migration.md) lưu thứ tự giai
-đoạn, chính sách, số đo ứng viên và kết quả theo thời điểm. Dùng mục lục
-này để tra quyết định và bằng chứng của từng giai đoạn.
+[Biên bản chuyển đổi native](../history/native-migration-ledger.md) ghi thứ
+tự giai đoạn, tiêu chí nghiệm thu và kết quả của từng ứng viên.
 
 ## Mã nguồn, ứng viên và bản phát hành
 
@@ -16,7 +15,7 @@ này để tra quyết định và bằng chứng của từng giai đoạn.
 - **Ứng viên đã nghiệm thu.** Mỗi kết quả áp dụng cho bộ artifact và nền
   tảng được nêu trong bằng chứng. Executable Windows giai đoạn 4 có SHA-256
   `717402ba92e7a0f1864fe4f5f70dbc8f6a55c154e9880a35d470dd2e07f51203`.
-  [Biên bản](native-migration.md#mốc-tương-thích-và-an-toàn-windows-giai-đoạn-4--717402ba)
+  [Biên bản](../history/native-migration-ledger.md#mốc-tương-thích-và-an-toàn-windows-giai-đoạn-4--717402ba)
   ghi Interface, Contracts, Hardware và worker C++ tương ứng.
 - **Bản phát hành được chọn và rollback.**
   [Khóa phát hành](../../../integration/release-set.json) chọn hệ thống và
@@ -28,12 +27,12 @@ này để tra quyết định và bằng chứng của từng giai đoạn.
 
 | Giai đoạn | Quyết định đã ghi | Bằng chứng và phạm vi |
 | --- | --- | --- |
-| 0. Đối chứng | **PASS** trên bộ tham chiếu `0.1.4` đã chọn | [Gói lưu trữ, ngưỡng và nguồn gốc](native-migration.md#gói-đối-chứng-và-ngưỡng-nghiệm-thu) |
-| 1. Simulator C++ | **PASS** với r7 trên Windows x64 | [Quyết định, Stop và tích hợp](native-migration.md#quyết-định-gate-1-trên-windows-x64), [đề xuất SPICE](native-migration.md#core-spice-tương-lai-dựa-trên-ngspice) |
-| 2. Contracts Rust | **PASS** với ma trận r2 | [FAIL của ứng viên đầu, đối chiếu r2 và biên bản build sạch](native-migration.md#xác-minh-ứng-viên-giai-đoạn-2) |
-| 3. Hardware Rust | **PASS** chức năng, tương thích và an toàn Windows với r8-R2 | [Chính sách theo môi trường](native-migration.md#chính-sách-nghiệm-thu-gate-3-theo-môi-trường), [Stop chính thức dưới tải](native-migration.md#gate-3-stop-dưới-tải-chính-thức-trên-windows) |
-| 4. Remote Rust | **PASS** chức năng, tương thích và an toàn Windows với `717402ba` | [Chính sách theo môi trường](native-migration.md#chính-sách-nghiệm-thu-gate-4-theo-môi-trường), [bằng chứng artifact, HTTP, dữ liệu, Interface và an toàn](native-migration.md#mốc-tương-thích-và-an-toàn-windows-giai-đoạn-4--717402ba) |
-| 5. Đúng bộ artifact phát hành | **NOT RUN** | [Tiêu chí đóng gói, khởi chạy, kiểm tra phát hành và rollback](native-migration.md#5-nghiệm-thu-đúng-bộ-artifact-phát-hành) |
+| 0. Đối chứng | **PASS** trên bộ tham chiếu `0.1.4` đã chọn | [Gói lưu trữ, ngưỡng và nguồn gốc](../history/native-migration-ledger.md#gói-đối-chứng-và-ngưỡng-nghiệm-thu) |
+| 1. Simulator C++ | **PASS** với r7 trên Windows x64 | [Quyết định, Stop và tích hợp](../history/native-migration-ledger.md#quyết-định-gate-1-trên-windows-x64), [đề xuất SPICE](../history/native-migration-ledger.md#core-spice-tương-lai-dựa-trên-ngspice) |
+| 2. Contracts Rust | **PASS** với ma trận r2 | [FAIL của ứng viên đầu, đối chiếu r2 và biên bản build sạch](../history/native-migration-ledger.md#xác-minh-ứng-viên-giai-đoạn-2) |
+| 3. Hardware Rust | **PASS** chức năng, tương thích và an toàn Windows với r8-R2 | [Chính sách theo môi trường](../history/native-migration-ledger.md#chính-sách-nghiệm-thu-gate-3-theo-môi-trường), [Stop chính thức dưới tải](../history/native-migration-ledger.md#gate-3-stop-dưới-tải-chính-thức-trên-windows) |
+| 4. Remote Rust | **PASS** chức năng, tương thích và an toàn Windows với `717402ba` | [Chính sách theo môi trường](../history/native-migration-ledger.md#chính-sách-nghiệm-thu-gate-4-theo-môi-trường), [bằng chứng artifact, HTTP, dữ liệu, Interface và an toàn](../history/native-migration-ledger.md#mốc-tương-thích-và-an-toàn-windows-giai-đoạn-4--717402ba) |
+| 5. Đúng bộ artifact phát hành | **NOT RUN** | [Tiêu chí đóng gói, khởi chạy, kiểm tra phát hành và rollback](../history/native-migration-ledger.md#5-nghiệm-thu-đúng-bộ-artifact-phát-hành) |
 
 Chính sách giai đoạn 3 và 4 giữ các giới hạn an toàn bắt buộc trên
 Windows/i5 và dùng so sánh hiệu năng thông thường để chẩn đoán. Hiệu năng

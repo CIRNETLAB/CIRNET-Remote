@@ -1,8 +1,8 @@
 # CIRNET migration plan for C++ and Rust
 
-[Tiếng Việt](../../vi/architecture/native-migration.md) · [Original plan dated 2026-11-05](https://github.com/cirnetlab/cirnet-remote/blob/f91eeeb42d7528d4e7fa9b1526195847932faf9d/docs/superpowers/plans/2026-11-05-cirnet-native-migration.md) · [Stage 0 record](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md)
+[Tiếng Việt](../../vi/history/native-migration-ledger.md) · [Original plan dated 2026-11-05](https://github.com/cirnetlab/cirnet-remote/blob/f91eeeb42d7528d4e7fa9b1526195847932faf9d/docs/superpowers/plans/2026-11-05-cirnet-native-migration.md) · [Stage 0 record](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md)
 
-Use [Current status and evidence by stage](native-migration-status.md) for the active decisions. This page holds the full plan and dated checkpoint records. Each checkpoint's status applies to its recorded inputs and time.
+Use [Current status and evidence by stage](../architecture/native-migration-status.md) for the active decisions. This page holds the full plan and dated checkpoint records. Each checkpoint's status applies to its recorded inputs and time.
 
 > **For implementation agents.** Use superpowers:subagent-driven-development or superpowers:executing-plans. Complete each gate and record its evidence before beginning the next stage.
 

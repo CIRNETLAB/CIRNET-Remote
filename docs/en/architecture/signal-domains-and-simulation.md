@@ -86,12 +86,12 @@ explicitly.
 
 The Simulator source also supports the opt-in `cpp` digital worker when a
 matching executable and digest are configured. See the
-[Simulator backend guide](https://github.com/cirnetlab/cirnet-simulator/blob/master/docs/en/backends.md)
+[Simulator backend guide](https://github.com/cirnetlab/cirnet-simulator/blob/master/docs/en/architecture/backends.md)
 for the provider setup and the [migration status](native-migration-status.md)
 for the verified artifact combinations.
 
 The reserved `ngspice` selector reports unavailable with zero execution and
-instrument capabilities. The [SPICE proposal](native-migration.md#future-spice-core-based-on-ngspice)
+instrument capabilities. The [SPICE proposal](../history/native-migration-ledger.md#future-spice-core-based-on-ngspice)
 covers future graph/netlist mapping, model and build provenance, result
 contracts and lifecycle checks. Document validation, classification and
 storage remain available independently of solver capability.

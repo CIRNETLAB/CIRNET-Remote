@@ -1,8 +1,8 @@
 # Kế hoạch chuyển đổi CIRNET sang C++ và Rust
 
-[English](../../en/architecture/native-migration.md) · [Kế hoạch gốc ngày 2026-11-05](https://github.com/cirnetlab/cirnet-remote/blob/f91eeeb42d7528d4e7fa9b1526195847932faf9d/docs/superpowers/plans/2026-11-05-cirnet-native-migration.md) · [Biên bản giai đoạn 0](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md)
+[English](../../en/history/native-migration-ledger.md) · [Kế hoạch gốc ngày 2026-11-05](https://github.com/cirnetlab/cirnet-remote/blob/f91eeeb42d7528d4e7fa9b1526195847932faf9d/docs/superpowers/plans/2026-11-05-cirnet-native-migration.md) · [Biên bản giai đoạn 0](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md)
 
-Xem [Trạng thái hiện tại và bằng chứng theo giai đoạn](native-migration-status.md) để tra quyết định hiện hành. Trang này giữ kế hoạch đầy đủ và các mốc theo thời điểm. Trạng thái mỗi mốc áp dụng cho đầu vào và thời điểm đã ghi.
+Xem [Trạng thái hiện tại và bằng chứng theo giai đoạn](../architecture/native-migration-status.md) để tra quyết định hiện hành. Trang này giữ kế hoạch đầy đủ và các mốc theo thời điểm. Trạng thái mỗi mốc áp dụng cho đầu vào và thời điểm đã ghi.
 
 > **Dành cho agent triển khai.** Dùng superpowers:subagent-driven-development hoặc superpowers:executing-plans. Hoàn thành và ghi bằng chứng từng gate trước khi bắt đầu giai đoạn kế tiếp.
 

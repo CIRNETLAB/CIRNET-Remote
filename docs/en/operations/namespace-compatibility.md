@@ -70,7 +70,7 @@ Ensure only one API scheduler and one Hardware Service are started. Existing
 independent old unit files must not remain enabled alongside the replacements.
 Reload and validate the host service-manager/proxy configuration before startup;
 actual target installation, TLS and physical checks remain separate acceptance.
-See the [production guide](../../../deployment/README.md).
+See the [production guide](deployment.md).
 
 ## Published artifacts and preserved evidence
 

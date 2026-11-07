@@ -92,10 +92,10 @@ executable Rust đã chọn và đáp ứng kiểm tra digest trong driver tươ
 - [Driver Stop dưới tải](../../../tests/integration/native_remote_stop_cases.py)
   và [driver tải cố định](../../../tests/integration/native_remote_load_cases.py)
   có biến chọn lượt chạy tường minh. Áp dụng
-  [chính sách theo môi trường](../architecture/native-migration.md#chính-sách-nghiệm-thu-gate-4-theo-môi-trường)
+  [chính sách theo môi trường](../history/native-migration-ledger.md#chính-sách-nghiệm-thu-gate-4-theo-môi-trường)
   để xác định phạm vi nghiệm thu phù hợp.
 
-[Biên bản Windows](../architecture/native-migration.md#mốc-tương-thích-và-an-toàn-windows-giai-đoạn-4--717402ba)
+[Biên bản Windows](../history/native-migration-ledger.md#mốc-tương-thích-và-an-toàn-windows-giai-đoạn-4--717402ba)
 ghi Gate 4 PASS cục bộ với ứng viên đã ghim. Hiệu năng và Stop dưới tải
 đầy đủ Linux/Xeon, xử lý signal Linux, HIL vật lý và nghiệm thu phát hành
 production vẫn **NOT RUN**. Các workflow trong repo bao phủ tài liệu, dịch

@@ -1,6 +1,6 @@
 # Contracts consumer guide
 
-[Tiếng Việt](../../vi/api/contracts-consumer.md) · [Original consumer README](../../../contracts/README.md)
+[Tiếng Việt](../../vi/api/contracts-consumer.md) · [Installed-wheel adapter](../../../contracts/README.md)
 
 The independent [cirnet-contracts](https://github.com/cirnetlab/cirnet-contracts) repository owns canonical Contracts and the Device Library. System **0.1.4** selects Interface **0.1.4** and API, Contracts, Simulator, Hardware and FPGA **0.1.2**. The Python distribution is `cirnet-contracts==0.1.2`, imported as `contracts`. Interface consumes `@cirnet/contracts` **0.1.2**. The independent DEV allocator uses Python **1.0.0a1** and npm **1.0.0-m1.0**. Use the [system manifest](../../../integration/release-set.json) for exact producer revisions, filenames and SHA-256 digests.
 

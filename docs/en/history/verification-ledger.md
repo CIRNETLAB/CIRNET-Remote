@@ -486,7 +486,7 @@ tested pixel positions and 194,249 exact native first-hit comparisons, including
 positive controls and four restoration guards. The original four UI cases pass
 on an explicitly unpublished native candidate; final Ubuntu/committed artifact
 acceptance is recorded separately. See the current
-[Interface verification guide](https://github.com/CIRNETLAB/CIRNET-Interface/blob/master/docs/VERIFICATION.md).
+[Interface verification guide](https://github.com/cirnetlab/cirnet-interface/blob/cad092eb95e27a2d348f65f605b1e70b2f428970/docs/VERIFICATION.md).
 
 Remote now understands the explicit 0.1.3 system profile and canonical
 `cirnet-interface-0.1.3-source.tar.gz` / `cirnet-interface-0.1.3-static.tar.gz`

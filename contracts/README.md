@@ -1,68 +1,10 @@
-# CIRNET Contracts consumer boundary
+# Contracts consumer
 
-Use the current consumer setup in [English](../docs/en/api/contracts-consumer.md)
-or [Vietnamese](../docs/vi/api/contracts-consumer.md). Samples below that pin
-0.1.1 record an earlier selection. Current commands select system 0.1.4 and
-the 0.1.2 component artifacts from the release lock.
+Remote loads the installed Contracts wheel through the adapter in this
+directory. The Contracts repository owns schemas, generated bindings and the
+Device Library. The system release lock identifies the selected producer
+artifacts by version, source revision and SHA-256.
 
-Canonical Contracts and Device Library ownership belongs to [cirnet-contracts](https://github.com/cirnetlab/cirnet-contracts). System 0.1.4 selects \`cirnet-contracts==0.1.2\` with the Python import \`contracts\` and the \`@cirnet/contracts\` SDK. [The system manifest](../integration/release-set.json) records exact source revisions, filenames and digests. This checkout keeps the installed-wheel shim and reads compatibility fixtures from the selected wheel.
-
-JSON Schemas own shapes, FastAPI registrations in Remote own public operations, and protobuf owns local RPC fields. The installed package's manifest records identity, version, visibility, producer/consumers, profiles, artifacts and compatibility policy. Absolute URIs resolve from installed resources without network access or the current directory. Historical relative schema IDs remain readable through the registry. The root `contracts/__init__.py` is a strict adapter to the installed wheel's module/spec/resource loader, with no retained-source fallback; missing, wrong-version or editable Contracts fail explicitly.
-
-Canonical generation belongs to the independent repository, with Python 3.11+ runtime and Python 3.14/Node 26 generator CI. Remote verification first needs a reviewed absolute artifact manifest containing Python/npm artifact paths and SHA-256 values, plus the independently versioned DEV allocator wheel. For source development, select the renamed Contracts wheel and matching Simulator and Hardware builds in a fresh environment. Install the artifacts before consumer packages:
-
-```sh
-export CIRNET_CONTRACTS_ARTIFACT_MANIFEST=/absolute/reviewed/artifacts.json
-python scripts/install_contracts.py --with-dev --manifest "$CIRNET_CONTRACTS_ARTIFACT_MANIFEST"
-export CIRNET_SIMULATOR_ARTIFACT_MANIFEST=/absolute/reviewed/simulator-artifacts.json
-python scripts/install_simulator.py
-export CIRNET_HARDWARE_ARTIFACT_MANIFEST=/absolute/reviewed/hardware-artifacts.json
-python scripts/install_hardware.py
-python -m pip install -r requirements-verification.txt -e './services/api[test]'
-export CIRNET_ARTIFACTS_SESSION="$(node scripts/artifact-paths.mjs)"
-export CIRNET_FPGA_ARTIFACT_MANIFEST=/absolute/reviewed/fpga-artifacts.json
-export CIRNET_FPGA_ROOT="$(python -B scripts/install_fpga.py --manifest "$CIRNET_FPGA_ARTIFACT_MANIFEST" | python -c 'import json,sys; print(json.load(sys.stdin)["fpgaRoot"])')"
-```
-
-Current Web setup belongs to the independent [CIRNET-Interface](https://github.com/cirnetlab/cirnet-interface) product. Bootstrap its exact reviewed SDK/DEV artifacts before its locked npm install; use its own README and the [M2 ledger](https://github.com/cirnetlab/cirnet-remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/superpowers/plans/2026-10-24-multi-repo-migration-m2.md). Remote Web/browser gates require an explicit `CIRNET_INTERFACE_ROOT` or `--interface-root`. Compatibility checks use resources from the selected Interface and Contracts artifacts.
-
-M3/M4 Simulator and Hardware builds/unit tests belong to their independent repositories. Remote consumes Simulator 0.1.1 and Hardware 0.1.1 by reviewed manifest/digest. The previous implementation trees are available in Git history. This README documents the Remote consumer setup; canonical Contracts inputs and baselines remain unchanged.
-
-Current M6 consumes FPGA source/scaffold 0.1.1 as an exact source archive, not a Python dependency. Its installer prints JSON identifying a fresh owned extracted root. Keep the manifest/root/session selection for child release checks; inspect evidence and use the canonical cleanup afterward. On PowerShell, capture the installer JSON with `ConvertFrom-Json` and assign its `fpgaRoot` to `$env:CIRNET_FPGA_ROOT`. Native RTL acceptance runs in the independent FPGA product with its pinned toolchain and installed Contracts. The original Remote FPGA tests are available in Git history. No optional skip becomes RTL acceptance.
-
-For subsequent verification, allocate/reuse an external owned session as described in [VERIFICATION.md](../docs/en/history/verification-ledger.md). Return to the repository root for the following read-only consumer checks. API registrations export without starting runtime services; Contracts generation does not import API or Web source:
-
-```sh
-python -m scripts.check_contract_consumer
-python scripts/generate_contracts.py --check
-python scripts/export_openapi.py --check
-python scripts/check_contract_sdk.py
-python scripts/check_contract_package.py
-python scripts/check_release.py --group contracts
-```
-
-`sync_lab_contracts.py --check` and the root generation/catalog wrappers check projections from the installed artifact. Explicit exports require external output. Root packaging is the empty `cirnet-remote-dev` metapackage, not a second Contracts distribution. Canonical generators retain deterministic UTF-8/LF, pinned tools, staged publication and ordinary I/O rollback in the independent repository. The standalone source and installed resources have separate tested generation modes.
-
-Generated Python models, RPC bindings and all resources come from the selected wheel. The M2 Interface product consumes public DTOs, validators, catalogs and fixtures from the exact Contracts npm 0.1.1 artifact. Its test-only resource gaps use an allowlisted, digest-verified 0.1.1 sdist. Remote uses the installed SDK projections for compatibility checks. Its dedicated SDK consumer installs the real npm tarball and verifies parity, types and packed public closure. Interface application adapters and `src/types` compatibility facades remain product-owned. Browser exports exclude private `InstrumentationExecutionPlan` and `StationCapabilities`; public capabilities omit routing resources. FastAPI registrations remain the operation authority: export a reviewed OpenAPI handoff, generate in Contracts, then require Remote's export on the exact final wheel to match. Open object properties/metadata remain intentional opaque extension points.
-
-The structural, editor and transport profiles are versioned separately in [profiles.json](https://github.com/cirnetlab/cirnet-remote/blob/989954f95c1c6b1d224e31a53fb33f125f0a81a9/contracts/profiles.json). Structural storage preserves arbitrary precision legacy graph numbers. Browser import examines original numeric tokens before conversion and rejects precision loss; normalization of legacy property aliases is a separate document operation. Transport intersects JS-safe integer bounds and protobuf uint32 limits before RPC serialization. Epoch `timestamp_ns` remains a decimal string. No value is clamped or truncated.
-
-Pydantic/TypeScript represent shapes; the full offline JSON Schema validator enforces composition, external references and conditionals. Array bounds, string patterns, numeric bounds, mounting `if/not` rules and cross-field relationships are runtime constraints, even when generated TypeScript cannot express them. Generation rejects unknown vocabulary and unresolved/private references instead of silently widening them. Python boundary adapters preserve numeric input representations and omission; route serialization must use `response_model_exclude_unset=True`.
-
-The wheel's `fixtures/conformance.json` provides shared rule IDs and examples; Python and browser run the same public cases. Explicit internal-only cases also run in Python. Editor authoring, server execution, physical evidence and electrical safety remain distinct contexts. Generic contract approval cannot create a safety permit, prove a physical path or enable an unavailable instrument.
-
-WC20 operation metadata binds every documented status and media type to its canonical response contract, including errors and legacy validation 422 responses. Browser boundaries reject undocumented success statuses, malformed errors and mismatched binary media before exposing domain details. Frozen legacy operation anchors remain unchanged; preparse request budget rejection uses their documented HTTP 400 ErrorEnvelope.
-
-Generated `validators*.core` entrypoints cover synchronous editor, authored properties, local configuration and authentication validation. API and realtime workflows explicitly prepare complete offline profiles when needed; `parseStructural` remains synchronous and fails closed if a workflow has not prepared a required validator. Complete profiles use literal lazy imports, with no runtime compilation or network schema resolution. Both core and complete outputs are generated deterministically; shared conformance and cold-workflow tests guard parity. Unit fixtures that enter synchronous controllers directly prepare profiles explicitly; production cold-entry tests and native browser scenarios exercise actual workflow loading.
-
-The wheel's `fixtures/diagnostics.json` supplements the conformance corpus with rule-code, JSON Pointer and profile expectations. Generated Pydantic errors carry sanitized canonical issues; HTTP adds the request-location prefix (for example `/body/name`) without echoing input values. These diagnostics do not alter the frozen top-level error envelope.
-
-The wheel's `compatibility/2026-10-16` freezes exact Git blobs for supported unpublished pre-W1 schemas/RPC and records the source revision. Its `public-wire-baseline.json` additionally freezes the current supported unpublished API operation/request/response/security anchors, named schemas and NCAP layouts. `python scripts/check_public_compatibility.py` rejects changes to those anchors; new operations and versioned definitions can coexist with them. Tests include negative mutations. There is no automatic baseline replacement command. Raw Windows-checkout digests are also recorded; comparisons normalize CRLF to LF only. It is not a released-version claim. Existing graph 1.0/1.1 schemas are unchanged. The pinned wheel supplies the same baseline bytes on Windows and Linux. New presentation namespaces are opt-in and preserve unknown/future metadata. Breaking public shapes require a new version and tested migration. Named boolean root DTOs and dynamic-reference relocation are currently explicit generation errors; nested boolean schemas and full 2020-12 runtime constraints are supported. These unsupported generation cases never become permissive DTOs.
-
-The wheel includes schema/data/baseline/fixture/proto resources and generates RPC bindings at build time. Core runtime needs pinned JSON Schema/referencing/Pydantic dependencies; install `[rpc]` for generated local RPC imports. API and hardware pin the same grpcio/protobuf versions as the generator; FastAPI/Pydantic versions are pinned for deterministic operation export. `requirements-verification.txt` also includes the optional workload monitor dependency because its owned-process cleanup regression runs in integration verification.
-
-`check_contract_package.py` builds the Remote API wheel and combines it with the selected Contracts, Simulator and Hardware wheels. Its `-I` probe, venv and working directory are physically outside the checkout, and every imported package path is checked. It tests packaged resources, graph preservation, NCAP v1/v2, domain dispatch, RPC limits, current migration head, authentication/project/capture persistence and installed CLIs. Catalog identity comes from the selected wheel. Build logs use the shared external session; only owned temporary children are cleaned. Node/Python wrappers delegate to one pinned independent DEV allocator; see [verification storage](../docs/en/history/verification-ledger.md).
-
-`python scripts/check_release.py --show-plan` lists release commands (plan construction may allocate external pytest directories). The contracts group checks installed provenance, frozen projections, final OpenAPI, public compatibility and the actual npm artifact. RPC bindings are supplied by the wheel. The default `--group all` also runs the full Python suite once, Web unit/build/boundary checks, PostgreSQL migrations/races, real browser scenarios and clean installed consumers. Repeated `--group` selects a subset. PostgreSQL requires a disposable `CIRNET_TEST_POSTGRES_URL` and matching PostgreSQL 18 tools; Chromium and external package scratch remain separate prerequisites. Make targets retain these groups; no missing prerequisite becomes a silent PASS.
-
-The load measurement is explicit: `python scripts/check_release.py --group load` runs 50 cookie/CSRF sessions, concurrency 10, eight actual virtual captures and three read rounds. Raw JSON uses the shared external `web-sessions/report.json` artifact location; a direct `scripts/benchmark_web_sessions.py --output` override must name a validated absolute external file. Retain the reviewed scenario/environment/results in an existing Markdown verification report, then clean only the owned external session. The load group is excluded from the default group and ordinary PR gates. Authentication pacing remains enforced. This bounded local workload does not establish target hardware or production deployment capacity; the dated 2026-10-16 reports preserve their original measurements.
+- [Consumer setup and verification in English](../docs/en/api/contracts-consumer.md) · [Tiếng Việt](../docs/vi/api/contracts-consumer.md)
+- [System release lock](../integration/release-set.json)
+- [Previous consumer guide](https://github.com/cirnetlab/cirnet-remote/blob/ae51abaa8ebdfce5981f91c0c95eca1d522900ee/contracts/README.md)

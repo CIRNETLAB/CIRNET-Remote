@@ -90,10 +90,10 @@ selected Rust binary and satisfy the digest check in the chosen driver.
 - The [loaded Stop driver](../../../tests/integration/native_remote_stop_cases.py)
   and [fixed load driver](../../../tests/integration/native_remote_load_cases.py)
   have explicit run selectors. Apply the
-  [host policy](../architecture/native-migration.md#gate-4-acceptance-policy-by-host)
+  [host policy](../history/native-migration-ledger.md#gate-4-acceptance-policy-by-host)
   to determine the correct acceptance scope.
 
-The [Windows checkpoint](../architecture/native-migration.md#stage-4-windows-compatibility-and-safety-checkpoint--717402ba)
+The [Windows checkpoint](../history/native-migration-ledger.md#stage-4-windows-compatibility-and-safety-checkpoint--717402ba)
 records the local Gate 4 PASS for the pinned candidate. Linux/Xeon performance
 and full loaded Stop, Linux signal execution, physical HIL and production
 release acceptance are **NOT RUN**. The checked-in workflows cover

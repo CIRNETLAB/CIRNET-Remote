@@ -17,7 +17,7 @@ def test_roadmap_defines_web_first_gate_before_ep4ce6():
 
 
 def test_design_spec_and_plan_are_preserved():
-    for name in ['2026-10-08-net-circuit-remote-architecture-design.md', '2026-10-08-initial-repository-scaffold.md']:
+    for name in ['2026-10-08-cirnet-remote-architecture-design.md', '2026-10-08-initial-repository-scaffold.md']:
         text = (ROOT/'docs/en/history/archive/legacy-v1'/name).read_text(encoding='utf-8')
         assert 'SUPERSEDED' in text
         assert 'Current authority: docs/ARCHITECTURE.md' in text

@@ -1,14 +1,14 @@
 # Application API and local service setup
 
-[Tiếng Việt](../../vi/api/application.md) · [System architecture](../architecture/system.md) · [Existing backend guide](../../../services/api/README.md)
+[Tiếng Việt](../../vi/api/application.md) · [System architecture](../architecture/system.md) · [Python API package](../../../services/api/README.md)
 
-Remote runs a FastAPI modular monolith for authentication, revisioned projects and circuits, published assignments, experiments, scheduling and captures. The separate Hardware Service owns station control and FPGA transport. The API reaches it through local-only RPC `2.0`. Keep one API scheduler. Production requires PostgreSQL, explicit HTTPS origins and guest access disabled. [Auth and migrations](../architecture/auth-and-migrations.md) · [Production deployment](../../../deployment/README.md)
+Remote runs a FastAPI modular monolith for authentication, revisioned projects and circuits, published assignments, experiments, scheduling and captures. The separate Hardware Service owns station control and FPGA transport. The API reaches it through local-only RPC `2.0`. Keep one API scheduler. Production requires PostgreSQL, explicit HTTPS origins and guest access disabled. [Auth and migrations](../architecture/auth-and-migrations.md) · [Production deployment](../operations/deployment.md)
 
 ## Select and start the services
 
 The [release lock](../../../integration/release-set.json) selects system and Interface `0.1.4`, API, Contracts, Simulator, Hardware and FPGA scaffold `0.1.2`, and independently pinned DEV tools. The [artifact-only release runbook](../../../deployment/multi-repo-release.md) installs exact versions and digests into fresh environments. Production runs installed packages. The Windows launcher uses the checked-out API through `--app-dir services/api`, the installed Hardware module and the extracted Interface. Source verification uses Python 3.14 and Node 26. The API package supports Python 3.11 and later. [Windows launcher](../../../README.md) · [Selected Interface setup](https://github.com/cirnetlab/cirnet-interface/blob/f1fe0c4738e105727aff1a331327caf7172cdf5f/README.md)
 
-For a manual POSIX development run, prepare an external virtual environment with the reviewed Contracts, Simulator and Hardware wheels and API dependencies. Use [the consumer setup](../../../contracts/README.md) for the installer entry points and use the lock for current pins. Set `CIRNET_ARTIFACTS_SESSION` to an owned external session and `CIRNET_API_PYTHON` to the prepared interpreter. In both service terminals, from the Remote root, select isolated local state and the same simulation backend and worker count.
+For a manual POSIX development run, prepare an external virtual environment with the reviewed Contracts, Simulator and Hardware wheels and API dependencies. Use [the consumer setup](contracts-consumer.md) for the installer entry points and use the lock for current pins. Set `CIRNET_ARTIFACTS_SESSION` to an owned external session and `CIRNET_API_PYTHON` to the prepared interpreter. In both service terminals, from the Remote root, select isolated local state and the same simulation backend and worker count.
 
 ```sh
 export CIRNET_ENV=development

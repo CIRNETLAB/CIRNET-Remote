@@ -1,7 +1,11 @@
 # CIRNET Remote — Lab-First v3.1
 
-This is the single canonical architecture authority. The original v3 proposal/audit are provenance; archived specs/prompts, source analyses and verification reports are history. This document governs conflicts. Current source identifiers and legacy compatibility
-boundaries are listed in [namespace compatibility](../operations/namespace-compatibility.md).
+This specification governs Lab-First system and safety requirements. The
+[system architecture](system.md) describes the selected release topology, and
+the [migration status](native-migration-status.md) records the verified native
+combinations. Dated reports and archived proposals record their own scope.
+See [namespace compatibility](../operations/namespace-compatibility.md) for
+source names and legacy aliases.
 
 **Safety-gated, Lab-First, Contract-Driven Virtual-to-Physical Laboratory Architecture.**
 
