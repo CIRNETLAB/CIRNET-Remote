@@ -10,7 +10,12 @@ ghi ứng viên Gate 4 Windows và các gate còn chờ.
 
 ## Build và chạy kiểm thử thông thường
 
-Dùng Rust `1.90.0` theo [rust-toolchain.toml](../../../rust-toolchain.toml).
+Dùng Rust và Cargo `1.99.1` theo [rust-toolchain.toml](../../../rust-toolchain.toml).
+Trên Windows, kiểm tra cả hai lệnh đều báo host `x86_64-pc-windows-msvc`.
+Trường `rust-version` trong manifest ghi phiên bản trình biên dịch tối thiểu được hỗ trợ.
+Nếu Rustup chỉ có bí danh `stable`, kiểm tra `rustup run stable rustc -vV`
+và `rustup run stable cargo -vV` trước. Dùng `rustup run stable cargo` cho
+các lệnh bên dưới khi bí danh trỏ tới 1.99.1 trên đúng host.
 [Cargo.toml](../../../Cargo.toml) và [Cargo.lock](../../../Cargo.lock) ghim
 các phụ thuộc, gồm Contracts native `0.1.2` tại
 `e640f80b1199779659d3db7817fee16d13cc24c1`. Chạy từ thư mục gốc Remote trong
@@ -19,11 +24,16 @@ một phiên ngoài checkout mới có chủ sở hữu. Kiểm tra allocator tr
 phụ thuộc theo lock.
 
 ```powershell
+rustc -vV
+cargo -vV
 $env:CARGO_TARGET_DIR = node scripts/artifact-paths.mjs rust-remote/target
 $env:TEMP = $env:TMP = $env:TMPDIR = node scripts/artifact-paths.mjs rust-remote/tmp
+cargo check --locked --all-targets
+cargo test --locked
+cargo clippy --locked --all-targets
+cargo fmt --all --check
 cargo build --locked --release --bin cirnet-remote
-cargo test --locked --lib --bins
-cargo test --locked --lib --bins -- --list
+cargo test --locked -- --list
 ```
 
 Các test thông thường kiểm tra cấu hình, ranh giới API, logic WebSocket
@@ -96,7 +106,9 @@ executable Rust đã chọn và đáp ứng kiểm tra digest trong driver tươ
   để xác định phạm vi nghiệm thu phù hợp.
 
 [Biên bản Windows](../history/native-migration-ledger.md#mốc-tương-thích-và-an-toàn-windows-giai-đoạn-4--717402ba)
-ghi Gate 4 PASS cục bộ với ứng viên đã ghim. Hiệu năng và Stop dưới tải
+ghi Gate 4 PASS cục bộ với ứng viên đã ghim. Để chạy lại các phép đo chẩn đoán
+thời gian theo thành phần DB trước đó, cần đúng snapshot mã nguồn, biên nhận
+build gốc và toolchain đã ghi. Hiệu năng và Stop dưới tải
 đầy đủ Linux/Xeon, xử lý signal Linux, HIL vật lý và nghiệm thu phát hành
 production vẫn **NOT RUN**. Các workflow trong repo bao phủ tài liệu, dịch
 vụ Python và tích hợp artifact, trình duyệt, Contracts và FPGA. Nghiệm thu

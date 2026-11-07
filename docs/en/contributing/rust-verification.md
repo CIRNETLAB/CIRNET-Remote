@@ -9,7 +9,12 @@ identifies the Windows Gate 4 candidate and the pending gates.
 
 ## Build and run ordinary tests
 
-Use Rust `1.90.0` from [rust-toolchain.toml](../../../rust-toolchain.toml).
+Use Rust and Cargo `1.99.1` from [rust-toolchain.toml](../../../rust-toolchain.toml).
+On Windows, verify that both commands report the `x86_64-pc-windows-msvc` host.
+The manifest's `rust-version` records the minimum supported compiler.
+If Rustup has only the `stable` alias installed, verify `rustup run stable rustc -vV`
+and `rustup run stable cargo -vV` first. Use `rustup run stable cargo` for the
+commands below while that alias resolves to 1.99.1 on the required host.
 [Cargo.toml](../../../Cargo.toml) and [Cargo.lock](../../../Cargo.lock) pin the
 dependencies, including Contracts native `0.1.2` at
 `e640f80b1199779659d3db7817fee16d13cc24c1`. Run from the Remote root in a fresh
@@ -17,11 +22,16 @@ owned external session. Check that the allocator returns the requested paths
 before running Cargo. Use `--offline` when the locked dependencies are cached.
 
 ```powershell
+rustc -vV
+cargo -vV
 $env:CARGO_TARGET_DIR = node scripts/artifact-paths.mjs rust-remote/target
 $env:TEMP = $env:TMP = $env:TMPDIR = node scripts/artifact-paths.mjs rust-remote/tmp
+cargo check --locked --all-targets
+cargo test --locked
+cargo clippy --locked --all-targets
+cargo fmt --all --check
 cargo build --locked --release --bin cirnet-remote
-cargo test --locked --lib --bins
-cargo test --locked --lib --bins -- --list
+cargo test --locked -- --list
 ```
 
 The ordinary tests exercise configuration, API boundary and WebSocket logic,
@@ -94,7 +104,9 @@ selected Rust binary and satisfy the digest check in the chosen driver.
   to determine the correct acceptance scope.
 
 The [Windows checkpoint](../history/native-migration-ledger.md#stage-4-windows-compatibility-and-safety-checkpoint--717402ba)
-records the local Gate 4 PASS for the pinned candidate. Linux/Xeon performance
+records the local Gate 4 PASS for the pinned candidate. Replaying the earlier
+DB component timing diagnostics requires their original source snapshot and
+build receipt, including the recorded toolchain. Linux/Xeon performance
 and full loaded Stop, Linux signal execution, physical HIL and production
 release acceptance are **NOT RUN**. The checked-in workflows cover
 documentation, Python service and artifact integration, browser, Contracts and

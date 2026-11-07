@@ -28,6 +28,8 @@
 
 ### Changed
 
+- Pinned the native development and verification toolchain to Rust and Cargo
+  1.99.1. [Rust verification guide](../en/contributing/rust-verification.md)
 - Organized tagged system changes by major version and separated the release
   changelog from historical verification records. [Changelog index](README.md) · [Documentation conventions](../en/contributing/writing-documentation.md)
 
