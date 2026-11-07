@@ -1,8 +1,10 @@
-# CONTEXT — CIRNET Remote
+# CIRNET Remote context invariants
 
-Start with the working context in [English](context.md) or
-[Vietnamese](../../vi/architecture/context.md). The
-[canonical Lab-First v3.1 architecture](lab-first-v3-1.md) governs the system.
+<a id="context--cirnet-remote"></a>
+
+[Tiếng Việt](../../vi/architecture/context-invariants.md) · [Working context](context.md)
+
+The [Lab-First v3.1 specification](lab-first-v3-1.md) governs the system.
 
 - Preserve the Web-first, Safety-gated single workspace. The selected release topology
   targets a Linux Mini PC with PostgreSQL. See [system topology](system.md)

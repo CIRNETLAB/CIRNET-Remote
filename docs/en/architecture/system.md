@@ -31,6 +31,12 @@ The browser uses Vue 3, TypeScript, Pinia and Three.js in a single workspace. In
 
 The [release lock](../../../integration/release-set.json) selects system and Interface `0.1.4` and API, Contracts, Simulator, Hardware and FPGA scaffold `0.1.2`. It pins exact artifacts, RPC `2.0`, FPGA logical `1.0-scaffold` and register map `1.0-reserved`. The scaffold is a source artifact. [Application API](../api/application.md) · [FPGA conformance](fpga-contract-conformance.md)
 
+The current source also contains a Rust Remote API and scheduler, Rust Contracts,
+Rust Hardware and a C++ simulation worker. The verified Windows combinations
+have their own artifact identities and acceptance scopes. The selected
+installation and rollback continue to use the release lock above.
+[Rust Remote](../../../native/README.md) · [Native migration status](native-migration-status.md)
+
 ## Design and observed topology
 
 `CircuitGraph` 1.0, 1.1 and 1.2 are logical design truth. Version 1.1 adds rigid placement and validated contact bonds. Version 1.2 adds flexible assemblies and pinned free-component descriptors. New flexible authoring uses automatic `FlexibleMountV2`. Saved V1 geometry and historical descriptor revisions remain readable. Three.js projects the graph. Coordinates alone create no nets, and a placement ghost enters the graph only at commit. Versioned `/api/v2` operations carry the new shapes alongside existing operations. [Circuit specification](../api/circuit-spec-reference.md) · [Component placement](component-placement.md)
@@ -67,4 +73,7 @@ These defaults describe the selected release.
 - Durable principals own projects and captures. Server sessions authenticate requests. The controller tab's identity binds execution lifetime to its authenticated session. Viewer tabs can read authorized state. Reconnection reconciles durable command outcomes and does not replay commands. [Projects and revisions](projects-and-revisions.md) · [Pending observations](pending-observations.md)
 - HTTP and realtime views redact reference answers under the default `observed_only` assignment policy. Experiment JSON and events carry `CaptureMetadata`. Owner-scoped capture endpoints provide binary NCAP payloads. NCAP v2 codecs support sampled data formats, while the current runtime capture producer remains NCAP v1. [Assignment publication](assignments-and-publication.md) · [Capture catalog](capture-catalog.md)
 
-The [0.1.4 local release report](../history/verification/2026-11-05-cirnet-release-0.1.4.md) records its Windows and software checks. The [later test audit](../../vi/history/verification/2026-11-05-test-infrastructure-audit.md) separates hosted release results from post-fix local results. The [native migration Stage 0 record](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md) records its separate environment and open gates. Electrical and target deployment claims require evidence from their own environments.
+The [0.1.4 local release report](../history/verification/2026-11-05-cirnet-release-0.1.4.md)
+records Windows and software checks. The [CI test audit](../../vi/history/verification/2026-11-05-test-infrastructure-audit.md)
+separates hosted release results from post-fix local results. Electrical and
+target deployment claims require evidence from their own environments.

@@ -1,6 +1,6 @@
 # An toàn phòng thí nghiệm vật lý
 
-[English](../../en/architecture/physical-lab-safety.md) · [Hợp đồng an toàn chuẩn](../../en/architecture/physical-lab-safety-contract.md) · [Kiến trúc hệ thống](system.md)
+[English](../../en/architecture/physical-lab-safety.md) · [Hợp đồng an toàn chuẩn](physical-lab-safety-contract.md) · [Kiến trúc hệ thống](system.md)
 
 An toàn và tính đúng đắn độc lập với nhau. Danh tính linh kiện chưa rõ giữ trạng thái `UNKNOWN`. Mạch có linh kiện chưa rõ chỉ chạy theo chế độ `RUN_GUARDED` khi đã chứng minh bảo vệ và có thể thực thi liên kết điểm cuối.
 

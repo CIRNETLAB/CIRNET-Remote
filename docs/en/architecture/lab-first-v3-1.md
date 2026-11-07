@@ -1,5 +1,7 @@
 # CIRNET Remote — Lab-First v3.1
 
+[Tiếng Việt](../../vi/architecture/lab-first-v3-1.md) · [System architecture](system.md)
+
 This specification governs Lab-First system and safety requirements. The
 [system architecture](system.md) describes the selected release topology, and
 the [migration status](native-migration-status.md) records the verified native
@@ -15,9 +17,13 @@ SAFETY != CORRECTNESS. UNKNOWN != UNSAFE. TOPOLOGY MISMATCH != RUN BLOCK.
 
 ## System boundary
 
-Browser Vue 3 / TypeScript / Pinia / Three.js → REST/WebSocket → Nginx → FastAPI modular monolith → local-only gRPC Hardware Service → HardwareStation. Application depends on the abstraction: VirtualHardwareStation (simulator) or PhysicalHardwareStation (driver/protected lab infrastructure). Hardware Service is isolated in its own process and owns FPGA transport/control.
+The selected browser workbench uses Vue 3, TypeScript, Pinia and Three.js.
+Nginx forwards same-origin REST and WebSocket traffic to FastAPI. The API
+calls Hardware Service over local-only gRPC. Both virtual and physical
+stations use the same `HardwareStation` boundary. Hardware Service runs
+in its own process and owns FPGA transport and control.
 
-Production host: Linux Mini PC Intel Xeon W-1370, 16 GB RAM, 256 GB SSD, Nginx, systemd, FastAPI, Hardware Service, PostgreSQL. SQLite is optional for development/tests. Store capture metadata in the database and large payloads in capture storage.
+The production target is a Linux Mini PC with Intel Xeon W-1370, 16 GB RAM and a 256 GB SSD. The selected deployment uses Nginx, systemd, FastAPI, Hardware Service and PostgreSQL. SQLite is optional for development/tests. Store capture metadata in the database and large payloads in capture storage.
 
 Configured capabilities reflect implemented support. Analog virtual execution requires a real SPICE-compatible adapter; otherwise virtual_analog=false. Physical digital requires validated driver/profile/protection; physical analog routing is outside V1.
 
@@ -53,7 +59,7 @@ Physical Run → scheduler/lease → SAFE_STATE → Topology Scan.
 
 DetectedTopologyGraph → Safety Verify → Topology Resolver with assignment/profiles → TopologyResolutionResult / ResolvedEndpointBindings → Topology Verify (diagnostic only) → ExecutionDecision → Lab Execution Compiler and infrastructure application. Compilation validates executability before permission is committed; it performs no hardware operations. ExecutionDecision consumes safety and executability; topology supports feedback.
 
-Resolver unions observed electrical connections and compares component-pin/net incidence independent of node labels. Supported identities or explicit instructor profiles use AUTO_DISCOVERY/INSTRUCTOR_PROFILE/HYBRID evidence; missing pins/opaque devices never acquire guessed identity or pin roles. Counter preserves repeated component quantities. Matching is bounded (32 components, 64 candidate mappings, 4096 search steps), with AMBIGUOUS on exhausted/multiple candidates. Unique component anchors can resolve execution endpoints in an incorrectly wired circuit; routing never restores reference nets. Fixed required endpoints remain usable despite unrelated component ambiguity.
+The resolver unions observed electrical connections and compares component-pin/net incidence independent of node labels. Supported identities or explicit instructor profiles use AUTO_DISCOVERY/INSTRUCTOR_PROFILE/HYBRID evidence; missing pins/opaque devices never acquire guessed identity or pin roles. Counter preserves repeated component quantities. Matching is bounded (32 components, 64 candidate mappings, 4096 search steps), with AMBIGUOUS on exhausted/multiple candidates. Unique component anchors can resolve execution endpoints in an incorrectly wired circuit; routing never restores reference nets. Fixed required endpoints remain usable despite unrelated component ambiguity. [Selected Python resolver](../../../services/api/app/services/topology_resolver.py) · [Rust candidate resolver](../../../native/src/compiler/topology.rs)
 
 Routable terminal aliases on the same proven observed net are selected jointly with complete resource matching, rather than greedily collapsing each net before allocation. Unscoped scan/reference ambiguity or zero-confidence continuity withholds reference inference; zero-confidence pins withhold the affected component match. Fixed observed terminals remain usable. Supplied positive confidence is propagated conservatively (minimum supplied evidence); absence never becomes fabricated confidence or a numerical electrical safety threshold.
 
@@ -74,7 +80,7 @@ Verification contracts carry structured safety faults/notes, missing/unexpected/
 | Safe wrong IC/wiring or topology mismatch | RUN_NORMAL / RUN_GUARDED |
 | Safe unknown identity with executable endpoints/protection | RUN_GUARDED |
 
-Software verification never substitutes for electrical protection. See PHYSICAL_LAB_SAFETY.md.
+Electrical protection requires its own evidence. See the [physical safety contract](physical-lab-safety-contract.md).
 
 ## Compiler and routing
 
@@ -94,7 +100,7 @@ Scheduler hardware capacity uses current validated `physical_execution_slots`: z
 
 ## Web identity and public boundaries
 
-Durable principal IDs own data independently of opaque server-side authentication sessions. Passwords use Argon2id; only cookie digests are stored. Login/logout/claim and privilege changes revoke old sessions. Every unsafe HTTP operation requires an exact configured Origin and session CSRF token, including login/logout. Production disables guest access and requires explicit HTTPS origins and PostgreSQL. Development guest access is explicit/configurable and has Student permissions. Role does not grant another user's private experiment or capture. Bootstrap has no default password. Alembic migrations preserve legacy data/leases/quarantine; guest ownership transfers only with proven session possession and explicit confirmation. Only explicit session bootstrap and auth mutations install credentials; ordinary stale reads cannot replace a newer login cookie. The Web retires old remote connections during rotation and reconciles unknown/failed outcomes through a bounded session read without replaying commands. See `en/architecture/auth-and-migrations.md` for setup and recovery.
+Durable principal IDs own data independently of opaque server-side authentication sessions. Passwords use Argon2id; only cookie digests are stored. Login/logout/claim and privilege changes revoke old sessions. Every unsafe HTTP operation requires an exact configured Origin and session CSRF token, including login/logout. Production disables guest access and requires explicit HTTPS origins and PostgreSQL. Development guest access is explicit/configurable and has Student permissions. Role does not grant another user's private experiment or capture. Bootstrap has no default password. Alembic migrations preserve legacy data/leases/quarantine; guest ownership transfers only with proven session possession and explicit confirmation. Only explicit session bootstrap and auth mutations install credentials; ordinary stale reads cannot replace a newer login cookie. The Web retires old remote connections during rotation and reconciles unknown/failed outcomes through a bounded session read without replaying commands. See [authentication and migrations](auth-and-migrations.md) for setup and recovery.
 
 Control lifetime is separate from read access. A volatile non-secret per-tab client ID travels in `X-Control-Client` and realtime negotiation; Run binds it to the current server session. A viewer tab cannot maintain or cancel another tab's control lifetime by connecting/disconnecting. Revocation, expiry and controller disconnect stop the affected execution, with safe release or quarantine unchanged. Workers recheck the session before hardware commands; browser activity cannot renew the fixed lease. Stop remains owner-authorized and bypasses generic mutation admission. These software bounds do not promise hard real-time browser Stop latency.
 
@@ -106,17 +112,23 @@ Students receive published assignment views without teacher reference designs, n
 
 ## Simulator, UI and results
 
-Supported CircuitGraph 1.0/1.1/1.2 → structural/domain validation → typed SimulationDispatcher → existing VirtualExecutionPlan → Python discrete-event engine with deterministic event ordering, net dependencies and propagation delays. Models include the existing logical digital set and bounded DC/physical-package subset. Explicit component-port domains and opt-in versioned `signal_domains` annotations never infer an unknown part as DIGITAL or turn MIXED into a wildcard. Future namespace versions remain storable but require an execution adapter. AnalogSimulationEngine / SPICEAdapter / MixedSignalCoordinator return typed unavailable results until real solvers exist; no virtual_analog capability is enabled. See `en/architecture/signal-domains-and-simulation.md`.
+In the selected release, supported CircuitGraph 1.0/1.1/1.2 → structural/domain validation → typed SimulationDispatcher → existing VirtualExecutionPlan → Python discrete-event engine with deterministic event ordering, net dependencies and propagation delays. Models include the existing logical digital set and bounded DC/physical-package subset. Explicit component-port domains and opt-in versioned `signal_domains` annotations never infer an unknown part as DIGITAL or turn MIXED into a wildcard. Future namespace versions remain storable but require an execution adapter. AnalogSimulationEngine / SPICEAdapter / MixedSignalCoordinator return typed unavailable results until real solvers exist; no virtual_analog capability is enabled. See [signal domains and simulation](signal-domains-and-simulation.md) for the selected provider and opt-in C++ worker.
 
 Unified results contain execution state/decision, independent safety/topology/function, digital samples, captures/timestamps, warnings/errors and raw observations. UI preserves the workbench and displays SAFETY, TOPOLOGY, FUNCTION separately. No fake waveform/acquisition. Large captures use versioned binary frames plus capture ID, instrument/channel, sample rate/count, timestamp and encoding; bounded diagnostic data may use JSON.
 
-Experiment SQL JSON and `experiment.updated` carry `CaptureMetadata` only; samples live behind `CaptureStore`. Runtime `FilesystemCaptureStore` uses immutable, atomic NCAP v1 payload files in `CIRNET_CAPTURE_DIR` (default `.runtime/captures`). Owner-scoped GET/DELETE `/api/captures/{capture_id}/payload` provides the data plane. NCAP v1 losslessly preserves event order, exact timestamps and `0`/`1`/`X`. Separate versioned NCAP v2 codecs/descriptors support INT16/UINT16/FLOAT32, ordered channels, exact clock-referenced rational time, calibration, clipping, generation, gaps/invalid ranges and termination. Shared synthetic fixtures prove decoding/presentation only; runtime still has no sampled producer or default v2 network source. Display min/max envelopes retain raw evidence and cannot grade timing. See `contracts/capture/README.md`.
+Experiment SQL JSON and `experiment.updated` carry `CaptureMetadata` only; samples live behind `CaptureStore`. Runtime `FilesystemCaptureStore` uses immutable, atomic NCAP v1 payload files in `CIRNET_CAPTURE_DIR` (default `.runtime/captures`). Owner-scoped GET/DELETE `/api/captures/{capture_id}/payload` provides the data plane. NCAP v1 losslessly preserves event order, exact timestamps and `0`/`1`/`X`. Separate versioned NCAP v2 codecs/descriptors support INT16/UINT16/FLOAT32, ordered channels, exact clock-referenced rational time, calibration, clipping, generation, gaps/invalid ranges and termination. Shared synthetic fixtures prove decoding/presentation only; runtime still has no sampled producer or default v2 network source. Display min/max envelopes retain raw evidence and cannot grade timing. See the [capture format](https://github.com/cirnetlab/cirnet-contracts/blob/524cc7a5e2e65f39077feefe70c7fb2ae3a773d6/contracts/capture/README.md).
 
 Migration 0005 indexes sealed captures independently of the current experiment generation; ownership is derived from the parent experiment. Reading/hashing/deleting bytes never holds the global control lock or a database transaction, and reads recheck authorization/availability before disclosure. Retirement atomically marks metadata unavailable and records an audit before filesystem cleanup; failed cleanup remains pending. Active/quarantined captures are not expired. Default directory limits are 256MiB/4,096 files for one API writer; explicit bounded maintenance applies a 30-day policy. Zero disables expiration but retries pending cleanup. Stop/release never deletes historical evidence. Functional verification loads raw payloads; Signal Monitor shares/cancels owner-scoped loads. Restart safe cleanup precedes legacy inline migration. See the [capture catalog](capture-catalog.md) and deployment maintenance templates.
 
 Hardware RPC ReadCapture also uses bounded NCAP in OperationReply.capture_payload, separate from metadata result_json. This keeps a 100k-event response below the default 4 MiB receive limit even for long signal names; the API rejects malformed binary or inconsistent descriptors instead of accepting truncated/no-response evidence.
 
-Inspector exposes permitted driver safety evidence, component quantities, pin/net differences, resolution/confidence and expected/observed signal or truth-table comparisons, subject to assignment disclosure policy. `X` differs from absent response; unexercised cases receive no invented timestamp/output. Uncertain physical locations are not highlighted or guessed. Scope stays `NO WAVEFORM DATA` until real analog acquisition exists.
+Inspector exposes driver safety evidence, component quantities, pin and net
+differences, resolution confidence, signal comparisons and truth-table cases
+as permitted by the assignment policy. `X` differs from absent response.
+Only exercised cases receive an observed timestamp or output. Uncertain
+physical locations stay unresolved. Scope shows `NO WAVEFORM DATA` when no
+capture is available. Its analog viewer can render supplied NCAP v2 evidence,
+while the selected runtime produces digital NCAP v1. [Workbench instruments](https://github.com/cirnetlab/cirnet-interface/blob/master/docs/en/guides/workbench.md)
 
 `assessment_policy` controls reporting/grading only. STRICT_TOPOLOGY grades topology while the independent function result remains visible; FUNCTIONAL_ONLY grades observed behavior and retains topology diagnostics; TOPOLOGY_AND_FUNCTION evaluates both. AssessmentService never feeds ExecutionPolicy or power permission.
 
@@ -132,7 +144,7 @@ Web validates and freezes requested capture/clock/generator/test-vector configur
 
 ## Persistent Web workbench
 
-Projects and circuit documents have owner-scoped CRUD, bounded keyset pages, immutable saved revisions and compare-and-swap writes. A server document ID is distinct from its embedded CircuitGraph ID; Save As does not retag the design. Storage preserves supported graph 1.0/1.1/1.2 metadata, memory, wires and mounting; browser numeric representability is a separate explicit boundary. Legacy routes reject a selected 1.2 document with `UNSUPPORTED_DOCUMENT_VERSION`; versioned operations reuse ownership, CAS and immutable revisions. Create pins the exact saved graph, published assignment revision and configuration. Session-row authorization fences linearize writes with revoke/guest claim. Assignment authors save drafts and publish stable revisions; student views redact reference answers. See `en/architecture/projects-and-revisions.md` and `en/architecture/assignments-and-publication.md`.
+Projects and circuit documents have owner-scoped CRUD, bounded keyset pages, immutable saved revisions and compare-and-swap writes. A server document ID is distinct from its embedded CircuitGraph ID; Save As does not retag the design. Storage preserves supported graph 1.0/1.1/1.2 metadata, memory, wires and mounting; browser numeric representability is a separate explicit boundary. Legacy routes reject a selected 1.2 document with `UNSUPPORTED_DOCUMENT_VERSION`; versioned operations reuse ownership, CAS and immutable revisions. Create pins the exact saved graph, published assignment revision and configuration. Session-row authorization fences linearize writes with revoke/guest claim. Assignment authors save drafts and publish stable revisions; student views redact reference answers. See [projects and revisions](projects-and-revisions.md) and [assignment publication](assignments-and-publication.md).
 
 Document/history/serialization and application controllers are framework/network independent. Composition ports remove the experiment/instrument store cycle. Scene picking, gesture sessions and resource ownership are separated without remounting the canvas; actual GLB previews use a shared, bounded, integrity-checked asset provider. Local recovery partitions every draft by durable principal. Stale save ACKs cannot clear later edits; export is independent of server Save.
 
@@ -142,60 +154,38 @@ Scope 2CH / Generator 2CH are target capacities; unavailable ADC/DAC support sta
 
 EP4CE6E22C8N prototype has no SDRAM. Compile-safe boundaries: reset/safe-state, protocol/control, topology scan, protected drive, routing, experiment clock, fault interlock. Mini PC uses FpgaTransport: serial/USB-SPI and future USB3/Ethernet; protocol is transport-independent.
 
-R7 implements an abstract control FSM and unavailable transport/instrument interfaces only. Logical FPGA envelope 1.0-scaffold is not a physical binary ABI; runtime physical capabilities remain unavailable. Compiler checks do not prove electrical safety, RTL behavioral simulation, target synthesis or timing closure.
+The selected FPGA artifact contains an abstract control state machine and scaffold interfaces. Physical transport, acquisition and execution remain unavailable. The logical `1.0-scaffold` envelope and `1.0-reserved` register map describe scaffold contracts. Target synthesis, timing closure and electrical safety require their own evidence. [FPGA conformance](fpga-contract-conformance.md)
 
 Future EP4CE10E22C8N + external SDRAM: Logic Analyzer, Scope 2CH + ADC/AFE, Generator 2CH + DAC/output stage, shared SDRAM arbiter, trigger, timestamps and explicit CDC. Pinout, switching/protection schematic, part selections, timing and electrical values: TBD_BY_HARDWARE_DESIGN. Never fabricate hardware success or measurements.
 
 ## Current multi-repo release boundary
 
-The current GitHub organization is [cirnetlab](https://github.com/cirnetlab).
-The six repositories are `cirnet-remote`, `cirnet-contracts`, `cirnet-interface`,
-`cirnet-simulator`, `cirnet-hardware` and `cirnet-fpga`. The
-[repository map](system.md#system-boundary) records
-their canonical URLs/owners. Organization ID 333715068 and the six repository
-IDs are preserved. Historical names/URLs remain provenance, including unchanged
-immutable release notes and source archives. Current installation paths use the
-canonical URLs rather than depending on those redirects.
+The [repository map](system.md#system-boundary) identifies source ownership.
+The [release lock](../../../integration/release-set.json) selects system and
+Interface `0.1.4` and API, Contracts, Simulator, Hardware and FPGA scaffold
+`0.1.2`. It records the exact artifacts and independently pinned DEV tools.
+CircuitGraph, Hardware RPC, NCAP and FPGA protocol have independent versions.
 
-The published system selection is **0.1.4** with Interface **0.1.4** and the
-selected API, Contracts, Simulator, Hardware and FPGA source artifacts at
-**0.1.2**. The [release lock](../../../integration/release-set.json) records exact
-committed sources, immutable asset locations and digests, compatibility and
-rollback. CircuitGraph 1.0/1.1/1.2, Hardware RPC 2.0, NCAP v1/v2, FPGA logical
-1.0-scaffold and register map 1.0-reserved retain their meaning. DEV tooling
-has independent pins. See the paired architecture overview in
-[English](system.md) and [Vietnamese](../../vi/architecture/system.md).
+Contracts owns schema, catalog, wire format and SDK generation. The selected
+Python API's FastAPI registrations provide the OpenAPI handoff. Integration
+uses installed producer artifacts and checks their actual wire behavior.
+Rust Remote, Rust Contracts, Rust Hardware and the C++ worker have separate
+candidate evidence. The [native migration status](native-migration-status.md)
+records accepted combinations and open deployment and release gates.
+[Contracts consumer guide](../api/contracts-consumer.md) · [Release and rollback](../operations/release-and-rollback.md)
 
-Contracts is the sole schema/catalog/protocol/SDK owner. FastAPI registrations remain operation authority and final-wheel OpenAPI equality is mandatory. Interface owns editor/assets/browser assertions; Simulator owns the existing engine/backend boundary; Hardware owns local-only RPC/stations/private transport; FPGA owns scaffold/RTL/toolchain. Remote owns auth/persistence, one scheduler process, orchestration, deployment and integrated acceptance. Supported gates use installed artifacts/resources, without sibling/frozen source dependencies or editable producers. Superseded monorepo implementations are available in Git history. The current tree keeps the Contracts forwarding shim, historical documents and approved artwork. Compatibility checks read fixture data from the installed Contracts wheel.
-
-Keep same-origin Web/API/WebSocket and unavailable native/physical capabilities. Rollback requires matching database/capture backups, no command replay and retained quarantine. Fresh publication/CI/acceptance dispositions belong to the [M6 record](../history/verification/2026-10-27-multi-repo-migration-m6.md).
+<a id="historical-extraction-stage-ownership"></a>
 
 ## Migration execution history
 
-M0–M5 versions and dispositions below describe their recorded stages; the current release boundary supersedes temporary package/workflow setup. Contracts 1.0.1, Simulator 0.2.0 and FPGA scaffold 0.1.0 below are historical extraction identities; the system manifest records the current selection. These old stage numbers are not current installation pins.
+See the [Lab-First ledger](../history/lab-first-migration-ledger.md), the
+[M6 release record](../history/verification/2026-10-27-multi-repo-migration-m6.md)
+and the [original extraction-stage record](https://github.com/cirnetlab/cirnet-remote/blob/13a35145b6d15644c7be10d95a5410bf69e11867/docs/ARCHITECTURE.md#historical-extraction-stage-ownership)
+for decisions, stage-specific package versions and results.
 
 ## Execution discipline
 
-Current verification and artifact storage rules are in [VERIFICATION.md](../history/verification-ledger.md), with the short Codex policy in root [AGENTS.md](../../../AGENTS.md). Temporary screenshots, video, traces, image-bearing HTML reports and raw diagnostic artifacts must be created outside every repository/worktree and Git directory. Retained repository evidence is Markdown; dated reports preserve their original results and do not authorize rerunning historical checklists. Product assets and approved regression fixtures keep their own roles.
-
-### Historical extraction-stage ownership
-
-These entries describe the original migration stages. The [pre-cleanup tree](https://github.com/cirnetlab/cirnet-remote/tree/989954f95c1c6b1d224e31a53fb33f125f0a81a9) contains the retired reference directories.
-
-M1 transfers canonical Contracts/Device Library ownership and generation to the independent cirnet-contracts repository. Remote consumes the pinned netcircuit-contracts 1.0.1 wheel; retained root contracts/device-library files are frozen references, with a strict installed-distribution adapter and no old-source fallback. The installed manifest/registry owns identities and offline schema resolution. JSON Schema 2020-12 produces Python boundary models, browser DTOs and standalone validators in Contracts; FastAPI registrations remain the public-operation authority through a reviewed OpenAPI export/final-artifact equality gate. Root `scripts/generate_contracts.py --check` and catalog wrappers compare installed projections without regenerating retained source. Structural/editor/transport profiles preserve legacy storage and explicit browser/RPC numeric limits. Pure contract errors have no HTTP dependency; property alias normalization remains a named document/API adaptation. Browser exports exclude private execution plans/routing resources. See `contracts/README.md`, the [M1 ledger](https://github.com/cirnetlab/cirnet-remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/superpowers/plans/2026-10-24-multi-repo-migration-m1.md) and [the archived contract decisions](https://github.com/cirnetlab/cirnet-remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/verification/2026-10-16-contract-decisions.md) for scope, compatibility and package rules.
-
-M2 assigns the complete Vue/TypeScript workbench, Component Library, Editor, application adapters, assets and browser assertions to cirnet-interface. Its DTOs, validators, catalogs and fixtures consume the exact public Contracts npm 1.0.1 artifact; test-only resource gaps use an allowlisted, digest-verified 1.0.1 sdist. Interface has no sibling-source imports or canonical generation. Remote retains `apps/web` as a frozen rollback/reference tree and owns API/RPC startup, restart and shutdown for integration. Current Web release gates require an explicit Interface product; CI downloads a reviewed version/digest source artifact, and production serves the corresponding static bundle at the same Web/API/WebSocket origin. Desktop/Mobile packaging remains proposed. See the [M2 ledger](https://github.com/cirnetlab/cirnet-remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/superpowers/plans/2026-10-24-multi-repo-migration-m2.md) for execution and verification. Local artifacts and preserved history bundles do not imply hosted publication, deployment or a completed ancestry merge.
-
-M3 assigns the existing discrete-event engine, dispatcher, nets and bounded DC models to cirnet-simulator. Remote API preview and Hardware virtual execution consume the same pinned `netcircuit-simulator==0.2.0` wheel with Contracts `1.0.1`; the `netcircuit_sim` public imports and model behavior remain unchanged. Retained `simulator/circuit-simulator` is a frozen rollback/reference tree, excluded from current Remote test discovery so legacy path injection cannot shadow installed code. Simulator unit tests and build belong to its standalone repository; worker ownership, RPC, lifecycle and integrated acceptance remain with Hardware/Remote. Analog/SPICE/mixed execution stays unavailable. See the [M3 ledger](https://github.com/cirnetlab/cirnet-remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/superpowers/plans/2026-10-27-multi-repo-migration-m3.md) for current gates; local build/history preservation does not establish publication or connected target ancestry.
-
-M3B adds `netcircuit_sim.backends` around the eight unchanged legacy modules. API settings and virtual stations snapshot `NETCIRCUIT_SIMULATION_BACKEND` at construction (default `legacy`); compiled plans carry backend ID, adapter version, plan format and provider payload across spawned workers. Execution resolves that identity rather than reselecting from environment. The reserved `ngspice` backend reports unavailable with zero execution/instrument capabilities; it does not load a native core or silently fall back. Trusted code can compose explicit registries for other cores, including matching composition in each worker; current service composition supports the two built-ins only. Future native integration requires netlist/model mapping, native build identity, typed analog results and lifecycle validation. See the [backend design](https://github.com/cirnetlab/cirnet-remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/superpowers/specs/2026-10-27-simulator-backends-design.md). Existing document, public API, digital capture and physical safety boundaries remain authoritative.
-
-M4 assigns the existing Hardware RPC service, station abstraction, virtual/physical adapters and private FPGA transport to cirnet-hardware. Remote consumes `netcircuit-hardware-service==0.1.1` for integration, with Contracts `1.0.1` and Simulator `0.2.0`; API runtime communicates over local-only RPC and has no Hardware implementation dependency. Retained `services/hardware-service` is a frozen reference excluded from current unit-test discovery. Hardware owns standalone build, service tests, Stop/control/worker lifecycle and current safety checks; Remote retains orchestration, leases/quarantine, deployment and integrated acceptance. Eight non-version runtime modules remain byte-identical; the package version alone changes in `__init__`. No new physical driver, transport capability, native core or analog producer is implied. See the [M4 plan](https://github.com/cirnetlab/cirnet-remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/superpowers/plans/2026-10-27-multi-repo-migration-m4.md); local artifacts/history preservation do not establish publication, connected ancestry or electrical/target deployment evidence.
-
-M5 assigns the existing FPGA scaffold, testbenches and pure RTL/toolchain verification to cirnet-fpga. Its source/scaffold artifact is version 0.1.0, consuming installed Contracts 1.0.1; it is neither a Python runtime dependency nor a board image. Remote consumes the explicitly selected archive/version/digest for compatibility acceptance, while retained `fpga/` and original `tests/fpga/` remain frozen references. The two DUT RTL modules retain their source bytes; target testbench startup holds reset through an active clock edge before release, correcting a verified baseline simulation-initialization failure without changing DUT behavior or assertions. Logical control remains 1.0-scaffold; the unavailable target example's 2.0-scaffold label is incompatible with that envelope and is not normalized or promoted to physical support. Register map remains 1.0-reserved, physical protocol/firmware UNAVAILABLE. See the [M5 plan](https://github.com/cirnetlab/cirnet-remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/superpowers/plans/2026-10-27-multi-repo-migration-m5.md). Parser/behavioral RTL evidence does not establish board pinout, synthesis/timing/CDC, electrical protection, ADC/DAC/SDRAM or real acquisition.
-
-R0–R7 run sequentially, TDD and acceptance gates, one main commit per phase. MIGRATION_LAB_FIRST.md records evidence/rulings/blockers. Preserve frontend/history; no unrelated rewrites, broker/cloud dependencies or bundle optimization. Unsupported features report UNAVAILABLE / NOT_IMPLEMENTED / capability=false.
-
-Post-R7 H0–H6 hardening completes contracts/resolution, capture storage, capacity/workers, instruments, feedback and documentation. Preserve existing phase commits and subsequent user changes. The original refactor handoff retained its branch for review; later integration follows the current explicit user authorization and acceptance gates.
-
-Web/Contracts W0–W8 execution evidence is in [the archived W0–W8 record](https://github.com/cirnetlab/cirnet-remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/verification/2026-10-16-web-contracts.md); historical proposals do not supersede this authority. Independent Contracts CI and consumer gates cover offline references, numeric/semantic parity, deterministic artifacts, retained public wire/NCAP anchors, actual installed wheels, real browser flows and database migrations. `scripts/check_release.py --show-plan` exposes the reproducible commands; the optional local workload reports observed HTTP/virtual concurrency separately. Hosted CI, target deployment and hardware success require their own evidence. Runtime JSON correlation logs contain allowlisted request/experiment/operation/capture metadata, and critical recovery/destructive changes retain database audit records.
+Follow [AGENTS.md](../../../AGENTS.md) and the [verification guide](../contributing/verification.md).
+Create temporary screenshots, video, traces and raw diagnostics outside all
+repositories and worktrees. The [history index](../history/index.md) links
+the dated verification records and their scope.

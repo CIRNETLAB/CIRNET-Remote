@@ -1,8 +1,13 @@
-# Lab-First Roadmap
+# Lab-First milestones
 
-Authority: ARCHITECTURE.md. Evidence/commits: MIGRATION_LAB_FIRST.md.
+This record summarizes the R/H/W milestones of the integrated repository.
+Use the [system architecture](../architecture/system.md) for current behavior
+and the [migration ledger](lab-first-migration-ledger.md) for dated evidence.
+[Original roadmap](https://github.com/cirnetlab/cirnet-remote/blob/ae51abaa8ebdfce5981f91c0c95eca1d522900ee/docs/en/history/lab-first-roadmap.md)
 
-Completed frontend history: Single Workspace, catalog, editing/wiring/history, memory editor, scene projection, camera/zoom, placement ghost/gizmo, overlay drawers and instrument presentation. Preserve implementations and historical source analyses/verification.
+The frontend milestones included the Single Workspace, catalog, editing,
+wiring, history, memory editor, scene projection, camera navigation, placement
+preview and controls, overlay drawers and instrument presentation.
 
 | Phase | Deliverable |
 |---|---|
@@ -20,16 +25,12 @@ Completed frontend history: Single Workspace, catalog, editing/wiring/history, m
 | H3 | Completed: capability slot admission, configurable simulation workers and spawn cleanup |
 | H4 | Completed: sole instrument capability authority and synchronized runtime control |
 | H5 | Completed: structured independent learning feedback, measured observations and assessment |
-| H6 | Architecture/provenance/final verification and user review; no automatic merge |
+| H6 | Architecture, provenance and verification record |
 | Web/Contracts W0–W7 | Implemented and verified: canonical boundaries, auth, owned persistence, Web separation, recovery/publication, instruments/domains/captures |
-| Web/Contracts W8 | Local software gates verified: full Python/Web/native browser/PostgreSQL/wheels/workload; individual acceptance, source inventory and handoff recorded. Git delivery blocked by metadata permissions; hosted CI/target deployment remain separate. |
-| Web/Contracts WC20 | Current hardening: credential lookup/retention, bounded input/realtime/control/persistence, operation error validation/diagnostics/lazy validators, authored document persistence, per-draft bindings and read-only operation recovery. Current gate dispositions are in [the 2026-10-20 closure report](https://github.com/CIRNETLAB/CIRNET-Remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/verification/2026-10-20-web-contracts-closure.md); historical W8 results are not reused as current evidence. |
-| Subsequent editor work | IMPLEMENTED: Graph 1.2 flexible placement and pinned descriptors, automatic V2 geometry/sealed packages, versioned document/assignment boundaries, Component/Run ribbon and shared camera navigation. Source: `contracts/circuit-schema/circuit-v1.2.schema.json`, `contracts/design-models/flexible-placement.md`, `services/api/app/api/placement.py`, `apps/web/src/components/workbench/WorkbenchRibbon.vue`, `apps/web/src/three/ViewportNavigation.ts`. |
+| Web/Contracts W8 | Historical local Python, Web, browser, PostgreSQL, package and workload verification. |
+| Web/Contracts WC20 | Credential, input, realtime, control, document persistence and operation-recovery hardening. [2026-10-20 closure report](https://github.com/cirnetlab/cirnet-remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/verification/2026-10-20-web-contracts-closure.md) |
+| Subsequent editor work | Graph 1.2 flexible placement, pinned descriptors, automatic V2 geometry, sealed packages, versioned document and assignment boundaries, ribbon and camera navigation. [Current placement reference](../architecture/component-placement.md) |
 
-R0–R7, H0–H6 and W0–W8 are historical phase labels; their reported PASS/counts belong to the dated evidence, not a fresh run against this checkout. IMPLEMENTED describes present source; VERIFIED requires a recorded current command/environment/result under [VERIFICATION.md](verification-ledger.md). Hardware targets below remain PROPOSED/NOT_IMPLEMENTED until independent implementation and measurements exist.
-
-Milestone W1 requires virtual execution/results, lifecycle/ownership/queue and truthful frontend capabilities before actual FPGA integration. R7 validates scaffold only.
-
-Post-R7 hardening preserves the existing editor and discrete-event engine. Required unresolved endpoints affect executability; topology/function/assessment do not become safety gates. Reference physical node != student physical node. Capture payload storage and actual capability capacity precede scaling; no analog acquisition or electrical rating is inferred from these software tests.
-
-After user review (no automatic merge): Linux Mini PC/PostgreSQL deployment; selected EP4CE6 transport/switching/protection schematic, measured topology scan/infrastructure routing; EP4CE10 SDRAM/ADC/DAC/AFE selection/timing/CDC; measured Logic Analyzer/Scope 2CH/Generator 2CH. Physical analog routing is future work. A bounded local50-session software workload has executed; target capacity, sustained load and real physical slots/recovery still require target evidence. No fixed breadboard count.
+The reported test counts apply to their dated inputs and environments.
+R7 verified the RTL scaffold. Hardware targets and physical capabilities are
+tracked separately in the [FPGA conformance reference](../architecture/fpga-contract-conformance.md).

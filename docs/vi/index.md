@@ -1,6 +1,6 @@
 # Tài liệu CIRNET Remote
 
-[English](../en/index.md) · [Repo](../../README.md) · [Chỉ dẫn repo](../../AGENTS.md)
+[English](../en/index.md) · [Repo](../../README.md) · [Chỉ dẫn repo](../../AGENTS.md) · [Nhật ký phát hành](../changelogs/README.md)
 
 Các trang tiếng Anh là hướng dẫn hiện hành mặc định của repo. Mục lục tiếng Việt có cùng cấu trúc.
 
@@ -15,11 +15,17 @@ Các trang tiếng Anh là hướng dẫn hiện hành mặc định của repo.
 - [API ứng dụng và phát triển](api/application.md)
 - [Consumer Contracts đã cài](api/contracts-consumer.md)
 - [Đặc tả mạch và phòng lab vật lý](api/circuit-and-physical-lab.md)
+- [Tham chiếu hợp đồng mạch và thực thi](api/circuit-spec-reference.md)
+
 ## Kiến trúc và trạng thái
 
 - [Kiến trúc hệ thống](architecture/system.md)
+- [Thiết kế và bất biến Lab-First](architecture/lab-first-v3-1.md)
 - [Bối cảnh làm việc](architecture/context.md)
+- [Ranh giới triển khai](architecture/context-invariants.md)
+- [Đặt linh kiện](architecture/component-placement.md)
 - [An toàn phòng lab vật lý](architecture/physical-lab-safety.md)
+- [Yêu cầu an toàn phòng lab vật lý](architecture/physical-lab-safety-contract.md)
 - [Bài thực hành và công bố](architecture/assignments-and-publication.md)
 - [Xác thực và migration](architecture/auth-and-migrations.md)
 - [Danh mục capture](architecture/capture-catalog.md)
@@ -37,16 +43,18 @@ Các trang tiếng Anh là hướng dẫn hiện hành mặc định của repo.
 - [Xác minh và artifact ngoài repo](contributing/verification.md)
 - [Build, kiểm thử và fixture Remote Rust](contributing/rust-verification.md)
 - [Quy ước viết tài liệu](contributing/writing-documentation.md)
+
 ## Vận hành
 
 - [Phát hành và khôi phục hệ thống](operations/release-and-rollback.md)
+- [Tương thích tên và định danh](operations/namespace-compatibility.md)
 - [Quyền tải artifact của CI](operations/ci-artifact-access.md)
 - [Triển khai sản xuất](operations/deployment.md)
 - [Rà soát triển khai Mini PC Linux](operations/mini-pc.md)
 
 ## Lịch sử
 
-- [Lịch sử phát hành, kế hoạch và bằng chứng](history/index.md)
+- [Hồ sơ lịch sử và bằng chứng xác minh](history/index.md)
 
 Remote sở hữu tích hợp hệ thống, API, lưu trữ, lập lịch và triển khai. Các
 repo sản phẩm sở hữu SDK và schema, bàn làm việc trên trình duyệt, bộ mô

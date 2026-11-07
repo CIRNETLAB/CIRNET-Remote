@@ -1,5 +1,9 @@
 # M6 verification and release ledger
 
+This record preserves dated results and decisions from the repository split.
+Within each checkpoint, status terms apply to the recorded revision and run.
+[Original ledger](https://github.com/cirnetlab/cirnet-remote/blob/ae51abaa8ebdfce5981f91c0c95eca1d522900ee/docs/en/history/verification/2026-10-27-multi-repo-migration-m6.md) · [Versioned changelogs](../../../changelogs/README.md)
+
 ## Removal of superseded producer source on November 4, 2026
 
 The cleanup starts from Remote `989954f`. It removes the frozen Web,
@@ -164,13 +168,11 @@ separately; Interface source/static must come from a fresh committed 0.1.2 build
 Previously inspected local 57/0/1 and cancelled old-artifact hosted evidence
 remain historical results, separate from the new selection.
 
-- [x] Obtain explicit approval for Interface/system 0.1.2 only.
-- [x] Verify six clean synchronized masters and preserve fresh all-ref bundles;
-  actual mirror restoration and strict fsck pass for all six.
-- [ ] Build and verify the new exact artifact selection and clean installation.
-- [ ] Pass the actual selected-artifact hosted browser gate and publish the
-  approved releases without replacing immutable v0.1.1 assets.
-- [ ] Complete final master CI, current documentation and owned-session handoff.
+At this checkpoint, approval covered Interface and system 0.1.2. All six
+synchronized masters were clean and their all-ref bundles passed mirror
+restoration and strict fsck. The exact selection build and clean install,
+hosted browser gate, publication, final master CI and session handoff were
+still pending.
 
 ### Current renamed-directory execution
 
@@ -403,15 +405,18 @@ source and selects published Contracts/Simulator/Hardware; it does not establish
 an all-candidate install or a browser/production result. Receipt
 `c38507bca5409379eb5ab6f1567f2b9e9230d37341f2cb5db9591365e622c765`.
 
-- [x] Commit/push the six reviewed source baselines; verify their five producer workflows and nine observed Remote non-browser workflows. Later docs-only master CI is tracked separately.
-- [x] Revalidate the original published selection through canonical URLs and complete the separate clean-install/registered-package probes.
-- [x] Preserve all published 0.1.1 bytes/tags and exact old-note history while updating only six release titles/notes.
-- [x] Build/retain/rehash 13 unpublished candidates from six committed sources, with explicit compatibility differences and original rollback retained.
-- [x] Complete/inspect the actual original full local native gate for the explicit compatible new API/Interface set: 57 PASS, zero FAIL and the sole historical optional NOT_RUN.
-- [x] Collect/inspect the resolved original published-set hosted result: run40748387829 CANCELLED / NOT_PASS, without inventing a final PASS total.
-- [ ] Resolve blocked hosted/release acceptance for the intended artifact selection; the separate local candidate PASS does not close that gate or authorize new immutable bytes.
-- [ ] Resolve any required new artifact/tag/version decision with the user using the concrete comparison; no immutable overwrite, retag or automatic 0.1.2 selection.
-- [ ] Finish the applicable current documentation/CI/recoverable-bundle and inspected owned-session handoff. M6 remains incomplete until its actual remaining gates are satisfied.
+The six reviewed source baselines were pushed. Five producer workflows and
+nine observed Remote non-browser workflows passed. The original published
+selection passed revalidation and separate installation and package probes.
+Six release titles and notes changed while the published 0.1.1 bytes and
+tags were preserved. The 13 unpublished candidates were built from six
+committed sources, retained and rehashed with the original rollback set.
+
+The compatible API and Interface candidate set recorded 57 local native PASS,
+zero FAIL and one optional NOT_RUN. Hosted run 40748387829 for the original
+published set ended CANCELLED / NOT_PASS. Hosted acceptance, selection of any
+new artifact version and the final documentation, CI and session handoff
+were still open at this checkpoint.
 
 
 **M6 remains incomplete.** Published immutable 0.1.1 releases and the completed
@@ -798,12 +803,14 @@ The original current-session owner `m6-promotion-20261028-f79860e8` and six-root
 context remain in force across the local date change. Cleanup of that whole
 current session is still pending inspection/process exit/durable retention.
 
-- [x] Six canonical names/origins, unchanged immutable identities, 60 CI URL variable readbacks and preserved selected artifact pins.
-- [x] Actual six-bundle restores and exact 11 remote / 16 local merged-branch cleanup with all 27 tips reachable; no native acceptance inferred.
-- [x] All six reviewed source baselines pushed/synchronized, five source producer workflows and nine observed Remote non-browser workflows PASS; committed comparisons/all 13 candidates retained. Interface docs-only descendant also has exact-head CI PASS.
-- [x] Complete and inspect the original compatible local native gate: 57 PASS / zero FAIL / one original historical optional NOT_RUN. Hosted old-set acceptance and any release-selection decision remain separate.
-- [ ] Resolve artifact selection truthfully: retain/revalidate the original immutable 0.1.1 sources/bytes, or obtain a concrete user release decision before any required replacement/tag movement; no automatic version bump.
-- [ ] Complete remaining native CI, retain the final current documentation/recoverable bundle and close inspected owned-session cleanup; normal current master pushes are complete.
+The checkpoint confirmed six canonical names and origins, immutable
+identities, 60 CI URL variable readbacks and preserved artifact pins. Six
+bundles were restored, and all 27 tips stayed reachable after cleanup of
+11 remote and 16 local merged branches. Five producer workflows, nine Remote
+non-browser workflows and the Interface docs-only exact-head CI passed.
+All 13 candidates and comparisons were retained. The compatible local
+native gate recorded 57 PASS, zero FAIL and one optional NOT_RUN. Hosted
+acceptance, artifact selection and the final handoff were still open.
 
 The earlier full95/final-docs-only helpers bind their recorded 23ca/65 source
 scope and cannot be reused as acceptance of these broader rename-source changes.

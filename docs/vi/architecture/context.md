@@ -1,6 +1,6 @@
 # Bối cảnh làm việc của CIRNET Remote
 
-[English](../../en/architecture/context.md) · [Tài liệu bối cảnh chuẩn và các mốc kiểm tra](../../en/architecture/context-invariants.md) · [Kiến trúc hệ thống](system.md)
+[English](../../en/architecture/context.md) · [Bất biến triển khai](context-invariants.md) · [Kiến trúc hệ thống](system.md)
 
 ## Các nguyên tắc cần giữ khi thay đổi
 

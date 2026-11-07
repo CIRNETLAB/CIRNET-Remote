@@ -1,9 +1,11 @@
 # CIRNET source names and legacy compatibility
 
-Active source uses the `cirnetlab/cirnet-*` repository namespace. The following
-names describe new source builds.
+[Tiếng Việt](../../vi/operations/namespace-compatibility.md) · [Deployment](deployment.md)
 
-| Product | Source distribution or artifact | Runtime import |
+Active source uses the `cirnetlab/cirnet-*` repository namespace. The table
+lists the selected release's product names.
+
+| Product | Distribution or artifact | Runtime identity |
 | --- | --- | --- |
 | Remote API | `cirnet-api` | `app` |
 | Contracts | `cirnet-contracts` | `contracts` |
@@ -13,8 +15,8 @@ names describe new source builds.
 | FPGA | `cirnet-fpga-scaffold` | canonical `cirnet_*` RTL modules |
 | Independent DEV allocator | `cirnet-artifact-paths` | `cirnet_artifact_paths` |
 
-System 0.1.4 selects the canonical \`@cirnet/contracts\` SDK and
-\`@cirnet/artifact-paths\` allocator through the [release lock](../../../integration/release-set.json).
+System 0.1.4 selects the canonical `@cirnet/contracts` SDK and
+`@cirnet/artifact-paths` allocator through the [release lock](../../../integration/release-set.json).
 Interface imports the packages directly by their published identities.
 Simulator and DEV retain application import aliases, and FPGA retains thin
 old-module wrappers for RTL fixtures. The Windows launcher uses a separate
@@ -26,9 +28,9 @@ virtual environment for system 0.1.4 and reuses developer database and capture p
 including explicitly empty values. Bootstrap/launcher adapters synchronize both
 spellings for subprocesses running pinned older tools. Current CI variables and
 secrets use canonical names with fallback to their provisioned legacy names.
-No new credential provisioning or hosted CI result is implied by those fallbacks.
+See the [CI artifact access guide](ci-artifact-access.md) for provisioning.
 
-Current source emits `cirnet_session` and `netcircuit_session` with the same
+The selected API emits `cirnet_session` and `netcircuit_session` with the same
 opaque credential, and reads the legacy cookie when the canonical credential
 is absent. The historical immutable API 0.1.1 emits only `netcircuit_session`.
 Browser acceptance recognizes these exact aliases and checks every present
@@ -36,15 +38,21 @@ cookie's privacy and security attributes. The canonical CSRF header is
 `X-CIRNET-CSRF`; the previous generic `X-CSRF-Token` remains accepted. Current
 Interface requests send both. Capture requests prefer
 `application/vnd.cirnet.capture; version=1` and recognize the exact legacy media
-namespace with the same version/bounds checks. New source health identifies
-`cirnet-api`; consumers and the published runtime retain their valid old identity.
-Schema/resource URI aliases preserve offline resolution of historical documents.
+namespace with the same version and bounds checks. The selected API identifies
+as `cirnet-api` at `GET /api/health`. Consumers still recognize the historical
+`netcircuit-api` identity. Schema and resource URI aliases preserve offline
+resolution of historical documents. [Python compatibility adapter](../../../services/api/app/compatibility.py) · [Application API](../api/application.md)
 
-The development SQLite default selects `cirnet.db`, falling back to an existing
+The selected Python API defaults to `cirnet.db`, falling back to an existing
 `netcircuit.db` when the canonical file is absent. Explicit database and capture
-settings continue to identify the chosen existing storage. Browser recovery
-reads old formats, migrates drafts transactionally into the canonical IndexedDB
-name without deleting the old database, and exports canonical recovery records.
+settings continue to identify the chosen existing storage. The Rust candidate
+defaults directly to `sqlite:///./cirnet.db`. Use an explicit
+`CIRNET_DATABASE_URL` when verifying against a copy of an existing database.
+[Rust candidate settings](../../../native/src/config.rs)
+
+Browser recovery reads old formats and migrates drafts into the canonical
+IndexedDB name in one transaction. It retains the old database and exports
+canonical recovery records.
 Pending observations retain shared old-tab synchronization; no migration replays
 an execution command. These adapters preserve data and operation identities.
 
@@ -70,7 +78,7 @@ Ensure only one API scheduler and one Hardware Service are started. Existing
 independent old unit files must not remain enabled alongside the replacements.
 Reload and validate the host service-manager/proxy configuration before startup;
 actual target installation, TLS and physical checks remain separate acceptance.
-See the [production guide](deployment.md).
+[Production guide](deployment.md)
 
 ## Published artifacts and preserved evidence
 
@@ -79,7 +87,6 @@ artifact digests and lowercase repository identities. `scripts/install_release.p
 accepts this release family and its verified local build counterpart. The
 previous releases remain available under their original tags for historical reference.
 
-Historical migration/extraction sections, dated CI/readback reports, protected
-archive filenames and markers, original proposal URLs, artwork, baselines and
-LICENSE keep their recorded names and bytes. Environment and service aliases in
-this guide apply to existing deployments and user data.
+The [history index](../history/index.md) links original names and recorded
+release evidence. Environment and service aliases in this guide apply to
+existing deployments and user data.

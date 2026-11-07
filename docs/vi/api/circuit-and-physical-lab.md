@@ -1,6 +1,6 @@
 # Đặc tả mạch và phòng thí nghiệm vật lý
 
-[English](../../en/api/circuit-and-physical-lab.md) · [Điểm vào đặc tả mạch](../../en/api/circuit-spec-reference.md) · [Kiến trúc chuẩn Lab-First v3.1](../../en/architecture/lab-first-v3-1.md) · [API ứng dụng](application.md)
+[English](../../en/api/circuit-and-physical-lab.md) · [Tham chiếu đặc tả mạch](circuit-spec-reference.md) · [Kiến trúc Lab-First v3.1](../architecture/lab-first-v3-1.md) · [API ứng dụng](application.md)
 
 ## CircuitGraph và cách đặt linh kiện
 
@@ -12,7 +12,7 @@
 | 1.1 | Tư thế gắn linh kiện cứng theo hệ tọa độ bo, linh kiện/vỏ có phiên bản và liên kết chân–tiếp điểm đã kiểm tra. Tài liệu trước đó giữ nguyên ý nghĩa. |
 | 1.2 | `FlexibleMountV1` bổ sung một tư thế 3D làm nguồn chuẩn cho thân linh kiện theo hệ tọa độ bo, profile cơ khí có phiên bản, hai liên kết chân–tiếp điểm ổn định và các điểm điều khiển chân dẫn có giới hạn. Linh kiện đã gắn lưu một tư thế duy nhất và chỉ lưu dữ liệu thiết kế. |
 
-Thao tác đặt tự động mới dùng `FlexibleMountV2` với `version: 2`, `geometryRevision: 2` và mẫu định tuyến tường minh. Tư thế V1 và điểm điều khiển uốn thủ công đã lưu tiếp tục chi phối những linh kiện tương ứng. Linh kiện vật lý đặt tự do có thể khóa `physicalDescriptor`. Bộ đọc phân giải đúng phiên bản linh kiện và vỏ cũ. Đọc hoặc lưu thông thường giữ nguyên hình học. Thao tác dựng lại hoặc chuyển đổi tường minh có thể chọn biểu diễn khác đã qua kiểm tra. Đây là hành vi đặt và lưu linh kiện đã triển khai. [Hướng dẫn đặt linh kiện](../../en/architecture/component-placement.md) · [Đặc tả gắn linh hoạt đã chọn](https://github.com/cirnetlab/cirnet-contracts/blob/524cc7a5e2e65f39077feefe70c7fb2ae3a773d6/contracts/design-models/flexible-placement.md)
+Thao tác đặt tự động mới dùng `FlexibleMountV2` với `version: 2`, `geometryRevision: 2` và mẫu định tuyến tường minh. Tư thế V1 và điểm điều khiển uốn thủ công đã lưu tiếp tục chi phối những linh kiện tương ứng. Linh kiện vật lý đặt tự do có thể khóa `physicalDescriptor`. Bộ đọc phân giải đúng phiên bản linh kiện và vỏ cũ. Đọc hoặc lưu thông thường giữ nguyên hình học. Thao tác dựng lại hoặc chuyển đổi tường minh có thể chọn biểu diễn khác đã qua kiểm tra. Đây là hành vi đặt và lưu linh kiện đã triển khai. [Hướng dẫn đặt linh kiện](../architecture/component-placement.md) · [Đặc tả gắn linh hoạt đã chọn](https://github.com/cirnetlab/cirnet-contracts/blob/524cc7a5e2e65f39077feefe70c7fb2ae3a773d6/contracts/design-models/flexible-placement.md)
 
 Cổng nguồn/đích có tên và liên kết tiếp điểm đã khai báo xác định kết nối điện. Giữ các kiểm tra chuẩn về hướng, độ rộng, trùng lặp và ngõ kích bổ sung khi tạo mạch. Schema bộ nhớ giữ phiên bản `1.0` riêng. Điều khiển nguồn và thiết bị đo trên giao diện cần nguồn điện hoặc đường đo được khai báo riêng. [Biên bản kiểm chứng nguồn điện theo thời điểm](../history/power-supply-controls.md)
 

@@ -1,11 +1,11 @@
 # Kiến trúc hệ thống CIRNET Remote
 
-[English](../../en/architecture/system.md) · [Tài liệu kiến trúc chuẩn Lab-First v3.1](../../en/architecture/lab-first-v3-1.md)
+[English](../../en/architecture/system.md) · [Đặc tả Lab-First v3.1](lab-first-v3-1.md)
 
 ## Thẩm quyền và phạm vi
 
-Dùng [đặc tả Lab-First v3.1](../../en/architecture/lab-first-v3-1.md) cho các quy tắc hệ thống
-và an toàn đã duyệt, cùng [hợp đồng an toàn vật lý](../../en/architecture/physical-lab-safety-contract.md)
+Dùng [đặc tả Lab-First v3.1](lab-first-v3-1.md) cho các quy tắc hệ thống
+và an toàn đã duyệt, cùng [hợp đồng an toàn vật lý](physical-lab-safety-contract.md)
 cho yêu cầu điện. Trang này giải thích các ranh giới đó và mô tả topology
 của bản đang được chọn. [Bối cảnh làm việc](context.md) nêu các bất biến
 cần kiểm tra khi thay đổi triển khai.
@@ -31,9 +31,15 @@ Trình duyệt dùng Vue 3, TypeScript, Pinia và Three.js trong một không gi
 
 [Khóa bản phát hành](../../../integration/release-set.json) chọn hệ thống và Interface `0.1.4`, cùng API, Contracts, Simulator, Hardware và khung FPGA `0.1.2`. Tệp này khóa chính xác gói phát hành, RPC `2.0`, giao thức logic FPGA `1.0-scaffold` và sơ đồ thanh ghi `1.0-reserved`. Khung FPGA được phân phối dưới dạng mã nguồn. [API ứng dụng](../api/application.md) · [Đối chiếu hợp đồng FPGA](fpga-contract-conformance.md)
 
+Mã nguồn hiện tại cũng có API và bộ điều phối Remote bằng Rust, Contracts và
+Hardware bằng Rust, cùng tiến trình mô phỏng C++. Các tổ hợp đã xác minh trên
+Windows có định danh artifact và phạm vi nghiệm thu riêng. Việc cài đặt và
+khôi phục bản đang chọn tiếp tục dùng khóa phát hành ở trên.
+[Remote Rust](../../../native/README.md) · [Trạng thái chuyển đổi native](native-migration-status.md)
+
 ## Thiết kế và cấu trúc mạch quan sát được
 
-`CircuitGraph` 1.0, 1.1 và 1.2 là nguồn dữ liệu chuẩn của thiết kế logic. Phiên bản 1.1 bổ sung cách gắn linh kiện cứng và liên kết tiếp xúc đã kiểm tra. Phiên bản 1.2 bổ sung cụm linh hoạt và mô tả linh kiện tự do được khóa theo phiên bản. Thao tác đặt linh kiện linh hoạt mới dùng `FlexibleMountV2` tự động. Hình học V1 đã lưu và các phiên bản mô tả cũ vẫn đọc được. Three.js hiển thị đồ thị này. Tọa độ tự thân không tạo net. Linh kiện xem trước chỉ vào đồ thị khi người dùng xác nhận đặt. Các thao tác `/api/v2` tiếp nhận cấu trúc mới song song với các thao tác hiện có. [Đặc tả mạch](../../en/api/circuit-spec-reference.md) · [Hướng dẫn đặt linh kiện](../../en/architecture/component-placement.md)
+`CircuitGraph` 1.0, 1.1 và 1.2 là nguồn dữ liệu chuẩn của thiết kế logic. Phiên bản 1.1 bổ sung cách gắn linh kiện cứng và liên kết tiếp xúc đã kiểm tra. Phiên bản 1.2 bổ sung cụm linh hoạt và mô tả linh kiện tự do được khóa theo phiên bản. Thao tác đặt linh kiện linh hoạt mới dùng `FlexibleMountV2` tự động. Hình học V1 đã lưu và các phiên bản mô tả cũ vẫn đọc được. Three.js hiển thị đồ thị này. Tọa độ tự thân không tạo net. Linh kiện xem trước chỉ vào đồ thị khi người dùng xác nhận đặt. Các thao tác `/api/v2` tiếp nhận cấu trúc mới song song với các thao tác hiện có. [Đặc tả mạch](../api/circuit-spec-reference.md) · [Hướng dẫn đặt linh kiện](component-placement.md)
 
 `DetectedTopologyGraph` ghi lại những gì thực sự quan sát được, gồm linh kiện và net thiếu hoặc phát sinh, thông mạch chưa rõ và danh tính linh kiện chưa xác định. `AssignmentDefinition` có thể chứa thiết kế hoặc cấu trúc mạch tham chiếu, hành vi mong đợi, chính sách chấm điểm và liên kết `LabEndpoint`. Điểm cuối có thể chọn nút quan sát cố định, nút tham chiếu cần phân giải hoặc cổng thiết kế ảo. Bộ phân giải ánh xạ điểm cuối tham chiếu đủ bằng chứng sang nút thực tế của sinh viên. Quan sát chưa rõ giữ nguyên trạng thái chưa rõ. Hệ thống chặn chạy khi không phân giải được điểm cuối bắt buộc.
 
@@ -67,4 +73,7 @@ Các mặc định dưới đây áp dụng cho bản phát hành đang chọn.
 - Danh tính bền vững sở hữu dự án và bản thu. Phiên máy chủ xác thực yêu cầu. Định danh tab điều khiển gắn vòng đời lần chạy với phiên đã xác thực. Tab xem đọc được trạng thái đã cấp quyền. Kết nối lại đối soát kết quả lệnh đã lưu và không phát lại lệnh. [Dự án và phiên bản](projects-and-revisions.md) · [Theo dõi kết quả đang chờ](pending-observations.md)
 - HTTP và sự kiện thời gian thực ẩn đáp án tham chiếu theo chính sách bài tập mặc định `observed_only`. JSON thí nghiệm và sự kiện mang `CaptureMetadata`. Endpoint bản thu kiểm tra quyền sở hữu rồi cung cấp dữ liệu nhị phân NCAP. Codec NCAP v2 hỗ trợ định dạng dữ liệu lấy mẫu, còn bộ tạo bản thu hiện tại dùng NCAP v1. [Công bố bài tập](assignments-and-publication.md) · [Danh mục bản thu](capture-catalog.md)
 
-[Báo cáo phát hành cục bộ 0.1.4](../../en/history/verification/2026-11-05-cirnet-release-0.1.4.md) ghi kết quả Windows và các kiểm tra phần mềm tương ứng. [Báo cáo kiểm tra hạ tầng sau đó](../history/verification/2026-11-05-test-infrastructure-audit.md) tách kết quả hosted của bản phát hành và kết quả cục bộ sau bản sửa. [Biên bản chuyển đổi native Giai đoạn 0](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md) ghi môi trường riêng và các cổng kiểm tra còn mở. Kết luận về an toàn điện và triển khai đích cần bằng chứng từ đúng môi trường tương ứng.
+[Báo cáo phát hành cục bộ 0.1.4](../../en/history/verification/2026-11-05-cirnet-release-0.1.4.md)
+ghi kết quả Windows và các kiểm tra phần mềm. [Báo cáo kiểm tra hạ tầng CI](../history/verification/2026-11-05-test-infrastructure-audit.md)
+tách kết quả hosted của bản phát hành và kết quả cục bộ sau bản sửa. Kết luận
+về an toàn điện và triển khai đích cần bằng chứng từ đúng môi trường.

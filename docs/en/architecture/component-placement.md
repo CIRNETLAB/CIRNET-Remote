@@ -1,8 +1,9 @@
 # Component placement and flexible assemblies
 
-This reference owns placement geometry and persistence details. See the
-circuit and lab overview in [English](../api/circuit-and-physical-lab.md)
-or [Vietnamese](../../vi/api/circuit-and-physical-lab.md).
+[Tiếng Việt](../../vi/architecture/component-placement.md) · [Circuit and physical lab](../api/circuit-and-physical-lab.md)
+
+This reference explains placement geometry and persistence across Interface,
+Contracts and Remote.
 
 CircuitGraph remains the design source of truth. Contact bindings determine electrical
 bonds; body/lead intersections never create nets. Mechanical authoring limits are
@@ -100,11 +101,10 @@ the old owned geometry is disposed after replacement. Pin targets, labels, wires
 selection previews and thumbnails resolve the same contact tips. Thumbnails continue
 using one bounded cache and shared renderer, with geometry/profile/color in cache keys.
 
-Source ownership: `cirnet-interface/src/editor/FlexiblePlacementController.ts` owns the two-click
-draft; `cirnet-interface/src/composables/useFlexibleAuthoring.ts` owns pointer previews/capture;
-`cirnet-interface/src/electrical/flexibleGeometry.ts` and `cirnet-contracts/contracts/flexible_mounting.py` own
-geometry validation. The [flexible contract](https://github.com/CIRNETLAB/CIRNET-Contracts/blob/54ef9f6a11f4906c11ec9789de47cf06d5100734/contracts/design-models/flexible-placement.md)
-is the canonical persistence/mechanics specification. Dated reports in `verification/`
-record their own observed results. New checks follow [VERIFICATION.md](../history/verification-ledger.md);
-screenshots and reference-derived diagnostic contact sheets are created outside the
-repository. User-supplied reference media remains reference material, not proof of a run.
+Interface owns the two-click draft and pointer handling. Interface and Contracts
+validate geometry against the shared mechanics and persistence contract.
+[Draft controller](https://github.com/cirnetlab/cirnet-interface/blob/f1fe0c4738e105727aff1a331327caf7172cdf5f/src/editor/FlexiblePlacementController.ts) · [Pointer adapter](https://github.com/cirnetlab/cirnet-interface/blob/f1fe0c4738e105727aff1a331327caf7172cdf5f/src/composables/useFlexibleAuthoring.ts) · [TypeScript geometry](https://github.com/cirnetlab/cirnet-interface/blob/f1fe0c4738e105727aff1a331327caf7172cdf5f/src/electrical/flexibleGeometry.ts) · [Python geometry](https://github.com/cirnetlab/cirnet-contracts/blob/524cc7a5e2e65f39077feefe70c7fb2ae3a773d6/contracts/flexible_mounting.py) · [Flexible placement contract](https://github.com/cirnetlab/cirnet-contracts/blob/524cc7a5e2e65f39077feefe70c7fb2ae3a773d6/contracts/design-models/flexible-placement.md)
+
+Use the [verification guide](../contributing/verification.md) for new checks.
+Store screenshots and diagnostic contact sheets outside the repositories.
+Use reference media for comparison and record actual results separately.

@@ -2,8 +2,8 @@
 
 [English](../../en/architecture/native-migration-status.md) · [Tài liệu](../index.md)
 
-[Biên bản chuyển đổi native](../history/native-migration-ledger.md) ghi thứ
-tự giai đoạn, tiêu chí nghiệm thu và kết quả của từng ứng viên.
+[Biên bản chuyển đổi native](../history/native-migration-ledger.md) ghi
+định danh artifact, phép đo và kết quả của từng ứng viên.
 
 ## Mã nguồn, ứng viên và bản phát hành
 
@@ -28,20 +28,17 @@ tự giai đoạn, tiêu chí nghiệm thu và kết quả của từng ứng vi
 | Giai đoạn | Quyết định đã ghi | Bằng chứng và phạm vi |
 | --- | --- | --- |
 | 0. Đối chứng | **PASS** trên bộ tham chiếu `0.1.4` đã chọn | [Gói lưu trữ, ngưỡng và nguồn gốc](../history/native-migration-ledger.md#gói-đối-chứng-và-ngưỡng-nghiệm-thu) |
-| 1. Simulator C++ | **PASS** với r7 trên Windows x64 | [Quyết định, Stop và tích hợp](../history/native-migration-ledger.md#quyết-định-gate-1-trên-windows-x64), [đề xuất SPICE](../history/native-migration-ledger.md#core-spice-tương-lai-dựa-trên-ngspice) |
+| 1. Simulator C++ | **PASS** với r7 trên Windows x64 | [Quyết định, Stop và tích hợp](../history/native-migration-ledger.md#quyết-định-gate-1-trên-windows-x64), [Phạm vi SPICE](../history/native-migration-ledger.md#core-spice-tương-lai-dựa-trên-ngspice) |
 | 2. Contracts Rust | **PASS** với ma trận r2 | [FAIL của ứng viên đầu, đối chiếu r2 và biên bản build sạch](../history/native-migration-ledger.md#xác-minh-ứng-viên-giai-đoạn-2) |
 | 3. Hardware Rust | **PASS** chức năng, tương thích và an toàn Windows với r8-R2 | [Chính sách theo môi trường](../history/native-migration-ledger.md#chính-sách-nghiệm-thu-gate-3-theo-môi-trường), [Stop chính thức dưới tải](../history/native-migration-ledger.md#gate-3-stop-dưới-tải-chính-thức-trên-windows) |
 | 4. Remote Rust | **PASS** chức năng, tương thích và an toàn Windows với `717402ba` | [Chính sách theo môi trường](../history/native-migration-ledger.md#chính-sách-nghiệm-thu-gate-4-theo-môi-trường), [bằng chứng artifact, HTTP, dữ liệu, Interface và an toàn](../history/native-migration-ledger.md#mốc-tương-thích-và-an-toàn-windows-giai-đoạn-4--717402ba) |
-| 5. Đúng bộ artifact phát hành | **NOT RUN** | [Tiêu chí đóng gói, khởi chạy, kiểm tra phát hành và rollback](../history/native-migration-ledger.md#5-nghiệm-thu-đúng-bộ-artifact-phát-hành) |
+| 5. Đúng bộ artifact phát hành | **NOT RUN** | [Trạng thái xác minh phát hành và rollback](../history/native-migration-ledger.md#5-nghiệm-thu-đúng-bộ-artifact-phát-hành) |
 
-Chính sách giai đoạn 3 và 4 giữ các giới hạn an toàn bắt buộc trên
-Windows/i5 và dùng so sánh hiệu năng thông thường để chẩn đoán. Hiệu năng
-production của giai đoạn 3, cùng hiệu năng và Stop dưới tải đầy đủ của
-giai đoạn 4 trên Linux/Xeon, vẫn **NOT RUN**. Kế hoạch Stop đầy đủ giai
-đoạn 4 giữ ba cặp cửa sổ với 100 mẫu hợp lệ mỗi bên và tối đa 403 lần
-thử mỗi bên trong một cửa sổ. Chốt phương pháp và ngưỡng hiệu năng Linux trên nền tảng
-đích trước nghiệm thu. HIL vật lý và nghiệm thu production/release vẫn
-**NOT RUN**. Bản phát hành công bố điều khiển vật lý cần HIL phù hợp.
+Nghiệm thu giai đoạn 3 và 4 áp dụng các giới hạn an toàn trên Windows/i5.
+So sánh hiệu năng thông thường dùng để chẩn đoán. Hiệu năng production của
+giai đoạn 3, cùng hiệu năng và Stop dưới tải đầy đủ của giai đoạn 4 trên
+Linux/Xeon, vẫn **NOT RUN**. HIL vật lý và nghiệm thu production và phát hành
+cũng ở trạng thái **NOT RUN**. Bản phát hành công bố điều khiển vật lý cần HIL phù hợp.
 
 [Hướng dẫn kiểm thử Remote Rust](../contributing/rust-verification.md)
 ghi các bài kiểm tra và đầu vào fixture. [Mục lục lịch sử phát hành](../history/index.md)

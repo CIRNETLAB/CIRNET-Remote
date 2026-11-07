@@ -1,24 +1,8 @@
-# Kế hoạch chuyển đổi CIRNET sang C++ và Rust
+# Bằng chứng chuyển đổi native CIRNET
 
 [English](../../en/history/native-migration-ledger.md) · [Kế hoạch gốc ngày 2026-11-05](https://github.com/cirnetlab/cirnet-remote/blob/f91eeeb42d7528d4e7fa9b1526195847932faf9d/docs/superpowers/plans/2026-11-05-cirnet-native-migration.md) · [Biên bản giai đoạn 0](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md)
 
-Xem [Trạng thái hiện tại và bằng chứng theo giai đoạn](../architecture/native-migration-status.md) để tra quyết định hiện hành. Trang này giữ kế hoạch đầy đủ và các mốc theo thời điểm. Trạng thái mỗi mốc áp dụng cho đầu vào và thời điểm đã ghi.
-
-> **Dành cho agent triển khai.** Dùng superpowers:subagent-driven-development hoặc superpowers:executing-plans. Hoàn thành và ghi bằng chứng từng gate trước khi bắt đầu giai đoạn kế tiếp.
-
-**Mục tiêu.** Giữ tương thích với hệ thống đang phát hành, rồi chuyển sang Interface Vue/TypeScript → Remote Rust → Hardware Rust → Simulator C++.
-
-**Kiến trúc.** Interface giữ REST và WebSocket cùng origin. Remote giữ quyền điều phối, dữ liệu và lease. Hardware giữ RPC cục bộ, quyền điều khiển trạm và tiến trình Simulator. Contracts cung cấp schema, SDK và dữ liệu chuẩn cho các thành phần. Trong giai đoạn 1–2, preview tiếp tục đi qua adapter của Remote. Từ giai đoạn 3, preview có thể đi qua Hardware khi tổ hợp giai đoạn đó đã vượt qua gate.
-
-**Công cụ.** C++20 và CMake cho worker, Rust và Cargo lock cho các binary và công cụ sinh mã, Node cho SDK TypeScript, pytest và Playwright Python để nghiệm thu. Chốt phiên bản compiler, linker, target và phụ thuộc trong manifest ứng viên trước khi đo. Các phiên bản công cụ C++/Rust dùng cho phát hành sẽ được chọn ở giai đoạn tương ứng.
-
-## Quy tắc áp dụng cho mọi giai đoạn
-
-- Theo đúng thứ tự **0 → 1 → 2 → 3 → 4 → 5**. Mỗi gate bắt buộc cần có lệnh chạy, tổ hợp artifact, kết quả và bằng chứng riêng. FAIL hoặc NOT RUN ở gate bắt buộc chặn tiến độ của phạm vi nghiệm thu tương ứng. Nghiệm thu chức năng và an toàn Gate 3 trên Windows quyết định thời điểm bắt đầu giai đoạn triển khai kế tiếp. Chọn mặc định production và phát hành cần đạt gate hiệu năng riêng trên Linux Xeon cùng các bằng chứng phát hành bắt buộc khác.
-- Mỗi tổ hợp dùng gói phát hành hoặc ứng viên đóng gói theo commit, version, SHA-256, target và cờ build. Mã nguồn của repo bên cạnh chỉ dùng để phát triển hoặc xuất artifact riêng. Phân biệt HEAD khảo sát, revision dùng build và revision của harness. Dữ liệu/trace thô nằm trong session ngoài Git do DEV allocator đã ghim cấp phát. Chỉ lưu báo cáo Markdown trong repo.
-- Python được giữ trong test và benchmark của sản phẩm cuối. Trong giai đoạn chuyển tiếp, giữ artifact Python tương thích và toàn bộ test tham chiếu. PR chạy test gần thay đổi cùng kiểm tra auth/safety liên quan. Gate tích hợp chạy tiến trình và artifact thật. Gate phát hành chạy chính xác bộ artifact dự định giao.
-- Dùng cùng fixture hợp lệ và không hợp lệ để kiểm wire. Khóa cả đường dẫn RPC chuẩn và alias cũ, protobuf presence, tên/kiểu/status/error REST, sequence và resync WebSocket, byte NCAP, quyền sở hữu và dữ liệu bền vững. Mọi thay đổi phá tương thích cần phiên bản wire và kế hoạch chuyển consumer riêng.
-- Trước khi đổi mặc định, ghi cách quay lại tổ hợp gần nhất đã qua gate. Ngừng nhận Run, đợi dọn dẹp an toàn hoặc lưu cách ly, giữ cặp backup database và capture cùng manifest. Khi khởi động, scheduler Python có thể tự dispatch bản ghi `QUEUED`. Trước khi cấp quyền gọi Hardware cho scheduler sau cutover hoặc restore, kiểm tra hàng đợi trong dữ liệu phục hồi và xử lý hoặc giữ riêng mọi lệnh đang chờ. Xác nhận quyền sở hữu, digest capture, lease, cách ly và chỉ một scheduler được cấp quyền điều khiển. Kiểm tra không có Start phát lại sau crash hoặc ACK không rõ kết quả.
+Xem [trạng thái hiện hành và bằng chứng theo giai đoạn](../architecture/native-migration-status.md) để tra quyết định đang áp dụng. Biên bản ghi đầu vào khảo sát, phạm vi đã duyệt, số đo và kết quả. Mỗi kết quả áp dụng cho môi trường và tổ hợp artifact đã ghi. [Biên bản trước khi tách kế hoạch](https://github.com/cirnetlab/cirnet-remote/blob/ae51abaa8ebdfce5981f91c0c95eca1d522900ee/docs/vi/architecture/native-migration.md) giữ danh sách công việc trước đây.
 
 ## Mốc tham chiếu và khảo sát mã
 
@@ -46,14 +30,6 @@ SHA-256 của file lock trong checkout là `90a8ef4d30ddc19d3024dcb3790fef5d5e04
 ## 0. Đo và khóa hành vi Python đang phát hành
 
 [Biên bản giai đoạn 0](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md)
-
-- [x] **Cài và nhận dạng bộ tham chiếu.** Chạy `python -B -m scripts.install_release --manifest integration/release-set.json --environment-file release-env.json` trong venv thuộc session riêng và áp dụng hai block biến môi trường của installer. Kiểm SHA-256 toàn bộ 15 artifact, provenance wheel đã cài, `pip check`, thông số máy/OS/CPU/RAM, phiên bản toolchain, DB, số worker, hạn mức và cấu hình cùng origin. Không dùng venv cũ hoặc artifact build lại khác digest làm chuẩn. Rollback giai đoạn 0 là tắt tiến trình thử và dọn đúng session, giữ nguyên lock hiện hành.
-- [x] **Khóa corpus đối chứng.** Tái dùng fixture hiện có trong Contracts `contracts/compatibility`, `tests/contracts`, Remote `tests/contracts`, `tests/integration` và `services/api/tests`. Chạy `scripts/export_openapi.py --check` và `scripts/check_public_compatibility.py`. Lưu input và kết quả đã khử thông tin nhạy cảm cho REST/OpenAPI, gRPC (bao gồm alias, presence và lỗi), NCAP (mẫu nhỏ và ca 100.000 mẫu), WebSocket và phiên bản schema DB. Tạo snapshot SQLite/PostgreSQL bằng dữ liệu thử tổng hợp với principal, dự án/revision, lệnh idempotent, lịch sử, lease/quarantine và capture. Lưu kèm digest capture. Chạy kiểm owner, CSRF/origin, revocation, replay, guarded power và capture không hợp lệ. Khóa digest fixture sau khi xác minh bản tham chiếu.
-- [x] **Đo đường ngoài.** Chạy `python -B -m scripts.benchmark_web_sessions --sessions 50 --concurrency 10 --runs 8 --read-rounds 3` làm mốc smoke. Giữ workload AND đã có (X tại 0 ns, 0 tại 8 ns, 1 tại 28 ns), thêm graph số nhiều sự kiện và gói NCAP lớn từ fixture hiện có. Khóa SHA-256 của input, harness và inventory dependency, cấu hình 50 principal, 10 HTTP đồng thời, 4 worker, chính sách auth hiện tại, seed, warmup và cửa sổ đo theo hai profile SQLite/PostgreSQL. Tính throughput bằng số request hoàn tất trong cửa sổ tải chia số giây cửa sổ đó, tính riêng job/s và byte capture/s. Thu CPU giây trên mỗi job, peak tổng RSS của cây tiến trình và số lần lấy mẫu. RSS có thể đếm trang chia sẻ nhiều lần. Tách bootstrap/login pacing ra khỏi cửa sổ tải. Lấy ít nhất 100 quan sát hợp lệ cho mỗi phân phối p99 ở từng lần đo, đo ít nhất ba lần độc lập sau warmup, báo cả số mẫu và cách tính nearest rank. Benchmark sẵn có dùng chung tiến trình API/Hardware và gọi Stop sau COMPLETE. Dùng harness pytest có tiến trình riêng để đo theo dịch vụ và profile PostgreSQL.
-- [x] **Đo Stop trong lúc chạy và phân pha.** Mở rộng harness pytest trong `tests/integration/` và tái dùng `scripts/benchmark_web_sessions.py` cho HTTP/resource metrics. Ghim graph và xác nhận tất cả slot bận, tiến trình worker đã bắt đầu job đích và job còn chạy tại thời điểm Stop. Loại mẫu nếu job kịp kết thúc. Lấy số đo riêng cho Stop → phản hồi HTTP, gRPC ACK và safe release hoặc quarantine bền vững. Dùng graph tải tự nhiên để đo, chạy các ca tiêm treo/crash/ACK muộn riêng để kiểm bất biến. Dùng đồng hồ đơn điệu trong từng tiến trình và request/experiment ID để phân pha Remote plan/queue và API, Hardware compile graph, thời gian chờ worker, Simulator run, NCAP encode/read/transfer/decode, lưu/đọc payload và DB wait/transaction. Tách dữ liệu có instrumentation với phép đo ngoài trên artifact nguyên bản. Báo thời gian song song dưới dạng span để tránh cộng đúp vào tổng.
-- [x] **Đối chiếu phép đo lõi.** Chạy riêng `python -B -m pytest -q tests/integration/native_baseline_cases.py --basetemp <owned>/pytest-native-baseline` từ môi trường đã xác thực. Tái dùng đồ thị AND của benchmark HTTP và kiểm chuỗi sự kiện/capture trước khi đo. So compile, run, NCAP encode và decode độc lập trong tiến trình pytest. Dữ liệu vi mô này dùng để đối chiếu span tích hợp.
-- [x] **Chốt ngưỡng trước ứng viên.** Quy ước ban đầu do người triển khai chọn là không sai khác corpus hoặc bất biến safety. So trên từng profile cùng cấu hình bằng median của các lần đo, giới hạn p95/p99 và peak RSS ≤ 110% mốc, CPU/job ≤ 110%, throughput ≥ 95%. Với Stop dùng ngưỡng chặt hơn giữa giới hạn vận hành hiện có và 110% p95/p99 mốc. Không cấp lại lease khi thiếu ACK an toàn. Với Simulator C++ yêu cầu p95 thời gian chạy lõi hoặc CPU/job giảm ít nhất 10%, hiệu ứng lớn hơn biến động đo qua ba lần chạy ghép cặp, đồng thời đạt các ngưỡng còn lại. Nếu số mẫu, tải hoặc biến động chưa đủ để áp các ngưỡng, hoàn thiện phép đo và lưu số tuyệt đối trước khi đánh giá ứng viên.
-- [x] **Gate 0.** Chỉ PASS khi có bộ artifact xác thực, corpus đối chứng, số đo phân pha, Stop dưới tải và ngưỡng đã khóa. Báo cáo theo mẫu cuối tài liệu.
 
 ### Chạy gate trên bộ tham chiếu đã cài
 
@@ -212,10 +188,6 @@ Gói đối chứng hỗ trợ cài lại đúng bộ 0.1.4 và phục hồi d�
 Diễn tập rollback bản phát hành native có gate riêng.
 
 ## 1. Simulator C++ và adapter chuyển tiếp
-
-- [x] **Lát cắt số.** Trong Simulator, thêm CMake và worker C++ độc lập, bắt đầu với AND 74HC08 từ corpus và kiểm chuỗi sự kiện qua adapter `cirnet_sim/backends.py`. Mở rộng theo hành vi của `engine.py`, `nets.py`, `logic.py`, `dispatch.py` và model đang được công bố. Giữ preview và các fixture DC tĩnh đã hỗ trợ (nguồn, điện trở, LED và 74HC08 có nguồn cấp). Giữ analog/SPICE/mixed ở trạng thái không khả dụng. So timestamp, thứ tự sự kiện đồng thời và giá trị 0/1/X, byte NCAP và lỗi. Chạy test Simulator và pytest gọi trực tiếp binary, ASan/UBSan trên target hỗ trợ.
-- [x] **Đóng gói và giám sát.** Dùng IPC cục bộ có frame giới hạn, handshake version và ID yêu cầu/thế hệ. Artifact Simulator xuất binary và mô tả giao thức riêng. Adapter Hardware `station/virtual.py` cho Run và adapter preview ở Remote dùng cùng lõi, ngân sách và pool riêng. Có deadline từ host, giới hạn queue/CPU/RAM, hủy, reap tiến trình và fence kết quả trả muộn. Kiểm timeout, frame lỗi, worker treo/chết, Stop/reset và chạy lại. REST, RPC 2.0 và NCAP giữ nguyên.
-- [x] **Ma trận và gate 1.** A = Interface hiện tại / Remote Python / Hardware Python / Simulator Python. B = cùng tổ hợp với worker C++ được bật ở cả Run và preview, Contracts Python 0.1.2 giữ nguyên. Chạy fixture, `tests/integration/test_virtual_lab_execution.py`, `test_capture_rpc_data_plane.py`, `test_simulation_backend_selection.py` và `services/api/tests/test_physical_preview.py` trên artifact. So số đo theo giai đoạn 0. Chỉ chọn B khi đạt tương đương và cải thiện đo được. Rollback về A sau hủy, reap và fence thế hệ. Không tự chạy lại job dở.
 
 ### Lát cắt C++ 74HC08 ngày 2026-11-06
 
@@ -738,36 +710,7 @@ trong phạm vi gate mô phỏng ảo này trên Windows.
 
 ### Core SPICE tương lai dựa trên ngspice
 
-**Đề xuất.** Giữ lõi số C++ và mô hình DC giới hạn của giai đoạn 1 để
-bảo đảm tương thích. Phát triển backend SPICE riêng từ mã nguồn ngspice
-thượng nguồn. Đánh giá thư viện C dùng chung bên trong worker C++ cách ly
-để giữ ranh giới tiến trình và an toàn của Remote và Hardware. So sánh
-callback và cơ chế ngắt hợp tác với tiến trình con chạy batch đã ghim trên
-các mạch analog đầu tiên. Mỗi tiến trình con ban đầu chạy một mô phỏng.
-Nếu hết deadline hoặc không ngắt được, phải kết thúc và thu hồi tiến
-trình trước khi xác nhận dọn dẹp an toàn. [Thư viện dùng chung ngspice](https://ngspice.sourceforge.io/shared.html)
-
-- [ ] **Chọn đầu vào có thể tái lập.** Bắt đầu thử nghiệm với bản thượng
-  nguồn `ngspice-46`, build thư viện dùng chung không có giao diện đồ họa
-  và bật XSPICE. Ghi SHA-256 của gói nguồn, toolchain, tùy chọn build,
-  bản vá, ABI đích, hash thư viện và code model, cùng nguồn gốc, phiên
-  bản và SHA-256 của từng model. Rà soát thông báo bản quyền và điều kiện
-  phân phối của mã nguồn đã chọn và mọi thành phần đi kèm trước khi đóng
-  gói. [Gói phát hành thượng nguồn](https://sourceforge.net/projects/ngspice/files/ng-spice-rework/old-releases/46/)
-- [ ] **Chuyển đồ thị và thu capture.** Xác thực `CircuitGraph` trước.
-  Gán tên net và linh kiện ổn định, ánh xạ linh kiện và thứ tự chân theo
-  catalog model có phiên bản, rồi sinh netlist có giới hạn. Chỉ tra đường
-  dẫn model trong thư mục đã ghim. Thu vector analog và sự kiện XSPICE
-  qua callback có giới hạn. Chốt đơn vị, quy đổi thời gian, lượng tử hóa,
-  thứ tự, biểu diễn khoảng trống và giá trị chưa biết trước khi xuất
-  NCAP tương thích Contracts. [Tài liệu ngspice](https://ngspice.sourceforge.io/docs.html)
-- [ ] **Đánh giá tương đương và xử lý lỗi.** Chạy mạch RC, diode/LED,
-  cổng 74HC08, clock, fan-out, đầu vào mất nguồn, ngõ ra tranh chấp và
-  cầu nối analog/digital. So với corpus C++ về thứ tự sự kiện, timestamp
-  trùng nhau, độ trễ lan truyền và `0/1/X`. Định nghĩa ánh xạ logic và
-  drive strength của XSPICE trước khi kiểm tra tương đương. Kiểm tra đồ
-  thị/model sai, không hội tụ, vượt giới hạn, timeout, hủy, crash và
-  phản hồi muộn qua Run và preview. [XSPICE trong ngspice](https://ngspice.sourceforge.io/xspice.html)
+**Đề xuất.** Khảo sát xem xét backend ngspice riêng trong worker C++ cách ly. Lõi số và mô hình DC giới hạn của giai đoạn 1 vẫn là đối chứng tương thích.
 
 Gói nguồn `ngspice-46.tar.gz` đã tải khớp SHA-256 đã chọn
 `a0d1699af1940b06649276dcd6ff5a566c8c0cad01b2f7b5e99dedbb4d64c19b`.
@@ -775,15 +718,7 @@ Kế hoạch backend của Simulator ghi hash nguồn đã xác minh cho ba mode
 XSPICE đầu tiên. Build SPICE, runtime, rà soát thành phần phân phối và
 so sánh lõi số ở trạng thái **NOT RUN**. [Gói nguồn upstream](https://sourceforge.net/projects/ngspice/files/ng-spice-rework/old-releases/46/ngspice-46.tar.gz/download) · [Công thức build đã ghim](https://github.com/Homebrew/homebrew-core/blob/539f6abfdfdff8af39757bc100dfbce1db0c5618/Formula/lib/libngspice.rb#L3-L5)
 
-Chỉ chọn phương án thay lõi số sau khi đạt tiêu chí tương
-đương và hiệu năng. Chỉ công bố capability đã triển khai và kiểm thử
-trong manifest phát hành. Tài liệu backend của Simulator ghi các bước
-tích hợp chi tiết.
-
 ## 2. Contracts Rust
-
-- [x] **Giữ nguồn chuẩn.** Repo Contracts giữ JSON Schema/manifest, `device-library/` và các bản chiếu catalog, `contracts/hardware/v2/rpc_v2.proto`, `contracts/capture/layout.json` và `ncap.schema.json`. Port `validation.py`, validator ngữ nghĩa, `capture_codec.py` và các generator trong `contracts/codegen/`. `contracts/api/openapi.json` là handoff đã duyệt từ exporter Remote. Sinh crate/kiểu Rust, SDK `@cirnet/contracts`, binding Python dùng trong pytest và giữ wheel Python cũ cho consumer chuyển tiếp. Runtime Rust và lệnh sinh SDK chạy trên máy không cài Python.
-- [x] **Ma trận và gate 2.** Chạy B với wheel Python và npm hiện tại. Lặp lại với SDK từ Rust generator trên Interface và legacy wheel vẫn cài cho Remote/Hardware. Chạy cùng corpus qua legacy Python, Rust binary/binding và tarball npm đã đóng gói. Giữ descriptor field number và hai tên dịch vụ, phân biệt trường absent/default, lỗi, 0/1/X, thứ tự và byte chuẩn NCAP1/NCAP2. Kiểm JSON, timing/gap và các encoding INT16/UINT16/FLOAT32 của NCAP2. Dùng các check generator legacy, `scripts/check_public_compatibility.py`, kiểm runtime/types SDK và build sạch hai lần từ cùng commit/toolchain để so digest. Báo thời gian sinh mã, dung lượng gói và validation/codec throughput. Chỉ đổi nguồn sinh mặc định khi parity và tái lập PASS. Rollback trỏ lại cả bộ crate/SDK/wheel cũ đã xác nhận, giữ artifact trước đó.
 
 ### Xác minh ứng viên giai đoạn 2
 
@@ -845,9 +780,6 @@ tục kiểm schema nội bộ. Dùng bộ sinh r2 cho SDK chuyển tiếp đã 
 Cặp SDK và wheel cũ là bộ rollback và tiếp tục sẵn có cho consumer Python.
 
 ## 3. Hardware Rust
-
-- [ ] **Thay server và lifecycle.** Hardware chuyển `server.py`, `rpc.py` và `station/` sang Rust, dùng Contracts Rust và worker C++ đã ghim. Giữ RPC 2.0 cả `cirnet.hardware.v2.HardwareService` và alias `netcircuit.hardware.v2.HardwareService`, loopback/Unix, nguyên ACK/ownership/deadline/NCAP. Preview chuyển qua endpoint nội bộ được thương lượng, giữ adapter Remote Python tương thích với Hardware cũ. Stop dùng tài nguyên riêng cho xử lý RPC, hủy worker và phản hồi an toàn. Remote tiếp tục sở hữu lease/quarantine. Không tăng khả năng công bố của trạm thiếu driver.
-- [ ] **Ma trận và gate 3.** So B với Interface hiện tại → Remote Python → Hardware Rust → Simulator C++, dùng legacy wheel ở Remote và crate ở Hardware. Giữ `test_server.py`, `test_virtual_execution.py`, `test_simulation_workers.py`, `test_rpc_lifecycle.py`, `test_ncap_rpc.py`, `test_physical_station.py` làm test tham chiếu. Chuyển assertion phụ thuộc internals Python sang test pytest gọi binary riêng qua RPC để thử Start/Stop/reset, hết lease, mất kết nối, worker treo/chết, phản hồi muộn, Stop đồng thời khi queue đầy và cách ly nếu thiếu ACK. Chạy các test tích hợp Remote. Dùng [chính sách hiện hành theo môi trường](#chính-sách-nghiệm-thu-gate-3-theo-môi-trường) cho hiệu năng và Stop dưới tải. Gate PR luôn giữ kiểm điều kiện trước khi cấp điện. Chạy hai testbench RTL đã ghim và HIL đúng khả năng được công bố. Phân loại riêng thiết bị chưa có. Rollback theo quy trình lease/quarantine, phục hồi Hardware Python và worker tương thích.
 
 ### Chính sách nghiệm thu Gate 3 theo môi trường
 
@@ -932,8 +864,8 @@ dùng ngưỡng đã duyệt và digest artifact Linux. Sáu trần Stop tuyệt
 tiếp tục áp dụng trên Windows.
 
 Bằng chứng r8-R2 hoàn tất nghiệm thu chức năng, tương thích và an toàn
-trên Windows. Commit Giai đoạn 3 trước khi bắt đầu Giai đoạn 4. Hiệu
-năng Linux và nghiệm thu production/phát hành vẫn **NOT RUN**.
+trên Windows. Hiệu năng Linux và nghiệm thu production/phát hành vẫn
+**NOT RUN**.
 
 #### Gate 3 Stop dưới tải chính thức trên Windows
 
@@ -1145,11 +1077,9 @@ SHA-256 wheel thử nghiệm là
 và SHA-256 tóm tắt HTTP ngắn là
 `10dcb8a6e9423949e0a8b74f06016d5bbfe6f78f80f9cf688ccd8ce3eed2da29`.
 
-Gate 3 vẫn **FAIL**. Bước chẩn đoán tiếp theo cần gắn thời gian giữ khóa
-với nơi gọi và tách thời gian chờ kết nối PostgreSQL. Hai bài tải SQLite,
-PostgreSQL và Stop tự nhiên chính thức đang chờ ứng viên đủ điều kiện.
-Số mẫu, ngưỡng ghép cặp và đã khóa, cùng bằng chứng an toàn Stop vẫn là
-điều kiện nghiệm thu.
+Gate 3 **FAIL** tại mốc này. Chưa chạy lại tải SQLite, PostgreSQL và Stop tự
+nhiên chính thức trên ứng viên đủ điều kiện. Mục kế tiếp ghi thời gian giữ
+khóa theo nơi gọi và thời gian chờ kết nối PostgreSQL.
 
 ### Truy vết tranh chấp khóa và quan sát Stop ở Gate 3
 
@@ -1690,17 +1620,10 @@ chậm C2 và B3: 23:56:24–23:57:04 ngày 06/11/2026 và
 xỉ, dựa trên thời gian tệp profile và thời lượng dọn dẹp/bài đo đã ghi.
 Pha sync của checkpoint là 0,674/0,439 giây; tổng 39,770/67,281 giây
 gồm cả ghi có điều tiết. Tương quan này chưa chứng minh checkpoint
-gây chậm; C1/C3 cũng trượt ngưỡng đọc. Lượt chẩn đoán tiếp theo bổ sung
-dấu thời gian chung và theo dõi CPU có giới hạn; chưa đổi độ bền dữ
-liệu, cấu hình checkpoint hay tiêu chí gate.
-
+gây chậm; C1/C3 cũng trượt ngưỡng đọc. Tại mốc này, cấu hình độ bền PostgreSQL,
+checkpoint và điều kiện nghiệm thu vẫn giữ nguyên.
 
 ## 4. Remote Rust
-
-- [x] **Thay theo nhóm route.** Remote giữ topology, auth và orchestration hiện tại. Port route đọc và preview trước, rồi `services/auth.py`, `websocket/events.py`, persistence và cuối cùng command/idempotency/`services/experiments.py`. So exact OpenAPI handoff, HTTP/error/cookie/CSRF/origin, WebSocket hello/sequence/resync/đóng kết nối, owner/control client và disconnect. Chỉ chạy shadow các route thực sự không có tác dụng phụ trên bản sao dữ liệu. Thử bootstrap phiên và kết nối WebSocket điều khiển trong môi trường riêng vì chúng có thể đổi phiên hoặc hủy job.
-- [x] **Dữ liệu và quyền điều khiển.** Port schema và migrations của Remote bằng migration native, chạy đối chiếu SQLite và PostgreSQL thực với dữ liệu cũ, CAS revision, login/ownership và capture. Diễn tập `pg_dump`/`pg_restore` cùng backup capture và kiểm hash, giữ idempotency và quarantine. Giữ endpoint điều khiển Hardware ngoài tầm truy cập của scheduler shadow. Rút quyền scheduler cũ và xác nhận tiến trình đã dừng, kiểm tra hàng đợi phục hồi trước khi cấp quyền cho ứng viên. Test hai tiến trình tranh quyền, hàng đợi còn lệnh và mất kết nối giữa cutover.
-- [x] **Ma trận và Gate 4 Windows.** So Remote Python → Hardware Rust → C++ với Interface hiện tại → Remote Rust → Hardware Rust → C++ theo nhóm route. Giữ `scripts/export_openapi.py --check` cho đối chứng Python và so OpenAPI native với cùng handoff và bảng operation. Giữ assertion auth, ownership, operation identity, WebSocket và PostgreSQL qua giao diện công khai hoặc component native có phạm vi xác định. Giữ E2E Interface và Playwright Python. Áp dụng [chính sách theo môi trường](#chính-sách-nghiệm-thu-gate-4-theo-môi-trường) cho hiệu năng thông thường và Stop dưới tải. Rollback rút quyền scheduler ứng viên, phục hồi đúng cặp database/capture khi cần, rồi xác minh quyền và quarantine trước khi nối lại Python. Nghiệm thu Windows không cho phép đổi mặc định hoặc bản phát hành.
-- [ ] **Production Linux/Xeon và HIL áp dụng.** Chạy tải đầy đủ và ma trận Stop đầy đủ sau khi dự án ổn định, có máy đích, đã chốt ngưỡng production và xác minh an toàn Linux. Chạy HIL thật trước khi nghiệm thu capability điều khiển phần cứng thật được công bố. Giữ nghiệm thu production/release NOT RUN đến khi mọi yêu cầu áp dụng đều đạt.
 
 ### Chính sách nghiệm thu Gate 4 theo môi trường
 
@@ -1763,9 +1686,7 @@ Linux/Xeon**, và **HIL**. Linux/Xeon và HIL giữ NOT RUN cho đến khi thự
 sự kiểm tra các yêu cầu tương ứng. Nghiệm thu production/release chờ
 Linux/Xeon và HIL phù hợp nếu công bố khả năng điều khiển phần cứng thật.
 Capability phần cứng chưa khả dụng vẫn không khả dụng. Windows PASS
-không chọn bản phát hành hoặc đổi traffic mặc định. Giữ thay đổi
-giai đoạn 4 trong worktree để review; cập nhật chính sách này không
-cho phép commit, merge hoặc xóa branch/worktree.
+không chọn bản phát hành hoặc đổi traffic mặc định.
 
 ### Nhóm đọc và preview đầu tiên của Giai đoạn 4
 
@@ -1807,7 +1728,6 @@ vẫn nằm trong session ban đầu.
 Thông báo chi tiết cho đầu vào v2 lỗi ngoài fixture đã chọn vẫn cần bằng
 chứng tương thích. Chưa đổi traffic mặc định hoặc manifest phát hành;
 nghiệm thu production Linux/Xeon vẫn **NOT RUN**.
-
 
 ### Mốc dữ liệu và giao thức native giai đoạn 4
 
@@ -2117,7 +2037,6 @@ database riêng với HTTP. Chính sách Windows Gate 3 không miễn các yêu 
 giai đoạn 4 này. Giữ nguyên luồng mặc định, lựa chọn release bất biến, commit
 giai đoạn 3 và toàn bộ bằng chứng lịch sử.
 
-
 ### Mốc tương thích và an toàn Windows giai đoạn 4 · 717402ba
 
 Ứng viên Windows x64/MSVC là `native-remote-sqlite-writer-release/f07bbb29b41d4a7c9120379547450752/cirnet-remote.exe`
@@ -2160,11 +2079,10 @@ Không ước tính tổng thời gian tiết kiệm do bỏ lượt Windows đ�
 chạy. Lượt hiệu chuẩn trình duyệt được dùng lại từng mất 136,46 giây;
 đây không phải mức cải thiện hiệu năng ứng dụng.
 
-Các biên bản nằm trong phiên DEV `cirnet-4PiLwh` bên dưới. Giữ workload
-chính thức gồm ba cặp cửa sổ 200 job mỗi bên cho từng cơ sở dữ liệu và ba cặp
+Các biên bản nằm trong phiên DEV `cirnet-4PiLwh` bên dưới. Workload Linux chính thức
+đã duyệt giữ ba cặp cửa sổ 200 job mỗi bên cho từng cơ sở dữ liệu và ba cặp
 cửa sổ Stop 100 mẫu đủ chuẩn mỗi bên, trần 403 lần thử. Chẩn đoán Windows và
-so sánh lịch sử giữ nguyên phạm vi đã ghi. Giữ worktree để rà soát trước khi
-tích hợp Git hay thay đổi mặc định hoặc release.
+so sánh lịch sử giữ nguyên phạm vi đã ghi.
 
 | Biên bản | Đường dẫn tương đối trong phiên | SHA-256 |
 | --- | --- | --- |
@@ -2332,16 +2250,6 @@ nguồn đo pha trước đó. Chúng so toàn bộ thao tác repository, không
 Thư viện SQLite client khác phiên bản (3.50.4 và 3.46.0); PostgreSQL
 dùng cùng server riêng. Không gán lại các số đo đó cho `717402ba…`.
 
-
 ## 5. Nghiệm thu đúng bộ artifact phát hành
 
-- [ ] **Thay lối vào sản phẩm.** Remote thêm manifest và trình kiểm native, chuyển `run-cirnet.bat` và `scripts/launcher/` sang gọi binary, cập nhật `deployment/` (systemd, Nginx, migration/admin/maintenance), workflows phát hành và bootstrap. Interface thay `scripts/build_release.py` trong quy trình build sản phẩm, giữ Node/Vue. Contracts dùng generator Rust. Manifest mới liệt kê commit, version, SHA-256, platform/ABI và khả năng công bố. Giữ immutable manifest 0.1.4, gói cũ, installer v1 và môi trường Python riêng để rollback. Kiểm gói thiếu, digest sai, target sai, path traversal, provenance và đóng gói tái lập.
-- [ ] **Smoke tiến trình thật.** Dùng lane build sạch không có Python để build sản phẩm và sinh SDK. Chuyển đúng bộ artifact đã băm vào image runtime sạch khác để cài, khởi động, chạy Doctor và vận hành. Ghi digest manifest ở cả hai lane và kiểm cây tiến trình, entrypoint, dependency. Interface/static server, Remote, Hardware và Simulator là các tiến trình riêng. Smoke đăng nhập, Run → NCAP → hiển thị, preview, WebSocket reconnect và Stop dưới tải. Thu PID, readiness, cleanup và quy tắc một scheduler. Client kiểm thử Python chạy trên host điều phối bên ngoài image.
-- [ ] **Gate phát hành.** Chạy full browser E2E (Playwright Python, giữ các ca hiện có kể cả WebGL, Web Locks và matrix hình ảnh đến khi chứng minh bao phủ tương đương), PostgreSQL backup/restore, đóng gói/SDK/tương thích, security, performance/load và hai RTL testbench bằng toolchain ghim. Security bao gồm auth/CSRF/origin, revocation, giới hạn frame, RPC loopback, khai báo không driver và kiểm dependency. FPGA hiện chỉ công bố scaffold. Ghi HIL NOT RUN cho scaffold và kiểm khả năng vật lý vẫn không khả dụng. Nếu công bố thực thi vật lý, HIL trên thiết bị phù hợp trở thành gate bắt buộc. Diễn tập rollback thật về 0.1.4 và tổ hợp gần nhất đã qua gate nếu khác 0.1.4, dùng đúng cặp backup, kiểm trạm/quarantine và lệnh dở. Có gate độc lập cho từng platform công bố. Chỉ chọn manifest mới sau khi tất cả gate bắt buộc PASS.
-
-## Mẫu biên bản từng giai đoạn
-
-- Repo và file thực sự đổi, commit/harness, danh sách artifact và digest, config, môi trường và lệnh chạy.
-- Ma trận từng tổ hợp và PASS/FAIL/NOT RUN cho từng gate. Ghi mô phỏng, RTL và HIL thành dòng riêng.
-- Số mẫu, p50/p95/p99, throughput, CPU/job, RSS và Stop đến an toàn trước/sau. Ghi số tuyệt đối, độ biến động và ngưỡng quyết định.
-- Lỗi còn mở, điều kiện chuyển mặc định, artifact/backup cần để rollback và kết quả diễn tập.
+**NOT RUN.** Các bước đóng gói native, cài đặt và smoke qua tiến trình thật, kiểm tra phát hành đầy đủ và rollback trên đúng bộ artifact native còn chờ thực hiện. [Khóa phát hành công bố](../../../integration/release-set.json) chọn hệ thống 0.1.4. Xem [trạng thái chuyển đổi native](../architecture/native-migration-status.md) để tra phạm vi đã nghiệm thu của các ứng viên.

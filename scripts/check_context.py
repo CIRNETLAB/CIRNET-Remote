@@ -13,7 +13,7 @@ CONTEXT_DOCS = [
 ]
 REQUIRED = [
     *CONTEXT_DOCS, DEV_LOG, "en/history/changelog.md", "en/history/lab-first-migration-ledger.md",
-    "en/index.md", "vi/index.md",
+    "en/index.md", "vi/index.md", "changelogs/README.md", "changelogs/CHANGELOG_V0.md",
 ]
 MARKERS = {
     CONTEXT: ["EP4CE6E22C8N", "EP4CE10E22C8N", "Web-first", "Frontend must never", "Mini PC", "Lab-First", "Safety-gated", "AssignmentDefinition", "LabEndpoint", "SafetyVerificationResult", "TopologyVerificationResult", "FunctionalVerificationResult", "ExecutionDecision", "HardwareStation", "PostgreSQL"],
@@ -22,9 +22,12 @@ MARKERS = {
 }
 
 errors = []
-for entry in DOCS.glob("*"):
-    if entry.name not in {"en", "vi"} or not entry.is_dir():
-        errors.append(f"unexpected docs/{entry.name}; docs must contain only en/ and vi/")
+expected_directories = {"en", "vi", "changelogs"}
+entries = list(DOCS.glob("*"))
+if {entry.name for entry in entries if entry.is_dir()} != expected_directories or any(
+    not entry.is_dir() for entry in entries
+):
+    errors.append("docs must contain exactly the en/, vi/ and changelogs/ directories")
 for name in REQUIRED:
     if not (DOCS / name).is_file():
         errors.append(f"missing docs/{name}")

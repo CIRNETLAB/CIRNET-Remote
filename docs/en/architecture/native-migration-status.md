@@ -2,8 +2,8 @@
 
 [Tiếng Việt](../../vi/architecture/native-migration-status.md) · [Documentation](../index.md)
 
-The [migration ledger](../history/native-migration-ledger.md) records the stage
-sequence, acceptance criteria and results for each candidate.
+The [migration ledger](../history/native-migration-ledger.md) records artifact
+identities, measurements and results for each candidate.
 
 ## Source, candidates and release
 
@@ -27,20 +27,17 @@ sequence, acceptance criteria and results for each candidate.
 | Stage | Recorded decision | Evidence and scope |
 | --- | --- | --- |
 | 0. Reference | **PASS** on the selected `0.1.4` reference | [Archive, thresholds and provenance](../history/native-migration-ledger.md#reference-archive-and-acceptance-thresholds) |
-| 1. C++ Simulator | **PASS** for r7 on Windows x64 | [Decision, Stop and integration evidence](../history/native-migration-ledger.md#gate-1-decision-for-windows-x64), [future SPICE proposal](../history/native-migration-ledger.md#future-spice-core-based-on-ngspice) |
+| 1. C++ Simulator | **PASS** for r7 on Windows x64 | [Decision, Stop and integration evidence](../history/native-migration-ledger.md#gate-1-decision-for-windows-x64), [SPICE scope](../history/native-migration-ledger.md#future-spice-core-based-on-ngspice) |
 | 2. Rust Contracts | **PASS** for the r2 matrix | [Initial candidate FAIL, r2 parity and clean build receipts](../history/native-migration-ledger.md#stage-2-candidate-verification) |
 | 3. Rust Hardware | **PASS** for r8-R2 Windows functionality, compatibility and safety | [Host policy](../history/native-migration-ledger.md#gate-3-acceptance-policy-by-host), [formal loaded Stop](../history/native-migration-ledger.md#gate-3-formal-windows-loaded-stop) |
 | 4. Rust Remote | **PASS** for `717402ba` Windows functionality, compatibility and safety | [Host policy](../history/native-migration-ledger.md#gate-4-acceptance-policy-by-host), [artifact, HTTP, data, Interface and safety evidence](../history/native-migration-ledger.md#stage-4-windows-compatibility-and-safety-checkpoint--717402ba) |
-| 5. Exact release artifacts | **NOT RUN** | [Packaging, process smoke, release verification and rollback criteria](../history/native-migration-ledger.md#5-accept-the-exact-release-artifacts) |
+| 5. Exact release artifacts | **NOT RUN** | [Release verification and rollback status](../history/native-migration-ledger.md#5-accept-the-exact-release-artifacts) |
 
-The Stage 3 and Stage 4 policies keep Windows/i5 safety bounds mandatory and
-use ordinary performance comparisons for diagnosis. The Stage 3 production
-performance gate and the Stage 4 Linux/Xeon performance and full loaded Stop
-gates remain **NOT RUN**. For Stage 4, the full Stop plan retains three paired
-windows of 100 qualified samples per side and a 403-attempt limit per side and window.
-Approve the Linux method and performance thresholds on the target platform
-before acceptance. Physical HIL and production/release acceptance remain
-**NOT RUN**. A release that advertises physical control requires suitable HIL.
+Stage 3 and 4 acceptance applies to Windows/i5 safety bounds. Their ordinary
+performance comparisons are diagnostic. Stage 3 production performance and
+Stage 4 Linux/Xeon performance and full loaded Stop remain **NOT RUN**.
+Physical HIL and production and release acceptance also remain **NOT RUN**.
+A release that advertises physical control requires suitable HIL.
 
 The [Rust Remote verification guide](../contributing/rust-verification.md)
 describes the tests and their fixture inputs. The

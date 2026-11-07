@@ -1,24 +1,8 @@
-# CIRNET migration plan for C++ and Rust
+# CIRNET native migration evidence
 
 [Tiếng Việt](../../vi/history/native-migration-ledger.md) · [Original plan dated 2026-11-05](https://github.com/cirnetlab/cirnet-remote/blob/f91eeeb42d7528d4e7fa9b1526195847932faf9d/docs/superpowers/plans/2026-11-05-cirnet-native-migration.md) · [Stage 0 record](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md)
 
-Use [Current status and evidence by stage](../architecture/native-migration-status.md) for the active decisions. This page holds the full plan and dated checkpoint records. Each checkpoint's status applies to its recorded inputs and time.
-
-> **For implementation agents.** Use superpowers:subagent-driven-development or superpowers:executing-plans. Complete each gate and record its evidence before beginning the next stage.
-
-**Goal.** Preserve compatibility with the released system, then migrate to Interface Vue/TypeScript → Remote Rust → Hardware Rust → Simulator C++.
-
-**Architecture.** Interface keeps REST and WebSocket on the same origin. Remote owns orchestration, data and leases. Hardware owns local RPC, station control and the Simulator process. Contracts supplies schemas, SDKs and canonical data. During stages 1–2, preview continues through the Remote adapter. From stage 3, preview may go through Hardware after that stage's combination passes its gate.
-
-**Tools.** Use C++20 and CMake for the worker, Rust and the Cargo lock for binaries and generators, Node for the TypeScript SDK, and pytest and Playwright Python for acceptance. Lock the compiler, linker, target and dependencies in the candidate manifest before measuring. Choose release versions of the C++ and Rust tools in their corresponding stages.
-
-## Rules for every stage
-
-- Follow the order **0 → 1 → 2 → 3 → 4 → 5**. Each required gate records its command, artifact combination, result and evidence. A required FAIL or NOT RUN blocks advancement through its acceptance lane. Gate 3 Windows functional and safety acceptance governs the next implementation stage. Production default selection and release require the separate Linux Xeon performance gate as well as the other required release evidence.
-- Each combination uses released or packaged candidate artifacts identified by commit, version, SHA-256, target and build flags. Use sibling source for development or to export separate artifacts. Distinguish the surveyed HEAD, build revision and harness revision. Raw data and traces go in a session outside Git allocated by the pinned DEV allocator. Keep only Markdown reports in the repository.
-- The final product keeps Python in tests and benchmarks. During the transition, keep compatible Python artifacts and all reference tests. PRs run tests near the change and relevant auth and safety checks. Integration gates exercise real processes and artifacts. Release gates run the exact artifacts intended for delivery.
-- Use the same valid and invalid fixtures to check wire behavior. Pin both canonical and legacy RPC paths, protobuf presence, REST names, types, statuses and errors, WebSocket sequence and resync, NCAP bytes, ownership and durable data. A breaking change requires a wire version and a separate consumer migration plan.
-- Before switching a default, record how to restore the most recent gated combination. Stop admitting Run, wait for safe cleanup or retain quarantine, and keep the matching database and capture backup with the manifest. At startup, the Python scheduler can dispatch `QUEUED` records. Before giving a scheduler permission to call Hardware after cutover or restore, inspect the restored queue and resolve or isolate all pending commands. Check ownership, capture digests, leases, quarantine and that only one scheduler can control Hardware. Check that Start is never replayed after a crash or an uncertain ACK.
+Use [current status and evidence by stage](../architecture/native-migration-status.md) for the active decisions. This ledger records surveyed inputs, accepted scope, measurements and results. Each result applies to the recorded environment and artifact combination. The [working ledger before separation](https://github.com/cirnetlab/cirnet-remote/blob/ae51abaa8ebdfce5981f91c0c95eca1d522900ee/docs/en/architecture/native-migration.md) preserves the earlier task list.
 
 ## Reference set and source survey
 
@@ -46,14 +30,6 @@ The checkout lock SHA-256 is `90a8ef4d30ddc19d3024dcb3790fef5d5e041f45fa47922bfd
 ## 0. Measure and pin released Python behavior
 
 [Stage 0 record](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md)
-
-- [x] **Install and identify the reference set.** Run `python -B -m scripts.install_release --manifest integration/release-set.json --environment-file release-env.json` in a virtual environment in a separate owned session and apply both installer environment blocks. Verify all 15 artifact SHA-256 digests, installed wheel provenance, `pip check`, host/OS/CPU/RAM, toolchain versions, database, worker count, limits and same-origin configuration. Use a fresh environment and the exact artifacts as the reference. Stage 0 rollback stops the test processes and cleans up their owned session while retaining the existing lock.
-- [x] **Pin the reference corpus.** Reuse fixtures from Contracts `contracts/compatibility` and `tests/contracts`, and Remote `tests/contracts`, `tests/integration` and `services/api/tests`. Run `scripts/export_openapi.py --check` and `scripts/check_public_compatibility.py`. Keep sanitized inputs and outcomes for REST/OpenAPI, gRPC including aliases, presence and errors, NCAP small samples and 100,000-sample case, WebSocket and database schema version. Create SQLite and PostgreSQL snapshots from synthetic principals, projects and revisions, idempotent commands, history, leases and quarantine, and captures. Keep capture digests with the snapshots. Check owner authorization, CSRF and Origin, revocation, replay, guarded power and invalid captures. Lock fixture digests after verifying the reference.
-- [x] **Measure the external path.** Run `python -B -m scripts.benchmark_web_sessions --sessions 50 --concurrency 10 --runs 8 --read-rounds 3` as the smoke baseline. Keep the existing AND workload, X at 0 ns, 0 at 8 ns and 1 at 28 ns, and add an event-heavy digital graph and a large NCAP payload from existing fixtures. Pin the input, harness and dependency inventory SHA-256, 50 principals, 10 concurrent HTTP requests, four workers, current auth policy, seed, warmup and measurement window for separate SQLite and PostgreSQL profiles. Calculate throughput as requests completed in the load window divided by seconds in that window. Calculate jobs/s and capture bytes/s separately. Collect CPU seconds per job, peak aggregate RSS for the process tree and sample count. RSS can count shared pages more than once. Separate bootstrap and login pacing from the load window. Collect at least 100 valid observations for each p99 distribution on each run, measure at least three independent runs after warmup, and report the sample count and nearest-rank method. The existing benchmark shares an API/Hardware process and issues Stop after COMPLETE. Use a pytest harness with separate processes for per-service and PostgreSQL measurements.
-- [x] **Measure Stop under load and separate phases.** Extend the pytest harness in `tests/integration/` and reuse `scripts/benchmark_web_sessions.py` for HTTP and resource metrics. Pin the graph and confirm all slots are busy, the worker has started the target job and that job is still running when Stop is issued. Discard the observation if the job finishes first. Measure Stop to HTTP response, gRPC ACK, and safe release or durable quarantine separately. Use natural graph load for timing and separate injected hang, crash and late-ACK cases for invariants. Use a monotonic clock in each process and request/experiment IDs to attribute Remote planning, queue and API time, Hardware graph compile, worker wait, Simulator run, NCAP encode/read/transfer/decode, payload store/read and database waits and transactions. Separate instrumented measurements from external measurements on original artifacts. Report parallel time as spans to avoid double-counting.
-- [x] **Compare core measurements.** Run `python -B -m pytest -q tests/integration/native_baseline_cases.py --basetemp <owned>/pytest-native-baseline` separately, using the verified environment. Reuse the HTTP benchmark's AND graph and check the event and capture sequence before measuring. Compare compile, run, NCAP encode and decode separately inside the pytest process. Use these microbenchmarks to compare against integrated spans.
-- [x] **Lock thresholds before testing a candidate.** The implementer's initial rule allows zero corpus or safety-invariant differences. Compare medians across runs for each identically configured profile. Require p95/p99 and peak RSS ≤ 110% of baseline, CPU/job ≤ 110%, and throughput ≥ 95%. For Stop, use the stricter of the current operational limit and 110% of baseline p95/p99. Keep leases unavailable until safe ACK. Require the C++ Simulator to reduce p95 core run time or CPU/job by at least 10%, with an effect larger than measurement variation across three paired runs, while meeting the other thresholds. If sample size, load or variation is insufficient, finish measuring and record absolute values before evaluating a candidate.
-- [x] **Gate 0.** PASS requires authenticated artifacts, a reference corpus, phase measurements, loaded Stop and locked thresholds. Report using the template at the end.
 
 ### Run the installed reference gates
 
@@ -218,10 +194,6 @@ restoring the matched synthetic state. The native release rollback rehearsal
 is a separate gate.
 
 ## 1. C++ Simulator and transition adapters
-
-- [x] **Digital slice.** In Simulator, add CMake and an independent C++ worker. Start with 74HC08 AND from the corpus and check the event sequence through `cirnet_sim/backends.py`. Extend it according to `engine.py`, `nets.py`, `logic.py`, `dispatch.py` and published model behavior. Keep preview and the supported static DC fixtures for supply, resistor, LED and powered 74HC08. Analog, SPICE and mixed execution remain unavailable. Compare timestamps, simultaneous event ordering, 0/1/X, NCAP bytes and errors. Run Simulator tests, pytest against the binary directly, and ASan/UBSan on supported targets.
-- [x] **Packaging and supervision.** Use local IPC with bounded frames, a version handshake and request/generation IDs. The Simulator artifact exports the binary and a private protocol description. Hardware's `station/virtual.py` Run adapter and Remote's preview adapter use the same core with separate budgets and pools. Add host deadlines, queue/CPU/RAM limits, cancellation, process reaping and fencing of late results. Check timeout, invalid frames, hung or dead workers, Stop/reset and running again. Preserve REST, RPC 2.0 and NCAP.
-- [x] **Matrix and Gate 1.** A = current Interface / Python Remote / Python Hardware / Python Simulator. B = the same combination with the C++ worker enabled for Run and preview, keeping Contracts Python 0.1.2. Run the fixtures, `tests/integration/test_virtual_lab_execution.py`, `test_capture_rpc_data_plane.py`, `test_simulation_backend_selection.py` and `services/api/tests/test_physical_preview.py` on artifacts. Compare with Stage 0 and choose B only after parity and measurable improvement. Roll back to A after cancellation, reaping and generation fencing. Interrupted jobs never replay automatically.
 
 ### C++ 74HC08 slice on 2026-11-06
 
@@ -765,35 +737,7 @@ remain `NOT RUN` for this Windows virtual simulation gate.
 
 ### Future SPICE core based on ngspice
 
-**Proposed.** Keep the Stage 1 C++ digital core and its bounded DC model
-for compatibility. Develop a separate SPICE backend from upstream ngspice
-source. Evaluate the shared C library inside the isolated C++ worker so
-Remote and Hardware retain their current process and safety boundaries.
-Compare its callbacks and cooperative interruption with a pinned batch
-child for the first analog cases. Start with one simulation per child.
-Deadline expiry or failed interruption requires terminating and reaping the
-child before reporting safe cleanup. [ngspice shared library](https://ngspice.sourceforge.io/shared.html)
-
-- [ ] **Select a reproducible input.** Start the experiment with upstream
-  `ngspice-46` and a headless shared build with XSPICE enabled. Record the
-  archive SHA-256, exact toolchain and options, patches, target ABI, library
-  and code-model hashes, and each model's origin, version and SHA-256.
-  Audit the selected source and all packaged components against their
-  notices and redistribution terms before packaging. [Upstream release archive](https://sourceforge.net/projects/ngspice/files/ng-spice-rework/old-releases/46/)
-- [ ] **Translate and capture.** Validate `CircuitGraph` first. Assign stable
-  net and element names, map approved parts and pin order to a versioned
-  model catalog, and emit a bounded netlist. Resolve model paths inside
-  the pinned model directory. Collect analog vectors and XSPICE events
-  through bounded callbacks. Specify units, time conversion, quantization,
-  ordering and how gaps and unknowns are represented before emitting
-  Contracts-compatible NCAP. [ngspice documentation](https://ngspice.sourceforge.io/docs.html)
-- [ ] **Evaluate parity and failure handling.** Run RC and diode/LED analog
-  references, 74HC08 gates, clocks, fan-out, unpowered inputs, conflicting
-  drivers and analog/digital bridges. Compare event order, equal timestamps,
-  propagation delay and CIRNET `0/1/X` against the C++ corpus. Define a
-  mapping for XSPICE logic and drive strength before testing parity. Exercise
-  invalid graphs and models, nonconvergence, limits, timeout, cancel, crash
-  and late replies through Run and preview. [XSPICE in ngspice](https://ngspice.sourceforge.io/xspice.html)
+**Proposed.** The study considered a separate ngspice backend with an isolated C++ worker. The Stage 1 digital core and bounded DC models remained the compatibility reference.
 
 The downloaded `ngspice-46.tar.gz` matched the selected SHA-256
 `a0d1699af1940b06649276dcd6ff5a566c8c0cad01b2f7b5e99dedbb4d64c19b`.
@@ -801,14 +745,7 @@ The Simulator backend plan records verified source digests for the first
 three XSPICE models. SPICE build, runtime, review of distributed components
 and digital parity are **NOT RUN**. [Upstream tarball](https://sourceforge.net/projects/ngspice/files/ng-spice-rework/old-releases/46/ngspice-46.tar.gz/download) · [Pinned build recipe](https://github.com/Homebrew/homebrew-core/blob/539f6abfdfdff8af39757bc100dfbce1db0c5618/Formula/lib/libngspice.rb#L3-L5)
 
-Select a digital replacement only after parity and performance pass. Expose
-only implemented and verified capabilities in the release manifest. The
-Simulator backend documentation owns the detailed implementation sequence.
-
 ## 2. Rust Contracts
-
-- [x] **Keep canonical sources.** Contracts retains JSON Schema and the manifest, `device-library/` and catalog projections, `contracts/hardware/v2/rpc_v2.proto`, `contracts/capture/layout.json` and `ncap.schema.json`. Port `validation.py`, semantic validators, `capture_codec.py` and generators in `contracts/codegen/`. `contracts/api/openapi.json` is the approved handoff from the Remote exporter. Generate Rust crates and types, the `@cirnet/contracts` SDK and Python bindings for pytest, and retain the old Python wheel for transition consumers. Run the Rust runtime and SDK generation on a machine without Python.
-- [x] **Matrix and Gate 2.** Run B with the current Python wheel and npm artifact. Repeat with the SDK from the Rust generator on Interface, keeping the legacy wheel installed for Remote and Hardware. Run the same corpus through legacy Python, the Rust binary or bindings, and the packed npm tarball. Preserve descriptor field numbers, both service names, absent/default distinctions, errors, 0/1/X, order and canonical NCAP1/NCAP2 bytes. Check JSON, timing and gaps, and NCAP2 INT16/UINT16/FLOAT32 encodings. Run legacy generator checks, `scripts/check_public_compatibility.py`, SDK runtime and type checks, and two clean builds with the same commit and toolchain to compare digests. Report generation time, package size and validation and codec throughput. Change the default generator only after parity and reproducibility pass. Roll back to the verified old crate, SDK and wheel set, keeping prior artifacts.
 
 ### Stage 2 candidate verification
 
@@ -871,9 +808,6 @@ verified transition SDK. The original SDK and wheel are the rollback
 pair and remain available for Python consumers.
 
 ## 3. Rust Hardware
-
-- [ ] **Replace the server and lifecycle.** Port Hardware `server.py`, `rpc.py` and `station/` to Rust with Rust Contracts and the pinned C++ worker. Retain RPC 2.0 with both `cirnet.hardware.v2.HardwareService` and `netcircuit.hardware.v2.HardwareService`, loopback or Unix transport, and the existing ACK, ownership, deadline and NCAP rules. Move preview through a negotiated internal endpoint and keep the Python Remote adapter compatible with old Hardware. Give Stop separate resources for RPC handling, worker cancellation and safe response. Remote still owns leases and quarantine. Keep published capabilities unavailable for stations without a driver.
-- [ ] **Matrix and Gate 3.** Compare B with current Interface → Python Remote → Rust Hardware → C++ Simulator, using the legacy wheel in Remote and the crate in Hardware. Retain `test_server.py`, `test_virtual_execution.py`, `test_simulation_workers.py`, `test_rpc_lifecycle.py`, `test_ncap_rpc.py` and `test_physical_station.py` as references. Port assertions tied to Python internals into pytest against a separate RPC binary. Test Start/Stop/reset, lease expiry, disconnect, hung or dead workers, late replies, concurrent Stop with a full queue, and quarantine when ACK is missing. Run Remote integration tests. Apply the [current host-specific policy](#gate-3-acceptance-policy-by-host) to performance and loaded Stop. Keep energization precondition checks in PR gates. Run both pinned RTL testbenches and HIL matching advertised capabilities. Report unavailable equipment separately. Roll back using the lease and quarantine procedure and restore Python Hardware with a compatible worker.
 
 ### Gate 3 acceptance policy by host
 
@@ -959,8 +893,7 @@ Use the approved Linux thresholds and Linux artifact digests for the
 Linux result. The six absolute Stop ceilings still govern Windows.
 
 The r8-R2 evidence closes Windows functionality, compatibility and safety.
-Commit Stage 3 before starting Stage 4. Linux performance and
-production/release acceptance remain **NOT RUN**.
+Linux performance and production/release acceptance remain **NOT RUN**.
 
 #### Gate 3 formal Windows loaded Stop
 
@@ -1173,11 +1106,9 @@ The experimental wheel SHA-256 is
 and the short HTTP summary SHA-256 is
 `10dcb8a6e9423949e0a8b74f06016d5bbfe6f78f80f9cf688ccd8ce3eed2da29`.
 
-Gate 3 remains **FAIL**. The next diagnostic needs lock-hold attribution by
-caller and PostgreSQL connection waits. The full SQLite and PostgreSQL
-retests and natural loaded Stop remain pending for a qualified candidate.
-The sample counts, paired/frozen thresholds, and Stop safety proof remain
-the formal requirements.
+Gate 3 was **FAIL** at this checkpoint. The SQLite and PostgreSQL retests
+and natural loaded Stop had yet to run on a qualified candidate. The next
+record covers lock-hold attribution and PostgreSQL connection waits.
 
 ### Gate 3 lock attribution and Stop observer
 
@@ -1721,16 +1652,10 @@ derived from profile file timestamps and recorded cleanup/workload times.
 Checkpoint sync was 0.674/0.439 seconds; total 39.770/67.281 seconds
 includes paced writing. This correlation does not prove checkpoint
 contention caused the slowdown, and C1/C3 also missed read limits.
-The next diagnostic adds common timestamps and bounded CPU observation;
-no PostgreSQL durability, checkpoint or gate settings have been changed.
-
+At this checkpoint, PostgreSQL durability, checkpoint and gate settings
+were unchanged.
 
 ## 4. Rust Remote
-
-- [x] **Replace route groups.** Remote keeps the existing topology, auth and orchestration. Port reads and preview first, then `services/auth.py`, `websocket/events.py`, persistence, and finally commands, idempotency and `services/experiments.py`. Compare the exact OpenAPI handoff, HTTP/errors/cookies/CSRF/Origin, WebSocket hello/sequence/resync/close, ownership/control client and disconnect. Shadow only genuinely side-effect-free routes against a data copy. Test session bootstrap and a control WebSocket in isolation because they can change sessions or cancel jobs.
-- [x] **Data and control.** Port Remote schemas and migrations to native migrations. Compare real SQLite and PostgreSQL against existing data, CAS revisions, login, ownership and captures. Rehearse `pg_dump`/`pg_restore` with the capture backup and check hashes, keeping idempotency and quarantine. Keep the Hardware control endpoint inaccessible to a shadow scheduler. Revoke the old scheduler's access and verify that it has stopped. Inspect the restored queue before granting the candidate access. Test competing schedulers, a queue with pending commands and loss of connectivity during cutover.
-- [x] **Matrix and Gate 4 Windows.** Compare Python Remote → Rust Hardware → C++ with current Interface → Rust Remote → Rust Hardware → C++ by route group. Keep `scripts/export_openapi.py --check` for the Python comparison and compare native OpenAPI with the same handoff and operation table. Retain auth, ownership, operation identity, WebSocket and PostgreSQL assertions through public boundaries or scoped native components. Keep Interface E2E and Playwright Python. Apply the [host-specific policy](#gate-4-acceptance-policy-by-host) to ordinary performance and loaded Stop. Rollback revokes candidate scheduler authority, restores the matching database/capture pair when needed, and verifies authority and quarantine before reconnecting Python. Windows acceptance does not authorize a default or release change.
-- [ ] **Linux/Xeon production and applicable HIL.** Run full fixed load and the full loaded-Stop matrix after project stability and target-host readiness, with approved production thresholds and Linux safety validation. Run real HIL before accepting any advertised physical-control capability. Keep production/release acceptance NOT RUN until all applicable requirements pass.
 
 ### Gate 4 acceptance policy by host
 
@@ -1794,9 +1719,7 @@ and **HIL** separately. Linux/Xeon and HIL remain NOT RUN until their
 requirements are actually exercised. Production/release acceptance waits
 for Linux/Xeon and, if physical control is advertised, suitable real HIL.
 Unavailable physical capabilities remain unavailable. Windows PASS does not
-select a release or change default traffic. Keep Stage 4 changes in the
-review worktree; no commit, merge or branch/worktree removal is authorized
-by this policy update.
+select a release or change default traffic.
 
 ### Stage 4 first read and preview slice
 
@@ -1839,7 +1762,6 @@ are **NOT RUN**. Detailed malformed v2 validation messages beyond the
 selected fixtures still need parity evidence. No default traffic or release
 manifest has been switched; Linux/Xeon production acceptance remains
 **NOT RUN**.
-
 
 ### Stage 4 native data and protocol checkpoint
 
@@ -2162,7 +2084,6 @@ HTTP timings. The Gate 3 Windows policy is not a waiver for these Stage 4
 requirements. Default traffic, immutable release selection, Stage 3 commits and
 all historical evidence remain unchanged.
 
-
 ### Stage 4 Windows compatibility and safety checkpoint · 717402ba
 
 The Windows x64/MSVC candidate is `native-remote-sqlite-writer-release/f07bbb29b41d4a7c9120379547450752/cirnet-remote.exe`
@@ -2206,12 +2127,11 @@ No total time-saving estimate is claimed for avoiding unrun full Windows
 gates. The reused browser calibration itself had a measured 136.46-second
 duration; that is not an application-performance improvement.
 
-The owned DEV session `cirnet-4PiLwh` contains the receipts below. Keep the
-formal workload at three paired 200-job windows per side for each database and
+The owned DEV session `cirnet-4PiLwh` contains the receipts below. The approved
+formal Linux workload retained three paired 200-job windows per side for each database and
 three paired 100-qualified-sample Stop windows per side, with the 403-attempt
 cap. Windows diagnostics and historical comparisons retain their recorded
-scope. The worktree remains available for review before Git integration or a
-default or release change.
+scope.
 
 | Receipt | Session-relative path | SHA-256 |
 | --- | --- | --- |
@@ -2377,16 +2297,6 @@ lazily and Rust begins explicitly. SQLite client library
 versions differ (3.50.4 and 3.46.0); PostgreSQL uses the same owned server.
 Their results are not relabelled as measurements of `717402ba…`.
 
-
 ## 5. Accept the exact release artifacts
 
-- [ ] **Replace product entrypoints.** Add a native manifest and checker in Remote. Update `run-cirnet.bat` and `scripts/launcher/` to call binaries. Update `deployment/` for systemd, Nginx, migration, admin and maintenance, as well as release workflows and bootstrap. Replace `scripts/build_release.py` in the Interface product build, retaining Node/Vue. Contracts uses the Rust generator. The new manifest records commit, version, SHA-256, platform/ABI and advertised capabilities. Keep the immutable 0.1.4 manifest, old packages, v1 installer and a separate Python environment for rollback. Check missing packages, wrong digests or targets, path traversal, provenance and reproducible packaging.
-- [ ] **Smoke test real processes.** Build the product and generate the SDK in a clean lane without Python. Move the exact hashed artifacts to another clean runtime image for installation, startup, Doctor and operation. Record the manifest digest in both lanes and inspect the process tree, entrypoints and dependencies. Interface/static server, Remote, Hardware and Simulator run as separate processes. Smoke test login, Run → NCAP → display, preview, WebSocket reconnect and Stop under load. Record PIDs, readiness, cleanup and single-scheduler enforcement. Run Python test clients on the orchestration host outside the image.
-- [ ] **Release gate.** Run full browser E2E with Playwright Python, preserving existing WebGL, Web Locks and image matrix cases until equivalent coverage is shown. Run PostgreSQL backup and restore, package/SDK/compatibility, security, performance and load, and both RTL testbenches with the pinned toolchain. Security covers auth/CSRF/Origin, revocation, frame bounds, RPC loopback, absent-driver declarations and dependency checks. The FPGA currently advertises only a scaffold. Record HIL NOT RUN for the scaffold and check that physical capabilities remain unavailable. When physical execution is advertised, HIL on suitable equipment becomes a required gate. Rehearse actual rollback to 0.1.4 and the most recent gated combination if different, using the matching backup pair and checking station state, quarantine and interrupted commands. Each advertised platform has an independent gate. Select the new manifest only after all required gates pass.
-
-## Report template for each stage
-
-- Repositories and files changed, commit and harness, artifacts and digests, configuration, environment and commands.
-- Combination matrix and PASS/FAIL/NOT RUN for each gate. Report simulation, RTL and HIL on separate rows.
-- Sample counts, p50/p95/p99, throughput, CPU/job, RSS and Stop to safe state before and after. Record absolute values, variability and decision thresholds.
-- Open failures, conditions for switching defaults, rollback artifacts and backups, and rehearsal outcome.
+**NOT RUN.** Native packaging, installation and real-process smoke, full release verification, and rollback of the exact native artifact set remain pending. The [published release lock](../../../integration/release-set.json) selects the 0.1.4 system. See [native migration status](../architecture/native-migration-status.md) for the scope of the accepted candidates.
