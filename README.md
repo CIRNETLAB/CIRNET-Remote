@@ -7,6 +7,8 @@ Service and Simulator for a Lab-First electronics laboratory.
 <a id="tiếng-việt"></a>
 [English documentation](docs/en/index.md) · [Tiếng Việt](docs/vi/index.md)
 
+Start with the English index for current guides, API reference and evidence.
+
 <a id="windows-launcher"></a>
 On Windows, open [run-cirnet.bat](run-cirnet.bat) or follow the
 [local startup guide](docs/en/guides/getting-started.md).

@@ -9,6 +9,19 @@ cùng thay đổi. Giữ `README.md` gốc bằng tiếng Anh và liên kết c�
 nguồn. Repo khác có thể tóm tắt ngắn và
 liên kết đến repo sở hữu.
 
+## Vai trò của tài liệu
+
+| Vị trí | Mục đích |
+| --- | --- |
+| `README.md` gốc | Giới thiệu repo và dẫn đến mục lục hiện hành. |
+| `docs/en/` và `docs/vi/` | Duy trì hướng dẫn tiếng Anh hiện hành và bản tiếng Việt tương ứng. Codex bắt đầu từ mục lục tiếng Anh. |
+| README cạnh mã nguồn | Mô tả thành phần hoặc package tại chỗ và dẫn đến cặp hướng dẫn. |
+| Biên bản verification, migration và archive | Giữ kết quả, revision, định danh artifact và giới hạn của từng lượt đã ghi. |
+
+Chọn một nơi sở hữu cho mỗi quy trình hiện hành. Các tóm tắt ở nơi khác
+dẫn về đó. Xem [kiến trúc hệ thống](../architecture/system.md) để tìm repo
+phù hợp và nguồn có thẩm quyền.
+
 Dùng một ngôn ngữ diễn giải trong mỗi tệp. Giữ nguyên định danh API, lệnh
 CLI, đường dẫn, biến môi trường, phiên bản và mã nguồn giữa hai bản. Giữ
 đầy đủ yêu cầu, ví dụ, giới hạn, cảnh báo và trạng thái khả năng. Chỉ tạo

@@ -74,25 +74,28 @@ dữ liệu mẫu giả. Lời gọi trực tiếp kiểu cũ không định ki�
 Mô hình số chưa hỗ trợ trả lỗi có kiểu. Các endpoint Run và phân tích công khai
 hiện tại giữ nguyên.
 
-Mã nguồn Simulator hiện hành dùng `cirnet_sim.backends`. Mô-đun backend ban đầu
-dùng `netcircuit_sim.backends` và giữ tên này làm bí danh import cũ. Provider
-mặc định `legacy` dùng bộ điều phối và bộ máy hiện có để biên dịch và chạy.
-Chế độ xem trước tiếp tục gọi trực tiếp bộ xem trước cho phép hiển thị trạng
-thái UNSUPPORTED. Cấu hình API và trạm ảo chốt `CIRNET_SIMULATION_BACKEND` khi
-khởi tạo. Kế hoạch giữ ID backend, phiên bản adapter, định dạng kế hoạch và
-payload có thể tuần tự hóa của provider. Worker mới và worker dùng lại đều
-xác định provider theo các giá trị đó mà không đọc lại biến môi trường. Provider
-chưa biết, bị thiếu hoặc không khớp đều gây lỗi và không có phương án dự phòng.
+Bản phát hành đang chọn dùng provider mặc định `legacy` từ
+`cirnet_sim.backends`. Tên import trước đây `netcircuit_sim.backends`
+vẫn là bí danh. Provider legacy chuyển biên dịch, chạy và xem trước tới
+bộ máy Python và ranh giới xem trước. Cấu hình API và trạm ảo chốt
+`CIRNET_SIMULATION_BACKEND` lúc khởi tạo. Kế hoạch đã tuần tự hóa giữ
+ID backend, phiên bản adapter, định dạng kế hoạch và payload của provider
+để worker dùng đúng định danh. Provider chưa biết, bị thiếu hoặc không
+khớp sẽ báo lỗi tường minh.
 
-Tên `ngspice` tích hợp sẵn dành trước ranh giới tích hợp và báo chưa khả dụng,
-với 0 khả năng thực thi hoặc sử dụng thiết bị đo. Nó chưa tải tệp nhị phân
-hay triển khai mô hình tương tự. Kiểm tra, phân loại và lưu tài liệu vẫn độc
-lập với khả năng của bộ giải. Provider khác yêu cầu ghép registry tin cậy
-một cách tường minh, kể cả trong từng worker. Cấu hình dịch vụ hiện chỉ cho
-chọn hai provider tích hợp sẵn. Tích hợp ngspice cần ánh xạ đồ thị, netlist
-và mô hình, nguồn gốc gói native, hợp đồng kết quả tương tự, quy đổi thời
-gian và đơn vị, cùng kiểm thử giới hạn vòng đời. Xem
-[phân tích và thiết kế](https://github.com/cirnetlab/cirnet-remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/superpowers/specs/2026-10-27-simulator-backends-design.md).
+Mã nguồn Simulator còn hỗ trợ worker số `cpp` khi chủ động cấu hình
+executable và digest khớp. Xem
+[hướng dẫn backend Simulator](https://github.com/cirnetlab/cirnet-simulator/blob/master/docs/vi/backends.md)
+để thiết lập provider và [trạng thái chuyển đổi](native-migration-status.md)
+để tra các tổ hợp artifact đã xác minh.
+
+Tên dành trước `ngspice` báo chưa khả dụng, với 0 khả năng thực thi
+hoặc sử dụng thiết bị đo. [Đề xuất SPICE](native-migration.md#core-spice-tương-lai-dựa-trên-ngspice)
+bao gồm ánh xạ đồ thị/netlist, nguồn gốc mô hình và bản build, hợp đồng
+kết quả và kiểm tra vòng đời trong tương lai. Xác minh, phân loại và lưu
+tài liệu vẫn khả dụng độc lập với khả năng bộ giải.
+
+Biên bản thiết kế trước đây. [phân tích và thiết kế](https://github.com/cirnetlab/cirnet-remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/superpowers/specs/2026-10-27-simulator-backends-design.md).
 
 VirtualHardwareStation tiếp nhận CircuitGraph 1.0/1.1/1.2 được hỗ trợ qua ranh
 giới provider, rồi thực thi qua vòng đời Lab, RPC, worker tiến trình có giới

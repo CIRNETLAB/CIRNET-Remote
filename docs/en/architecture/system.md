@@ -2,9 +2,23 @@
 
 [Tiếng Việt](../../vi/architecture/system.md) · [Canonical Lab-First v3.1 architecture](../../ARCHITECTURE.md)
 
+## Authority and scope
+
+Use the [Lab-First v3.1 specification](../../ARCHITECTURE.md) for approved
+system and safety rules and the [physical safety contract](../../PHYSICAL_LAB_SAFETY.md)
+for electrical requirements. This page explains those boundaries and maps the
+current selected topology. The [working context](context.md) gives maintainers
+the invariants to check when changing the implementation.
+
+Use [Contracts](../api/contracts-consumer.md) for the exact schemas and wire
+formats. Use the [release lock](../../../integration/release-set.json) for
+selected artifact identities and the [migration status](native-migration-status.md)
+for the verified native combinations. The [history index](../history/index.md)
+lists dated designs and reports with their scope.
+
 ## System boundary
 
-The browser uses Vue 3, TypeScript, Pinia and Three.js in a single workspace. In production, Nginx serves the Interface and forwards same-origin REST and WebSocket traffic to one FastAPI scheduler on `127.0.0.1:8000`. The API talks to the separate Hardware Service over local-only gRPC on `127.0.0.1:50051`. Hardware Service owns station lifecycle and private FPGA transport. PostgreSQL stores durable state in production. SQLite is supported for development and tests. Capture metadata lives in the database and large payloads live in capture storage.
+The browser uses Vue 3, TypeScript, Pinia and Three.js in a single workspace. In the selected release topology, Nginx serves the Interface and forwards same-origin REST and WebSocket traffic to one FastAPI scheduler on `127.0.0.1:8000`. The API talks to the separate Hardware Service over local-only gRPC on `127.0.0.1:50051`. Hardware Service owns station lifecycle and private FPGA transport. PostgreSQL stores durable state in production. SQLite is supported for development and tests. Capture metadata lives in the database and large payloads live in capture storage.
 
 | Repository | Responsibility |
 | --- | --- |
@@ -44,6 +58,8 @@ The Lab Execution Compiler checks executability before power permission and emit
 Safety, topology and function are independent results. Functional verification uses captured behavior. Assessment policy controls grading and disclosure. For example, a safe circuit with the wrong wiring can run through its observed wiring and fail its functional check. The topology result remains available as a separate diagnostic.
 
 ## Runtime boundaries
+
+These defaults describe the selected release.
 
 - Virtual stations run the existing digital engine and bounded DC subset. The reserved `ngspice` selector reports unavailable. Full analog or mixed execution requires a real supported backend. [Signal domains and simulation](signal-domains-and-simulation.md)
 - `instrument_capabilities` supplies available channels, with `0` meaning unavailable. UI channels are 1-based. The virtual Logic Analyzer exposes four channels. Scope and Generator have zero channels in the baseline. [Control isolation](control-isolation-and-runtime-index.md)

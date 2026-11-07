@@ -2,7 +2,7 @@
 
 [English](../../en/architecture/native-migration.md) · [Kế hoạch gốc ngày 2026-11-05](https://github.com/cirnetlab/cirnet-remote/blob/f91eeeb42d7528d4e7fa9b1526195847932faf9d/docs/superpowers/plans/2026-11-05-cirnet-native-migration.md) · [Biên bản giai đoạn 0](https://github.com/cirnetlab/cirnet-remote/blob/81d919d63ac6b8a7b0b7846a887d0156c694f0e5/docs/verification/2026-11-05-native-migration-stage-0.md)
 
-**Gate 0 PASS trên bộ tham chiếu 0.1.4 đã chọn. Gate 1 PASS trên Windows x64 với r7. Gate 2 PASS với ma trận Contracts r2. Gate 3 PASS về chức năng, tương thích và an toàn trên Windows với r8-R2. Gate 4 PASS về chức năng, tương thích và an toàn trên Windows với Remote 717402ba.** Hiệu năng production Gate 3, hiệu năng và Stop dưới tải đầy đủ Gate 4 trên Linux/Xeon, HIL, nghiệm thu production/phát hành và Gate 5 đều `NOT RUN`. [Chính sách Gate 3 hiện hành](#chính-sách-nghiệm-thu-gate-3-theo-môi-trường) · [Chính sách Gate 4 hiện hành](#chính-sách-nghiệm-thu-gate-4-theo-môi-trường). Profile 0.1.4 đã phát hành là bản tham chiếu để rollback.
+Xem [Trạng thái hiện tại và bằng chứng theo giai đoạn](native-migration-status.md) để tra quyết định hiện hành. Trang này giữ kế hoạch đầy đủ và các mốc theo thời điểm. Trạng thái mỗi mốc áp dụng cho đầu vào và thời điểm đã ghi.
 
 > **Dành cho agent triển khai.** Dùng superpowers:subagent-driven-development hoặc superpowers:executing-plans. Hoàn thành và ghi bằng chứng từng gate trước khi bắt đầu giai đoạn kế tiếp.
 

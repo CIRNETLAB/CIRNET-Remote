@@ -70,6 +70,11 @@ phạm vi hiệu lực full. Bằng chứng khác đầu vào cho `NOT_VERIFIED`
 trong lúc điều tra. Bỏ biến hoặc dùng `false` sau khi kiểm chứng quy tắc.
 Giá trị không rỗng nhưng sai định dạng chọn full. Biến chỉ tác động job quan sát.
 
+## Remote Rust
+
+Xem [hướng dẫn kiểm thử native](rust-verification.md) để tra lệnh Cargo,
+fixture của ca mặc định bỏ qua và kiểm tra đúng ứng viên Windows.
+
 ## Kiểm tra thay đổi tài liệu
 
 Chạy từ thư mục gốc Remote. `REVIEWED_BASE_SHA` là commit trước thay đổi.

@@ -71,6 +71,11 @@ Set `CIRNET_CI_SELECTOR_FORCE_FULL=true` for subsequent observation jobs during
 investigation. Unset it or use `false` after validating the rule. An invalid
 nonempty value selects full. The setting affects only the advisory job.
 
+## Rust Remote
+
+Use the [native verification guide](rust-verification.md) for Cargo commands,
+ignored fixtures and exact Windows candidate tests.
+
 ## Check documentation changes
 
 Run from the Remote root. `REVIEWED_BASE_SHA` is the commit preceding the change.

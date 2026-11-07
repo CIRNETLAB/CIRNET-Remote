@@ -6,6 +6,8 @@ Các hồ sơ này mô tả revision, đầu vào và môi trường cụ thể.
 [khóa phát hành hiện hành](../../../integration/release-set.json) và
 [hướng dẫn xác minh](../contributing/verification.md) khi chuẩn bị lượt mới.
 
+Với chuyển đổi native, xem [trạng thái và bằng chứng theo giai đoạn](../architecture/native-migration-status.md).
+
 | Hồ sơ | Ngôn ngữ | Phạm vi |
 | --- | --- | --- |
 | [Nhật ký thay đổi](../../CHANGELOG.md) | Tiếng Anh | Thay đổi theo thời gian |

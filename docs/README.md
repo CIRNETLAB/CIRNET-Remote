@@ -18,6 +18,7 @@ points.
 
 ## Reading status
 
-The [history index](en/history/index.md) distinguishes dated records from
+The [native migration index](en/architecture/native-migration-status.md) separates
+the current source, verified combinations and the selected release. The [history index](en/history/index.md) distinguishes dated records from
 current guidance. It links archived designs, earlier implementations and the
 verification records for their respective revisions.

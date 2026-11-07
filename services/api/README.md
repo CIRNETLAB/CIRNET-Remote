@@ -1,5 +1,8 @@
 # CIRNET Application Backend
 
+This README describes the Python API package in this directory. Use the paired
+application API guide for current setup and contracts. [English](../../docs/en/api/application.md) · [Tiếng Việt](../../docs/vi/api/application.md)
+
 Start with the current API guide in [English](../../docs/en/api/application.md)
 or [Vietnamese](../../docs/vi/api/application.md). Use its current examples
 when an older example on this page refers to an earlier release.

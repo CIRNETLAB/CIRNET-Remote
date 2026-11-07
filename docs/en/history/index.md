@@ -6,6 +6,8 @@ These records describe specific revisions, inputs and environments. Use the
 [current release lock](../../../integration/release-set.json) and
 [verification guide](../contributing/verification.md) when preparing a new run.
 
+For native migration, use the [stage status and evidence index](../architecture/native-migration-status.md).
+
 | Record | Language | Scope |
 | --- | --- | --- |
 | [Changelog](../../CHANGELOG.md) | English | Chronological changes |

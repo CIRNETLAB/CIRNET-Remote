@@ -2,9 +2,23 @@
 
 [English](../../en/architecture/system.md) · [Tài liệu kiến trúc chuẩn Lab-First v3.1](../../ARCHITECTURE.md)
 
+## Thẩm quyền và phạm vi
+
+Dùng [đặc tả Lab-First v3.1](../../ARCHITECTURE.md) cho các quy tắc hệ thống
+và an toàn đã duyệt, cùng [hợp đồng an toàn vật lý](../../PHYSICAL_LAB_SAFETY.md)
+cho yêu cầu điện. Trang này giải thích các ranh giới đó và mô tả topology
+của bản đang được chọn. [Bối cảnh làm việc](context.md) nêu các bất biến
+cần kiểm tra khi thay đổi triển khai.
+
+Dùng [Contracts](../api/contracts-consumer.md) để tra schema và định dạng
+truyền chính xác. Dùng [khóa phát hành](../../../integration/release-set.json)
+cho định danh artifact đã chọn và [trạng thái chuyển đổi](native-migration-status.md)
+cho các tổ hợp native đã xác minh. [Mục lục lịch sử](../history/index.md)
+liệt kê thiết kế, biên bản theo thời điểm và phạm vi tương ứng.
+
 ## Ranh giới hệ thống
 
-Trình duyệt dùng Vue 3, TypeScript, Pinia và Three.js trong một không gian làm việc. Khi triển khai production, Nginx phục vụ Interface và chuyển REST, WebSocket cùng origin đến một tiến trình FastAPI điều phối tại `127.0.0.1:8000`. API gọi Hardware Service chạy riêng qua gRPC nội bộ tại `127.0.0.1:50051`. Hardware Service quản lý vòng đời trạm và lớp truyền thông FPGA riêng. PostgreSQL lưu trạng thái bền vững trong production. SQLite dùng cho phát triển và kiểm thử. Cơ sở dữ liệu lưu siêu dữ liệu bản thu, còn kho bản thu giữ nội dung dung lượng lớn.
+Trình duyệt dùng Vue 3, TypeScript, Pinia và Three.js trong một không gian làm việc. Trong topology của bản đang chọn, Nginx phục vụ Interface và chuyển REST, WebSocket cùng origin đến một tiến trình FastAPI điều phối tại `127.0.0.1:8000`. API gọi Hardware Service chạy riêng qua gRPC nội bộ tại `127.0.0.1:50051`. Hardware Service quản lý vòng đời trạm và lớp truyền thông FPGA riêng. PostgreSQL lưu trạng thái bền vững trong production. SQLite dùng cho phát triển và kiểm thử. Cơ sở dữ liệu lưu siêu dữ liệu bản thu, còn kho bản thu giữ nội dung dung lượng lớn.
 
 | Kho mã | Trách nhiệm |
 | --- | --- |
@@ -44,6 +58,8 @@ Lab Execution Compiler kiểm tra khả năng thực thi trước khi cho phép 
 An toàn, cấu trúc và chức năng cho ba kết quả độc lập. Kiểm tra chức năng dùng hành vi thu được. Chính sách đánh giá điều khiển cách chấm và nội dung được công bố. Ví dụ, mạch đi dây sai nhưng vẫn an toàn có thể chạy theo đúng dây quan sát được rồi không đạt kiểm tra chức năng. Kết quả cấu trúc vẫn được giữ làm chẩn đoán riêng.
 
 ## Ranh giới khi chạy
+
+Các mặc định dưới đây áp dụng cho bản phát hành đang chọn.
 
 - Trạm ảo chạy bộ mô phỏng số hiện có và phần DC giới hạn. Giá trị chọn `ngspice` được dành trước và báo chưa khả dụng. Mô phỏng tương tự hoặc hỗn hợp đầy đủ cần backend thực sự hỗ trợ. [Miền tín hiệu và mô phỏng](signal-domains-and-simulation.md)
 - `instrument_capabilities` công bố các kênh dùng được. Giá trị `0` nghĩa là chưa khả dụng. Giao diện đánh số kênh từ 1. Logic Analyzer ảo có bốn kênh. Scope và Generator có 0 kênh ở cấu hình cơ sở. [Cô lập điều khiển](control-isolation-and-runtime-index.md)

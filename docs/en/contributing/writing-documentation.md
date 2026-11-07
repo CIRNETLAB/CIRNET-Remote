@@ -9,6 +9,19 @@ Place system-level material in Remote and feature-specific material in the
 repository that owns the code.
 Other repositories can link to the owner with a short contextual summary.
 
+## Documentation roles
+
+| Location | Purpose |
+| --- | --- |
+| Root `README.md` | Introduce the repository and link the current indexes. |
+| `docs/en/` and `docs/vi/` | Maintain the current English guidance and its Vietnamese counterpart. Codex starts from the English index. |
+| README beside source | Describe the local component or package and link its paired guides. |
+| Verification, migration and archive records | Preserve the result, revision, artifact identity and limits of each recorded run. |
+
+Choose one owner for each current procedure. Summaries elsewhere link to that
+owner. Use [system architecture](../architecture/system.md) to find the
+appropriate repository and the governing source.
+
 Use one prose language per file. Keep API identifiers, CLI commands, paths,
 environment variables, versions and code unchanged between languages. Preserve
 requirements, examples, limits, warnings, and capability status. Use `guides/`,

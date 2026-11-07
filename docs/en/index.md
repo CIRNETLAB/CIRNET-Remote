@@ -2,15 +2,21 @@
 
 [Tiếng Việt](../vi/index.md) · [Repository](../../README.md) · [Repository instructions](../../AGENTS.md)
 
+Start with the English pages for current repository guidance. The Vietnamese index follows the same structure.
+
 ## Guides
 
 - [Run the lab locally and use the Windows launcher](guides/getting-started.md)
 
-## API and architecture
+<a id="api-and-architecture"></a>
+
+## API reference
 
 - [Application API and development](api/application.md)
 - [Installed Contracts consumer](api/contracts-consumer.md)
 - [Circuit and physical lab specification](api/circuit-and-physical-lab.md)
+## Architecture and status
+
 - [System architecture](architecture/system.md)
 - [Working context](architecture/context.md)
 - [Physical lab safety](architecture/physical-lab-safety.md)
@@ -22,12 +28,17 @@
 - [Pending observations](architecture/pending-observations.md)
 - [Projects and revisions](architecture/projects-and-revisions.md)
 - [Signal domains and simulation](architecture/signal-domains-and-simulation.md)
-- [Native migration plan and gate status](architecture/native-migration.md)
+- [Native migration status and evidence by stage](architecture/native-migration-status.md)
 
-## Contribute and operate
+<a id="contribute-and-operate"></a>
+
+## Contributing
 
 - [Verification and external artifacts](contributing/verification.md)
+- [Rust Remote build, tests and fixtures](contributing/rust-verification.md)
 - [Documentation conventions](contributing/writing-documentation.md)
+## Operations
+
 - [System release and rollback](operations/release-and-rollback.md)
 - [CI artifact access](operations/ci-artifact-access.md)
 - [Production deployment](operations/deployment.md)

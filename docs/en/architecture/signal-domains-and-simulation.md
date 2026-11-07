@@ -75,25 +75,28 @@ fabricated samples. Historical direct untyped adapter calls retain their
 RuntimeError compatibility behavior. Unsupported digital models return a typed
 rejection. There is no additional public Run or analysis endpoint.
 
-Current Simulator source uses `cirnet_sim.backends`. The original backend module
-used `netcircuit_sim.backends`, which is retained as a legacy import alias.
-The default `legacy` provider delegates compile/run to the unchanged dispatcher
-and engine; preview delegates directly to the existing permissive preview so
-UNSUPPORTED device states remain visible. API settings and virtual stations
-freeze `CIRNET_SIMULATION_BACKEND` at construction. Plans carry the selected
-backend ID, adapter version, plan format and serializable provider payload;
-spawned or reused workers resolve this identity without rereading selection
-from environment. Unknown, missing or mismatched providers never fall back.
+The selected release uses the default `legacy` provider from
+`cirnet_sim.backends`. The earlier `netcircuit_sim.backends` import remains
+an alias. The legacy provider delegates compile/run and preview to the
+Python engine and preview boundary. API settings and virtual stations freeze
+`CIRNET_SIMULATION_BACKEND` at construction. The serialized plan carries
+backend ID, adapter version, plan format and provider payload so workers
+resolve the same identity. Unknown, missing or mismatched providers fail
+explicitly.
 
-The built-in `ngspice` name reserves the integration boundary and reports
-unavailable, with zero execution/instrument capabilities. It does not load a
-binary or implement analog models. Document validation, classification and
-storage remain independent of solver availability. Other providers require
-explicit trusted registry composition, including in each worker; service
-configuration currently selects only the two built-ins. Real ngspice integration
-will require graph/netlist and model mapping, native artifact provenance,
-analog result contracts, time/unit alignment and bounded lifecycle tests. See
-the [analysis and design](https://github.com/cirnetlab/cirnet-remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/superpowers/specs/2026-10-27-simulator-backends-design.md).
+The Simulator source also supports the opt-in `cpp` digital worker when a
+matching executable and digest are configured. See the
+[Simulator backend guide](https://github.com/cirnetlab/cirnet-simulator/blob/master/docs/en/backends.md)
+for the provider setup and the [migration status](native-migration-status.md)
+for the verified artifact combinations.
+
+The reserved `ngspice` selector reports unavailable with zero execution and
+instrument capabilities. The [SPICE proposal](native-migration.md#future-spice-core-based-on-ngspice)
+covers future graph/netlist mapping, model and build provenance, result
+contracts and lifecycle checks. Document validation, classification and
+storage remain available independently of solver capability.
+
+Earlier design record. [analysis and design](https://github.com/cirnetlab/cirnet-remote/blob/8ad610d445fa3ad6eddfd56eaa6bc91e690b52ca/docs/superpowers/specs/2026-10-27-simulator-backends-design.md).
 
 VirtualHardwareStation admits supported CircuitGraph 1.0/1.1/1.2 through this
 provider boundary, then executes through the existing Lab lifecycle, RPC, bounded
